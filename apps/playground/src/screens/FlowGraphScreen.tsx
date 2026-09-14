@@ -44,7 +44,7 @@ const DETAIL_TABS: RunPanelSlot[] = ["compare"]
 const overlayFor = (selection: RunSelection): RunOverlay => {
   if (selection.runId === null) return EMPTY_OVERLAY
   if (selection.view === null) return EMPTY_OVERLAY
-  return overlayOf(selection.runId, selection.view)
+  return overlayOf(selection.runId, selection.view, selection.renders)
 }
 
 function Diagnostics({ client, flowId, revision }: { client: ApiClient; flowId: string; revision: number }) {

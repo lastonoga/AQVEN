@@ -99,6 +99,7 @@ const toCanvasNode = (
     type: "wf",
     data: {
       stage,
+      runId: node.rootId,
       kind: node.kind,
       label: node.label,
       note: node.note,
