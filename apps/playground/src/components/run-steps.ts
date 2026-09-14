@@ -20,6 +20,7 @@ export type RunStep = {
   nodeId: string
   kind: string
   description: string | null
+  summary: string | null
   status: NodeStatus
   startedAt: number | null
   durationMs: number | null
@@ -196,6 +197,7 @@ const stepOf = (node: RunNodeView, index: number, render: Render | undefined): R
     nodeId: node.nodeId,
     kind: node.kind ?? "node",
     description: node.description,
+    summary: pickString(sources, ["summary"]),
     status: node.status,
     startedAt: node.startedAt,
     durationMs: node.durationMs,

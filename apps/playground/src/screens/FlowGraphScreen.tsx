@@ -109,7 +109,7 @@ function EmptyRuns({ client, flowId, runs, hrefOfRun }: LayoutProps) {
   )
 }
 
-function DetailPanel({ props }: { props: RunPanelProps }) {
+function DetailPanel({ props, onClose }: { props: RunPanelProps; onClose: () => void }) {
   const [tab, setTab] = useState<RunPanelSlot>("detail")
   const scrollRef = useScrollMemory("run:detail")
   const available = DETAIL_TABS.filter((slot) => runPanelOf(slot).appliesTo(props))
@@ -118,31 +118,40 @@ function DetailPanel({ props }: { props: RunPanelProps }) {
   const Panel = panel.Component
 
   return (
-    <aside className="flex w-[30rem] shrink-0 flex-col border-l border-slate-800 bg-slate-950/60">
-      <div className="flex shrink-0 items-center gap-1 border-b border-slate-800 px-2 py-1">
+    <section className="flex h-[38%] min-h-[190px] shrink-0 flex-col border-t border-slate-800 bg-slate-950/60">
+      <div className="flex shrink-0 items-center gap-1 border-b border-slate-800 px-3 py-1">
         {available.map((slot) => (
           <button
             key={slot}
             type="button"
             onClick={() => setTab(slot)}
-            className={`rounded px-2 py-0.5 font-mono text-[11px] ${
+            className={`rounded px-2 py-0.5 font-mono text-[11.5px] ${
               slot === active ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
             }`}
           >
             {runPanelOf(slot).title}
           </button>
         ))}
+        <span className="ml-3 min-w-0 truncate font-mono text-[11.5px] text-slate-500">{props.nodeId}</span>
+        <button
+          type="button"
+          onClick={onClose}
+          title="закрыть разбор"
+          className="ml-auto shrink-0 rounded px-1.5 font-mono text-[12px] text-slate-500 hover:bg-slate-800 hover:text-slate-200"
+        >
+          ✕
+        </button>
       </div>
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
         <Panel {...props} />
       </div>
-    </aside>
+    </section>
   )
 }
 
 function RunLayout(layout: LayoutProps) {
   const { ir, index, selection, selectedId, onSelect } = layout
-  const [canvasOpen, setCanvasOpen] = useState(true)
+  const [canvasOpen, setCanvasOpen] = useState(false)
   const stepsRef = useScrollMemory("run:steps")
   const steps = runPanelOf("steps")
   const Steps = steps.Component
@@ -152,36 +161,30 @@ function RunLayout(layout: LayoutProps) {
     nodeId: runIdAt(index, selectedId),
     onSelectNode: onSelect,
   }
-  const total = selection.view?.nodes.length ?? 0
 
   if (selection.runId === null) return <EmptyRuns {...layout} />
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col">
-        {canvasOpen && (
-          <div className="h-[32%] min-h-[160px] shrink-0 border-b border-slate-800">
-            <FlowCanvas ir={ir} selectedId={selectedId} onSelect={onSelect} />
-          </div>
-        )}
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-3 py-1">
-          <button
-            type="button"
-            onClick={() => setCanvasOpen((prev) => !prev)}
-            className="rounded px-2 py-0.5 font-mono text-[11px] text-slate-400 ring-1 ring-slate-800 hover:bg-slate-900"
-          >
-            {canvasOpen ? "свернуть канвас" : "показать канвас"}
-          </button>
-          <span className="font-mono text-[11px] text-slate-600">
-            шагов <span className="text-slate-300">{total}</span>
-          </span>
-          {selection.loading && <span className="font-mono text-[11px] text-slate-600">обновление…</span>}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {canvasOpen && (
+        <div className="h-[30%] min-h-[170px] shrink-0 border-b border-slate-800">
+          <FlowCanvas ir={ir} selectedId={selectedId} onSelect={onSelect} />
         </div>
-        <div ref={stepsRef} className="min-h-0 flex-1 overflow-auto">
-          <Steps {...panelProps} />
-        </div>
+      )}
+      <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-3 py-1">
+        <button
+          type="button"
+          onClick={() => setCanvasOpen((prev) => !prev)}
+          className="rounded px-2 py-0.5 font-mono text-[11.5px] text-slate-400 ring-1 ring-slate-800 hover:bg-slate-900"
+        >
+          {canvasOpen ? "скрыть схему" : "показать схему"}
+        </button>
+        {selection.loading && <span className="font-mono text-[11px] text-slate-600">обновление…</span>}
       </div>
-      <DetailPanel props={panelProps} />
+      <div ref={stepsRef} className="min-h-0 flex-1 overflow-auto">
+        <Steps {...panelProps} />
+      </div>
+      {panelProps.nodeId !== null && <DetailPanel props={panelProps} onClose={() => onSelect(null)} />}
     </div>
   )
 }
