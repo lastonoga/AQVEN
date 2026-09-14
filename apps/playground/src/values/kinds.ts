@@ -30,6 +30,25 @@ export type ValueFacts = {
   readonly bytes: number
 }
 
+export type SummaryKind = ValueKind | "enum" | "id" | "date"
+
+export type Rendered = {
+  readonly text: string
+  readonly detail: string
+  readonly count: number
+}
+
+export type ValueSummary = {
+  readonly kind: SummaryKind
+  readonly text: string
+  readonly detail: string
+  readonly count: number
+  readonly typeName: string
+  readonly typeLabel: string
+  readonly missing: readonly string[]
+  readonly facts: ValueFacts
+}
+
 export const MEDIA_KINDS: readonly ValueKind[] = ["image", "video", "audio", "file"]
 
 export const isMediaKind = (kind: ValueKind): kind is MediaKind =>

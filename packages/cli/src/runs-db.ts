@@ -10,6 +10,8 @@ export const DB_FILE = "playground.db"
 export type Render = {
   runId: string
   nodeId: string
+  branchKey?: string
+  iteration?: number
   input: unknown
   output: unknown
   prompt: string | null
@@ -65,10 +67,12 @@ CREATE TABLE IF NOT EXISTS node_events (
 CREATE TABLE IF NOT EXISTS renders (
   run_id TEXT NOT NULL,
   node_id TEXT NOT NULL,
+  branch_key TEXT NOT NULL DEFAULT '',
+  iteration INTEGER NOT NULL DEFAULT 0,
   input TEXT,
   output TEXT,
   prompt TEXT,
-  PRIMARY KEY (run_id, node_id)
+  PRIMARY KEY (run_id, node_id, branch_key, iteration)
 );
 CREATE TABLE IF NOT EXISTS blobs (
   id TEXT PRIMARY KEY,
@@ -82,6 +86,26 @@ CREATE TABLE IF NOT EXISTS blobs (
 CREATE INDEX IF NOT EXISTS node_events_run ON node_events (run_id, seq);
 CREATE INDEX IF NOT EXISTS runs_started ON runs (started_at DESC);
 CREATE INDEX IF NOT EXISTS blobs_run ON blobs (run_id);
+`
+
+export const RENDER_KEY_COLUMNS = ["branch_key", "iteration"] as const
+
+const RENDERS_MIGRATION = `
+DROP TABLE IF EXISTS renders_legacy;
+ALTER TABLE renders RENAME TO renders_legacy;
+CREATE TABLE renders (
+  run_id TEXT NOT NULL,
+  node_id TEXT NOT NULL,
+  branch_key TEXT NOT NULL DEFAULT '',
+  iteration INTEGER NOT NULL DEFAULT 0,
+  input TEXT,
+  output TEXT,
+  prompt TEXT,
+  PRIMARY KEY (run_id, node_id, branch_key, iteration)
+);
+INSERT INTO renders (run_id, node_id, branch_key, iteration, input, output, prompt)
+  SELECT run_id, node_id, '', 0, input, output, prompt FROM renders_legacy;
+DROP TABLE renders_legacy;
 `
 
 const STATUSES = new Set<string>(["queued", "running", "ok", "error"])
@@ -145,10 +169,20 @@ const toEvent = (row: Row): RunEvent => ({
 const toRender = (row: Row): Render => ({
   runId: text(row, "run_id"),
   nodeId: text(row, "node_id"),
+  branchKey: text(row, "branch_key"),
+  iteration: int(row, "iteration"),
   input: decode(row["input"] ?? null),
   output: decode(row["output"] ?? null),
   prompt: optText(row, "prompt") ?? null,
 })
+
+export const renderKey = (render: Render): string => {
+  const branch = render.branchKey ?? ""
+  const iteration = render.iteration ?? 0
+  if (branch !== "") return `${render.nodeId}#${branch}`
+  if (iteration > 0) return `${render.nodeId}@${iteration}`
+  return render.nodeId
+}
 
 const bodyOf = (row: Row): Uint8Array => {
   const value = row["body"]
@@ -171,12 +205,41 @@ export function runsDbPath(root: string): string {
 
 export class SqliteRunsDb implements RunsRepository {
   private readonly db: DatabaseSync
+  private readonly wideRenders: boolean
 
   constructor(file: string) {
     mkdirSync(dirname(file), { recursive: true })
     this.db = new DatabaseSync(file)
     this.db.exec("PRAGMA journal_mode = WAL")
     this.db.exec(DDL)
+    this.wideRenders = this.migrateRenders()
+  }
+
+  private renderColumns(): Set<string> {
+    const rows = this.db.prepare("PRAGMA table_info(renders)").all()
+    return new Set(rows.map((row) => text(row, "name")))
+  }
+
+  private rollback(): void {
+    try {
+      this.db.exec("ROLLBACK")
+    } catch {
+      return
+    }
+  }
+
+  private migrateRenders(): boolean {
+    const columns = this.renderColumns()
+    if (RENDER_KEY_COLUMNS.every((column) => columns.has(column))) return true
+    try {
+      this.db.exec("BEGIN")
+      this.db.exec(RENDERS_MIGRATION)
+      this.db.exec("COMMIT")
+      return true
+    } catch {
+      this.rollback()
+      return false
+    }
   }
 
   createRun(run: Run): void {
@@ -196,9 +259,12 @@ export class SqliteRunsDb implements RunsRepository {
   }
 
   saveRender(render: Render): void {
-    this.db
-      .prepare("INSERT OR REPLACE INTO renders (run_id, node_id, input, output, prompt) VALUES (?, ?, ?, ?, ?)")
-      .run(render.runId, render.nodeId, encode(render.input), encode(render.output), render.prompt)
+    const statement = this.wideRenders
+      ? "INSERT OR REPLACE INTO renders (run_id, node_id, branch_key, iteration, input, output, prompt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      : "INSERT OR REPLACE INTO renders (run_id, node_id, input, output, prompt) VALUES (?, ?, ?, ?, ?)"
+    const wide = [render.branchKey ?? "", render.iteration ?? 0]
+    const tail = [encode(render.input), encode(render.output), render.prompt]
+    this.db.prepare(statement).run(render.runId, render.nodeId, ...(this.wideRenders ? wide : []), ...tail)
   }
 
   saveBlob(blob: StoredBlob): void {
@@ -229,7 +295,7 @@ export class SqliteRunsDb implements RunsRepository {
     return {
       run: toRun(row),
       events,
-      renders: Object.fromEntries(renders.map((r) => [r.nodeId, r])),
+      renders: Object.fromEntries(renders.map((r) => [renderKey(r), r])),
     }
   }
 

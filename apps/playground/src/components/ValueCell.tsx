@@ -1,44 +1,72 @@
 import type { ReactNode } from "react"
 import { MediaThumb } from "./MediaValue.js"
-import { NO_HINT, factsOf, isMediaKind, sizeLabel, summaryOf } from "../values/index.js"
-import type { ValueFacts, ValueHint, ValueKind } from "../values/index.js"
+import { isMediaKind, sizeLabel, summarize } from "../values/index.js"
+import type { SummaryKind, ValueSummary } from "../values/index.js"
+import type { Ir } from "../api/index.js"
 
-export const CELL_SIZE_LIMIT = 2048
-
-const TONES: Readonly<Record<ValueKind, string>> = {
-  empty: "text-slate-600",
-  text: "text-slate-300",
-  number: "text-amber-300",
-  boolean: "text-sky-300",
-  object: "text-slate-400",
-  array: "text-slate-400",
-  image: "text-slate-300",
-  video: "text-slate-300",
-  audio: "text-slate-300",
-  file: "text-slate-300",
+const TONES: Readonly<Record<SummaryKind, string>> = {
+  empty: "text-amber-500/80",
+  text: "text-slate-200",
+  number: "text-amber-200",
+  boolean: "text-sky-200",
+  object: "text-slate-200",
+  array: "text-slate-200",
+  enum: "text-sky-200",
+  id: "text-slate-300",
+  date: "text-slate-300",
+  image: "text-slate-200",
+  video: "text-slate-200",
+  audio: "text-slate-200",
+  file: "text-slate-200",
   link: "text-sky-300",
 }
 
-export type ValueCellProps = { value: unknown; hint?: ValueHint }
+export const CELL_SIZE_LIMIT = 2048
 
-const sizeNote = (facts: ValueFacts): string => (facts.bytes > CELL_SIZE_LIMIT ? sizeLabel(facts.bytes) : "")
+export type ValueCellProps = {
+  value: unknown
+  typeName?: string
+  ir?: Ir | null
+  lines?: number
+}
 
-export function ValueCell({ value, hint = NO_HINT }: ValueCellProps): ReactNode {
-  const facts = factsOf(value, hint)
+const CLAMP: Readonly<Record<number, string>> = {
+  1: "line-clamp-1",
+  2: "line-clamp-2",
+  3: "line-clamp-3",
+}
 
-  if (facts.media !== null && isMediaKind(facts.kind)) {
+const noteOf = (summary: ValueSummary): string => {
+  if (summary.missing.length > 0) return `не заполнено: ${summary.missing.join(", ")}`
+  const size = summary.facts.bytes > CELL_SIZE_LIMIT ? sizeLabel(summary.facts.bytes) : ""
+  return [summary.detail, size].filter((part) => part !== "").join(" · ")
+}
+
+function Detail({ summary }: { summary: ValueSummary }) {
+  const note = noteOf(summary)
+  if (note === "") return null
+  const tone = summary.missing.length > 0 ? "text-amber-500/80" : "text-slate-500"
+  return <span className={`block truncate font-mono text-[10.5px] ${tone}`}>{note}</span>
+}
+
+export function ValueCell({ value, typeName = "", ir = null, lines = 2 }: ValueCellProps): ReactNode {
+  const summary = summarize(value, typeName, ir)
+
+  if (summary.facts.media !== null && isMediaKind(summary.facts.kind)) {
     return (
-      <span className="flex min-w-0 items-center" title={summaryOf(facts)}>
-        <MediaThumb media={facts.media} kind={facts.kind} />
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <MediaThumb media={summary.facts.media} kind={summary.facts.kind} />
+        <Detail summary={summary} />
       </span>
     )
   }
 
-  const note = sizeNote(facts)
   return (
-    <span className="flex min-w-0 items-baseline gap-1.5" title={summaryOf(facts)}>
-      <span className={`truncate font-mono text-[11.5px] ${TONES[facts.kind]}`}>{summaryOf(facts)}</span>
-      {note !== "" && <span className="shrink-0 font-mono text-[10px] text-slate-600">{note}</span>}
+    <span className="flex min-w-0 flex-col gap-0.5">
+      <span className={`block font-mono text-[12px] leading-[1.35] ${CLAMP[lines] ?? CLAMP[2]} ${TONES[summary.kind]}`}>
+        {summary.text}
+      </span>
+      <Detail summary={summary} />
     </span>
   )
 }

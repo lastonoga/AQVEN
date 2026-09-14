@@ -18,6 +18,21 @@ export type Diagnostic = {
 
 export type IrNode = Record<string, unknown> & { kind: string }
 
+export type IrTypeKind = "object" | "enum" | "id" | "scalar" | "array" | "unknown"
+
+export type IrType = {
+  name: string
+  kind: IrTypeKind
+  declared?: boolean
+  description?: string
+  example?: unknown
+  schema?: JsonSchema
+  valueDescriptions?: Record<string, string>
+  source?: string
+  allowedSet?: string
+  codeFormat?: string
+}
+
 export type IrComponent = {
   name: string
   out: { type: string; from: string }
@@ -35,6 +50,7 @@ export type Ir = {
   defaults?: object
   components: Record<string, IrComponent>
   nodes: Record<string, IrNode>
+  types?: Record<string, IrType>
 }
 
 export type FlowDetail = { ir: Ir; synthMs: number }
