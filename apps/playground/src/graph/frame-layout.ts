@@ -9,6 +9,7 @@ import {
   layoutNested,
 } from "./layout.js"
 import type { GraphLabel } from "@dagrejs/dagre"
+import { labelSize } from "./edge-label.js"
 import type { ExpandedEdge, ExpandedGraph, ExpandedNode } from "./expand.js"
 import type { Layout, LayoutNode, Size } from "./layout.js"
 
@@ -36,6 +37,9 @@ export const fallbackSize = (node: ExpandedNode, collapsed: boolean): Size => {
   const extra = node.info.nested === null ? 0 : NESTED_HEIGHT
   return { width: NODE_WIDTH, height: NODE_BASE_HEIGHT + extra }
 }
+
+const plateFor = (edge: ExpandedEdge): Size | undefined =>
+  edge.label === "" ? undefined : labelSize(edge.label)
 
 export const hiddenUnder = (graph: ExpandedGraph, collapsed: ReadonlySet<string>): Set<string> => {
   const byId = new Map(graph.nodes.map((node) => [node.id, node]))
@@ -68,11 +72,12 @@ export const placeGraph = (
     fallback: fallbackSize(node, collapsed.has(node.id)),
   }))
   const edges = graph.edges.filter((edge) => shown.has(edge.source) && shown.has(edge.target))
+  const wires = edges.map((edge) => ({ ...edge, plate: plateFor(edge) }))
 
   const sized = new Set(visible.filter((node) => node.group === null).map((node) => node.id))
   const useful = new Map([...measured].filter(([id]) => sized.has(id)))
 
-  return { visible, edges, layout: layoutNested(layoutNodes, edges, useful, options), sized }
+  return { visible, edges, layout: layoutNested(layoutNodes, wires, useful, options), sized }
 }
 
 export const groupIdsOf = (graph: ExpandedGraph): string[] =>

@@ -10,7 +10,7 @@ export const GROUP_HEADER = 48
 export const GROUP_NEST = 24
 export const NODE_SEP = 72
 export const EDGE_SEP = 28
-export const RANK_SEP = 160
+export const RANK_SEP = 120
 export const GRAPH_MARGIN = 32
 export const COLUMN_GAP = 26
 

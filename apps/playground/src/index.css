@@ -18,3 +18,7 @@ body {
 .react-flow__attribution {
   display: none;
 }
+
+.react-flow__edgelabel-renderer {
+  z-index: 5000;
+}

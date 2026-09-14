@@ -3,13 +3,14 @@ import { GROUP_HEADER, overlaps } from "./layout.js"
 import type { EdgeAnchor, Point, RouteGeometry } from "./edge-route.js"
 import type { Rect, Size } from "./layout.js"
 
-export const LABEL_CHAR = 6.6
+export const LABEL_TEXT = 11
+export const LABEL_CHAR_EM = 0.62
+export const LABEL_CHAR = LABEL_TEXT * LABEL_CHAR_EM
 export const LABEL_PAD_X = 7
 export const LABEL_PAD_Y = 4
 export const LABEL_BORDER = 1
-export const LABEL_TEXT = 11
 export const LABEL_GAP = 6
-export const LABEL_MAX_CHARS = 30
+export const LABEL_MAX_CHARS = 40
 export const LABEL_HEIGHT = LABEL_TEXT + LABEL_PAD_Y * 2 + LABEL_BORDER * 2
 export const LABEL_RING = LABEL_HEIGHT + LABEL_GAP
 export const LABEL_RINGS = 2
@@ -32,7 +33,8 @@ export type LabelTarget = {
 }
 
 export const labelSize = (text: string): Size => ({
-  width: Math.min(text.length, LABEL_MAX_CHARS) * LABEL_CHAR + LABEL_PAD_X * 2 + LABEL_BORDER * 2,
+  width:
+    Math.ceil(Math.min([...text].length, LABEL_MAX_CHARS) * LABEL_CHAR) + LABEL_PAD_X * 2 + LABEL_BORDER * 2,
   height: LABEL_HEIGHT,
 })
 
@@ -128,12 +130,13 @@ const clear = (rect: Rect, obstacles: readonly Rect[], taken: readonly Rect[]): 
 const preferredOf = (total: number, anchor: EdgeAnchor): number =>
   anchor === "center" ? total * HALF : Math.min(LEAD, total * HALF)
 
-const ranked = (chain: readonly Point[], anchor: EdgeAnchor, skip: number): Spot[] => {
-  const preferred = preferredOf(chainLength(chain), anchor)
-  return spotsOf(segmentsOf(chain), skip).sort(
-    (left, right) => Math.abs(left.distance - preferred) - Math.abs(right.distance - preferred),
+const byDistance = (preferred: number) => (left: Spot, right: Spot): number =>
+  Math.abs(left.distance - preferred) - Math.abs(right.distance - preferred)
+
+const ranked = (target: LabelTarget, skip: number): Spot[] =>
+  spotsOf(segmentsOf(target.chain), skip).sort(
+    byDistance(preferredOf(chainLength(target.chain), target.anchor)),
   )
-}
 
 const centresOf = (spots: readonly Spot[], size: Size): Placed[] => {
   const rings = Array.from({ length: LABEL_RINGS }, (_, index) => index)
@@ -149,26 +152,58 @@ const passesOf = (chain: readonly Point[], anchor: EdgeAnchor): number[] => {
   return segmentsOf(chain).length >= 3 ? [1, 0] : [0]
 }
 
+const toSegment = (point: Point, from: Point, to: Point): number => {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const length = dx * dx + dy * dy
+  if (length === 0) return Math.hypot(point.x - from.x, point.y - from.y)
+  const along = Math.max(0, Math.min(1, ((point.x - from.x) * dx + (point.y - from.y) * dy) / length))
+  return Math.hypot(point.x - (from.x + dx * along), point.y - (from.y + dy * along))
+}
+
+export const toChain = (point: Point, chain: readonly Point[]): number =>
+  chain.slice(1).reduce((best, to, index) => {
+    const from = chain[index]
+    if (from === undefined) return best
+    return Math.min(best, toSegment(point, from, to))
+  }, Infinity)
+
+const owned = (
+  center: Point,
+  target: LabelTarget,
+  chains: ReadonlyMap<string, readonly Point[]>,
+): boolean => {
+  const own = toChain(center, target.chain)
+  for (const [id, chain] of chains) {
+    if (id === target.id) continue
+    if (toChain(center, chain) < own) return false
+  }
+  return true
+}
+
 export const placeLabel = (
   target: LabelTarget,
   obstacles: readonly Rect[],
   taken: readonly Rect[],
+  chains: ReadonlyMap<string, readonly Point[]> = new Map(),
 ): Placed | null => {
   const size = labelSize(target.text)
   const tries = passesOf(target.chain, target.anchor).flatMap((skip) =>
-    centresOf(ranked(target.chain, target.anchor, skip), size),
+    centresOf(ranked(target, skip), size),
   )
-  return tries.find((placed) => clear(labelRect(placed.center, target.text), obstacles, taken)) ?? null
+  const free = tries.filter((placed) => clear(labelRect(placed.center, target.text), obstacles, taken))
+  return free.find((placed) => owned(placed.center, target, chains)) ?? free[0] ?? null
 }
 
 export const placeLabels = (
   targets: readonly LabelTarget[],
   obstacles: readonly Rect[],
+  chains: ReadonlyMap<string, readonly Point[]> = new Map(),
 ): Map<string, Placed | null> => {
   const taken: Rect[] = []
   const spots = new Map<string, Placed | null>()
   for (const target of targets) {
-    const placed = placeLabel(target, obstacles, taken)
+    const placed = placeLabel(target, obstacles, taken, chains)
     spots.set(target.id, placed)
     if (placed !== null) taken.push(labelRect(placed.center, target.text))
   }
