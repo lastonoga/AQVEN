@@ -14,6 +14,7 @@ import {
   labelSize,
   placeLabel,
   placeLabels,
+  toChain,
 } from "./edge-label.js"
 import { GROUP_HEADER, overlaps } from "./layout.js"
 import type { Ir } from "../api/types.js"
@@ -213,5 +214,50 @@ describe("подписи не пересекают узлы и друг друг
     expect(flow).toBeDefined()
     if (flow === undefined) return
     expect(placedIn(flow).labels.length).toBeGreaterThan(0)
+  })
+})
+
+
+describe("подпись принадлежит своему ребру", () => {
+  test("при выборе места чужое ребро не оказывается ближе своего", () => {
+    const own: Point[] = [
+      { x: 0, y: 0 },
+      { x: 400, y: 0 },
+    ]
+    const rival: Point[] = [
+      { x: 0, y: 30 },
+      { x: 400, y: 30 },
+    ]
+    const target: LabelTarget = { id: "own", text: "ветка 1", anchor: "center", chain: own }
+    const chains = new Map<string, readonly Point[]>([
+      ["own", own],
+      ["rival", rival],
+    ])
+    const placed = placeLabel(target, [], [], chains)
+    expect(placed).not.toBeNull()
+    if (placed === null) return
+    expect(toChain(placed.center, own)).toBeLessThanOrEqual(toChain(placed.center, rival))
+  })
+
+  test("на всех воркфлоу почти каждая подпись ближе к своему ребру", () => {
+    const confused = flows.flatMap((flow) => {
+      const scene = buildScene(flow.ir)
+      const frame = buildFrame(scene, OPEN, NO_MEASURES)
+      const rects = placeGraph(scene.graph, OPEN, NO_MEASURES).layout.rects
+      const targets = labelTargets(frame.edges, rects)
+      const chains = new Map(targets.map((target) => [target.id, target.chain]))
+      const spots = placeLabels(targets, labelObstacles(rects, new Set(scene.groupIds)), chains)
+      return targets.flatMap((target) => {
+        const spot = spots.get(target.id) ?? null
+        if (spot === null) return []
+        const own = toChain(spot.center, target.chain)
+        const rival = [...chains].reduce((best, [id, chain]) => {
+          if (id === target.id) return best
+          return Math.min(best, toChain(spot.center, chain))
+        }, Infinity)
+        return rival < own ? [`${flow.id}:${target.id}`] : []
+      })
+    })
+    expect(confused.length).toBeLessThanOrEqual(4)
   })
 })

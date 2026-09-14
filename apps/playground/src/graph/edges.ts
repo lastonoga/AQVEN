@@ -99,6 +99,9 @@ const isPoint = (value: unknown): value is Point =>
 
 const pointsOf = (value: unknown): Point[] => (Array.isArray(value) ? value.filter(isPoint) : [])
 
+const chainsOf = (targets: readonly LabelTarget[]): Map<string, readonly Point[]> =>
+  new Map(targets.map((target) => [target.id, target.chain]))
+
 const labelAnchor = (edge: Edge): EdgeAnchor => (edge.type === "branch" ? "source" : "center")
 
 const labelTargetOf = (edge: Edge, rects: ReadonlyMap<string, Rect>): LabelTarget[] => {
@@ -123,7 +126,8 @@ export const labelEdges = (
   rects: ReadonlyMap<string, Rect>,
   frames: ReadonlySet<string>,
 ): Edge[] => {
-  const spots = placeLabels(labelTargets(edges, rects), labelObstacles(rects, frames))
+  const targets = labelTargets(edges, rects)
+  const spots = placeLabels(targets, labelObstacles(rects, frames), chainsOf(targets))
   return edges.map((edge) => {
     if (!spots.has(edge.id)) return edge
     return { ...edge, data: { ...edge.data, label: spots.get(edge.id) ?? null } }

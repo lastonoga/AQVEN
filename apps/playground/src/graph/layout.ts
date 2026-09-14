@@ -43,6 +43,7 @@ export type LayoutEdge = {
   id: string
   source: string
   target: string
+  plate?: Size
 }
 
 export type Layout = {
@@ -222,6 +223,17 @@ const insetsOf = (nodes: readonly LayoutNode[], tree: Tree): Map<string, Inset> 
   return insets
 }
 
+const LABEL_BLEED = 12
+
+const plateOf = (link: Link): EdgeLabel => {
+  if (link.plate === undefined) return {}
+  return {
+    width: link.plate.width + LABEL_BLEED,
+    height: link.plate.height + LABEL_BLEED,
+    labelpos: "c",
+  }
+}
+
 const compoundGraph = (
   nodes: readonly LayoutNode[],
   links: readonly Link[],
@@ -246,7 +258,7 @@ const compoundGraph = (
     if (node.parentId === null) continue
     graph.setParent(node.id, node.parentId)
   }
-  for (const link of links) graph.setEdge(link.from, link.to, {}, link.id)
+  for (const link of links) graph.setEdge(link.from, link.to, plateOf(link), link.id)
 
   return graph
 }

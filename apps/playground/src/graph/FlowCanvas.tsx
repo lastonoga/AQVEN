@@ -78,15 +78,11 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
   }, [scene])
 
   const frame = useMemo(() => buildFrame(scene, collapsed, measured), [scene, collapsed, measured])
-  const labelled = useMemo(
-    () =>
-      labelEdges(
-        frame.edges,
-        placeGraph(scene.graph, collapsed, measured).layout.rects,
-        new Set(scene.groupIds.filter((id) => !collapsed.has(id))),
-      ),
-    [frame, scene, collapsed, measured],
-  )
+  const labelled = useMemo(() => {
+    const { rects } = placeGraph(scene.graph, collapsed, measured).layout
+    const frames = new Set(scene.groupIds.filter((id) => !collapsed.has(id)))
+    return labelEdges(frame.edges, rects, frames)
+  }, [frame, scene, collapsed, measured])
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasNode>(frame.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(labelled)
 

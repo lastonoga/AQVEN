@@ -97,7 +97,6 @@ export function RouteEdge({ anchor, ...props }: Props) {
           <EdgeLabelRenderer>
             <div
               className="nodrag nopan overflow-hidden rounded border text-center font-mono"
-              title={hint}
               onMouseEnter={() => setOpen(true)}
               onMouseLeave={() => setOpen(false)}
               style={{
