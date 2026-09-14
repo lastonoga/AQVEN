@@ -116,7 +116,7 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
   const toggle = useCallback((id: string) => setCollapsed((current) => toggleIn(current, id)), [])
   const collapseValue = useMemo(() => ({ collapsed, toggle }), [collapsed, toggle])
   const expandAll = useCallback(() => setCollapsed(new Set()), [])
-  const collapseAll = useCallback(() => setCollapsed(new Set(scene.groupIds)), [scene])
+  const collapseAll = useCallback(() => setCollapsed(new Set(scene.collapsibleIds)), [scene])
 
   const painted = useMemo(
     () => nodes.map((node) => ({ ...node, selected: node.id === selectedId })),
@@ -129,7 +129,7 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
         <div className="flex h-full min-h-0 flex-col">
           <StageRail stages={scene.ranking.stages} columns={frame.columns} />
           <GraphLegend
-            groups={scene.groupIds.length}
+            groups={scene.collapsibleIds.length}
             collapsedCount={collapsed.size}
             onExpandAll={expandAll}
             onCollapseAll={collapseAll}
@@ -145,7 +145,7 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
               nodesDraggable={false}
               nodesConnectable={false}
               edgesFocusable={false}
-              onNodeClick={(_, node) => onSelect(scene.rootOf.get(node.id) ?? node.id)}
+              onNodeClick={(_, node) => onSelect(node.id)}
               onPaneClick={() => onSelect(null)}
               proOptions={{ hideAttribution: true }}
               defaultEdgeOptions={defaultEdgeOptions}

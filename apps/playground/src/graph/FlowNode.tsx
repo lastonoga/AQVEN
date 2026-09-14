@@ -84,31 +84,31 @@ export function FlowNode({ data, selected }: NodeProps<FlowNodeType>) {
   return (
     <div className={shell} style={{ width: NODE_WIDTH }}>
       <InputPorts inputs={data.inputs} />
-      <div className="flex items-center gap-1.5 border-b border-slate-800 px-2.5 py-1.5">
+      <div className="flex items-center gap-1.5 border-b border-slate-800 px-3.5 py-2">
         {step !== null && (
-          <span className="rounded-sm bg-slate-800 px-1 py-0.5 font-mono text-[11px] font-bold leading-none tabular-nums text-slate-300">
+          <span className="rounded-sm bg-slate-800 px-1 py-0.5 font-mono text-[12.5px] font-bold leading-none tabular-nums text-slate-300">
             {step}
           </span>
         )}
-        <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] leading-none ring-1 ${style.badge}`}>
+        <span className={`inline-flex items-center gap-1 rounded px-1.5 py-1 font-mono text-[11px] leading-none ring-1 ${style.badge}`}>
           <KindGlyph shape={style.shape} />
           {style.label}
         </span>
-        <span className="ml-auto truncate text-[10px] text-slate-500">{style.title}</span>
+        <span className="ml-auto truncate text-[11px] text-slate-500">{style.title}</span>
       </div>
 
-      <div className="px-2.5 pt-1.5">
-        <div className="truncate font-mono text-[13px] font-semibold text-slate-100">{data.label}</div>
-        <div className="mt-0.5 line-clamp-2 text-[10.5px] leading-[1.3] text-slate-400">
+      <div className="px-3.5 pt-2">
+        <div className="truncate font-mono text-[15px] font-semibold text-slate-100">{data.label}</div>
+        <div className="mt-1 line-clamp-2 text-[12px] leading-[1.35] text-slate-400">
           {data.description === "" ? "без описания" : data.description}
         </div>
       </div>
 
-      <div className="mt-1.5 grid grid-cols-2 gap-x-2 px-2.5">
+      <div className="mt-2.5 grid grid-cols-2 gap-x-3 px-3.5">
         {data.facts.slice(0, 2).map((fact) => (
           <div key={fact.label} className="min-w-0">
-            <div className="truncate text-[9px] uppercase tracking-wide text-slate-500">{fact.label}</div>
-            <div className="truncate font-mono text-[11px] text-slate-200">{fact.value}</div>
+            <div className="truncate text-[10px] uppercase tracking-wide text-slate-500">{fact.label}</div>
+            <div className="truncate font-mono text-[12.5px] text-slate-200">{fact.value}</div>
           </div>
         ))}
       </div>
@@ -116,14 +116,14 @@ export function FlowNode({ data, selected }: NodeProps<FlowNodeType>) {
       {data.nested !== null && <NestedCard nested={data.nested} />}
 
       {data.note !== "" && (
-        <div className="mt-1.5 truncate px-2.5 font-mono text-[9.5px] text-amber-400/80">{data.note}</div>
+        <div className="mt-2 truncate px-3.5 font-mono text-[11px] text-amber-400/80">{data.note}</div>
       )}
 
-      <div className="mt-auto flex items-center gap-1.5 border-t border-slate-800 px-2.5 py-1 pt-1.5">
-        <span className="text-[9px] uppercase tracking-wide text-slate-500">вход</span>
-        <span className="font-mono text-[10px] text-slate-300">{data.inputs.length}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-500">{sourcesText(data.inputs)}</span>
-        <span className="shrink-0 font-mono text-[10px] text-emerald-300/80">→ {data.outputType}</span>
+      <div className="mt-auto flex items-center gap-2 border-t border-slate-800 px-3.5 py-1.5 pt-2">
+        <span className="text-[10px] uppercase tracking-wide text-slate-500">вход</span>
+        <span className="font-mono text-[11.5px] text-slate-300">{data.inputs.length}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-slate-500">{sourcesText(data.inputs)}</span>
+        <span className="shrink-0 font-mono text-[11.5px] text-emerald-300/80">→ {data.outputType}</span>
       </div>
       <OutputPort />
     </div>

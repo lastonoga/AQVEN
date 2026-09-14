@@ -3,13 +3,13 @@ import { GROUP_HEADER, overlaps } from "./layout.js"
 import type { EdgeAnchor, Point, RouteGeometry } from "./edge-route.js"
 import type { Rect, Size } from "./layout.js"
 
-export const LABEL_CHAR = 5.7
-export const LABEL_PAD_X = 6
-export const LABEL_PAD_Y = 3
+export const LABEL_CHAR = 6.6
+export const LABEL_PAD_X = 7
+export const LABEL_PAD_Y = 4
 export const LABEL_BORDER = 1
-export const LABEL_TEXT = 10
+export const LABEL_TEXT = 11
 export const LABEL_GAP = 6
-export const LABEL_MAX_CHARS = 18
+export const LABEL_MAX_CHARS = 30
 export const LABEL_HEIGHT = LABEL_TEXT + LABEL_PAD_Y * 2 + LABEL_BORDER * 2
 export const LABEL_RING = LABEL_HEIGHT + LABEL_GAP
 export const LABEL_RINGS = 2
@@ -21,6 +21,8 @@ const MIN_SEGMENT = CORNER * 2 + 2
 const HALF = 0.5
 const LEAD = 42
 const SIDES: readonly number[] = [-1, 1]
+
+export type Placed = { center: Point; anchor: Point }
 
 export type LabelTarget = {
   id: string
@@ -133,10 +135,12 @@ const ranked = (chain: readonly Point[], anchor: EdgeAnchor, skip: number): Spot
   )
 }
 
-const centresOf = (spots: readonly Spot[], size: Size): Point[] => {
+const centresOf = (spots: readonly Spot[], size: Size): Placed[] => {
   const rings = Array.from({ length: LABEL_RINGS }, (_, index) => index)
   return rings.flatMap((ring) =>
-    spots.flatMap((spot) => SIDES.map((side) => beside(spot, size, side, ring))),
+    spots.flatMap((spot) =>
+      SIDES.map((side) => ({ center: beside(spot, size, side, ring), anchor: spot.point })),
+    ),
   )
 }
 
@@ -149,24 +153,24 @@ export const placeLabel = (
   target: LabelTarget,
   obstacles: readonly Rect[],
   taken: readonly Rect[],
-): Point | null => {
+): Placed | null => {
   const size = labelSize(target.text)
   const tries = passesOf(target.chain, target.anchor).flatMap((skip) =>
     centresOf(ranked(target.chain, target.anchor, skip), size),
   )
-  return tries.find((center) => clear(labelRect(center, target.text), obstacles, taken)) ?? null
+  return tries.find((placed) => clear(labelRect(placed.center, target.text), obstacles, taken)) ?? null
 }
 
 export const placeLabels = (
   targets: readonly LabelTarget[],
   obstacles: readonly Rect[],
-): Map<string, Point | null> => {
+): Map<string, Placed | null> => {
   const taken: Rect[] = []
-  const spots = new Map<string, Point | null>()
+  const spots = new Map<string, Placed | null>()
   for (const target of targets) {
-    const center = placeLabel(target, obstacles, taken)
-    spots.set(target.id, center)
-    if (center !== null) taken.push(labelRect(center, target.text))
+    const placed = placeLabel(target, obstacles, taken)
+    spots.set(target.id, placed)
+    if (placed !== null) taken.push(labelRect(placed.center, target.text))
   }
   return spots
 }

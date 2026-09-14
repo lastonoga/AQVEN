@@ -2,7 +2,7 @@ import { expandIr, rootEdgesOf, rootNodesOf } from "./expand.js"
 import { rankNodes } from "./ranks.js"
 import { toFlowEdge } from "./edges.js"
 import { columnsOf } from "./layout.js"
-import { canvasKindOf, fallbackSize, groupIdsOf, placeGraph } from "./frame-layout.js"
+import { canvasKindOf, collapsibleIdsOf, fallbackSize, groupIdsOf, placeGraph } from "./frame-layout.js"
 import type { Edge } from "@xyflow/react"
 import type { Ir } from "../api/types.js"
 import type { CanvasKind } from "./frame-layout.js"
@@ -21,6 +21,7 @@ export type Scene = {
   rootIds: string[]
   rootOf: Map<string, string>
   groupIds: string[]
+  collapsibleIds: string[]
 }
 
 export type Frame = {
@@ -39,6 +40,7 @@ export const buildScene = (ir: Ir): Scene => {
     rootIds: roots.map((node) => node.id),
     rootOf: new Map(graph.nodes.map((node) => [node.id, node.rootId])),
     groupIds: groupIdsOf(graph),
+    collapsibleIds: collapsibleIdsOf(graph),
   }
 }
 
@@ -82,7 +84,14 @@ const toCanvasNode = (
       ...shared,
       type: "wfgroup",
       style: { width: size.width, height: size.height },
-      data: { label: node.label, kind: node.kind, stage, group: node.group, collapsed },
+      data: {
+        label: node.label,
+        kind: node.kind,
+        stage,
+        group: node.group,
+        collapsed,
+        collapsible: node.group.leaves > 1,
+      },
     }
   }
   return {
