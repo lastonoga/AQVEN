@@ -5,7 +5,7 @@ import { ValueView } from "../components/ValueView.js"
 import { useRun } from "../run/use-run.js"
 import { RunOverlayProvider, overlayOf } from "../run/node-status.js"
 import { formatClock, formatMs, formatStamp, nodeTones, runLabels, runTones } from "../run/styles.js"
-import { flowHref, runsHref } from "../routing/route.js"
+import { flowHref, flowRunHref, runsHref } from "../routing/route.js"
 import type { ApiClient, Render, Run, RunEvent } from "../api/index.js"
 import type { RunNodeView, RunView } from "../run/events.js"
 
@@ -76,6 +76,14 @@ function Header({ run, view, runId, now }: { run: Run | null; view: RunView; run
         {run !== null && (
           <a className="font-mono text-[12px] text-sky-400 hover:underline" href={flowHref(run.flow)}>
             {run.flow}
+          </a>
+        )}
+        {run !== null && (
+          <a
+            className="font-mono text-[11px] text-slate-400 hover:text-slate-200 hover:underline"
+            href={flowRunHref(run.flow, runId)}
+          >
+            по схематике
           </a>
         )}
         <a className="font-mono text-[11px] text-slate-500 hover:underline" href={runsHref}>

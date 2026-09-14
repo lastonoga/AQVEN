@@ -1,26 +1,19 @@
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { formatBytes } from "../refs/index.js"
+import { formatBytes, previewLabel } from "../refs/index.js"
+import { MediaValue } from "./MediaValue.js"
+import { NO_HINT, factsOf, plural, summaryOf } from "../values/index.js"
 import type { RefValue } from "../refs/index.js"
+import type { ValueHint } from "../values/index.js"
 
 const OPEN_DEPTH = 1
 const PREVIEW_ROWS = 6
 const MAX_ROWS = 500
 const STRING_LIMIT = 2048
-const SUMMARY_CHARS = 48
 
 const encoder = new TextEncoder()
 
 const byteLength = (text: string): number => encoder.encode(text).length
-
-const plural = (count: number, one: string, few: string, many: string): string => {
-  const teens = count % 100
-  if (teens >= 11 && teens <= 14) return many
-  const last = count % 10
-  if (last === 1) return one
-  if (last >= 2 && last <= 4) return few
-  return many
-}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -110,9 +103,13 @@ function Branch({ label, entries, depth }: BranchProps) {
 const indexed = (value: readonly unknown[]): ReadonlyArray<[string, unknown]> =>
   value.map((item, index): [string, unknown] => [`[${index}]`, item])
 
-export function ValueView({ value, depth = 0 }: { value: unknown; depth?: number }): ReactNode {
+export type ValueViewProps = { value: unknown; depth?: number; hint?: ValueHint }
+
+export function ValueView({ value, depth = 0, hint = NO_HINT }: ValueViewProps): ReactNode {
   if (value === undefined) return <Muted text="—" />
   if (value === null) return <Muted text="null" />
+  const facts = factsOf(value, hint)
+  if (facts.media !== null) return <MediaValue media={facts.media} kind={facts.kind} />
   if (typeof value === "string") return <StringValue value={value} />
   if (Array.isArray(value)) {
     if (value.length === 0) return <Muted text="пустой массив" />
@@ -128,19 +125,9 @@ export function ValueView({ value, depth = 0 }: { value: unknown; depth?: number
   return <Scalar value={value} />
 }
 
-const clip = (text: string): string => (text.length <= SUMMARY_CHARS ? text : `${text.slice(0, SUMMARY_CHARS - 1)}…`)
-
 export const valueSummary = (value: unknown): string => {
-  if (value === undefined) return "—"
   if (value === null) return "null"
-  if (typeof value === "string") return clip(value)
-  if (Array.isArray(value)) return `массив · ${value.length}`
-  if (isRecord(value)) {
-    const keys = Object.keys(value)
-    if (keys.length === 0) return "{}"
-    return clip(`{ ${keys.join(", ")} }`)
-  }
-  return clip(String(value))
+  return summaryOf(factsOf(value))
 }
 
 export function ValuePreview({ value }: { value: unknown }) {
@@ -159,7 +146,7 @@ export function RunValueView({ found, reason }: { found: RefValue | null; reason
     <div className="flex min-w-0 flex-col gap-1">
       <ValueView value={found.value} />
       <span className="font-mono text-[10px] text-slate-600">
-        {[formatBytes(found.preview.totalBytes), note, found.lifted ? "подъём [*]" : ""]
+        {[previewLabel(found.preview), note, found.lifted ? "подъём [*]" : ""]
           .filter((part) => part !== "")
           .join(" · ")}
       </span>

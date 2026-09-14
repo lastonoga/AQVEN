@@ -96,6 +96,8 @@ const varyOf = (body: IrNode): VaryAxis | null => {
 
 type RoleRef = { role: string; component: string }
 
+type Part = { id: string; label: string; component: string; role: string; variant: string }
+
 const componentRef = (value: unknown): string | null =>
   isRecord(value) && typeof value["component"] === "string" ? value["component"] : null
 
@@ -121,10 +123,21 @@ const hasArrayParam = (body: IrNode): boolean => {
   return Object.values(params).some((value) => Array.isArray(value))
 }
 
-const branchLabels = (total: number, vary: VaryAxis | null): string[] => {
-  if (vary === null) return Array.from({ length: total }, (_, index) => `ветка ${index + 1}`)
-  return Array.from({ length: total }, (_, index) => `${vary.key} = ${vary.values[index] ?? index + 1}`)
+type Branch = { name: string; variant: string }
+
+const variantOf = (vary: VaryAxis | null, index: number): string => {
+  if (vary === null) return ""
+  return `${vary.key} = ${vary.values[index] ?? index + 1}`
 }
+
+const branchesOf = (total: number, vary: VaryAxis | null): Branch[] =>
+  Array.from({ length: total }, (_, index) => ({
+    name: `ветка ${index + 1}`,
+    variant: variantOf(vary, index),
+  }))
+
+const branchEdgeLabel = (branch: Branch): string =>
+  branch.variant === "" ? branch.name : branch.variant
 
 const varyNote = (vary: VaryAxis | null): string =>
   vary === null ? "" : `${vary.key}: ${vary.values.join(", ")}`
@@ -241,42 +254,46 @@ class Expansion {
     return id
   }
 
-  private emitOpaque(parentId: string, id: string, label: string, component: string): void {
+  private emitOpaque(parentId: string, part: Part): void {
+    const variant = part.variant === "" ? [] : [{ label: "вариация", value: part.variant }]
     this.push({
-      id,
-      label,
+      id: part.id,
+      label: part.label,
       parentId,
-      rootId: id,
+      rootId: part.id,
       depth: 0,
       kind: "call",
       note: "тело компонента не объявлено",
-      info: { ...EMPTY_INFO, facts: [{ label: "компонент", value: component }] },
+      info: {
+        ...EMPTY_INFO,
+        facts: [{ label: "компонент", value: part.component }, ...variant],
+      },
       group: null,
       body: null,
     })
   }
 
-  private emitComponentGroup(parentId: string, id: string, label: string, component: string, role: string): void {
-    const name = this.resolveComponent(component)
+  private emitComponentGroup(parentId: string, part: Part): void {
+    const name = this.resolveComponent(part.component)
     const declared = this.ir.components[name]
-    if (declared === undefined) return this.emitOpaque(parentId, id, label, name)
-    this.inScope({}, () => this.emitLevel(id, `${id}/`, declared.nodes))
+    if (declared === undefined) return this.emitOpaque(parentId, { ...part, component: name })
+    this.inScope({}, () => this.emitLevel(part.id, `${part.id}/`, declared.nodes))
     this.push({
-      id,
-      label,
+      id: part.id,
+      label: part.label,
       parentId,
-      rootId: id,
+      rootId: part.id,
       depth: 0,
       kind: "call",
       note: "",
       info: { ...EMPTY_INFO, outputType: declared.out.type },
       group: {
         component: name,
-        role,
+        role: part.role,
         parallel: false,
         branches: 0,
         leaves: 0,
-        badge: "",
+        badge: part.variant,
         note: declared.out.from,
       },
       body: null,
@@ -378,14 +395,19 @@ class Expansion {
     total: number,
     vary: VaryAxis | null,
   ): GroupInfo {
-    const labels = branchLabels(total, vary)
     const split = this.emitFan(id, `${id}/split`, "fanout", "разветвление", `${role.component} ×${total}`)
     const join = this.emitFan(id, `${id}/join`, "fanin", "сведение", `${component} → массив`)
-    labels.forEach((label, index) => {
-      const branch = `${id}/b${index}`
-      this.emitComponentGroup(id, branch, label, role.component, role.role)
-      this.link(split, branch, "fanout", label)
-      this.link(branch, join, "fanin", "")
+    branchesOf(total, vary).forEach((branch, index) => {
+      const at = `${id}/b${index}`
+      this.emitComponentGroup(id, {
+        id: at,
+        label: branch.name,
+        component: role.component,
+        role: role.role,
+        variant: branch.variant,
+      })
+      this.link(split, at, "fanout", branchEdgeLabel(branch))
+      this.link(at, join, "fanin", "")
     })
     return {
       component,
@@ -402,10 +424,10 @@ class Expansion {
     const split = this.emitFan(id, `${id}/split`, "fanout", "разветвление", `ролей ${roles.length}`)
     const join = this.emitFan(id, `${id}/join`, "fanin", "сведение", component)
     roles.forEach((role, index) => {
-      const branch = `${id}/r${index}`
-      this.emitComponentGroup(id, branch, role.role, role.component, role.role)
-      this.link(split, branch, "fanout", role.role)
-      this.link(branch, join, "fanin", "")
+      const at = `${id}/r${index}`
+      this.emitComponentGroup(id, { id: at, label: role.role, ...role, variant: "" })
+      this.link(split, at, "fanout", role.role)
+      this.link(at, join, "fanin", "")
     })
     return {
       component,
@@ -420,9 +442,9 @@ class Expansion {
 
   private expandChain(id: string, component: string, roles: readonly RoleRef[]): GroupInfo {
     roles.forEach((role, index) => {
-      const branch = `${id}/r${index}`
-      this.emitComponentGroup(id, branch, role.role, role.component, role.role)
-      if (index > 0) this.link(`${id}/r${index - 1}`, branch, "data", "")
+      const at = `${id}/r${index}`
+      this.emitComponentGroup(id, { id: at, label: role.role, ...role, variant: "" })
+      if (index > 0) this.link(`${id}/r${index - 1}`, at, "data", "")
     })
     return {
       component,
@@ -441,14 +463,19 @@ class Expansion {
     total: number,
     vary: VaryAxis | null,
   ): GroupInfo {
-    const labels = branchLabels(total, vary)
     const split = this.emitFan(id, `${id}/split`, "fanout", "разветвление", `${component} ×${total}`)
     const join = this.emitFan(id, `${id}/join`, "fanin", "сведение", component)
-    labels.forEach((label, index) => {
-      const branch = `${id}/b${index}`
-      this.emitOpaque(id, branch, label, component)
-      this.link(split, branch, "fanout", label)
-      this.link(branch, join, "fanin", "")
+    branchesOf(total, vary).forEach((branch, index) => {
+      const at = `${id}/b${index}`
+      this.emitOpaque(id, {
+        id: at,
+        label: branch.name,
+        component,
+        role: "ветка",
+        variant: branch.variant,
+      })
+      this.link(split, at, "fanout", branchEdgeLabel(branch))
+      this.link(at, join, "fanin", "")
     })
     return {
       component,

@@ -106,6 +106,28 @@ describe("сцена React Flow собирается корректно", () => 
     }
   })
 
+  test.each(every.map((flow) => [flow.id, flow] as const))("%s: слои идут по глубине", (_id, flow) => {
+    const scene = buildScene(flow.ir)
+    const frame = frameOf(flow.ir, new Set())
+    const layer = new Map(frame.nodes.map((node) => [node.id, node.zIndex ?? 0]))
+    const depth = new Map(scene.graph.nodes.map((node) => [node.id, node.depth]))
+    const groups = frame.nodes.filter((node) => node.type === "wfgroup")
+
+    for (const node of frame.nodes) {
+      if (node.parentId === undefined) continue
+      expect(layer.get(node.id) ?? 0).toBeGreaterThan(layer.get(node.parentId) ?? 0)
+    }
+
+    for (const edge of frame.edges) {
+      const own = edge.zIndex ?? 0
+      const level = Math.min(depth.get(edge.source) ?? 0, depth.get(edge.target) ?? 0)
+      expect(own).toBeLessThan(layer.get(edge.source) ?? 0)
+      expect(own).toBeLessThan(layer.get(edge.target) ?? 0)
+      const covered = groups.filter((group) => (depth.get(group.id) ?? 0) >= level)
+      for (const group of covered) expect(own).toBeLessThan(layer.get(group.id) ?? 0)
+    }
+  })
+
   test.each(every.map((flow) => [flow.id, flow] as const))("%s: рёбра получили маркеры", (_id, flow) => {
     const frame = frameOf(flow.ir, new Set())
     for (const edge of frame.edges) {

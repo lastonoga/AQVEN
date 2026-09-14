@@ -12,6 +12,8 @@ import {
 } from "@xyflow/react"
 import type { Edge } from "@xyflow/react"
 import { buildFrame, buildScene } from "./scene.js"
+import { placeGraph } from "./frame-layout.js"
+import { labelEdges } from "./edges.js"
 import { defaultEdgeOptions, edgeTypes } from "./edge-types.js"
 import { toggleIn, GroupCollapseProvider } from "./collapse.js"
 import { FlowNode } from "./FlowNode.js"
@@ -76,13 +78,22 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
   }, [scene])
 
   const frame = useMemo(() => buildFrame(scene, collapsed, measured), [scene, collapsed, measured])
+  const labelled = useMemo(
+    () =>
+      labelEdges(
+        frame.edges,
+        placeGraph(scene.graph, collapsed, measured).layout.rects,
+        new Set(scene.groupIds.filter((id) => !collapsed.has(id))),
+      ),
+    [frame, scene, collapsed, measured],
+  )
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasNode>(frame.nodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(frame.edges)
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(labelled)
 
   useEffect(() => {
     setNodes(frame.nodes)
-    setEdges(frame.edges)
-  }, [frame, setNodes, setEdges])
+    setEdges(labelled)
+  }, [frame, labelled, setNodes, setEdges])
 
   const initialized = useNodesInitialized()
 
@@ -145,6 +156,7 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
               minZoom={MIN_ZOOM}
               maxZoom={2}
               colorMode="dark"
+              zIndexMode="manual"
             >
               <StageColumns columns={frame.columns} />
               <Background color="#1e293b" gap={20} />

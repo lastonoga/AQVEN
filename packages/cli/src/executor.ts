@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto"
+import { makeMedia, mimeOfName, mimeOfType } from "./media.js"
 import type { Ir } from "@wf/synth"
+import type { MediaContext, MediaEnvelope } from "./media.js"
 import type { Run, RunEvent, RunStatus, ServerEvent } from "./events.js"
 import type { RunsRepository } from "./runs-db.js"
 
@@ -36,6 +38,7 @@ type HandlerContext = {
   scope: Scope
   inputs: Record<string, unknown>
   required: string[][]
+  media: MediaContext
   progress: (payload: Record<string, unknown>) => void
 }
 
@@ -132,7 +135,31 @@ const round2 = (n: number): number => Math.round(n * 100) / 100
 const snake = (name: string): string =>
   name.replace(/\[\]$/, "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()
 
-type Rule<T> = { match: (key: string) => boolean; make: (rnd: () => number, key: string) => T }
+export type Stub = {
+  rnd: () => number
+  emit: (mime: string, label: string) => MediaEnvelope
+  media: MediaContext
+}
+
+const hex8 = (value: number): string => value.toString(16).padStart(8, "0")
+
+const stubOf = (seed: string, media: MediaContext): Stub => {
+  const rnd = mulberry32(fnv1a(seed))
+  let issued = 0
+  return {
+    rnd,
+    media,
+    emit: (mime, label) => {
+      issued += 1
+      return makeMedia(media, hex8(fnv1a(`${seed}|${label}|${issued}`)), mime, label, rnd)
+    },
+  }
+}
+
+type Rule<T> = {
+  match: (key: string, raw: string) => boolean
+  make: (stub: Stub, key: string, raw: string) => T
+}
 
 const OBJECT_KEYS = new Set([
   "best",
@@ -149,69 +176,72 @@ const OBJECT_KEYS = new Set([
 ])
 
 const SCALAR_RULES: Rule<unknown>[] = [
-  { match: (k) => k.endsWith("id"), make: (rnd, k) => `${snake(k)}_${hex6(rnd)}` },
-  { match: (k) => k.includes("score") || k.includes("rating") || k.includes("confidence"), make: (rnd) => round2(rnd()) },
-  { match: (k) => k.includes("count") || k.includes("index") || k.includes("total"), make: (rnd) => Math.floor(rnd() * 10) },
+  { match: (k) => k.endsWith("id"), make: (s, k) => `${snake(k)}_${hex6(s.rnd)}` },
+  { match: (k) => k.includes("score") || k.includes("rating") || k.includes("confidence"), make: (s) => round2(s.rnd()) },
+  { match: (k) => k.includes("count") || k.includes("index") || k.includes("total"), make: (s) => Math.floor(s.rnd() * 10) },
   { match: (k) => k.includes("decision") || k.includes("verdict"), make: () => "accept" },
-  { match: (k) => k.startsWith("is") || k.startsWith("has"), make: (rnd) => rnd() > 0.5 },
-  { match: (k) => OBJECT_KEYS.has(k), make: (rnd, k) => objectOfType(k, rnd) },
+  { match: (k) => k.startsWith("is") || k.startsWith("has"), make: (s) => s.rnd() > 0.5 },
+  { match: (_k, raw) => mimeOfName(raw) !== "", make: (s, _k, raw) => s.emit(mimeOfName(raw), raw) },
+  { match: (k) => OBJECT_KEYS.has(k), make: (s, k) => objectOfType(k, s) },
 ]
 
-const DEFAULT_SCALAR: Rule<unknown> = { match: () => true, make: (rnd) => sentence(rnd) }
+const DEFAULT_SCALAR: Rule<unknown> = { match: () => true, make: (s) => sentence(s.rnd) }
 
-const scalarFor = (key: string, rnd: () => number): unknown => {
+const scalarFor = (key: string, stub: Stub): unknown => {
   const lower = key.toLowerCase()
-  const rule = SCALAR_RULES.find((r) => r.match(lower)) ?? DEFAULT_SCALAR
-  return rule.make(rnd, lower)
+  const rule = SCALAR_RULES.find((r) => r.match(lower, key)) ?? DEFAULT_SCALAR
+  return rule.make(stub, lower, key)
 }
 
 const TYPE_RULES: Rule<unknown>[] = [
-  { match: (t) => t.endsWith("text") || t.endsWith("string") || t.endsWith("message"), make: (rnd) => sentence(rnd) },
+  { match: (t) => t.endsWith("text") || t.endsWith("string") || t.endsWith("message"), make: (s) => sentence(s.rnd) },
   { match: (t) => t.endsWith("decision") || t.endsWith("status"), make: () => "accept" },
-  { match: (t) => t.endsWith("number") || t.endsWith("count") || t.endsWith("score"), make: (rnd) => round2(rnd() * 10) },
-  { match: (t) => t.endsWith("bool") || t.endsWith("boolean") || t.endsWith("flag"), make: (rnd) => rnd() > 0.5 },
+  { match: (t) => t.endsWith("number") || t.endsWith("count") || t.endsWith("score"), make: (s) => round2(s.rnd() * 10) },
+  { match: (t) => t.endsWith("bool") || t.endsWith("boolean") || t.endsWith("flag"), make: (s) => s.rnd() > 0.5 },
 ]
 
-function objectOfType(typeName: string, rnd: () => number): Record<string, unknown> {
+function objectOfType(typeName: string, stub: Stub): Record<string, unknown> {
   return {
     _type: typeName,
     _stub: true,
-    id: `${snake(typeName)}_${hex6(rnd)}`,
-    title: sentence(rnd),
-    score: round2(rnd()),
+    id: `${snake(typeName)}_${hex6(stub.rnd)}`,
+    title: sentence(stub.rnd),
+    score: round2(stub.rnd()),
   }
 }
 
-const valueOfType = (typeName: string, rnd: () => number): unknown => {
+const valueOfType = (typeName: string, stub: Stub): unknown => {
   if (typeName.endsWith("[]")) {
     const base = typeName.slice(0, -2)
-    return Array.from({ length: MAP_ITEMS }, () => valueOfType(base, rnd))
+    return Array.from({ length: MAP_ITEMS }, () => valueOfType(base, stub))
   }
-  const rule = TYPE_RULES.find((r) => r.match(typeName.toLowerCase()))
-  if (rule) return rule.make(rnd, typeName)
-  return objectOfType(typeName, rnd)
+  const mime = mimeOfType(stub.media.types, typeName)
+  if (mime !== "") return stub.emit(mime, typeName)
+  const rule = TYPE_RULES.find((r) => r.match(typeName.toLowerCase(), typeName))
+  if (rule) return rule.make(stub, typeName, typeName)
+  return objectOfType(typeName, stub)
 }
 
-const ensurePath = (target: unknown, path: string[], rnd: () => number): void => {
+const ensurePath = (target: unknown, path: string[], stub: Stub): void => {
   const head = path[0]
   if (head === undefined) return
   if (Array.isArray(target)) {
-    for (const item of target) ensurePath(item, path, rnd)
+    for (const item of target) ensurePath(item, path, stub)
     return
   }
   if (!isRecord(target)) return
   if (head === "*") {
-    ensurePath(target, path.slice(1), rnd)
+    ensurePath(target, path.slice(1), stub)
     return
   }
   if (path.length === 1) {
     if (head in target) return
-    target[head] = scalarFor(head, rnd)
+    target[head] = scalarFor(head, stub)
     return
   }
   const next = isRecord(target[head]) ? target[head] : {}
   target[head] = next
-  ensurePath(next, path.slice(1), rnd)
+  ensurePath(next, path.slice(1), stub)
 }
 
 const typeNameOf = (node: IrNode, fallback: string): string => {
@@ -222,10 +252,16 @@ const typeNameOf = (node: IrNode, fallback: string): string => {
   return fallback
 }
 
-const generate = (key: string, typeName: string, inputs: unknown, required: string[][]): unknown => {
-  const rnd = mulberry32(fnv1a(`${key}|${typeName}|${stableJson(inputs)}`))
-  const value = valueOfType(typeName, rnd)
-  for (const path of required) ensurePath(value, path, rnd)
+const generate = (
+  key: string,
+  typeName: string,
+  inputs: unknown,
+  required: string[][],
+  media: MediaContext,
+): unknown => {
+  const stub = stubOf(`${key}|${typeName}|${stableJson(inputs)}`, media)
+  const value = valueOfType(typeName, stub)
+  for (const path of required) ensurePath(value, path, stub)
   return value
 }
 
@@ -370,7 +406,7 @@ const nodeInputs = (node: IrNode, scope: Scope): Record<string, unknown> => ({
 })
 
 const stubOutput = (ctx: HandlerContext, type: string): unknown =>
-  generate(ctx.nodeId, type, ctx.inputs, ctx.required)
+  generate(ctx.nodeId, type, ctx.inputs, ctx.required, ctx.media)
 
 const settle = async (ctx: HandlerContext): Promise<void> => {
   await sleep(delayFor(`${ctx.nodeId}|${stableJson(ctx.inputs)}`))
@@ -460,7 +496,7 @@ const mapHandler: Handler = async (ctx) => {
     const scope: Scope = { input: ctx.scope.input, values: { ...ctx.scope.values, item } }
     const inputs = resolveSlots(inner["in"], scope)
     await sleep(delayFor(`${ctx.nodeId}#${index}`))
-    const value = generate(`${ctx.nodeId}#${index}`, itemType, inputs, [])
+    const value = generate(`${ctx.nodeId}#${index}`, itemType, inputs, [], ctx.media)
     output.push(value)
     ctx.progress({ index, total: taken.length, source: items.length, output: value })
   }
@@ -569,11 +605,11 @@ export function describeFlowInput(ir: Ir): InputSchema {
     }
   }
 
-  const rnd = mulberry32(fnv1a(`${ir.flow}|${ir.input}`))
+  const stub = stubOf(`${ir.flow}|${ir.input}`, { types: ir.types, store: null })
   const example: Record<string, unknown> = {}
   for (const field of used.keys()) {
     if (field === "(весь вход)") continue
-    ensurePath(example, field.split("."), rnd)
+    ensurePath(example, field.split("."), stub)
   }
 
   return {
@@ -614,6 +650,22 @@ export class Executor {
     const message = error instanceof Error ? error.message : String(error)
     this.db.finishRun(run.id, "error", Date.now())
     this.record(run.id, "run_fail", undefined, { message })
+  }
+
+  private mediaFor(runId: string, nodeId: string, ir: Ir): MediaContext {
+    return {
+      types: ir.types,
+      store: (blob) =>
+        this.db.saveBlob({
+          id: blob.id,
+          runId,
+          nodeId,
+          mime: blob.mime,
+          name: blob.name,
+          bytes: blob.body.length,
+          body: blob.body,
+        }),
+    }
   }
 
   private record(runId: string, type: string, nodeId: string | undefined, payload: unknown): void {
@@ -685,6 +737,7 @@ export class Executor {
         scope,
         inputs,
         required: requiredPathsOf(ir, nodeId),
+        media: this.mediaFor(run.id, nodeId, ir),
         progress: (payload) => emit("node_progress", nodeId, payload),
       }
 
