@@ -108,9 +108,7 @@ const fromMap = (bag: Readonly<Record<string, unknown>>): Array<[string, TypeEnt
   Object.entries(bag).map(([id, raw]): [string, TypeEntry] => [id, readEntry(id, raw)])
 
 export const readRegistry = (ir: Ir | null): TypeRegistry => {
-  if (ir === null) return {}
-  const bag: Record<string, unknown> = ir
-  const source = bag["types"]
+  const source = ir?.types
   if (Array.isArray(source)) return Object.fromEntries(fromArray(source))
   if (isRecord(source)) return Object.fromEntries(fromMap(source))
   return {}

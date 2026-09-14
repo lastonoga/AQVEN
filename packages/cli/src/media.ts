@@ -1,3 +1,8 @@
+import { textAt } from "./ir-types.js"
+import type { TypeCatalog } from "./ir-types.js"
+
+export type { TypeFacts, TypeCatalog } from "./ir-types.js"
+
 export type MediaBlob = {
   id: string
   mime: string
@@ -15,8 +20,6 @@ export type MediaEnvelope = {
   bytes: number
   note?: string
 }
-
-export type TypeFacts = { kind?: string; schema?: Record<string, unknown> }
 
 export const BLOB_ROUTE = "/api/blobs"
 
@@ -52,12 +55,7 @@ const startsWithStem = (stem: string, name: string): boolean => {
 export const mimeOfName = (name: string): string =>
   KEY_MIMES.find(([stem]) => startsWithStem(stem, name))?.[1] ?? ""
 
-const textAt = (bag: Record<string, unknown>, key: string): string => {
-  const value = bag[key]
-  return typeof value === "string" ? value : ""
-}
-
-export const mimeOfType = (types: Record<string, TypeFacts> | undefined, name: string): string => {
+export const mimeOfType = (types: TypeCatalog | undefined, name: string): string => {
   const entry = types?.[name]
   const schema = entry?.schema
   const declared = schema === undefined ? "" : textAt(schema, "contentMediaType")
@@ -157,7 +155,7 @@ const substituted = (declared: string, actual: string): string | undefined => {
 }
 
 export type MediaContext = {
-  types?: Record<string, TypeFacts>
+  types?: TypeCatalog
   store: MediaStore | null
 }
 

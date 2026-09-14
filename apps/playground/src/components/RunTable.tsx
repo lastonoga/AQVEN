@@ -2,17 +2,20 @@ import { useCallback, useMemo, useState } from "react"
 import { kindStyle } from "../graph/kinds.js"
 import { formatMs, nodeTones } from "../run/styles.js"
 import { ValueCell } from "./ValueCell.js"
+import { deltaOf } from "../values/index.js"
 import { buildTable, filtered, GLYPHS, SIGNAL_LABELS, SIGNAL_TONES } from "./run-table.js"
 import { buildSteps, formatTokens, formatUsd } from "./run-steps.js"
 import type { Column, SignalKind, Table, TableRow } from "./run-table.js"
 import type { RunStep } from "./run-steps.js"
-import type { Render, Run } from "../api/index.js"
+import type { DeltaKind } from "../values/index.js"
+import type { Ir, Render, Run } from "../api/index.js"
 import type { RunView } from "../run/events.js"
 
 type Props = {
   view: RunView
   run: Run | null
   renders: Readonly<Record<string, Render>>
+  ir: Ir | null
   selectedId: string | null
   onSelectNode?: (nodeId: string) => void
 }
@@ -27,14 +30,36 @@ const WIDTHS: Readonly<Record<Column, string>> = {
   checks: "3.25rem",
 }
 
+const DELTA_TONES: Readonly<Record<DeltaKind, string>> = {
+  same: "text-slate-600",
+  added: "text-emerald-400",
+  removed: "text-amber-400",
+  changed: "text-sky-400",
+  reshaped: "text-violet-400",
+  error: "text-red-400",
+  empty: "text-amber-400",
+}
+
+const DELTA_GLYPHS: Readonly<Record<DeltaKind, string>> = {
+  same: "=",
+  added: "+",
+  removed: "-",
+  changed: "~",
+  reshaped: "≠",
+  error: "✗",
+  empty: "∅",
+}
+
 const templateOf = (columns: ReadonlySet<Column>): string =>
   [
     "1.5rem",
     "2rem",
-    "minmax(0,17rem)",
+    "minmax(0,14rem)",
+    "minmax(0,8rem)",
     "minmax(0,1fr)",
-    "minmax(0,11rem)",
-    "minmax(0,11rem)",
+    "1.5rem",
+    "minmax(0,1fr)",
+    "minmax(0,1fr)",
     ...(Object.keys(WIDTHS) as Column[]).flatMap((column) => (columns.has(column) ? [WIDTHS[column]] : [])),
   ].join(" ")
 
@@ -106,6 +131,8 @@ function Head({ columns, span }: { columns: ReadonlySet<Column>; span: number | 
       <span>шаг</span>
       <span>{span === null ? "когда" : <Scale span={span} />}</span>
       <span>вход</span>
+      <span />
+      <span>промт</span>
       <span>выход</span>
       {columns.has("tokens") && <span className="text-right">ткн</span>}
       {columns.has("cost") && <span className="text-right">$</span>}
@@ -134,14 +161,34 @@ function Bar({ row }: { row: TableRow }) {
   )
 }
 
+function Prompt({ text }: { text: string | null }) {
+  if (text === null || text === "") return <span className="font-mono text-[11px] text-slate-700">нет промта</span>
+  return (
+    <span className="block whitespace-pre-wrap break-words font-mono text-[11px] leading-[1.35] text-slate-400 line-clamp-3">
+      {text}
+    </span>
+  )
+}
+
+function Delta({ before, after }: { before: unknown; after: unknown }) {
+  const found = deltaOf(before, after)
+  return (
+    <span className={`font-mono text-[12px] leading-5 ${DELTA_TONES[found.kind]}`} title={found.text}>
+      {DELTA_GLYPHS[found.kind]}
+    </span>
+  )
+}
+
 function Row({
   row,
   columns,
+  ir,
   selected,
   onSelect,
 }: {
   row: TableRow
   columns: ReadonlySet<Column>
+  ir: Ir | null
   selected: boolean
   onSelect: () => void
 }) {
@@ -176,14 +223,20 @@ function Row({
         </span>
       </span>
       <Bar row={row} />
-      <span className="min-w-0 leading-5">
-        <ValueCell value={step.input} />
+      <span className="min-w-0">
+        <ValueCell value={step.input} ir={ir} lines={3} />
       </span>
-      <span className="min-w-0 leading-5">
+      <Delta before={step.input} after={step.output} />
+      <span className="min-w-0">
+        <Prompt text={step.prompt} />
+      </span>
+      <span className="min-w-0">
         {step.error === null ? (
-          <ValueCell value={step.output} />
+          <ValueCell value={step.output} typeName={step.outputType ?? ""} ir={ir} lines={3} />
         ) : (
-          <span className="block truncate font-mono text-[11.5px] text-red-300">{step.error}</span>
+          <span className="block whitespace-pre-wrap font-mono text-[11.5px] text-red-300 line-clamp-3">
+            {step.error}
+          </span>
         )}
       </span>
       {columns.has("tokens") && (
@@ -203,7 +256,7 @@ function Row({
   )
 }
 
-export function RunTable({ view, run, renders, selectedId, onSelectNode = NOOP }: Props) {
+export function RunTable({ view, run, renders, ir, selectedId, onSelectNode = NOOP }: Props) {
   const [active, setActive] = useState<ReadonlySet<SignalKind>>(new Set())
   const steps = useMemo(() => buildSteps(view, renders), [view, renders])
   const now = run?.endedAt ?? Date.now()
@@ -244,6 +297,7 @@ export function RunTable({ view, run, renders, selectedId, onSelectNode = NOOP }
           key={row.step.nodeId}
           row={row}
           columns={table.columns}
+          ir={ir}
           selected={row.step.nodeId === selectedId}
           onSelect={() => onSelectNode(row.step.nodeId)}
         />

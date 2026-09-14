@@ -21,7 +21,7 @@ const useSteps = ({ selection }: RunPanelProps): readonly RunStep[] => {
 }
 
 function StepsPanel(props: RunPanelProps) {
-  const { selection, nodeId, onSelectNode } = props
+  const { ir, selection, nodeId, onSelectNode } = props
   const view = selection.view
   if (view === null) return <p className={HINT}>прогон ещё не загрузился</p>
   return (
@@ -29,6 +29,7 @@ function StepsPanel(props: RunPanelProps) {
       view={view}
       run={selection.run}
       renders={selection.renders}
+      ir={ir}
       selectedId={nodeId}
       onSelectNode={onSelectNode}
     />

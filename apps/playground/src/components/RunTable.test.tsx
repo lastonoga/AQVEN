@@ -9,7 +9,7 @@ import type { RunEvent } from "../api/index.js"
 
 const table = (events: readonly RunEvent[], selected: string | null = null): string =>
   renderToStaticMarkup(
-    <RunTable view={foldRun(events, "ok")} run={runFixture} renders={rendersFixture} selectedId={selected} />,
+    <RunTable view={foldRun(events, "ok")} run={runFixture} renders={rendersFixture} ir={null} selectedId={selected} />,
   )
 
 describe("таблица прогона", () => {
@@ -55,7 +55,7 @@ describe("таблица прогона", () => {
 
   it("честно сообщает, что шагов нет", () => {
     const markup = renderToStaticMarkup(
-      <RunTable view={foldRun([], "queued")} run={null} renders={{}} selectedId={null} />,
+      <RunTable view={foldRun([], "queued")} run={null} renders={{}} ir={null} selectedId={null} />,
     )
     expect(markup).toContain("шагов ещё нет")
   })
