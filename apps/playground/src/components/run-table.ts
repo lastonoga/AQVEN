@@ -153,6 +153,43 @@ export const buildTable = (steps: readonly RunStep[], now: number): Table => {
   return { rows, window, columns: columnsOf(steps), counts }
 }
 
+export type RunTotals = {
+  steps: number
+  done: number
+  errors: number
+  checksFailed: number
+  ms: number | null
+  tokens: number | null
+  costUsd: number | null
+  lanes: number
+}
+
+const summed = (values: readonly (number | null)[]): number | null => {
+  const known = values.filter((value): value is number => value !== null)
+  return known.length === 0 ? null : known.reduce((total, value) => total + value, 0)
+}
+
+export const lanesOf = (steps: readonly RunStep[]): number => {
+  const spans = steps.flatMap((step) =>
+    step.startedAt === null ? [] : [{ from: step.startedAt, to: step.startedAt + (step.durationMs ?? 0) }],
+  )
+  return spans.reduce(
+    (most, span) => Math.max(most, spans.filter((other) => other.from < span.to && span.from < other.to).length),
+    0,
+  )
+}
+
+export const totalsOf = (steps: readonly RunStep[], window: Window | null): RunTotals => ({
+  steps: steps.length,
+  done: steps.filter((step) => step.status === "ok" || step.status === "error").length,
+  errors: steps.filter((step) => step.status === "error").length,
+  checksFailed: steps.reduce((total, step) => total + step.checks.filter((check) => check.ok === false).length, 0),
+  ms: window === null ? null : window.span,
+  tokens: summed(steps.map((step) => step.metrics.totalTokens)),
+  costUsd: summed(steps.map((step) => step.metrics.costUsd)),
+  lanes: lanesOf(steps),
+})
+
 export const filtered = (table: Table, kinds: ReadonlySet<SignalKind>): TableRow[] => {
   if (kinds.size === 0) return table.rows
   return table.rows.filter((row) => row.signal !== null && kinds.has(row.signal.kind))

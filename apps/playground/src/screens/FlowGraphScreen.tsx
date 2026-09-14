@@ -39,7 +39,7 @@ type LayoutProps = {
 
 const EMPTY_OVERLAY: RunOverlay = { runId: null, byNodeId: new Map() }
 
-const DETAIL_TABS: RunPanelSlot[] = ["detail", "compare"]
+const DETAIL_TABS: RunPanelSlot[] = ["compare"]
 
 const overlayFor = (selection: RunSelection): RunOverlay => {
   if (selection.runId === null) return EMPTY_OVERLAY
@@ -109,11 +109,14 @@ function EmptyRuns({ client, flowId, runs, hrefOfRun }: LayoutProps) {
   )
 }
 
+const comparable = (props: RunPanelProps): boolean =>
+  props.nodeId !== null && DETAIL_TABS.some((slot) => runPanelOf(slot).appliesTo(props))
+
 function DetailPanel({ props, onClose }: { props: RunPanelProps; onClose: () => void }) {
-  const [tab, setTab] = useState<RunPanelSlot>("detail")
+  const [tab, setTab] = useState<RunPanelSlot>("compare")
   const scrollRef = useScrollMemory("run:detail")
   const available = DETAIL_TABS.filter((slot) => runPanelOf(slot).appliesTo(props))
-  const active = available.includes(tab) ? tab : "detail"
+  const active = available.includes(tab) ? tab : "compare"
   const panel = runPanelOf(active)
   const Panel = panel.Component
 
@@ -184,7 +187,7 @@ function RunLayout(layout: LayoutProps) {
       <div ref={stepsRef} className="min-h-0 flex-1 overflow-auto">
         <Steps {...panelProps} />
       </div>
-      {panelProps.nodeId !== null && <DetailPanel props={panelProps} onClose={() => onSelect(null)} />}
+      {comparable(panelProps) && <DetailPanel props={panelProps} onClose={() => onSelect(null)} />}
     </div>
   )
 }

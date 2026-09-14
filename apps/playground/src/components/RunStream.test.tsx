@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { foldRun } from "../run/events.js"
-import { RunTable } from "./RunTable.js"
+import { RunStream } from "./RunStream.js"
 import { buildSteps } from "./run-steps.js"
 import { columnsOf } from "./run-table.js"
 import { finishedEvents, rendersFixture, runFixture, startedEvents } from "./run-steps.fixture.js"
@@ -9,10 +9,10 @@ import type { RunEvent } from "../api/index.js"
 
 const table = (events: readonly RunEvent[], selected: string | null = null): string =>
   renderToStaticMarkup(
-    <RunTable view={foldRun(events, "ok")} run={runFixture} renders={rendersFixture} ir={null} selectedId={selected} />,
+    <RunStream view={foldRun(events, "ok")} run={runFixture} renders={rendersFixture} ir={null} selectedId={selected} />,
   )
 
-describe("таблица прогона", () => {
+describe("лента прогона", () => {
   it("даёт строку на каждый шаг", () => {
     const markup = table(finishedEvents)
     for (const nodeId of ["load_hotels", "pick", "render"]) expect(markup).toContain(nodeId)
@@ -24,23 +24,27 @@ describe("таблица прогона", () => {
     expect(markup).toContain("left:")
   })
 
-  it("не требует раскрывать строку, чтобы увидеть вход и выход", () => {
+  it("показывает вход, промт и выход без единого клика", () => {
     const markup = table(finishedEvents)
     expect(markup).toContain("вход")
+    expect(markup).toContain("промт")
     expect(markup).toContain("выход")
-    expect(markup).not.toContain("отрисованный промт")
+  })
+
+  it("даёт переключатель плотности вместо раскрытия каждой строки", () => {
+    const markup = table(finishedEvents)
+    for (const label of ["плотно", "обычно", "полно"]) expect(markup).toContain(label)
   })
 
   it("показывает легенду сигналов с числом задетых шагов", () => {
     expect(table(finishedEvents)).toContain("заглушка исполнителя")
   })
 
-  it("прячет колонки, под которые исполнитель ничего не пишет", () => {
+  it("не печатает метрики, которых исполнитель не прислал", () => {
     const steps = buildSteps(foldRun(finishedEvents, "ok"), rendersFixture)
     const columns = columnsOf(steps)
     const markup = table(finishedEvents)
-    expect(markup.includes(">ткн<")).toBe(columns.has("tokens"))
-    expect(markup.includes(">$<")).toBe(columns.has("cost"))
+    expect(markup.includes("токенов")).toBe(columns.has("tokens"))
   })
 
   it("показывает живой прогон, пока событий ещё мало", () => {
@@ -50,12 +54,12 @@ describe("таблица прогона", () => {
   })
 
   it("подсвечивает выбранный шаг", () => {
-    expect(table(finishedEvents, "pick")).toContain("bg-slate-800/60")
+    expect(table(finishedEvents, "pick")).toContain("bg-[#16202F]")
   })
 
   it("честно сообщает, что шагов нет", () => {
     const markup = renderToStaticMarkup(
-      <RunTable view={foldRun([], "queued")} run={null} renders={{}} ir={null} selectedId={null} />,
+      <RunStream view={foldRun([], "queued")} run={null} renders={{}} ir={null} selectedId={null} />,
     )
     expect(markup).toContain("шагов ещё нет")
   })
