@@ -1,5 +1,5 @@
-export const NODE_WIDTH = 300
-export const NODE_BASE_HEIGHT = 176
+export const NODE_WIDTH = 360
+export const NODE_BASE_HEIGHT = 248
 export const NESTED_HEIGHT = 64
 export const FAN_WIDTH = 184
 export const FAN_HEIGHT = 82

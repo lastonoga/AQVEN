@@ -34,10 +34,10 @@ const toneOf = (value: unknown): LineTone => {
 
 const PATH_KEYS = /(^|_)(id|url|path|hash|key|ref)($|_)/i
 
-const scalarText = (key: string, value: unknown): string => {
+const scalarText = (key: string, value: unknown, chars: number): string => {
   const text = flat(String(value))
-  if (PATH_KEYS.test(key)) return clipMid(text, VALUE_CHARS)
-  return clipEnd(text, VALUE_CHARS)
+  if (PATH_KEYS.test(key)) return clipMid(text, chars)
+  return clipEnd(text, chars)
 }
 
 const orderedKeys = (value: Readonly<Record<string, unknown>>, view: TypeView): string[] => {
@@ -53,10 +53,10 @@ const nestedText = (value: unknown, ir: Ir | null): string => {
   return flat(String(value))
 }
 
-const fieldLine = (key: string, value: unknown, ir: Ir | null): ValueLine => {
+const fieldLine = (key: string, value: unknown, ir: Ir | null, chars: number): ValueLine => {
   if (value === null || value === undefined) return { key, text: "пусто", tone: "muted" }
-  if (SCALARS.has(typeof value)) return { key, text: scalarText(key, value), tone: toneOf(value) }
-  return { key, text: clipEnd(flat(nestedText(value, ir)), VALUE_CHARS), tone: "data" }
+  if (SCALARS.has(typeof value)) return { key, text: scalarText(key, value, chars), tone: toneOf(value) }
+  return { key, text: clipEnd(flat(nestedText(value, ir)), chars), tone: "data" }
 }
 
 const recordLines = (
@@ -64,6 +64,7 @@ const recordLines = (
   limit: number,
   view: TypeView,
   ir: Ir | null,
+  chars: number,
 ): ValueBlock => {
   const keys = orderedKeys(value, view)
   const shown = keys.slice(0, limit)
@@ -74,29 +75,35 @@ const recordLines = (
     missing.length > 0 ? `не заполнено: ${missing.join(", ")}` : "",
   ].filter((note) => note !== "")
   return {
-    lines: shown.map((key) => fieldLine(clipEnd(key, KEY_CHARS), value[key], ir)),
+    lines: shown.map((key) => fieldLine(clipEnd(key, KEY_CHARS), value[key], ir, chars)),
     more: notes.join(" · "),
     empty: keys.length === 0,
   }
 }
 
-const itemLines = (items: readonly unknown[], limit: number, view: TypeView, ir: Ir | null): ValueBlock => {
+const itemLines = (
+  items: readonly unknown[],
+  limit: number,
+  view: TypeView,
+  ir: Ir | null,
+  chars: number,
+): ValueBlock => {
   const item = itemViewOf(ir, view)
   const shown = items.slice(0, limit)
   const rest = items.length - shown.length
   return {
     lines: shown.map((entry, index) => {
       const summary = summarize(entry, item.name, ir)
-      return { key: `${index + 1}`, text: clipEnd(flat(summary.text), VALUE_CHARS), tone: "data" as LineTone }
+      return { key: `${index + 1}`, text: clipEnd(flat(summary.text), chars), tone: "data" as LineTone }
     }),
     more: rest > 0 ? `ещё ${rest} из ${items.length}` : "",
     empty: items.length === 0,
   }
 }
 
-const textLines = (value: string, limit: number): ValueBlock => {
+const textLines = (value: string, limit: number, chars: number): ValueBlock => {
   const rows = value.split("\n")
-  const shown = rows.slice(0, limit).map((row) => clipEnd(row, VALUE_CHARS))
+  const shown = rows.slice(0, limit).map((row) => clipEnd(row, chars))
   const rest = rows.length - shown.length
   return {
     lines: shown.map((text, index) => ({ key: index === 0 ? "" : "", text, tone: "data" as LineTone })),
@@ -112,16 +119,26 @@ const withSize = (block: ValueBlock, bytes: number, limit: number): ValueBlock =
 
 export const SIZE_NOTE_FROM = 2048
 
-export const valueLines = (value: unknown, limit: number, typeName: string, ir: Ir | null): ValueBlock => {
+export const valueLines = (
+  value: unknown,
+  limit: number,
+  typeName: string,
+  ir: Ir | null,
+  chars: number = VALUE_CHARS,
+): ValueBlock => {
   const summary = summarize(value, typeName, ir)
   const view = typeViewOf(ir, typeName)
 
   if (isBlank(value)) {
     return { lines: [{ key: "", text: summary.text, tone: "muted" }], more: summary.detail, empty: true }
   }
-  if (typeof value === "string") return withSize(textLines(value, limit), summary.facts.bytes, SIZE_NOTE_FROM)
-  if (Array.isArray(value)) return withSize(itemLines(value, limit, view, ir), summary.facts.bytes, SIZE_NOTE_FROM)
-  if (isRecord(value)) return withSize(recordLines(value, limit, view, ir), summary.facts.bytes, SIZE_NOTE_FROM)
+  if (typeof value === "string") return withSize(textLines(value, limit, chars), summary.facts.bytes, SIZE_NOTE_FROM)
+  if (Array.isArray(value)) {
+    return withSize(itemLines(value, limit, view, ir, chars), summary.facts.bytes, SIZE_NOTE_FROM)
+  }
+  if (isRecord(value)) {
+    return withSize(recordLines(value, limit, view, ir, chars), summary.facts.bytes, SIZE_NOTE_FROM)
+  }
 
   return { lines: [{ key: "", text: flat(String(value)), tone: toneOf(value) }], more: "", empty: false }
 }
