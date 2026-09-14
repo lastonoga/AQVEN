@@ -1,7 +1,8 @@
 import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath } from "@xyflow/react"
 import { BORDER_RADIUS, ROUTE_OFFSET, SOURCE_SHARE, orthoRoute } from "./edge-route.js"
+import { LABEL_PAD_X, LABEL_PAD_Y, LABEL_TEXT, labelSize } from "./edge-label.js"
 import type { EdgeProps } from "@xyflow/react"
-import type { EdgeAnchor, RouteGeometry, RoutePath, Side } from "./edge-route.js"
+import type { EdgeAnchor, Point, RouteGeometry, RoutePath, Side } from "./edge-route.js"
 import type { WfEdge } from "./edges.js"
 
 const SIDE: Record<Position, Side> = {
@@ -13,7 +14,7 @@ const SIDE: Record<Position, Side> = {
 
 const HIT_WIDTH = 24
 
-const LABEL_BG = "rgba(2,6,23,0.92)"
+const LABEL_BG = "var(--xy-background-color, var(--xy-background-color-default, #020617))"
 
 type Props = EdgeProps<WfEdge> & { anchor: EdgeAnchor }
 
@@ -40,11 +41,19 @@ const smoothRoute = (props: EdgeProps<WfEdge>, anchor: EdgeAnchor): RoutePath =>
   return { path, label: { x: labelX, y: lead } }
 }
 
+const spotOf = (placed: Point | null | undefined, fallback: Point): Point | null =>
+  placed === undefined ? fallback : placed
+
+const hintOf = (text: string, title: string | undefined): string =>
+  [text, title ?? ""].filter((part) => part !== "").join(" · ")
+
 export function RouteEdge({ anchor, ...props }: Props) {
   const points = props.data?.points ?? []
   const route = orthoRoute(geometryOf(props), points, anchor) ?? smoothRoute(props, anchor)
   const text = props.data?.text ?? ""
   const color = props.data?.color ?? "#64748b"
+  const spot = spotOf(props.data?.label, route.label)
+  const size = labelSize(text)
 
   return (
     <>
@@ -55,19 +64,26 @@ export function RouteEdge({ anchor, ...props }: Props) {
         markerEnd={props.markerEnd}
         interactionWidth={HIT_WIDTH}
       />
-      {text !== "" && (
+      {text !== "" && spot !== null && (
         <EdgeLabelRenderer>
           <div
-            className="nodrag nopan rounded border px-1.5 py-0.5 font-mono text-[9.5px] leading-none"
-            title={props.data?.title}
+            className="nodrag nopan overflow-hidden rounded border font-mono text-[9.5px]"
+            title={hintOf(text, props.data?.title)}
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${route.label.x}px, ${route.label.y}px)`,
+              transform: `translate(-50%, -50%) translate(${spot.x}px, ${spot.y}px)`,
               pointerEvents: "all",
+              boxSizing: "border-box",
+              width: size.width,
+              height: size.height,
+              paddingInline: LABEL_PAD_X,
+              paddingBlock: LABEL_PAD_Y,
+              lineHeight: `${LABEL_TEXT}px`,
               borderColor: color,
               color,
               background: LABEL_BG,
               whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
             }}
           >
             {text}

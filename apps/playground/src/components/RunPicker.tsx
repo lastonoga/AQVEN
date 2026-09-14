@@ -1,36 +1,11 @@
-import { useResource } from "../hooks/use-resource.js"
-import { startedRuns } from "../run/registry.js"
 import { formatMs, formatStamp, runLabels, runTones } from "../run/styles.js"
-import { flowHref, navigate, runHref } from "../routing/route.js"
-import type { ApiClient, Run, RunStatus } from "../api/index.js"
+import { navigate, runHref } from "../routing/route.js"
+import type { FlowRun, FlowRuns } from "../run-view/flow-runs.js"
 import type { RunSelection } from "../run-context.js"
 
-type Props = { client: ApiClient; flowId: string; revision: number; selection: RunSelection }
+type Props = { runs: FlowRuns; selection: RunSelection; hrefOf: (runId: string | null) => string }
 
-type PickerRun = { id: string; startedAt: number; status: RunStatus | null }
-
-const fromServer = (runs: Run[], flowId: string): PickerRun[] =>
-  runs.filter((run) => run.flow === flowId).map((run) => ({ id: run.id, startedAt: run.startedAt, status: run.status }))
-
-const fromRegistry = (flowId: string): PickerRun[] =>
-  startedRuns()
-    .filter((item) => item.flow === flowId)
-    .map((item) => ({ id: item.id, startedAt: item.startedAt, status: null }))
-
-const loadRuns = async (client: ApiClient, flowId: string): Promise<PickerRun[]> => {
-  const listed = await client.listRuns()
-  const rows = listed === null ? fromRegistry(flowId) : fromServer(listed, flowId)
-  return [...rows].sort((a, b) => b.startedAt - a.startedAt)
-}
-
-const withSelected = (rows: PickerRun[], selection: RunSelection): PickerRun[] => {
-  if (selection.runId === null) return rows
-  if (rows.some((row) => row.id === selection.runId)) return rows
-  const startedAt = selection.run?.startedAt ?? Date.now()
-  return [{ id: selection.runId, startedAt, status: selection.run?.status ?? null }, ...rows]
-}
-
-const optionLabel = (row: PickerRun): string => {
+const optionLabel = (row: FlowRun): string => {
   const status = row.status === null ? "?" : runLabels[row.status]
   return `${row.id.slice(0, 8)} · ${status} · ${formatStamp(row.startedAt)}`
 }
@@ -58,22 +33,19 @@ function Progress({ selection }: { selection: RunSelection }) {
   )
 }
 
-export function RunPicker({ client, flowId, revision, selection }: Props) {
-  const status = selection.view?.status ?? "none"
-  const runs = useResource(() => loadRuns(client, flowId), `flow-runs:${flowId}:${revision}:${status}`)
-  const rows = withSelected(runs.data ?? [], selection)
-  const latest = rows[0] ?? null
+export function RunPicker({ runs, selection, hrefOf }: Props) {
+  const latest = runs.latest
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 bg-slate-950/80 px-3 py-1.5">
       <span className="font-mono text-[10px] uppercase tracking-wide text-slate-600">прогон</span>
       <select
         value={selection.runId ?? ""}
-        onChange={(event) => navigate(flowHref(flowId, event.target.value === "" ? null : event.target.value))}
+        onChange={(event) => navigate(hrefOf(event.target.value === "" ? null : event.target.value))}
         className="max-w-[22rem] rounded bg-slate-900 px-2 py-1 font-mono text-[12px] text-slate-200 ring-1 ring-slate-700"
       >
         <option value="">без прогона</option>
-        {rows.map((row) => (
+        {runs.rows.map((row) => (
           <option key={row.id} value={row.id}>
             {optionLabel(row)}
           </option>
@@ -82,7 +54,7 @@ export function RunPicker({ client, flowId, revision, selection }: Props) {
       <button
         type="button"
         disabled={latest === null || latest.id === selection.runId}
-        onClick={() => latest !== null && navigate(flowHref(flowId, latest.id))}
+        onClick={() => latest !== null && navigate(hrefOf(latest.id))}
         className="rounded px-2 py-1 font-mono text-[11px] text-slate-300 ring-1 ring-slate-700 hover:bg-slate-900 disabled:opacity-40"
       >
         последний
@@ -98,7 +70,7 @@ export function RunPicker({ client, flowId, revision, selection }: Props) {
         <span className="font-mono text-[11px] text-red-400">прогон не загрузился: {selection.error}</span>
       )}
       {runs.error !== null && <span className="font-mono text-[11px] text-amber-400">список прогонов: {runs.error}</span>}
-      {rows.length === 0 && runs.data !== null && (
+      {runs.rows.length === 0 && runs.loaded && (
         <span className="font-mono text-[11px] text-slate-600">прогонов ещё не было</span>
       )}
     </div>

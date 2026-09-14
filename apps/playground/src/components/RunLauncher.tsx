@@ -5,7 +5,7 @@ import { rememberRun } from "../run/registry.js"
 import { navigate, runHref } from "../routing/route.js"
 import type { ApiClient, JsonSchema } from "../api/index.js"
 
-type Props = { client: ApiClient; flowId: string }
+type Props = { client: ApiClient; flowId: string; hrefOfRun?: (runId: string) => string }
 
 const scalarExamples: Record<string, unknown> = {
   string: "",
@@ -32,7 +32,7 @@ export const exampleOf = (schema: JsonSchema | null): unknown => {
 
 const messageOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause))
 
-export function RunLauncher({ client, flowId }: Props) {
+export function RunLauncher({ client, flowId, hrefOfRun = runHref }: Props) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState("{}")
   const [busy, setBusy] = useState(false)
@@ -52,7 +52,7 @@ export function RunLauncher({ client, flowId }: Props) {
       const runId = await client.startRun(flowId, parsed.value)
       rememberRun({ id: runId, flow: flowId, startedAt: Date.now() })
       setOpen(false)
-      navigate(runHref(runId))
+      navigate(hrefOfRun(runId))
     } catch (cause: unknown) {
       setError(messageOf(cause))
     } finally {

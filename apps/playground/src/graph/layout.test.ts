@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { describe, expect, test } from "vitest"
 import { expandIr } from "./expand.js"
 import { groupIdsOf, placeGraph } from "./frame-layout.js"
-import { contains, overlaps } from "./layout.js"
+import { contains, framePadOf, overlaps } from "./layout.js"
 import type { Ir } from "../api/types.js"
 import type { ExpandedNode } from "./expand.js"
 import type { Rect } from "./layout.js"
@@ -80,6 +80,64 @@ const escapees = (nodes: readonly ExpandedNode[], rects: ReadonlyMap<string, Rec
 
 const missing = (nodes: readonly ExpandedNode[], rects: ReadonlyMap<string, Rect>): string[] =>
   nodes.filter((node) => rects.get(node.id) === undefined).map((node) => node.id)
+
+const TOLERANCE = 0.5
+
+const childrenOf = (nodes: readonly ExpandedNode[]): Map<string, string[]> => {
+  const kids = new Map<string, string[]>()
+  for (const node of nodes) {
+    if (node.parentId === null) continue
+    kids.set(node.parentId, [...(kids.get(node.parentId) ?? []), node.id])
+  }
+  return kids
+}
+
+const gapsOf = (frame: Rect, kid: Rect): { side: string; gap: number }[] => [
+  { side: "left", gap: kid.x - frame.x },
+  { side: "top", gap: kid.y - frame.y },
+  { side: "right", gap: frame.x + frame.width - (kid.x + kid.width) },
+  { side: "bottom", gap: frame.y + frame.height - (kid.y + kid.height) },
+]
+
+const squeezed = (nodes: readonly ExpandedNode[], rects: ReadonlyMap<string, Rect>): string[] => {
+  const kids = childrenOf(nodes)
+  const needOf = (id: string, side: string): number => {
+    const pad = framePadOf((kids.get(id) ?? []).length > 0)
+    if (side === "top") return pad.top
+    return side === "bottom" ? pad.bottom : pad.side
+  }
+  return [...kids].flatMap(([parent, list]) => {
+    const frame = rects.get(parent)
+    if (frame === undefined) return []
+    return list.flatMap((id) => {
+      const kid = rects.get(id)
+      if (kid === undefined) return []
+      return gapsOf(frame, kid)
+        .filter((item) => item.gap + TOLERANCE < needOf(id, item.side))
+        .map((item) => `${id} ${item.side} ${item.gap.toFixed(1)} < ${needOf(id, item.side)}`)
+    })
+  })
+}
+
+const crossedFrames = (nodes: readonly ExpandedNode[], rects: ReadonlyMap<string, Rect>): string[] => {
+  const related = ancestorPairs(nodes)
+  const frames = [...childrenOf(nodes).keys()].flatMap((id) => {
+    const rect = rects.get(id)
+    return rect === undefined ? [] : [{ id, rect }]
+  })
+  const found: string[] = []
+  for (let left = 0; left < frames.length; left += 1) {
+    for (let right = left + 1; right < frames.length; right += 1) {
+      const a = frames[left]
+      const b = frames[right]
+      if (a === undefined || b === undefined) continue
+      if (related.has(`${a.id}|${b.id}`)) continue
+      if (!overlaps(a.rect, b.rect)) continue
+      found.push(`${a.id} x ${b.id}`)
+    }
+  }
+  return found
+}
 
 describe("expandIr раскрывает компоненты и параллелизм", () => {
   test("примеры синтезируются", () => {
@@ -176,6 +234,8 @@ describe("раскладка не даёт наслоений", () => {
       expect(missing(placement.visible, placement.layout.rects)).toEqual([])
       expect(collisionsIn(placement.visible, placement.layout.rects)).toEqual([])
       expect(escapees(placement.visible, placement.layout.rects)).toEqual([])
+      expect(squeezed(placement.visible, placement.layout.rects)).toEqual([])
+      expect(crossedFrames(placement.visible, placement.layout.rects)).toEqual([])
     },
   )
 
@@ -200,6 +260,46 @@ describe("раскладка не даёт наслоений", () => {
       const placement = placeGraph(graph, new Set(), measured)
       expect(collisionsIn(placement.visible, placement.layout.rects)).toEqual([])
       expect(escapees(placement.visible, placement.layout.rects)).toEqual([])
+      expect(squeezed(placement.visible, placement.layout.rects)).toEqual([])
+      expect(crossedFrames(placement.visible, placement.layout.rects)).toEqual([])
     },
   )
+})
+
+describe("рамка группы вмещает вложенные группы", () => {
+  const WATCHED = ["diverge_judge_select", "hotel_pitch", "deep_composition", "judge_panel"]
+
+  const flowOf = (id: string) => {
+    const flow = every.find((item) => item.id === id)
+    expect(flow).toBeDefined()
+    return flow
+  }
+
+  test("образцы со скриншота синтезируются", () => {
+    const ids = new Set(every.map((flow) => flow.id))
+    expect(WATCHED.filter((id) => !ids.has(id))).toEqual([])
+  })
+
+  test.each(WATCHED)("%s: вложенная группа не садится на рамку родителя", (id) => {
+    const flow = flowOf(id)
+    if (flow === undefined) return
+    const graph = expandIr(flow.ir)
+    const placement = placeGraph(graph, new Set(), new Map())
+    const rects = placement.layout.rects
+    const nested = placement.visible.filter(
+      (node) => node.parentId !== null && placement.visible.some((kid) => kid.parentId === node.id),
+    )
+    expect(nested.length).toBeGreaterThan(0)
+    expect(squeezed(placement.visible, rects)).toEqual([])
+    expect(crossedFrames(placement.visible, rects)).toEqual([])
+    for (const node of nested) {
+      const outer = rects.get(node.parentId ?? "")
+      const inner = rects.get(node.id)
+      expect(outer).toBeDefined()
+      expect(inner).toBeDefined()
+      if (outer === undefined || inner === undefined) continue
+      expect(contains(outer, inner)).toBe(true)
+      expect(inner.y - outer.y).toBeGreaterThanOrEqual(framePadOf(true).top - TOLERANCE)
+    }
+  })
 })

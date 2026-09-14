@@ -87,6 +87,9 @@ class FlowState {
   }
 }
 
+const toArrayBuffer = (view: Uint8Array): ArrayBuffer =>
+  view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer
+
 type RunRequest = { flow: string; input: unknown }
 
 const isRunRequest = (body: unknown): body is RunRequest =>
@@ -150,6 +153,18 @@ function buildApp(state: FlowState, db: RunsRepository, executor: Executor): Hon
     const detail = db.findRun(runId)
     if (!detail) return c.json({ error: "run_not_found", runId }, 404)
     return c.json(detail)
+  })
+
+  app.get("/api/blobs/:id", (c) => {
+    const id = c.req.param("id")
+    const blob = db.findBlob(id)
+    if (!blob) return c.json({ error: "blob_not_found", id }, 404)
+    return c.body(toArrayBuffer(blob.body), 200, {
+      "Content-Type": blob.mime,
+      "Content-Length": String(blob.body.length),
+      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(blob.name)}`,
+      "Cache-Control": "public, max-age=31536000, immutable",
+    })
   })
 
   app.get("/api/events", eventsHandler)

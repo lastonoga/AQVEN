@@ -58,7 +58,7 @@ const squared = (points: readonly Point[]): Point[] =>
 const collinear = (before: Point, at: Point, after: Point): boolean =>
   (near(before.x, at.x) && near(at.x, after.x)) || (near(before.y, at.y) && near(at.y, after.y))
 
-const simplify = (points: readonly Point[]): Point[] =>
+export const simplify = (points: readonly Point[]): Point[] =>
   points.reduce<Point[]>((chain, point) => {
     const last = chain[chain.length - 1]
     if (last === undefined) return [point]

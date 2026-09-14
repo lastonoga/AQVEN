@@ -21,11 +21,23 @@ export type RunDetail = {
   renders: Record<string, Render>
 }
 
+export type StoredBlob = {
+  id: string
+  runId: string
+  nodeId: string
+  mime: string
+  name: string
+  bytes: number
+  body: Uint8Array
+}
+
 export type RunsRepository = {
   createRun(run: Run): void
   finishRun(id: string, status: RunStatus, endedAt: number): void
   appendEvent(runId: string, event: RunEvent): void
   saveRender(render: Render): void
+  saveBlob(blob: StoredBlob): void
+  findBlob(id: string): StoredBlob | null
   listRuns(limit: number): Run[]
   findRun(id: string): RunDetail | null
   close(): void
@@ -58,8 +70,18 @@ CREATE TABLE IF NOT EXISTS renders (
   prompt TEXT,
   PRIMARY KEY (run_id, node_id)
 );
+CREATE TABLE IF NOT EXISTS blobs (
+  id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL,
+  node_id TEXT NOT NULL,
+  mime TEXT NOT NULL,
+  name TEXT NOT NULL,
+  bytes INTEGER NOT NULL,
+  body BLOB NOT NULL
+);
 CREATE INDEX IF NOT EXISTS node_events_run ON node_events (run_id, seq);
 CREATE INDEX IF NOT EXISTS runs_started ON runs (started_at DESC);
+CREATE INDEX IF NOT EXISTS blobs_run ON blobs (run_id);
 `
 
 const STATUSES = new Set<string>(["queued", "running", "ok", "error"])
@@ -128,6 +150,21 @@ const toRender = (row: Row): Render => ({
   prompt: optText(row, "prompt") ?? null,
 })
 
+const bodyOf = (row: Row): Uint8Array => {
+  const value = row["body"]
+  return value instanceof Uint8Array ? value : new Uint8Array()
+}
+
+const toBlob = (row: Row): StoredBlob => ({
+  id: text(row, "id"),
+  runId: text(row, "run_id"),
+  nodeId: text(row, "node_id"),
+  mime: text(row, "mime"),
+  name: text(row, "name"),
+  bytes: int(row, "bytes"),
+  body: bodyOf(row),
+})
+
 export function runsDbPath(root: string): string {
   return join(resolve(root), DB_DIR, DB_FILE)
 }
@@ -162,6 +199,17 @@ export class SqliteRunsDb implements RunsRepository {
     this.db
       .prepare("INSERT OR REPLACE INTO renders (run_id, node_id, input, output, prompt) VALUES (?, ?, ?, ?, ?)")
       .run(render.runId, render.nodeId, encode(render.input), encode(render.output), render.prompt)
+  }
+
+  saveBlob(blob: StoredBlob): void {
+    this.db
+      .prepare("INSERT OR REPLACE INTO blobs (id, run_id, node_id, mime, name, bytes, body) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(blob.id, blob.runId, blob.nodeId, blob.mime, blob.name, blob.bytes, blob.body)
+  }
+
+  findBlob(id: string): StoredBlob | null {
+    const row = this.db.prepare("SELECT * FROM blobs WHERE id = ?").get(id)
+    return row === undefined ? null : toBlob(row)
   }
 
   listRuns(limit: number): Run[] {

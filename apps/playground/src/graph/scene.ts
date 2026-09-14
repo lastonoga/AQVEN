@@ -5,6 +5,7 @@ import { columnsOf } from "./layout.js"
 import { canvasKindOf, fallbackSize, groupIdsOf, placeGraph } from "./frame-layout.js"
 import type { Edge } from "@xyflow/react"
 import type { Ir } from "../api/types.js"
+import type { CanvasKind } from "./frame-layout.js"
 import type { ExpandedGraph, ExpandedNode } from "./expand.js"
 import type { ColumnBox, Size } from "./layout.js"
 import type { Ranking } from "./ranks.js"
@@ -41,8 +42,20 @@ export const buildScene = (ir: Ir): Scene => {
   }
 }
 
-const GROUP_Z = 0
-const NODE_Z = 1
+const LAYER_SPAN = 10
+const CARD_LIFT = 4
+const EDGE_DROP = 4
+
+export const frameZ = (depth: number): number => (depth + 1) * LAYER_SPAN
+
+export const cardZ = (depth: number): number => frameZ(depth) + CARD_LIFT
+
+export const edgeZ = (depth: number): number => frameZ(depth) - EDGE_DROP
+
+const layerOf = (kind: CanvasKind, depth: number, collapsed: boolean): number => {
+  if (kind !== "wfgroup") return cardZ(depth)
+  return collapsed ? cardZ(depth) : frameZ(depth)
+}
 
 const toCanvasNode = (
   node: ExpandedNode,
@@ -58,7 +71,7 @@ const toCanvasNode = (
     parentId: node.parentId ?? undefined,
     extent: node.parentId === null ? undefined : ("parent" as const),
     draggable: false,
-    zIndex: kind === "wfgroup" ? GROUP_Z : NODE_Z,
+    zIndex: layerOf(kind, node.depth, collapsed),
   }
 
   if (kind === "fan") {
@@ -110,9 +123,16 @@ export const buildFrame = (
       ),
     )
 
+  const depthOf = new Map(placement.visible.map((node) => [node.id, node.depth]))
+  const spanOf = (source: string, target: string): number =>
+    Math.min(depthOf.get(source) ?? 0, depthOf.get(target) ?? 0)
+
   return {
     nodes,
-    edges: placement.edges.map((edge) => toFlowEdge({ ...edge, points: layout.routes.get(edge.id) })),
+    edges: placement.edges.map((edge) => ({
+      ...toFlowEdge({ ...edge, points: layout.routes.get(edge.id) }),
+      zIndex: edgeZ(spanOf(edge.source, edge.target)),
+    })),
     columns: columnsOf(layout.rects, scene.ranking.rankOf, scene.rootIds),
     sized: placement.sized,
   }

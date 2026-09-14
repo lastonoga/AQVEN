@@ -10,11 +10,27 @@ export const COLLAPSED_WIDTH = 264
 export const COLLAPSED_HEIGHT = 112
 export const GROUP_PAD = 18
 export const GROUP_HEADER = 40
+export const GROUP_NEST = 16
 export const NODE_SEP = 40
 export const EDGE_SEP = 24
 export const RANK_SEP = 90
 export const GRAPH_MARGIN = 24
 export const COLUMN_GAP = 18
+
+export const RANK_PAD = RANK_SEP / 2
+export const CROSS_PAD = (NODE_SEP + EDGE_SEP) / 2
+
+export type FramePad = { top: number; bottom: number; side: number }
+
+const LEAF_PAD: FramePad = { top: GROUP_HEADER, bottom: GROUP_PAD, side: GROUP_PAD }
+
+const NESTED_PAD: FramePad = {
+  top: GROUP_HEADER + GROUP_NEST,
+  bottom: GROUP_PAD + GROUP_NEST,
+  side: GROUP_PAD + GROUP_NEST,
+}
+
+export const framePadOf = (nested: boolean): FramePad => (nested ? NESTED_PAD : LEAF_PAD)
 
 export type Point = { x: number; y: number }
 export type Size = { width: number; height: number }
@@ -174,11 +190,46 @@ const linksOf = (tree: Tree, edges: readonly LayoutEdge[]): Link[] => {
     .filter((link) => link.from !== link.to)
 }
 
+type Inset = { top: number; bottom: number; left: number; right: number }
+
+const NO_INSET: Inset = { top: 0, bottom: 0, left: 0, right: 0 }
+
+const boxOf = (size: Size, inset: Inset): Size => ({
+  width: size.width + inset.left + inset.right,
+  height: size.height + inset.top + inset.bottom,
+})
+
+const shortfall = (need: number, given: number): number => Math.max(0, need - given)
+
+const insetAt = (depth: number): Inset => {
+  if (depth === 0) return NO_INSET
+  const outer = depth - 1
+  const own = framePadOf(false)
+  const nest = framePadOf(true)
+  const side = shortfall(own.side, RANK_PAD) + shortfall(nest.side, RANK_PAD) * outer
+  return {
+    top: shortfall(own.top, CROSS_PAD) + shortfall(nest.top, CROSS_PAD) * outer,
+    bottom: shortfall(own.bottom, CROSS_PAD) + shortfall(nest.bottom, CROSS_PAD) * outer,
+    left: side,
+    right: side,
+  }
+}
+
+const insetsOf = (nodes: readonly LayoutNode[], tree: Tree): Map<string, Inset> => {
+  const insets = new Map<string, Inset>()
+  for (const node of nodes) {
+    const leaf = (tree.children.get(node.id) ?? []).length === 0
+    insets.set(node.id, leaf ? insetAt(tree.depth.get(node.id) ?? 0) : NO_INSET)
+  }
+  return insets
+}
+
 const compoundGraph = (
   nodes: readonly LayoutNode[],
   links: readonly Link[],
   tree: Tree,
   sizeOf: (id: string) => Size,
+  insets: ReadonlyMap<string, Inset>,
 ) => {
   const graph = new dagre.graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>({
     compound: true,
@@ -190,7 +241,7 @@ const compoundGraph = (
   for (const node of nodes) {
     const kids = tree.children.get(node.id) ?? []
     if (kids.length > 0) graph.setNode(node.id, { width: 0, height: 0 })
-    else graph.setNode(node.id, { ...sizeOf(node.id) })
+    else graph.setNode(node.id, { ...boxOf(sizeOf(node.id), insets.get(node.id) ?? NO_INSET) })
   }
   for (const node of nodes) {
     if (node.parentId === null) continue
@@ -201,29 +252,31 @@ const compoundGraph = (
   return graph
 }
 
-const frameAround = (rect: Rect, kids: readonly Rect[]): Rect => {
-  const left = Math.min(rect.x, ...kids.map((kid) => kid.x - GROUP_PAD))
-  const top = Math.min(rect.y, ...kids.map((kid) => kid.y - GROUP_HEADER))
-  const right = Math.max(rect.x + rect.width, ...kids.map((kid) => kid.x + kid.width + GROUP_PAD))
-  const bottom = Math.max(
-    rect.y + rect.height,
-    ...kids.map((kid) => kid.y + kid.height + GROUP_PAD),
-  )
+type Kid = { rect: Rect; pad: FramePad }
+
+const frameAround = (kids: readonly Kid[]): Rect => {
+  const left = Math.min(...kids.map((kid) => kid.rect.x - kid.pad.side))
+  const right = Math.max(...kids.map((kid) => kid.rect.x + kid.rect.width + kid.pad.side))
+  const top = Math.min(...kids.map((kid) => kid.rect.y - kid.pad.top))
+  const bottom = Math.max(...kids.map((kid) => kid.rect.y + kid.rect.height + kid.pad.bottom))
   return { x: left, y: top, width: right - left, height: bottom - top }
 }
+
+const kidsOf = (tree: Tree, rects: ReadonlyMap<string, Rect>, id: string): Kid[] =>
+  (tree.children.get(id) ?? []).flatMap((kid) => {
+    const rect = rects.get(kid)
+    if (rect === undefined) return []
+    return [{ rect, pad: framePadOf((tree.children.get(kid) ?? []).length > 0) }]
+  })
 
 const growFrames = (nodes: readonly LayoutNode[], tree: Tree, rects: Map<string, Rect>): void => {
   const deepestFirst = [...nodes].sort(
     (left, right) => (tree.depth.get(right.id) ?? 0) - (tree.depth.get(left.id) ?? 0),
   )
   for (const node of deepestFirst) {
-    const kids = (tree.children.get(node.id) ?? []).flatMap((id) => {
-      const rect = rects.get(id)
-      return rect === undefined ? [] : [rect]
-    })
-    const rect = rects.get(node.id)
-    if (rect === undefined || kids.length === 0) continue
-    rects.set(node.id, frameAround(rect, kids))
+    const kids = kidsOf(tree, rects, node.id)
+    if (kids.length === 0) continue
+    rects.set(node.id, frameAround(kids))
   }
 }
 
@@ -339,15 +392,23 @@ export const layoutNested = (
   }
 
   const links = linksOf(tree, edges)
-  const graph = compoundGraph(nodes, links, tree, sizeOf)
+  const insets = insetsOf(nodes, tree)
+  const graph = compoundGraph(nodes, links, tree, sizeOf, insets)
   dagre.layout(graph)
 
   const rects = new Map<string, Rect>()
   for (const node of nodes) {
     const placed = graph.node(node.id)
-    const width = placed.width > 0 ? placed.width : sizeOf(node.id).width
-    const height = placed.height > 0 ? placed.height : sizeOf(node.id).height
-    rects.set(node.id, { x: (placed.x ?? 0) - width / 2, y: (placed.y ?? 0) - height / 2, width, height })
+    const inset = insets.get(node.id) ?? NO_INSET
+    const fallback = boxOf(sizeOf(node.id), inset)
+    const width = placed.width > 0 ? placed.width : fallback.width
+    const height = placed.height > 0 ? placed.height : fallback.height
+    rects.set(node.id, {
+      x: (placed.x ?? 0) - width / 2 + inset.left,
+      y: (placed.y ?? 0) - height / 2 + inset.top,
+      width: width - inset.left - inset.right,
+      height: height - inset.top - inset.bottom,
+    })
   }
   growFrames(nodes, tree, rects)
 

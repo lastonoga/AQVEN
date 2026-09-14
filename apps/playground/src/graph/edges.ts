@@ -1,8 +1,11 @@
 import { MarkerType } from "@xyflow/react"
 import { IN_PORT, OUT_PORT, slotPort } from "./ports.js"
+import { edgeChain, labelObstacles, placeLabels } from "./edge-label.js"
 import type { Edge } from "@xyflow/react"
-import type { Point } from "./edge-route.js"
+import type { EdgeAnchor, Point } from "./edge-route.js"
+import type { LabelTarget } from "./edge-label.js"
 import type { EdgeKind, ExpandedEdge } from "./expand.js"
+import type { Rect } from "./layout.js"
 
 export type EdgeVariant = EdgeKind | "loopback" | "boundary"
 
@@ -24,12 +27,15 @@ export type RoutedEdge = ExpandedEdge & EdgeRoute
 
 export type WfEdgeType = "ortho" | "branch"
 
+export type LabelSpot = Point | null
+
 export type WfEdgeData = {
   variant: EdgeVariant
   title: string
   color: string
   text: string
   points: readonly Point[]
+  label?: LabelSpot
 }
 
 export type WfEdge = Edge<WfEdgeData, WfEdgeType>
@@ -84,6 +90,45 @@ const edgeTypeOf = (variant: EdgeVariant, label: string): WfEdgeType =>
 
 const targetPortOf = (edge: RoutedEdge): string =>
   edge.slot === undefined || edge.slot === "" ? IN_PORT : slotPort(edge.slot)
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null
+
+const isPoint = (value: unknown): value is Point =>
+  isRecord(value) && typeof value["x"] === "number" && typeof value["y"] === "number"
+
+const pointsOf = (value: unknown): Point[] => (Array.isArray(value) ? value.filter(isPoint) : [])
+
+const labelAnchor = (edge: Edge): EdgeAnchor => (edge.type === "branch" ? "source" : "center")
+
+const labelTargetOf = (edge: Edge, rects: ReadonlyMap<string, Rect>): LabelTarget[] => {
+  const data = edge.data
+  if (!isRecord(data)) return []
+  const text = data["text"]
+  if (typeof text !== "string" || text === "") return []
+  const source = rects.get(edge.source)
+  const target = rects.get(edge.target)
+  if (source === undefined || target === undefined) return []
+  const chain = edgeChain(source, target, pointsOf(data["points"]))
+  return [{ id: edge.id, text, anchor: labelAnchor(edge), chain }]
+}
+
+export const labelTargets = (
+  edges: readonly Edge[],
+  rects: ReadonlyMap<string, Rect>,
+): LabelTarget[] => edges.flatMap((edge) => labelTargetOf(edge, rects))
+
+export const labelEdges = (
+  edges: readonly Edge[],
+  rects: ReadonlyMap<string, Rect>,
+  frames: ReadonlySet<string>,
+): Edge[] => {
+  const spots = placeLabels(labelTargets(edges, rects), labelObstacles(rects, frames))
+  return edges.map((edge) => {
+    if (!spots.has(edge.id)) return edge
+    return { ...edge, data: { ...edge.data, label: spots.get(edge.id) ?? null } }
+  })
+}
 
 export const toFlowEdge = (edge: RoutedEdge): WfEdge => {
   const variant = edgeVariant(edge)
