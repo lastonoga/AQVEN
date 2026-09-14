@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { RunSteps } from "../components/RunSteps.js"
+import { RunTable } from "../components/RunTable.js"
 import { RunStepDetail } from "../components/RunStepDetail.js"
 import { FanCompare } from "../components/FanCompare.js"
 import { buildSteps, stepSnapshot } from "../components/run-steps.js"
@@ -21,10 +21,18 @@ const useSteps = ({ selection }: RunPanelProps): readonly RunStep[] => {
 }
 
 function StepsPanel(props: RunPanelProps) {
-  const { ir, selection, onSelectNode } = props
+  const { selection, nodeId, onSelectNode } = props
   const view = selection.view
   if (view === null) return <p className={HINT}>прогон ещё не загрузился</p>
-  return <RunSteps view={view} run={selection.run} renders={selection.renders} ir={ir} onSelectNode={onSelectNode} />
+  return (
+    <RunTable
+      view={view}
+      run={selection.run}
+      renders={selection.renders}
+      selectedId={nodeId}
+      onSelectNode={onSelectNode}
+    />
+  )
 }
 
 function DetailPanel(props: RunPanelProps) {
