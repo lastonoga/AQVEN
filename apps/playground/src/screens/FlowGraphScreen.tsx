@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { ComponentType } from "react"
 import { FlowCanvas } from "../graph/FlowCanvas.js"
+import { bodyAt, nodeIndexOf, runIdAt } from "../graph/node-index.js"
 import { NodeInspector } from "../components/NodeInspector.js"
 import { DiagnosticList } from "../components/DiagnosticList.js"
 import { RunPicker } from "../components/RunPicker.js"
@@ -15,6 +16,7 @@ import { runPanelOf } from "../run-view/slots.js"
 import { formatStamp, runLabels } from "../run/styles.js"
 import { listHref } from "../routing/route.js"
 import type { ApiClient, Ir } from "../api/index.js"
+import type { NodeIndex } from "../graph/node-index.js"
 import type { FlowMode } from "../routing/route.js"
 import type { FlowRuns } from "../run-view/flow-runs.js"
 import type { RunPanelProps, RunPanelSlot } from "../run-view/slots.js"
@@ -27,6 +29,7 @@ type LayoutProps = {
   client: ApiClient
   flowId: string
   ir: Ir
+  index: NodeIndex
   selection: RunSelection
   runs: FlowRuns
   selectedId: string | null
@@ -55,7 +58,7 @@ function Diagnostics({ client, flowId, revision }: { client: ApiClient; flowId: 
   )
 }
 
-function SchemaLayout({ ir, selectedId, onSelect }: LayoutProps) {
+function SchemaLayout({ ir, index, selectedId, onSelect }: LayoutProps) {
   return (
     <div className="flex min-h-0 flex-1">
       <div className="min-w-0 flex-1">
@@ -64,7 +67,7 @@ function SchemaLayout({ ir, selectedId, onSelect }: LayoutProps) {
       <aside className="w-[420px] shrink-0 border-l border-slate-800 bg-slate-950/60">
         <NodeInspector
           nodeId={selectedId}
-          body={selectedId === null ? null : ir.nodes[selectedId] ?? null}
+          body={bodyAt(ir, index, selectedId)}
           ir={ir}
           onSelectNode={onSelect}
           onClose={() => onSelect(null)}
@@ -138,12 +141,17 @@ function DetailPanel({ props }: { props: RunPanelProps }) {
 }
 
 function RunLayout(layout: LayoutProps) {
-  const { ir, selection, selectedId, onSelect } = layout
+  const { ir, index, selection, selectedId, onSelect } = layout
   const [canvasOpen, setCanvasOpen] = useState(true)
   const stepsRef = useScrollMemory("run:steps")
   const steps = runPanelOf("steps")
   const Steps = steps.Component
-  const panelProps: RunPanelProps = { ir, selection, nodeId: selectedId, onSelectNode: onSelect }
+  const panelProps: RunPanelProps = {
+    ir,
+    selection,
+    nodeId: runIdAt(index, selectedId),
+    onSelectNode: onSelect,
+  }
   const total = selection.view?.nodes.length ?? 0
 
   if (selection.runId === null) return <EmptyRuns {...layout} />
@@ -190,6 +198,7 @@ export function FlowGraphScreen({ client, flowId, runId, revision }: Props) {
   const { mode, selectedNodeId, selectNode, hrefOfRun } = useMode()
 
   const ir = detail.data?.ir ?? null
+  const index = useMemo(() => (ir === null ? new Map() : nodeIndexOf(ir)), [ir])
 
   if (detail.error !== null) {
     return (
@@ -216,6 +225,7 @@ export function FlowGraphScreen({ client, flowId, runId, revision }: Props) {
     client,
     flowId,
     ir,
+    index,
     selection,
     runs,
     selectedId: selectedNodeId,

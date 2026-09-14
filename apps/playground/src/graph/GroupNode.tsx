@@ -13,6 +13,7 @@ export type GroupNodeData = {
   stage: number
   group: GroupInfo
   collapsed: boolean
+  collapsible: boolean
 }
 
 export type GroupNodeType = Node<GroupNodeData, "wfgroup">
@@ -52,32 +53,34 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
   const tone = data.group.parallel ? "border-teal-700/70" : "border-slate-700"
 
   const header = (withSummary: boolean) => (
-    <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation()
-          toggle(id)
-        }}
-        title={data.collapsed ? "развернуть" : "свернуть"}
-        className="shrink-0 rounded-sm border border-slate-700 bg-slate-900 px-1 py-0.5 font-mono text-[10px] leading-none text-slate-300 hover:border-slate-500 hover:text-slate-100"
-      >
-        {data.collapsed ? "+" : "−"}
-      </button>
+    <div className="flex items-center gap-2 px-3.5 py-2.5">
+      {data.collapsible && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            toggle(id)
+          }}
+          title={data.collapsed ? "развернуть" : "свернуть"}
+          className="shrink-0 rounded-sm border border-slate-700 bg-slate-900 px-1.5 py-1 font-mono text-[12px] leading-none text-slate-300 hover:border-slate-500 hover:text-slate-100"
+        >
+          {data.collapsed ? "+" : "−"}
+        </button>
+      )}
       <span
-        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] leading-none ring-1 ${style.badge}`}
+        className={`inline-flex items-center gap-1 rounded px-1.5 py-1 font-mono text-[11px] leading-none ring-1 ${style.badge}`}
       >
         <KindGlyph shape={style.shape} />
         {style.label}
       </span>
-      <span className="truncate font-mono text-[12px] font-semibold text-slate-100">{data.label}</span>
+      <span className="truncate font-mono text-[14px] font-semibold text-slate-100">{data.label}</span>
       {data.group.badge !== "" && (
-        <span className="shrink-0 rounded-sm bg-teal-950 px-1 py-0.5 font-mono text-[9px] leading-none text-teal-300 ring-1 ring-teal-700">
+        <span className="shrink-0 rounded-sm bg-teal-950 px-1.5 py-1 font-mono text-[10.5px] leading-none text-teal-300 ring-1 ring-teal-700">
           {data.group.badge}
         </span>
       )}
       {withSummary && (
-        <span className="ml-auto shrink-0 font-mono text-[10px] text-slate-500">{summary(data.group)}</span>
+        <span className="ml-auto shrink-0 font-mono text-[11.5px] text-slate-500">{summary(data.group)}</span>
       )}
     </div>
   )
@@ -89,13 +92,13 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
       >
         <Handle type="target" id={IN_PORT} position={Position.Left} className={HANDLE} />
         {header(false)}
-        <div className="border-t border-slate-800 px-2.5 py-1.5">
+        <div className="border-t border-slate-800 px-3.5 py-2">
           <div className="flex items-baseline gap-1.5">
-            <span className="truncate font-mono text-[11px] text-slate-300">{data.group.component}</span>
-            <span className="ml-auto shrink-0 font-mono text-[10px] text-slate-400">{summary(data.group)}</span>
+            <span className="truncate font-mono text-[12.5px] text-slate-300">{data.group.component}</span>
+            <span className="ml-auto shrink-0 font-mono text-[11.5px] text-slate-400">{summary(data.group)}</span>
           </div>
-          <div className="truncate text-[10px] text-slate-500">{data.group.role}</div>
-          <div className="mt-0.5 truncate font-mono text-[9.5px] text-slate-600">{data.group.note}</div>
+          <div className="truncate text-[11.5px] text-slate-500">{data.group.role}</div>
+          <div className="mt-1 truncate font-mono text-[11px] text-slate-600">{data.group.note}</div>
         </div>
         <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
       </div>
@@ -108,10 +111,10 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
     >
       <Handle type="target" id={IN_PORT} position={Position.Left} className={HANDLE} />
       {header(true)}
-      <div className="-mt-1 flex items-center gap-2 px-2.5">
-        <span className="truncate font-mono text-[10px] text-slate-500">{data.group.component}</span>
-        <span className="truncate text-[10px] text-slate-600">{data.group.role}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[9.5px] text-slate-600">{data.group.note}</span>
+      <div className="-mt-1 flex items-center gap-3 px-3.5">
+        <span className="truncate font-mono text-[11.5px] text-slate-500">{data.group.component}</span>
+        <span className="truncate text-[11.5px] text-slate-600">{data.group.role}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-600">{data.group.note}</span>
       </div>
       <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
     </div>

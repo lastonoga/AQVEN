@@ -1,24 +1,25 @@
 import dagre from "@dagrejs/dagre"
+import { channelRoutes } from "./channels.js"
+import { bypass, clean } from "./reroute.js"
+import {
+  COLUMN_GAP,
+  CROSS_PAD,
+  EDGE_SEP,
+  GRAPH_MARGIN,
+  GROUP_HEADER,
+  GROUP_NEST,
+  GROUP_PAD,
+  NODE_BASE_HEIGHT,
+  NODE_SEP,
+  NODE_WIDTH,
+  RANK_PAD,
+  RANK_SEP,
+} from "./metrics.js"
 import type { EdgeLabel, GraphLabel, NodeLabel } from "@dagrejs/dagre"
+import type { Wire } from "./channels.js"
+import type { Point, Rect, Size } from "./metrics.js"
 
-export const NODE_WIDTH = 224
-export const NODE_BASE_HEIGHT = 150
-export const NESTED_HEIGHT = 56
-export const FAN_WIDTH = 148
-export const FAN_HEIGHT = 66
-export const COLLAPSED_WIDTH = 264
-export const COLLAPSED_HEIGHT = 112
-export const GROUP_PAD = 18
-export const GROUP_HEADER = 40
-export const GROUP_NEST = 16
-export const NODE_SEP = 40
-export const EDGE_SEP = 24
-export const RANK_SEP = 90
-export const GRAPH_MARGIN = 24
-export const COLUMN_GAP = 18
-
-export const RANK_PAD = RANK_SEP / 2
-export const CROSS_PAD = (NODE_SEP + EDGE_SEP) / 2
+export * from "./metrics.js"
 
 export type FramePad = { top: number; bottom: number; side: number }
 
@@ -31,10 +32,6 @@ const NESTED_PAD: FramePad = {
 }
 
 export const framePadOf = (nested: boolean): FramePad => (nested ? NESTED_PAD : LEAF_PAD)
-
-export type Point = { x: number; y: number }
-export type Size = { width: number; height: number }
-export type Rect = Point & Size
 
 export type LayoutNode = {
   id: string
@@ -61,7 +58,8 @@ export type ColumnBox = Rect & { rank: number }
 export const GRAPH_OPTIONS: GraphLabel = {
   rankdir: "LR",
   ranker: "network-simplex",
-  rankalign: "top",
+  rankalign: "center",
+  align: "UR",
   acyclicer: "greedy",
   nodesep: NODE_SEP,
   edgesep: EDGE_SEP,
@@ -230,12 +228,13 @@ const compoundGraph = (
   tree: Tree,
   sizeOf: (id: string) => Size,
   insets: ReadonlyMap<string, Inset>,
+  options: Partial<GraphLabel>,
 ) => {
   const graph = new dagre.graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>({
     compound: true,
     multigraph: true,
   })
-  graph.setGraph({ ...GRAPH_OPTIONS })
+  graph.setGraph({ ...GRAPH_OPTIONS, ...options })
   graph.setDefaultEdgeLabel(() => ({}))
 
   for (const node of nodes) {
@@ -308,53 +307,17 @@ const trimmed = (points: readonly Point[], source: Rect, target: Rect): Point[] 
   )
 }
 
-const LANE = RANK_SEP / 2
-const TOUCH = 0.5
-
-const slab = (from: number, span: number, low: number, high: number): [number, number] => {
-  if (span === 0) return from >= low && from <= high ? [0, 1] : [1, 0]
-  const first = (low - from) / span
-  const second = (high - from) / span
-  return first <= second ? [first, second] : [second, first]
-}
-
-const clips = (from: Point, to: Point, box: Rect): boolean => {
-  const width = box.width - TOUCH * 2
-  const height = box.height - TOUCH * 2
-  if (width <= 0 || height <= 0) return false
-  const [minX, maxX] = slab(from.x, to.x - from.x, box.x + TOUCH, box.x + TOUCH + width)
-  const [minY, maxY] = slab(from.y, to.y - from.y, box.y + TOUCH, box.y + TOUCH + height)
-  return Math.max(0, minX, minY) < Math.min(1, maxX, maxY)
-}
-
-const clean = (path: readonly Point[], boxes: readonly Rect[]): boolean =>
-  !path.some((point, index) => {
-    const next = path[index + 1]
-    return next !== undefined && boxes.some((box) => clips(point, next, box))
+const wiresOf = (links: readonly Link[], rects: ReadonlyMap<string, Rect>): Wire[] =>
+  links.flatMap((link) => {
+    const source = rects.get(link.source)
+    const target = rects.get(link.target)
+    if (source === undefined || target === undefined) return []
+    return [{ id: link.id, source, target }]
   })
 
-const detour = (start: Point, end: Point, lane: number): Point[] => [
-  start,
-  { x: start.x + LANE, y: start.y },
-  { x: start.x + LANE, y: lane },
-  { x: end.x - LANE, y: lane },
-  { x: end.x - LANE, y: end.y },
-  end,
-]
-
-const bypass = (path: readonly Point[], boxes: readonly Rect[]): Point[] => {
-  if (clean(path, boxes)) return [...path]
-  const start = path[0]
-  const end = path[path.length - 1]
-  if (start === undefined || end === undefined) return [...path]
-  const band = boxes.filter(
-    (box) =>
-      box.x <= Math.max(start.x, end.x) + LANE && box.x + box.width >= Math.min(start.x, end.x) - LANE,
-  )
-  const above = Math.min(start.y, end.y, ...band.map((box) => box.y)) - NODE_SEP
-  const below = Math.max(start.y, end.y, ...band.map((box) => box.y + box.height)) + NODE_SEP
-  const tried = [detour(start, end, above), detour(start, end, below)]
-  return tried.find((candidate) => clean(candidate, boxes)) ?? [...path]
+const usableChannel = (path: readonly Point[] | undefined, obstacles: readonly Rect[]): Point[] | null => {
+  if (path === undefined) return null
+  return clean(path, obstacles) ? [...path] : null
 }
 
 const originOf = (rects: ReadonlyMap<string, Rect>, routes: ReadonlyMap<string, Point[]>): Point => {
@@ -381,6 +344,7 @@ export const layoutNested = (
   nodes: readonly LayoutNode[],
   edges: readonly LayoutEdge[],
   measured: ReadonlyMap<string, Size>,
+  options: Partial<GraphLabel> = {},
 ): Layout => {
   if (nodes.length === 0) return EMPTY_LAYOUT
 
@@ -393,7 +357,7 @@ export const layoutNested = (
 
   const links = linksOf(tree, edges)
   const insets = insetsOf(nodes, tree)
-  const graph = compoundGraph(nodes, links, tree, sizeOf, insets)
+  const graph = compoundGraph(nodes, links, tree, sizeOf, insets, options)
   dagre.layout(graph)
 
   const rects = new Map<string, Rect>()
@@ -413,6 +377,7 @@ export const layoutNested = (
   growFrames(nodes, tree, rects)
 
   const kin = kinOf(tree)
+  const channels = channelRoutes(wiresOf(links, rects))
   const routes = new Map<string, Point[]>()
   for (const link of links) {
     const points = graph.edge(link.from, link.to, link.id).points
@@ -421,7 +386,8 @@ export const layoutNested = (
     if (points === undefined || source === undefined || target === undefined) continue
     const skip = new Set([...(kin.get(link.source) ?? []), ...(kin.get(link.target) ?? [])])
     const obstacles = [...rects].flatMap(([id, rect]) => (skip.has(id) ? [] : [rect]))
-    routes.set(link.id, bypass(trimmed(points, source, target), obstacles))
+    const normalized = usableChannel(channels.get(link.id), obstacles)
+    routes.set(link.id, normalized ?? bypass(trimmed(points, source, target), obstacles))
   }
 
   const origin = originOf(rects, routes)

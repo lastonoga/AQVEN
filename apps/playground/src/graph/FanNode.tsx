@@ -27,9 +27,9 @@ export function FanNode({ data }: NodeProps<FanNodeType>) {
         <span className={`inline-flex items-center rounded p-0.5 ring-1 ${style.badge}`}>
           <KindGlyph shape={style.shape} size={11} />
         </span>
-        <span className="truncate font-mono text-[11px] font-semibold text-teal-200">{data.label}</span>
+        <span className="truncate font-mono text-[13px] font-semibold text-teal-200">{data.label}</span>
       </div>
-      <div className="truncate font-mono text-[9.5px] text-slate-500">{data.note}</div>
+      <div className="truncate font-mono text-[11px] text-slate-500">{data.note}</div>
       <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
     </div>
   )

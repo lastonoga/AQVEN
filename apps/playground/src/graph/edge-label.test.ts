@@ -62,7 +62,7 @@ const placedIn = (flow: SynthesizedFlow): { labels: PlacedLabel[]; hidden: strin
   const spots = placeLabels(targets, labelObstacles(rects, frames))
   const labels = targets.flatMap((target) => {
     const spot = spots.get(target.id) ?? null
-    return spot === null ? [] : [{ id: target.id, rect: labelRect(spot, target.text) }]
+    return spot === null ? [] : [{ id: target.id, rect: labelRect(spot.center, target.text) }]
   })
   const hidden = targets.filter((target) => (spots.get(target.id) ?? null) === null).map((t) => t.id)
   return { labels, hidden, boxes: labelObstacles(rects, frames) }
@@ -132,7 +132,7 @@ describe("место подписи", () => {
   test("подпись стоит рядом с линией, а не на ней", () => {
     const spot = placeLabel(chainOf(straight), [], [])
     expect(spot).not.toBeNull()
-    expect(nearestGap(spot ?? { x: 0, y: 0 }, straight)).toBeCloseTo(LABEL_HEIGHT / 2 + LABEL_GAP)
+    expect(nearestGap(spot?.center ?? { x: 0, y: 0 }, straight)).toBeCloseTo(LABEL_HEIGHT / 2 + LABEL_GAP)
   })
 
   test("точка крепления не садится на поворот", () => {
@@ -143,7 +143,7 @@ describe("место подписи", () => {
     ]
     const spot = placeLabel({ ...chainOf(bend), anchor: "center" }, [], [])
     expect(spot).not.toBeNull()
-    expect(Math.hypot((spot?.x ?? 0) - 200, spot?.y ?? 0)).toBeGreaterThan(LABEL_GAP)
+    expect(Math.hypot((spot?.center.x ?? 0) - 200, spot?.center.y ?? 0)).toBeGreaterThan(LABEL_GAP)
   })
 
   test("веер подписывается на своей ветке, а не на общем стволе", () => {
@@ -155,14 +155,14 @@ describe("место подписи", () => {
     ]
     const spot = placeLabel(chainOf(branch), [], [])
     expect(spot).not.toBeNull()
-    expect(spot?.y ?? 0).toBeGreaterThan(0)
+    expect(spot?.center.y ?? 0).toBeGreaterThan(0)
   })
 
   test("занятый прямоугольник узла сдвигает подпись дальше по маршруту", () => {
     const block: Rect = { x: -60, y: -60, width: 200, height: 120 }
     const spot = placeLabel(chainOf(straight), [block], [])
     expect(spot).not.toBeNull()
-    expect(overlaps(labelRect(spot ?? { x: 0, y: 0 }, "temperature = 0.3"), block)).toBe(false)
+    expect(overlaps(labelRect(spot?.center ?? { x: 0, y: 0 }, "temperature = 0.3"), block)).toBe(false)
   })
 
   test("без свободного места подпись прячется", () => {
@@ -181,9 +181,9 @@ describe("место подписи", () => {
     expect(first).not.toBeNull()
     expect(second).not.toBeNull()
     if (first === null || first === undefined || second === null || second === undefined) return
-    expect(overlaps(labelRect(first, targets[0]?.text ?? ""), labelRect(second, targets[1]?.text ?? ""))).toBe(
-      false,
-    )
+    expect(
+      overlaps(labelRect(first.center, targets[0]?.text ?? ""), labelRect(second.center, targets[1]?.text ?? "")),
+    ).toBe(false)
   })
 })
 

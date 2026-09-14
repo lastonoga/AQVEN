@@ -8,6 +8,7 @@ import {
   NODE_WIDTH,
   layoutNested,
 } from "./layout.js"
+import type { GraphLabel } from "@dagrejs/dagre"
 import type { ExpandedEdge, ExpandedGraph, ExpandedNode } from "./expand.js"
 import type { Layout, LayoutNode, Size } from "./layout.js"
 
@@ -55,6 +56,7 @@ export const placeGraph = (
   graph: ExpandedGraph,
   collapsed: ReadonlySet<string>,
   measured: ReadonlyMap<string, Size>,
+  options: Partial<GraphLabel> = {},
 ): Placement => {
   const hidden = hiddenUnder(graph, collapsed)
   const visible = graph.nodes.filter((node) => !hidden.has(node.id))
@@ -70,8 +72,11 @@ export const placeGraph = (
   const sized = new Set(visible.filter((node) => node.group === null).map((node) => node.id))
   const useful = new Map([...measured].filter(([id]) => sized.has(id)))
 
-  return { visible, edges, layout: layoutNested(layoutNodes, edges, useful), sized }
+  return { visible, edges, layout: layoutNested(layoutNodes, edges, useful, options), sized }
 }
 
 export const groupIdsOf = (graph: ExpandedGraph): string[] =>
   graph.nodes.filter((node) => node.group !== null).map((node) => node.id)
+
+export const collapsibleIdsOf = (graph: ExpandedGraph): string[] =>
+  graph.nodes.filter((node) => node.group !== null && node.group.leaves > 1).map((node) => node.id)

@@ -3,7 +3,7 @@ import { IN_PORT, OUT_PORT, slotPort } from "./ports.js"
 import { edgeChain, labelObstacles, placeLabels } from "./edge-label.js"
 import type { Edge } from "@xyflow/react"
 import type { EdgeAnchor, Point } from "./edge-route.js"
-import type { LabelTarget } from "./edge-label.js"
+import type { LabelTarget, Placed } from "./edge-label.js"
 import type { EdgeKind, ExpandedEdge } from "./expand.js"
 import type { Rect } from "./layout.js"
 
@@ -27,7 +27,7 @@ export type RoutedEdge = ExpandedEdge & EdgeRoute
 
 export type WfEdgeType = "ortho" | "branch"
 
-export type LabelSpot = Point | null
+export type LabelSpot = Placed | null
 
 export type WfEdgeData = {
   variant: EdgeVariant
