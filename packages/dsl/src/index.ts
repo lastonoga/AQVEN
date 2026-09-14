@@ -115,5 +115,6 @@ export const defineComponent = <D extends Readonly<Record<string, SlotType | str
 export const $const = <T>(v: T): Const<T> => ({ const: v });
 export const root = <T>(name: string): Ref<T> => mk(null, [name]);
 
-export type { Id, IdType, Type, TypeDecl, TypeKind, EnumType, ListType, ViewDecl, AllowedSetKind, CodeFormat, IdOptions, TypeOptions } from "./types.js";
-export { idType, defineType, defineEnum, defineId, view, viewType, listType, declOf, hasSchema, typeRegistry } from "./types.js";
+export { z } from "zod";
+export type { Id, IdType, Type, TypeDecl, TypeKind, TypeValue, TypeOptions, EnumType, ListType, ViewDecl, FieldInfo, AllowedSetKind, CodeFormat, IdOptions } from "./types.js";
+export { idType, defineType, defineEnum, defineId, view, viewType, listType, ref, schemaOf, declOf, hasSchema, typeRegistry } from "./types.js";

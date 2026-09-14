@@ -41,6 +41,9 @@ export const buildScene = (ir: Ir): Scene => {
   }
 }
 
+const GROUP_Z = 0
+const NODE_Z = 1
+
 const toCanvasNode = (
   node: ExpandedNode,
   position: { x: number; y: number },
@@ -48,14 +51,15 @@ const toCanvasNode = (
   collapsed: boolean,
   stage: number,
 ): CanvasNode => {
+  const kind = canvasKindOf(node)
   const shared = {
     id: node.id,
     position,
     parentId: node.parentId ?? undefined,
     extent: node.parentId === null ? undefined : ("parent" as const),
     draggable: false,
+    zIndex: kind === "wfgroup" ? GROUP_Z : NODE_Z,
   }
-  const kind = canvasKindOf(node)
 
   if (kind === "fan") {
     return { ...shared, type: "fan", data: { label: node.label, note: node.note, kind: node.kind } }
@@ -108,7 +112,7 @@ export const buildFrame = (
 
   return {
     nodes,
-    edges: placement.edges.map(toFlowEdge),
+    edges: placement.edges.map((edge) => toFlowEdge({ ...edge, points: layout.routes.get(edge.id) })),
     columns: columnsOf(layout.rects, scene.ranking.rankOf, scene.rootIds),
     sized: placement.sized,
   }

@@ -12,6 +12,7 @@ import {
 } from "@xyflow/react"
 import type { Edge } from "@xyflow/react"
 import { buildFrame, buildScene } from "./scene.js"
+import { defaultEdgeOptions, edgeTypes } from "./edge-types.js"
 import { toggleIn, GroupCollapseProvider } from "./collapse.js"
 import { FlowNode } from "./FlowNode.js"
 import { FanNode } from "./FanNode.js"
@@ -26,7 +27,11 @@ import type { Ir } from "../api/types.js"
 
 const nodeTypes = { wf: FlowNode, fan: FanNode, wfgroup: GroupNode }
 
-const FIT_VIEW = { padding: 0.06, maxZoom: 1, minZoom: 0.15 }
+const FIT_VIEW = { padding: 0.06, maxZoom: 1, minZoom: 0.1 }
+
+const MIN_ZOOM = 0.1
+
+const VIRTUALIZE_FROM = 200
 
 const REFIT_DELAY = 90
 
@@ -125,19 +130,23 @@ function FlowScene({ ir, selectedId, onSelect }: Props) {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
               nodesDraggable={false}
               nodesConnectable={false}
               edgesFocusable={false}
               onNodeClick={(_, node) => onSelect(scene.rootOf.get(node.id) ?? node.id)}
               onPaneClick={() => onSelect(null)}
               proOptions={{ hideAttribution: true }}
+              defaultEdgeOptions={defaultEdgeOptions}
+              elevateEdgesOnSelect
+              onlyRenderVisibleElements={painted.length > VIRTUALIZE_FROM}
               fitView
               fitViewOptions={FIT_VIEW}
-              minZoom={0.08}
+              minZoom={MIN_ZOOM}
               maxZoom={2}
               colorMode="dark"
             >
-              <StageColumns columns={frame.columns} stages={scene.ranking.stages} />
+              <StageColumns columns={frame.columns} />
               <Background color="#1e293b" gap={20} />
               <Controls showInteractive={false} />
               <MiniMap

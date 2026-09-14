@@ -1,6 +1,10 @@
 import { MarkerType } from "@xyflow/react"
+import { IN_PORT, OUT_PORT, slotPort } from "./ports.js"
 import type { Edge } from "@xyflow/react"
+import type { Point } from "./edge-route.js"
 import type { EdgeKind, ExpandedEdge } from "./expand.js"
+
+export type EdgeVariant = EdgeKind | "loopback" | "boundary"
 
 export type EdgeLook = {
   title: string
@@ -8,66 +12,99 @@ export type EdgeLook = {
   width: number
   dash?: string
   animated: boolean
-  type: string
 }
 
-const looks: Record<EdgeKind, EdgeLook> = {
-  data: { title: "поток данных", color: "#64748b", width: 1.6, animated: false, type: "default" },
-  branch: {
-    title: "ветка switch",
-    color: "#fb923c",
-    width: 1.8,
-    dash: "7 4",
-    animated: false,
-    type: "smoothstep",
-  },
+export type EdgeRoute = {
+  points?: readonly Point[]
+  variant?: EdgeVariant
+  slot?: string
+}
+
+export type RoutedEdge = ExpandedEdge & EdgeRoute
+
+export type WfEdgeType = "ortho" | "branch"
+
+export type WfEdgeData = {
+  variant: EdgeVariant
+  title: string
+  color: string
+  text: string
+  points: readonly Point[]
+}
+
+export type WfEdge = Edge<WfEdgeData, WfEdgeType>
+
+const looks: Record<EdgeVariant, EdgeLook> = {
+  data: { title: "поток данных", color: "#64748b", width: 1.6, animated: false },
+  branch: { title: "переход ветки switch", color: "#fb923c", width: 1.8, dash: "7 4", animated: false },
   fanout: {
     title: "разветвление на параллельные вызовы",
     color: "#2dd4bf",
     width: 2.2,
     animated: true,
-    type: "smoothstep",
   },
-  fanin: {
-    title: "сведение параллельных ветвей",
-    color: "#2dd4bf",
-    width: 2.2,
-    animated: false,
-    type: "smoothstep",
-  },
-  loop: {
-    title: "вход в тело цикла",
+  fanin: { title: "сведение параллельных ветвей", color: "#2dd4bf", width: 2.2, animated: false },
+  loop: { title: "вход в тело цикла", color: "#f472b6", width: 1.8, dash: "3 4", animated: true },
+  loopback: {
+    title: "обратное ребро цикла",
     color: "#f472b6",
     width: 1.8,
-    dash: "3 4",
-    animated: true,
-    type: "smoothstep",
+    dash: "1 6",
+    animated: false,
   },
+  boundary: { title: "граница компонента", color: "#94a3b8", width: 1.4, dash: "12 6", animated: false },
 }
 
-export const edgeLook = (kind: EdgeKind): EdgeLook => looks[kind]
+const LOOP_ENTRY_SUFFIX = "/split"
 
-export const edgeLegend: readonly (EdgeLook & { kind: EdgeKind })[] = (
-  Object.keys(looks) as EdgeKind[]
-).map((kind) => ({ kind, ...looks[kind] }))
+const SOURCE_LABELLED: ReadonlySet<EdgeVariant> = new Set<EdgeVariant>([
+  "branch",
+  "fanout",
+  "loop",
+  "loopback",
+])
 
-const labelStyle = { fill: "#cbd5e1", fontSize: 10, fontFamily: "ui-monospace, monospace" }
+const backEdge = (edge: ExpandedEdge): boolean =>
+  edge.kind === "loop" && edge.target.endsWith(LOOP_ENTRY_SUFFIX)
 
-const labelBgStyle = { fill: "#020617", fillOpacity: 0.85 }
+export const edgeVariant = (edge: RoutedEdge): EdgeVariant => {
+  if (edge.variant !== undefined) return edge.variant
+  if (backEdge(edge)) return "loopback"
+  return edge.kind
+}
 
-export const toFlowEdge = (edge: ExpandedEdge): Edge => {
-  const look = edgeLook(edge.kind)
+export const edgeLook = (variant: EdgeVariant): EdgeLook => looks[variant]
+
+export const edgeLegend: readonly (EdgeLook & { kind: EdgeVariant })[] = (
+  Object.keys(looks) as EdgeVariant[]
+).map((variant) => ({ kind: variant, ...looks[variant] }))
+
+const edgeTypeOf = (variant: EdgeVariant, label: string): WfEdgeType =>
+  label !== "" && SOURCE_LABELLED.has(variant) ? "branch" : "ortho"
+
+const targetPortOf = (edge: RoutedEdge): string =>
+  edge.slot === undefined || edge.slot === "" ? IN_PORT : slotPort(edge.slot)
+
+export const toFlowEdge = (edge: RoutedEdge): WfEdge => {
+  const variant = edgeVariant(edge)
+  const look = edgeLook(variant)
+  const label = edge.label
   return {
     id: edge.id,
     source: edge.source,
     target: edge.target,
-    type: look.type,
+    sourceHandle: OUT_PORT,
+    targetHandle: targetPortOf(edge),
+    type: edgeTypeOf(variant, label),
     animated: look.animated,
-    label: edge.label === "" ? undefined : edge.label,
-    labelStyle,
-    labelBgStyle,
-    labelBgPadding: [4, 2],
-    labelBgBorderRadius: 3,
+    zIndex: 2,
+    data: {
+      variant,
+      title: look.title,
+      color: look.color,
+      text: label,
+      points: edge.points ?? [],
+    },
     style: { stroke: look.color, strokeWidth: look.width, strokeDasharray: look.dash },
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: look.color },
   }

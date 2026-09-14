@@ -1,26 +1,9 @@
-import { branch, call, code, defineFlow, human, idType, llm, map, root, $const } from "@wf/dsl";
-import type { Fn, Id, IdType, Type } from "@wf/dsl";
+import { branch, call, code, defineFlow, human, llm, map, root, $const } from "@wf/dsl";
 import { aggregate, agreementOf, divergeTypes, expandVary, voteTally } from "@wf/std/diverge";
-import type { AggregateStrategy, Tally } from "@wf/std/diverge";
+import type { AggregateStrategy } from "@wf/std/diverge";
 import { extractTypes } from "@wf/std/extract";
-
-type OptionId = Id<"OptionId">;
-type Option = { id: OptionId; text: string };
-type Problem = { id: string; statement: string; options: Option[] };
-type Answer = { option_id: OptionId; reasoning: string };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-const optionId: IdType<OptionId> = idType<OptionId>("OptionId");
-
-const t = {
-  OptionId: optionId,
-  Answer: ty<Answer>("Answer"),
-  AnswerArr: ty<Answer[]>("Answer[]"),
-  AnswerTallyArr: ty<Tally<Answer>[]>("Tally<Answer>[]"),
-  AnswerReviewForm: ty<unknown>("AnswerReviewForm"),
-};
-
-const solveProblem: Fn<{ problem: Problem }, Answer> = { name: "solve_problem" };
+import { solveProblem, t } from "./domain/quiz.js";
+import type { Answer, Problem } from "./domain/quiz.js";
 
 const $input = root<Problem>("input");
 

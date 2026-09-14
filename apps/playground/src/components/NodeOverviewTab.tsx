@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { kindStyle } from "../graph/kinds.js"
 import { InspectorSection } from "./InspectorSection.js"
+import { TypeBadge } from "./TypeBadge.js"
 import { KeyValueRows } from "./KeyValueRows.js"
 import { SlotSourceView } from "./SlotSourceView.js"
 import { flattenParams, labelOf } from "./node-labels.js"
@@ -106,7 +107,10 @@ export function NodeOverviewTab(context: InspectorContext) {
               value: description === "" ? "" : <span className="font-sans text-slate-300">{description}</span>,
             },
             { label: "Шаг", value: context.step === 0 ? "" : `${context.step} из ${context.total}` },
-            { label: "Тип выхода", value: outTypeName(context.body) },
+            {
+              label: "Тип выхода",
+              value: <TypeBadge type={outTypeName(context.body)} ir={context.ir} missing="тип выхода не объявлен" />,
+            },
           ]}
         />
       </InspectorSection>

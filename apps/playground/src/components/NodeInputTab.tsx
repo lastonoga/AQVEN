@@ -1,5 +1,6 @@
 import { InspectorHint, InspectorSection } from "./InspectorSection.js"
 import { RefChip } from "./RefChip.js"
+import { TypeBadge } from "./TypeBadge.js"
 import { ValuePopover } from "./ValuePopover.js"
 import { ValuePreview, ValueView } from "./ValueView.js"
 import { embeddedLlm } from "./ir-value.js"
@@ -44,6 +45,12 @@ function SlotValueCell({ provenance }: { provenance: SlotProvenance }) {
   )
 }
 
+function SlotTypeCell({ provenance, ir }: { provenance: SlotProvenance; ir: Ir }) {
+  const type = provenance.origin?.type ?? ""
+  if (type === "") return null
+  return <TypeBadge type={type} ir={ir} />
+}
+
 function SlotRow({ slot, context, ir, owner }: { slot: Slot } & Omit<TableProps, "slots">) {
   const provenance = resolveSlot(slot.name, slot.raw, ir, context.run, { nodeId: owner })
   return (
@@ -51,8 +58,9 @@ function SlotRow({ slot, context, ir, owner }: { slot: Slot } & Omit<TableProps,
       <span className="truncate pt-[2px] text-slate-200" title={slot.name}>
         {slot.name}
       </span>
-      <span className="min-w-0">
+      <span className="flex min-w-0 flex-col items-start gap-0.5">
         <RefChip provenance={provenance} raw={slot.raw} onSelectNode={context.onSelectNode} />
+        <SlotTypeCell provenance={provenance} ir={ir} />
       </span>
       <span className="min-w-0 pt-[2px]">
         <SlotValueCell provenance={provenance} />

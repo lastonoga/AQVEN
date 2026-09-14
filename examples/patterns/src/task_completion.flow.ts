@@ -1,52 +1,16 @@
 import { branch, code, defineComponent, defineFlow, human, llm, root, tool, $const } from "@wf/dsl";
-import type { Fn, Type } from "@wf/dsl";
 import { loopTypes, taskCompletion } from "@wf/std/loops";
-import type { ChecklistItem, ChecklistItemId } from "@wf/std/loops";
-
-type Account = { id: string; name: string; plan: string };
-type OnboardingRequest = { accountId: string; owner: string; checklist: ChecklistItem[] };
-type OnboardingTask = { account: Account; owner: string; deadlineDays: number };
-type Artifact = { itemId: ChecklistItemId; kind: string; url: string };
-type OnboardingState = { summary: string; artifacts: Artifact[] };
-type Completion = "done" | "partial";
-type OnboardingReport = { text: string; openItems: string[] };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-
-const t = {
-  Account: ty<Account>("Account"),
-  OnboardingTask: ty<OnboardingTask>("OnboardingTask"),
-  OnboardingState: ty<OnboardingState>("OnboardingState"),
-  Completion: ty<Completion>("Completion"),
-  CompletionFlag: ty<{ status: Completion; closed: number }>("CompletionFlag"),
-  OnboardingReport: ty<OnboardingReport>("OnboardingReport"),
-  HandoverForm: ty<unknown>("HandoverForm"),
-  TaskCompletionOnboarding: ty<{
-    state: OnboardingState;
-    checklist: ChecklistItem[];
-    allDone: boolean;
-    iterations: number;
-  }>("TaskCompletion<OnboardingState>"),
-};
-
-const accountById: Fn<{ accountId: string }, Account> = { name: "account_by_id" };
-const buildOnboardingTask: Fn<{ account: Account; owner: string; deadlineDays: number }, OnboardingTask> = {
-  name: "build_onboarding_task",
-};
-const workOnChecklist: Fn<
-  { task: OnboardingTask; state: OnboardingState; checklist: ChecklistItem[] },
-  OnboardingState
-> = { name: "work_on_checklist" };
-const checkChecklist: Fn<{ state: OnboardingState; checklist: ChecklistItem[] }, ChecklistItem[]> = {
-  name: "check_checklist",
-};
-const completionFlag: Fn<{ checklist: ChecklistItem[]; allDone: boolean }, { status: Completion; closed: number }> = {
-  name: "completion_flag",
-};
-const renderOnboarding: Fn<
-  { state: OnboardingState; checklist: ChecklistItem[]; iterations: number },
-  OnboardingReport
-> = { name: "render_onboarding" };
+import type { ChecklistItem } from "@wf/std/loops";
+import {
+  accountById,
+  buildOnboardingTask,
+  checkChecklist,
+  completionFlag,
+  renderOnboarding,
+  t,
+  workOnChecklist,
+} from "./domain/onboarding.js";
+import type { OnboardingRequest, OnboardingState, OnboardingTask } from "./domain/onboarding.js";
 
 const $work = root<{ task: OnboardingTask; state: OnboardingState; checklist: ChecklistItem[] }>("in");
 

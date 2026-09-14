@@ -1,32 +1,7 @@
-import { code, defineFlow, idType, llm, map, root, tool, $const } from "@wf/dsl";
-import type { Fn, Id, IdType, Type } from "@wf/dsl";
+import { code, defineFlow, llm, map, root, tool, $const } from "@wf/dsl";
 import { foldCounts } from "@wf/std/diverge";
-
-type CategoryId = Id<"CategoryId">;
-type TicketId = Id<"TicketId">;
-type Category = { id: CategoryId; title: string };
-type BatchRef = { batch_id: string; categories: Category[] };
-type Ticket = { id: TicketId; text: string; created_at: string };
-type Label = { ticket_id: TicketId; category_id: CategoryId; severity: number };
-type CategoryStat = { category_id: CategoryId; count: number; avg_severity: number };
-type Digest = { batch_id: string; headline: string; stats: CategoryStat[] };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-const categoryId: IdType<CategoryId> = idType<CategoryId>("CategoryId");
-const ticketId: IdType<TicketId> = idType<TicketId>("TicketId");
-
-const t = {
-  CategoryId: categoryId,
-  TicketId: ticketId,
-  Ticket: ty<Ticket>("Ticket"),
-  TicketArr: ty<Ticket[]>("Ticket[]"),
-  CategoryStatArr: ty<CategoryStat[]>("CategoryStat[]"),
-  Digest: ty<Digest>("Digest"),
-};
-
-const ticketsOfBatch: Fn<{ batchId: string }, Ticket[]> = { name: "tickets_of_batch" };
-const classifyTicket: Fn<{ ticket: Ticket; categories: Category[] }, Label> = { name: "classify_ticket" };
-const writeDigest: Fn<{ stats: CategoryStat[]; batch: BatchRef }, Digest> = { name: "write_digest" };
+import { classifyTicket, t, ticketsOfBatch, writeDigest } from "./domain/triage.js";
+import type { BatchRef, CategoryStat, Label } from "./domain/triage.js";
 
 const $input = root<BatchRef>("input");
 
