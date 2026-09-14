@@ -10,8 +10,10 @@ export const COLLAPSED_WIDTH = 264
 export const COLLAPSED_HEIGHT = 112
 export const GROUP_PAD = 18
 export const GROUP_HEADER = 40
-export const NODE_SEP = 30
-export const RANK_SEP = 56
+export const NODE_SEP = 40
+export const EDGE_SEP = 24
+export const RANK_SEP = 90
+export const GRAPH_MARGIN = 24
 export const COLUMN_GAP = 18
 
 export type Point = { x: number; y: number }
@@ -25,6 +27,7 @@ export type LayoutNode = {
 }
 
 export type LayoutEdge = {
+  id: string
   source: string
   target: string
 }
@@ -33,75 +36,292 @@ export type Layout = {
   offsets: Map<string, Point>
   rects: Map<string, Rect>
   sizes: Map<string, Size>
+  routes: Map<string, Point[]>
   bounds: Rect
 }
 
 export type ColumnBox = Rect & { rank: number }
 
-type Level = { size: Size; offsets: Map<string, Point> }
-
-const EMPTY_LEVEL: Level = { size: { width: 0, height: 0 }, offsets: new Map() }
-
-const GRAPH_OPTIONS: GraphLabel = {
+export const GRAPH_OPTIONS: GraphLabel = {
   rankdir: "LR",
-  ranker: "longest-path",
+  ranker: "network-simplex",
+  rankalign: "top",
   acyclicer: "greedy",
   nodesep: NODE_SEP,
+  edgesep: EDGE_SEP,
   ranksep: RANK_SEP,
-  marginx: 0,
-  marginy: 0,
+  marginx: GRAPH_MARGIN,
+  marginy: GRAPH_MARGIN,
 }
 
-const layoutLevel = (
-  ids: readonly string[],
-  edges: readonly LayoutEdge[],
-  sizeOf: (id: string) => Size,
-): Level => {
-  if (ids.length === 0) return EMPTY_LEVEL
-
-  const graph = new dagre.graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>()
-  graph.setDefaultEdgeLabel(() => ({}))
-  graph.setGraph({ ...GRAPH_OPTIONS })
-
-  const inside = new Set(ids)
-  for (const id of ids) {
-    const size = sizeOf(id)
-    graph.setNode(id, { width: size.width, height: size.height })
-  }
-  for (const edge of edges) {
-    if (edge.source === edge.target) continue
-    if (!inside.has(edge.source) || !inside.has(edge.target)) continue
-    graph.setEdge(edge.source, edge.target)
-  }
-
-  dagre.layout(graph)
-
-  const corners = new Map<string, Point>()
-  for (const id of ids) {
-    const placed = graph.node(id)
-    const size = sizeOf(id)
-    corners.set(id, { x: (placed.x ?? 0) - size.width / 2, y: (placed.y ?? 0) - size.height / 2 })
-  }
-
-  const left = Math.min(...[...corners.values()].map((point) => point.x))
-  const top = Math.min(...[...corners.values()].map((point) => point.y))
-  const right = Math.max(...ids.map((id) => (corners.get(id)?.x ?? 0) + sizeOf(id).width))
-  const bottom = Math.max(...ids.map((id) => (corners.get(id)?.y ?? 0) + sizeOf(id).height))
-
-  const offsets = new Map<string, Point>()
-  for (const [id, point] of corners) offsets.set(id, { x: point.x - left, y: point.y - top })
-
-  return { size: { width: right - left, height: bottom - top }, offsets }
+const EMPTY_LAYOUT: Layout = {
+  offsets: new Map(),
+  rects: new Map(),
+  sizes: new Map(),
+  routes: new Map(),
+  bounds: { x: 0, y: 0, width: 0, height: 0 },
 }
 
-const childrenIndex = (nodes: readonly LayoutNode[]): Map<string | null, string[]> => {
-  const children = new Map<string | null, string[]>()
+type Tree = {
+  byId: Map<string, LayoutNode>
+  children: Map<string, string[]>
+  depth: Map<string, number>
+}
+
+const treeOf = (nodes: readonly LayoutNode[]): Tree => {
+  const byId = new Map(nodes.map((node) => [node.id, node]))
+  const children = new Map<string, string[]>()
   for (const node of nodes) {
+    if (node.parentId === null) continue
     const bucket = children.get(node.parentId) ?? []
     bucket.push(node.id)
     children.set(node.parentId, bucket)
   }
-  return children
+
+  const depth = new Map<string, number>()
+  const depthOf = (id: string): number => {
+    const seen = depth.get(id)
+    if (seen !== undefined) return seen
+    const parentId = byId.get(id)?.parentId ?? null
+    const own = parentId === null ? 0 : depthOf(parentId) + 1
+    depth.set(id, own)
+    return own
+  }
+  for (const node of nodes) depthOf(node.id)
+
+  return { byId, children, depth }
+}
+
+const lineage = (tree: Tree, id: string): Set<string> => {
+  const chain = new Set<string>()
+  let cursor = tree.byId.get(id)?.parentId ?? null
+  while (cursor !== null) {
+    chain.add(cursor)
+    cursor = tree.byId.get(cursor)?.parentId ?? null
+  }
+  return chain
+}
+
+const routable = (tree: Tree, edge: LayoutEdge): boolean => {
+  if (edge.source === edge.target) return false
+  if (!tree.byId.has(edge.source) || !tree.byId.has(edge.target)) return false
+  if (lineage(tree, edge.source).has(edge.target)) return false
+  return !lineage(tree, edge.target).has(edge.source)
+}
+
+type Port = { entry: string; exit: string }
+
+type Link = LayoutEdge & { from: string; to: string }
+
+const descendantsOf = (tree: Tree): Map<string, string[]> => {
+  const nested = new Map<string, string[]>()
+  for (const id of tree.byId.keys()) {
+    for (const ancestor of lineage(tree, id)) {
+      const bucket = nested.get(ancestor) ?? []
+      bucket.push(id)
+      nested.set(ancestor, bucket)
+    }
+  }
+  return nested
+}
+
+const endpointOf = (tree: Tree, ports: ReadonlyMap<string, Port>, id: string, side: keyof Port): string => {
+  if ((tree.children.get(id) ?? []).length === 0) return id
+  return ports.get(id)?.[side] ?? id
+}
+
+const kinOf = (tree: Tree): Map<string, Set<string>> => {
+  const nested = descendantsOf(tree)
+  const kin = new Map<string, Set<string>>()
+  for (const id of tree.byId.keys()) {
+    kin.set(id, new Set([id, ...lineage(tree, id), ...(nested.get(id) ?? [])]))
+  }
+  return kin
+}
+
+const portsOf = (tree: Tree, edges: readonly LayoutEdge[]): Map<string, Port> => {
+  const ports = new Map<string, Port>()
+  const nested = descendantsOf(tree)
+  const deepestFirst = [...nested.keys()].sort(
+    (left, right) => (tree.depth.get(right) ?? 0) - (tree.depth.get(left) ?? 0),
+  )
+  for (const cluster of deepestFirst) {
+    const inside = nested.get(cluster) ?? []
+    const within = new Set(inside)
+    const leaves = inside.filter((id) => (tree.children.get(id) ?? []).length === 0)
+    const first = leaves[0]
+    if (first === undefined) continue
+    const internal = edges.filter((edge) => within.has(edge.source) && within.has(edge.target))
+    const fed = new Set(internal.map((edge) => endpointOf(tree, ports, edge.target, "entry")))
+    const drained = new Set(internal.map((edge) => endpointOf(tree, ports, edge.source, "exit")))
+    ports.set(cluster, {
+      entry: leaves.find((id) => !fed.has(id)) ?? first,
+      exit: leaves.find((id) => !drained.has(id)) ?? first,
+    })
+  }
+  return ports
+}
+
+const linksOf = (tree: Tree, edges: readonly LayoutEdge[]): Link[] => {
+  const routes = edges.filter((edge) => routable(tree, edge))
+  const ports = portsOf(tree, routes)
+  return routes
+    .map((edge) => ({
+      ...edge,
+      from: endpointOf(tree, ports, edge.source, "exit"),
+      to: endpointOf(tree, ports, edge.target, "entry"),
+    }))
+    .filter((link) => link.from !== link.to)
+}
+
+const compoundGraph = (
+  nodes: readonly LayoutNode[],
+  links: readonly Link[],
+  tree: Tree,
+  sizeOf: (id: string) => Size,
+) => {
+  const graph = new dagre.graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>({
+    compound: true,
+    multigraph: true,
+  })
+  graph.setGraph({ ...GRAPH_OPTIONS })
+  graph.setDefaultEdgeLabel(() => ({}))
+
+  for (const node of nodes) {
+    const kids = tree.children.get(node.id) ?? []
+    if (kids.length > 0) graph.setNode(node.id, { width: 0, height: 0 })
+    else graph.setNode(node.id, { ...sizeOf(node.id) })
+  }
+  for (const node of nodes) {
+    if (node.parentId === null) continue
+    graph.setParent(node.id, node.parentId)
+  }
+  for (const link of links) graph.setEdge(link.from, link.to, {}, link.id)
+
+  return graph
+}
+
+const frameAround = (rect: Rect, kids: readonly Rect[]): Rect => {
+  const left = Math.min(rect.x, ...kids.map((kid) => kid.x - GROUP_PAD))
+  const top = Math.min(rect.y, ...kids.map((kid) => kid.y - GROUP_HEADER))
+  const right = Math.max(rect.x + rect.width, ...kids.map((kid) => kid.x + kid.width + GROUP_PAD))
+  const bottom = Math.max(
+    rect.y + rect.height,
+    ...kids.map((kid) => kid.y + kid.height + GROUP_PAD),
+  )
+  return { x: left, y: top, width: right - left, height: bottom - top }
+}
+
+const growFrames = (nodes: readonly LayoutNode[], tree: Tree, rects: Map<string, Rect>): void => {
+  const deepestFirst = [...nodes].sort(
+    (left, right) => (tree.depth.get(right.id) ?? 0) - (tree.depth.get(left.id) ?? 0),
+  )
+  for (const node of deepestFirst) {
+    const kids = (tree.children.get(node.id) ?? []).flatMap((id) => {
+      const rect = rects.get(id)
+      return rect === undefined ? [] : [rect]
+    })
+    const rect = rects.get(node.id)
+    if (rect === undefined || kids.length === 0) continue
+    rects.set(node.id, frameAround(rect, kids))
+  }
+}
+
+const shift = (point: Point, origin: Point): Point => ({ x: point.x - origin.x, y: point.y - origin.y })
+
+const covers = (rect: Rect, point: Point): boolean =>
+  point.x >= rect.x &&
+  point.x <= rect.x + rect.width &&
+  point.y >= rect.y &&
+  point.y <= rect.y + rect.height
+
+const squared = (corridor: readonly Point[], start: Point, end: Point): Point[] => {
+  const first = corridor[0]
+  const last = corridor[corridor.length - 1]
+  if (first === undefined || last === undefined) return [start, end]
+  const head = first.y === start.y ? [] : [{ x: first.x, y: start.y }]
+  const tail = last.y === end.y ? [] : [{ x: last.x, y: end.y }]
+  return [start, ...head, ...corridor, ...tail, end]
+}
+
+const trimmed = (points: readonly Point[], source: Rect, target: Rect): Point[] => {
+  const corridor = points
+    .slice(1, -1)
+    .filter((point) => !covers(source, point) && !covers(target, point))
+  return squared(
+    corridor,
+    { x: source.x + source.width, y: source.y + source.height / 2 },
+    { x: target.x, y: target.y + target.height / 2 },
+  )
+}
+
+const LANE = RANK_SEP / 2
+const TOUCH = 0.5
+
+const slab = (from: number, span: number, low: number, high: number): [number, number] => {
+  if (span === 0) return from >= low && from <= high ? [0, 1] : [1, 0]
+  const first = (low - from) / span
+  const second = (high - from) / span
+  return first <= second ? [first, second] : [second, first]
+}
+
+const clips = (from: Point, to: Point, box: Rect): boolean => {
+  const width = box.width - TOUCH * 2
+  const height = box.height - TOUCH * 2
+  if (width <= 0 || height <= 0) return false
+  const [minX, maxX] = slab(from.x, to.x - from.x, box.x + TOUCH, box.x + TOUCH + width)
+  const [minY, maxY] = slab(from.y, to.y - from.y, box.y + TOUCH, box.y + TOUCH + height)
+  return Math.max(0, minX, minY) < Math.min(1, maxX, maxY)
+}
+
+const clean = (path: readonly Point[], boxes: readonly Rect[]): boolean =>
+  !path.some((point, index) => {
+    const next = path[index + 1]
+    return next !== undefined && boxes.some((box) => clips(point, next, box))
+  })
+
+const detour = (start: Point, end: Point, lane: number): Point[] => [
+  start,
+  { x: start.x + LANE, y: start.y },
+  { x: start.x + LANE, y: lane },
+  { x: end.x - LANE, y: lane },
+  { x: end.x - LANE, y: end.y },
+  end,
+]
+
+const bypass = (path: readonly Point[], boxes: readonly Rect[]): Point[] => {
+  if (clean(path, boxes)) return [...path]
+  const start = path[0]
+  const end = path[path.length - 1]
+  if (start === undefined || end === undefined) return [...path]
+  const band = boxes.filter(
+    (box) =>
+      box.x <= Math.max(start.x, end.x) + LANE && box.x + box.width >= Math.min(start.x, end.x) - LANE,
+  )
+  const above = Math.min(start.y, end.y, ...band.map((box) => box.y)) - NODE_SEP
+  const below = Math.max(start.y, end.y, ...band.map((box) => box.y + box.height)) + NODE_SEP
+  const tried = [detour(start, end, above), detour(start, end, below)]
+  return tried.find((candidate) => clean(candidate, boxes)) ?? [...path]
+}
+
+const originOf = (rects: ReadonlyMap<string, Rect>, routes: ReadonlyMap<string, Point[]>): Point => {
+  const corners = [...rects.values()].map((rect) => ({ x: rect.x, y: rect.y }))
+  const waypoints = [...routes.values()].flat()
+  const all = [...corners, ...waypoints]
+  if (all.length === 0) return { x: 0, y: 0 }
+  return {
+    x: Math.min(...all.map((point) => point.x)) - GRAPH_MARGIN,
+    y: Math.min(...all.map((point) => point.y)) - GRAPH_MARGIN,
+  }
+}
+
+const extentOf = (rects: ReadonlyMap<string, Rect>): Size => {
+  const boxes = [...rects.values()]
+  if (boxes.length === 0) return { width: 0, height: 0 }
+  return {
+    width: Math.max(...boxes.map((rect) => rect.x + rect.width)) + GRAPH_MARGIN,
+    height: Math.max(...boxes.map((rect) => rect.y + rect.height)) + GRAPH_MARGIN,
+  }
 }
 
 export const layoutNested = (
@@ -109,54 +329,55 @@ export const layoutNested = (
   edges: readonly LayoutEdge[],
   measured: ReadonlyMap<string, Size>,
 ): Layout => {
-  const children = childrenIndex(nodes)
-  const byId = new Map(nodes.map((node) => [node.id, node]))
-  const sizes = new Map<string, Size>()
-  const offsets = new Map<string, Point>()
+  if (nodes.length === 0) return EMPTY_LAYOUT
 
-  const leafSize = (id: string): Size => {
+  const tree = treeOf(nodes)
+  const sizeOf = (id: string): Size => {
     const seen = measured.get(id)
     if (seen !== undefined && seen.width > 0 && seen.height > 0) return seen
-    return byId.get(id)?.fallback ?? { width: NODE_WIDTH, height: NODE_BASE_HEIGHT }
+    return tree.byId.get(id)?.fallback ?? { width: NODE_WIDTH, height: NODE_BASE_HEIGHT }
   }
 
-  const sizeOf = (id: string): Size => {
-    const cached = sizes.get(id)
-    if (cached !== undefined) return cached
-    const kids = children.get(id) ?? []
-    if (kids.length === 0) {
-      const size = leafSize(id)
-      sizes.set(id, size)
-      return size
-    }
-    const level = layoutLevel(kids, edges, sizeOf)
-    for (const [kid, point] of level.offsets) {
-      offsets.set(kid, { x: point.x + GROUP_PAD, y: point.y + GROUP_HEADER })
-    }
-    const size = {
-      width: level.size.width + GROUP_PAD * 2,
-      height: level.size.height + GROUP_HEADER + GROUP_PAD,
-    }
-    sizes.set(id, size)
-    return size
-  }
-
-  const roots = children.get(null) ?? []
-  const top = layoutLevel(roots, edges, sizeOf)
-  for (const [id, point] of top.offsets) offsets.set(id, point)
+  const links = linksOf(tree, edges)
+  const graph = compoundGraph(nodes, links, tree, sizeOf)
+  dagre.layout(graph)
 
   const rects = new Map<string, Rect>()
-  const place = (id: string, originX: number, originY: number): void => {
-    const offset = offsets.get(id) ?? { x: 0, y: 0 }
-    const size = sizeOf(id)
-    const x = originX + offset.x
-    const y = originY + offset.y
-    rects.set(id, { x, y, width: size.width, height: size.height })
-    for (const kid of children.get(id) ?? []) place(kid, x, y)
+  for (const node of nodes) {
+    const placed = graph.node(node.id)
+    const width = placed.width > 0 ? placed.width : sizeOf(node.id).width
+    const height = placed.height > 0 ? placed.height : sizeOf(node.id).height
+    rects.set(node.id, { x: (placed.x ?? 0) - width / 2, y: (placed.y ?? 0) - height / 2, width, height })
   }
-  for (const id of roots) place(id, 0, 0)
+  growFrames(nodes, tree, rects)
 
-  return { offsets, rects, sizes, bounds: { x: 0, y: 0, ...top.size } }
+  const kin = kinOf(tree)
+  const routes = new Map<string, Point[]>()
+  for (const link of links) {
+    const points = graph.edge(link.from, link.to, link.id).points
+    const source = rects.get(link.source)
+    const target = rects.get(link.target)
+    if (points === undefined || source === undefined || target === undefined) continue
+    const skip = new Set([...(kin.get(link.source) ?? []), ...(kin.get(link.target) ?? [])])
+    const obstacles = [...rects].flatMap(([id, rect]) => (skip.has(id) ? [] : [rect]))
+    routes.set(link.id, bypass(trimmed(points, source, target), obstacles))
+  }
+
+  const origin = originOf(rects, routes)
+  for (const [id, rect] of rects) rects.set(id, { ...rect, ...shift(rect, origin) })
+  for (const [id, points] of routes) routes.set(id, points.map((point) => shift(point, origin)))
+
+  const offsets = new Map<string, Point>()
+  const sizes = new Map<string, Size>()
+  for (const node of nodes) {
+    const rect = rects.get(node.id)
+    if (rect === undefined) continue
+    const parent = node.parentId === null ? null : rects.get(node.parentId) ?? null
+    offsets.set(node.id, parent === null ? { x: rect.x, y: rect.y } : shift(rect, parent))
+    sizes.set(node.id, { width: rect.width, height: rect.height })
+  }
+
+  return { offsets, rects, sizes, routes, bounds: { x: 0, y: 0, ...extentOf(rects) } }
 }
 
 export const columnsOf = (

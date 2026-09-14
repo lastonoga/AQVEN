@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
 import { kindStyle } from "../graph/kinds.js"
+import { InspectorSection } from "./InspectorSection.js"
+import { KeyValueRows } from "./KeyValueRows.js"
+import { TypeBadge } from "./TypeBadge.js"
 import { nodeIds, stepOf } from "./ir-value.js"
 import { visibleTabs } from "./node-inspector-tabs.js"
 import { useRunSnapshot } from "./run-context.js"
@@ -17,12 +20,29 @@ type Props = {
 
 const noop = (): void => undefined
 
-function Empty() {
+function FlowTypes({ ir }: { ir: Ir | null }) {
+  if (ir === null) return null
   return (
-    <div className="flex h-full items-center justify-center px-6">
-      <p className="text-center text-[12px] leading-relaxed text-slate-500">
-        Выберите узел на схеме — здесь появятся его параметры, входы и промт.
-      </p>
+    <InspectorSection title="типы воркфлоу">
+      <KeyValueRows
+        rows={[
+          { label: "Вход", value: <TypeBadge type={ir.input} ir={ir} missing="вход не типизирован" /> },
+          { label: "Выход", value: <TypeBadge type={ir.output.type} ir={ir} missing="выход не типизирован" /> },
+        ]}
+      />
+    </InspectorSection>
+  )
+}
+
+function Empty({ ir }: { ir: Ir | null }) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <FlowTypes ir={ir} />
+      <div className="flex flex-1 items-center justify-center px-6">
+        <p className="text-center text-[12px] leading-relaxed text-slate-500">
+          Выберите узел на схеме — здесь появятся его параметры, входы и промт.
+        </p>
+      </div>
     </div>
   )
 }
@@ -33,7 +53,7 @@ export function NodeInspector({ nodeId, body, ir = null, onSelectNode = noop, on
 
   useEffect(() => setTab("overview"), [nodeId])
 
-  if (nodeId === null || body === null) return <Empty />
+  if (nodeId === null || body === null) return <Empty ir={ir} />
 
   const context: InspectorContext = {
     nodeId,
@@ -48,7 +68,7 @@ export function NodeInspector({ nodeId, body, ir = null, onSelectNode = noop, on
 
   const tabs = visibleTabs(context)
   const active = tabs.find((entry) => entry.id === tab) ?? tabs[0]
-  if (active === undefined) return <Empty />
+  if (active === undefined) return <Empty ir={ir} />
   const Active = active.component
   const style = kindStyle(body.kind)
 

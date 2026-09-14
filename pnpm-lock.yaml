@@ -125,6 +125,9 @@ importers:
       '@wf/dsl':
         specifier: workspace:*
         version: link:../dsl
+      zod:
+        specifier: 4.6.2
+        version: 4.6.2
     devDependencies:
       '@types/node':
         specifier: 24.10.1

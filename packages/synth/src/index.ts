@@ -1,4 +1,5 @@
-import { NODE, REF, isRef, root } from "@wf/dsl"
+import * as z from "zod"
+import { NODE, REF, isRef, root, typeRegistry } from "@wf/dsl"
 import type { Flow } from "@wf/dsl"
 
 export type Diagnostic = {
@@ -17,6 +18,25 @@ export type IrComponent = {
   nodes: Record<string, IrNode>
 }
 
+export type JsonSchema = Record<string, unknown>
+
+export type TypeKind = "object" | "enum" | "id" | "scalar" | "array" | "unknown"
+
+export type IrType = {
+  name: string
+  kind: TypeKind
+  declared: boolean
+  description?: string
+  example?: unknown
+  schema?: JsonSchema
+  valueDescriptions?: Record<string, string>
+  source?: string
+  allowedSet?: string
+  codeFormat?: string
+}
+
+export type IrTypes = Record<string, IrType>
+
 export type Ir = {
   flow: string
   version: number
@@ -28,6 +48,7 @@ export type Ir = {
   defaults?: object
   components: Record<string, IrComponent>
   nodes: Record<string, IrNode>
+  types: IrTypes
 }
 
 export type Origin = { call: string; component: string; node: string }
@@ -52,6 +73,7 @@ export type ExpandedIr = {
   defaults?: object
   groups: Record<string, ExpandedGroup>
   nodes: Record<string, IrNode>
+  types: IrTypes
 }
 
 export type SynthResult =
@@ -137,12 +159,25 @@ class Synthesizer {
     body["stopWhen"] = this.walk(stop(root("iter")))
   }
 
+  private expandTry(body: Record<string, unknown>): void {
+    const make = body["catch"] as ((error: unknown) => unknown) | undefined
+    if (make === undefined) {
+      this.diagnostics.push({
+        code: "WF_TRY_WITHOUT_CATCH",
+        message: "у узла try нет обработчика: поле catch обязательно",
+      })
+      return
+    }
+    body["catch"] = this.node(make(root("error")))
+  }
+
   private readonly expanders: Record<string, (body: Record<string, unknown>) => void> = {
     map: (body) => this.expandMap(body),
     loop: (body) => this.expandLoop(body),
+    try: (body) => this.expandTry(body),
   }
 
-  private static readonly PRE_EXPANDED = new Set(["do", "body", "stopWhen"])
+  private static readonly PRE_EXPANDED = new Set(["do", "body", "stopWhen", "catch"])
 
   node(n: unknown): IrNode {
     const { id: _id, ...rest } = { ...bodyOf(n) }
@@ -173,7 +208,7 @@ class Synthesizer {
 export const NAMESPACE_SEPARATOR = "__"
 const EXPANSION_DEPTH_LIMIT = 16
 const PARAM_ROOTS = new Set(["params", "param"])
-const RESERVED_ROOTS = new Set(["input", "item", "index", "acc", "iter", "run", "in", "out"])
+const RESERVED_ROOTS = new Set(["input", "item", "index", "acc", "iter", "error", "run", "in", "out"])
 
 const HEAD = /^\$([A-Za-z_][A-Za-z0-9_]*)/
 const OUT_HEAD = /^\$([A-Za-z_][A-Za-z0-9_]*)\.out(?![A-Za-z0-9_])/
@@ -281,6 +316,7 @@ class Expander {
       budget: ir.budget,
       policies: ir.policies,
       defaults: ir.defaults,
+      types: ir.types,
       groups: this.resolvedGroups(),
       nodes: Object.fromEntries(
         Object.entries(nodes).map(([id, body]) => [id, mapValues(body, (v) => this.resolveValue(v))]),
@@ -533,13 +569,219 @@ class Expander {
   }
 }
 
+export type TypeDeclaration = Record<string, unknown>
+export type TypeCatalog = { get: (name: string) => unknown }
+export type SynthOptions = { types?: TypeCatalog }
+
+export const recordCatalog = (bag: Readonly<Record<string, unknown>>): TypeCatalog => ({
+  get: (name) => bag[name],
+})
+
+const TYPE_FIELDS = new Set(["out", "itemType", "onType", "form", "errorType"])
+const OPAQUE_FIELDS = new Set(["budget", "policies", "defaults", "overrides", "outputContract", "retry"])
+
+const JSON_SCHEMA_OPTIONS = {
+  target: "draft-2020-12",
+  io: "output",
+  unrepresentable: "throw",
+  cycles: "throw",
+  reused: "inline",
+} as const
+
+const KIND_ALIASES: Readonly<Record<string, TypeKind>> = {
+  object: "object",
+  record: "object",
+  union: "object",
+  enum: "enum",
+  id: "id",
+  array: "array",
+  list: "array",
+  scalar: "scalar",
+  value: "scalar",
+}
+
+const SCHEMA_KINDS: ReadonlyArray<readonly [(s: JsonSchema) => boolean, TypeKind]> = [
+  [(s) => Array.isArray(s["enum"]), "enum"],
+  [(s) => s["type"] === "array", "array"],
+  [(s) => s["type"] === "object" || isObject(s["properties"]), "object"],
+  [(s) => typeof s["type"] === "string", "scalar"],
+]
+
+const ARRAY_SUFFIX = /\[\]$/
+
+const isZodSchema = (v: unknown): v is z.core.$ZodType => isObject(v) && "_zod" in v
+
+const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error))
+
+const firstString = (...candidates: unknown[]): string | undefined =>
+  candidates.find((c): c is string => typeof c === "string" && c.length > 0)
+
+const jsonSchemaOf = (schema: z.core.$ZodType): JsonSchema => {
+  const { $schema: _drop, ...rest } = z.toJSONSchema(schema, JSON_SCHEMA_OPTIONS) as JsonSchema
+  return rest
+}
+
+const declarationOf = (catalog: TypeCatalog, name: string): TypeDeclaration | null => {
+  const found = catalog.get(name)
+  if (isZodSchema(found)) return { schema: found }
+  return isObject(found) ? found : null
+}
+
+const kindOfSchema = (schema: JsonSchema): TypeKind =>
+  SCHEMA_KINDS.find(([matches]) => matches(schema))?.[1] ?? "unknown"
+
+const kindOfName = (name: string): TypeKind => (ARRAY_SUFFIX.test(name) ? "array" : "unknown")
+
+const kindOf = (declared: unknown, schema: JsonSchema | null, name: string): TypeKind => {
+  const alias = typeof declared === "string" ? KIND_ALIASES[declared] : undefined
+  if (alias !== undefined) return alias
+  if (schema !== null) return kindOfSchema(schema)
+  return kindOfName(name)
+}
+
+const stringMap = (value: unknown): Record<string, string> => {
+  if (!isObject(value)) return {}
+  const pairs = Object.entries(value).flatMap(([k, v]) => (typeof v === "string" ? [[k, v] as const] : []))
+  return Object.fromEntries(pairs)
+}
+
+const valueDescriptionsOf = (decl: TypeDeclaration, schema: JsonSchema | null): Record<string, string> => {
+  const declared = { ...stringMap(decl["values"]), ...stringMap(decl["valueDescriptions"]) }
+  const listed = schema === null ? undefined : schema["enum"]
+  if (!Array.isArray(listed)) return declared
+  return Object.fromEntries(listed.map((v) => [String(v), declared[String(v)] ?? ""]))
+}
+
+const exampleOf = (decl: TypeDeclaration, schema: JsonSchema | null): unknown => {
+  if (decl["example"] !== undefined) return decl["example"]
+  const listed = decl["examples"] ?? (schema === null ? undefined : schema["examples"])
+  return Array.isArray(listed) ? listed[0] : undefined
+}
+
+class TypeRegistryBuilder {
+  private readonly names = new Set<string>()
+  readonly diagnostics: Diagnostic[] = []
+
+  constructor(private readonly catalog: TypeCatalog) {}
+
+  collect(ir: Ir): void {
+    this.add(ir.input)
+    this.add(ir.output.type)
+    for (const component of Object.values(ir.components)) {
+      this.add(component.out.type)
+      this.scan(component.nodes)
+    }
+    this.scan(ir.nodes)
+  }
+
+  build(): IrTypes {
+    const sorted = [...this.names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    return Object.fromEntries(sorted.map((name) => [name, this.describe(name)]))
+  }
+
+  private add(value: unknown): void {
+    if (typeof value !== "string" || value.length === 0 || value.startsWith("$")) return
+    this.names.add(value)
+  }
+
+  private scan(value: unknown): void {
+    if (Array.isArray(value)) {
+      value.forEach((x) => this.scan(x))
+      return
+    }
+    if (!isObject(value)) return
+    for (const [key, x] of Object.entries(value)) this.scanEntry(key, x)
+  }
+
+  private scanEntry(key: string, value: unknown): void {
+    if (OPAQUE_FIELDS.has(key)) return
+    if (key === "allowedSets") return this.scanAllowedSets(value)
+    if (!TYPE_FIELDS.has(key)) return this.scan(value)
+    this.add(value)
+    if (isObject(value)) this.add(value["type"])
+  }
+
+  private scanAllowedSets(value: unknown): void {
+    if (!Array.isArray(value)) return
+    for (const set of value) if (isObject(set)) this.add(set["type"])
+  }
+
+  private describe(name: string): IrType {
+    const decl = declarationOf(this.catalog, name)
+    if (decl === null) return { name, kind: kindOfName(name), declared: false }
+    return this.described(name, decl)
+  }
+
+  private described(name: string, decl: TypeDeclaration): IrType {
+    const schema = this.compile(name, decl)
+    const values = valueDescriptionsOf(decl, schema)
+    const kind = kindOf(decl["kind"], schema, name)
+    const description = firstString(decl["description"], schema?.["description"])
+    const example = exampleOf(decl, schema)
+    this.checkValueDescriptions(name, kind, values)
+    return {
+      name,
+      kind,
+      declared: schema !== null,
+      ...(description === undefined ? {} : { description }),
+      ...(example === undefined ? {} : { example }),
+      ...(schema === null ? {} : { schema }),
+      ...(Object.keys(values).length === 0 ? {} : { valueDescriptions: values }),
+      ...this.identity(decl),
+    }
+  }
+
+  private identity(decl: TypeDeclaration): Partial<IrType> {
+    const source = firstString(decl["source"])
+    const allowedSet = firstString(decl["allowedSet"])
+    const codeFormat = firstString(decl["codeFormat"])
+    return {
+      ...(source === undefined ? {} : { source }),
+      ...(allowedSet === undefined ? {} : { allowedSet }),
+      ...(codeFormat === undefined ? {} : { codeFormat }),
+    }
+  }
+
+  private compile(name: string, decl: TypeDeclaration): JsonSchema | null {
+    const source = decl["schema"]
+    if (!isZodSchema(source)) return null
+    try {
+      return jsonSchemaOf(source)
+    } catch (error) {
+      this.diagnostics.push({
+        code: "WF_TYPE_SCHEMA_UNREPRESENTABLE",
+        message: `схема типа «${name}» не переводится в JSON Schema: ${messageOf(error)}`,
+      })
+      return null
+    }
+  }
+
+  private checkValueDescriptions(name: string, kind: TypeKind, values: Record<string, string>): void {
+    if (kind !== "enum") return
+    const missing = Object.entries(values).flatMap(([value, text]) => (text === "" ? [value] : []))
+    if (missing.length === 0) return
+    this.diagnostics.push({
+      code: "WF_ENUM_VALUE_WITHOUT_DESCRIPTION",
+      message: `значения enum «${name}» без описания: ${missing.join(", ")} — описание обязательно и попадает в промт`,
+    })
+  }
+}
+
+const flowCatalog = (flow: Flow): TypeCatalog | null => {
+  const declared = (flow as { types?: unknown }).types
+  return isObject(declared) ? recordCatalog(declared) : null
+}
+
+const catalogOf = (flow: Flow, options?: SynthOptions): TypeCatalog =>
+  options?.types ?? flowCatalog(flow) ?? typeRegistry
+
 export function expandIr(ir: Ir): { expandedIr: ExpandedIr; diagnostics: Diagnostic[] } {
   const expander = new Expander(ir.components)
   const expandedIr = expander.expand(ir)
   return { expandedIr, diagnostics: expander.diagnostics }
 }
 
-export function synthesize(flow: Flow): SynthResult {
+export function synthesize(flow: Flow, options?: SynthOptions): SynthResult {
   const s = new Synthesizer()
   s.register(flow.nodes)
   s.registerComponents(flow.components as Record<string, unknown> | undefined)
@@ -554,7 +796,7 @@ export function synthesize(flow: Flow): SynthResult {
     flow.nodes.map((n) => [bodyOf(n)["id"] as string, s.node(n)]),
   )
 
-  const ir: Ir = {
+  const draft: Ir = {
     flow: flow.flow,
     version: flow.version,
     input: flow.input,
@@ -565,14 +807,24 @@ export function synthesize(flow: Flow): SynthResult {
     defaults: flow.defaults,
     components,
     nodes,
+    types: {},
   }
 
   if (s.diagnostics.some((d) => d.code === "WF_UNREGISTERED_NODE")) {
     return { ok: false, ir: null, expandedIr: null, diagnostics: s.diagnostics }
   }
 
+  const builder = new TypeRegistryBuilder(catalogOf(flow, options))
+  builder.collect(draft)
+  const ir: Ir = { ...draft, types: builder.build() }
+
   const expansion = expandIr(ir)
-  return { ok: true, ir, expandedIr: expansion.expandedIr, diagnostics: [...s.diagnostics, ...expansion.diagnostics] }
+  return {
+    ok: true,
+    ir,
+    expandedIr: expansion.expandedIr,
+    diagnostics: [...s.diagnostics, ...builder.diagnostics, ...expansion.diagnostics],
+  }
 }
 
 function canonicalize(v: unknown): unknown {

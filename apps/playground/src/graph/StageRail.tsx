@@ -69,7 +69,6 @@ export function StageRail({ stages, columns }: Props) {
                     </span>
                   )
                 })}
-                <span className="truncate font-mono text-[9.5px] text-slate-500">{stage.nodeIds.join(", ")}</span>
               </div>
             </button>
           </div>

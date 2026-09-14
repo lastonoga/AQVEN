@@ -1,42 +1,17 @@
 import { branch, code, defineComponent, defineFlow, human, llm, root, tool, $const } from "@wf/dsl";
-import type { Fn, Type } from "@wf/dsl";
 import { criticRevise } from "@wf/std/loops";
 import type { Critique } from "@wf/std/loops";
-
-type Lead = { company: string; industry: string; painPoints: string[] };
-type OutreachRequest = { company: string; offer: string };
-type OutreachTask = { lead: Lead; offer: string; maxWords: number };
-type Email = { subject: string; body: string };
-type EmailDecision = "ship" | "escalate";
-type EmailGate = { decision: EmailDecision; reason: string };
-type EmailText = { text: string };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-
-const t = {
-  Lead: ty<Lead>("Lead"),
-  OutreachTask: ty<OutreachTask>("OutreachTask"),
-  Email: ty<Email>("Email"),
-  EmailText: ty<EmailText>("EmailText"),
-  EmailGate: ty<EmailGate>("EmailGate"),
-  EmailDecision: ty<EmailDecision>("EmailDecision"),
-  EmailReviewForm: ty<unknown>("EmailReviewForm"),
-  CriticReviseEmail: ty<{ candidate: Email; score: number; critique: Critique; iterations: number }>(
-    "CriticRevise<Email>",
-  ),
-};
-
-const leadByCompany: Fn<{ company: string }, Lead> = { name: "lead_by_company" };
-const buildOutreachTask: Fn<{ lead: Lead; offer: string; maxWords: number }, OutreachTask> = {
-  name: "build_outreach_task",
-};
-const writeEmail: Fn<{ task: OutreachTask }, Email> = { name: "write_email" };
-const criticizeEmail: Fn<{ task: OutreachTask; candidate: Email }, Critique> = { name: "criticize_email" };
-const reviseEmail: Fn<{ task: OutreachTask; candidate: Email; critique: Critique }, Email> = {
-  name: "revise_email",
-};
-const gateEmail: Fn<{ score: number; threshold: number; iterations: number }, EmailGate> = { name: "gate_email" };
-const renderEmail: Fn<{ email: Email; critique: Critique }, EmailText> = { name: "render_email" };
+import {
+  buildOutreachTask,
+  criticizeEmail,
+  gateEmail,
+  leadByCompany,
+  renderEmail,
+  reviseEmail,
+  t,
+  writeEmail,
+} from "./domain/outreach.js";
+import type { Email, OutreachRequest, OutreachTask } from "./domain/outreach.js";
 
 const $generate = root<{ task: OutreachTask }>("in");
 

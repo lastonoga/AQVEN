@@ -1,50 +1,18 @@
-import { code, defineComponent, defineFlow, idType, llm, root, tool, $const } from "@wf/dsl";
-import type { Fn, Id, Type } from "@wf/dsl";
+import { code, defineComponent, defineFlow, llm, root, tool, $const } from "@wf/dsl";
 import { loopTypes, retryWithFeedback, verifyFix } from "@wf/std/loops";
 import type { Issue } from "@wf/std/loops";
-
-type TicketId = Id<"TicketId">;
-type Ticket = { id: TicketId; title: string; risk: "low" | "high" };
-type ReleaseRequest = { version: string; audience: string };
-type ReleaseTask = { version: string; audience: string; tickets: Ticket[] };
-type NotesSection = { heading: string; body: string; ticketIds: TicketId[] };
-type ReleaseNotes = { title: string; sections: NotesSection[] };
-type ReleaseDigest = { highlights: string[]; ticketIds: TicketId[] };
-type ReleaseText = { text: string };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-
-const t = {
-  TicketId: idType<TicketId>("TicketId"),
-  TicketArr: ty<Ticket[]>("Ticket[]"),
-  ReleaseTask: ty<ReleaseTask>("ReleaseTask"),
-  ReleaseNotes: ty<ReleaseNotes>("ReleaseNotes"),
-  ReleaseDigest: ty<ReleaseDigest>("ReleaseDigest"),
-  ReleaseText: ty<ReleaseText>("ReleaseText"),
-  VerifyFixNotes: ty<{ candidate: ReleaseNotes; issues: Issue[]; iterations: number; score: number }>(
-    "VerifyFix<ReleaseNotes>",
-  ),
-  RetryDigest: ty<{ candidate: ReleaseDigest; issues: Issue[]; attempts: number; valid: boolean }>(
-    "Retry<ReleaseDigest>",
-  ),
-};
-
-const ticketsOfRelease: Fn<{ version: string }, Ticket[]> = { name: "tickets_of_release" };
-const buildReleaseTask: Fn<{ version: string; audience: string; tickets: Ticket[] }, ReleaseTask> = {
-  name: "build_release_task",
-};
-const draftReleaseNotes: Fn<{ task: ReleaseTask; feedback: Issue[] }, ReleaseNotes> = {
-  name: "draft_release_notes",
-};
-const checkReleaseNotes: Fn<{ candidate: ReleaseNotes }, Issue[]> = { name: "check_release_notes" };
-const scoreReleaseNotes: Fn<{ candidate: ReleaseNotes }, number> = { name: "score_release_notes" };
-const digestReleaseNotes: Fn<{ task: ReleaseNotes; feedback: Issue[] }, ReleaseDigest> = {
-  name: "digest_release_notes",
-};
-const validateReleaseDigest: Fn<{ candidate: ReleaseDigest }, Issue[]> = { name: "validate_release_digest" };
-const renderRelease: Fn<{ notes: ReleaseNotes; digest: ReleaseDigest; issues: Issue[] }, ReleaseText> = {
-  name: "render_release",
-};
+import {
+  buildReleaseTask,
+  checkReleaseNotes,
+  digestReleaseNotes,
+  draftReleaseNotes,
+  renderRelease,
+  scoreReleaseNotes,
+  t,
+  ticketsOfRelease,
+  validateReleaseDigest,
+} from "./domain/release.js";
+import type { ReleaseDigest, ReleaseNotes, ReleaseRequest, ReleaseTask } from "./domain/release.js";
 
 const $draft = root<{ task: ReleaseTask; feedback: Issue[] }>("in");
 

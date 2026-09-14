@@ -5,6 +5,7 @@ import { NestedCard } from "./NestedCard.js"
 import { kindStyle } from "./kinds.js"
 import { stepNumber } from "./ranks.js"
 import { useStageHover } from "./stage-hover.js"
+import { IN_PORT, OUT_PORT, slotPortsOf } from "./ports.js"
 import { NODE_WIDTH } from "./layout.js"
 import type { Fact, InputRef, NestedNode } from "./node-facts.js"
 
@@ -25,7 +26,22 @@ export type FlowNodeType = Node<FlowNodeData, "wf">
 
 const HANDLE = "!h-2 !w-2 !border-0 !bg-slate-600"
 
+const SLOT_HANDLE = `${HANDLE} !opacity-0`
+
 const COMPACT_ZOOM = 0.62
+
+const InputPorts = ({ inputs }: { inputs: readonly InputRef[] }) => (
+  <>
+    <Handle type="target" id={IN_PORT} position={Position.Left} className={HANDLE} />
+    {slotPortsOf(inputs.map((input) => input.slot)).map((port) => (
+      <Handle key={port} type="target" id={port} position={Position.Left} className={SLOT_HANDLE} />
+    ))}
+  </>
+)
+
+const OutputPort = () => (
+  <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
+)
 
 const sourcesText = (inputs: readonly InputRef[]): string => {
   const heads = inputs.map((input) => input.source.split(".")[0] ?? input.source)
@@ -44,7 +60,7 @@ export function FlowNode({ data, selected }: NodeProps<FlowNodeType>) {
   if (zoom < COMPACT_ZOOM) {
     return (
       <div className={shell} style={{ width: NODE_WIDTH, height: data.height }}>
-        <Handle type="target" position={Position.Left} className={HANDLE} />
+        <InputPorts inputs={data.inputs} />
         <div className="flex h-full flex-col justify-center gap-1.5 px-3">
           <div className="flex items-center gap-2">
             {step !== null && (
@@ -60,14 +76,14 @@ export function FlowNode({ data, selected }: NodeProps<FlowNodeType>) {
             {data.facts[0]?.value ?? "—"}
           </div>
         </div>
-        <Handle type="source" position={Position.Right} className={HANDLE} />
+        <OutputPort />
       </div>
     )
   }
 
   return (
     <div className={shell} style={{ width: NODE_WIDTH }}>
-      <Handle type="target" position={Position.Left} className={HANDLE} />
+      <InputPorts inputs={data.inputs} />
       <div className="flex items-center gap-1.5 border-b border-slate-800 px-2.5 py-1.5">
         {step !== null && (
           <span className="rounded-sm bg-slate-800 px-1 py-0.5 font-mono text-[11px] font-bold leading-none tabular-nums text-slate-300">
@@ -109,7 +125,7 @@ export function FlowNode({ data, selected }: NodeProps<FlowNodeType>) {
         <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-500">{sourcesText(data.inputs)}</span>
         <span className="shrink-0 font-mono text-[10px] text-emerald-300/80">→ {data.outputType}</span>
       </div>
-      <Handle type="source" position={Position.Right} className={HANDLE} />
+      <OutputPort />
     </div>
   )
 }

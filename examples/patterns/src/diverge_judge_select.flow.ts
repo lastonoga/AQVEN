@@ -1,47 +1,8 @@
-import { defineFlow, defineComponent, call, code, idType, llm, root, tool, $const } from "@wf/dsl";
-import type { Component, Fn, Id, IdType, Type } from "@wf/dsl";
+import { defineFlow, defineComponent, call, code, llm, root, tool, $const } from "@wf/dsl";
 import { diverge } from "@wf/std/diverge";
 import type { BranchVisibility, CallOverrides } from "@wf/std/diverge";
-
-type FactId = Id<"FactId">;
-type Fact = { id: FactId; text: string };
-type SupportCase = { id: string; text: string; locale: string };
-type CaseBrief = { case: SupportCase; facts: Fact[] };
-type Reply = { text: string; used_facts: FactId[] };
-type ReplyText = { text: string };
-type Criterion = { id: string; text: string; weight: number };
-type Rubric = { criteria: Criterion[] };
-type JudgeMode = "pointwise" | "pairwise" | "ranking";
-type ReplyVerdict = { decision: "accept" | "revise"; best: Reply; why: string };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-const factId: IdType<FactId> = idType<FactId>("FactId");
-
-const t = {
-  FactId: factId,
-  CaseBrief: ty<CaseBrief>("CaseBrief"),
-  Reply: ty<Reply>("Reply"),
-  ReplyArr: ty<Reply[]>("Reply[]"),
-  ReplyText: ty<ReplyText>("ReplyText"),
-  ReplyVerdict: ty<ReplyVerdict>("ReplyVerdict"),
-};
-
-const caseBrief: Fn<{ caseId: string }, CaseBrief> = { name: "support_case_brief" };
-const draftReply: Fn<{ brief: CaseBrief }, Reply> = { name: "draft_reply" };
-const renderReply: Fn<{ reply: Reply; facts: Fact[] }, ReplyText> = { name: "render_reply" };
-
-const judgeReplies: Component<
-  { candidates: Reply[]; rubric: Rubric; mode: JudgeMode; swapPositions: boolean; modelRole: string },
-  ReplyVerdict
-> = { name: "judge" };
-
-const rubric: Rubric = {
-  criteria: [
-    { id: "accuracy", text: "Ответ опирается только на факты заявки", weight: 0.5 },
-    { id: "tone", text: "Тон спокойный, без обвинений", weight: 0.2 },
-    { id: "actionability", text: "Есть следующий шаг для клиента", weight: 0.3 },
-  ],
-};
+import { caseBrief, draftReply, judgeReplies, renderReply, rubric, t } from "./domain/replies.js";
+import type { CaseBrief, JudgeMode, Reply } from "./domain/replies.js";
 
 const $branch = root<{ task: CaseBrief; overrides: CallOverrides }>("in");
 

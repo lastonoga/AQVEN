@@ -1,5 +1,6 @@
 import { InspectorHint, InspectorSection } from "./InspectorSection.js"
 import { KeyValueRows } from "./KeyValueRows.js"
+import { TypeBadge } from "./TypeBadge.js"
 import { RunValueView } from "./ValueView.js"
 import { consumersOf } from "./output-consumers.js"
 import { outTypeName } from "./ir-value.js"
@@ -25,7 +26,10 @@ export function NodeOutputTab(context: InspectorContext) {
       <InspectorSection title="выход узла">
         <KeyValueRows
           rows={[
-            { label: "Тип значения", value: typeName === "" ? "не объявлен" : typeName },
+            {
+              label: "Тип значения",
+              value: <TypeBadge type={typeName} ir={context.ir} missing="тип выхода не объявлен" />,
+            },
             { label: "Ссылка", value: <span className="text-sky-300">{`$${context.nodeId}.out`}</span> },
           ]}
         />

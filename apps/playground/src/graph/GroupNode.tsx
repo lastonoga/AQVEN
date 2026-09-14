@@ -4,6 +4,7 @@ import { KindGlyph } from "./KindGlyph.js"
 import { kindStyle } from "./kinds.js"
 import { useGroupCollapse } from "./collapse.js"
 import { useStageHover } from "./stage-hover.js"
+import { IN_PORT, OUT_PORT } from "./ports.js"
 import type { GroupInfo } from "./expand.js"
 
 export type GroupNodeData = {
@@ -86,7 +87,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
       <div
         className={`flex h-full w-full flex-col overflow-hidden rounded-md border-l-4 border border-slate-700 bg-slate-900 shadow-lg transition-opacity ${style.accent} ${ring} ${dim}`}
       >
-        <Handle type="target" position={Position.Left} className={HANDLE} />
+        <Handle type="target" id={IN_PORT} position={Position.Left} className={HANDLE} />
         {header(false)}
         <div className="border-t border-slate-800 px-2.5 py-1.5">
           <div className="flex items-baseline gap-1.5">
@@ -96,7 +97,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
           <div className="truncate text-[10px] text-slate-500">{data.group.role}</div>
           <div className="mt-0.5 truncate font-mono text-[9.5px] text-slate-600">{data.group.note}</div>
         </div>
-        <Handle type="source" position={Position.Right} className={HANDLE} />
+        <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
       </div>
     )
   }
@@ -105,14 +106,14 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
     <div
       className={`h-full w-full rounded-lg border border-dashed transition-opacity ${tone} ${ring} ${dim}`}
     >
-      <Handle type="target" position={Position.Left} className={HANDLE} />
+      <Handle type="target" id={IN_PORT} position={Position.Left} className={HANDLE} />
       {header(true)}
       <div className="-mt-1 flex items-center gap-2 px-2.5">
         <span className="truncate font-mono text-[10px] text-slate-500">{data.group.component}</span>
         <span className="truncate text-[10px] text-slate-600">{data.group.role}</span>
         <span className="min-w-0 flex-1 truncate font-mono text-[9.5px] text-slate-600">{data.group.note}</span>
       </div>
-      <Handle type="source" position={Position.Right} className={HANDLE} />
+      <Handle type="source" id={OUT_PORT} position={Position.Right} className={HANDLE} />
     </div>
   )
 }

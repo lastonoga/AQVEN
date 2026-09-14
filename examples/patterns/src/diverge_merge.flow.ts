@@ -1,30 +1,9 @@
-import { defineFlow, defineComponent, call, code, idType, llm, root, tool, $const } from "@wf/dsl";
-import type { Fn, Id, IdType, Type } from "@wf/dsl";
+import { defineFlow, defineComponent, call, code, llm, root, tool, $const } from "@wf/dsl";
 import { aggregate, diverge } from "@wf/std/diverge";
 import { aggregateBody, divergeBody } from "@wf/std";
 import type { AggregateStrategy, BranchVisibility, CallOverrides } from "@wf/std/diverge";
-
-type SourceId = Id<"SourceId">;
-type Source = { id: SourceId; title: string };
-type ResearchBrief = { topic: string; sources: Source[] };
-type Idea = { slug: string; title: string; rationale: string; source_ids: SourceId[] };
-type IdeaSet = { ideas: Idea[] };
-type IdeaBoard = { topic: string; ideas: Idea[] };
-
-const ty = <T>(name: string): Type<T> => ({ name });
-const sourceId: IdType<SourceId> = idType<SourceId>("SourceId");
-
-const t = {
-  SourceId: sourceId,
-  ResearchBrief: ty<ResearchBrief>("ResearchBrief"),
-  IdeaSet: ty<IdeaSet>("IdeaSet"),
-  IdeaSetArr: ty<IdeaSet[]>("IdeaSet[]"),
-  IdeaBoard: ty<IdeaBoard>("IdeaBoard"),
-};
-
-const researchBrief: Fn<{ topic: string }, ResearchBrief> = { name: "research_brief" };
-const generateIdeas: Fn<{ brief: ResearchBrief }, IdeaSet> = { name: "generate_ideas" };
-const renderBoard: Fn<{ merged: IdeaSet; brief: ResearchBrief }, IdeaBoard> = { name: "render_board" };
+import { generateIdeas, renderBoard, researchBrief, t } from "./domain/research.js";
+import type { IdeaSet, ResearchBrief } from "./domain/research.js";
 
 const $branch = root<{ task: ResearchBrief; overrides: CallOverrides }>("in");
 
