@@ -1,0 +1,20 @@
+{
+  "name": "@wf/cli",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "wf": "./dist/bin.js"
+  },
+  "main": "./dist/bin.js",
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "@wf/dsl": "workspace:*",
+    "@wf/synth": "workspace:*",
+    "chokidar": "5.0.0",
+    "hono": "4.13.7",
+    "jiti": "2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1"
+  }
+}

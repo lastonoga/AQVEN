@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/dsl" },
+    { "path": "packages/synth" },
+    { "path": "packages/cli" },
+    { "path": "packages/std" },
+    { "path": "examples/hotel-pitch" },
+    { "path": "examples/patterns" }
+  ]
+}
