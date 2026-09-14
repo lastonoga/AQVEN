@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { RunTable } from "../components/RunTable.js"
+import { RunStream } from "../components/RunStream.js"
 import { RunStepDetail } from "../components/RunStepDetail.js"
 import { FanCompare } from "../components/FanCompare.js"
 import { buildSteps, stepSnapshot } from "../components/run-steps.js"
@@ -25,7 +25,7 @@ function StepsPanel(props: RunPanelProps) {
   const view = selection.view
   if (view === null) return <p className={HINT}>прогон ещё не загрузился</p>
   return (
-    <RunTable
+    <RunStream
       view={view}
       run={selection.run}
       renders={selection.renders}
