@@ -1,7 +1,7 @@
 import type { RunStatus } from "../api/index.js"
 import type { NodeStatus } from "./events.js"
 
-export type Tone = { label: string; pill: string; bar: string; dot: string }
+export type Tone = { label: string; pill: string; bar: string; dot: string; rail: string }
 
 export const nodeTones: Record<NodeStatus, Tone> = {
   pending: {
@@ -9,30 +9,35 @@ export const nodeTones: Record<NodeStatus, Tone> = {
     pill: "bg-slate-900 text-slate-400 ring-slate-700",
     bar: "bg-slate-700",
     dot: "bg-slate-600",
+    rail: "#334155",
   },
   running: {
     label: "идёт",
     pill: "bg-sky-950 text-sky-300 ring-sky-700",
     bar: "bg-sky-500",
     dot: "bg-sky-400",
+    rail: "#0EA5E9",
   },
   ok: {
     label: "ok",
     pill: "bg-emerald-950 text-emerald-300 ring-emerald-800",
     bar: "bg-emerald-500",
     dot: "bg-emerald-400",
+    rail: "#10B981",
   },
   error: {
     label: "ошибка",
     pill: "bg-red-950 text-red-300 ring-red-800",
     bar: "bg-red-500",
     dot: "bg-red-400",
+    rail: "#EF4444",
   },
   skipped: {
     label: "пропущен",
     pill: "bg-slate-900 text-slate-500 ring-slate-800",
     bar: "bg-slate-600",
     dot: "bg-slate-700",
+    rail: "#475569",
   },
 }
 

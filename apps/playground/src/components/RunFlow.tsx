@@ -1,4 +1,3 @@
-import { kindStyle } from "../graph/kinds.js"
 import { ValueLines } from "./ValueLines.js"
 import { MUTED_TEXT, TONE } from "./run-tokens.js"
 import { nodeTones } from "../run/styles.js"
@@ -25,9 +24,16 @@ const BAND_RULE: Readonly<Record<FlowMode, string>> = {
   loop: "border-[#6B4A86]",
 }
 
-const ZONE_GRID = { gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }
+const ZONE_GRID = { gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }
 
-const BRANCH_GRID = { gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))" }
+const COLUMNS: Readonly<Record<number, string>> = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 lg:grid-cols-2",
+  3: "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3",
+  4: "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4",
+}
+
+const columnsFor = (count: number): string => COLUMNS[Math.min(count, 4)] ?? COLUMNS[4] ?? "grid-cols-1"
 
 const paramsText = (params: Readonly<Record<string, unknown>> | null): string =>
   params === null
@@ -37,15 +43,24 @@ const paramsText = (params: Readonly<Record<string, unknown>> | null): string =>
         .join(" ")
 
 function Facts({ item }: { item: FlowItem }) {
-  const passed = item.checks.filter((check) => check.ok !== false).length
-  const failed = item.checks.length - passed
+  const failed = item.checks.filter((check) => check.ok === false).length
   return (
-    <span className="flex shrink-0 flex-wrap items-baseline gap-x-3 font-mono text-[11.5px] tabular-nums">
-      <span className={TONE["data"]}>{formatSpan(item.durationMs)}</span>
-      {item.offsetMs !== null && <span className={TONE["muted"]}>{formatOffset(item.offsetMs)}</span>}
-      {item.totalTokens !== null && <span className={TONE["number"]}>{formatCount(item.totalTokens)} ток</span>}
-      {item.costUsd !== null && item.costUsd > 0 && <span className={TONE["number"]}>{formatMoney(item.costUsd)}</span>}
-      {failed > 0 && <span className={TONE["error"]}>проверок не прошло {failed}</span>}
+    <span className="flex shrink-0 items-baseline font-mono text-[11.5px] tabular-nums">
+      <span className={`w-[62px] text-right ${TONE["data"]}`} title="длительность шага">
+        {formatSpan(item.durationMs)}
+      </span>
+      <span className={`w-[70px] text-right ${TONE["muted"]}`} title="смещение от старта прогона">
+        {formatOffset(item.offsetMs)}
+      </span>
+      <span className={`w-[74px] text-right ${TONE["number"]}`} title="токенов всего">
+        {item.totalTokens === null ? "" : `${formatCount(item.totalTokens)} ток`}
+      </span>
+      <span className={`w-[62px] text-right ${TONE["number"]}`} title="стоимость шага">
+        {item.costUsd === null || item.costUsd === 0 ? "" : formatMoney(item.costUsd)}
+      </span>
+      <span className={`w-[54px] text-right ${failed > 0 ? TONE["error"] : TONE["muted"]}`} title="проверки">
+        {item.checks.length === 0 ? "" : `${item.checks.length - failed}/${item.checks.length}`}
+      </span>
     </span>
   )
 }
@@ -85,17 +100,36 @@ function Zones({ item, ir, lines }: { item: FlowItem; ir: Ir | null; lines: numb
   )
 }
 
+const CHIP = "shrink-0 rounded-sm bg-[#182231] px-1.5 py-px font-mono text-[10.5px] leading-[14px]"
+
+function Chips({ item }: { item: FlowItem }) {
+  const parts = [item.nodeId, item.model, paramsText(item.params)].filter(
+    (part): part is string => part !== null && part !== "",
+  )
+  if (parts.length === 0) return null
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {parts.map((part) => (
+        <span key={part} className={`${CHIP} ${TONE["muted"]}`} title={part}>
+          {part}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function Head({ item }: { item: FlowItem }) {
   const tone = nodeTones[item.status]
-  const style = kindStyle(item.nodeKind)
-  const meta = [item.nodeId, style.label, item.model, paramsText(item.params)]
-    .filter((part) => part !== null && part !== "")
-    .join(" · ")
   return (
-    <div className="flex flex-col gap-1 px-3 pt-2.5">
-      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+    <div className="flex flex-col gap-1.5 px-3 pt-2.5">
+      <div className="flex min-w-0 items-baseline gap-2.5">
         <span className={`${MUTED_TEXT} ${TONE["muted"]} shrink-0 tabular-nums`}>{item.order}</span>
-        <span className={`min-w-0 flex-1 text-[13.5px] font-medium leading-snug ${TONE["data"]}`}>{item.title}</span>
+        <span
+          className={`min-w-0 flex-1 truncate text-[13.5px] font-medium ${TONE["data"]}`}
+          title={item.title}
+        >
+          {item.title}
+        </span>
         {item.status !== "ok" && (
           <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] ring-1 ${tone.pill}`}>
             {tone.label}
@@ -108,7 +142,7 @@ function Head({ item }: { item: FlowItem }) {
         )}
         <Facts item={item} />
       </div>
-      <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate`}>{meta}</div>
+      <Chips item={item} />
       {item.note !== "" && <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate`}>{item.note}</div>}
     </div>
   )
@@ -118,12 +152,9 @@ function Item({ item, ir, lines }: { item: FlowItem; ir: Ir | null; lines: numbe
   const tone = nodeTones[item.status]
   return (
     <article className={`flex min-w-0 flex-col ${CARD}`}>
-      <div className="flex min-w-0">
-        <span className={`w-[3px] shrink-0 rounded-l-md ${tone.bar}`} />
-        <div className="flex min-w-0 flex-1 flex-col pb-1">
-          <Head item={item} />
-          <Zones item={item} ir={ir} lines={lines} />
-        </div>
+      <div className="flex min-w-0 flex-col pb-1" style={{ boxShadow: `inset 2px 0 0 ${tone.rail}` }}>
+        <Head item={item} />
+        <Zones item={item} ir={ir} lines={lines} />
       </div>
       {item.groups.map((group) => (
         <div key={group.id} className="px-3 pb-2.5">
@@ -173,7 +204,7 @@ export function RunFlow({ group, ir, lines }: Props) {
   if (group.mode === "parallel") {
     return (
       <Band group={group}>
-        <div className="grid gap-3" style={BRANCH_GRID}>
+        <div className={`grid gap-3 ${columnsFor(group.items.length)}`}>
           {group.items.map((item) => (
             <Item key={item.id} item={item} ir={ir} lines={lines} />
           ))}

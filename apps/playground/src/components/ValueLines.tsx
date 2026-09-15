@@ -33,7 +33,12 @@ export function ValueLines({ value, typeName = "", ir, lines, chars }: Props) {
           className="flex min-w-0 items-baseline gap-1.5 font-mono text-[12.5px] leading-[1.45]"
         >
           {line.key !== "" && <span className={`shrink-0 ${TONE["muted"]}`}>{line.key}</span>}
-          <span className={`min-w-0 flex-1 truncate ${TONE[line.tone] ?? TONE["data"]}`}>{line.text}</span>
+          <span
+            className={`min-w-0 flex-1 truncate ${TONE[line.tone] ?? TONE["data"]}`}
+            title={line.key === "" ? line.text : `${line.key}: ${line.text}`}
+          >
+            {line.text}
+          </span>
         </div>
       ))}
       <More block={block} />
