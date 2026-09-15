@@ -1,6 +1,6 @@
 import { kindStyle } from "../graph/kinds.js"
 import { ValueLines } from "./ValueLines.js"
-import { HAIRLINE, MUTED_TEXT, TONE } from "./run-tokens.js"
+import { MUTED_TEXT, TONE } from "./run-tokens.js"
 import { nodeTones } from "../run/styles.js"
 import {
   branchWord,
@@ -11,86 +11,76 @@ import {
   iterationWord,
   stepWord,
 } from "./flow-view.js"
+import type { ReactNode } from "react"
 import type { FlowGroup, FlowItem, FlowMode, FlowTree } from "./flow-view.js"
 import type { Ir } from "../api/index.js"
 
-type Props = { group: FlowGroup; ir: Ir | null; lines: number; depth?: number }
+type Props = { group: FlowGroup; ir: Ir | null; lines: number }
 
-const BAND_TONES: Readonly<Record<FlowMode, string>> = {
-  sequence: "border-[#232A36]",
+const CARD = "rounded-md border border-[#222C3A] bg-[#111721]"
+
+const BAND_RULE: Readonly<Record<FlowMode, string>> = {
+  sequence: "",
   parallel: "border-[#2E6F6A]",
   loop: "border-[#6B4A86]",
 }
 
-const BAND_LABELS: Readonly<Record<FlowMode, string>> = {
-  sequence: "",
-  parallel: "параллельно",
-  loop: "цикл",
-}
+const ZONE_GRID = { gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }
 
-const paramsText = (params: Readonly<Record<string, unknown>> | null): string => {
-  if (params === null) return ""
-  return Object.entries(params)
-    .map(([key, value]) => `${key} ${String(value)}`)
-    .join(" · ")
-}
+const BRANCH_GRID = { gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))" }
+
+const paramsText = (params: Readonly<Record<string, unknown>> | null): string =>
+  params === null
+    ? ""
+    : Object.entries(params)
+        .map(([key, value]) => `${key} ${String(value)}`)
+        .join(" ")
 
 function Facts({ item }: { item: FlowItem }) {
   const passed = item.checks.filter((check) => check.ok !== false).length
   const failed = item.checks.length - passed
   return (
-    <span className="ml-auto flex shrink-0 items-baseline gap-3 tabular-nums">
-      {item.offsetMs !== null && (
-        <span className={`${MUTED_TEXT} ${TONE["muted"]}`}>{formatOffset(item.offsetMs)}</span>
-      )}
-      <span className={`font-mono text-[12.5px] ${TONE["data"]}`}>{formatSpan(item.durationMs)}</span>
-      {item.totalTokens !== null && (
-        <span className={`font-mono text-[12.5px] ${TONE["number"]}`}>{formatCount(item.totalTokens)} ток</span>
-      )}
-      {item.costUsd !== null && (
-        <span className={`font-mono text-[12.5px] ${TONE["number"]}`}>{formatMoney(item.costUsd)}</span>
-      )}
-      {item.checks.length > 0 && (
-        <span className={`font-mono text-[12.5px] ${failed === 0 ? TONE["ok"] : TONE["error"]}`}>
-          пров. {passed}/{item.checks.length}
-        </span>
-      )}
+    <span className="flex shrink-0 flex-wrap items-baseline gap-x-3 font-mono text-[11.5px] tabular-nums">
+      <span className={TONE["data"]}>{formatSpan(item.durationMs)}</span>
+      {item.offsetMs !== null && <span className={TONE["muted"]}>{formatOffset(item.offsetMs)}</span>}
+      {item.totalTokens !== null && <span className={TONE["number"]}>{formatCount(item.totalTokens)} ток</span>}
+      {item.costUsd !== null && item.costUsd > 0 && <span className={TONE["number"]}>{formatMoney(item.costUsd)}</span>}
+      {failed > 0 && <span className={TONE["error"]}>проверок не прошло {failed}</span>}
     </span>
+  )
+}
+
+function Zone({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <span className={`${MUTED_TEXT} ${TONE["muted"]} uppercase tracking-[0.07em]`}>{label}</span>
+      <div className="min-w-0">{children}</div>
+    </div>
   )
 }
 
 function Zones({ item, ir, lines }: { item: FlowItem; ir: Ir | null; lines: number }) {
   if (lines === 0) return null
+  const hasPrompt = item.prompt !== null && item.prompt !== ""
   return (
-    <div className="grid gap-x-5 gap-y-2 py-1.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
+    <div className="grid gap-x-5 gap-y-3 border-t border-[#1B2430] px-3 py-2.5" style={ZONE_GRID}>
       <Zone label="вход">
         <ValueLines value={item.input} ir={ir} lines={lines} />
       </Zone>
-      <Zone label="промт" wide>
-        {item.prompt === null || item.prompt === "" ? (
-          <span className={`${MUTED_TEXT} ${TONE["muted"]}`}>промта нет</span>
-        ) : (
+      {hasPrompt && (
+        <Zone label="промт">
           <ValueLines value={item.prompt} ir={ir} lines={lines} />
-        )}
-      </Zone>
+        </Zone>
+      )}
       <Zone label="выход">
         {item.error === null ? (
           <ValueLines value={item.output} typeName={item.outputType ?? ""} ir={ir} lines={lines} />
         ) : (
-          <span className={`whitespace-pre-wrap font-mono text-[13px] leading-[1.5] ${TONE["error"]}`}>
+          <span className={`block whitespace-pre-wrap font-mono text-[12.5px] leading-[1.45] ${TONE["error"]}`}>
             {item.error}
           </span>
         )}
       </Zone>
-    </div>
-  )
-}
-
-function Zone({ label, wide = false, children }: { label: string; wide?: boolean; children: React.ReactNode }) {
-  return (
-    <div className={`flex min-w-0 flex-col gap-0.5 ${wide ? "md:col-span-2 xl:col-span-1" : ""}`}>
-      <span className={`${MUTED_TEXT} ${TONE["muted"]} uppercase tracking-[0.07em]`}>{label}</span>
-      <div className="min-w-0 max-w-[640px]">{children}</div>
     </div>
   )
 }
@@ -102,87 +92,74 @@ function Head({ item }: { item: FlowItem }) {
     .filter((part) => part !== null && part !== "")
     .join(" · ")
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex min-w-0 items-baseline gap-2">
-        <span className={`${MUTED_TEXT} ${TONE["muted"]} w-6 shrink-0 tabular-nums`}>{item.order}</span>
-        <span className={`min-w-0 flex-1 text-[14px] font-medium leading-snug ${TONE["data"]}`}>{item.title}</span>
+    <div className="flex flex-col gap-1 px-3 pt-2.5">
+      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <span className={`${MUTED_TEXT} ${TONE["muted"]} shrink-0 tabular-nums`}>{item.order}</span>
+        <span className={`min-w-0 flex-1 text-[13.5px] font-medium leading-snug ${TONE["data"]}`}>{item.title}</span>
         {item.status !== "ok" && (
           <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] ring-1 ${tone.pill}`}>
             {tone.label}
           </span>
         )}
+        {item.selected && item.kind !== "branch" && (
+          <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] ring-1 ring-[#2E6F6A] ${TONE["ok"]}`}>
+            выбрана
+          </span>
+        )}
         <Facts item={item} />
       </div>
-      <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate pl-8`}>{meta}</div>
-      {item.note !== "" && <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate pl-8`}>{item.note}</div>}
+      <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate`}>{meta}</div>
+      {item.note !== "" && <div className={`${MUTED_TEXT} ${TONE["muted"]} truncate`}>{item.note}</div>}
     </div>
   )
 }
 
-function Item({ item, ir, lines, depth }: { item: FlowItem; ir: Ir | null; lines: number; depth: number }) {
+function Item({ item, ir, lines }: { item: FlowItem; ir: Ir | null; lines: number }) {
   const tone = nodeTones[item.status]
-  const mark = item.selected ? `${TONE["ok"]} ring-1 ring-[#2E6F6A]` : ""
   return (
-    <section className={`flex min-w-0 gap-2.5 ${mark}`}>
-      <span className={`mt-1 w-[3px] shrink-0 rounded-sm ${tone.bar}`} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Head item={item} />
-        <div className="pl-8">
+    <article className={`flex min-w-0 flex-col ${CARD}`}>
+      <div className="flex min-w-0">
+        <span className={`w-[3px] shrink-0 rounded-l-md ${tone.bar}`} />
+        <div className="flex min-w-0 flex-1 flex-col pb-1">
+          <Head item={item} />
           <Zones item={item} ir={ir} lines={lines} />
-          {item.groups.map((group) => (
-            <RunFlow key={group.id} group={group} ir={ir} lines={lines} depth={depth + 1} />
-          ))}
         </div>
       </div>
-    </section>
+      {item.groups.map((group) => (
+        <div key={group.id} className="px-3 pb-2.5">
+          <RunFlow group={group} ir={ir} lines={lines} />
+        </div>
+      ))}
+    </article>
   )
 }
 
 const bandTitle = (group: FlowGroup): string => {
   const count = group.items.length
-  if (group.mode === "parallel") return `${BAND_LABELS.parallel} · ${count} ${branchWord(count)}`
-  if (group.mode === "loop") return `${BAND_LABELS.loop} · ${count} ${iterationWord(count)}`
+  if (group.mode === "parallel") return `параллельно · ${count} ${branchWord(count)}`
+  if (group.mode === "loop") return `цикл · ${count} ${iterationWord(count)}`
   return `${count} ${stepWord(count)}`
 }
 
-function Band({ group, children }: { group: FlowGroup; children: React.ReactNode }) {
-  if (group.mode === "sequence") return <div className="flex flex-col gap-4">{children}</div>
+function Band({ group, children }: { group: FlowGroup; children: ReactNode }) {
+  if (group.mode === "sequence") return <div className="flex flex-col gap-2.5">{children}</div>
   return (
-    <div className={`my-2 rounded border-l-2 ${BAND_TONES[group.mode]} pl-3`}>
-      <div className="flex items-baseline gap-2 pb-1.5">
-        <span className={`font-mono text-[12px] uppercase tracking-[0.07em] ${TONE["data"]}`}>
+    <div className={`my-1 border-l-2 pl-3 ${BAND_RULE[group.mode]}`}>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 pb-1.5">
+        <span className={`font-mono text-[11.5px] uppercase tracking-[0.07em] ${TONE["data"]}`}>
           {bandTitle(group)}
         </span>
-        {group.label !== "" && <span className={`${MUTED_TEXT} ${TONE["muted"]}`}>{group.label}</span>}
         <span className={`${MUTED_TEXT} ${TONE["muted"]} tabular-nums`}>{formatSpan(group.durationMs)}</span>
-        {group.mode === "parallel" && group.lanes > 1 && (
-          <span className={`${MUTED_TEXT} ${TONE["muted"]}`}>одновременно до {group.lanes}</span>
-        )}
+        {group.label !== "" && <span className={`${MUTED_TEXT} ${TONE["muted"]}`}>{group.label}</span>}
       </div>
       {children}
     </div>
   )
 }
 
-const columnsFor = (count: number): string => {
-  if (count <= 1) return "grid-cols-1"
-  if (count === 2) return "grid-cols-1 xl:grid-cols-2"
-  if (count === 3) return "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3"
-  return "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3"
-}
-
-export function RunTreeView({
-  tree,
-  ir,
-  lines,
-}: {
-  tree: FlowTree
-  ir: Ir | null
-  lines: number
-  onSelectNode?: (nodeId: string) => void
-}) {
+export function RunTreeView({ tree, ir, lines }: { tree: FlowTree; ir: Ir | null; lines: number }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2.5">
       {tree.groups.map((group) => (
         <RunFlow key={group.id} group={group} ir={ir} lines={lines} />
       ))}
@@ -190,17 +167,15 @@ export function RunTreeView({
   )
 }
 
-export function RunFlow({ group, ir, lines, depth = 0 }: Props) {
+export function RunFlow({ group, ir, lines }: Props) {
   if (group.items.length === 0) return null
 
   if (group.mode === "parallel") {
     return (
       <Band group={group}>
-        <div className={`grid gap-x-5 gap-y-4 ${columnsFor(group.items.length)}`}>
+        <div className="grid gap-3" style={BRANCH_GRID}>
           {group.items.map((item) => (
-            <div key={item.id} className={`min-w-0 border-t ${HAIRLINE} pt-2`}>
-              <Item item={item} ir={ir} lines={lines} depth={depth} />
-            </div>
+            <Item key={item.id} item={item} ir={ir} lines={lines} />
           ))}
         </div>
       </Band>
@@ -210,7 +185,7 @@ export function RunFlow({ group, ir, lines, depth = 0 }: Props) {
   return (
     <Band group={group}>
       {group.items.map((item) => (
-        <Item key={item.id} item={item} ir={ir} lines={lines} depth={depth} />
+        <Item key={item.id} item={item} ir={ir} lines={lines} />
       ))}
     </Band>
   )
