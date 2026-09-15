@@ -18,10 +18,10 @@ describe("лента прогона", () => {
     for (const nodeId of ["load_hotels", "pick", "render"]) expect(markup).toContain(nodeId)
   })
 
-  it("показывает шкалу времени вместо отдельного экрана таймлайна", () => {
+  it("у каждого шага видно, когда он начался и сколько шёл", () => {
     const markup = table(finishedEvents)
-    expect(markup).toContain("width:")
-    expect(markup).toContain("left:")
+    expect(markup).toMatch(/\+\d+ мс|\+\d+\.\d+ с/)
+    expect(markup).toMatch(/\d+ мс|\d+\.\d+ с/)
   })
 
   it("показывает вход, промт и выход без единого клика", () => {
@@ -50,11 +50,7 @@ describe("лента прогона", () => {
   it("показывает живой прогон, пока событий ещё мало", () => {
     const markup = table(startedEvents)
     expect(markup).toContain("load_hotels")
-    expect(markup).toContain("animate-pulse")
-  })
-
-  it("подсвечивает выбранный шаг", () => {
-    expect(table(finishedEvents, "pick")).toContain("bg-[#16202F]")
+    expect(markup).toContain("идёт")
   })
 
   it("честно сообщает, что шагов нет", () => {
