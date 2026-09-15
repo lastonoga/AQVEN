@@ -20,8 +20,6 @@ type Props = {
   onSelectNode?: (nodeId: string) => void
 }
 
-const NOOP = (): void => undefined
-
 const KINDS: readonly SignalKind[] = ["error", "check", "empty", "slow", "stub"]
 
 function Metric({ label, value }: { label: string; value: string }) {
@@ -87,7 +85,7 @@ function Legend({ counts }: { counts: ReadonlyMap<SignalKind, number> }) {
   )
 }
 
-export function RunStream({ view, run, renders, ir, onSelectNode = NOOP }: Props) {
+export function RunStream({ view, run, renders, ir }: Props) {
   const [density, setDensity] = useState<Density>("normal")
   useEffect(() => setDensity(readDensity()), [])
 
@@ -120,7 +118,7 @@ export function RunStream({ view, run, renders, ir, onSelectNode = NOOP }: Props
         </div>
       </div>
       <div className="px-3 py-3">
-        <RunTreeView tree={tree} ir={ir} lines={DENSITY_LINES[density]} onSelectNode={onSelectNode} />
+        <RunTreeView tree={tree} ir={ir} lines={DENSITY_LINES[density]} />
       </div>
     </div>
   )
