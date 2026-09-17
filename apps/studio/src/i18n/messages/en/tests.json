@@ -1,0 +1,46 @@
+{
+  "title": "Tests",
+  "actions": {
+    "newTest": "New test",
+    "runTestAria": "Run test {text}"
+  },
+  "columns": {
+    "testScope": "Test · scope",
+    "dataset": "Dataset",
+    "pass": "Pass",
+    "lastRun": "Last run"
+  },
+  "scope": {
+    "call": "call",
+    "stage": "stage",
+    "stageNumber": "stage {value}",
+    "parallel": "{count, plural, one {# branch} other {# branches}} in parallel",
+    "loop": "loop to threshold {threshold}",
+    "workflowTitle": "whole workflow",
+    "workflowSubtitle": "end-to-end run from {text}"
+  },
+  "rows": "{count, plural, one {# row} other {# rows}}",
+  "datasets": {
+    "title": "Datasets",
+    "buildWithAgent": "Build with agent",
+    "newDataset": "New dataset",
+    "assertions": "{count, plural, one {# assertion} other {# assertions}}",
+    "usedBy": "tests: {count}",
+    "columns": {
+      "dataset": "Dataset",
+      "source": "Source",
+      "assertions": "Assertions",
+      "usedBy": "Used by",
+      "updated": "Updated"
+    },
+    "source": {
+      "spreadsheet": "spreadsheet",
+      "spreadsheetAgentExtended": "spreadsheet + agent-extended",
+      "agent": "agent",
+      "agentRuns": "from runs {from}…{to}",
+      "tool": "tool {text}",
+      "snapshot": "snapshot",
+      "manual": "manual"
+    }
+  }
+}

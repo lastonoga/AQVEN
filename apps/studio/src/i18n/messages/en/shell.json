@@ -1,0 +1,21 @@
+{
+  "modes": {
+    "navAria": "Workflow views"
+  },
+  "run": {
+    "openAria": "Open run {run} in Dataflow"
+  },
+  "resizeChatAria": "Resize chat",
+  "picker": {
+    "triggerAria": "Switch workflow",
+    "label": "Workflows in {workspace}",
+    "stages": "{count, plural, one {# stage} other {# stages}}",
+    "run": "run {run}",
+    "neverRun": "never run",
+    "current": "OPEN",
+    "newWorkflow": "New workflow",
+    "allWorkflows": "All workflows",
+    "settings": "Workflow settings",
+    "studioSettings": "Studio settings"
+  }
+}

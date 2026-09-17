@@ -1,0 +1,203 @@
+{
+  "onboarding": {
+    "brand": "AQVEN Studio",
+    "title": "Set up {project}",
+    "lead": "Studio runs inside this project. Connect the chat agent, add model keys for your workflows, and pick where to start.",
+    "stepsAria": "Setup steps",
+    "steps": {
+      "agent": "1 · Chat agent",
+      "providers": "2 · Model keys",
+      "workflow": "3 · Workflows"
+    },
+    "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip to Studio"
+  },
+  "project": {
+    "title": "Project",
+    "description": "Studio serves the project it was launched in. To work on another project, run the same command in its folder.",
+    "folder": "Folder",
+    "git": "Git",
+    "gitDirty": "{branch} · uncommitted changes",
+    "noGit": "not a git repository",
+    "config": "Config",
+    "noConfig": "aqven.yaml is created on first save",
+    "workflows": "Workflows",
+    "workflowCount": "{count, plural, =0 {none yet} one {# workflow} other {# workflows}}",
+    "server": "Server",
+    "started": "Started",
+    "projectData": "Project data",
+    "studioData": "Studio data",
+    "anotherProject": "Open another project"
+  },
+  "agent": {
+    "title": "Chat agent",
+    "description": "The chat runs the agent on this computer with your own subscription. No API key is needed.",
+    "signInNote": "Sign-in happens in the agent's own flow. Studio never reads or stores your credentials.",
+    "names": {
+      "claude": "Claude Agent",
+      "codex": "Codex"
+    },
+    "cli": "CLI",
+    "origin": {
+      "system": "installed",
+      "bundled": "bundled with aqven"
+    },
+    "signIn": "Sign-in",
+    "tools": "AQVEN tools",
+    "checked": "Checked",
+    "notInstalled": "not installed",
+    "signedOut": "not signed in",
+    "toolsConnected": "{count} tools connected",
+    "toolsFailed": "failed: {reason}",
+    "toolsPending": "checked after sign-in",
+    "state": {
+      "ready": "READY",
+      "signIn": "SIGN IN",
+      "install": "NOT INSTALLED"
+    },
+    "fix": {
+      "install": "Install it in Terminal, then check again",
+      "signIn": {
+        "claude": "Run this in Terminal, type /login, then check again",
+        "codex": "Run this in Terminal, then check again"
+      }
+    },
+    "checkAgain": "Check again",
+    "copyAria": "Copy command",
+    "default": "Default agent",
+    "defaultHint": "The chat starts new conversations with this agent.",
+    "noneReady": "Sign in to at least one agent to use the chat."
+  },
+  "providers": {
+    "title": "Model keys",
+    "description": "Workflow nodes call models with these keys. The first match wins: project setting, Studio setting, then the environment variable.",
+    "missingNote": "Workflows that call models need at least one key. You can add keys later in Settings.",
+    "names": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "google": "Google",
+      "openrouter": "OpenRouter",
+      "together": "Together"
+    },
+    "source": {
+      "project": "PROJECT",
+      "studio": "STUDIO",
+      "environment": "ENV",
+      "missing": "NOT SET"
+    },
+    "fromEnv": "from {variable}",
+    "notSet": "not set · {variable}",
+    "set": "Set key",
+    "replace": "Replace",
+    "remove": "Remove"
+  },
+  "workflow": {
+    "existingTitle": "Workflows in {project}",
+    "existingDescription": "Open one to continue where you left off.",
+    "nodes": "{count, plural, one {# node} other {# nodes}}",
+    "emptyTitle": "Start your first workflow",
+    "emptyDescription": "{project} has no workflows yet. Pick how you want to begin.",
+    "describe": {
+      "title": "Describe it to the agent",
+      "description": "{agent} drafts the flow, nodes and prompts as files in your project, runs aqven check and asks before each edit.",
+      "placeholder": "Triage support emails, look up the order, draft a reply and ask a human before sending",
+      "suggestionsAria": "Example requests",
+      "action": "Draft with {agent}"
+    },
+    "suggestions": {
+      "reviews": "Summarize reviews with citations",
+      "tickets": "Route support tickets",
+      "products": "Product copy from a spreadsheet"
+    },
+    "template": {
+      "title": "Start from an example",
+      "description": "Copy a working workflow with its tests and adapt it.",
+      "use": "Use"
+    },
+    "blank": {
+      "title": "Empty workflow",
+      "description": "Create flow.yaml in a new flows folder with one input node and build it yourself.",
+      "placeholder": "workflow_id",
+      "action": "Create"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "lead": "Settings of this project and of Studio on this computer.",
+    "back": "Back to Studio",
+    "navAria": "Settings sections",
+    "sections": {
+      "project": "Project",
+      "agents": "Chat agent",
+      "providers": "Model keys",
+      "mcp": "MCP connections",
+      "updates": "Updates"
+    },
+    "agents": {
+      "general": "General",
+      "configuration": "{agent} configuration",
+      "configurationHint": "Applied to new chat sessions. The agent works in this project with the AQVEN tools and the project's CLAUDE.md and AGENTS.md; your global CLI settings are not loaded.",
+      "model": "Model",
+      "modelHint": "Models this CLI reports for your account.",
+      "effort": "Effort",
+      "effortHint": "How much the model reasons before it answers. The list depends on the model.",
+      "effortUnsupported": "{model} has no effort setting",
+      "choices": {
+        "reasoning": {
+          "title": "Reasoning in chat",
+          "hint": "How much of the agent's thinking streams into the chat."
+        },
+        "approvals": {
+          "title": "Permissions",
+          "hint": "When the agent stops and waits for your approval."
+        },
+        "sandbox": {
+          "title": "Sandbox",
+          "hint": "What shell commands are allowed to touch."
+        }
+      },
+      "limits": {
+        "maxTurns": {
+          "title": "Max turns",
+          "hint": "Stop a request after this many agent steps."
+        },
+        "maxBudgetUsd": {
+          "title": "Spend limit per request, $",
+          "hint": "Stop when one request costs more than this."
+        }
+      },
+      "noLimit": "No limit",
+      "save": "Save changes"
+    },
+    "mcp": {
+      "server": "AQVEN MCP server",
+      "serverDescription": "External agents get the same tools as the Studio chat. The HTTP endpoint needs this launch's token, so agents connect through aqven mcp, which reads it or starts the server in the background.",
+      "address": "Address",
+      "auth": "Access",
+      "authValue": "Bearer token from .aqven/server.json",
+      "connect": "Connect an agent",
+      "claudeCode": "Claude Code",
+      "claudeCodeHint": "Run once in this project folder.",
+      "cursor": "Cursor",
+      "cursorHint": "Add to .cursor/mcp.json in this project.",
+      "claudeDesktop": "Claude Desktop",
+      "claudeDesktopHint": "Add the same server to claude_desktop_config.json.",
+      "connectDesktop": "Add to Claude Desktop"
+    },
+    "updates": {
+      "title": "Updates",
+      "description": "Studio ships inside the aqven package of this project's environment.",
+      "installed": "Installed",
+      "latest": "Latest on PyPI",
+      "checked": "Last checked",
+      "upToDate": "up to date",
+      "available": "{version} available",
+      "uv": "With uv",
+      "uvHint": "Then restart aqven studio.",
+      "pip": "With pip",
+      "pipHint": "Then restart aqven studio.",
+      "releases": "Release notes"
+    }
+  }
+}

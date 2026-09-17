@@ -1,0 +1,45 @@
+{
+  "close": "Close",
+  "none": "—",
+  "open": "Open",
+  "new": "New",
+  "run": "Run",
+  "retry": "Retry",
+  "copy": "Copy",
+  "copied": "Copied",
+  "moreActions": "More actions",
+  "expand": "expand",
+  "collapse": "collapse",
+  "notFound": "Page not found",
+  "quoted": "“{text}”",
+  "units": {
+    "seconds": "{value} s",
+    "tokens": "{count, plural, one {# token} other {# tokens}}",
+    "chars": "{count, plural, one {# char} other {# chars}}",
+    "fields": "{count, plural, one {# field} other {# fields}}"
+  },
+  "duration": {
+    "hoursMinutes": "{hours} h {minutes} m",
+    "hours": "{hours} h"
+  },
+  "actions": {
+    "uploadSpreadsheet": "Upload spreadsheet",
+    "open": "Open",
+    "run": "Run"
+  },
+  "columns": {
+    "actions": "Actions"
+  },
+  "empty": {
+    "inspector": "Select a node on the canvas",
+    "call": "No data for this call",
+    "contract": "No data for this node",
+    "review": "Select a step to review",
+    "reviewNotFound": "No data for this review step",
+    "trace": "No trace for this row",
+    "run": "No data for this run",
+    "tests": "No tests yet",
+    "datasets": "No datasets yet",
+    "queue": "Nothing waiting for review"
+  }
+}

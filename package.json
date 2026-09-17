@@ -1,5 +1,5 @@
 {
-  "name": "wf",
+  "name": "aqven",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",
@@ -8,15 +8,9 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "build": "tsc -b",
-    "dev": "wf dev",
-    "wf": "wf",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "typescript": "6.0.3",
-    "vitest": "5.0.0",
-    "@types/node": "24.10.1",
-    "@wf/cli": "workspace:*"
+    "dev": "pnpm --filter @aqven/studio dev",
+    "build": "pnpm --filter @aqven/studio build",
+    "test": "pnpm --filter @aqven/studio test",
+    "lint": "pnpm --filter @aqven/studio lint"
   }
 }

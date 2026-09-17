@@ -1,0 +1,67 @@
+{
+  "title": "Human review",
+  "subtitle": "steps that ask a person to decide, before the run continues",
+  "actions": {
+    "assignToMe": "Assign to me",
+    "reviewRules": "Review rules"
+  },
+  "queue": {
+    "labelAria": "Review queue",
+    "run": "run {run}",
+    "stageNode": "stage {stage} · {node}"
+  },
+  "sla": {
+    "left": "{duration} left",
+    "overdue": "overdue {duration}",
+    "full": "{budget, select, none {} other {SLA {budget} · }}{state, select, overdue {overdue {duration} · escalated} other {{duration} left · then escalate}}"
+  },
+  "trigger": {
+    "verdict": "{verdict} · verdict ≠ {required}",
+    "humanInput": "human input · {slot}",
+    "escalated": "escalated · SLA breached"
+  },
+  "badge": {
+    "needsHuman": "NEEDS HUMAN",
+    "needsInput": "NEEDS INPUT"
+  },
+  "detail": {
+    "meta": "run {run} · stage {stage} · row {row} · branch {branch}"
+  },
+  "sections": {
+    "produced": "What the run produced",
+    "why": "Why a human was asked",
+    "decision": "Your decision"
+  },
+  "fields": {
+    "agent": "agent",
+    "prompt": "prompt",
+    "cost": "cost",
+    "postCheck": "post-check",
+    "judges": "judges",
+    "loop": "loop",
+    "expected": "expected",
+    "dataset": "dataset"
+  },
+  "values": {
+    "temperature": "t {value}",
+    "promptRevision": "{prompt} · {revision}",
+    "loop": "{count, plural, one {# iteration} other {# iterations}} · stop: {reason}",
+    "datasetRow": "{dataset} · row {row} / {total}"
+  },
+  "why": {
+    "judgesReturned": "Judges returned <b>{verdict}</b>: {summary}",
+    "waitingFor": "Waiting for <b>{slot}</b>: {summary}"
+  },
+  "decision": {
+    "placeholder": "Add a note for the agent — it is stored with the run and used as $human.review in the next iteration…",
+    "approve": "Approve · resume run",
+    "requestChanges": "Request changes",
+    "reject": "Reject branch",
+    "reassign": "Reassign",
+    "hint": "approve resumes stage {stage} with this branch · request changes replays the loop with your note",
+    "failed": "The decision was not saved. Your note is kept, try again."
+  },
+  "status": {
+    "overdueAria": "overdue"
+  }
+}
