@@ -26,6 +26,7 @@ or the future marketing/landing page — both are explicitly out of scope (§6).
 | Rejected: mkdocs-material | — | Zero-glue Python docstring rendering, but Jinja2/CSS theming is a worse fit for the bespoke landing page that's coming later, and it's a second toolchain alongside the TS-based `apps/studio`. |
 | Rejected: Fumadocs (Next.js) | — | No advantage over Starlight for this project (neither the engine nor Studio is Next.js), and static GitHub Pages export is more native to Astro. |
 | Rejected: Mintlify / Kapa.ai-style SaaS "Ask AI" widgets | — | Paid SaaS; conflicts with the project's cheap-OpenRouter-only preference and self-hosted ethos. |
+| Diagrams | `astro-mermaid` (client-side rendering) over `rehype-mermaid`/`@beoe/rehype-mermaid` | Build-time SVG rendering needs a headless Chromium via Playwright in CI; client-side rendering avoids that dependency entirely for a small client-bundle cost, which is the right trade for a docs site. |
 
 ## 3. Build-time codegen
 
@@ -63,7 +64,25 @@ Laravel-style: narrative + step-by-step + generated reference, cross-linked, eve
 14. **For AI Coding Agents** — how to read these docs as an agent, the MCP tool contract, condensed workflow/model/schema rules, the `AGENTS.md` template (reusing Lumen's own)
 15. **Examples** — the full `support_case` flow walked end-to-end, node by node
 
-## 5. "Ask AI" widget
+## 5. Visual content plan
+
+Placeholders only — no diagram or screenshot gets produced as part of this spec. Each row is a marker for what
+belongs on that page and how it should eventually be made, so a future content pass knows what to draw instead of
+guessing. `[VISUAL: ...]` markers go directly in the MDX source at these points.
+
+| Page | Visual | Shows | Make it by |
+|---|---|---|---|
+| Introduction | Pipeline concept diagram | Input → Context → Strategies → Aggregation → Judge → Output, the shape from the positioning doc's §2 | Hand-drawn mermaid flowchart |
+| Core Concepts | File-path → kind → id resolution diagram | A handful of real Lumen paths (`triage.node.yaml`, `flows/support_case/flow.yaml`) mapped to their resolved kind and id | Hand-drawn mermaid diagram |
+| Building Flows | One small control-flow shape per node kind | How `switch`, `parallel`, `loop`, `map`, `race` branch and rejoin, in the abstract | Hand-drawn mermaid, one per node-kind page |
+| Building Flows / Examples | Full `support_case` flow graph | All ~15 top-level stages of the real Lumen flow, from `prepare` to `finalize` | **Generated, not hand-drawn** — a build-time script parses `flow.yaml` + each node's `body`/`cases` into a mermaid flowchart, so the diagram can never drift from the real example. Real engineering work, not a placeholder task — track as a follow-up item, start with a hand-drawn stand-in. |
+| Designing Reliable Workflows | Decision trees (decompose? diverge? critic-loop?) | The decision tables from the workflow-design research, e.g. "is there an external verifiable signal for this node?" | Hand-drawn mermaid, distilled from the research doc's existing ASCII decision tree |
+| Testing & Evaluation | Check/test pipeline diagram | static check → simulated run → scenario test → live cassette recording | Hand-drawn mermaid |
+| For AI Coding Agents | MCP tool contract flow | agent → MCP tools → `flow_patch` → CAS/rename journal → `aqven check` loop | Hand-drawn mermaid |
+| Examples (walkthrough) | Same generated flow graph as above, with the current stage highlighted per section | Reader's "you are here" anchor while reading the node-by-node walkthrough | Same generator, highlight param per section |
+| Getting Started, Examples | Studio screenshots ("what this looks like in Studio") | Real UI, once it exists | Deferred entirely to Part 2 — do not block Part 1 content on these; leave `[VISUAL: Studio screenshot — pending Part 2]` markers only |
+
+## 6. "Ask AI" widget
 
 A visitor-facing chat box grounded in the docs content, distinct from §4.14/the `llms.txt` output (which is for
 external agents like Claude Code or Cursor reading the site, not a UI feature).
@@ -78,14 +97,14 @@ external agents like Claude Code or Cursor reading the site, not a UI feature).
 - Deliberate v1 shortcut: once the engine exists past the phase-0 spike, this is a natural candidate to rebuild as
   an actual AQVEN flow — the docs site's own chat agent, built with AQVEN.
 
-## 6. Out of scope
+## 7. Out of scope
 
 - The marketing/landing page itself (will live at `site/` alongside the docs once designed; not part of this spec).
 - Studio *frontend* documentation (screens, canvas, debugger, screenshots) — Studio isn't finished; its own docs
   section is a placeholder nav entry with no content until it stabilizes. Its API is already covered by §4.11.
 - Any change to the internal `docs/` planning corpus, which stays Russian and unaffected by this site.
 
-## 7. Required follow-up: ADR-0026 §8 amendment
+## 8. Required follow-up: ADR-0026 §8 amendment
 
 ADR-0026 §8 / CLAUDE.md currently state a hard, repo-wide rule: no comments in code, and "a docstring counts as a
 comment." This spec depends on docstrings existing on the public API surface of `aqven` and `aqven-llm` (owner
@@ -95,7 +114,7 @@ surface only** — the exported entry points a host project imports (`Project`, 
 Lumen example keep the no-comment rule unchanged. This needs its own ADR entry before implementation starts,
 not just this spec — it changes a documented law.
 
-## 8. Research notes (verification, Sept 2026)
+## 9. Research notes (verification, Sept 2026)
 
 - Griffe 2.0.0 (Feb 2026, MIT) — `griffe dump <package> -s <path>` serializes public signatures + docstrings to
   JSON on the command line, independent of mkdocs.
@@ -110,11 +129,18 @@ not just this spec — it changes a documented law.
 - `aqven`'s CLI is stdlib `argparse` with a custom `Command` wrapper (confirmed by reading `cli.py`), not
   Typer/Click — no drop-in CLI-doc plugin exists for this combination, hence the `--help`-capture approach in §3.
 - mkdocs-material + mkdocstrings-python (1.0.4 / 2.0.3, current) was evaluated and rejected — see §2.
+- `astro-mermaid` and `rehype-mermaid`/`@beoe/rehype-mermaid` are the current actively maintained options for
+  mermaid diagrams in Astro/Starlight; the build-time option needs Playwright/headless Chromium in CI, which is
+  the reason to prefer client-side rendering here.
 
-## 9. Open questions
+## 10. Open questions
 
 1. Diagnostics-reference generation (§3, §4.13) assumes the `E_*`/`W_*` catalog is structured data inside the
    compiler, not scattered string literals. Confirm against the actual code once it exists past the phase-0 spike;
    if it's not structured, this page starts hand-written and gets generated later.
 2. Exact npm/uv wiring for the pre-build codegen step (single `npm run build` orchestrating both the Python-side
    scripts and the Astro build, vs. a separate CI step) is an implementation detail for the plan, not this spec.
+3. The flow-graph-to-mermaid generator (§5) is real engineering, not a content task: it has to parse `flow.yaml`
+   plus every node's `body`/`cases` recursively, including nested `parallel`/`loop`/`switch` bodies, and needs its
+   own scoping before implementation. Content for Building Flows and Examples should ship with a hand-drawn
+   stand-in diagram first rather than block on this.
