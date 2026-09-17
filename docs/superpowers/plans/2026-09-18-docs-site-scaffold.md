@@ -118,10 +118,13 @@ Create `site/package.json`:
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
-    "typescript": "7.0.2"
+    "typescript": "6.0.3"
   }
 }
 ```
+
+`@astrojs/check@0.9.10` peer-depends on `typescript@"^5.0.0 || ^6.0.0"` — 7.0.2 (the newest release) is not yet
+supported, so this pins 6.0.3, matching `apps/studio`'s existing pin.
 
 - [ ] **Step 5: Install and verify the workspace recognizes the new package**
 
