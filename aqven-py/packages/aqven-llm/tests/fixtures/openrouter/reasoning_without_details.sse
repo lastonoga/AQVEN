@@ -1,0 +1,6 @@
+data: {"id": "g", "object": "chat.completion.chunk", "created": 1, "model": "x", "choices": [{"index": 0, "delta": {"role": "assistant", "content": "", "reasoning": "thinking without details"}, "finish_reason": null}]}
+
+data: {"id": "g", "object": "chat.completion.chunk", "created": 1, "model": "x", "choices": [{"index": 0, "delta": {"content": "ok"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2, "cost": 1e-06}}
+
+data: [DONE]
+

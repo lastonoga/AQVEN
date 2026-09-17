@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Ответ на заметку инференсом этого узла"
+agent: "writer"
+in:
+- name: "text"
+  from: "$clean.out.text"
+- name: "mood"
+  value: "calm"

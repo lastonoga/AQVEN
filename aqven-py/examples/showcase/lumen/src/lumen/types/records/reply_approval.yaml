@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Согласование ответа руководителем поддержки"
+fields:
+- name: "decision"
+  type: "ApprovalDecision"
+  description: "Решение по ответу"
+- name: "edited_text"
+  type: "Text?"
+  description: "Исправленный текст при правке; иначе null"
+  maxLength: 1500
+- name: "note"
+  type: "Text?"
+  description: "Заметка руководителя; null, если заметки нет"
+  maxLength: 400

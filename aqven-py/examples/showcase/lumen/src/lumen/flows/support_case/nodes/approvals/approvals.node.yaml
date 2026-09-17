@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "parallel"
+description: "Параллельное согласование ответа руководителем поддержки и медиа бренд-редактором"
+body:
+  lead: "lead"
+  brand: "brand"
+join:
+  use: "all"
+out:
+- name: "lead"
+  type: "ReplyApproval"
+  description: "Решение руководителя поддержки по ответу"
+  from: "$branch.lead"
+- name: "media"
+  type: "MediaApproval"
+  description: "Решение бренд-редактора по медиа ответа"
+  from: "$branch.brand"

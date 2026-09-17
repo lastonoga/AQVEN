@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Очередь обращения"
+values:
+- value: "billing"
+  description: "Оплата и возвраты"
+- value: "delivery"
+  description: "Доставка"

@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Поиск заметок, похожих на вопрос агента"
+in:
+- name: "question"
+  type: "Text"
+  description: "Вопрос агента"
+  maxLength: 200
+out:
+- name: "similar"
+  type: "Note[]"
+  description: "Похожие заметки"
+  maxItems: 3
+- name: "score"
+  type: "Score"
+  description: "Сходство лучшей заметки"

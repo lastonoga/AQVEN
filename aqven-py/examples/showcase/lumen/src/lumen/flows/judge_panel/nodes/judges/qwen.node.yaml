@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Судья семейства Qwen оценивает черновики вслепую"
+inference: "tie_break"
+agent: "qwen"
+in:
+- name: "summary"
+  from: "$input.summary"
+- name: "candidates"
+  from: "$input.candidates"
+- name: "chunks"
+  from: "$input.chunks"

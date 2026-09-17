@@ -1,0 +1,9 @@
+from typing import Annotated
+
+from pydantic import StringConstraints
+
+from __package__.types import AnswerQuestionPrepareOut
+
+
+def prepare(text: Annotated[str, StringConstraints(max_length=2000)]) -> AnswerQuestionPrepareOut:
+    return AnswerQuestionPrepareOut(text=" ".join(text.split()))

@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Оплата уходит сразу, доставку подтверждает оператор"
+on: "$classify.out.category"
+cases:
+  billing:
+    bind:
+    - name: "category"
+      from: "$classify.out.category"
+  delivery:
+    node: "confirm"
+out:
+- name: "category"
+  type: "TriageCategory"
+  description: "Итоговая очередь"

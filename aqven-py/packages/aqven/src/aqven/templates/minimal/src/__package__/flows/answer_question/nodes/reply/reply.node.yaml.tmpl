@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Answers the prepared question with the assistant agent"
+agent: "assistant"
+in:
+- name: "text"
+  from: "$prepare.out.text"
+- name: "tone"
+  from: "$input.tone"

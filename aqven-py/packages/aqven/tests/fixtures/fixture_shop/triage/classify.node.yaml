@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Выбор очереди по теме и тексту"
+agent: "writer"
+in:
+- name: "ticket"
+  from: "$input"

@@ -1,0 +1,80 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-f00d3c6c04afcb8b97e91d6b6eb0e983319b9b6fd9f9870f7386aa8e83cd1516",
+  "request_key": "sha256-b7df592c29cafb338e2779f17d9a1fae53783b762c678b0c131d94775c329245",
+  "model_ref": "openrouter:google/gemini-3.1-flash-lite-image",
+  "site": {
+    "address": {
+      "node_id": "illustrate",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "data": "_9j_4AAQSkZJRgABAQAASABIAAD_4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAYKADAAQAAAABAAAAQAAAAAD_7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs-EJ-_8AAEQgAQABgAwEiAAIRAQMRAf_EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC__EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29_j5-v_EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC__EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5-jp6vLz9PX29_j5-v_bAEMAAgICAgICAwICAwQDAwMEBQQEBAQFBwUFBQUFBwgHBwcHBwcICAgICAgICAoKCgoKCgsLCwsLDQ0NDQ0NDQ0NDf_bAEMBAgICAwMDBgMDBg0JBwkNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDf_dAAQABv_aAAwDAQACEQMRAD8A_cCiiivQOcKKKKACiiigAooooAKKKKACiiigD__Q_cCivK7_AMSa1DaSSxXG1lxg7EPUgd1qnpPinXrnzfPut23bj93GOufRa-Ww_H-X1sqq5xGE_ZwlytWjzX93Zc1re8uvc9Wpw9iIYuODclzSV-tuvl5HsFFeJ3_i7xDDdyRRXe1VxgeXGeoB7rWxf-JNahtJJYrjay4wdiHqQO6114njTA0fqfNGX-025dFpfl-L3tPiW1-plTySvP21mv3V779L7aeXWx6pX44_8PaP-qV_-XF_97a_S7SfFOvXPm-fdbtu3H7uMdc-i1_KHXr4LOqGKxmIwNNPmo8vNe1nzq6tq3tvdI5a2BnSo068mrTvb5Ozufsd_wAPaP8Aqlf_AJcX_wB7a7L4df8ABTv_AIT74g-GPAn_AArX7B_wkes6fpH2r-3vO8j7dcJB5nl_2em_Zv3bdy7sYyOtfh_XrfwCkeL47fDiWM4ZPFuhsp9CL6EivSxFaNGlKrLaKb-7U56dLnkoLqf1g0V4nf8Ai7xDDdyRRXe1VxgeXGeoB7rWxf8AiTWobSSWK42suMHYh6kDutfLYnjTA0fqfNGX-025dFpfl-L3tPiW1-p6VPJK8_bWa_dXvv0vtp5dbHqlFeP6T4p16583z7rdt24_dxjrn0Wqd_4u8Qw3ckUV3tVcYHlxnqAe611YfinCVs1q5PGMvaQjzN2XLb3dne9_eXTuZVMqqwwkcY2uWTt1v18vI__R_Xq98Ialc2zwpLAGbGMs2OCD_dqrpvgnVbPzPNltzv242s_bPqo9a9QorwKHA-V0stqZVBP2U3zPXW-nX_t1HoTz3FTxMcW2uaKstPX_ADZ5Le-AtXubl5kmtgrYxlnzwAP7lal74Q1K5tnhSWAM2MZZscEH-7Xo1FdFfhHL631XnT_2e3Jr25bX7_CjOnnGIh7Xlt-8-LTvf_Nnl-m-CdVs_M82W3O_bjaz9s-qj1r-TOv7HK_NX_h1l-z7_wBDB4y_8DbD_wCV9ephMow-GxVbGUr89Xl5tf5VZW7aHPUxtSpShRntC9vm7s_A2vXP2f4mn-PHw3gTAaTxdoSDPTLX0Ir9lv8Ah1l-z7_0MHjL_wADbD_5X10vgv8A4JufA3wL4x0LxtpGueLJr7w9qdnqtrHc3dk0LzWUyTRrIEsUYoWQBgrKSM4IPNd9alGrTlSns00_mYQqOElJbo-q73wFq9zcvMk1sFbGMs-eAB_crUvfCGpXNs8KSwBmxjLNjgg_3a9Gor5yvwjl9b6rzp_7Pbk17ctr9_hR3084xEPa8tv3nxad7_5s8v03wTqtn5nmy2537cbWftn1UetVb3wFq9zcvMk1sFbGMs-eAB_cr1qiumhw3gqWZVM1gn7Wa5XrpbTp_wBuoznmVeeGjhH8MXdfj_mz_9L9wKKKK9A5wooooAKKKKACiiigAooooAKKKKAP_9k=",
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "41321a"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "data": "_9j_4AAQSkZJRgABAQAASABIAAD_4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAYKADAAQAAAABAAAAQAAAAAD_7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs-EJ-_8AAEQgAQABgAwEiAAIRAQMRAf_EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC__EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29_j5-v_EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC__EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5-jp6vLz9PX29_j5-v_bAEMAAgICAgICAwICAwQDAwMEBQQEBAQFBwUFBQUFBwgHBwcHBwcICAgICAgICAoKCgoKCgsLCwsLDQ0NDQ0NDQ0NDf_bAEMBAgICAwMDBgMDBg0JBwkNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDf_dAAQABv_aAAwDAQACEQMRAD8A_cCiiivQOcKKKKACiiigAooooAKKKKACiiigD__Q_cCivK7_AMSa1DaSSxXG1lxg7EPUgd1qnpPinXrnzfPut23bj93GOufRa-Ww_H-X1sqq5xGE_ZwlytWjzX93Zc1re8uvc9Wpw9iIYuODclzSV-tuvl5HsFFeJ3_i7xDDdyRRXe1VxgeXGeoB7rWxf-JNahtJJYrjay4wdiHqQO6114njTA0fqfNGX-025dFpfl-L3tPiW1-plTySvP21mv3V779L7aeXWx6pX44_8PaP-qV_-XF_97a_S7SfFOvXPm-fdbtu3H7uMdc-i1_KHXr4LOqGKxmIwNNPmo8vNe1nzq6tq3tvdI5a2BnSo068mrTvb5Ozufsd_wAPaP8Aqlf_AJcX_wB7a7L4df8ABTv_AIT74g-GPAn_AArX7B_wkes6fpH2r-3vO8j7dcJB5nl_2em_Zv3bdy7sYyOtfh_XrfwCkeL47fDiWM4ZPFuhsp9CL6EivSxFaNGlKrLaKb-7U56dLnkoLqf1g0V4nf8Ai7xDDdyRRXe1VxgeXGeoB7rWxf8AiTWobSSWK42suMHYh6kDutfLYnjTA0fqfNGX-025dFpfl-L3tPiW1-p6VPJK8_bWa_dXvv0vtp5dbHqlFeP6T4p16583z7rdt24_dxjrn0Wqd_4u8Qw3ckUV3tVcYHlxnqAe611YfinCVs1q5PGMvaQjzN2XLb3dne9_eXTuZVMqqwwkcY2uWTt1v18vI__R_Xq98Ialc2zwpLAGbGMs2OCD_dqrpvgnVbPzPNltzv242s_bPqo9a9QorwKHA-V0stqZVBP2U3zPXW-nX_t1HoTz3FTxMcW2uaKstPX_ADZ5Le-AtXubl5kmtgrYxlnzwAP7lal74Q1K5tnhSWAM2MZZscEH-7Xo1FdFfhHL631XnT_2e3Jr25bX7_CjOnnGIh7Xlt-8-LTvf_Nnl-m-CdVs_M82W3O_bjaz9s-qj1r-TOv7HK_NX_h1l-z7_wBDB4y_8DbD_wCV9ephMow-GxVbGUr89Xl5tf5VZW7aHPUxtSpShRntC9vm7s_A2vXP2f4mn-PHw3gTAaTxdoSDPTLX0Ir9lv8Ah1l-z7_0MHjL_wADbD_5X10vgv8A4JufA3wL4x0LxtpGueLJr7w9qdnqtrHc3dk0LzWUyTRrIEsUYoWQBgrKSM4IPNd9alGrTlSns00_mYQqOElJbo-q73wFq9zcvMk1sFbGMs-eAB_crUvfCGpXNs8KSwBmxjLNjgg_3a9Gor5yvwjl9b6rzp_7Pbk17ctr9_hR3084xEPa8tv3nxad7_5s8v03wTqtn5nmy2537cbWftn1UetVb3wFq9zcvMk1sFbGMs-eAB_cr1qiumhw3gqWZVM1gn7Wa5XrpbTp_wBuoznmVeeGjhH8MXdfj_mz_9L9wKKKK9A5wooooAKKKKACiiigAooooAKKKKAP_9k=",
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "41321a"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1984,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 1865,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {},
+      "cost": null
+    },
+    "model_name": "scripted-painter",
+    "timestamp": "2026-09-17T17:42:27.498172Z",
+    "kind": "response",
+    "provider_name": null,
+    "provider_url": null,
+    "provider_details": null,
+    "provider_response_id": null,
+    "finish_reason": null,
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

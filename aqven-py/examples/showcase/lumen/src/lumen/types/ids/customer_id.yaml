@@ -1,0 +1,5 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "id"
+description: "Идентификатор покупателя в CRM"
+pattern: "^cus_[a-z0-9]{12}$"

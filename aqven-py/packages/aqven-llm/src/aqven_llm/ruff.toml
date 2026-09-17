@@ -1,0 +1,9 @@
+extend = "../../../../pyproject.toml"
+
+[lint.flake8-tidy-imports.banned-api]
+"httpx".msg = "Only httpx2 (ADR-0025)."
+"requests".msg = "Only httpx2 (ADR-0025)."
+"yaml".msg = "Spec files are read by ruamel.yaml (ADR-0025)."
+"pydantic_graph".msg = "The IR executor is ours (ADR-0025)."
+"pydantic_ai.retries".msg = "Imports encode httpx (ADR-0025)."
+"pydantic_ai.StructuredDict".msg = "Does not validate output (ADR-0027)."

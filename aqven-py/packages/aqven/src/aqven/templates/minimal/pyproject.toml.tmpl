@@ -1,0 +1,32 @@
+[project]
+name = "__project__"
+version = "0.1.0"
+description = "__package__: AI workflows on aqven"
+requires-python = ">=3.14,<3.15"
+dependencies = ["__aqven_requirement__"]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.16.7"]
+
+__uv_sources__
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+source-exclude = [".aqven", ".env", ".env.example"]
+wheel-exclude = [".aqven", ".env", ".env.example"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+aqven_project = "src/__package__"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+extend-exclude = ["src/__package__/types.py"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"

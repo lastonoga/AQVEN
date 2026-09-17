@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Ссылка на товар каталога"
+fields:
+- name: "sku"
+  type: "SkuId"
+  description: "Артикул товара"
+- name: "name"
+  type: "Text"
+  description: "Название товара в каталоге"
+  maxLength: 120
+- name: "category"
+  type: "ProductCategory"
+  description: "Категория товара"
+- name: "lamp_kind"
+  type: "LampKind?"
+  description: "Вид лампы; null у аксессуаров без собственного света"

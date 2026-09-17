@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Сжатие пробелов в заметке"
+run: "clean"
+in:
+- name: "text"
+  type: "Text"
+  description: "Текст заметки"
+  maxLength: 200
+  from: "$input.text"
+out:
+- name: "text"
+  type: "Text"
+  description: "Текст без лишних пробелов"
+  maxLength: 200

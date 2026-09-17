@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Балл ответа по одному критерию"
+fields:
+- name: "criterion"
+  type: "ReplyCriterion"
+  description: "Критерий оценки"
+- name: "score"
+  type: "Int"
+  description: "Балл от 1 до 5"
+  minimum: 1
+  maximum: 5

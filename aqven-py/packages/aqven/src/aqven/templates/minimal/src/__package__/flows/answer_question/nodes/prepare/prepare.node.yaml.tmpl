@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Collapses repeated whitespace in the question"
+run: "prepare"
+in:
+- name: "text"
+  type: "Text"
+  description: "Question text as the user typed it"
+  maxLength: 2000
+  from: "$input.text"
+out:
+- name: "text"
+  type: "Text"
+  description: "Question text with single spaces"
+  maxLength: 2000

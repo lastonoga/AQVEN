@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Генерирует картинку-инструкцию к ответу"
+agent: "painter"
+in:
+- name: "text"
+  from: "$polish.out.reply.text"
+- name: "category"
+  from: "$triage.out.category"
+- name: "photo"
+  from: "$input.photo"

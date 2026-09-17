@@ -1,0 +1,21 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "loop"
+description: "Переписывает ответ и сжимает его, пока уверенность не дойдёт до порога"
+body:
+- "redo"
+- "trim"
+max_iter: 2
+stop:
+- use: "threshold"
+  with:
+    path: "$iter.redo.out.score"
+    gte: 0.8
+select:
+  use: "last"
+out:
+- name: "text"
+  type: "Text"
+  description: "Сжатый ответ последней итерации"
+  maxLength: 200
+  from: "$iter.trim.out.text"

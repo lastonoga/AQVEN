@@ -1,0 +1,75 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Разбор обращения и всех вложений: краткое содержание, категория товара, наблюдения по сигналам категории, риск безопасности и поля приёма площадки"
+in:
+- name: "message"
+  type: "Text"
+  description: "Текст обращения покупателя после нормализации пробелов"
+  maxLength: 4000
+- name: "channel"
+  type: "Channel"
+  description: "Канал, через который пришло обращение"
+- name: "customer"
+  type: "Customer"
+  description: "Покупатель, написавший обращение"
+- name: "product"
+  type: "ProductRef?"
+  description: "Товар, выбранный покупателем в обращении; null, если товар не указан"
+- name: "signals"
+  type: "SignalDef[]"
+  description: "Сигналы категории, которые разрешено отмечать в наблюдениях"
+  maxItems: 20
+- name: "intake_fields"
+  type: "FieldSpec[]"
+  description: "Поля приёма площадки, которые заполняются из обращения; пустой список — дополнительных полей нет"
+  maxItems: 10
+- name: "photo"
+  type: "Image?"
+  description: "Фото товара или дефекта; null, если фото не приложено"
+- name: "voice_note"
+  type: "Audio?"
+  description: "Голосовое сообщение покупателя; null, если его нет"
+- name: "video"
+  type: "Video?"
+  description: "Видео с проявлением дефекта; null, если видео не приложено"
+- name: "invoice"
+  type: "Document?"
+  description: "Счёт или чек покупки; null, если документ не приложен"
+out:
+- name: "summary"
+  type: "Text"
+  description: "Краткое содержание обращения с учётом текста и вложений"
+  maxLength: 600
+- name: "category"
+  type: "ProductCategory"
+  description: "Категория товара, о котором идёт речь"
+- name: "observations"
+  type: "Observation[]"
+  description: "Наблюдения по сигналам категории, не больше одного на сигнал"
+  maxItems: 12
+- name: "safety_risk"
+  type: "Bool"
+  description: "Есть ли в обращении или вложениях признаки угрозы безопасности"
+- name: "intake_extra"
+  type: "Dynamic"
+  description: "Значения полей приёма площадки по форме из входа"
+  schema_from: "$in.intake_fields"
+  limits:
+    max_fields: 10
+    max_depth: 1
+    max_text_length: 200
+    max_items: 5
+allowed_sets:
+- type: "SignalKey"
+  from: "$in.signals[*].key"
+  labels_from: "$in.signals[*].label"
+checks:
+- use: "unique_items"
+  with:
+    field: "$out.observations"
+    key: "key"
+  on_fail: "retry"
+- use: "not_empty"
+  with:
+    field: "$out.summary"
+  on_fail: "retry"

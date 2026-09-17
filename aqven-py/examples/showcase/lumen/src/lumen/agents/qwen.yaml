@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Судья панели семейства Qwen"
+model: "openrouter:qwen/qwen3-30b-a3b-instruct-2507"
+settings:
+  temperature: 0
+  max_tokens: 1500
+output:
+  mode: "tool"
+  strict: false

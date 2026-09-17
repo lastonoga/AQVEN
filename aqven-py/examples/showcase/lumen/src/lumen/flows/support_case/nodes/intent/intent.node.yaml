@@ -1,0 +1,26 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Каскад: при согласии голосов берёт их намерение, при расхождении решает сильная модель"
+on: "$tally.out.agreement"
+cases:
+  agreed:
+    bind:
+    - name: "intent"
+      from: "$tally.out.intent"
+    - name: "tier"
+      value: "cheap"
+  split:
+    node: "escalate"
+    bind:
+    - name: "intent"
+      from: "$escalate.out.intent"
+    - name: "tier"
+      value: "strong"
+out:
+- name: "intent"
+  type: "CaseIntent"
+  description: "Итоговое намерение обращения"
+- name: "tier"
+  type: "CascadeTier"
+  description: "Ступень каскада, давшая намерение"

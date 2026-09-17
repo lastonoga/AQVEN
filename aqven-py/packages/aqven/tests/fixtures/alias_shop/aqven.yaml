@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "Модуль для проверки коротких ссылок на код и файлы промтов"
+package: "alias_shop"
+providers:
+- id: "openai"
+  api_key: "ref:env/OPENAI_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "zero"
