@@ -51,7 +51,7 @@ Laravel-style: narrative + step-by-step + generated reference, cross-linked, eve
 1. **Introduction** — what AQVEN is, when to reach for it (condensed from the positioning doc)
 2. **Getting Started** — install → first flow → run it → directory layout, tutorial-ized from `project-structure.md`
 3. **Core Concepts** — files-as-source-of-truth, kinds, the step-as-layout-unit, convention-over-configuration
-4. **Building Flows** — one page per node kind (llm, code, tool, switch/loop/parallel/map/race, human), each anchored to a real Lumen node
+4. **Building Flows** — bindings/references, shapes, tools, and a node-kind decision table (revised 2026-09-18: written as one unified how-to guide, not one page per node kind — the source material reads as unified wiring mechanics)
 5. **Writing Prompts** — prompt levels, the Liquid template rules, `{{ output_format }}`, variants, message blocks (added 2026-09-18: substantial enough to be its own guide, not a Building Flows subsection)
 6. **Models & Providers** — configuring providers, output modes, and model-selection guidance (which model class fits extractor/classifier/generator/judge)
 7. **Designing Reliable Workflows** — decomposition heuristics, divergence/self-consistency, critic-loop rules, compounding-error math, gates — mapped onto real node/policy vocabulary (`quorum`, `stop`, `select`)
