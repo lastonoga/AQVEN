@@ -1,0 +1,57 @@
+{
+  "stages": {
+    "label": "Stages"
+  },
+  "canvas": {
+    "aria": "Workflow schema canvas"
+  },
+  "legend": {
+    "toggle": "Legend",
+    "title": "Legend",
+    "allBranches": "all branches at once",
+    "oneBranch": "exactly one branch",
+    "loopBackEdge": "loop back edge",
+    "map": "map, count from runtime"
+  },
+  "zoom": {
+    "percent": "{zoom, number, percent}",
+    "inAria": "Zoom in",
+    "outAria": "Zoom out",
+    "fitAria": "Fit to view"
+  },
+  "runs": {
+    "title": "Runs",
+    "hint": "click opens the run in Dataflow",
+    "openDataflow": "Open Dataflow",
+    "origin": {
+      "baseline": "baseline",
+      "fork": "fork of {run}"
+    },
+    "columns": {
+      "run": "Run",
+      "status": "Status",
+      "origin": "Origin",
+      "cost": "$",
+      "time": "Time",
+      "assertions": "Assertions",
+      "when": "When"
+    }
+  },
+  "inspector": {
+    "shortcutHint": "1…5",
+    "tabsAria": "Inspector tabs",
+    "sections": {
+      "node": "Node",
+      "effectiveConfig": "Effective config",
+      "inputSlots": "Input slots",
+      "prompt": "Prompt",
+      "slots": "Slots",
+      "outputType": "Output type",
+      "sourceYaml": "Source · YAML"
+    }
+  },
+  "resize": {
+    "runsAria": "Resize runs panel",
+    "inspectorAria": "Resize inspector"
+  }
+}

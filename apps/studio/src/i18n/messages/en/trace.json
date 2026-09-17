@@ -1,0 +1,97 @@
+{
+  "stage": {
+    "runStage": "run stage",
+    "waiting": "waiting",
+    "kindFanOut": "{code} ×{count}",
+    "desc": {
+      "toolCalls": "{count, plural, one {# tool call} other {# tool calls}}",
+      "map": "parallel · concurrency {concurrency} · N ← {source}",
+      "pureFunction": "pure function, no model call",
+      "families": "{count} model families on one input · join all",
+      "familiesRow": "{count} model families on row {row} input · join all",
+      "loopStagnation": "body: {body} · stop on stagnation",
+      "loopThreshold": "body: {body} · exit at threshold {threshold}"
+    }
+  },
+  "call": {
+    "cached": "cached",
+    "actionsAria": "Call actions"
+  },
+  "agent": {
+    "noModel": "no model",
+    "noAgent": "no agent · deterministic call",
+    "noTokens": "— tokens",
+    "judgesWithFix": "{count} judges + fix",
+    "judgesWithFixNode": "{count} judges + {node}",
+    "judgesFixNotRun": "{count} judges · fix not run",
+    "panelCosts": "judge {judges} · fix {fix}",
+    "judgeCosts": "judge {judges}",
+    "calls": "{count, plural, one {# call} other {# calls}}",
+    "notCalled": "not called",
+    "waiting": "waiting {minutes} m",
+    "fromCassette": "from cassette",
+    "config": "agent {agent}",
+    "temperature": "t {value}",
+    "reasoning": "reasoning {value}"
+  },
+  "input": {
+    "identicalAcrossBranches": "hash {hash} — identical across all {count, plural, =2 {two branches} =3 {three branches} =4 {four branches} other {# branches}}",
+    "fromDataset": "from the dataset · ancestors frozen",
+    "expand": "expand the whole input",
+    "refUnchanged": "unchanged"
+  },
+  "prompt": {
+    "none": "none — not a model call",
+    "open": "template and rendered prompt"
+  },
+  "output": {
+    "expand": "expand",
+    "open": "raw response and parse",
+    "skipped": "skipped · verdict ≠ {case}",
+    "awaiting": "awaiting a human decision",
+    "deadline": "deadline in {time}",
+    "aborted": "no output — the iteration was aborted by stagnation, shown as is"
+  },
+  "summary": {
+    "moreCalls": "+ {count} calls",
+    "expand": "expand",
+    "total": "total",
+    "median": "median {value}",
+    "oneType": "one type",
+    "spread": "spread",
+    "okCount": "{ok}/{total} ok"
+  },
+  "attempts": {
+    "title": "{call} · {count, plural, one {# attempt} other {# attempts}}",
+    "collapse": "collapse attempts",
+    "expand": "expand {count, plural, one {# attempt} other {# attempts}}",
+    "attempt": "attempt {n}",
+    "link": "link: {action}",
+    "billed": "Billed across all attempts <b>{billed}</b>, of that {failed} failed. Retrying the same model is banned by policy — the result cannot be “silently green”."
+  },
+  "join": {
+    "label": "Join",
+    "selected": "judges selected <code>{branch}</code> ({score})",
+    "droppedBilled": "branch {branch} dropped on an assertion, but its tokens were billed",
+    "dropped": "branch {branch} dropped on an assertion",
+    "compareOutputs": "Compare {count} outputs"
+  },
+  "postCheck": {
+    "actual": "actual: {value}",
+    "expected": "expected: {value}",
+    "judgeVerdicts": "verdicts of {count} judges"
+  },
+  "nested": {
+    "depth": "L{depth}",
+    "hintScrollRight": "iterations run as columns — scroll right",
+    "hintQuorum": "quorum {required} of {total}",
+    "hintClaimPerColumn": "one claim per column",
+    "claim": "claim {n}"
+  },
+  "expander": {
+    "loop": "loop ×{count}",
+    "judges": "judges ×{count}",
+    "map": "map ×{count}",
+    "toggleAria": "Toggle nested run for {name}"
+  }
+}

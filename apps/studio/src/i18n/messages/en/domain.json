@@ -1,0 +1,130 @@
+{
+  "mode": {
+    "schema": "Schema",
+    "dataflow": "Dataflow",
+    "nodes": "Nodes",
+    "tests": "Tests",
+    "review": "Review"
+  },
+  "outcome": {
+    "ok": "OK",
+    "degraded": "DEGRADED",
+    "failed": "FAILED",
+    "cached": "CACHED",
+    "idle": "IDLE",
+    "waiting": "WAITING",
+    "skipped": "SKIPPED",
+    "aborted": "ABORTED",
+    "awaiting": "AWAITING",
+    "intermediate": "INTERMEDIATE"
+  },
+  "verdict": {
+    "pass": "PASS",
+    "fail": "FAIL"
+  },
+  "claimVerdict": {
+    "matched": "matched",
+    "invented": "invented"
+  },
+  "provenance": {
+    "static": "static",
+    "data": "data",
+    "knowledge": "knowledge",
+    "generated": "generated",
+    "human": "human"
+  },
+  "reasoning": {
+    "off": "off",
+    "low": "low",
+    "medium": "medium",
+    "high": "high"
+  },
+  "revisionStatus": {
+    "draft": "draft",
+    "applied": "applied"
+  },
+  "bindingSource": {
+    "literal": "literal",
+    "node_output": "node output",
+    "knowledge": "knowledge",
+    "human": "human",
+    "state": "state"
+  },
+  "registryKind": {
+    "signature": "Signatures",
+    "profile": "Model profiles",
+    "adapter": "Adapters",
+    "type": "Types"
+  },
+  "usage": {
+    "node": "{count, plural, one {# node} other {# nodes}}",
+    "slot": "{count, plural, one {# slot} other {# slots}}"
+  },
+  "columnFlag": {
+    "loopBody": "LOOP BODY",
+    "best": "BEST",
+    "selected": "SELECTED",
+    "case": "case {value}"
+  },
+  "callSheetTab": {
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "assertions": "Assertions"
+  },
+  "inspectorTab": {
+    "overview": "Overview",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "source": "Source"
+  },
+  "matrixRow": {
+    "columns": "Columns",
+    "call": "Call",
+    "agent": "Agent",
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "postCheck": "Post-check",
+    "assertions": "Assertions"
+  },
+  "matrixSub": {
+    "modelConfig": "model · config",
+    "validatorsScorers": "validators · scorers",
+    "scorerThreshold": "scorer · threshold {threshold}",
+    "inParallel": "{count} in parallel",
+    "perRow": "{total} per row",
+    "assetFanOut": "asset fan-out",
+    "multimodalParts": "multimodal parts",
+    "typedParts": "typed parts",
+    "perModality": "per modality",
+    "divergeBranch": "diverge branch",
+    "costTime": "$ · time",
+    "loopBody": "loop body",
+    "verdict": "verdict",
+    "source": "source",
+    "mapItem": "map · item",
+    "datasetRow": "row {row}"
+  },
+  "exit": {
+    "title": "Exit conditions",
+    "iterations": "iterations {used} / {max}",
+    "budget": "budget {spent} / {limit}",
+    "stagnation": "stagnation Δ{delta} < {epsilon}",
+    "threshold": "threshold {score} / {target}",
+    "thresholdAfterFix": "threshold {score} ≥ {target} after fix",
+    "repeatedCandidate": "no repeated candidate seen",
+    "fired": "FIRED"
+  },
+  "check": {
+    "belowThreshold": "< {threshold}",
+    "aboveThreshold": "≥ {threshold}",
+    "expectedMatched": "expected matched · Δ {delta}",
+    "assertionsPassed": "{passed} of {total} assertions",
+    "close": "close · Δ {delta}",
+    "stop": "→ stop"
+  }
+}

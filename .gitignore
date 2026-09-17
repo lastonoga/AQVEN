@@ -1,4 +1,5 @@
 node_modules/
 dist/
-.wf/
+.aqven/
 *.tsbuildinfo
+.DS_Store

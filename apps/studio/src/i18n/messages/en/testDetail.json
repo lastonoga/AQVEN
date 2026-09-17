@@ -1,0 +1,88 @@
+{
+  "notFound": "No data for this test",
+  "breadcrumb": {
+    "label": "Test location",
+    "allTests": "All tests",
+    "dataflowStage": "Dataflow · stage {stage}",
+    "call": "call {node}"
+  },
+  "summary": {
+    "title": "Test of a workflow slice",
+    "scope": "stage {stage} · {stageName} · {count, plural, =0 {no frozen ancestors} one {ancestors frozen (# node replays recorded outputs)} other {ancestors frozen (# nodes replay recorded outputs)}}",
+    "extendWithAgent": "Extend with agent",
+    "runRows": "Run {count, plural, one {# row} other {# rows}}",
+    "promptFromDraft": "prompt from draft {revision}",
+    "noCassette": "no cassette",
+    "cassette": "replayed from cassette"
+  },
+  "metrics": {
+    "rows": "Rows",
+    "pass": "Pass",
+    "cost": "Cost",
+    "time": "Time",
+    "deltaVsPrevious": "Δ vs previous",
+    "passDelta": "{delta} pass"
+  },
+  "dataset": {
+    "title": "Dataset rows",
+    "meta": "{rows, plural, one {# row} other {# rows}} · {assertions, plural, one {# assertion} other {# assertions}} · source: {sources}",
+    "source": {
+      "spreadsheet": "spreadsheet",
+      "agentExtended": "agent-extended",
+      "agent": "agent",
+      "tool": "tool {adapter}",
+      "manual": "manual"
+    },
+    "addRow": "row",
+    "showAll": "show all {count} rows · edit cells inline",
+    "column": {
+      "index": "#",
+      "assertions": "assertions",
+      "verdictAria": "Verdict"
+    }
+  },
+  "filter": {
+    "label": "Row filter",
+    "failuresOnly": "failures only · {count}"
+  },
+  "results": {
+    "title": "Per-row result",
+    "description": "one dataset row = one run of the selected workflow slice",
+    "column": {
+      "index": "#",
+      "result": "Result",
+      "selectedBranch": "Selected branch",
+      "iterations": "Iterations",
+      "calls": "Calls",
+      "cost": "$",
+      "time": "Time",
+      "delta": "Δ"
+    }
+  },
+  "navigator": {
+    "label": "Dataset row",
+    "position": "{ordinal} / {total}",
+    "previousAria": "Previous row",
+    "nextAria": "Next row",
+    "nextFailure": "Next failure",
+    "allRows": "All {count} rows",
+    "searchRows": "Find a row",
+    "noRows": "No matching rows",
+    "rowAria": "Row {row}"
+  },
+  "outcome": {
+    "title": "Row {row} · {verdict}",
+    "assertionFailed": "assertion failed <code>{assertion}</code> in branch {branch}",
+    "allPassed": "all assertions passed",
+    "rowTotal": "row total {cost} across {calls, plural, one {# call} other {# calls}}, discarded branches included",
+    "openInSandbox": "Open in sandbox",
+    "rerunRow": "Rerun the row"
+  },
+  "runs": {
+    "label": "Dataset runs",
+    "chip": "{run} · {ratio} · {cost}",
+    "draftChip": "{run} draft · {ratio} · {cost}",
+    "compare": "Compare runs",
+    "apply": "Apply {revision}"
+  }
+}

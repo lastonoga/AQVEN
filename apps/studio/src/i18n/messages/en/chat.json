@@ -1,0 +1,48 @@
+{
+  "fixtureReply": "No agent backend is connected yet, so this reply comes from the fixture model.",
+  "composer": {
+    "placeholder": "Ask, or assign an edit…",
+    "addAria": "Add context",
+    "dictateAria": "Dictate",
+    "stopDictationAria": "Stop dictation",
+    "sendAria": "Send",
+    "cancelAria": "Stop"
+  },
+  "message": {
+    "copyAria": "Copy",
+    "copied": "Copied",
+    "retryAria": "Retry",
+    "moreAria": "More actions"
+  },
+  "tool": {
+    "toggleAria": "Toggle details",
+    "readRun": {
+      "attempts": "attempts: {sequence}",
+      "billed": "billed {amount}",
+      "failedShare": "of that failed {amount}",
+      "toLadder": "To attempt ladder",
+      "attemptPrompt": "Attempt {n} prompt"
+    },
+    "patchSpec": {
+      "nodes": "{count, plural, one {# node} other {# nodes}}",
+      "branchesAffected": "branches affected: {count}",
+      "runEstimate": "run estimate ~{amount}",
+      "showDiff": "Show diff",
+      "apply": "Apply",
+      "revert": "Revert",
+      "progressTarget": "editing {target}",
+      "progressSteps": "{step} of {total} steps"
+    },
+    "runDataset": {
+      "callModeLive": "live calls",
+      "callModeCassette": "cassette calls",
+      "recordingOff": "no cassette recording",
+      "recordingOn": "cassette recording",
+      "openRun": "Open run"
+    },
+    "error": "Tool call failed"
+  },
+  "thread": {
+    "scrollToBottomAria": "Scroll to latest message"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "title": "Model call",
+  "tabsAria": "Call sections",
+  "emptyTab": {
+    "model": "No model details recorded for this call",
+    "input": "Nothing was passed into this call",
+    "prompt": "No prompt — this step is not a model call",
+    "output": "No output recorded for this call",
+    "assertions": "No assertions recorded for this call"
+  },
+  "header": {
+    "context": "branch {branch} · stage {stage} · row {row}",
+    "meta": "{callId} · attempt {attempt} of {attempts} · {cost} total"
+  },
+  "model": {
+    "providerSection": "Provider and model",
+    "provider": "provider",
+    "model": "model",
+    "snapshot": "snapshot",
+    "api": "API",
+    "region": "region",
+    "quantization": "quantization",
+    "context": "context",
+    "billing": "billing",
+    "routingSection": "Routing",
+    "profile": "profile",
+    "order": "order",
+    "fallbackReason": "fallback reason",
+    "retries": "retries",
+    "timeout": "timeout",
+    "cassette": "cassette",
+    "paramsSection": "Call parameters",
+    "changedValue": "{value} ({revision}, was {previous})",
+    "billedSection": "What was billed",
+    "inputOutput": "input / output",
+    "tokensInOut": "{input} / {output} tokens",
+    "pricePer1k": "price per 1k",
+    "attemptN": "attempt {n}",
+    "failedAttempts": "failed attempts",
+    "callTotal": "call total"
+  },
+  "input": {
+    "partsSection": "Input parts · multimodal · {count}",
+    "slotsSection": "Input slots · {count}",
+    "rowValuesSection": "Row {row} values",
+    "freezeSection": "What came from the freeze",
+    "freezeRecorded": "recorded value from run {run}",
+    "freezeKnowledge": "knowledge"
+  },
+  "prompt": {
+    "templateSection": "Template <v>{template} · revision {revision}</v>",
+    "systemSection": "Compiled prompt · system",
+    "userSection": "Compiled prompt · user · {tokens, number} tokens",
+    "diffSection": "Diff against previous revision"
+  },
+  "output": {
+    "partsSection": "Output parts · multimodal · {count}",
+    "rawSection": "Raw response · {tokens, number} tokens",
+    "parsedSection": "Parsed against <v>{type}</v>",
+    "parsedOkOf": "ok · {length} of {max} chars",
+    "parsedOk": "ok · {length} chars",
+    "emptyString": "empty string",
+    "validationSection": "Schema validation",
+    "validationRest": "{errors, plural, =0 {all fields valid} other {other fields valid}} · strict mode",
+    "comparisonSection": "Comparison with expected",
+    "actual": "actual:",
+    "expected": "expected:",
+    "scores": "semantic match {semantic} · factual {factual}"
+  },
+  "checks": {
+    "assertionsSection": "Row {row} assertions",
+    "judgesSection": "Judges · <v>quorum({quorum})</v>",
+    "judgeLabel": "{node} · {model}",
+    "decisionLabel": "decision",
+    "decision": "{verdict, select, approved {accepted {passed} of {total}} rejected {rejected {passed} of {total}} other {{verdict}}}",
+    "historySection": "History for this row",
+    "draft": "draft",
+    "historyValue": "{status} · {note}",
+    "dataset": "dataset"
+  }
+}
