@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "Counts the words of a draft reply"
+run: "@root.tools.functions:count_words"
+effect: "read"
+in:
+- name: "text"
+  type: "Text"
+  description: "Draft reply"
+  maxLength: 2000
+out:
+- name: "words"
+  type: "Int"
+  description: "Number of words in the draft"
+  minimum: 0
+  maximum: 2000

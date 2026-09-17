@@ -1,0 +1,222 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-46e511e55b5f9249ac1d0e1b5d2b199e474dce14b1b3c879e7d61e847cf77814",
+  "request_key": "sha256-afc093e48cb52c19a5a42da20594347bfbf8e18949880a1e61015803dc6cae52",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "drafts__gpt",
+      "branch_key": "gpt",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to output JSON with reply field containing the text. The function expects an object with reply key. We must provide reply.citations? The output format: reply: Текст ответа и цитаты фрагментов, на которые он оп",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ирается. So reply is an object? Wait the specification: Output fields: - reply: Текст ответа и цитаты фрагментов, на которые он опирается. Allowed values of KbChunkId: ... Output limits:",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " reply.text, reply.citations. So reply is an object with text and citations. So we need to output JSON with reply.text and reply.citations. The function signature: final",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_result takes {reply: any}. So reply can be an object. So we should output:\n\n{\n  \"reply\": {\n    \"text\": \"...\",\n    \"citations\": []\n  }\n}\n\nBut citations array may be empty. That should satisfy",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ". Let's produce that.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to output JSON with reply field containing the text. The function expects an object with reply key. We must provide reply.citations? The output format: reply: Текст ответа и цитаты фрагментов, на которые он опирается. So reply is an object? Wait the specification: Output fields: - reply: Текст ответа и цитаты фрагментов, на которые он опирается. Allowed values of KbChunkId: ... Output limits: reply.text, reply.citations. So reply is an object with text and citations. So we need to output JSON with reply.text and reply.citations. The function signature: final_result takes {reply: any}. So reply can be an object. So we should output:\n\n{\n  \"reply\": {\n    \"text\": \"...\",\n    \"citations\": []\n  }\n}\n\nBut citations array may be empty. That should satisfy. Let's produce that.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tooluse_tSOhwjpP6zGlmRrVyZOGhH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tooluse_tSOhwjpP6zGlmRrVyZOGhH",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"reply\":{\"text\":\"К сожалению, в базе знаний нет информации о совместимости Lumen Glow E27 с Wi‑Fi 5 ГГц.\",\"citations\":[]}}",
+        "tool_call_id": "tooluse_tSOhwjpP6zGlmRrVyZOGhH",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"reply\":{\"text\":\"К сожалению, в базе знаний нет информации о совместимости Lumen Glow E27 с Wi‑Fi 5 ГГц.\",\"citations\":[]}}",
+        "tool_call_id": "tooluse_tSOhwjpP6zGlmRrVyZOGhH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "We need to output JSON with reply field containing the text. The function expects an object with reply key. We must provide reply.citations? The output format: reply: Текст ответа и цитаты фрагментов, на которые он опирается. So reply is an object? Wait the specification: Output fields: - reply: Текст ответа и цитаты фрагментов, на которые он опирается. Allowed values of KbChunkId: ... Output limits: reply.text, reply.citations. So reply is an object with text and citations. So we need to output JSON with reply.text and reply.citations. The function signature: final_result takes {reply: any}. So reply can be an object. So we should output:\n\n{\n  \"reply\": {\n    \"text\": \"...\",\n    \"citations\": []\n  }\n}\n\nBut citations array may be empty. That should satisfy. Let's produce that.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"reply\":{\"text\":\"К сожалению, в базе знаний нет информации о совместимости Lumen Glow E27 с Wi‑Fi 5 ГГц.\",\"citations\":[]}}",
+        "tool_call_id": "tooluse_tSOhwjpP6zGlmRrVyZOGhH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1289,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 241,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 223,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 223
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-17T16:55:49.898522Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T16:55:49Z",
+      "downstream_provider": "Amazon Bedrock",
+      "finish_reason": "tool_use",
+      "cost": 0.00012638,
+      "upstream_inference_cost": 0.00012638,
+      "upstream_inference_prompt_cost": 0.00009023,
+      "upstream_inference_completions_cost": 0.00003615,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789664149-IbQzKtD8VRXrvxgf3Jkz",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

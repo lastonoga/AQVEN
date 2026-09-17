@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Короткий ответ на заметку"
+in:
+- name: "text"
+  type: "Text"
+  description: "Заметка"
+  maxLength: 200
+out:
+- name: "text"
+  type: "Text"
+  description: "Ответ"
+  maxLength: 200
+prompt: "@flow/prompts/reply.md"

@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Политика обслуживания Lumen: гарантия, компенсации, замена"
+fields:
+- name: "policy_id"
+  type: "PolicyId"
+  description: "Идентификатор политики"
+- name: "title"
+  type: "Text"
+  description: "Название политики"
+  maxLength: 120
+- name: "text"
+  type: "Text"
+  description: "Текст политики"
+  maxLength: 1200

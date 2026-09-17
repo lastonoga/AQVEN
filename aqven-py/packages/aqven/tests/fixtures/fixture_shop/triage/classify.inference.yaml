@@ -1,0 +1,35 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Выбор очереди по теме и тексту обращения"
+in:
+- name: "ticket"
+  type: "TriageTicket"
+  description: "Обращение"
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Обоснование выбора"
+  maxLength: 300
+- name: "category"
+  type: "TriageCategory"
+  description: "Очередь"
+examples:
+- name: "late_parcel"
+  in:
+    ticket:
+      subject: "Где посылка"
+      body: "Заказ не пришёл вовремя"
+      customer:
+        name: "Анна"
+        email: null
+      photo: null
+  out:
+    rationale: "Покупатель спрашивает о сроках доставки"
+    category: "delivery"
+checks:
+- use: "not_empty"
+  with:
+    field: "$out.rationale"
+  on_fail: "retry"
+- run: "fixture_shop.triage.classify:rationale_is_short"
+  on_fail: "flag"

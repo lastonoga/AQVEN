@@ -1,0 +1,104 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "strip_flicker_credit"
+  inputs:
+    summary: "Лента Lumen Flow 5 м мигает у контроллера третий день, контроллер сильно нагревается через полчаса работы; покупатель боится оставлять ленту включённой."
+    customer:
+      customer_id: "cus_7k2m9p4q1x8z"
+      display_name: "Анна Смирнова"
+      email: "anna.smirnova@example.com"
+      tier: "plus"
+      locale: "ru-RU"
+    locale: "ru-RU"
+    channel: "amazon"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 м"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    resolution:
+      action: "store_credit"
+      summary: "Кредит магазина 15,00 € по гарантии за перегрев контроллера ленты"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Мерцание ленты Flow"
+      text: "Если лента Flow мерцает у контроллера, отключите питание, проверьте, что штекер контроллера вставлен до щелчка, и перезапустите ленту через приложение Lumen. Если мерцание повторяется, контроллер подлежит гарантийной замене."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Нагрев контроллера"
+      text: "Контроллер ленты Flow в работе тёплый, но не горячий. Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки: это признак неисправности блока питания."
+    - chunk_id: "kb_credit2026"
+      title: "Кредит магазина по гарантии"
+      text: "Покупатели Lumen Plus получают кредит магазина за неисправный товар в течение гарантийного срока. Кредит зачисляется на аккаунт в течение 24 часов и действует 12 месяцев."
+    previous: null
+    critique: null
+  metadata:
+    split: "train"
+- name: "bulb_app_offline_advice"
+  inputs:
+    summary: "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит."
+    customer:
+      customer_id: "cus_3n8b5v2c6x1a"
+      display_name: "Дмитрий Орлов"
+      email: null
+      tier: "standard"
+      locale: "ru-RU"
+    locale: "ru-RU"
+    channel: "storefront"
+    product:
+      sku: "SKU-GL27E1"
+      name: "Lumen Glow E27"
+      category: "smart_bulb"
+      lamp_kind: "smart_wifi"
+    resolution:
+      action: "advice"
+      summary: "Ответ по базе знаний без компенсации"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_bulbwifi24"
+      title: "Подключение лампы Glow к Wi-Fi"
+      text: "Лампы Glow работают только в сети 2,4 ГГц. После смены роутера или пароля лампу нужно заново добавить в приложение: удалите её из списка устройств и выполните сопряжение."
+    - chunk_id: "kb_bulbreset5"
+      title: "Сброс лампы Glow"
+      text: "Чтобы сбросить лампу Glow, включите и выключите её пять раз подряд с интервалом в одну секунду. Лампа мигнёт трижды и перейдёт в режим сопряжения."
+    previous: null
+    critique: null
+  metadata:
+    split: "dev"
+- name: "lamp_crushed_box_reship"
+  inputs:
+    summary: "Торшер Lumen Arc Floor пришёл в смятой коробке с треснувшим плафоном; покупатель приложил фото упаковки."
+    customer:
+      customer_id: "cus_9d4f6h1j3k5m"
+      display_name: "Ольга Кузнецова"
+      email: "olga.kuznetsova@example.com"
+      tier: "business"
+      locale: "ru-RU"
+    locale: "ru-RU"
+    channel: "ozon"
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    resolution:
+      action: "reship"
+      summary: "Повторная отправка заказа за счёт магазина"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Повреждение при доставке"
+      text: "Если товар пришёл повреждённым, сохраните упаковку и сфотографируйте её. Lumen повторно отправит заказ за свой счёт, а повреждённый товар заберёт курьер."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Заказы с Ozon"
+      text: "По заказам с Ozon повторная отправка оформляется через поддержку Lumen, отдельную заявку на площадке создавать не нужно."
+    previous: null
+    critique: null
+  metadata:
+    split: "test"

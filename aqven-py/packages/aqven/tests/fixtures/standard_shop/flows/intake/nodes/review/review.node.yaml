@@ -1,0 +1,20 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Спокойный ответ принимает, тёплый переписывает"
+on: "$reply.out.mood"
+cases:
+  calm:
+    bind:
+    - name: "text"
+      from: "$reply.out.text"
+  warm:
+    node: "recheck"
+    bind:
+    - name: "text"
+      from: "$recheck.out.text"
+out:
+- name: "text"
+  type: "Text"
+  description: "Принятый ответ"
+  maxLength: 200

@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Краткое содержание обращения по теме и очереди"
+run: "fixture_shop.triage.code:summarize"
+in:
+- name: "ticket"
+  type: "TriageTicket"
+  description: "Обращение"
+  from: "$input"
+- name: "category"
+  type: "TriageCategory"
+  description: "Очередь"
+  from: "$route.out.category"
+out:
+- name: "summary"
+  type: "Text"
+  description: "Краткое содержание"
+  maxLength: 200

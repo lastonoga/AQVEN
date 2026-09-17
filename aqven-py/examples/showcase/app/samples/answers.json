@@ -1,0 +1,43 @@
+[
+  {
+    "address": {
+      "node_id": "approvals__lead",
+      "branch_key": "lead",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1,
+    "payload": {
+      "decision": "approve",
+      "edited_text": null,
+      "note": null
+    }
+  },
+  {
+    "address": {
+      "node_id": "approvals__brand",
+      "branch_key": "brand",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1,
+    "payload": {
+      "use_image": true,
+      "use_voice": true,
+      "use_clip": false
+    }
+  },
+  {
+    "address": {
+      "node_id": "route__resolve",
+      "branch_key": "defect",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1,
+    "payload": {
+      "approve": true,
+      "message": null
+    }
+  }
+]

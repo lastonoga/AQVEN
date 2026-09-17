@@ -1,0 +1,2792 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-30747f5007e22f44993d31565d869549f9f1fe4aa5fa6eeafde390ce10e4fca2",
+  "request_key": "sha256-991f6e945bfc58345f0d7e47af1e5ea4f494466b6a744c1c951cdb305a0e6b12",
+  "model_ref": "openrouter:meta-llama/llama-3.1-8b-instruct",
+  "site": {
+    "address": {
+      "node_id": "vote__ballot",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": 1
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\n",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ration",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ale",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "Т",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "овар",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " при",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ш",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ёл",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " в",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " пом",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ят",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ой",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " короб",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ке",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " что",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " может",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " указ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ывать",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " на",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " поврежд",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ение",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " при",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " достав",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ке",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "intent",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "delivery",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "confidence",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "7",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\n",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "   ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " }\n",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Товар пришёл в помятой коробке, что может указывать на повреждение при доставке\",\n      \"intent\": \"delivery\",\n      \"confidence\": 0.7\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\n",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ration",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ale",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "Л",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ента",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " мер",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ц",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ает",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " у",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " контр",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ол",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "л",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ера",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " что",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " может",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " быть",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " при",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "зн",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ак",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ом",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " де",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ф",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ект",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "а",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "intent",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "def",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ect",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "confidence",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "6",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\n",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "   ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " }\n",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Лента мерцает у контроллера, что может быть признаком дефекта\",\n      \"intent\": \"defect\",\n      \"confidence\": 0.6\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 2,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\n",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ration",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ale",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "К",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "онт",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "рол",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "лер",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " наг",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "рев",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ается",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " через",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " пол",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "час",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "а",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " после",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " подключ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ения",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " что",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " может",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " быть",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " при",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "зн",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ак",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ом",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " де",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ф",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ект",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "а",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "intent",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "def",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ect",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "confidence",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "8",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\n",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "   ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " }\n",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Контроллер нагревается через полчаса после подключения, что может быть признаком дефекта\",\n      \"intent\": \"defect\",\n      \"confidence\": 0.8\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 3,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\n",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ration",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ale",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "П",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ок",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "уп",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "атель",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " сом",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "нев",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ается",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " в",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " правиль",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ности",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " подключ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ения",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " контр",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ол",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "л",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ера",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " что",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " может",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " указ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ывать",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " на",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " необходим",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ость",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " дополнитель",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ной",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " информации",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " или",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " поддерж",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ки",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "intent",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "question",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\",\n",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "     ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "confidence",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "5",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\n",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "   ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " }\n",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Покупатель сомневается в правильности подключения контроллера, что может указывать на необходимость дополнительной информации или поддержки\",\n      \"intent\": \"question\",\n      \"confidence\": 0.5\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Товар пришёл в помятой коробке, что может указывать на повреждение при доставке\",\n      \"intent\": \"delivery\",\n      \"confidence\": 0.7\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-a4d072633ad998f3",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Лента мерцает у контроллера, что может быть признаком дефекта\",\n      \"intent\": \"defect\",\n      \"confidence\": 0.6\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-aa957173d568f04a",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Контроллер нагревается через полчаса после подключения, что может быть признаком дефекта\",\n      \"intent\": \"defect\",\n      \"confidence\": 0.8\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-b67178026dadcbb4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\n      \"rationale\": \"Покупатель сомневается в правильности подключения контроллера, что может указывать на необходимость дополнительной информации или поддержки\",\n      \"intent\": \"question\",\n      \"confidence\": 0.5\n    }\n  ",
+        "tool_call_id": "chatcmpl-tool-bde974736a49771c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1039,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 832,
+      "output_tokens": 273,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "meta-llama/llama-3.1-8b-instruct",
+    "timestamp": "2026-09-17T17:05:07.292740Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:05:06Z",
+      "downstream_provider": "CoreWeave",
+      "finish_reason": "tool_calls",
+      "cost": 0.00028864,
+      "upstream_inference_cost": 0.00028864,
+      "upstream_inference_prompt_cost": 0.00022858,
+      "upstream_inference_completions_cost": 0.00006006,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789664706-8LOS6F02QRCvydudAIwn",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

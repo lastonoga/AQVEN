@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Что случилось с заказом при доставке"
+values:
+- value: "crushed_box"
+  description: "Смятая коробка"
+- value: "broken_item"
+  description: "Товар сломан или разбит"
+- value: "missing_item"
+  description: "Товар или его часть не доставлены"

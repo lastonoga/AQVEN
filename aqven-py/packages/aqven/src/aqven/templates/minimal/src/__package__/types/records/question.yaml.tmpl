@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A question and the tone of the expected reply"
+fields:
+- name: "text"
+  type: "Text"
+  description: "Question text"
+  maxLength: 2000
+- name: "tone"
+  type: "Tone"
+  description: "Tone of the reply"

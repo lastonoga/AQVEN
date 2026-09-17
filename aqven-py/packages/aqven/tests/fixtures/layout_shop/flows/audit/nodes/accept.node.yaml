@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "call"
+description: "Приём заметки воркфлоу intake"
+flow: "intake"
+in:
+- name: "text"
+  from: "$input.text"

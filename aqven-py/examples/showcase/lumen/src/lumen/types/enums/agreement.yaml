@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Согласие голосов или судей"
+values:
+- value: "agreed"
+  description: "Большинство согласно"
+- value: "split"
+  description: "Мнения разошлись"

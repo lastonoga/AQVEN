@@ -1,0 +1,16 @@
+from datetime import datetime
+from typing import Protocol
+
+from aqven.engine.human.records import AnswerEnvelope, WaitRecord
+
+
+class WaitJournal(Protocol):
+    def workflow_id(self) -> str: ...
+
+    async def now(self) -> datetime: ...
+
+    async def publish(self, record: WaitRecord) -> None: ...
+
+    async def receive(self, topic: str, timeout_seconds: float) -> object: ...
+
+    async def deliver(self, topic: str, envelope: AnswerEnvelope) -> None: ...

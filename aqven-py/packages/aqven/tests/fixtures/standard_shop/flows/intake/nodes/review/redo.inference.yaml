@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Спокойная версия ответа"
+in:
+- name: "text"
+  type: "Text"
+  description: "Исходный ответ"
+  maxLength: 200
+out:
+- name: "text"
+  type: "Text"
+  description: "Спокойный ответ"
+  maxLength: 200
+- name: "score"
+  type: "Score"
+  description: "Уверенность в новой версии"

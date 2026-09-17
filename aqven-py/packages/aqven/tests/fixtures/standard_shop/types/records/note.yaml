@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Заметка"
+fields:
+- name: "text"
+  type: "Text"
+  description: "Текст заметки"
+  maxLength: 200

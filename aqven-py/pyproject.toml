@@ -1,0 +1,42 @@
+[tool.uv]
+required-version = ">=0.12.15"
+
+[tool.uv.workspace]
+members = ["packages/aqven", "packages/aqven-llm", "examples/showcase", "examples/showcase/lumen"]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.7", "pyright==1.1.414"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RET", "ANN", "ERA", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/aqven/src/aqven/spec/builder.py" = ["ANN401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aqven", "aqven_llm", "lumen", "app"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"httpx".msg = "Only httpx2 (ADR-0025)."
+"requests".msg = "Only httpx2 (ADR-0025)."
+"yaml".msg = "Spec files are read by ruamel.yaml (ADR-0025)."
+"pydantic_graph".msg = "The IR executor is ours (ADR-0025)."
+"pydantic_ai.retries".msg = "Imports encode httpx (ADR-0025)."
+"pydantic_ai.StructuredDict".msg = "Does not validate output (ADR-0027)."
+"openai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"anthropic".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"google.genai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.providers".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.openai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.anthropic".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.google".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.openrouter".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"
+extraPaths = ["packages/aqven/src", "packages/aqven-llm/src", "examples/showcase/lumen/src", "examples/showcase"]

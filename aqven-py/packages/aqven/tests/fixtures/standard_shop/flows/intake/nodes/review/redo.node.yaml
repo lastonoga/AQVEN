@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Переписывает тёплый ответ спокойнее"
+agent: "critic"
+in:
+- name: "text"
+  from: "$reply.out.text"

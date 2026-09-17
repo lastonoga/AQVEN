@@ -1,0 +1,7 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "Поиск похожих заметок"
+mcp:
+  server: "desk"
+  tool: "search_notes"
+effect: "read"

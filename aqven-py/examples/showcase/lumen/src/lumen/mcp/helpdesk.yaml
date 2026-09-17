@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "McpServer"
+description: "MCP-сервер хелпдеска Lumen: поиск прошлых обращений и макросов ответа"
+transport: "streamable_http"
+url: "https://helpdesk.lumen.example/mcp"
+headers:
+- name: "Authorization"
+  value: "ref:env/LUMEN_HELPDESK_TOKEN"

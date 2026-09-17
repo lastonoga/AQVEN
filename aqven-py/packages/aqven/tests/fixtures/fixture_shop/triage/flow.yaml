@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Сортировка обращения по очередям"
+input: "TriageTicket"
+output: "TriageResult"
+returns:
+- name: "category"
+  from: "$route.out.category"
+- name: "summary"
+  from: "$summarize.out.summary"
+order:
+- "classify"
+- "route"
+- "summarize"

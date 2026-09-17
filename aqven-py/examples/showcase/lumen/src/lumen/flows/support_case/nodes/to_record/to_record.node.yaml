@@ -1,0 +1,6 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "narrow"
+description: "Сужает анкету до статического типа обращения по его виду"
+from: "$record.out.record"
+to: "CaseRecord"

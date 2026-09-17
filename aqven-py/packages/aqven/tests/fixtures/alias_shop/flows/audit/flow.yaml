@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Аудит заметки шагом другого воркфлоу"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$seal.out.text"
+order:
+- "seal"

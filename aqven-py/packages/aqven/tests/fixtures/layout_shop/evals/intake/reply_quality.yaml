@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Eval"
+description: "Качество ответа на заметку"
+inference: "reply"
+agent: "writer"
+dataset: "notes"
+scorers:
+- id: "filled"
+  kind: "binary"
+  use: "not_empty"
+  with:
+    field: "$out.text"

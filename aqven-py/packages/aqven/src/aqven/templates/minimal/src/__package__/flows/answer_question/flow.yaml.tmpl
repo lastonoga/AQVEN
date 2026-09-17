@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Cleans up a question and answers it in the requested tone"
+input: "Question"
+output: "Answer"
+returns:
+- name: "reply"
+  from: "$reply.out.reply"
+- name: "tone"
+  from: "$input.tone"
+order:
+- "prepare"
+- "reply"

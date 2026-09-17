@@ -1,0 +1,36 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Панель судей трёх семейств, отличных от авторов: вердикты, согласие, тай-брейк моделью OpenAI, победитель"
+input: "PanelRequest"
+output: "PanelOutcome"
+returns:
+- name: "winner"
+  from: "$pick.out.winner"
+- name: "verdict"
+  from: "$pick.out.verdict"
+order:
+- "judges"
+- "aggregate"
+- "decide"
+- "pick"
+requires:
+- rule: "families_distinct"
+  nodes:
+  - "judges__deepseek"
+  - "judges__qwen"
+  - "judges__llama"
+  min: 3
+- rule: "family_disjoint_from_input"
+  nodes:
+  - "judges__deepseek"
+  - "judges__qwen"
+  - "judges__llama"
+  input: "candidates"
+- rule: "field_before"
+  nodes:
+  - "judges__deepseek"
+  - "judges__qwen"
+  - "judges__llama"
+  - "decide__tie_break"
+  first: "rationale"
+  second: "scores"

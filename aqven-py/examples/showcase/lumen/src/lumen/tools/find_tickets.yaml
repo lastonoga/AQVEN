@@ -1,0 +1,7 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "Поиск прошлых обращений покупателя в хелпдеске"
+mcp:
+  server: "helpdesk"
+  tool: "search_tickets"
+effect: "read"

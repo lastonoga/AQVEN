@@ -1,0 +1,28 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "human"
+description: "Руководитель поддержки одобряет, правит или отклоняет ответ"
+form: "ReplyApproval"
+assignee: "support_lead"
+timeout_seconds: 14400
+on_timeout:
+  policy: "escalate"
+  assignee: "support_manager"
+  timeout_seconds: 7200
+in:
+- name: "reply"
+  type: "ReplyDraft"
+  description: "Ответ после полировки"
+  from: "$polish.out.reply"
+- name: "resolution"
+  type: "Resolution"
+  description: "Решение по обращению"
+  from: "$route.out.resolution"
+- name: "score"
+  type: "Score"
+  description: "Оценка критика для ответа"
+  from: "$polish.out.score"
+- name: "iterations"
+  type: "Int"
+  description: "Сколько итераций правки прошёл ответ"
+  from: "$polish.out.iterations"

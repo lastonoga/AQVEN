@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Ответ на заметку инференсом этого узла"
+agent: "writer"
+in:
+- name: "text"
+  from: "$stamp.out.text"

@@ -1,0 +1,7 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "value"
+description: "Оценка от нуля до единицы"
+base: "Float"
+minimum: 0
+maximum: 1

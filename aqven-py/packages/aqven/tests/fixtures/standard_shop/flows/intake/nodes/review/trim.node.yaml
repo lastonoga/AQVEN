@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Сжатие переписанного ответа"
+run: "trim"
+in:
+- name: "text"
+  type: "Text"
+  description: "Переписанный ответ"
+  maxLength: 200
+  from: "$redo.out.text"
+out:
+- name: "text"
+  type: "Text"
+  description: "Сжатый ответ"
+  maxLength: 200

@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "human"
+description: "Оператор подтверждает очередь доставки"
+form: "TriageReview"
+assignee: "support_operator"
+timeout_seconds: 3600
+on_timeout:
+  policy: "default"
+  value:
+    category: "delivery"
+in:
+- name: "ticket"
+  type: "TriageTicket"
+  description: "Обращение"
+  from: "$input"

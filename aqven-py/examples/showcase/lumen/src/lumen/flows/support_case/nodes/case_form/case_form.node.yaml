@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Строит форму анкеты обращения по намерению: поля совпадают с вариантом CaseRecord"
+run: "case_form"
+in:
+- name: "intent"
+  type: "CaseIntent"
+  description: "Намерение обращения"
+  from: "$intent.out.intent"
+out:
+- name: "fields"
+  type: "FieldSpec[]"
+  description: "Поля анкеты обращения"
+  maxItems: 30

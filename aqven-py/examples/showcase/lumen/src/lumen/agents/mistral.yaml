@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Модель семейства Mistral: черновик и критика ответа"
+model: "openrouter:mistralai/mistral-nemo"
+settings:
+  temperature: 0.2
+  max_tokens: 3000
+output:
+  strict: false
+  retries: 2

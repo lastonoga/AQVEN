@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Обращение покупателя"
+fields:
+- name: "subject"
+  type: "Text"
+  description: "Тема обращения"
+  maxLength: 200
+- name: "body"
+  type: "Text"
+  description: "Текст обращения"
+  maxLength: 2000
+- name: "customer"
+  type: "Customer"
+  description: "Автор обращения"
+- name: "photo"
+  type: "Image?"
+  description: "Фото товара, если приложено"

@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-ec0bbd356f9a5261ebd7f727ad6b12fb8f9019374175b823557794289f37298f",
+  "request_key": "sha256-aa3553990dda9444d9ba203a985b1d660630611eec347a21c86de01813353230",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "record__extract",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_AlY8QMSqzALhTVTSYnDq",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_AlY8QMSqzALhTVTSYnDq",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_AlY8QMSqzALhTVTSYnDq",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_AlY8QMSqzALhTVTSYnDq",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_AlY8QMSqzALhTVTSYnDq",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1139,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 44,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-17T17:23:56.083075Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:23:54Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0001315,
+      "upstream_inference_cost": 0.0001315,
+      "upstream_inference_prompt_cost": 0.0001139,
+      "upstream_inference_completions_cost": 0.0000176,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789665834-NpMJbmEzUTbos6VLbP6L",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}
