@@ -32,7 +32,7 @@ on 2026-09-18, not from memory.
 - Create: `site/package.json`
 - Modify: `.gitignore` (root)
 
-- [ ] **Step 1: Add `site` to the workspace**
+- [x] **Step 1: Add `site` to the workspace**
 
 Edit `pnpm-workspace.yaml` from:
 
@@ -51,7 +51,7 @@ packages:
   - site
 ```
 
-- [ ] **Step 2: Add the docs scripts to the root `package.json`**
+- [x] **Step 2: Add the docs scripts to the root `package.json`**
 
 Edit the `scripts` block of `package.json` (root) from:
 
@@ -79,7 +79,7 @@ to:
 
 Leave `dev`/`build`/`test`/`lint` pointed at `@aqven/studio` unchanged — no existing script's meaning changes.
 
-- [ ] **Step 3: Ignore Astro's cache directory**
+- [x] **Step 3: Ignore Astro's cache directory**
 
 Add one line to `.gitignore` (root), after `dist/`:
 
@@ -92,7 +92,7 @@ dist/
 .DS_Store
 ```
 
-- [ ] **Step 4: Create `site/package.json`**
+- [x] **Step 4: Create `site/package.json`**
 
 Create `site/package.json`:
 
@@ -126,7 +126,7 @@ Create `site/package.json`:
 `@astrojs/check@0.9.10` peer-depends on `typescript@"^5.0.0 || ^6.0.0"` — 7.0.2 (the newest release) is not yet
 supported, so this pins 6.0.3, matching `apps/studio`'s existing pin.
 
-- [ ] **Step 5: Install and verify the workspace recognizes the new package**
+- [x] **Step 5: Install and verify the workspace recognizes the new package**
 
 Run from the repo root: `pnpm install`
 
@@ -134,7 +134,7 @@ Expected: pnpm resolves and installs `astro`, `@astrojs/starlight`, `sharp`, `@a
 into `site/node_modules` (or the workspace's hoisted store), `pnpm-lock.yaml` is updated, and the command exits 0.
 No Astro project files exist yet, so there is nothing to build — this step only proves the workspace wiring.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add pnpm-workspace.yaml package.json site/package.json .gitignore pnpm-lock.yaml
@@ -161,14 +161,14 @@ EOF
 - Modify: `site/public/favicon.svg` (move existing `site/favicon.svg` here)
 - Delete: `site/favicon.svg`, `site/index.html` (superseded by the Astro project)
 
-- [ ] **Step 1: Move the existing favicon into `public/`**
+- [x] **Step 1: Move the existing favicon into `public/`**
 
 ```bash
 mkdir -p site/public
 git mv site/favicon.svg site/public/favicon.svg
 ```
 
-- [ ] **Step 2: Remove the static placeholder homepage**
+- [x] **Step 2: Remove the static placeholder homepage**
 
 ```bash
 git rm site/index.html
@@ -177,7 +177,7 @@ git rm site/index.html
 Its content (title, description, color tokens, canonical URL) is preserved in spirit by the config and CNAME
 below — the placeholder markup itself is fully superseded by the real site being built in this plan.
 
-- [ ] **Step 3: Add the CNAME for the custom domain**
+- [x] **Step 3: Add the CNAME for the custom domain**
 
 Create `site/public/CNAME`:
 
@@ -189,7 +189,7 @@ This matches the canonical URL (`https://aqvenstudio.com/`) already declared in 
 removed. Astro's `public/` directory is copied to the build output verbatim, so this lands at `site/dist/CNAME`,
 which is what GitHub Pages looks for to serve a custom domain.
 
-- [ ] **Step 4: Create the Starlight content collection**
+- [x] **Step 4: Create the Starlight content collection**
 
 Create `site/src/content.config.ts`:
 
@@ -203,7 +203,7 @@ export const collections = {
 };
 ```
 
-- [ ] **Step 5: Create the TypeScript config**
+- [x] **Step 5: Create the TypeScript config**
 
 Create `site/tsconfig.json`:
 
@@ -215,7 +215,7 @@ Create `site/tsconfig.json`:
 }
 ```
 
-- [ ] **Step 6: Create the Astro/Starlight config**
+- [x] **Step 6: Create the Astro/Starlight config**
 
 Create `site/astro.config.mjs`:
 
@@ -241,7 +241,7 @@ export default defineConfig({
 No `sidebar` key yet — Starlight auto-generates navigation from the content directory until Task 4 defines the
 real structure.
 
-- [ ] **Step 7: Create the index page**
+- [x] **Step 7: Create the index page**
 
 Create `site/src/content/docs/index.mdx`:
 
@@ -254,7 +254,7 @@ description: Engineer AI systems, not just prompts.
 Documentation is under construction. Check back soon.
 ```
 
-- [ ] **Step 8: Build and verify**
+- [x] **Step 8: Build and verify**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -269,7 +269,7 @@ test -f site/dist/index.html && grep -q AQVEN site/dist/index.html && echo OK
 
 Expected output: `OK`
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add site/
@@ -294,7 +294,7 @@ EOF
 - Modify: `site/astro.config.mjs`
 - Modify: `site/src/content/docs/index.mdx`
 
-- [ ] **Step 1: Add the dependencies**
+- [x] **Step 1: Add the dependencies**
 
 Edit the `dependencies` block of `site/package.json` from:
 
@@ -321,13 +321,13 @@ to:
 `astro-mermaid@2.1.0` peer-depends on `mermaid@"^10.0.0 || ^11.0.0"` — 12.0.0 (the newest release) is not yet
 supported, so this pins the latest 11.x instead.
 
-- [ ] **Step 2: Install**
+- [x] **Step 2: Install**
 
 Run from the repo root: `pnpm install`
 
 Expected: exit code 0, `pnpm-lock.yaml` updated with `astro-mermaid` and `mermaid` entries.
 
-- [ ] **Step 3: Wire the integration**
+- [x] **Step 3: Wire the integration**
 
 Edit `site/astro.config.mjs` from:
 
@@ -361,7 +361,7 @@ export default defineConfig({
 `astro-mermaid` must be listed before `starlight` in the `integrations` array — it processes markdown ahead of
 Starlight's own pipeline.
 
-- [ ] **Step 4: Add a smoke-test diagram to the index page**
+- [x] **Step 4: Add a smoke-test diagram to the index page**
 
 Edit `site/src/content/docs/index.mdx` from:
 
@@ -393,7 +393,7 @@ flowchart LR
 This is a real, working diagram (the docs site's own build pipeline), not throwaway test content — it can stay
 until Task 4/a later content pass replaces the index page with real introduction text.
 
-- [ ] **Step 5: Build and verify the diagram renders**
+- [x] **Step 5: Build and verify the diagram renders**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -407,7 +407,7 @@ grep -q 'mermaid' site/dist/index.html && echo OK
 
 Expected output: `OK`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add site/
@@ -448,7 +448,7 @@ Every stub below follows the same shape: real frontmatter (`title`, `description
 spec's site-structure section) and a one-line body. This is the intentional final state for this plan — later
 plans replace the body, not the frontmatter.
 
-- [ ] **Step 1: Create the Guide section stub pages**
+- [x] **Step 1: Create the Guide section stub pages**
 
 Create `site/src/content/docs/getting-started.md`:
 
@@ -527,7 +527,7 @@ description: aqven check, cassettes, scenario tests, evals and gates.
 This section is under construction.
 ```
 
-- [ ] **Step 2: Create the Reference section stub pages**
+- [x] **Step 2: Create the Reference section stub pages**
 
 Create `site/src/content/docs/reference/cli.md`:
 
@@ -584,7 +584,7 @@ description: Every E_ and W_ code aqven check can report, and how to fix it.
 This section is under construction.
 ```
 
-- [ ] **Step 3: Create the remaining top-level stub pages**
+- [x] **Step 3: Create the remaining top-level stub pages**
 
 Create `site/src/content/docs/for-ai-agents.md`:
 
@@ -608,7 +608,7 @@ description: The full support_case flow from the Lumen showcase, walked end to e
 This section is under construction.
 ```
 
-- [ ] **Step 4: Define the sidebar**
+- [x] **Step 4: Define the sidebar**
 
 Edit `site/astro.config.mjs`, adding a `sidebar` key to the `starlight()` call. From:
 
@@ -662,7 +662,7 @@ to:
     }),
 ```
 
-- [ ] **Step 5: Build and verify every sidebar link resolves to a real page**
+- [x] **Step 5: Build and verify every sidebar link resolves to a real page**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -682,7 +682,7 @@ echo done
 
 Expected output: `done` with no `MISSING:` lines above it.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add site/
@@ -705,7 +705,7 @@ EOF
 **Files:**
 - Modify: `.github/workflows/pages.yml`
 
-- [ ] **Step 1: Update the workflow to build before uploading**
+- [x] **Step 1: Update the workflow to build before uploading**
 
 Replace the full contents of `.github/workflows/pages.yml`:
 
@@ -763,7 +763,7 @@ The only changes from the existing workflow: `pnpm/action-setup`, `actions/setup
 `configure-pages` step, and the uploaded `path` changes from `site` to `site/dist`. The trigger (`paths: site/**`)
 already covers every file this plan adds.
 
-- [ ] **Step 2: Verify the workflow is valid YAML and matches the existing job/permissions shape**
+- [x] **Step 2: Verify the workflow is valid YAML and matches the existing job/permissions shape**
 
 ```bash
 python3 -c "import yaml; yaml.safe_load(open('.github/workflows/pages.yml'))" && echo OK
@@ -771,7 +771,7 @@ python3 -c "import yaml; yaml.safe_load(open('.github/workflows/pages.yml'))" &&
 
 Expected output: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/pages.yml
