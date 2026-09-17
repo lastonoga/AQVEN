@@ -23,6 +23,7 @@ export default defineConfig({
             { slug: "getting-started" },
             { slug: "core-concepts" },
             { slug: "building-flows" },
+            { slug: "writing-prompts" },
             { slug: "models-and-providers" },
             { slug: "designing-reliable-workflows" },
             { slug: "structured-output-and-types" },

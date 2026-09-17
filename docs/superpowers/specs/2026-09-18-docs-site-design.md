@@ -52,17 +52,18 @@ Laravel-style: narrative + step-by-step + generated reference, cross-linked, eve
 2. **Getting Started** — install → first flow → run it → directory layout, tutorial-ized from `project-structure.md`
 3. **Core Concepts** — files-as-source-of-truth, kinds, the step-as-layout-unit, convention-over-configuration
 4. **Building Flows** — one page per node kind (llm, code, tool, switch/loop/parallel/map/race, human), each anchored to a real Lumen node
-5. **Models & Providers** — configuring providers, output modes, and model-selection guidance (which model class fits extractor/classifier/generator/judge)
-6. **Designing Reliable Workflows** — decomposition heuristics, divergence/self-consistency, critic-loop rules, compounding-error math, gates — mapped onto real node/policy vocabulary (`quorum`, `stop`, `select`)
-7. **Structured Output & Types** — reasoning-before-answer field order, nesting limits, enum/union design, strict-mode tradeoffs, framed as how AQVEN's type system already encodes these rules
-8. **Testing & Evaluation** — `aqven check`, cassettes, scenario tests, evals/gates
-9. **CLI Reference** *(generated)*
-10. **Python API Reference** *(generated)* — in-process usage: `Project`, `RunOptions`, `create_local_app`, `create_mcp_server`, testing helpers
-11. **HTTP API Reference** *(generated)* — the OpenAPI contract for any HTTP client
-12. **Configuration Reference** *(generated)*
-13. **Diagnostics Reference** *(generated)*
-14. **For AI Coding Agents** — how to read these docs as an agent, the MCP tool contract, condensed workflow/model/schema rules, the `AGENTS.md` template (reusing Lumen's own)
-15. **Examples** — the full `support_case` flow walked end-to-end, node by node
+5. **Writing Prompts** — prompt levels, the Liquid template rules, `{{ output_format }}`, variants, message blocks (added 2026-09-18: substantial enough to be its own guide, not a Building Flows subsection)
+6. **Models & Providers** — configuring providers, output modes, and model-selection guidance (which model class fits extractor/classifier/generator/judge)
+7. **Designing Reliable Workflows** — decomposition heuristics, divergence/self-consistency, critic-loop rules, compounding-error math, gates — mapped onto real node/policy vocabulary (`quorum`, `stop`, `select`)
+8. **Structured Output & Types** — reasoning-before-answer field order, nesting limits, enum/union design, strict-mode tradeoffs, framed as how AQVEN's type system already encodes these rules
+9. **Testing & Evaluation** — `aqven check`, cassettes, scenario tests, evals/gates
+10. **CLI Reference** *(generated)*
+11. **Python API Reference** *(generated)* — in-process usage: `Project`, `RunOptions`, `create_local_app`, `create_mcp_server`, testing helpers
+12. **HTTP API Reference** *(generated)* — the OpenAPI contract for any HTTP client
+13. **Configuration Reference** *(generated)*
+14. **Diagnostics Reference** *(generated)*
+15. **For AI Coding Agents** — how to read these docs as an agent, the MCP tool contract, condensed workflow/model/schema rules, the `AGENTS.md` template (reusing Lumen's own)
+16. **Examples** — the full `support_case` flow walked end-to-end, node by node
 
 ## 5. Visual content plan
 
