@@ -1,9 +1,14 @@
+import mermaid from "astro-mermaid";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://aqvenstudio.com",
   integrations: [
+    mermaid({
+      theme: "forest",
+      autoTheme: true,
+    }),
     starlight({
       title: "AQVEN",
       description: "Engineer AI systems, not just prompts.",

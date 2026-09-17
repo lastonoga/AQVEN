@@ -313,10 +313,13 @@ to:
     "@astrojs/starlight": "0.42.1",
     "astro": "7.3.3",
     "astro-mermaid": "2.1.0",
-    "mermaid": "12.0.0",
+    "mermaid": "11.17.2",
     "sharp": "0.35.4"
   },
 ```
+
+`astro-mermaid@2.1.0` peer-depends on `mermaid@"^10.0.0 || ^11.0.0"` — 12.0.0 (the newest release) is not yet
+supported, so this pins the latest 11.x instead.
 
 - [ ] **Step 2: Install**
 
