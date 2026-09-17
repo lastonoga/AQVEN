@@ -1,6 +1,6 @@
 # Priority Content Pages Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace the stub body of the four highest-priority documentation pages — Models & Providers, Structured
 Output & Types, Designing Reliable Workflows, and For AI Coding Agents — with real content, grounded in AQVEN's
@@ -37,7 +37,7 @@ final Markdown for each page, not an outline for someone else to flesh out later
 **Files:**
 - Modify: `site/src/content/docs/models-and-providers.md`
 
-- [ ] **Step 1: Replace the stub body**
+- [x] **Step 1: Replace the stub body**
 
 Edit `site/src/content/docs/models-and-providers.md`, replacing everything after the frontmatter's closing `---`
 with:
@@ -121,7 +121,7 @@ classifiers, where the job is narrow and schema-constrained. Reserve a stronger,
 generator step and for judges that need to catch subtle problems — not for every node in the graph.
 ```
 
-- [ ] **Step 2: Build and verify**
+- [x] **Step 2: Build and verify**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -133,7 +133,7 @@ grep -q 'openrouter:openai/gpt-oss-20b' site/dist/models-and-providers/index.htm
 
 Expected output: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add site/src/content/docs/models-and-providers.md
@@ -157,7 +157,7 @@ EOF
 **Files:**
 - Modify: `site/src/content/docs/structured-output-and-types.md`
 
-- [ ] **Step 1: Replace the stub body**
+- [x] **Step 1: Replace the stub body**
 
 Edit `site/src/content/docs/structured-output-and-types.md`, replacing everything after the frontmatter's closing
 `---` with:
@@ -226,7 +226,7 @@ provider profile are actually compatible, otherwise AQVEN falls back rather than
 would reject or silently ignore.
 ```
 
-- [ ] **Step 2: Build and verify**
+- [x] **Step 2: Build and verify**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -238,7 +238,7 @@ grep -q 'Reasoning before answer' site/dist/structured-output-and-types/index.ht
 
 Expected output: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add site/src/content/docs/structured-output-and-types.md
@@ -262,7 +262,7 @@ EOF
 **Files:**
 - Modify: `site/src/content/docs/designing-reliable-workflows.md`
 
-- [ ] **Step 1: Replace the stub body**
+- [x] **Step 1: Replace the stub body**
 
 Edit `site/src/content/docs/designing-reliable-workflows.md`, replacing everything after the frontmatter's closing
 `---` with:
@@ -363,7 +363,7 @@ after a real model call costs tokens, latency, and a harder-to-read failure.
 | No gate after a step with a checkable output | Bad data flows downstream before anyone notices | `aqven check`'s simulated run, or an explicit `gate` node |
 ```
 
-- [ ] **Step 2: Build and verify**
+- [x] **Step 2: Build and verify**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -375,7 +375,7 @@ grep -q 'Compounding error is a budget' site/dist/designing-reliable-workflows/i
 
 Expected output: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add site/src/content/docs/designing-reliable-workflows.md
@@ -399,7 +399,7 @@ EOF
 **Files:**
 - Modify: `site/src/content/docs/for-ai-agents.md`
 
-- [ ] **Step 1: Replace the stub body**
+- [x] **Step 1: Replace the stub body**
 
 Edit `site/src/content/docs/for-ai-agents.md`, replacing everything after the frontmatter's closing `---` with:
 
@@ -490,7 +490,7 @@ every reader finds them:
   should get before it needs a gate instead of another node.
 ```
 
-- [ ] **Step 2: Build and verify**
+- [x] **Step 2: Build and verify**
 
 Run: `pnpm --filter @aqven/site build`
 
@@ -502,7 +502,7 @@ grep -q 'flow_patch' site/dist/for-ai-agents/index.html && echo OK
 
 Expected output: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add site/src/content/docs/for-ai-agents.md
