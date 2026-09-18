@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Сигнал, который разбор обращения ищет в тексте и вложениях"
+fields:
+- name: "key"
+  type: "SignalKey"
+  description: "Ключ сигнала"
+- name: "label"
+  type: "Text"
+  description: "Название сигнала для модели и оператора"
+  maxLength: 80

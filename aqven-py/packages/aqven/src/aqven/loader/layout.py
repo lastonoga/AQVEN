@@ -98,7 +98,7 @@ def text_key(stem: str, file: str) -> str | None:
 
 
 def include_candidates(folders: Sequence[str], name: str) -> tuple[str, ...]:
-    file = name if name.endswith(TEXT_SUFFIX) else f"{name}{TEXT_SUFFIX}"
+    file = name if name.endswith((TEXT_SUFFIX, ".liquid")) else f"{name}{TEXT_SUFFIX}"
     bases = ("",) if file.startswith(ROOT_PATH_PREFIX) else (*folders, "")
     paths = (posixpath.normpath(posixpath.join(folder, file.removeprefix(ROOT_PATH_PREFIX))) for folder in bases)
     return tuple(dict.fromkeys(path for path in paths if not path.startswith(("..", "/"))))

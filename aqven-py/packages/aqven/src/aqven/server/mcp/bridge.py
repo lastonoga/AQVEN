@@ -24,7 +24,7 @@ STARTUP_TIMEOUT_SECONDS: Final = 30.0
 POLL_INTERVAL_SECONDS: Final = 0.2
 CONNECT_TIMEOUT_SECONDS: Final = 30.0
 READ_TIMEOUT_SECONDS: Final = 1900.0
-HEADLESS_SERVER_ARGUMENTS: Final = ("-m", "aqven", "serve", "--headless", "--no-browser")
+HEADLESS_SERVER_ARGUMENTS: Final = ("-P", "-m", "aqven", "serve", "--headless", "--no-browser")
 
 
 class ServerUnavailable(Exception):

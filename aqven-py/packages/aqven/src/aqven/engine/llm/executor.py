@@ -3,7 +3,7 @@ import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Final, assert_never
+from typing import Final, Literal, assert_never
 
 from pydantic import BaseModel
 from pydantic_ai import (
@@ -65,10 +65,18 @@ from aqven.ports.execution import (
     NodeUsage,
     OutputSink,
 )
-from aqven.runtime.address import ExecutionAddress
-from aqven.runtime.events import NodeAttemptFailed, RunEvent
-from aqven.runtime.executions import RunError
+from aqven.runtime.address import ExecutionAddress, JsonObject
+from aqven.runtime.events import (
+    InferenceChecksCaptured,
+    InferenceInputCaptured,
+    InferencePromptCaptured,
+    NodeAttemptFailed,
+    RunEvent,
+)
+from aqven.runtime.executions import CheckOutcome, PromptTrace, RunError
 from aqven.runtime.human import ToolApprovalDecision
+from aqven.runtime.values import InlineValue
+from aqven.spec import AgentId, InferenceId
 
 DENIED_WITHOUT_APPROVAL: Final = "agent does not declare approval: tool call denied"
 
@@ -124,11 +132,28 @@ class LlmSegmentRunner:
         self, node: CompiledLlmNode, scope: ExecutionScope, state: SegmentState, usage: RunUsage
     ) -> SegmentResult:
         call = InferenceCall(node.agent, node.inference, node.output_mode, node.limits)
-        prepared = await self.agents.prepare(scope, call, scope.bind(node.inputs), state.attempt_offset)
+        bound = scope.bind(node.inputs)
+        await scope.events.emit(
+            partial(_captured_input_event, scope.address, node.agent, node.inference, "bound", bound, {})
+        )
+        prepared = await self.agents.prepare(scope, call, bound, state.attempt_offset)
+        await scope.events.emit(
+            partial(
+                _captured_input_event,
+                scope.address,
+                node.agent,
+                node.inference,
+                "normalized",
+                prepared.deps.document,
+                prepared.variants,
+            )
+        )
+        resumed = state.messages_json is not None
+        if not resumed:
+            await scope.events.emit(partial(_captured_prompt_event, scope.address, prepared.prompt_trace))
         analysis = FailureAnalysis(_failure_context(scope, node, prepared), prepared.deps.guard_failures)
         sink = _output_sink(scope.output, self.delta_batch_ms)
         observer = StreamObserver(sink, prepared.plan.text_kind, prepared.plan.output_tools)
-        resumed = state.messages_json is not None
         history = _history(state, prepared)
         base = len(history or ())
         with capture_run_messages() as captured:
@@ -150,10 +175,12 @@ class LlmSegmentRunner:
                 analysis.collect_final(captured, base, state.attempt_offset, error)
                 await observer.abandon(analysis.last_kind or abandon_cause(code))
                 await sink.flush()
+                await _emit_checks(scope, prepared.deps.checks)
                 if code is None:
                     raise
                 return _failed_segment(scope.address, analysis, error, code, usage)
         await sink.flush()
+        await _emit_checks(scope, prepared.deps.checks)
         analysis.collect(result.all_messages(), base, state.attempt_offset)
         messages = result.new_messages()
         attempts = response_count(messages)
@@ -212,11 +239,13 @@ class LlmNodeExecutor:
         outcome: SegmentDeferred,
     ) -> SegmentState:
         attempt_offset = state.attempt_offset + result.attempts
-        decisions = await self._decisions(node, scope, outcome.approvals, max(attempt_offset, 1))
+        approval_round = state.approval_round + (1 if outcome.approvals else 0)
+        decisions = await self._decisions(node, scope, outcome.approvals, approval_round)
         results = {call.tool_call_id: await self._call(scope, call) for call in outcome.calls}
         return SegmentState(
             segment=state.segment + 1,
             attempt_offset=attempt_offset,
+            approval_round=approval_round,
             messages_json=outcome.messages_json,
             approvals=dict(decisions),
             call_results=results,
@@ -297,6 +326,43 @@ def _failed_segment(
 async def _emit_failures(scope: ExecutionScope, failures: Sequence[AttemptFailure]) -> None:
     for failure in failures:
         await scope.events.emit(partial(_attempt_failed_event, scope.address, failure))
+
+
+async def _emit_checks(scope: ExecutionScope, checks: Sequence[CheckOutcome]) -> None:
+    if checks:
+        await scope.events.emit(partial(_captured_checks_event, scope.address, tuple(checks)))
+
+
+def _captured_input_event(
+    address: ExecutionAddress,
+    agent: AgentId,
+    inference: InferenceId,
+    stage: Literal["bound", "normalized"],
+    document: JsonObject,
+    variants: Mapping[str, str],
+    stamp: EventStamp,
+) -> RunEvent:
+    return InferenceInputCaptured(
+        seq=stamp.seq,
+        at=stamp.at,
+        run_id=stamp.run_id,
+        address=address,
+        stage=stage,
+        agent=agent,
+        inference=inference,
+        input_ref=InlineValue(value=document),
+        variants=dict(variants),
+    )
+
+
+def _captured_prompt_event(address: ExecutionAddress, prompt: PromptTrace, stamp: EventStamp) -> RunEvent:
+    return InferencePromptCaptured(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, prompt=prompt)
+
+
+def _captured_checks_event(
+    address: ExecutionAddress, checks: tuple[CheckOutcome, ...], stamp: EventStamp
+) -> RunEvent:
+    return InferenceChecksCaptured(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, checks=checks)
 
 
 def _attempt_failed_event(address: ExecutionAddress, failure: AttemptFailure, stamp: EventStamp) -> RunEvent:

@@ -10,6 +10,7 @@ from typing import Final, get_type_hints
 from pydantic import BaseModel, JsonValue, TypeAdapter
 from pydantic_core import to_jsonable_python
 
+from aqven.codegen import GENERATED_MODULE
 from aqven.engine.errors import CodeLoadError, CodeSignatureError
 from aqven.runtime.address import JsonObject
 from aqven.spec import BUILTIN_ANNOTATIONS, parse_type_ref
@@ -20,7 +21,6 @@ MODULE_SEPARATOR: Final = "."
 PACKAGE_INIT: Final = "__init__.py"
 PYTHON_SUFFIX: Final = ".py"
 RETURN_HINT: Final = "return"
-GENERATED_TYPES_MODULE: Final = "types"
 
 type CodeFunction = Callable[..., object]
 
@@ -68,7 +68,7 @@ class CodeLoader:
         return shaped_annotation(item, ref, None)
 
     def _generated_type(self, package: str, type_id: str) -> object:
-        module_name = f"{package}{MODULE_SEPARATOR}{GENERATED_TYPES_MODULE}"
+        module_name = f"{package}{MODULE_SEPARATOR}{GENERATED_MODULE}"
         value: object = getattr(self.module(module_name, f"{module_name}:{type_id}"), type_id, None)
         if value is None:
             raise CodeLoadError(f"{module_name}:{type_id}", "type is not generated: run aqven generate")

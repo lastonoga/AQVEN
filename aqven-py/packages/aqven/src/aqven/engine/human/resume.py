@@ -6,11 +6,19 @@ from datetime import UTC, datetime
 from typing import Final, Protocol
 
 from aqven.engine.human.forms import FormModel, FormRegistry, FormRejected, prefixed_problems
-from aqven.engine.human.index import WaitIndex, WaitIndexEntry, WaitQuery, entry_wait, index_entry
+from aqven.engine.human.index import (
+    WaitIndex,
+    WaitIndexEntry,
+    WaitQuery,
+    entry_wait,
+    index_entry,
+    open_wait_query,
+    run_order,
+)
 from aqven.engine.human.records import AnswerEnvelope, WaitRecord, human_wait_detail
 from aqven.ports.engine import EngineError
 from aqven.runtime.address import ExecutionAddress, RunId
-from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.human import HumanWait, HumanWaitDetail, OpenWaitFilter, ResumeRequest, ResumeResult
 from aqven.runtime.vocabulary import ResumeOutcome, RunStatus, WaitState
 
 CONFIRM_WINDOW_SECONDS: Final = 5.0
@@ -153,6 +161,9 @@ class HumanWaits:
 
     async def open_waits(self, query: WaitQuery) -> tuple[WaitIndexEntry, ...]:
         return await self.index.search(query)
+
+    async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]:
+        return run_order(await self.index.search(open_wait_query(wanted)))
 
     async def _located(self, run_id: RunId, address: ExecutionAddress) -> tuple[WaitIndexEntry, WaitRecord]:
         entry = await self._entry(run_id, address)

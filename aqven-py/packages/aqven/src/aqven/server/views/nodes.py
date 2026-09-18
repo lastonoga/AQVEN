@@ -1,3 +1,4 @@
+import posixpath
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
@@ -12,18 +13,22 @@ from aqven.loader import (
     LoadedFlow,
     LoadedProject,
     SourceSpec,
+    include_candidates,
     local_node_id,
     parent_node_id,
 )
 from aqven.server.errors import not_found
 from aqven.server.resources import (
     DynamicSlot,
+    NodeAgentRuntime,
     NodeBindingView,
     NodeCode,
     NodeDetail,
+    NodeDisplaySource,
     NodePromptRef,
     NodeSchemas,
     NodeSummary,
+    NodeValueShape,
 )
 from aqven.server.views.common import (
     SCHEMA_FAILURES,
@@ -36,12 +41,16 @@ from aqven.server.views.common import (
 from aqven.server.views.prompts import inference_facts
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import (
+    AgentId,
+    AgentSpec,
+    BoundField,
     CallNodeSpec,
     CodeNodeSpec,
     FieldBinding,
     FieldDecl,
     FlowId,
     HumanNodeSpec,
+    InferenceSpec,
     InputField,
     LlmNodeSpec,
     LoopNodeSpec,
@@ -52,10 +61,13 @@ from aqven.spec import (
     NodeSpec,
     OutputField,
     ParallelNodeSpec,
+    RecordType,
     SwitchNodeSpec,
     ToolId,
     ToolNodeSpec,
+    TypeId,
     TypeModels,
+    UnionType,
     normalized_schema,
 )
 
@@ -280,10 +292,60 @@ def dynamic_slots(shape: NodeShape) -> tuple[DynamicSlot, ...]:
     )
 
 
+def output_value_shapes(project: LoadedProject, models: TypeModels, shape: NodeShape) -> dict[str, NodeValueShape]:
+    shapes: dict[str, NodeValueShape] = {}
+    for field in shape.outputs or ():
+        if not isinstance(field, OutputField | BoundField) or field.value_type is None:
+            continue
+        source = project.types.get(TypeId(field.value_type))
+        if source is None or not isinstance(source.spec, RecordType | UnionType):
+            continue
+        shapes[field.name] = NodeValueShape(
+            type_id=field.value_type,
+            spec=source.spec,
+            json_schema=ref_schema(models, field.value_type),
+        )
+    return shapes
+
+
 def node_code(spec: NodeSpec, schemas: NodeSchemas) -> NodeCode | None:
     if not isinstance(spec, CodeNodeSpec):
         return None
     return NodeCode(ref=spec.run, declared_in=schemas.in_, declared_out=schemas.out)
+
+
+def display_sources(project: LoadedProject, source: SourceSpec[InferenceSpec] | None) -> dict[str, NodeDisplaySource]:
+    if source is None or source.spec.display is None:
+        return {}
+    sources: dict[str, NodeDisplaySource] = {}
+    for side in ("input", "output"):
+        formatter = getattr(source.spec.display, side)
+        if formatter is None or formatter.template is None:
+            continue
+        candidates = include_candidates((posixpath.dirname(source.path),), formatter.template)
+        path = next((candidate for candidate in candidates if candidate in project.texts), None)
+        if path is not None:
+            sources[side] = NodeDisplaySource(path=path, text=project.texts[path])
+    return sources
+
+
+def agent_instructions(project: LoadedProject, source: SourceSpec[AgentSpec] | None) -> str | None:
+    if source is None or source.spec.instructions is None:
+        return None
+    candidates = include_candidates((posixpath.dirname(source.path),), source.spec.instructions)
+    path = next((candidate for candidate in candidates if candidate in project.texts), None)
+    return None if path is None else project.texts[path]
+
+
+def allowed_set_descriptions(project: LoadedProject, source: SourceSpec[InferenceSpec] | None) -> dict[str, str]:
+    if source is None:
+        return {}
+    descriptions: dict[str, str] = {}
+    for allowed_set in source.spec.allowed_sets or ():
+        type_source = project.types.get(TypeId(allowed_set.type))
+        if type_source is not None:
+            descriptions[allowed_set.type] = type_source.spec.description
+    return descriptions
 
 
 def node_detail(state: WorkspaceState, flow_id: str, node_id: str) -> NodeDetail:
@@ -292,12 +354,42 @@ def node_detail(state: WorkspaceState, flow_id: str, node_id: str) -> NodeDetail
     if source is None:
         raise not_found(f"node {node_id} is not in flow {flow_id}")
     project = loaded_project(state)
+    inference = (
+        project.inferences.get(source.spec.inference)
+        if isinstance(source.spec, LlmNodeSpec) and source.spec.inference is not None
+        else None
+    )
+    inference_source = None if inference is None else inference.source
+    agent_source = project.agents.get(AgentId(source.spec.agent)) if isinstance(source.spec, LlmNodeSpec) else None
+    compiled_agent = (
+        state.compiled.agents.get(AgentId(source.spec.agent))
+        if state.compiled is not None and isinstance(source.spec, LlmNodeSpec)
+        else None
+    )
     shape = node_shape(source.spec, project)
-    schemas = shape_schemas(type_models(project), flow_id, node_id, shape)
+    models = type_models(project)
+    schemas = shape_schemas(models, flow_id, node_id, shape)
     summary = node_summary(state, flow_id, node_id, source)
     return NodeDetail(
         **summary.model_dump(),
         spec=source.spec,
+        inference_spec=None if inference_source is None else inference_source.spec,
+        inference_path=None if inference_source is None else inference_source.path,
+        agent_spec=None if agent_source is None else agent_source.spec,
+        agent_runtime=(
+            None
+            if agent_source is None
+            else NodeAgentRuntime(
+                models=None if compiled_agent is None else compiled_agent.models,
+                output=None if compiled_agent is None else compiled_agent.output,
+                instructions=(
+                    agent_instructions(project, agent_source) if compiled_agent is None else compiled_agent.instructions
+                ),
+            )
+        ),
+        agent_path=None if agent_source is None else agent_source.path,
+        display_sources=display_sources(project, inference_source),
+        allowed_set_descriptions=allowed_set_descriptions(project, inference_source),
         ir_node=compiled_node(state, flow_id, node_id),
         in_schema=schemas.in_,
         out_schema=schemas.out,
@@ -306,5 +398,6 @@ def node_detail(state: WorkspaceState, flow_id: str, node_id: str) -> NodeDetail
         prompt=prompt_ref(project, source.spec),
         code=node_code(source.spec, schemas),
         dynamic_slots=dynamic_slots(shape),
+        value_shapes=output_value_shapes(project, models, shape),
         problems=diagnostics_by_file(state).get(source.path, ()),
     )

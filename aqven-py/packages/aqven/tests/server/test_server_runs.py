@@ -20,6 +20,7 @@ def test_start_run_validates_and_delegates(server_client: TestClient, server_eng
     assert response.status_code == 201
     assert response.json()["run_id"] == RUN_ID
     assert [request.flow_id for request in server_engine.started] == ["intake"]
+    assert server_engine.started_dataset_items == [None]
 
 
 def test_start_run_with_invalid_input(server_client: TestClient, server_engine: FakeEngine) -> None:
@@ -93,6 +94,23 @@ def test_executions_and_detail_address(server_client: TestClient, server_engine:
     assert level.json()["address"]["iteration"] is None
     assert server_engine.detail_requests[0][1] == "full"
     assert server_client.get(f"/api/runs/{RUN_ID}/executions/detail").status_code == 422
+
+
+def test_presentation_batch_route_preserves_target_order(server_client: TestClient, server_engine: FakeEngine) -> None:
+    address = {"node_id": "reply", "branch_key": None, "iteration": None, "item_index": None}
+    request = {
+        "locale": "en",
+        "targets": [{"address": address, "side": "input"}, {"address": address, "side": "output"}],
+    }
+    response = server_client.post(f"/api/runs/{RUN_ID}/presentation", json=request)
+    assert response.status_code == 200
+    assert [result["target"]["side"] for result in response.json()["results"]] == ["input", "output"]
+    assert server_engine.presentation_requests[-1].locale == "en"
+
+
+def test_presentation_batch_route_rejects_empty_targets(server_client: TestClient) -> None:
+    response = server_client.post(f"/api/runs/{RUN_ID}/presentation", json={"locale": "en", "targets": []})
+    assert response.status_code == 422
 
 
 def test_resume_accepted_and_unconfirmed(server_client: TestClient, server_engine: FakeEngine) -> None:

@@ -3,10 +3,13 @@ from typing import Annotated
 from fastapi import APIRouter, Header, Query
 from fastapi.responses import JSONResponse, Response
 
+from aqven.engine.selection import SelectionError, execution_order, range_missing
 from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineError, RunListQuery
+from aqven.preview import PromptPreview
+from aqven.runtime.address import RequestModel, ResourceModel
 from aqven.runtime.runs import Page
 from aqven.server.context import ServerContext, operation, rest_only
-from aqven.server.errors import ERROR_RESPONSES
+from aqven.server.errors import ERROR_RESPONSES, ApiFailure
 from aqven.server.resources import (
     CompileStatus,
     FlowDetail,
@@ -26,11 +29,44 @@ from aqven.server.resources import (
 from aqven.server.views.common import loaded_project, page_of
 from aqven.server.views.flows import flow_detail, flow_ir, flow_schemas, flow_spec_view, flow_summaries
 from aqven.server.views.nodes import node_detail, node_summaries
+from aqven.server.views.preview import PromptPreviewBody, prompt_preview
 from aqven.server.views.prompts import prompt_detail, prompt_summaries
 from aqven.server.views.types import type_detail, type_summaries
-from aqven.spec import FlowId
+from aqven.spec import DatasetId, FlowId, NodeId
 
 NOT_MODIFIED = 304
+
+
+class RunScopeRequest(RequestModel):
+    selected_nodes: tuple[NodeId, ...] | None = None
+
+
+class RunScopePreview(ResourceModel):
+    selected_nodes: tuple[NodeId, ...] | None
+    order: tuple[NodeId, ...]
+
+
+class DatasetRangeRequest(RequestModel):
+    dataset_id: DatasetId
+    case_names: tuple[str, ...]
+
+
+class MissingRangeData(ResourceModel):
+    case_name: str
+    reference: str
+    reason: str
+
+
+class DatasetRangePair(ResourceModel):
+    start_node: NodeId
+    end_node: NodeId
+    available: bool
+    missing: tuple[MissingRangeData, ...]
+
+
+class DatasetRangePreview(ResourceModel):
+    order: tuple[NodeId, ...]
+    ranges: tuple[DatasetRangePair, ...]
 
 
 async def last_run(context: ServerContext, flow_id: str) -> RunBrief | None:
@@ -92,6 +128,68 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         state = await context.workspace.state()
         return flow_schemas(state, flow_id)
 
+    @router.post(
+        "/flows/{flow_id}/run-scope",
+        operation_id="flow_run_scope",
+        openapi_extra=rest_only("preview the nodes executed by a scoped run"),
+    )
+    async def preview_run_scope(flow_id: str, body: RunScopeRequest) -> RunScopePreview:
+        state = await context.workspace.state()
+        if state.compiled is None or FlowId(flow_id) not in state.compiled.flows:
+            raise ApiFailure("NOT_RUNNABLE", f"flow {flow_id} has no compiled execution plan")
+        try:
+            order = execution_order(state.compiled.flow(FlowId(flow_id)), body.selected_nodes)
+        except SelectionError as error:
+            raise ApiFailure("INPUT_INVALID", str(error)) from error
+        return RunScopePreview(selected_nodes=body.selected_nodes, order=order)
+
+    @router.post(
+        "/flows/{flow_id}/dataset-range",
+        operation_id="flow_dataset_range",
+        openapi_extra=rest_only("preview contiguous dataset execution ranges"),
+    )
+    async def preview_dataset_range(flow_id: str, body: DatasetRangeRequest) -> DatasetRangePreview:
+        state = await context.workspace.state()
+        wanted_flow = FlowId(flow_id)
+        if state.compiled is None or wanted_flow not in state.compiled.flows:
+            raise ApiFailure("NOT_RUNNABLE", f"flow {flow_id} has no compiled execution plan")
+        source = loaded_project(state).datasets.get(body.dataset_id)
+        if source is None:
+            raise ApiFailure("NOT_FOUND", f"dataset {body.dataset_id} is not in the project")
+        if source.spec.flow != wanted_flow:
+            raise ApiFailure("NOT_RUNNABLE", f"dataset {body.dataset_id} is not a flow dataset for {flow_id}")
+        if not body.case_names or len(set(body.case_names)) != len(body.case_names):
+            raise ApiFailure("REQUEST_INVALID", "case_names must be nonempty and unique")
+        cases = {case.name: case for case in source.spec.cases}
+        unknown = set(body.case_names) - cases.keys()
+        if unknown:
+            raise ApiFailure("NOT_FOUND", f"cases not in dataset {body.dataset_id}: {', '.join(sorted(unknown))}")
+        flow = state.compiled.flow(wanted_flow)
+        ranges: list[DatasetRangePair] = []
+        for first, start_node in enumerate(flow.order):
+            for end_node in flow.order[first:]:
+                missing = tuple(
+                    MissingRangeData(case_name=case_name, reference=item.reference, reason=item.reason)
+                    for case_name in body.case_names
+                    for item in range_missing(
+                        flow,
+                        start_node,
+                        end_node,
+                        cases[case_name].inputs,
+                        cases[case_name].context or {},
+                        cases[case_name].node_outputs or {},
+                    )
+                )
+                ranges.append(
+                    DatasetRangePair(
+                        start_node=start_node,
+                        end_node=end_node,
+                        available=not missing,
+                        missing=missing,
+                    )
+                )
+        return DatasetRangePreview(order=flow.order, ranges=tuple(ranges))
+
     @router.get("/flows/{flow_id}/nodes", operation_id="flow_nodes", openapi_extra=operation("flow_get"))
     async def list_nodes(flow_id: str) -> tuple[NodeSummary, ...]:
         state = await context.workspace.state()
@@ -110,6 +208,15 @@ def build_flows_router(context: ServerContext) -> APIRouter:
     async def get_prompt(flow_id: str, node_id: str) -> PromptDetail:
         state = await context.workspace.state()
         return prompt_detail(state, flow_id, node_id)
+
+    @router.post(
+        "/flows/{flow_id}/nodes/{node_id}/prompt/preview",
+        operation_id="flow_node_prompt_preview",
+        openapi_extra=operation("prompt_preview"),
+    )
+    async def preview_prompt_of_node(flow_id: str, node_id: str, body: PromptPreviewBody) -> PromptPreview:
+        state = await context.workspace.state()
+        return prompt_preview(state, flow_id, node_id, body)
 
     @router.get("/prompts", operation_id="prompt_list", openapi_extra=rest_only("prompt listing for the studio"))
     async def list_prompts(

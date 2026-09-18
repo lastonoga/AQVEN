@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, TextIO
@@ -29,6 +29,7 @@ from aqven.runtime import (
     Project,
     ProjectInvalid,
     Run,
+    RunContext,
     RunEvent,
     RunFinished,
     RunOptions,
@@ -48,6 +49,7 @@ class FlowRunRequest:
     root: Path
     flow_id: str
     input_file: Path
+    context: tuple[tuple[str, str], ...] = ()
     answers_file: Path | None = None
     cassettes: Path | None = None
     cassette_mode: CassetteMode = CassetteMode.REPLAY_STRICT
@@ -144,13 +146,24 @@ EVENT_LINES: Final[Mapping[EventFormat, Callable[[RunEvent], str]]] = {
 }
 
 
+def run_context(entries: Sequence[tuple[str, str]]) -> RunContext | None:
+    if not entries:
+        return None
+    return RunContext.model_validate(dict(entries))
+
+
 def run_options(request: FlowRunRequest) -> RunOptions:
     answers = () if request.answers_file is None else ANSWERS_ADAPTER.validate_json(request.answers_file.read_bytes())
     cassettes = (
         None if request.cassettes is None else CassetteConfig(directory=request.cassettes, mode=request.cassette_mode)
     )
     mode = "replay" if cassettes is not None and cassettes.mode == CassetteMode.REPLAY_STRICT else "live"
-    return RunOptions(mode=mode, human_answers=answers, cassettes=cassettes)
+    return RunOptions(
+        mode=mode,
+        context=run_context(request.context),
+        human_answers=answers,
+        cassettes=cassettes,
+    )
 
 
 @dataclass(slots=True)

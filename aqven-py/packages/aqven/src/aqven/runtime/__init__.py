@@ -12,6 +12,7 @@ from aqven.runtime.events import (
     OUTPUT_DELTA_BATCH_MS,
     RUN_EVENT_ADAPTER,
     RUN_EVENT_TYPES,
+    InferenceInputCaptured,
     LoopExited,
     LoopIterationFinished,
     NodeAnswerIgnored,
@@ -35,7 +36,6 @@ from aqven.runtime.events import (
     RunSuspended,
 )
 from aqven.runtime.executions import (
-    RAW_EXCERPT_LIMIT,
     Attempt,
     AttemptCause,
     CheckOutcome,
@@ -49,7 +49,6 @@ from aqven.runtime.executions import (
     RunError,
     SlotProvenance,
     SlotRange,
-    excerpt_of,
 )
 from aqven.runtime.human import (
     HumanWait,
@@ -71,6 +70,14 @@ from aqven.runtime.options import (
     RunContext,
     RunOptions,
     RunResult,
+)
+from aqven.runtime.overrides import (
+    OVERRIDE_CODE,
+    NodeOutputError,
+    NodeOutputOverride,
+    node_failure,
+    node_output,
+    override_for,
 )
 from aqven.runtime.project import (
     FlowHandle,
@@ -129,7 +136,7 @@ from aqven.runtime.vocabulary import (
 __all__ = [
     "MODEL_OUTPUT_ERROR_CODES",
     "OUTPUT_DELTA_BATCH_MS",
-    "RAW_EXCERPT_LIMIT",
+    "OVERRIDE_CODE",
     "RUN_EVENT_ADAPTER",
     "RUN_EVENT_TYPES",
     "Attempt",
@@ -162,6 +169,7 @@ __all__ = [
     "HumanWaitAttempt",
     "HumanWaitDetail",
     "IgnoredAnswer",
+    "InferenceInputCaptured",
     "IncludePayloads",
     "InlineValue",
     "JobDone",
@@ -187,6 +195,8 @@ __all__ = [
     "NodeExecution",
     "NodeFinished",
     "NodeOutputDelta",
+    "NodeOutputError",
+    "NodeOutputOverride",
     "NodeProgress",
     "NodeResumed",
     "NodeStarted",
@@ -248,6 +258,8 @@ __all__ = [
     "ValueRef",
     "WaitKind",
     "WaitState",
-    "excerpt_of",
     "node_address",
+    "node_failure",
+    "node_output",
+    "override_for",
 ]

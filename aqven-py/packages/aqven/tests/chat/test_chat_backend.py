@@ -148,6 +148,30 @@ def test_turn_streams_events_and_routes_approvals_to_studio(tmp_path: Path) -> N
     assert client.prompts == ["add return intent"]
 
 
+def test_turn_events_name_the_backend_and_the_model_that_produced_them(tmp_path: Path) -> None:
+    factory = ScriptedClientFactory([streamed_answer_turn(tmp_path), streamed_answer_turn(tmp_path)])
+    harness = chat_harness(tmp_path, factory)
+
+    async def scenario() -> tuple[list[ChatEvent], list[ChatEvent]]:
+        session = await harness.backend.start_session(harness.options(model=None))
+        events = harness.backend.events(session.session_id)
+        await harness.backend.send_message(session.session_id, message("one", "op-1"))
+        _, first = await until_turn_finished(events)
+        await harness.backend.send_message(session.session_id, message("two", "op-2"))
+        _, second = await until_turn_finished(events)
+        await harness.backend.aclose()
+        return first, second
+
+    first, second = asyncio.run(scenario())
+    opened = of_type(first, ChatTurnStarted)[0]
+    closed = of_type(first, ChatTurnFinished)[0]
+    reopened = of_type(second, ChatTurnStarted)[0]
+
+    assert (opened.backend, opened.model) == ("claude", None)
+    assert (closed.backend, closed.model) == ("claude", MODEL)
+    assert (reopened.backend, reopened.model) == ("claude", MODEL)
+
+
 def test_message_operation_is_idempotent_and_busy_session_rejects_second_turn(tmp_path: Path) -> None:
     turn = [ApprovalStep(tool_name="Bash", tool_use_id="toolu_wait"), *streamed_answer_turn(tmp_path)]
     factory = ScriptedClientFactory([turn])

@@ -1,0 +1,30 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "Начисляет покупателю кредит магазина по заказу"
+run: "@root.tools.functions:issue_store_credit"
+effect: "write"
+idempotency_key:
+- "customer_id"
+- "order_id"
+secrets:
+- name: "orders_token"
+  ref: "ref:env/LUMEN_ORDERS_TOKEN"
+in:
+- name: "customer_id"
+  type: "CustomerId"
+  description: "Покупатель, которому начисляется кредит"
+- name: "order_id"
+  type: "OrderId"
+  description: "Заказ, по которому начисляется кредит"
+- name: "amount"
+  type: "Money"
+  description: "Сумма кредита"
+out:
+- name: "credit_id"
+  type: "Text"
+  description: "Идентификатор начисления"
+  maxLength: 15
+  pattern: "^cr_[a-z0-9]{12}$"
+- name: "amount"
+  type: "Money"
+  description: "Начисленная сумма"

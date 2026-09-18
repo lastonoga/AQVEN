@@ -8,6 +8,15 @@ from pydantic import JsonValue
 
 from aqven.loader.layout import NODE_ID_SEPARATOR, PROJECT_FILE, entity_id
 from aqven.spec import NodeId, SpecKind
+from aqven.write.agents import (
+    AgentFile,
+    agent_file,
+    agent_files,
+    agent_moves,
+    rename_agent_refs,
+    require_free_agent,
+    require_unused_agent,
+)
 from aqven.write.canonical import HEADER_KEYS, JsonObject
 from aqven.write.errors import WriteError, not_found, request_invalid
 from aqven.write.flows import (
@@ -25,10 +34,12 @@ from aqven.write.flows import (
 from aqven.write.model import (
     AddNodeOp,
     BindOp,
+    DeleteAgentOp,
     JournalEntry,
     MoveNodeOp,
     PatchOp,
     RemoveNodeOp,
+    RenameAgentOp,
     RenameFlowOp,
     RenameNodeOp,
     SetOp,
@@ -38,6 +49,7 @@ from aqven.write.model import (
 from aqven.write.rewrite import (
     ORDER_KEY,
     flow_alias_rewrite,
+    moved_file_rewrite,
     node_ref_rewrite,
     rename_flow_node,
     rename_inner_node,
@@ -108,6 +120,10 @@ def apply_op(context: PatchContext, op: PatchOp) -> None:
             unbind_slot(context, op)
         case RenameFlowOp():
             rename_flow(context, op)
+        case RenameAgentOp():
+            rename_agent(context, op)
+        case DeleteAgentOp():
+            delete_agent(context, op)
         case _:
             assert_never(op)
 
@@ -257,6 +273,36 @@ def rename_flow(context: PatchContext, op: RenameFlowOp) -> None:
         _update(context.tree, path, lambda document: _rename_flow_references(document, old, new))
     context.journal(FLOW_KEY, old, new)
     context.flow_id = new
+
+
+def rename_agent(context: PatchContext, op: RenameAgentOp) -> None:
+    agent = agent_file(context.tree, op.agent_id)
+    if op.to == agent.agent_id:
+        return
+    require_free_agent(context.tree, op.to)
+    moves = agent_moves(context.tree, agent, op.to)
+    _move_all(context.tree, moves)
+    old, new = agent.agent_id, op.to
+    files = moved_file_rewrite(moves)
+
+    def rename(document: JsonObject) -> None:
+        replace_contents(document, rename_agent_refs(document, old, new))
+        rewrite_document(document, files)
+
+    for path in tuple(context.tree.yaml_paths()):
+        _update(context.tree, path, rename)
+    context.journal(SpecKind.AGENT.value.lower(), old, new)
+
+
+def delete_agent(context: PatchContext, op: DeleteAgentOp) -> None:
+    agent = agent_file(context.tree, op.agent_id)
+    require_unused_agent(context.tree, agent)
+    _delete_agent_files(context.tree, agent)
+
+
+def _delete_agent_files(tree: WorkingTree, agent: AgentFile) -> None:
+    for path in agent_files(tree, agent):
+        tree.delete(path)
 
 
 def _rename_flow_references(document: JsonObject, old: str, new: str) -> None:

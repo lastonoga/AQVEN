@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Итог панели судей: черновик-победитель и вердикт"
+fields:
+- name: "winner"
+  type: "ReplyDraft"
+  description: "Лучший черновик по вердикту панели"
+- name: "verdict"
+  type: "PanelVerdict"
+  description: "Вердикт панели с признаком тай-брейка и разбросом оценок"

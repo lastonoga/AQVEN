@@ -2,7 +2,7 @@
 required-version = ">=0.12.15"
 
 [tool.uv.workspace]
-members = ["packages/aqven", "packages/aqven-llm", "examples/showcase", "examples/showcase/lumen"]
+members = ["packages/aqven", "packages/aqven-llm", "examples"]
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.7", "pyright==1.1.414"]
@@ -18,7 +18,7 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RET", "ANN", "ERA", "TID"]
 "packages/aqven/src/aqven/spec/builder.py" = ["ANN401"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["aqven", "aqven_llm", "lumen", "app"]
+known-first-party = ["aqven", "aqven_llm", "lumen"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "httpx".msg = "Only httpx2 (ADR-0025)."
@@ -30,13 +30,34 @@ known-first-party = ["aqven", "aqven_llm", "lumen", "app"]
 "openai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "anthropic".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "google.genai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"groq".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"mistralai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"cohere".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"boto3".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"botocore".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"xai_sdk".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"huggingface_hub".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "pydantic_ai.providers".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "pydantic_ai.models.openai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "pydantic_ai.models.anthropic".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "pydantic_ai.models.google".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 "pydantic_ai.models.openrouter".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.groq".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.mistral".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.cohere".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.bedrock".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.bedrock_mantle".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.huggingface".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.xai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.ollama".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.cerebras".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.crusoe".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.zai".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.github_copilot".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.openai_codex".msg = "Provider imports live only in aqven_llm (ADR-0025)."
+"pydantic_ai.models.snowflake".msg = "Provider imports live only in aqven_llm (ADR-0025)."
 
 [tool.pyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
-extraPaths = ["packages/aqven/src", "packages/aqven-llm/src", "examples/showcase/lumen/src", "examples/showcase"]
+extraPaths = ["packages/aqven/src", "packages/aqven-llm/src", "examples", "examples/tests"]

@@ -1,0 +1,151 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-6b1e36f4a5a4e9e60a2ca67805b5640833a6c13f1c93d899f680fee990bd2712",
+  "request_key": "sha256-86514a81b41633518eede73b0aa394f29d518fec10568a2295936a6807a196aa",
+  "model_ref": "openrouter:openai/gpt-5-image-mini",
+  "site": {
+    "address": {
+      "node_id": "illustrate",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "",
+        "id": "rs_0d5cd3e801cd0e3c016aac23b2549487d1bfdf78916c6499d7",
+        "signature": {
+          "$aqven_blob": "sha256-31a3913cca8e4d415983e6e94cd333e8ed386811458eafb86609d942c752e4f7"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "",
+        "id": "rs_0d5cd3e801cd0e3c016aac23b2549487d1bfdf78916c6499d7",
+        "signature": {
+          "$aqven_blob": "sha256-31a3913cca8e4d415983e6e94cd333e8ed386811458eafb86609d942c752e4f7"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "file",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-ca44533535d0115c59d5f829112f16a8487dc267e35e0bd6b761bfb38d729ddf"
+          },
+          "media_type": "image/png",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "9c51e1"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "",
+        "id": "rs_0d5cd3e801cd0e3c016aac23b2549487d1bfdf78916c6499d7",
+        "signature": {
+          "$aqven_blob": "sha256-31a3913cca8e4d415983e6e94cd333e8ed386811458eafb86609d942c752e4f7"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-ca44533535d0115c59d5f829112f16a8487dc267e35e0bd6b761bfb38d729ddf"
+          },
+          "media_type": "image/png",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "9c51e1"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      }
+    ],
+    "usage": {
+      "input_tokens": 3781,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 6070,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1152,
+        "image_tokens": 4175
+      },
+      "cost": null,
+      "output_reasoning_tokens": 1152
+    },
+    "model_name": "openai/gpt-5-image-mini",
+    "timestamp": "2026-09-17T17:30:45.898967Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:30:25Z",
+      "downstream_provider": "OpenAI",
+      "finish_reason": "completed",
+      "cost": 0.0466425,
+      "upstream_inference_cost": 0.0466425,
+      "upstream_inference_prompt_cost": 0.0094525,
+      "upstream_inference_completions_cost": 0.03719,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789666225-gA2BScUsnIl0LHNbwDtZ",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -12,6 +12,7 @@ from aqven.diagnostics import (
     format_text,
     templated_diagnostic,
 )
+from aqven_llm.errors import INSTALL_HINT
 
 AGENT_FILE: Final = "agents/classifier.yaml"
 VALUES: Final = {
@@ -48,7 +49,8 @@ def test_new_codes_have_severity_message_and_hint(code: DiagnosticCode, severity
 def test_missing_extra_names_the_install_command() -> None:
     item = templated_diagnostic(DiagnosticCode.E_PROVIDER_EXTRA_MISSING, AGENT_FILE, ("model",), VALUES)
 
-    assert item.hint == "install the extra: uv add 'aqven[cohere]'"
+    assert item.hint == 'install the extra: uv add "aqven[cohere]"'
+    assert item.hint is not None and INSTALL_HINT.format(extra="cohere") in item.hint
 
 
 def test_text_format_prints_the_hint_under_the_line() -> None:

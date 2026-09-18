@@ -6,6 +6,7 @@ from pydantic_ai import DeferredToolRequests, DeferredToolResults, ToolApproved,
 
 from aqven.engine.human.forms import TOOL_APPROVAL_FORM, TOOL_APPROVAL_TYPE_ID, ToolApprovalAnswer, ToolCallDecision
 from aqven.engine.human.journal import WaitJournal
+from aqven.engine.human.keys import FIRST_ATTEMPT
 from aqven.engine.human.outcomes import (
     HumanAnswered,
     HumanDefaulted,
@@ -112,6 +113,7 @@ class ToolApprovalGate:
         scope: ExecutionScope,
         approval: ToolApprovalSpec,
         calls: tuple[PendingToolCall, ...],
+        attempt: int = FIRST_ATTEMPT,
     ) -> ToolApprovalOutcome:
         request = WaitRequest(
             run_id=wait_run_id(scope),
@@ -124,6 +126,7 @@ class ToolApprovalGate:
             assignee=approval.assignee,
             timeout_seconds=float(approval.timeout_seconds),
             expiry=expiry_plan(approval.on_timeout),
+            attempt=attempt,
         )
         waiter = HumanWaiter(self.journal, scope.events, await self.scripted.book(scope))
         return approval_outcome(scope.address, await waiter.wait(request))

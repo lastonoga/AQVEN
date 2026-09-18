@@ -1,23 +1,21 @@
 from collections.abc import AsyncIterable
-from typing import Annotated
+from typing import Annotated, Final
 
 from fastapi import APIRouter, Depends
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from pydantic import Field
 
-from aqven.ports.chat import ChatEvent
-from aqven.runtime.address import ResourceModel
-from aqven.runtime.events import RunEvent
 from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES
 from aqven.server.routes.runs import event_cursor
 from aqven.server.spec_channel import SpecEvent
 
-
-class EventCatalog(ResourceModel):
-    spec: list[SpecEvent]
-    run: list[RunEvent]
-    chat: list[ChatEvent] = Field(default_factory=list[ChatEvent])
+STREAM_SUMMARY: Final = "Server-sent stream of spec changes"
+STREAM_DESCRIPTION: Final = (
+    "A text/event-stream that stays open and pushes a frame per spec change; it is not a schema "
+    "document and a plain request to it never completes. Each frame carries one SpecEvent as data, "
+    "its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. "
+    "The JSON Schema of every event is at GET /api/schemas/events."
+)
 
 
 def spec_frame(event: SpecEvent) -> ServerSentEvent:
@@ -31,14 +29,12 @@ def build_events_router(context: ServerContext) -> APIRouter:
         "/events/spec",
         response_class=EventSourceResponse,
         operation_id="spec_events",
+        summary=STREAM_SUMMARY,
+        description=STREAM_DESCRIPTION,
         openapi_extra=rest_only("sse transport"),
     )
     async def spec_events(start: Annotated[int, Depends(event_cursor)]) -> AsyncIterable[ServerSentEvent]:
         async for event in context.hub.follow(start):
             yield spec_frame(event)
-
-    @router.get("/schemas/events", operation_id="event_catalog", openapi_extra=rest_only("event schemas"))
-    async def event_catalog() -> EventCatalog:
-        return EventCatalog(spec=[], run=[], chat=[])
 
     return router

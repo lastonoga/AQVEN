@@ -4,6 +4,7 @@ import re
 import tempfile
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Final, Protocol
 
@@ -103,7 +104,7 @@ class DirectoryBlobStore:
         return self.directory / f"{blob_id}{META_SUFFIX}"
 
     def _commit(self, temporary: Path, meta: BlobMeta) -> BlobMeta:
-        existing = self._read(meta.blob_id)
+        existing = self._read_canonical(meta.blob_id)
         if existing is not None:
             temporary.unlink(missing_ok=True)
             return existing.meta
@@ -114,6 +115,26 @@ class DirectoryBlobStore:
         return meta
 
     def _read(self, blob_id: str) -> BlobFile | None:
+        canonical = self._read_canonical(blob_id)
+        if canonical is not None:
+            return canonical
+        legacy = self.directory / blob_id.removeprefix(BLOB_PREFIX)
+        if not legacy.is_file():
+            return None
+        status = legacy.stat()
+        return BlobFile(
+            legacy,
+            BlobMeta(
+                blob_id=BlobId(blob_id),
+                sha256=blob_id,
+                size_bytes=status.st_size,
+                media_type=DEFAULT_MEDIA_TYPE,
+                name=None,
+                created_at=datetime.fromtimestamp(status.st_mtime, UTC),
+            ),
+        )
+
+    def _read_canonical(self, blob_id: str) -> BlobFile | None:
         data = self._data_path(blob_id)
         meta = self._meta_path(blob_id)
         if not data.is_file() or not meta.is_file():

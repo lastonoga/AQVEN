@@ -29,6 +29,7 @@ class RunnerSettings:
 class AqvenCheckInput(RequestModel):
     paths: tuple[str, ...] = ()
     include_warnings: bool = True
+    static: bool = False
     limit: Annotated[int, Field(ge=1, le=MAX_DIAGNOSTICS)] = DEFAULT_DIAGNOSTICS
     timeout_seconds: Annotated[int, Field(ge=1, le=MAX_CHECK_SECONDS)] = DEFAULT_CHECK_SECONDS
 
@@ -50,8 +51,10 @@ class _CheckDocument(BaseModel):
     diagnostics: tuple[Diagnostic, ...]
 
 
-def check_command(settings: RunnerSettings) -> tuple[str, ...]:
-    return (settings.python, "-m", "aqven", "check", "--format", "json", settings.paths.module.as_posix())
+def check_command(settings: RunnerSettings, static: bool = False) -> tuple[str, ...]:
+    stage = ("--static",) if static else ()
+    arguments = ("-P", "-m", "aqven", "check", "--format", "json", *stage)
+    return (settings.python, *arguments, settings.paths.module.as_posix())
 
 
 def selected(items: Iterable[Diagnostic], prefixes: Sequence[str], include_warnings: bool) -> tuple[Diagnostic, ...]:
@@ -98,7 +101,7 @@ class AqvenCheckTool:
     async def check(self, request: AqvenCheckInput) -> AqvenCheckResult:
         prefixes = self.settings.paths.module_prefixes(request.paths)
         outcome = await self.settings.runner.run(
-            check_command(self.settings),
+            check_command(self.settings, request.static),
             cwd=self.settings.paths.module,
             timeout_seconds=request.timeout_seconds,
         )
@@ -122,10 +125,11 @@ class AqvenCheckTool:
             Operation(
                 name="aqven_check",
                 description=(
-                    "Full project check with the same compiler as `aqven check`: regenerates the type models and "
-                    "returns diagnostics (code, severity, file, path, line, column, message). paths filters by "
-                    "path prefixes relative to the project root with aqven.yaml. Call it after every edit of "
-                    "YAML, a prompt or code."
+                    "Full project check with the same compiler as `aqven check`: regenerates the type models, "
+                    "checks the definitions statically and then simulates every flow without network or tokens, "
+                    "and returns diagnostics (code, severity, file, path, line, column, message, hint). "
+                    "paths filters by path prefixes relative to the project root with aqven.yaml; static skips "
+                    "the simulated runs. Call it after every edit of YAML, a prompt or code."
                 ),
                 input_model=AqvenCheckInput,
                 output_model=AqvenCheckResult,

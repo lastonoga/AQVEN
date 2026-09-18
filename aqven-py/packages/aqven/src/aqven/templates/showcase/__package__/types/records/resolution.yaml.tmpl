@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Решение по обращению"
+fields:
+- name: "action"
+  type: "ResolutionAction"
+  description: "Что делаем по обращению"
+- name: "summary"
+  type: "Text"
+  description: "Суть решения для покупателя и оператора"
+  maxLength: 400
+- name: "credit"
+  type: "Money?"
+  description: "Сумма кредита магазина; null, если кредит не начисляется"
+- name: "policy"
+  type: "PolicyId?"
+  description: "Политика, на которой основано решение; null, если решение не по политике"

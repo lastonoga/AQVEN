@@ -2,10 +2,14 @@ from aqven.runtime import (
     CassetteConfig,
     CassetteMode,
     McpToolStub,
+    NodeOutputError,
+    NodeOutputOverride,
     ProviderFault,
     RunContext,
     RunOptions,
     ToolReplayMiss,
+    node_failure,
+    node_output,
 )
 from aqven.testing.blobs import BlobNotFound, MemoryBlobStore, blob_id_for, media_value
 from aqven.testing.human import HumanResponder, ScriptedAnswerConflict, ScriptedHuman, WaitNotReached, payload_json
@@ -17,16 +21,31 @@ from aqven.testing.offline import (
     provider_fault,
     replay_cassettes,
 )
+from aqven.testing.providers import (
+    AdapterCase,
+    AdapterNotConformant,
+    ConformanceCheck,
+    ConformanceReport,
+    FailingTransport,
+    check_adapter,
+)
 from aqven.testing.workspace import copy_project, diagnostics_under
 
 __all__ = [
     "LIVE_VARIABLE",
+    "AdapterCase",
+    "AdapterNotConformant",
     "BlobNotFound",
     "CassetteConfig",
     "CassetteMode",
+    "ConformanceCheck",
+    "ConformanceReport",
+    "FailingTransport",
     "HumanResponder",
     "McpToolStub",
     "MemoryBlobStore",
+    "NodeOutputError",
+    "NodeOutputOverride",
     "ProviderFault",
     "RunContext",
     "RunOptions",
@@ -35,11 +54,14 @@ __all__ = [
     "ToolReplayMiss",
     "WaitNotReached",
     "blob_id_for",
+    "check_adapter",
     "cassette_directory",
     "cassette_mode",
     "copy_project",
     "diagnostics_under",
     "media_value",
+    "node_failure",
+    "node_output",
     "offline_options",
     "payload_json",
     "provider_fault",

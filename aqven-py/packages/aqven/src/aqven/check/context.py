@@ -86,7 +86,7 @@ class CheckRule(Protocol):
 
 
 def resolve_agents(project: LoadedProject) -> Mapping[AgentId, ResolvedAgent]:
-    providers = {provider.id.value: provider for provider in project.project.spec.providers}
+    providers = {str(provider.id): provider for provider in project.project.spec.providers}
     return {
         agent_id: ResolvedAgent(source.spec, _models(source.spec, providers))
         for agent_id, source in project.agents.items()
@@ -94,11 +94,14 @@ def resolve_agents(project: LoadedProject) -> Mapping[AgentId, ResolvedAgent]:
 
 
 def _models(agent: AgentSpec, providers: Mapping[str, ProviderSpec]) -> tuple[ResolvedModel, ...]:
-    return tuple(
-        ResolvedModel(
-            model=model,
-            provider=providers.get(model.partition(PROVIDER_SEPARATOR)[0]),
-            profile=resolve_profile(model, agent.capabilities),
-        )
-        for model in (agent.model, *(agent.fallback_models or ()))
-    )
+    declared = [(providers.get(model.partition(PROVIDER_SEPARATOR)[0]), model) for model in _listed(agent)]
+    return tuple(_model(agent, provider, model) for provider, model in declared)
+
+
+def _listed(agent: AgentSpec) -> tuple[ModelString, ...]:
+    return (agent.model, *(agent.fallback_models or ()))
+
+
+def _model(agent: AgentSpec, provider: ProviderSpec | None, model: ModelString) -> ResolvedModel:
+    declared = None if provider is None else provider.capabilities
+    return ResolvedModel(model=model, provider=provider, profile=resolve_profile(model, agent.capabilities, declared))

@@ -1,3 +1,4 @@
+from aqven.chat.agent import CLAUDE_AGENT, TurnAgent, session_agent
 from aqven.chat.approvals import ApprovalRegistry, ApprovalVerdict
 from aqven.chat.claude_backend import ClaudeAgentBackend, ClaudeChat, create_claude_chat
 from aqven.chat.claude_cli import ClaudeCli, ClaudeLoginProbe, LoginProbe, locate_claude_cli
@@ -12,6 +13,7 @@ from aqven.chat.tool_names import ToolIdentity, claude_tool_identity
 
 __all__ = [
     "AQVEN_MCP_SERVER",
+    "CLAUDE_AGENT",
     "PROJECT_APP_DATABASE",
     "ApprovalRegistry",
     "ApprovalVerdict",
@@ -34,9 +36,11 @@ __all__ = [
     "SqliteChatJournal",
     "StoredChatSession",
     "ToolIdentity",
+    "TurnAgent",
     "claude_tool_identity",
     "create_claude_chat",
     "follow_chat_events",
     "locate_claude_cli",
     "sdk_client",
+    "session_agent",
 ]

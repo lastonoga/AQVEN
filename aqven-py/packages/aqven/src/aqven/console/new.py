@@ -63,6 +63,7 @@ class NewProjectRequest:
     aqven_path: Path | None = None
     sync: bool = True
     force: bool = False
+    with_tests: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +152,7 @@ def project_draft(templates: Mapping[str, ProjectTemplate], request: NewProjectR
         project=package.replace(PACKAGE_SEPARATOR, PROJECT_SEPARATOR),
         aqven_requirement=aqven_requirement(),
         uv_sources=uv_sources(request.aqven_path),
+        with_tests=request.with_tests,
     )
     return ProjectDraft(target=request.target, template=template, values=values, rendered=template.render(values))
 
@@ -161,7 +163,13 @@ class WriteFiles:
         for file in draft.rendered.files:
             destination = draft.target / file.path
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_text(file.content, encoding=FILE_ENCODING)
+            self._write(destination, file.content)
+
+    def _write(self, destination: Path, content: str | bytes) -> None:
+        if isinstance(content, bytes):
+            destination.write_bytes(content)
+            return
+        destination.write_text(content, encoding=FILE_ENCODING)
 
 
 @dataclass(frozen=True, slots=True)
@@ -258,6 +266,9 @@ class NewCommand:
             metavar="PATH",
             help="local aqven package folder, installed as an editable uv path source for development",
         )
+        parser.add_argument(
+            "--with-tests", action="store_true", help="add a tests folder with one offline example test"
+        )
         parser.add_argument("--no-sync", action="store_true", help="do not run uv sync")
         parser.add_argument("--force", action="store_true", help="write into a folder that is not empty")
 
@@ -269,5 +280,6 @@ class NewCommand:
             aqven_path=_optional_path(arguments.aqven_path),
             sync=not bool(arguments.no_sync),
             force=bool(arguments.force),
+            with_tests=bool(arguments.with_tests),
         )
         return create_project(request)

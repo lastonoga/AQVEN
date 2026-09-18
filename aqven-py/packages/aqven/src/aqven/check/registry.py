@@ -77,7 +77,7 @@ def _tool_nodes(context: CheckContext) -> Iterator[Diagnostic]:
 
 
 def _agent_models(context: CheckContext, source: SourceSpec[AgentSpec]) -> Iterator[Diagnostic]:
-    declared = {provider.id.value for provider in context.spec.providers}
+    declared = {str(provider.id) for provider in context.spec.providers}
     agent = source.spec
     models: tuple[tuple[YamlPath, str], ...] = (
         (("model",), agent.model),

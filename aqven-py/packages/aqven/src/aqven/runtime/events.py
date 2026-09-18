@@ -4,8 +4,8 @@ from typing import Annotated, Final, Literal, get_args
 from pydantic import AwareDatetime, Field, TypeAdapter
 
 from aqven.runtime.address import ClientOpId, ExecutionAddress, Problem, ResourceModel, RunId
-from aqven.runtime.executions import AttemptCause, RunError
-from aqven.runtime.values import ValueRef
+from aqven.runtime.executions import AttemptCause, CheckOutcome, PromptTrace, RunError
+from aqven.runtime.values import InlineValue, ValueRef
 from aqven.runtime.vocabulary import (
     AttemptAction,
     AttemptCauseKind,
@@ -15,7 +15,7 @@ from aqven.runtime.vocabulary import (
     TerminalRunStatus,
     WaitKind,
 )
-from aqven.spec import FlowId, LoopStopReason, NodeKind, TypeId
+from aqven.spec import AgentId, FlowId, InferenceId, LoopStopReason, NodeKind, TypeId
 
 OUTPUT_DELTA_BATCH_MS: Final[int] = 80
 
@@ -43,6 +43,28 @@ class NodeStarted(RunEventBase):
     kind: NodeKind
     attempt: Annotated[int, Field(ge=1)]
     queued_ms: Annotated[int, Field(ge=0)]
+
+
+class InferenceInputCaptured(RunEventBase):
+    type: Literal["inference_input_captured"] = "inference_input_captured"
+    address: ExecutionAddress
+    stage: Literal["bound", "normalized"]
+    agent: AgentId
+    inference: InferenceId
+    input_ref: InlineValue
+    variants: dict[str, str]
+
+
+class InferencePromptCaptured(RunEventBase):
+    type: Literal["inference_prompt_captured"] = "inference_prompt_captured"
+    address: ExecutionAddress
+    prompt: PromptTrace
+
+
+class InferenceChecksCaptured(RunEventBase):
+    type: Literal["inference_checks_captured"] = "inference_checks_captured"
+    address: ExecutionAddress
+    checks: tuple[CheckOutcome, ...]
 
 
 class NodeAttemptFailed(RunEventBase):
@@ -180,6 +202,9 @@ class RunFinished(RunEventBase):
 type RunEvent = Annotated[
     RunStartedEvent
     | NodeStarted
+    | InferenceInputCaptured
+    | InferencePromptCaptured
+    | InferenceChecksCaptured
     | NodeAttemptFailed
     | NodeProgress
     | NodeOutputDelta
@@ -201,6 +226,9 @@ type RunEvent = Annotated[
 type RunEventType = Literal[
     "run_started",
     "node_started",
+    "inference_input_captured",
+    "inference_prompt_captured",
+    "inference_checks_captured",
     "node_attempt_failed",
     "node_progress",
     "node_output_delta",

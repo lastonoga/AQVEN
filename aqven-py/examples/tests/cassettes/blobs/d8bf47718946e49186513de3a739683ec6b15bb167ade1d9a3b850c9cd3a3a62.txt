@@ -1,0 +1,24 @@
+Let me analyze the candidates.
+
+Candidate 0: Uses both chunks. Says "скорее всего, проблема связана с контроллером" - this is an inference not directly confirmed by KB, but it's framed as "скорее всего" and directs to support. It also says "контроллер подлежит гарантийной замене" which is grounded in the flicker chunk. The heating advice is grounded. It's helpful: addresses both symptoms, gives actionable steps, directs to support. Tone is polite.
+
+Candidate 1: Says "в нашей базе знаний нет информации о том, как повлиять на нагрев контроллера" - but there IS a chunk about heating (kb_ctrlheat01) that says to disconnect and not turn on until check. So candidate 1 is factually wrong/under-grounded: it claims no info exists when it does. It only addresses flicker, not heating. Less helpful.
+
+So best is candidate 0.
+
+Scores for candidate 0:
+- grounded: 5 (both claims supported by chunks; the "скорее всего" is a soft inference, acceptable)
+- helpful: 5 (addresses both symptoms, clear steps, directs to support)
+- tone: 5 (polite, professional)
+
+Maybe grounded 4 because of the "скорее всего проблема связана с контроллером" which is not directly in KB? But it's framed as a guess and directs to support. I'd say 4 or 5. The instruction says statements without confirmation in fragments are considered unconfirmed. The claim "проблема связана с контроллером" is an inference, but it's hedged. I'll give grounded 4 to be safe? Actually the candidate says "учитывая описанные симптомы, скорее всего, проблема связана с контроллером" - this is a reasonable synthesis, hedged. I think grounded 5 is fine since all concrete instructions are cited. But strictly, the inference is unconfirmed. Let me give grounded 4, helpful 5, tone 5.
+
+Hmm, but the rubric: "Утверждение без подтверждения во фрагментах считается неподтверждённым". The inference is hedged as "скорее всего" and it's a diagnostic suggestion, not a factual claim. I'll keep grounded 4 to reflect the slight unconfirmed inference, or 5. I think 4 is more defensible.
+
+Actually, let me reconsider. Candidate 0's statements: flicker → disconnect, check plug, if repeats → warranty replacement (grounded). Hot controller → disconnect, don't turn on until check (grounded). "Скорее всего проблема связана с контроллером" - hedged inference, not confirmed. "Свяжитесь с отделом поддержки" - standard. So grounded 4.
+
+Helpful: addresses both symptoms, gives clear safety steps, next action. 5.
+
+Tone: polite, professional, empathetic. 5.
+
+best_index: 0.

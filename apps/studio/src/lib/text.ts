@@ -1,4 +1,4 @@
-import type { DiffOp, Provenance, ProvenancedValue, TextLine, TextRun } from "@/domain"
+import type { DiffOp, Provenance, ProvenancedValue, TextLine, TextRun } from "@/components/studio"
 
 export const LINE_BREAK = "\n"
 const INLINE_CODE = /`([^`]+)`/

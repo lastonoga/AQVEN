@@ -38,7 +38,7 @@ TICKET: Final = "triage/types/triage_ticket.yaml"
 STEM: Final = "triage/classify"
 PARTIAL: Final = f"{STEM}.partials/customer.md"
 TONES: Final = f"{STEM}.variants/tone"
-PENDING: Final = ("fmt", "plan", "build", "eval", "optimize")
+PENDING: Final = ("fmt", "plan", "build", "optimize")
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,6 +281,45 @@ def test_fixture_project_is_clean() -> None:
     assert report.diagnostics == ()
     assert report.ok
     assert report.project is not None
+
+
+def test_value_type_hint_requires_dynamic_output(shop: Path) -> None:
+    replace(
+        shop,
+        INFERENCE,
+        '  description: "Обоснование выбора"\n  maxLength: 300\n',
+        '  description: "Обоснование выбора"\n  maxLength: 300\n  value_type: "TriageTicket"\n',
+    )
+
+    assert diagnostics_of(check_project(shop), DiagnosticCode.E_DYNAMIC_VALUE_TYPE) == [
+        (INFERENCE, ("out", 0, "value_type"))
+    ]
+
+
+def test_value_type_hint_must_reference_a_registry_type(shop: Path) -> None:
+    replace(
+        shop,
+        INFERENCE,
+        '  description: "Обоснование выбора"\n  maxLength: 300\n',
+        '  description: "Обоснование выбора"\n  maxLength: 300\n  value_type: "UnknownRecord"\n',
+    )
+
+    assert diagnostics_of(check_project(shop), DiagnosticCode.E_TYPE_UNKNOWN) == [(INFERENCE, ("out", 0, "value_type"))]
+
+
+def test_value_type_hint_requires_record_or_union(shop: Path) -> None:
+    replace(
+        shop,
+        INFERENCE,
+        '- name: "rationale"\n  type: "Text"\n  description: "Обоснование выбора"\n  maxLength: 300\n',
+        '- name: "rationale"\n  type: "Dynamic"\n  description: "Обоснование выбора"\n'
+        '  value_type: "TriageCategory"\n  limits:\n    max_fields: 3\n    max_depth: 1\n'
+        "    max_text_length: 300\n    max_items: 3\n",
+    )
+
+    assert diagnostics_of(check_project(shop), DiagnosticCode.E_DYNAMIC_VALUE_TYPE) == [
+        (INFERENCE, ("out", 0, "value_type"))
+    ]
 
 
 @pytest.mark.parametrize("name", list(MUTATIONS), ids=list(MUTATIONS))
@@ -1917,7 +1956,7 @@ def test_condition_on_enum_value_outside_enum_is_reported(shop: Path) -> None:
 
 
 def test_cli_check_passes_on_clean_project(capsys: pytest.CaptureFixture[str]) -> None:
-    code = main(["check", str(FIXTURE / "triage" / "types")])
+    code = main(["check", "--static", str(FIXTURE / "triage" / "types")])
 
     assert code == 0
     assert "errors: 0, warnings: 0" in capsys.readouterr().out
@@ -1957,10 +1996,7 @@ def test_cli_usage_errors(argv: list[str]) -> None:
 
 @pytest.mark.parametrize("command", PENDING)
 def test_cli_engine_commands_are_not_implemented(shop: Path, command: str, capsys: pytest.CaptureFixture[str]) -> None:
-    extra: Mapping[str, list[str]] = {
-        "eval": ["--eval", "triage"],
-        "optimize": ["--eval", "triage"],
-    }
+    extra: Mapping[str, list[str]] = {"optimize": ["--eval", "triage"]}
 
     code = main([command, str(shop), *extra.get(command, [])])
 
@@ -1994,7 +2030,7 @@ def test_cli_check_regenerates_types_first(shop: Path, capsys: pytest.CaptureFix
     (shop / GENERATED_TYPES).unlink()
 
     assert DiagnosticCode.W_GENERATED_STALE in found(check_project(shop))
-    assert main(["check", str(shop)]) == 0
+    assert main(["check", "--static", str(shop)]) == 0
     assert "errors: 0, warnings: 0" in capsys.readouterr().out
     assert (shop / GENERATED_TYPES).is_file()
 
@@ -2008,9 +2044,11 @@ def test_cli_command_table_is_complete() -> None:
     assert set(COMMANDS) == {
         "new",
         "models",
+        "prompt",
         "check",
         "generate",
         "schema",
+        "secrets",
         "tree",
         "refs",
         "run",
@@ -2018,6 +2056,7 @@ def test_cli_command_table_is_complete() -> None:
         "serve",
         "dev",
         "mcp",
+        "eval",
         *PENDING,
     }
 

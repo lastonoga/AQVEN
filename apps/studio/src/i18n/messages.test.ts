@@ -6,7 +6,23 @@ import { messages } from "./messages"
 
 type LeafMessage = { readonly key: string; readonly message: string }
 
-const NAMESPACES = ["common", "domain", "shell", "chat", "schema", "trace", "dataflow", "callSheet", "nodes", "tests", "testDetail", "review", "setup"]
+const NAMESPACES = [
+  "common",
+  "domain",
+  "shell",
+  "chat",
+  "flow",
+  "datasets",
+  "nodes",
+  "runs",
+  "trace",
+  "callSheet",
+  "review",
+  "tests",
+  "testDetail",
+  "setup",
+  "project",
+]
 
 const ARGUMENT_NAME = /\{\s*(\w+)/g
 const TAG_NAME = /<(\w+)>/g
@@ -51,8 +67,8 @@ describe("messages", () => {
     expect(rendered).toHaveLength(leaves.length)
     expect(errors).toEqual([])
     expect(rendered).not.toContain("")
-    expect(t("domain.check.stop")).toBe("→ stop")
+    expect(t("domain.runStatus.suspended")).toBe("SUSPENDED")
     expect(t("common.units.tokens", { count: 1 })).toBe("1 token")
-    expect(t("domain.matrixSub.scorerThreshold", { threshold: "0.90" })).toBe("scorer · threshold 0.90")
+    expect(t("domain.nodeKind.narrow")).toBe("Narrow")
   })
 })

@@ -31,7 +31,16 @@ from aqven.chat.claude_runtime import ClaudeChatRuntime, ClaudeClientFactory
 from aqven.chat.feed import ChatSignals
 from aqven.chat.sqlite_journal import SqliteChatJournal
 from aqven.chat.testing import ApprovalStep, ScriptStep
-from aqven.ports.chat import ChatEvent, ChatSessionId, ChatSessionOptions, ChatTurnFinished, LoginStatus
+from aqven.ports.chat import (
+    ChatEvent,
+    ChatPermissionMode,
+    ChatSession,
+    ChatSessionId,
+    ChatSessionOptions,
+    ChatTurnFinished,
+    LoginStatus,
+)
+from aqven.spec import FlowId
 
 SDK_SESSION: Final[str] = "0f5b8b52-3c2e-4a41-9a4e-2f9d8f3c7a10"
 MODEL: Final[str] = "claude-haiku-4-5"
@@ -48,6 +57,25 @@ def fixed_clock() -> datetime:
 def counting_ids(prefix: str = "id") -> Callable[[], str]:
     counter = itertools.count(1)
     return lambda: f"{prefix}-{next(counter)}"
+
+
+def chat_session(
+    session_id: str,
+    project_root: Path,
+    flow_id: FlowId | None = None,
+    model: str | None = MODEL,
+    permission_mode: ChatPermissionMode = "default",
+) -> ChatSession:
+    return ChatSession(
+        session_id=ChatSessionId(session_id),
+        backend="claude",
+        project_root=str(project_root),
+        flow_id=flow_id,
+        model=model,
+        permission_mode=permission_mode,
+        created_at=FIXED_NOW,
+        last_seq=0,
+    )
 
 
 def materialize(builders: Iterable[ChatEventBuilder], session_id: str = "session-1") -> list[ChatEvent]:
@@ -244,8 +272,8 @@ class ChatHarness:
     backend: ClaudeAgentBackend
     login: FakeLogin
 
-    def options(self, model: str | None = MODEL) -> ChatSessionOptions:
-        return ChatSessionOptions(project_root=str(self.project_root), mcp_url=MCP_URL, model=model)
+    def options(self, model: str | None = MODEL, flow_id: FlowId | None = None) -> ChatSessionOptions:
+        return ChatSessionOptions(project_root=str(self.project_root), mcp_url=MCP_URL, flow_id=flow_id, model=model)
 
 
 def chat_harness(

@@ -1,0 +1,31 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "human"
+description: "Бренд-редактор выбирает, какие медиа отправить с ответом"
+form: "MediaApproval"
+assignee: "brand_editor"
+timeout_seconds: 86400
+on_timeout:
+  policy: "default"
+  value:
+    use_image: false
+    use_voice: true
+    use_clip: false
+in:
+- name: "text"
+  type: "Text"
+  description: "Текст ответа"
+  maxLength: 1500
+  from: "$polish.out.reply.text"
+- name: "image"
+  type: "Image"
+  description: "Картинка-инструкция"
+  from: "$illustrate.out.image"
+- name: "voice"
+  type: "Audio"
+  description: "Голосовая версия ответа"
+  from: "$voice.out.voice"
+- name: "clip"
+  type: "Video"
+  description: "Короткий ролик по картинке"
+  from: "$clip.out.clip"

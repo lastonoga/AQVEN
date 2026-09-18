@@ -189,7 +189,7 @@ function HeadingRow({ size, title, leading, tags = [], description, trailing, wr
 
 function HeadingBelow({ lines, spec }: { readonly lines: readonly ReactNode[]; readonly spec: HeadingSizeSpec }) {
   return lines.map((line, index) => (
-    <Text key={index} as="div" role={spec.below} tone="neutral" className={belowGap(index, spec.belowGap)}>
+    <Text key={index} as="div" role={spec.below} tone="neutral" className={cn("min-w-0 break-words", belowGap(index, spec.belowGap))}>
       {line}
     </Text>
   ))

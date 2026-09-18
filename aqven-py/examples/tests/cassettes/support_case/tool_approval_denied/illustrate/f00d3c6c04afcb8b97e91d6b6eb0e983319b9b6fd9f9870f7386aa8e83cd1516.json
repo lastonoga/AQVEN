@@ -1,0 +1,84 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-f00d3c6c04afcb8b97e91d6b6eb0e983319b9b6fd9f9870f7386aa8e83cd1516",
+  "request_key": "sha256-b7df592c29cafb338e2779f17d9a1fae53783b762c678b0c131d94775c329245",
+  "model_ref": "openrouter:google/gemini-3.1-flash-lite-image",
+  "site": {
+    "address": {
+      "node_id": "illustrate",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-d4e0202f5fec982f52a001e38faed53dac2115107357b388bc63c66b9f85b8b7"
+          },
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "41321a"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-d4e0202f5fec982f52a001e38faed53dac2115107357b388bc63c66b9f85b8b7"
+          },
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "41321a"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1984,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 1865,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {},
+      "cost": null
+    },
+    "model_name": "scripted-painter",
+    "timestamp": "2026-09-17T17:42:27.498172Z",
+    "kind": "response",
+    "provider_name": null,
+    "provider_url": null,
+    "provider_details": null,
+    "provider_response_id": null,
+    "finish_reason": null,
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

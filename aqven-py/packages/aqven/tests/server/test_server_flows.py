@@ -1,6 +1,9 @@
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings
+
+from aqven.server import ServerOptions, create_app
 
 
 def test_flow_list(server_client: TestClient) -> None:
@@ -66,6 +69,55 @@ def test_node_detail(server_client: TestClient) -> None:
     assert body["bindings"] == [{"slot": "text", "ref": "$input.text", "value": None}]
     assert set(body["out_schema"]["properties"]) == {"text"}
     assert body["spec"]["node"] == "code"
+    assert body["inference_spec"] is None
+    assert body["agent_spec"] is None
+    assert body["agent_runtime"] is None
+
+    reply = server_client.get("/api/flows/intake/nodes/reply").json()
+    assert reply["inference_spec"]["kind"] == "Inference"
+    assert reply["inference_path"].endswith("reply.inference.yaml")
+    assert reply["agent_spec"]["kind"] == "Agent"
+    assert reply["agent_runtime"]["models"] is None
+    assert reply["agent_runtime"]["output"] is None
+    assert reply["agent_runtime"]["instructions"] == "Ты отвечаешь на заметки покупателей одной короткой фразой.\n"
+    assert "file" not in reply["agent_runtime"]
+    assert reply["agent_path"].endswith("writer.yaml")
+    assert reply["display_sources"] == {}
+
+
+def test_lumen_dynamic_output_exposes_expected_value_variants(server_options: ServerOptions) -> None:
+    lumen = Path(__file__).resolve().parents[4] / "examples" / "lumen"
+    app = create_app(lumen, FakeEngine(), MemorySettings(), options=server_options)
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        extract = client.get("/api/flows/support_case/nodes/record__extract").json()
+        record = client.get("/api/flows/support_case/nodes/record").json()
+
+    for detail in (extract, record):
+        shape = detail["value_shapes"]["record"]
+        assert shape["type_id"] == "CaseRecord"
+        assert shape["spec"]["type"] == "union"
+        assert {variant["name"] for variant in shape["spec"]["variants"]} == {"defect", "delivery", "question"}
+        assert "oneOf" in shape["json_schema"]
+    assert extract["inference_spec"]["out"][0]["value_type"] == "CaseRecord"
+    assert record["spec"]["out"][0]["value_type"] == "CaseRecord"
+
+
+def test_node_detail_includes_display_template_source(server_project: Path, server_options: ServerOptions) -> None:
+    folder = server_project / "flows/intake/nodes/reply"
+    inference = folder / "reply.inference.yaml"
+    inference.write_text(
+        inference.read_text(encoding="utf-8") + '\ndisplay:\n  output:\n    template: "reply.output.display.liquid"\n',
+        encoding="utf-8",
+    )
+    (folder / "reply.output.display.liquid").write_text("{{ value.text }}", encoding="utf-8")
+    app = create_app(server_project, FakeEngine(), MemorySettings(), options=server_options)
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        reply = client.get("/api/flows/intake/nodes/reply").json()
+    assert reply["inference_spec"]["display"]["output"]["template"] == "reply.output.display.liquid"
+    assert reply["display_sources"]["output"] == {
+        "path": "flows/intake/nodes/reply/reply.output.display.liquid",
+        "text": "{{ value.text }}",
+    }
 
 
 def test_prompts(server_client: TestClient) -> None:

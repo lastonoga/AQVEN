@@ -24,7 +24,8 @@ REF_PATTERN: Final = (
     r"(\.[a-z][a-z0-9_]{0,62}|\[\*\]|\[[0-9]{1,4}\])*$"
 )
 INSTRUCTIONS_PATTERN: Final = f"^{TEXT_PATH_BODY}$"
-MODEL_PATTERN: Final = r"^(openai|anthropic|google|openrouter|together):[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$"
+PROVIDER_NAME_PATTERN: Final = r"^[a-z][a-z0-9_-]{0,62}$"
+MODEL_PATTERN: Final = r"^[a-z][a-z0-9_-]{0,62}:[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$"
 BLOB_ID_PATTERN: Final = r"^sha256-[0-9a-f]{64}$"
 
 FlowId = NewType("FlowId", str)
@@ -38,6 +39,7 @@ McpServerId = NewType("McpServerId", str)
 DatasetId = NewType("DatasetId", str)
 EvalId = NewType("EvalId", str)
 SecretRef = NewType("SecretRef", str)
+ProviderName = NewType("ProviderName", str)
 CodeRef = NewType("CodeRef", str)
 BlobId = NewType("BlobId", str)
 TimeZone = NewType("TimeZone", str)
@@ -105,14 +107,6 @@ class ModelFamily(StrEnum):
     META = "meta"
     MISTRAL = "mistral"
     OTHER = "other"
-
-
-class ProviderName(StrEnum):
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GOOGLE = "google"
-    OPENROUTER = "openrouter"
-    TOGETHER = "together"
 
 
 class OnFail(StrEnum):

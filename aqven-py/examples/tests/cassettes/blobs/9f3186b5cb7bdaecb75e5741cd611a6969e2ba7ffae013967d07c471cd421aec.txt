@@ -1,0 +1,21 @@
+We need to respond in Russian, friendly, short, no exclamation marks, no mention of marketplace site or contacts outside. We must mention subscription Lumen Plus only if benefits are in fragments. The fragments only mention "Мерцание ленты Flow" and "Нагрев контроллера". No subscription benefits. So we don't mention subscription.
+
+We need to provide steps in the Lumen app to troubleshoot, then reset and re-pair if described in fragments. But fragments don't mention app steps. So we cannot provide steps. We should say that the knowledge base doesn't have steps. But we can give general steps? We must not guess. So we must say that the fragments do not contain steps. So we cannot provide them. We can mention that the credit has been issued: €15 (1500 eur). Provide citation for that? The solution says credit of €15. We need to mention the amount. Provide citations: maybe from the solution? But we don't have a KB chunk for that. The only KB chunks are kb_strip0flck and kb_ctrlheat01. We must cite them for any statements about the product. So we can cite kb_strip0flck for the flickering and kb_ctrlheat01 for heating. We also need to mention that the credit has been issued. That is from the solution. But we don't have a KB chunk for that. The instructions: "If the fragments do not answer the question, say so." But we do have a solution: "Issue store credit of €15 for defective light strip within warranty period, per Lumen Plus policy." So we can mention that. But we need to cite? There's no chunk. But maybe we can still provide answer. The rule: "Each statement about policy, terms, or characteristics must be supported by a citation." But we have no chunk for credit. So we cannot provide that statement? But the solution says we should issue credit. The instruction: "Решение: покупателю начислен кредит магазина. Сумму называй только ту, что указана в решении." So we must mention that. But we can't cite a chunk. Maybe we can still mention it but no citation. The instruction says: "Если фрагменты не отвечают на вопрос, прямо скажи, что в базе знаний ответа нет, и не заполняй пробел догадками." But we have a solution. So we can answer. But we need to cite for the product issues. So we will cite kb_strip0flck for flickering, kb_ctrlheat01 for heating. For the credit, we might not need citation. The instruction: "Each statement about policy, terms, or characteristics must be supported by a citation." We don't have a KB chunk for credit. But maybe we can still mention it. The policy is not in KB. But maybe it's okay. The instruction might allow not citing if no chunk. But it's ambiguous. I think we can mention credit without citation.
+
+We need to keep reply <=1500 chars. Provide citations array up to 6 items. We'll provide two citations.
+
+We need to not mention site or contacts. No exclamation marks. No personal data. Use "вы".
+
+Let's craft:
+
+"Уважаемый клиент, ..."
+
+We should apologize once. We can say "Приносим извинения". That's one apology.
+
+We need to mention steps: we can't provide because not in KB. So we say "В базе знаний нет подробных инструкций по настройке приложения Lumen, но вы можете проверить подключение согласно руководству пользователя." But we can't mention that. We can say "В базе знаний нет информации о шагах в приложении". That might be acceptable.
+
+We need to mention that credit of €15 has been issued. We need to mention amount in minimal units: 1500 eur. So we say "Кредит в размере 1500 евро был начислен на ваш аккаунт."
+
+We need to mention that the flickering and heating are covered by warranty. Provide citations.
+
+Let's produce final.

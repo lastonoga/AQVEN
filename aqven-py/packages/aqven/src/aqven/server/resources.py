@@ -3,11 +3,22 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, Field, JsonValue
 
 from aqven.diagnostics import Diagnostic
+from aqven.ir import AgentModel, CompiledAgentOutput
 from aqven.ir.nodes import CompiledNode
 from aqven.ir.plan import CompiledProject
 from aqven.runtime.address import ResourceModel, RunId
 from aqven.runtime.vocabulary import RunStatus
-from aqven.spec import DynamicLimits, EnumValue, FlowSpec, NodeKind, NodeSpec, TypeSpec
+from aqven.spec import (
+    AgentSpec,
+    DynamicLimits,
+    EnumValue,
+    FlowSpec,
+    InferenceSpec,
+    NodeKind,
+    NodeSpec,
+    RunContextKey,
+    TypeSpec,
+)
 
 type CompileStatus = Literal["ok", "not_runnable", "invalid", "unreadable"]
 type FileKind = Literal[
@@ -102,6 +113,7 @@ class FlowSummary(ResourceModel):
     node_count: Count
     input_type: str | None
     output_type: str | None
+    context: tuple[RunContextKey, ...]
     content_hash: str | None
     last_run: RunBrief | None
 
@@ -138,7 +150,7 @@ class FlowSchemas(ResourceModel):
     flow_id: str
     input: JsonValue
     output: JsonValue
-    context: tuple[str, ...]
+    context: tuple[RunContextKey, ...]
     nodes: dict[str, NodeSchemas]
 
 
@@ -183,6 +195,23 @@ class DynamicSlot(ResourceModel):
     limits: DynamicLimits | None
 
 
+class NodeDisplaySource(ResourceModel):
+    path: str
+    text: str
+
+
+class NodeAgentRuntime(ResourceModel):
+    models: tuple[AgentModel, ...] | None
+    output: CompiledAgentOutput | None
+    instructions: str | None
+
+
+class NodeValueShape(ResourceModel):
+    type_id: str
+    spec: TypeSpec
+    json_schema: JsonValue
+
+
 class NodeDetail(NodeSummary):
     spec: NodeSpec
     ir_node: CompiledNode | None
@@ -193,7 +222,15 @@ class NodeDetail(NodeSummary):
     prompt: NodePromptRef | None
     code: NodeCode | None
     dynamic_slots: tuple[DynamicSlot, ...]
+    value_shapes: dict[str, NodeValueShape] = Field(default_factory=dict[str, NodeValueShape])
     problems: tuple[Diagnostic, ...]
+    inference_spec: InferenceSpec | None = None
+    inference_path: str | None = None
+    agent_spec: AgentSpec | None = None
+    agent_runtime: NodeAgentRuntime | None = None
+    agent_path: str | None = None
+    display_sources: dict[str, NodeDisplaySource] = Field(default_factory=dict[str, NodeDisplaySource])
+    allowed_set_descriptions: dict[str, str] = Field(default_factory=dict[str, str])
 
 
 class TypeSummary(ResourceModel):

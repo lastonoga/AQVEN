@@ -10,6 +10,7 @@ from aqven.runtime import (
     CassetteMode,
     McpToolStub,
     ModelProfile,
+    NodeOutputOverride,
     ProviderFault,
     ProviderFaultKind,
     RunContext,
@@ -33,6 +34,7 @@ def offline_options(
     blobs: BlobStore | None = None,
     faults: Sequence[ProviderFault] = (),
     models: ModelProfile | None = None,
+    outputs: Sequence[NodeOutputOverride] = (),
 ) -> RunOptions:
     script = ScriptedHuman() if human is None else human
     return RunOptions(
@@ -45,6 +47,7 @@ def offline_options(
         blobs=blobs,
         faults=tuple(faults),
         models=models,
+        outputs=tuple(outputs),
     )
 
 

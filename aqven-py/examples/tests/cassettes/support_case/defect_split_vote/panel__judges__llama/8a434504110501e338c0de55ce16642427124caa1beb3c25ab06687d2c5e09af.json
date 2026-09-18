@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-8a434504110501e338c0de55ce16642427124caa1beb3c25ab06687d2c5e09af",
+  "request_key": "sha256-671b0e2853bdaceee6bd5ece81cf602d3bf3afc08a95da79d181170fb0812ed2",
+  "model_ref": "openrouter:meta-llama/llama-3.1-8b-instruct",
+  "site": {
+    "address": {
+      "node_id": "panel__judges__llama",
+      "branch_key": "llama",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "t3zrd48mk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "t3zrd48mk",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"best_index\":0,\"rationale\":\"По критерию \\\"опора на фрагменты базы знаний\\\" лучший кандидат - первый, поскольку он ссылается на два фрагмента базы знаний, а второй кандидат ссылается только на один. По критерию \\\"польза для покупателя с учётом его обращения\\\" лучший кандидат - первый, поскольку он предлагает конкретные действия для решения проблемы, а второй кандидат просто предоставляет кредит и не предлагает никаких действий. По критерию \\\"тон поддержки\\\" лучший кандидат - первый, поскольку он использует более формальный и профессиональный тон, а второй кандидат использует более индивидуальный и неформальный тон.\",\"scores\":[{\"criterion\":\"grounded\",\"score\":5},{\"criterion\":\"helpful\",\"score\":5},{\"criterion\":\"tone\",\"score\":5}]}",
+        "tool_call_id": "t3zrd48mk",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"best_index\":0,\"rationale\":\"По критерию \\\"опора на фрагменты базы знаний\\\" лучший кандидат - первый, поскольку он ссылается на два фрагмента базы знаний, а второй кандидат ссылается только на один. По критерию \\\"польза для покупателя с учётом его обращения\\\" лучший кандидат - первый, поскольку он предлагает конкретные действия для решения проблемы, а второй кандидат просто предоставляет кредит и не предлагает никаких действий. По критерию \\\"тон поддержки\\\" лучший кандидат - первый, поскольку он использует более формальный и профессиональный тон, а второй кандидат использует более индивидуальный и неформальный тон.\",\"scores\":[{\"criterion\":\"grounded\",\"score\":5},{\"criterion\":\"helpful\",\"score\":5},{\"criterion\":\"tone\",\"score\":5}]}",
+        "tool_call_id": "t3zrd48mk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"best_index\":0,\"rationale\":\"По критерию \\\"опора на фрагменты базы знаний\\\" лучший кандидат - первый, поскольку он ссылается на два фрагмента базы знаний, а второй кандидат ссылается только на один. По критерию \\\"польза для покупателя с учётом его обращения\\\" лучший кандидат - первый, поскольку он предлагает конкретные действия для решения проблемы, а второй кандидат просто предоставляет кредит и не предлагает никаких действий. По критерию \\\"тон поддержки\\\" лучший кандидат - первый, поскольку он использует более формальный и профессиональный тон, а второй кандидат использует более индивидуальный и неформальный тон.\",\"scores\":[{\"criterion\":\"grounded\",\"score\":5},{\"criterion\":\"helpful\",\"score\":5},{\"criterion\":\"tone\",\"score\":5}]}",
+        "tool_call_id": "t3zrd48mk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1559,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 227,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "meta-llama/llama-3.1-8b-instruct",
+    "timestamp": "2026-09-17T17:27:55.637068Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:27:55Z",
+      "downstream_provider": "Groq",
+      "finish_reason": "tool_calls",
+      "cost": 9.611e-05,
+      "upstream_inference_cost": 9.611e-05,
+      "upstream_inference_prompt_cost": 7.795e-05,
+      "upstream_inference_completions_cost": 1.816e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789666075-8vsLyRLSqYJoqdtHIDI7",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -8,6 +8,13 @@ from aqven.runtime.vocabulary import OnTimeoutAction, ResumeOutcome, RunStatus, 
 from aqven.spec import TypeId
 
 
+class OpenWaitFilter(RequestModel):
+    assignee: str | None = None
+    deadline_before: AwareDatetime | None = None
+    overdue_at: AwareDatetime | None = None
+    upcoming_at: AwareDatetime | None = None
+
+
 class HumanWait(ResourceModel):
     address: ExecutionAddress
     wait_kind: WaitKind

@@ -382,6 +382,7 @@ CANONICAL_NODE_KEYS: dict[type[BaseModel], tuple[str, ...]] = {
         "allowed_sets",
         "examples",
         "checks",
+        "display",
     ),
     CheckSpec: ("use", "run", "inference", "agent", "with", "on_fail", "threshold"),
     PolicyRef: ("use", "run", "with"),
@@ -638,12 +639,12 @@ def test_agent_carries_model_configuration() -> None:
     ("body", "expected"),
     [
         ({"model": "gpt-5.4-mini"}, ("string_pattern_mismatch", ("model",))),
-        ({"model": "google-gla:gemini-3.8-flash"}, ("string_pattern_mismatch", ("model",))),
+        ({"model": "Google:gemini-3.8-flash"}, ("string_pattern_mismatch", ("model",))),
         ({"model": "openai:gpt", "instructions": "Отвечай вежливо"}, ("string_pattern_mismatch", ("instructions",))),
         ({"model": "openai:gpt", "output": {"mode": "text"}}, ("enum", ("output", "mode"))),
         ({"model": "openai:gpt", "output": {"retries": 9}}, ("less_than_equal", ("output", "retries"))),
     ],
-    ids=["no_provider", "legacy_provider", "inline_instructions", "text_mode", "retries"],
+    ids=["no_provider", "upper_case_provider", "inline_instructions", "text_mode", "retries"],
 )
 def test_agent_rejects_bad_configuration(
     body: dict[str, JsonValue], expected: tuple[str, tuple[str | int, ...]]
@@ -708,7 +709,7 @@ def test_mcp_server_and_project_documents() -> None:
         )
     )
     assert isinstance(project, ProjectSpec)
-    assert project.providers[0].id is ProviderName.OPENROUTER
+    assert project.providers[0].id == ProviderName("openrouter")
     assert project.limits is None
     errors = validation_errors(
         SPEC_MODEL_BY_KIND[SpecKind.PROJECT],
@@ -781,9 +782,10 @@ def test_other_documents_validate() -> None:
 
 
 def test_model_strings_parse_into_provider_and_name() -> None:
-    assert parse_model("openrouter:qwen/qwen3.8-max-0902") == ModelRef(ProviderName.OPENROUTER, "qwen/qwen3.8-max-0902")
-    assert parse_model("together:meta-llama/Llama-3.3-70B-Instruct-Turbo").provider is ProviderName.TOGETHER
-    for bad in ("gpt-5", "google-gla:gemini", "mistral:large", "openai:"):
+    openrouter = ProviderName("openrouter")
+    assert parse_model("openrouter:qwen/qwen3.8-max-0902") == ModelRef(openrouter, "qwen/qwen3.8-max-0902")
+    assert parse_model("together:meta-llama/Llama-3.3-70B-Instruct-Turbo").provider == ProviderName("together")
+    for bad in ("gpt-5", "Google:gemini", "openai:", "acme provider:model"):
         with pytest.raises(ModelSyntaxError):
             parse_model(bad)
 
@@ -1148,6 +1150,10 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_GENERATED_STALE,
         DiagnosticCode.W_OUTPUT_MODE_RESOLVED,
         DiagnosticCode.W_TYPES_SHADOWS_STDLIB,
+        DiagnosticCode.W_SIM_NODE_UNREACHED,
+        DiagnosticCode.W_PROMPT_VALUE_UNREADABLE,
+        DiagnosticCode.W_TOOL_ARG_UNREACHABLE,
+        DiagnosticCode.W_CONTEXT_KEY_UNUSED,
     }
     assert all(code.value.startswith("W_") == (code in warnings) for code in DiagnosticCode)
     unbounded = diagnostic(
@@ -1189,3 +1195,16 @@ def test_sort_diagnostics_orders_by_file_line_code() -> None:
     ]
     with pytest.raises(ValidationError):
         Diagnostic.model_validate({"code": "E_NOPE", "severity": "error", "file": "a", "path": [], "message": "m"})
+
+
+def test_openrouter_profiles_match_the_openrouter_models_api() -> None:
+    gemini = MODEL_PROFILES["openrouter:google/gemini-2.5-flash-lite"]
+    painter = MODEL_PROFILES["openrouter:google/gemini-3.1-flash-lite-image"]
+    fallback = MODEL_PROFILES["openrouter:openai/gpt-5-image-mini"]
+
+    assert (gemini.input, gemini.output, gemini.strict) == (frozenset(Modality), frozenset({Modality.TEXT}), True)
+    assert painter.input == painter.output == frozenset({Modality.TEXT, Modality.IMAGE})
+    assert not painter.strict
+    assert Modality.DOCUMENT in fallback.input
+    assert fallback.output == frozenset({Modality.TEXT, Modality.IMAGE})
+    assert fallback.strict

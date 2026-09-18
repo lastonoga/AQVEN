@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from conftest import SERVER_BASE, SERVER_TOKEN
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from server_fakes import FakeEngine, MemorySettings
+from server_fakes import SERVER_BASE, SERVER_TOKEN, FakeEngine, MemorySettings
 
 from aqven.app.access import access_cookie_name
 from aqven.server import ServerOptions, create_app

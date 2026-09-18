@@ -2,6 +2,7 @@ from collections.abc import Iterable, Iterator
 
 from aqven.check.bindings import flow_input_slots
 from aqven.check.context import CheckContext
+from aqven.check.context_keys import bound_keys
 from aqven.check.graph import NodeEntry
 from aqven.check.nodes import typed_entries
 from aqven.check.provenance import ProvenanceTracer, entry_families, llm_entries, primary_family
@@ -18,11 +19,33 @@ from aqven.spec import (
     FlowSpec,
     LlmNodeSpec,
     ModelFamily,
+    RunContextKey,
 )
 
 
 def check_flows(context: CheckContext) -> Iterable[Diagnostic]:
-    return (*_calls(context), *_recursion(context), *_contracts(context))
+    return (*_calls(context), *_recursion(context), *_contracts(context), *_context_keys(context))
+
+
+def _context_keys(context: CheckContext) -> Iterator[Diagnostic]:
+    bound = bound_keys(context.graph)
+    for flow_id, flow in context.project.flows.items():
+        source = flow.source
+        if source is None:
+            continue
+        yield from _unused_keys(flow_id, source.path, source.spec, bound.get(flow_id, frozenset()))
+
+
+def _unused_keys(flow_id: FlowId, file: str, spec: FlowSpec, bound: frozenset[RunContextKey]) -> Iterator[Diagnostic]:
+    declared = tuple(spec.context or ())
+    for index, key in enumerate(declared):
+        if key in bound:
+            continue
+        message = (
+            f"flow {flow_id} declares run context key {key}, which no binding of its nodes reads; "
+            f"the compiler infers the keys from bindings, so remove it or bind it with $run.context.{key}"
+        )
+        yield diagnostic(DiagnosticCode.W_CONTEXT_KEY_UNUSED, file, ("context", index), message)
 
 
 def _calls(context: CheckContext) -> Iterator[Diagnostic]:

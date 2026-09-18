@@ -9,16 +9,16 @@ from pydantic_ai.messages import AudioUrl, DocumentUrl, ImageUrl, UserContent, V
 from pydantic_ai.models import Model
 from pydantic_ai.models.fallback import FallbackModel
 
+from aqven.codegen import GENERATED_MODULE
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import SegmentWork, ToolCallWork
 from aqven.engine.llm.segments import PendingToolCall, SegmentResult, SegmentState, ToolCallResult
 from aqven.ir import AgentModel, CompiledAgent, CompiledInference
 from aqven.ports.execution import ExecutionScope
-from aqven.ports.models import PROVIDER_KEY_ENV, ModelFactory
+from aqven.ports.models import ModelFactory, provider_env_var
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
 from aqven.spec import SECRET_REF_PATTERN, MediaValue, Modality, SecretRef
 
-GENERATED_TYPES_MODULE: Final = "types"
 INPUT_SUFFIX: Final = "In"
 OUTPUT_SUFFIX: Final = "Out"
 ENV_SECRET: Final = re.compile(SECRET_REF_PATTERN)
@@ -53,7 +53,7 @@ class GeneratedInferenceModels:
         return self._model(inference, OUTPUT_SUFFIX)
 
     def _model(self, inference: CompiledInference, suffix: str) -> type[BaseModel]:
-        ref = f"{self.package}.{GENERATED_TYPES_MODULE}:{pascal(inference.inference_id)}{suffix}"
+        ref = f"{self.package}.{GENERATED_MODULE}:{pascal(inference.inference_id)}{suffix}"
         found = pkgutil.resolve_name(ref)
         if isinstance(found, type) and issubclass(found, BaseModel):
             return found
@@ -92,12 +92,11 @@ class FactoryModelSource:
         return FallbackModel(built[0], *built[1:])
 
     async def _build(self, choice: AgentModel) -> Model:
-        env_var = PROVIDER_KEY_ENV.get(choice.provider)
+        env_var = provider_env_var(choice.provider)
         resolved = await resolve_secret(self.settings, provider_key_setting(choice.provider), env_var, self.environ)
         if resolved is None:
-            message = (
-                f"no API key for provider {choice.provider.value}: set {env_var} in the project .env or the environment"
-            )
+            named = env_var or f"the variable of the api_key ref of provider {choice.provider}"
+            message = f"no API key for provider {choice.provider}: set {named} in the project .env or the environment"
             raise LlmNodeError(LlmFailureCode.PROVIDER_KEY_MISSING, message)
         return self.factory.build(choice.model, settings=None, api_key=resolved.value)
 

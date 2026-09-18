@@ -2,11 +2,14 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Final
+from typing import Final, Literal
 
 from aqven.engine.addressing import address_key
 from aqven.runtime.address import ExecutionAddress
 from aqven.runtime.events import (
+    InferenceChecksCaptured,
+    InferenceInputCaptured,
+    InferencePromptCaptured,
     NodeAttemptFailed,
     NodeFinished,
     NodeResumed,
@@ -16,7 +19,7 @@ from aqven.runtime.events import (
     RunFinished,
     RunStartedEvent,
 )
-from aqven.runtime.executions import Attempt, NodeExecution
+from aqven.runtime.executions import Attempt, CheckOutcome, NodeExecution, PromptTrace, RunError
 from aqven.runtime.runs import HumanAnswerStatus, NodeCounts
 from aqven.runtime.values import ValueRef
 from aqven.runtime.vocabulary import ExecutionStatus
@@ -42,6 +45,13 @@ class ExecutionFold:
     started_at: datetime | None = None
     finished_at: datetime | None = None
     latency_ms: int | None = None
+    agent: str | None = None
+    inference: str | None = None
+    input_ref: ValueRef | None = None
+    input_stage: Literal["bound", "normalized"] | None = None
+    variants: dict[str, str] = field(default_factory=dict[str, str])
+    prompt: PromptTrace | None = None
+    checks: list[CheckOutcome] = field(default_factory=list[CheckOutcome])
     model: str | None = None
     cost_usd: Decimal = Decimal(0)
     tokens_in: int = 0
@@ -49,6 +59,7 @@ class ExecutionFold:
     cache_hit: bool = False
     degraded: bool = False
     output_ref: ValueRef | None = None
+    error: RunError | None = None
     attempts: list[Attempt] = field(default_factory=list[Attempt])
 
     def view(self) -> NodeExecution:
@@ -60,8 +71,8 @@ class ExecutionFold:
             started_at=self.started_at,
             finished_at=self.finished_at,
             latency_ms=self.latency_ms,
-            agent=None,
-            inference=None,
+            agent=self.agent,
+            inference=self.inference,
             model=self.model,
             profile=None,
             cost_usd=self.cost_usd,
@@ -70,7 +81,7 @@ class ExecutionFold:
             cache_hit=self.cache_hit,
             degraded=self.degraded,
             summary=None,
-            input_ref=None,
+            input_ref=self.input_ref,
             output_ref=self.output_ref,
             trace_id=None,
             span_id=None,
@@ -94,6 +105,12 @@ class RunFold:
                 self.finished = event
             case NodeStarted():
                 self._started(event)
+            case InferenceInputCaptured():
+                self._input_captured(event)
+            case InferencePromptCaptured():
+                self._prompt_captured(event)
+            case InferenceChecksCaptured():
+                self._checks_captured(event)
             case NodeFinished():
                 self._finished(event)
             case NodeSuspended():
@@ -160,6 +177,27 @@ class RunFold:
         fold.cache_hit = event.cache_hit
         fold.degraded = event.degraded
         fold.output_ref = event.output_ref
+        fold.error = event.error
+
+    def _input_captured(self, event: InferenceInputCaptured) -> None:
+        fold = self.executions.get(address_key(event.address))
+        if fold is None or (event.stage == "bound" and fold.input_stage == "normalized"):
+            return
+        fold.agent = event.agent
+        fold.inference = event.inference
+        fold.input_ref = event.input_ref
+        fold.input_stage = event.stage
+        fold.variants = dict(event.variants)
+
+    def _prompt_captured(self, event: InferencePromptCaptured) -> None:
+        fold = self.executions.get(address_key(event.address))
+        if fold is not None:
+            fold.prompt = event.prompt
+
+    def _checks_captured(self, event: InferenceChecksCaptured) -> None:
+        fold = self.executions.get(address_key(event.address))
+        if fold is not None:
+            fold.checks.extend(event.checks)
 
     def _set_status(self, address: ExecutionAddress, status: ExecutionStatus) -> None:
         fold = self.executions.get(address_key(address))

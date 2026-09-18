@@ -8,7 +8,7 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "dev": "pnpm --filter @aqven/studio dev",
+    "dev": "node scripts/dev-lumen.mjs",
     "build": "pnpm --filter @aqven/studio build",
     "test": "pnpm --filter @aqven/studio test",
     "lint": "pnpm --filter @aqven/studio lint",

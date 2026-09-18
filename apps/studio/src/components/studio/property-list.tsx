@@ -15,11 +15,11 @@ function SplitRows({ rows }: PropertyRowsProps) {
   return (
     <dl className="divide-y divide-border">
       {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2.5 px-2.75 py-2.25">
-          <Text as="dt" role="hint" tone="neutral" className="wrap-anywhere">
+        <div key={index} className="grid grid-cols-[minmax(max-content,auto)_minmax(0,1fr)] gap-2.5 px-2.75 py-2.25">
+          <Text as="dt" role="hint" tone="neutral" className="whitespace-nowrap">
             <Rich value={row.key} />
           </Text>
-          <Text as="dd" role="cell" tone={row.tone ?? "default"} className="text-right wrap-anywhere">
+          <Text as="dd" role="cell" tone={row.tone ?? "default"} className="min-w-0 text-right wrap-anywhere">
             <Rich value={row.value} />
           </Text>
         </div>
@@ -30,13 +30,13 @@ function SplitRows({ rows }: PropertyRowsProps) {
 
 function GridRows({ rows }: PropertyRowsProps) {
   return (
-    <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-px bg-border">
+    <dl className="grid grid-cols-[minmax(0,120px)_minmax(0,1fr)] gap-px bg-border">
       {rows.map((row, index) => (
         <Fragment key={index}>
-          <Text as="dt" role="hint" weight="medium" tone="neutral" className="bg-muted px-2.5 py-2">
+          <Text as="dt" role="hint" weight="medium" tone="neutral" className="bg-muted px-2.5 py-2 break-words">
             <Rich value={row.key} />
           </Text>
-          <Text as="dd" role="body" tone={row.tone ?? "default"} className="min-w-0 bg-card px-2.5 py-2">
+          <Text as="dd" role="body" tone={row.tone ?? "default"} className="min-w-0 bg-card px-2.5 py-2 wrap-anywhere">
             <Rich value={row.value} />
           </Text>
         </Fragment>

@@ -81,6 +81,7 @@ class SegmentResult(ResourceModel):
 class SegmentState(ResourceModel):
     segment: Annotated[int, Field(ge=1)] = 1
     attempt_offset: Annotated[int, Field(ge=0)] = 0
+    approval_round: Annotated[int, Field(ge=0)] = 0
     messages_json: str | None = None
     approvals: dict[str, ToolApprovalDecision] = Field(default_factory=dict[str, ToolApprovalDecision])
     call_results: dict[str, ToolCallResult] = Field(default_factory=dict[str, ToolCallResult])

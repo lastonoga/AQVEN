@@ -11,6 +11,7 @@ from aqven.models.callsite import CallSite
 type UsageSource = Literal["live", "replay"]
 
 PROVIDER_COST_KEY: Final = "cost"
+CASSETTE_METADATA_KEY: Final = "aqven.cassette"
 ZERO_COST: Final = Decimal(0)
 
 
@@ -72,6 +73,19 @@ def provider_cost(response: ModelResponse) -> Decimal | None:
         return Decimal(str(reported))
     except InvalidOperation:
         return None
+
+
+def replayed(response: ModelResponse) -> bool:
+    return bool((response.metadata or {}).get(CASSETTE_METADATA_KEY))
+
+
+def response_cost_usd(response: ModelResponse) -> Decimal:
+    if replayed(response):
+        return ZERO_COST
+    reported = provider_cost(response)
+    if reported is not None:
+        return reported
+    return estimated_cost(response) or ZERO_COST
 
 
 def live_cost(site: CallSite, model_ref: str, response: ModelResponse) -> RequestCost:

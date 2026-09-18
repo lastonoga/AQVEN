@@ -1,0 +1,4 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Grades an answer against the question"
+model: "openai:gpt-5.6-terra"

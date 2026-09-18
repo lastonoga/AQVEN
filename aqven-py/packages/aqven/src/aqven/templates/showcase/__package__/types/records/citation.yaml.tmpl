@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Цитата из фрагмента базы знаний"
+fields:
+- name: "chunk_id"
+  type: "KbChunkId"
+  description: "Фрагмент, из которого взята цитата"
+- name: "quote"
+  type: "Text"
+  description: "Дословная цитата из текста фрагмента"
+  maxLength: 300

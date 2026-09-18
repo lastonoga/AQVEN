@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Генерация картинки-инструкции с фолбэком на модель другого провайдера"
+model: "openrouter:google/gemini-3.1-flash-lite-image"
+fallback_models:
+- "openrouter:openai/gpt-5-image-mini"
+output:
+  mode: "prompted"
+  strict: false

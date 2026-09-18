@@ -118,7 +118,9 @@ class RunTools:
                 description=(
                     "Starts a flow run from the working copy and returns run_id at once, without waiting for the end. "
                     "Pass exactly one of input and dataset_item_id; human_answers are scripted answers for human "
-                    "nodes. Then call run_get and run_events."
+                    "nodes; context carries the run context keys the flow reads through $run.context.* and "
+                    "flow_get lists them, a missing key is CONTEXT_MISSING with the key in problems[]. "
+                    "Then call run_get and run_events."
                 ),
                 input_model=RunStartRequest,
                 output_model=RunStarted,
@@ -138,8 +140,10 @@ class RunTools:
             Operation(
                 name="run_list",
                 description=(
-                    "Page of runs filtered by flow_id, status, mode, assignee; for what is waiting for me use "
-                    "status=suspended. Cursor: next_cursor."
+                    "Page of runs filtered by flow_id, status, mode, assignee, parent_run_id and the time window "
+                    "since and until; for what is waiting for a human use status=suspended, and for the inbox add "
+                    "assignee=me (the local user), overdue=true, deadline_before and sort=deadline_at. "
+                    "Cursor: next_cursor."
                 ),
                 input_model=RunListQuery,
                 output_model=RUN_SUMMARY_PAGE,

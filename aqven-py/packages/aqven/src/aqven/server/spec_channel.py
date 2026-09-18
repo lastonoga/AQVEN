@@ -1,6 +1,6 @@
 import asyncio
 from collections import deque
-from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator, Mapping
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from importlib import import_module
@@ -10,9 +10,11 @@ from typing import Annotated, Final, Literal, Protocol, cast
 from pydantic import AwareDatetime, Field, JsonValue
 from watchfiles import Change, DefaultFilter
 
-from aqven.loader import LoadedFlow
+from aqven.diagnostics import Diagnostic
+from aqven.loader import LoadedFlow, within
 from aqven.runtime.address import ClientOpId, ResourceModel
 from aqven.server.resources import CompileStatus, ProblemCounts
+from aqven.server.simulation import SimulationRun, SubprocessSimulation
 from aqven.server.views.common import diagnostics_within, problem_counts
 from aqven.server.views.flows import compile_status
 from aqven.server.workspace import EMPTY_SNAPSHOT, ProjectWorkspace, TreeSnapshot, WorkspaceState, utc_now
@@ -111,16 +113,17 @@ def _change_kind(before: str | None, after: str | None) -> ChangeKind:
     return "deleted" if after is None else "modified"
 
 
-def flow_health(state: WorkspaceState) -> Mapping[str, FlowHealth]:
+def flow_health(state: WorkspaceState, simulated: Sequence[Diagnostic] = ()) -> Mapping[str, FlowHealth]:
     project = state.report.project
     if project is None:
         return {}
-    return {flow_id: health_of(state, flow) for flow_id, flow in project.flows.items()}
+    return {flow_id: health_of(state, flow, simulated) for flow_id, flow in project.flows.items()}
 
 
-def health_of(state: WorkspaceState, flow: LoadedFlow) -> FlowHealth:
-    problems = diagnostics_within(state, flow.folder)
-    return FlowHealth(compile_status(state, flow, problems), problem_counts(problems))
+def health_of(state: WorkspaceState, flow: LoadedFlow, simulated: Sequence[Diagnostic] = ()) -> FlowHealth:
+    static = diagnostics_within(state, flow.folder)
+    problems = (*static, *(item for item in simulated if within(item.file, flow.folder)))
+    return FlowHealth(compile_status(state, flow, static), problem_counts(problems))
 
 
 def change_summary(changes: tuple[FileChange, ...]) -> str:
@@ -129,14 +132,39 @@ def change_summary(changes: tuple[FileChange, ...]) -> str:
 
 
 @dataclass(slots=True)
+class SimulationFeed:
+    run: SimulationRun
+    task: asyncio.Task[None] | None = None
+
+    def schedule(self, hub: SpecEventHub, tree_hash: str) -> None:
+        self.cancel()
+        self.task = asyncio.create_task(self._publish(hub, tree_hash))
+
+    def cancel(self) -> None:
+        task = self.task
+        self.task = None
+        if task is not None and not task.done():
+            task.cancel()
+
+    async def _publish(self, hub: SpecEventHub, tree_hash: str) -> None:
+        try:
+            diagnostics = await self.run()
+        except Exception:
+            return
+        await hub.apply_simulation(tree_hash, diagnostics)
+
+
+@dataclass(slots=True)
 class SpecEventHub:
     workspace: ProjectWorkspace
     window: int = DEFAULT_WINDOW
     clock: Callable[[], datetime] = utc_now
+    simulation: SimulationFeed | None = None
     seq: int = 0
     events: deque[SpecEvent] = field(default_factory=deque[SpecEvent])
     snapshot: TreeSnapshot = EMPTY_SNAPSHOT
     health: Mapping[str, FlowHealth] = field(default_factory=dict[str, FlowHealth])
+    simulated: tuple[Diagnostic, ...] = ()
     closed: bool = False
     primed: bool = False
     _changed: asyncio.Condition | None = None
@@ -146,6 +174,7 @@ class SpecEventHub:
         self.snapshot = state.snapshot
         self.health = flow_health(state)
         self.primed = True
+        self._simulate(state.snapshot.tree_hash)
 
     async def refresh(self) -> tuple[SpecEvent, ...]:
         if not self.primed:
@@ -155,15 +184,35 @@ class SpecEventHub:
         changes = file_changes(self.snapshot, state.snapshot)
         if not changes:
             return ()
+        self.simulated = ()
         health = flow_health(state)
         builders = tuple(self._builders(state, changes, health))
         self.snapshot = state.snapshot
         self.health = health
+        published = await self._publish(builders)
+        self._simulate(state.snapshot.tree_hash)
+        return published
+
+    async def apply_simulation(self, tree_hash: str, diagnostics: Sequence[Diagnostic]) -> tuple[SpecEvent, ...]:
+        if tree_hash != self.snapshot.tree_hash:
+            return ()
+        self.simulated = tuple(diagnostics)
+        state = await self.workspace.state()
+        health = flow_health(state, self.simulated)
+        changed = tuple(flow_id for flow_id, current in sorted(health.items()) if self.health.get(flow_id) != current)
+        self.health = health
+        builders = tuple(_diagnostics_builder(self.clock, tree_hash, flow_id, health[flow_id]) for flow_id in changed)
         return await self._publish(builders)
 
     async def close(self) -> None:
         self.closed = True
+        if self.simulation is not None:
+            self.simulation.cancel()
         await self._notify()
+
+    def _simulate(self, tree_hash: str) -> None:
+        if self.simulation is not None:
+            self.simulation.schedule(self, tree_hash)
 
     async def follow(self, after_seq: int) -> AsyncIterator[SpecEvent]:
         cursor = after_seq
@@ -264,8 +313,10 @@ class ProjectChangeFilter(DefaultFilter):
 
 
 async def watch_project(
-    hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS
+    hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS, simulate: bool = True
 ) -> None:
+    if simulate and hub.simulation is None:
+        hub.simulation = SimulationFeed(SubprocessSimulation(root))
     await hub.refresh()
     async for _ in AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop):
         await hub.refresh()

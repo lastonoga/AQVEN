@@ -86,8 +86,23 @@ def test_server_commands_share_local_server_options() -> None:
     assert (dev.dev_origin, str(dev.studio_dist)) == ("http://localhost:5174", "dist")
 
 
-def test_eval_stays_a_stub(tmp_path: Path) -> None:
-    assert main(["eval", str(tmp_path), "--eval", "quality"]) == 2
+def test_local_server_defaults_to_no_auth_with_explicit_token_opt_in(
+    env_project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+
+    assert main(["dev", str(env_project)]) == 0
+    assert main(["dev", str(env_project), "--require-auth"]) == 0
+
+    [(_, default_options, _), (_, protected_options, _)] = recorder.calls
+    assert default_options.require_auth is False
+    assert protected_options.require_auth is True
+
+
+def test_optimize_stays_a_stub_while_eval_needs_a_project(tmp_path: Path) -> None:
+    assert main(["optimize", str(tmp_path), "--eval", "quality"]) == 2
+    assert main(["eval", str(tmp_path), "--eval", "quality"]) == 1
 
 
 def test_dev_opens_studio_in_the_browser_and_studio_is_its_alias() -> None:
@@ -96,10 +111,11 @@ def test_dev_opens_studio_in_the_browser_and_studio_is_its_alias() -> None:
 
     assert isinstance(dev, ServerCommand) and isinstance(studio, ServerCommand)
     assert dev.mode == studio.mode
-    options = SERVE_MODES[dev.mode].options(ServerOptions(root=Path("project")))
-    assert options.launches_browser
-    assert options.dev_origin is None
-    assert SERVE_MODES[dev.mode].watch
+    mode = SERVE_MODES[dev.mode]
+    assert mode.defaults.open_browser
+    assert SERVE_MODES["serve"].defaults.open_browser is False
+    assert mode.defaults.studio
+    assert mode.watch
     assert "alias of dev" in studio.help
 
 
@@ -129,7 +145,8 @@ def test_dev_loads_the_project_env_before_the_server_starts(env_project: Path, m
     [(mode, base, loaded)] = recorder.calls
     assert loaded == "from-file"
     assert base.root == env_project and base.port == 5999
-    assert mode.options(base).launches_browser
+    assert base.launches_browser
+    assert mode.defaults.open_browser
 
 
 def test_models_check_opens_the_project_and_reports_every_agent(
@@ -160,3 +177,73 @@ def test_new_parses_its_options(tmp_path: Path) -> None:
 
     assert (str(arguments.target), arguments.template, arguments.package) == (str(tmp_path / "shop"), "minimal", "shop")
     assert (arguments.no_sync, arguments.force, arguments.aqven_path) == (True, True, None)
+
+
+def test_dev_serves_without_studio_and_browser_when_the_env_switches_studio_off(
+    env_project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+    monkeypatch.setenv("AQVEN_STUDIO", "false")
+
+    assert main(["dev", str(env_project)]) == 0
+
+    [(_, base, _)] = recorder.calls
+    assert base.headless is True
+    assert base.launches_browser is False
+
+
+def test_dev_serves_studio_and_opens_the_browser_by_default(env_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+    monkeypatch.delenv("AQVEN_STUDIO", raising=False)
+    monkeypatch.delenv("AQVEN_OPEN_BROWSER", raising=False)
+
+    assert main(["dev", str(env_project)]) == 0
+
+    [(_, base, _)] = recorder.calls
+    assert base.headless is False
+    assert base.launches_browser is True
+    assert base.port == 5180
+
+
+def test_serve_keeps_the_browser_closed_unless_the_env_asks_for_it(
+    env_project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+    monkeypatch.setenv("AQVEN_PORT", "5999")
+
+    assert main(["serve", str(env_project)]) == 0
+    monkeypatch.setenv("AQVEN_OPEN_BROWSER", "true")
+    assert main(["serve", str(env_project)]) == 0
+
+    [(_, closed, _), (_, opened, _)] = recorder.calls
+    assert (closed.launches_browser, closed.port) == (False, 5999)
+    assert opened.launches_browser is True
+
+
+def test_explicit_cli_arguments_win_over_the_environment(env_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+    monkeypatch.setenv("AQVEN_PORT", "5999")
+    monkeypatch.setenv("AQVEN_OPEN_BROWSER", "true")
+
+    assert main(["dev", str(env_project), "--port", "6001", "--no-browser"]) == 0
+
+    [(_, base, _)] = recorder.calls
+    assert (base.port, base.open_browser) == (6001, False)
+
+
+def test_invalid_environment_value_stops_the_server_command(
+    env_project: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    recorder = ServeRecorder()
+    monkeypatch.setattr(serve_module, "serve", recorder)
+    monkeypatch.setenv("AQVEN_PORT", "many")
+
+    code = main(["dev", str(env_project)])
+
+    assert code == 2
+    assert "AQVEN_PORT='many' is not a valid value" in capsys.readouterr().err
+    assert recorder.calls == []

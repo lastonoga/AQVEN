@@ -20,6 +20,7 @@ from claude_agent_sdk import (
     UserMessage,
 )
 
+from aqven.chat.agent import CLAUDE_AGENT, TurnAgent
 from aqven.chat.builders import (
     ChatEventBuilders,
     clip,
@@ -116,9 +117,10 @@ def backend_session_id(message: Message) -> str | None:
 
 
 class ClaudeEventNormalizer:
-    def __init__(self, project_root: Path, ids: IdFactory) -> None:
+    def __init__(self, project_root: Path, ids: IdFactory, agent: TurnAgent = CLAUDE_AGENT) -> None:
         self._project_root = project_root
         self._ids = ids
+        self._agent = agent
         self._state: ChatState = "idle"
         self._message_id: ChatMessageId | None = None
         self._model: str | None = None
@@ -136,6 +138,7 @@ class ClaudeEventNormalizer:
             Route(UserMessage, self._user_message),
             Route(ResultMessage, self._result_message),
             Route(RateLimitEvent, self._rate_limit_event),
+            Route(SystemMessage, self._system_message),
         )
         self._stream_handlers: Mapping[str, Callable[[StreamEventWire], ChatEventBuilders]] = {
             "message_start": self._message_start,
@@ -157,6 +160,10 @@ class ClaudeEventNormalizer:
     @property
     def interrupting(self) -> bool:
         return self._interrupting
+
+    @property
+    def agent(self) -> TurnAgent:
+        return self._agent.resolved(self._model)
 
     def begin_turn(self) -> None:
         self._message_id = None
@@ -191,7 +198,7 @@ class ClaudeEventNormalizer:
 
     def finished(self, stop_reason: ChatStopReason, duration_ms: int, usage: ChatUsage | None) -> ChatEventBuilders:
         self._interrupting = False
-        return (*self.transition("idle"), turn_finished(stop_reason, duration_ms, usage))
+        return (*self.transition("idle"), turn_finished(stop_reason, duration_ms, usage, self.agent))
 
     def normalize(self, message: Message) -> ChatEventBuilders:
         return dispatch(self._message_routes, message)
@@ -358,8 +365,14 @@ class ClaudeEventNormalizer:
         text = "\n".join(block.text for block in message.content if isinstance(block, TextBlock)) or message.error
         return self.failed(code, text, retryable)
 
+    def _system_message(self, message: SystemMessage) -> ChatEventBuilders:
+        model = message.data.get("model")
+        self._model = model if isinstance(model, str) and model else self._model
+        return ()
+
     def _result_message(self, message: ResultMessage) -> ChatEventBuilders:
         usage = self._usage(message)
+        self._model = usage.model or self._model
         stop_reason = self._stop_reason(message)
         errors = self._result_error(message, stop_reason)
         return (*errors, usage_reported(usage), *self.finished(stop_reason, message.duration_ms, usage))

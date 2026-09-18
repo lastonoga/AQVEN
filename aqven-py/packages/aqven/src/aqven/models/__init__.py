@@ -29,12 +29,21 @@ from aqven.models.chain import (
 from aqven.models.declared import MODEL_REF_METADATA, DeclaredModel, declared_model_ref
 from aqven.models.limiter import LimiterModel, UsageBudget
 from aqven.models.outcome import OUTCOME_GATES, OutcomeGateModel, RefusedOutput, TruncatedOutput
+from aqven.models.providers import (
+    CUSTOM_KINDS,
+    ProviderFactoryUnavailable,
+    custom_options,
+    declared_capabilities,
+    key_variable,
+    provider_factory,
+)
 from aqven.models.redaction import PatternRedactor, RedactingModel, RedactionPolicy, TextRedactor
 from aqven.models.streams import RelayedStream, StreamFirstModel, StreamRelay, drain
-from aqven.models.usage import RequestCost, UsageLog, UsageSink, UsageSource
+from aqven.models.usage import RequestCost, UsageLog, UsageSink, UsageSource, response_cost_usd
 
 __all__ = [
     "CASSETTE_BEHAVIORS",
+    "CUSTOM_KINDS",
     "CHAIN_ORDER",
     "LIVE_BEHAVIOR",
     "MODEL_REF_METADATA",
@@ -60,6 +69,7 @@ __all__ = [
     "MissingProviderKey",
     "OutcomeGateModel",
     "PatternRedactor",
+    "ProviderFactoryUnavailable",
     "ProviderKeyResolver",
     "RecordingSession",
     "RedactingModel",
@@ -79,11 +89,16 @@ __all__ = [
     "canonical_request",
     "cassette_key",
     "cassette_policy",
+    "custom_options",
+    "declared_capabilities",
     "chain_links",
     "current_call_site",
     "declared_model_ref",
     "drain",
     "guard_model",
+    "key_variable",
     "is_transient",
+    "provider_factory",
     "request_key",
+    "response_cost_usd",
 ]

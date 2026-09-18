@@ -1,6 +1,6 @@
-from typing import Annotated, Final, Literal, assert_never
+from typing import Annotated, Final, Literal, Self, assert_never
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from aqven.ir.common import (
     AbsoluteCodeRef,
@@ -15,6 +15,7 @@ from aqven.ir.common import (
 )
 from aqven.spec import (
     MODEL_PATTERN,
+    PROVIDER_NAME_PATTERN,
     AgentId,
     Effect,
     ExampleSpec,
@@ -38,6 +39,7 @@ from aqven.spec import (
 )
 
 type ModelText = Annotated[ModelString, Field(pattern=MODEL_PATTERN)]
+type ProviderText = Annotated[ProviderName, Field(pattern=PROVIDER_NAME_PATTERN)]
 type PromptLevelText = Literal[1, 2]
 
 PROFILE_DEFAULT_REASON: Final = "Pydantic AI profile default"
@@ -52,7 +54,7 @@ class ModelCapabilities(IrModel):
 
 class AgentModel(IrModel):
     model: ModelText
-    provider: ProviderName
+    provider: ProviderText
     capabilities: ModelCapabilities
 
 
@@ -118,6 +120,23 @@ class CompiledAllowedSet(IrModel):
     labels_from: RefText | None = None
 
 
+class CompiledDisplayFormatter(IrModel):
+    run: AbsoluteCodeRef | None = None
+    template: str | None = None
+    variables: dict[str, RefText] = Field(default_factory=dict[str, RefText])
+
+    @model_validator(mode="after")
+    def one_source(self) -> Self:
+        if (self.run is None) == (self.template is None):
+            raise ValueError("exactly one of run and template is required")
+        return self
+
+
+class CompiledInferenceDisplay(IrModel):
+    input: CompiledDisplayFormatter | None = None
+    output: CompiledDisplayFormatter | None = None
+
+
 class CompiledInference(IrModel):
     inference_id: InferenceId
     description: Annotated[str, Field(min_length=1)]
@@ -131,6 +150,7 @@ class CompiledInference(IrModel):
     allowed_sets: tuple[CompiledAllowedSet, ...] = ()
     examples: tuple[ExampleSpec, ...] = ()
     checks: tuple[CompiledCheck, ...] = ()
+    display: CompiledInferenceDisplay | None = None
     file: str | None = None
 
 

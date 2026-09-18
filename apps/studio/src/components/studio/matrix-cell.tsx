@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Ellipsis } from "lucide-react"
-import type { ContentPart, Provenance, TextLine } from "@/domain"
+import type { ContentPart, Provenance, TextLine } from "./presets"
 import { Dot } from "./dot"
 import { Expander } from "./expander"
 import { Heading } from "./heading"
@@ -11,6 +11,8 @@ import { Stat } from "./stat"
 import { Tag, type TagSpec } from "./tag"
 import { Text } from "./text"
 import { TextBlock } from "./text-block"
+import { StructuredValue } from "./value-display"
+import type { OutputMedia } from "./media-output"
 import type { Tone } from "./tone"
 
 export type ExpanderSpec = {
@@ -40,6 +42,7 @@ type CellBlockFields = {
     readonly muted?: boolean
     readonly clamp?: boolean
   }
+  readonly value: { readonly value: unknown; readonly media?: readonly OutputMedia[]; readonly mediaOnly?: boolean }
   readonly inline: {
     readonly lines: readonly Inline[]
     readonly role: "body" | "small" | "caption" | "tiny" | "link"
@@ -58,6 +61,7 @@ type CellBlockFields = {
   }
   readonly tags: { readonly tags: readonly TagSpec[]; readonly text?: Inline }
   readonly divider: object
+  readonly node: { readonly node: ReactNode }
 }
 
 export type CellBlockKind = keyof CellBlockFields
@@ -151,6 +155,7 @@ const BLOCK_VIEW: CellBlockViews = {
   text: ({ lines, variant, muted = false, clamp = false }) => (
     <TextBlock lines={lines} variant={variant} muted={muted} clamp={clamp} />
   ),
+  value: ({ value, media, mediaOnly }) => <StructuredValue value={value} media={media} mediaOnly={mediaOnly} compact />,
   inline: ({ lines, role, tone }) => (
     <div className="min-w-0">
       {lines.map((line, index) => (
@@ -203,6 +208,7 @@ const BLOCK_VIEW: CellBlockViews = {
     </div>
   ),
   divider: () => <div aria-hidden className="mt-0.5 border-t border-border" />,
+  node: ({ node }) => node,
 }
 
 const renderBlock = <K extends CellBlockKind>(block: CellBlock<K>): ReactNode => {

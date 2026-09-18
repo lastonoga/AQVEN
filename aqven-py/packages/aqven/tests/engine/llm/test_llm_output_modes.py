@@ -147,8 +147,28 @@ def test_schema_violation_names_the_field_limit_and_the_file_then_repairs() -> N
     )
     assert [(problem.path, problem.code) for problem in cause.schema_errors] == [(("reply",), "string_too_long")]
     assert cause.details is not None
-    assert cause.details.raw_excerpt is not None and len(cause.details.raw_excerpt) <= 300
+    assert cause.details.raw_excerpt == TOO_LONG
     assert bed.scope.output.discards() == [(1, "schema_invalid")]
+
+
+def test_failed_attempt_keeps_complete_redacted_model_output() -> None:
+    raw = json.dumps({"reply": "mail me at anna@example.com " + "x" * 2500, "confidence": 0.5})
+    bed = llm_bed(
+        [[tool_call(OUTPUT_TOOL_NAME, raw, "out-1")], [tool_call(OUTPUT_TOOL_NAME, VALID, "out-2")]],
+        answer_node(),
+        [writer()],
+        [answer_inference()],
+        RUN_INPUT,
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeSucceeded)
+    (event,) = attempt_events(list(bed.scope.events.emitted))
+    details = event.cause.details
+    assert details is not None
+    assert details.raw_excerpt == raw.replace("anna@example.com", "<EMAIL>")
+    assert details.raw_excerpt is not None and len(details.raw_excerpt) > 2000
 
 
 def test_prompted_text_that_is_not_json_is_classified_as_invalid_json() -> None:
@@ -198,6 +218,25 @@ def test_provider_rejection_of_the_output_tool_is_feature_unsupported(caplog: py
     (record,) = [record for record in caplog.records if record.name == "aqven.engine.llm"]
     assert getattr(record, "aqven.error.code") == "MODEL_FEATURE_UNSUPPORTED"
     assert getattr(record, "aqven.output.mode") == "tool"
+
+
+def test_provider_rejection_keeps_complete_redacted_response_body() -> None:
+    body = "No endpoints found that support tool use; mail anna@example.com " + "x" * 2500
+    context = FailureContext(
+        agent_id="qwen",
+        model="openrouter:qwen/x",
+        mode="tool",
+        output_tools=frozenset(),
+        schema={},
+        inference_id="judge",
+    )
+
+    final = feature_unsupported(ModelHTTPError(404, "qwen", body), context)
+
+    assert final is not None and final.details is not None
+    assert final.details.raw_excerpt == body.replace("anna@example.com", "<EMAIL>")
+    assert final.details.raw_excerpt is not None and len(final.details.raw_excerpt) > 2000
+    assert len(final.message) < 500
 
 
 def test_node_failure_is_one_log_record_and_span_attributes(caplog: pytest.LogCaptureFixture) -> None:

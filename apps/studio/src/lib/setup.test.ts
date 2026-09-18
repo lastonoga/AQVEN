@@ -1,26 +1,31 @@
 import { describe, expect, it } from "vitest"
-import { firstRunOverview, setupOverview } from "@/mocks/data/setup"
-import { agentState, landingOf } from "./setup"
+import type { AgentProbe } from "@/domain"
+import { isoDateTime } from "@/data/ids"
+import { agentState, anyAgentReady } from "./setup"
 
-const ready = setupOverview.agents[0]?.probe
-const signedOut = firstRunOverview.agents[0]?.probe
+const ready: AgentProbe = {
+  kind: "claude",
+  install: { status: "installed", version: "2.0.44", path: "/usr/local/bin/claude", origin: "system" },
+  auth: { status: "signedIn", plan: "Max" },
+  tools: { status: "connected", toolCount: 18 },
+  checkedAt: isoDateTime("2026-09-17T20:31:13.721168Z"),
+}
+
+const signedOut: AgentProbe = { ...ready, auth: { status: "signedOut", loginCommand: "claude login" } }
+const missing: AgentProbe = { ...ready, install: { status: "missing", installCommand: "curl -fsSL https://claude.ai/install.sh | bash" } }
 
 describe("agentState", () => {
   it("reads install before sign-in", () => {
-    expect(ready && agentState(ready)).toBe("ready")
-    expect(signedOut && agentState(signedOut)).toBe("signIn")
-    expect(ready && agentState({ ...ready, install: { status: "missing", installCommand: "curl -fsSL https://claude.ai/install.sh | bash" } })).toBe(
-      "install",
-    )
+    expect(agentState(ready)).toBe("ready")
+    expect(agentState(signedOut)).toBe("signIn")
+    expect(agentState({ ...signedOut, install: missing.install })).toBe("install")
   })
 })
 
-describe("landingOf", () => {
-  it("opens the first workflow of the launched project", () => {
-    expect(landingOf(setupOverview)).toEqual({ kind: "workflow", workspaceId: "hotel_pitch", workflowId: "pitch_pipeline" })
-  })
-
-  it("sends a project without workflows to setup", () => {
-    expect(landingOf(firstRunOverview)).toEqual({ kind: "setup" })
+describe("anyAgentReady", () => {
+  it("is true when at least one agent is installed and signed in", () => {
+    const profile = { kind: "claude", models: [], model: "", effort: null, choices: [], limits: [] } as const
+    expect(anyAgentReady([{ probe: signedOut, profile }])).toBe(false)
+    expect(anyAgentReady([{ probe: signedOut, profile }, { probe: ready, profile }])).toBe(true)
   })
 })

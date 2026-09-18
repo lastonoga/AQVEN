@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react"
 import { cva } from "class-variance-authority"
 import { cn } from "cn"
-import type { TextLine, TextRun } from "@/domain"
+import type { TextLine, TextRun } from "./presets"
 import { TEXT_MARK, type TextMarkStyle } from "./presets"
 import { textVariants } from "./text"
 

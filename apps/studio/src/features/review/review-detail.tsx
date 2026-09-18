@@ -1,60 +1,52 @@
 import { useNow, useTranslations } from "use-intl"
-import type { ReviewDetail, ReviewId, ReviewQueueItem } from "@/domain"
+import type { ApiExecutionDetail, ApiJsonObject } from "@/domain"
 import { Empty, Heading, NODE_KIND, Surface, Tag, Text } from "@/components/studio"
-import { useRichTags } from "@/i18n/format"
 import { DecisionForm } from "./decision-form"
 import { EvidenceColumn } from "./evidence-column"
-import { SLA, detailMeta, nextItemId, slaState, slaSummary, triggerBadge } from "./presenters"
-import { reviewEvidence } from "./review-sections"
-import type { NoteDrafts } from "./use-note-drafts"
+import { addressLabel, DEADLINE, deadlineState, detailMeta, entryKey, timeoutSummary, waitBadge, type ReviewEntry } from "./presenters"
+import { waitEvidence } from "./review-sections"
 
 export type ReviewDetailSlotProps = {
-  readonly queue: readonly ReviewQueueItem[]
-  readonly itemId: ReviewId | null
-  readonly detail: ReviewDetail | null
-  readonly drafts: NoteDrafts
+  readonly entry: ReviewEntry | null
+  readonly detail: ApiExecutionDetail | null
+  readonly schema: ApiJsonObject | null
+  readonly blobText?: string | undefined
 }
 
-type ReviewDetailCardProps = Omit<ReviewDetailSlotProps, "itemId" | "detail"> & {
-  readonly item: ReviewQueueItem
-  readonly detail: ReviewDetail
-}
-
-function ReviewDetailCard({ queue, item, detail, drafts }: ReviewDetailCardProps) {
+function ReviewDetailCard({ entry, detail, schema, blobText }: { readonly entry: ReviewEntry; readonly detail: ApiExecutionDetail | null; readonly schema: ApiJsonObject | null; readonly blobText?: string | undefined }) {
   const t = useTranslations("review")
-  const common = useTranslations("common")
-  const state = slaState(item.sla, useNow())
-  const { b: strong } = useRichTags({ role: "note", weight: "semibold" })
-  const evidence = reviewEvidence(detail, item, { t, common, strong })
+  const domain = useTranslations("domain")
+  const state = deadlineState(entry.wait, useNow())
+  const human = detail?.human ?? null
+  const evidence = human === null ? [] : waitEvidence(human, t, blobText)
   return (
     <Surface variant="raised" padding="lg">
       <Heading
         size="item"
         wrap
-        leading={<Tag tone={NODE_KIND.human.tone}>{triggerBadge(item, t)}</Tag>}
-        title={item.nodeId}
-        description={<Text role="hint">{detailMeta(item, detail, t)}</Text>}
+        leading={<Tag tone={NODE_KIND.human.tone}>{waitBadge(entry.wait, domain)}</Tag>}
+        title={addressLabel(entry.wait.address)}
+        description={<Text role="hint">{detailMeta(entry, t)}</Text>}
         trailing={
-          <Text role="body" tone={SLA[state.kind].detail}>
-            {slaSummary(item.sla, state, { t, common })}
+          <Text role="body" tone={DEADLINE[state.kind].detail}>
+            {timeoutSummary(entry.wait, state, { t, domain })}
           </Text>
         }
       />
-      <div className="mt-3.25 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-2.5">
-        {evidence.map((section) => (
-          <EvidenceColumn key={section.id} section={section} />
-        ))}
-      </div>
-      <DecisionForm item={item} next={nextItemId(queue, item.id)} drafts={drafts} />
+      {evidence.length === 0 ? null : (
+        <div className="mt-3.25 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-2.5">
+          {evidence.map((section) => (
+            <EvidenceColumn key={section.id} section={section} />
+          ))}
+        </div>
+      )}
+      <DecisionForm key={entryKey(entry)} entry={entry} schema={schema} />
     </Surface>
   )
 }
 
-const missingKey = (itemId: ReviewId | null): "empty.review" | "empty.reviewNotFound" => (itemId === null ? "empty.review" : "empty.reviewNotFound")
-
-export function ReviewDetailSlot({ queue, itemId, detail, drafts }: ReviewDetailSlotProps) {
+export function ReviewDetailSlot({ entry, detail, schema, blobText }: ReviewDetailSlotProps) {
   const common = useTranslations("common")
-  const item = queue.find((entry) => entry.id === itemId)
-  if (item === undefined || detail === null) return <Empty title={common(missingKey(itemId))} />
-  return <ReviewDetailCard queue={queue} item={item} detail={detail} drafts={drafts} />
+  if (entry === null) return <Empty title={common("empty.review")} />
+  return <ReviewDetailCard entry={entry} detail={detail} schema={schema} blobText={blobText} />
 }

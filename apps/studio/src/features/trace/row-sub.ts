@@ -1,78 +1,48 @@
-import type { CallColumn, MatrixGroup, RowKey, RowSpec, StageKind } from "@/domain"
+import type { NodeKind } from "@/domain"
 import type { MatrixGround } from "@/components/studio"
-import { rowRef, score } from "@/lib/format"
 import type { Translator } from "@/i18n/translator"
-import { isHeaded } from "./context"
+import type { MatrixGroup, RowKey } from "./model"
 
 type SubRule = (group: MatrixGroup, t: Translator) => string | undefined
 
 const noSub: SubRule = () => undefined
 
-const hasInputParts = (column: CallColumn): boolean => column.input?.kind === "parts"
+type FanOutSub = (group: MatrixGroup, t: Translator) => string
 
-const hasOutputParts = (column: CallColumn): boolean => column.output?.kind === "parts"
+const iterationCount = (group: MatrixGroup): number =>
+  new Set(group.columns.map((column) => column.address.iteration).filter((value) => value !== null)).size
 
-export const groupHasParts = (group: MatrixGroup): boolean =>
-  group.shared?.input?.kind === "parts" || group.columns.some((column) => hasInputParts(column) || hasOutputParts(column))
-
-const CALL_SUB: Partial<Readonly<Record<StageKind, (t: Translator) => string>>> = {
-  map: (t) => t("domain.matrixSub.mapItem"),
-  loop: (t) => t("domain.matrixSub.loopBody"),
-  parallel: (t) => t("domain.matrixSub.assetFanOut"),
-  diverge: (t) => t("domain.matrixSub.divergeBranch"),
+const FAN_OUT: Partial<Readonly<Record<NodeKind, FanOutSub>>> = {
+  parallel: (group, t) => t("trace.matrixSub.branches", { count: group.columns.length }),
+  map: (group, t) => t("trace.matrixSub.items", { count: group.columns.length }),
+  loop: (group, t) => t("trace.matrixSub.iterations", { count: iterationCount(group), calls: group.columns.length }),
+  switch: (group, t) => t("trace.matrixSub.takenBranch", { count: group.columns.length }),
+  call: (group, t) => t("trace.matrixSub.calledNodes", { count: group.columns.length }),
 }
 
-const callSub: SubRule = (group, t) => {
-  if (!isHeaded(group) || group.kind === undefined) return undefined
-  return CALL_SUB[group.kind]?.(t)
-}
+const callSub: SubRule = (group, t) => FAN_OUT[group.kind]?.(group, t)
 
-const inputSub: SubRule = (group, t) => {
-  const shared = group.shared?.input
-  if (group.columns.some(hasInputParts) || shared?.kind === "parts") return t("domain.matrixSub.multimodalParts")
-  if (shared?.kind === "refs" && shared.row !== undefined) return t("domain.matrixSub.datasetRow", { row: rowRef(shared.row) })
-  if (isHeaded(group) && group.kind === "map") return t("domain.matrixSub.source")
-  return undefined
-}
+const inputSub: SubRule = (group, t) =>
+  group.columns.some((column) => column.input?.kind === "upstream") ? t("trace.matrixSub.upstream") : undefined
 
-const outputSub: SubRule = (group, t) => {
-  if (group.columns.some(hasOutputParts)) return t("domain.matrixSub.typedParts")
-  if (group.columns.some((column) => column.output?.kind === "verdict")) return t("domain.matrixSub.verdict")
-  return undefined
-}
+const promptSub: SubRule = (_group, t) => t("trace.matrixSub.modelRequest")
 
-const thresholdOf = (group: MatrixGroup): number | undefined =>
-  group.columns.map((column) => column.check?.score?.threshold).find((threshold) => threshold !== undefined)
-
-const postCheckSub: SubRule = (group, t) => {
-  const threshold = thresholdOf(group)
-  if (threshold !== undefined) return t("domain.matrixSub.scorerThreshold", { threshold: score(threshold) })
-  if (groupHasParts(group)) return t("domain.matrixSub.perModality")
-  return t("domain.matrixSub.validatorsScorers")
-}
-
-const assertionsSub: SubRule = (group, t) => {
-  const ratio = group.columns[0]?.check?.ratio
-  if (ratio === undefined) return undefined
-  return t("domain.matrixSub.perRow", { total: ratio.total })
-}
+const postCheckSub: SubRule = (_group, t) => t("trace.matrixSub.outputChecks")
 
 export const ROW_SUB: Readonly<Record<RowKey, SubRule>> = {
-  columns: (group, t) => t("domain.matrixSub.inParallel", { count: group.columns.length }),
   call: callSub,
-  agent: (_group, t) => t("domain.matrixSub.modelConfig"),
-  model: (_group, t) => t("domain.matrixSub.costTime"),
+  agent: (_group, t) => t("trace.matrixSub.declared"),
+  model: (_group, t) => t("trace.matrixSub.costTime"),
   input: inputSub,
-  prompt: noSub,
-  output: outputSub,
+  prompt: promptSub,
+  output: noSub,
   postCheck: postCheckSub,
-  assertions: assertionsSub,
 }
 
-export const rowSub = (row: RowSpec, group: MatrixGroup, t: Translator): string | undefined => row.detail ?? ROW_SUB[row.key](group, t)
+export const rowSub = (key: RowKey, group: MatrixGroup, t: Translator): string | undefined => ROW_SUB[key](group, t)
 
 const GIVEN_ROWS: ReadonlySet<RowKey> = new Set<RowKey>(["input", "prompt"])
 
-export const rowGround = (key: RowKey, headed: boolean): MatrixGround => (GIVEN_ROWS.has(key) && !headed ? "subtle" : "card")
+export const rowGround = (key: RowKey): MatrixGround => (GIVEN_ROWS.has(key) ? "subtle" : "card")
 
-export const rowEmphasis = (key: RowKey, headed: boolean): boolean => key === "output" && !headed
+export const rowEmphasis = (key: RowKey): boolean => key === "output"

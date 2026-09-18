@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-6b876a05b7f5f84a88c004b8dc93ecb5db2e4f931a4db0a35bbc453fc72f6939",
+  "request_key": "sha256-f2a1dbef8147f95491e1838ab788f057eb4855e7c5fb3073e52618a4729342bd",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "drafts__gemini",
+      "branch_key": "gemini",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_tpzZdqNaNtOAP8evChsi",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_tpzZdqNaNtOAP8evChsi",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"reply\":{\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}],\"text\":\"Здравствуйте. Понимаем ваше беспокойство по поводу работы ленты Lumen Flow.\\n\\nЕсли лента мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nВ базе знаний нет информации о возможности повреждения ленты при доставке или о компенсации.\"}}",
+        "tool_call_id": "tool_final_result_tpzZdqNaNtOAP8evChsi",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"reply\":{\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}],\"text\":\"Здравствуйте. Понимаем ваше беспокойство по поводу работы ленты Lumen Flow.\\n\\nЕсли лента мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nВ базе знаний нет информации о возможности повреждения ленты при доставке или о компенсации.\"}}",
+        "tool_call_id": "tool_final_result_tpzZdqNaNtOAP8evChsi",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"reply\":{\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}],\"text\":\"Здравствуйте. Понимаем ваше беспокойство по поводу работы ленты Lumen Flow.\\n\\nЕсли лента мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nВ базе знаний нет информации о возможности повреждения ленты при доставке или о компенсации.\"}}",
+        "tool_call_id": "tool_final_result_tpzZdqNaNtOAP8evChsi",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1081,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 202,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-17T17:34:47.109110Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:34:46Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0001889,
+      "upstream_inference_cost": 0.0001889,
+      "upstream_inference_prompt_cost": 0.0001081,
+      "upstream_inference_completions_cost": 8.08e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789666486-UEU9v6dT8FUyW7lXxSzO",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

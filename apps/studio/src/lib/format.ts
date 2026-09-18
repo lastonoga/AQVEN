@@ -1,4 +1,4 @@
-import type { Ratio, RowId, RunId } from "@/domain"
+import type { Ratio } from "@/domain"
 
 type UsdDigits = 2 | 3 | 4
 
@@ -21,6 +21,7 @@ const THOUSANDS = /,/g
 const DIGIT_GROUP = " "
 const FACTOR_SIGN = "×"
 const PLAIN_USD_DIGITS = 4
+const RUN_REF_TAIL = 6
 
 const fixedFormat = (digits: number): Intl.NumberFormat =>
   new Intl.NumberFormat(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false })
@@ -65,9 +66,7 @@ export const plainUsd = (value: number): string => fixed(value, PLAIN_USD_DIGITS
 export const percentChange = (value: number, previous: number): string =>
   `${String(Math.abs(Math.round(((value - previous) / previous) * 100)))} %`
 
-export const runRef = (id: RunId): string => `#${id}`
-
-export const rowRef = (id: RowId): string => `#${id}`
+export const runRef = (id: string): string => `#${id.slice(-RUN_REF_TAIL)}`
 
 const twoDigits = (value: number): string => String(value).padStart(2, "0")
 

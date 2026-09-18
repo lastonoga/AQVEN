@@ -17,12 +17,14 @@ from aqven.server.blobs import BlobFiles, DirectoryBlobStore
 from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
 from aqven.server.routes.blobs import build_blobs_router
+from aqven.server.routes.evals import build_evals_router
 from aqven.server.routes.events import build_events_router
 from aqven.server.routes.fallback import build_fallback_router
 from aqven.server.routes.flows import build_flows_router
 from aqven.server.routes.meta import build_meta_router
 from aqven.server.routes.project import build_project_router
 from aqven.server.routes.runs import build_runs_router
+from aqven.server.routes.schemas import build_schemas_router
 from aqven.server.routes.settings import build_settings_router
 from aqven.server.security import QueryTokenScrubber
 from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, watch_project
@@ -49,6 +51,7 @@ class ServerOptions:
     guard: bool = True
     studio_dist: Path | None = None
     serve_studio: bool = True
+    serve_api: bool = True
     dev_origin: str | None = None
     blob_directory: Path | None = None
     watch: bool = True
@@ -122,8 +125,10 @@ def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
         build_flows_router(context),
         build_runs_router(context),
         build_events_router(context),
+        build_schemas_router(),
         build_blobs_router(context),
         build_settings_router(context),
+        build_evals_router(context),
     )
 
 
@@ -160,7 +165,8 @@ def create_app(
     )
     setattr(app.state, CONTEXT_ATTRIBUTE, context)
     install_error_handlers(app)
-    for router in (*core_routers(context), *extra_routers):
+    included = (*core_routers(context), *extra_routers) if chosen.serve_api else tuple(extra_routers)
+    for router in included:
         app.include_router(router)
     app.include_router(build_fallback_router())
     for path, mounted in extended.mounts.items():

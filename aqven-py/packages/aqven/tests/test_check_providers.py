@@ -52,7 +52,7 @@ def test_every_model_and_fallback_model_is_checked(tmp_path: Path) -> None:
     found = [(item.code, item.file, item.path, item.hint) for item in provider_diagnostics(loaded, scripted)]
 
     assert found == [
-        (DiagnosticCode.E_PROVIDER_EXTRA_MISSING, WRITER, ("model",), "install the extra: uv add 'aqven[anthropic]'"),
+        (DiagnosticCode.E_PROVIDER_EXTRA_MISSING, WRITER, ("model",), 'install the extra: uv add "aqven[anthropic]"'),
         (
             DiagnosticCode.E_PROVIDER_NO_STREAMING,
             WRITER,

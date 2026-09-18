@@ -14,7 +14,9 @@ from aqven.ir import (
     CompiledAgent,
     CompiledAgentOutput,
     CompiledAllowedSet,
+    CompiledDisplayFormatter,
     CompiledInference,
+    CompiledInferenceDisplay,
     CompiledJobWait,
     CompiledMcpServer,
     CompiledTool,
@@ -75,7 +77,36 @@ def compile_inference(context: CompileContext, loaded: LoadedInference) -> Compi
         ),
         examples=tuple(spec.examples or ()),
         checks=checks(context, spec.checks or (), source.path),
+        display=(
+            CompiledInferenceDisplay(
+                input=_display_formatter(context, source.path, "input", spec.display.input),
+                output=_display_formatter(context, source.path, "output", spec.display.output),
+            )
+            if spec.display is not None
+            else None
+        ),
         file=source.path,
+    )
+
+
+def _display_formatter(context: CompileContext, file: str, side: str, spec: object) -> CompiledDisplayFormatter | None:
+    from aqven.spec import DisplayFormatterSpec
+
+    if not isinstance(spec, DisplayFormatterSpec):
+        return None
+    return CompiledDisplayFormatter(
+        run=context.code(spec.run, file, ("display", side, "run")) if spec.run is not None else None,
+        template=(
+            context.text_file(
+                include_candidates((posixpath.dirname(file),), spec.template),
+                file,
+                ("display", side, "template"),
+                f"display template {spec.template} is missing",
+            )
+            if spec.template is not None
+            else None
+        ),
+        variables=spec.variables,
     )
 
 

@@ -11,13 +11,13 @@ from aqven.chat.approvals import DEFAULT_APPROVAL_TIMEOUT_SECONDS
 from aqven.chat.env_guard import SecretFileGuard, scrubbed_environment
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import MCP_CONFIG_PREFIX, McpConfigFile, write_mcp_config
+from aqven.chat.project_rules import project_rules
 from aqven.ports.chat import ChatPermissionMode
 
 AQVEN_MCP_SERVER: Final[str] = "aqven"
 CLIENT_APP_ENV: Final[str] = "CLAUDE_AGENT_SDK_CLIENT_APP"
 DEFAULT_CLIENT_APP: Final[str] = "aqven-studio"
 DEFAULT_THINKING_BUDGET_TOKENS: Final[int] = 8000
-PROJECT_RULE_FILES: Final[tuple[str, ...]] = ("AGENTS.md", "CLAUDE.md")
 PERMISSION_MODES: Final[Mapping[ChatPermissionMode, PermissionMode]] = {
     "default": "default",
     "accept_edits": "acceptEdits",
@@ -39,11 +39,6 @@ class ClaudeChatSettings:
 class ClaudeLaunch:
     options: ClaudeAgentOptions
     mcp_config: McpConfigFile
-
-
-def project_rules(project_root: Path) -> str:
-    files = (project_root / name for name in PROJECT_RULE_FILES)
-    return "\n\n".join(path.read_text(encoding="utf-8") for path in files if path.is_file())
 
 
 def claude_system_prompt(project_root: Path) -> SystemPromptPreset:

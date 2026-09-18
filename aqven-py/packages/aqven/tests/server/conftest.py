@@ -1,17 +1,12 @@
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from server_fakes import FakeEngine, MemorySettings, copy_fixture
+from server_fakes import AUTH, SERVER_BASE, SERVER_TOKEN, FakeEngine, MemorySettings, copy_fixture
 
 from aqven.server import ServerOptions, create_app
-
-SERVER_TOKEN: Final = "test-token-0123456789"
-SERVER_BASE: Final = "http://127.0.0.1:5180"
-AUTH: Final = {"Authorization": f"Bearer {SERVER_TOKEN}"}
 
 
 @pytest.fixture

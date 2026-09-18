@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Проверяет анкету бизнес-правилами и возвращает замечания для ремонта"
+run: "validate_record"
+in:
+- name: "record"
+  type: "Dynamic"
+  description: "Анкета, заполненная моделью"
+  from: "$extract.out.record"
+- name: "fields"
+  type: "FieldSpec[]"
+  description: "Форма, по которой заполнялась анкета"
+  maxItems: 30
+  from: "$case_form.out.fields"
+- name: "today"
+  type: "Date"
+  description: "Дата прогона"
+  from: "$run.context.date"
+out:
+- name: "issues"
+  type: "Issue[]"
+  description: "Нарушенные правила; пусто, если анкета корректна"
+  maxItems: 10

@@ -12,6 +12,7 @@ from aqven.ir.registry import AgentModel
 from aqven.runtime.address import RunId
 from aqven.runtime.executions import RunError
 from aqven.runtime.human import ScriptedAnswer
+from aqven.runtime.overrides import NodeOutputOverride
 from aqven.runtime.replay import McpToolStub, ProviderFault
 from aqven.runtime.steps import BlobStore
 from aqven.runtime.vocabulary import RunMode, RunStatus
@@ -92,6 +93,7 @@ class RunOptions:
     blobs: BlobStore | None = None
     faults: tuple[ProviderFault, ...] = ()
     models: ModelProfile | None = None
+    outputs: tuple[NodeOutputOverride, ...] = ()
 
 
 class RunResult[O: BaseModel](BaseModel):

@@ -2,7 +2,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Final
 
 from aqven.check.context import CheckContext
-from aqven.check.nodes import field_sites, typed_entries
+from aqven.check.nodes import FieldRole, field_sites, typed_entries
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader import YamlPath
 from aqven.spec import (
@@ -10,10 +10,12 @@ from aqven.spec import (
     FLOAT,
     INT,
     TEXT,
+    BoundField,
     Constraints,
     FieldDecl,
     HumanNodeSpec,
     NarrowNodeSpec,
+    OutputField,
     RecordType,
     TypeId,
     TypeRef,
@@ -93,6 +95,13 @@ def _reference_sites(context: CheckContext) -> Iterator[tuple[str, YamlPath, str
     yield from ((source.path, ("output",), source.spec.output) for source in sources)
     yield from ((entry.file, ("form",), human.form) for entry, human in typed_entries(context.graph, HumanNodeSpec))
     yield from ((entry.file, ("to",), narrow.to) for entry, narrow in typed_entries(context.graph, NarrowNodeSpec))
+    yield from (
+        (site.file, (*site.path, "value_type"), site.decl.value_type)
+        for site in field_sites(context.graph)
+        if site.role is FieldRole.OUTPUT
+        and isinstance(site.decl, OutputField | BoundField)
+        and site.decl.value_type is not None
+    )
     yield from (
         (source.path, ("allowed_sets", index, "type"), allowed.type)
         for loaded in context.project.inferences.values()

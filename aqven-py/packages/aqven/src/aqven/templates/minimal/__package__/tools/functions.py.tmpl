@@ -1,0 +1,10 @@
+from typing import Annotated
+
+from pydantic import StringConstraints
+
+from aqven.runtime import ToolContext
+from __package__.types import CountWordsOut
+
+
+async def count_words(ctx: ToolContext, text: Annotated[str, StringConstraints(max_length=2000)]) -> CountWordsOut:
+    return CountWordsOut(words=len(text.split()))

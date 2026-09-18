@@ -249,13 +249,15 @@ async def test_sqlite_index_filters_open_waits(tmp_path: Path) -> None:
     for record in (later, soon, closed):
         await index.record(index_entry(record))
 
-    everyone = await index.search(WaitQuery(assignee="me"))
+    open_waits = await index.search(WaitQuery())
+    named_me = await index.search(WaitQuery(assignee="me"))
     finance = await index.search(WaitQuery(assignee="finance"))
     before = await index.search(WaitQuery(deadline_before=NOW + timedelta(seconds=30)))
     run_waits = await index.search(WaitQuery(run_id=RunId("run-c"), state=None))
     found = await index.find(RunId("run-b"), ADDRESS)
 
-    assert [entry.run_id for entry in everyone] == ["run-a", "run-b"]
+    assert [entry.run_id for entry in open_waits] == ["run-a", "run-b"]
+    assert named_me == ()
     assert [entry.run_id for entry in finance] == ["run-a"]
     assert [entry.run_id for entry in before] == ["run-a"]
     assert [entry.state for entry in run_waits] == ["timed_out"]

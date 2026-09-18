@@ -12,6 +12,7 @@ from pydantic_ai.settings import ModelSettings, merge_model_settings
 from pydantic_ai.usage import RequestUsage
 
 from aqven.models.callsite import CallSite, current_call_site
+from aqven.models.cassette_blobs import BlobVault, blob_root, document_text, inlined_document, packed_document
 from aqven.models.cassette_key import (
     CASSETTE_KEY_PATTERN,
     CassetteKey,
@@ -22,12 +23,11 @@ from aqven.models.cassette_key import (
 )
 from aqven.models.redaction import PartRedaction, RedactionPolicy, redact_response
 from aqven.models.streams import RelayedStream, StreamContext, StreamFirstModel
-from aqven.models.usage import DiscardUsage, UsageSink, replay_cost
+from aqven.models.usage import CASSETTE_METADATA_KEY, DiscardUsage, UsageSink, replay_cost
 from aqven.runtime.address import ExecutionAddress
 from aqven.runtime.options import CassetteMode
 
 CASSETTE_FORMAT: Final = "aqven.cassette.v1"
-CASSETTE_METADATA_KEY: Final = "aqven.cassette"
 SECRET_PLACEHOLDER: Final = "<secret>"
 UNBOUND_DIRECTORY: Final = "_unbound"
 RECORDING_SUFFIX: Final = ".json"
@@ -37,6 +37,7 @@ EVENTS_ADAPTER: Final[TypeAdapter[list[ModelResponseStreamEvent]]] = TypeAdapter
     config=ConfigDict(defer_build=True, ser_json_bytes="base64", val_json_bytes="base64"),
 )
 USAGE_ADAPTER: Final[TypeAdapter[RequestUsage]] = TypeAdapter(RequestUsage)
+JSON_DOCUMENT: Final[TypeAdapter[JsonValue]] = TypeAdapter(JsonValue)
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,8 +127,9 @@ class MemoryCassetteStore:
 
 
 class DirectoryCassetteStore:
-    def __init__(self, directory: Path) -> None:
+    def __init__(self, directory: Path, vault: BlobVault | None = None) -> None:
         self.directory = directory
+        self.vault = BlobVault(blob_root(directory)) if vault is None else vault
 
     def path(self, key: CassetteKey, site: CallSite) -> Path:
         folder = site.node_id or UNBOUND_DIRECTORY
@@ -137,14 +139,22 @@ class DirectoryCassetteStore:
         path = self.path(key, site)
         if not path.is_file():
             return None
-        return CassetteRecording.model_validate_json(path.read_bytes())
+        return read_recording(path, self.vault)
 
     def save(self, recording: CassetteRecording, site: CallSite) -> None:
         path = self.path(CassetteKey(recording.key), site)
         path.parent.mkdir(parents=True, exist_ok=True)
         staging = path.with_suffix(".tmp")
-        staging.write_text(recording.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        staging.write_text(recording_text(recording, self.vault), encoding="utf-8")
         os.replace(staging, path)
+
+
+def recording_text(recording: CassetteRecording, vault: BlobVault) -> str:
+    return document_text(packed_document(recording.model_dump(mode="json"), vault))
+
+
+def read_recording(path: Path, vault: BlobVault) -> CassetteRecording:
+    return CassetteRecording.model_validate(inlined_document(JSON_DOCUMENT.validate_json(path.read_bytes()), vault))
 
 
 class SecretScrubber:

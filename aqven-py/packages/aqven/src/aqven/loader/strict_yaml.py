@@ -16,6 +16,7 @@ from ruamel.yaml.tokens import (
     CommentToken,
     DirectiveToken,
     FlowMappingStartToken,
+    FlowSequenceEndToken,
     FlowSequenceStartToken,
     TagToken,
     Token,
@@ -34,7 +35,10 @@ TOKEN_VIOLATIONS: Final[Mapping[type[Token], tuple[DiagnosticCode, str]]] = {
     AnchorToken: (DiagnosticCode.E_YAML_ANCHOR, "YAML anchors are forbidden"),
     AliasToken: (DiagnosticCode.E_YAML_ANCHOR, "YAML aliases are forbidden"),
     TagToken: (DiagnosticCode.E_YAML_TAG, "YAML tags are forbidden"),
-    FlowSequenceStartToken: (DiagnosticCode.E_YAML_FLOW_STYLE, "flow-style lists [] are forbidden: use block style"),
+    FlowSequenceStartToken: (
+        DiagnosticCode.E_YAML_FLOW_STYLE,
+        "nonempty flow-style lists are forbidden: use block style",
+    ),
     FlowMappingStartToken: (DiagnosticCode.E_YAML_FLOW_STYLE, "flow-style mappings {} are forbidden: use block style"),
 }
 
@@ -128,7 +132,16 @@ def _token_violations(tokens: Iterable[object], file: str) -> tuple[Diagnostic, 
         diagnostic(DiagnosticCode.E_YAML_COMMENT, file, (), "YAML comments are forbidden", line=line, column=column)
         for line, column in sorted(comments)
     ]
-    token_diagnostics = [_token_diagnostic(token, file) for token in typed if type(token) in TOKEN_VIOLATIONS]
+    token_diagnostics = [
+        _token_diagnostic(token, file)
+        for index, token in enumerate(typed)
+        if type(token) in TOKEN_VIOLATIONS
+        and not (
+            isinstance(token, FlowSequenceStartToken)
+            and index + 1 < len(typed)
+            and isinstance(typed[index + 1], FlowSequenceEndToken)
+        )
+    ]
     return (*comment_diagnostics, *token_diagnostics)
 
 

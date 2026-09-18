@@ -45,7 +45,11 @@ def build_blobs_router(context: ServerContext) -> APIRouter:
         found = await context.blobs.locate(blob_id)
         if found is None:
             raise not_found(f"blob {blob_id} not found")
-        headers = {"ETag": f'"{found.meta.blob_id}"', "Cache-Control": IMMUTABLE}
+        headers = {
+            "ETag": f'"{found.meta.blob_id}"',
+            "Cache-Control": IMMUTABLE,
+            "X-Content-Type-Options": "nosniff",
+        }
         return FileResponse(found.path, media_type=found.meta.media_type, headers=headers)
 
     for method, operation_id in BLOB_READ_METHODS:

@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-c80c3bc07353a5c64caf75f7287ccfd9e9396283b7f315c38f34bf4d21990d2c",
+  "request_key": "sha256-ccaa1c7335014d92a10b90ca5fd1f78f6994cfbb10750dfb8c97fb0905afb545",
+  "model_ref": "openrouter:meta-llama/llama-3.1-8b-instruct",
+  "site": {
+    "address": {
+      "node_id": "vote__ballot",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": 2
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "s00fgz5wd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "s00fgz5wd",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"confidence\":0.7,\"intent\":\"question\",\"rationale\":\"Покупатель спрашивает о совместимости лампы с конкретной технологией Wi-Fi, что не является критической проблемой, но требует ответа на вопрос\"}",
+        "tool_call_id": "s00fgz5wd",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"confidence\":0.7,\"intent\":\"question\",\"rationale\":\"Покупатель спрашивает о совместимости лампы с конкретной технологией Wi-Fi, что не является критической проблемой, но требует ответа на вопрос\"}",
+        "tool_call_id": "s00fgz5wd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"confidence\":0.7,\"intent\":\"question\",\"rationale\":\"Покупатель спрашивает о совместимости лампы с конкретной технологией Wi-Fi, что не является критической проблемой, но требует ответа на вопрос\"}",
+        "tool_call_id": "s00fgz5wd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 956,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 63,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "meta-llama/llama-3.1-8b-instruct",
+    "timestamp": "2026-09-17T16:55:44.614714Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T16:55:44Z",
+      "downstream_provider": "Groq",
+      "finish_reason": "tool_calls",
+      "cost": 5.284e-05,
+      "upstream_inference_cost": 5.284e-05,
+      "upstream_inference_prompt_cost": 4.78e-05,
+      "upstream_inference_completions_cost": 5.04e-06,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789664144-2oSrCFq0HyxqHIEbSnkT",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

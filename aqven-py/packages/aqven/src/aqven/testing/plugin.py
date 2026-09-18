@@ -6,6 +6,7 @@ import pytest
 from aqven.check import CheckReport, check_project
 from aqven.codegen import generate_types
 from aqven.runtime import CassetteConfig, Project
+from aqven.testing.engines import aqven_engine
 from aqven.testing.human import ScriptedHuman
 from aqven.testing.offline import replay_cassettes
 
@@ -54,3 +55,18 @@ def scripted_human() -> ScriptedHuman:
 @pytest.fixture
 def cassette_config(request: pytest.FixtureRequest) -> CassetteConfig:
     return replay_cassettes(request.path)
+
+
+__all__ = [
+    "AQVEN_PROJECT_INI",
+    "ENGINE_MARKER",
+    "aqven_check_report",
+    "aqven_engine",
+    "aqven_project",
+    "aqven_project_root",
+    "cassette_config",
+    "pytest_addoption",
+    "pytest_configure",
+    "pytest_load_initial_conftests",
+    "scripted_human",
+]

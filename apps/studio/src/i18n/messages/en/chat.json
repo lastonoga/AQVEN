@@ -1,5 +1,4 @@
 {
-  "fixtureReply": "No agent backend is connected yet, so this reply comes from the fixture model.",
   "composer": {
     "placeholder": "Ask, or assign an edit…",
     "addAria": "Add context",
@@ -14,35 +13,51 @@
     "retryAria": "Retry",
     "moreAria": "More actions"
   },
+  "session": {
+    "connecting": "Connecting to the agent…",
+    "backendLoadFailed": "Could not load the selected agent",
+    "selectedAgentChanged": "The selected agent changed in another window. Review the current agent and try again.",
+    "loadFailed": "Could not load threads: {detail}",
+    "noThread": "No thread for this agent yet. Open the thread menu to start one.",
+    "loggedOut": "The agent backend is not signed in: {detail}"
+  },
+  "threads": {
+    "triggerAria": "Switch thread",
+    "select": "Select thread",
+    "new": "New thread",
+    "project": "Project"
+  },
   "tool": {
     "toggleAria": "Toggle details",
-    "readRun": {
-      "attempts": "attempts: {sequence}",
-      "billed": "billed {amount}",
-      "failedShare": "of that failed {amount}",
-      "toLadder": "To attempt ladder",
-      "attemptPrompt": "Attempt {n} prompt"
-    },
-    "patchSpec": {
-      "nodes": "{count, plural, one {# node} other {# nodes}}",
-      "branchesAffected": "branches affected: {count}",
-      "runEstimate": "run estimate ~{amount}",
-      "showDiff": "Show diff",
-      "apply": "Apply",
-      "revert": "Revert",
-      "progressTarget": "editing {target}",
-      "progressSteps": "{step} of {total} steps"
-    },
-    "runDataset": {
-      "callModeLive": "live calls",
-      "callModeCassette": "cassette calls",
-      "recordingOff": "no cassette recording",
-      "recordingOn": "cassette recording",
-      "openRun": "Open run"
-    },
-    "error": "Tool call failed"
+    "running": "running…",
+    "exitCode": "exit code {code}",
+    "mcp": "{server} · {tool}",
+    "fileChange": {
+      "added": "file added",
+      "modified": "file changed",
+      "deleted": "file deleted"
+    }
+  },
+  "approval": {
+    "prompt": "This tool call needs your decision."
+  },
+  "error": {
+    "auth_required": "The agent backend needs you to sign in again.",
+    "rate_limited": "The agent backend is rate limited. Try again shortly.",
+    "billing": "The agent backend refused the turn for billing reasons.",
+    "backend_unavailable": "The agent backend is unavailable.",
+    "invalid_request": "The agent backend rejected the request.",
+    "internal": "The agent backend failed on its side."
   },
   "thread": {
     "scrollToBottomAria": "Scroll to latest message"
+  },
+  "state": {
+    "thinking": "Thinking…",
+    "streaming": "Writing the answer…",
+    "running_tool": "Running a tool…",
+    "waiting_approval": "Waiting for your decision…",
+    "interrupting": "Stopping…",
+    "aria": "Agent status"
   }
 }

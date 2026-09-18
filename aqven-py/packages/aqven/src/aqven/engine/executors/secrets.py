@@ -2,11 +2,10 @@ from collections.abc import Sequence
 from typing import Final
 
 from aqven.engine.runtime import ToolServices
-from aqven.ports.settings import SettingKey, resolve_secret, setting_key
+from aqven.ports.settings import SECRET_SETTING_PREFIX, SettingKey, resolve_secret, setting_key
 from aqven.spec import SecretBinding, SecretHeader
 
 SECRET_REF_PREFIX: Final = "ref:env/"
-SECRET_SETTING_PREFIX: Final = "secrets."
 
 
 def secret_env_name(ref: str) -> str:

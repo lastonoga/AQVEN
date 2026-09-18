@@ -1,52 +1,49 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "@tanstack/react-router"
-import type { DecisionCommand, ReviewId } from "@/domain"
+import type { ApiExecutionAddress, ApiJsonValue, RunId } from "@/domain"
+import { ApiError, type ApiFailure } from "@/api/client"
 import { reviewRouteApi } from "@/lib/routes"
 
-export type DecisionRequest = {
-  readonly command: DecisionCommand
-  readonly next: ReviewId | null
-  readonly onDecided: () => void
+export type ResumeCommand = {
+  readonly runId: RunId
+  readonly address: ApiExecutionAddress
+  readonly attempt: number
+  readonly payload: ApiJsonValue
+  readonly clientOpId: string
 }
 
 export type ReviewDecision = {
   readonly pending: boolean
-  readonly failedId: ReviewId | null
-  readonly decide: (request: DecisionRequest) => void
+  readonly failure: ApiFailure | null
+  readonly resume: (command: ResumeCommand) => void
+}
+
+const UNKNOWN_FAILURE: ApiFailure = { op: "run_resume", code: "UNKNOWN", message: "", problems: [], retryAfterMs: null }
+
+const failureOf = (reason: unknown): ApiFailure => {
+  if (!(reason instanceof ApiError)) return UNKNOWN_FAILURE
+  return { op: reason.op, code: reason.code, message: reason.message, problems: reason.problems, retryAfterMs: reason.retryAfterMs }
 }
 
 export function useReviewDecision(): ReviewDecision {
-  const { sources } = reviewRouteApi.useRouteContext()
-  const scope = reviewRouteApi.useParams()
-  const navigate = reviewRouteApi.useNavigate()
+  const { api } = reviewRouteApi.useRouteContext()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [failedId, setFailedId] = useState<ReviewId | null>(null)
+  const [failure, setFailure] = useState<ApiFailure | null>(null)
 
-  const refresh = (next: ReviewId | null): Promise<void> => {
-    if (next === null) return router.invalidate()
-    return navigate({ to: ".", search: { item: next }, resetScroll: false }).then(() => router.invalidate())
-  }
-
-  const settle = async ({ command, next, onDecided }: DecisionRequest): Promise<void> => {
-    const saved = await sources.review.decide(scope, command).then(
-      () => true,
-      () => false,
+  const settle = async ({ runId, address, attempt, payload, clientOpId }: ResumeCommand): Promise<void> => {
+    const rejection = await api.run.resume(runId, { address, attempt, payload, client_op_id: clientOpId }).then(
+      () => null,
+      (reason: unknown) => failureOf(reason),
     )
-    if (!saved) {
-      setFailedId(command.reviewId)
-      return
-    }
-    startTransition(() => {
-      onDecided()
-      void refresh(next)
-    })
+    setFailure(rejection)
+    if (rejection === null) await router.invalidate()
   }
 
-  const decide = (request: DecisionRequest): void => {
-    setFailedId(null)
-    startTransition(() => settle(request))
+  const resume = (command: ResumeCommand): void => {
+    setFailure(null)
+    startTransition(() => settle(command))
   }
 
-  return { pending, failedId, decide }
+  return { pending, failure, resume }
 }

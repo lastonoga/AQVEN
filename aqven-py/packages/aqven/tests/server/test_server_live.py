@@ -9,9 +9,8 @@ from typing import Final
 
 import httpx2
 import uvicorn
-from conftest import AUTH, SERVER_TOKEN
 from fastapi import FastAPI
-from server_fakes import RUN_ID, FakeEngine, MemorySettings
+from server_fakes import AUTH, RUN_ID, SERVER_TOKEN, FakeEngine, MemorySettings
 
 from aqven.client import AqvenClient
 from aqven.server import ServerOptions, create_app

@@ -246,12 +246,10 @@ class RefResolver:
         return Resolved(self.type_annotation(flow.input), ())
 
     def _run_context(self, scope: Scope, ref: Ref) -> Resolution:
-        flow = self.graph.flow_spec(scope.owner)
-        declared = {key.value for key in (flow.context or ())} if flow is not None else set[str]()
-        key = ref.key or ""
-        if key not in declared:
-            return _scope_error(scope, f"context key {key} is not declared in the flow context")
-        return Resolved(self.type_annotation(CONTEXT_TYPES_BY_KEY[key]), ())
+        type_id = CONTEXT_TYPES_BY_KEY.get(ref.key or "")
+        if type_id is None:
+            return _scope_error(scope, "the context key is date, time_zone, locale or tenant_id")
+        return Resolved(self.type_annotation(type_id), ())
 
     def _inference_only(self, scope: Scope, ref: Ref) -> Resolution:
         message = (

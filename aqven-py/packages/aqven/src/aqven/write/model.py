@@ -80,13 +80,34 @@ class UnbindOp(RequestModel):
     target: Annotated[str, Field(pattern=SLOT_TARGET_PATTERN)]
 
 
+class RenameAgentOp(RequestModel):
+    op: Literal["rename_agent"]
+    agent_id: EntityName
+    to: EntityName
+
+
+class DeleteAgentOp(RequestModel):
+    op: Literal["delete_agent"]
+    agent_id: EntityName
+
+
 class RenameFlowOp(RequestModel):
     op: Literal["rename_flow"]
     to: EntityName
 
 
 type PatchOp = Annotated[
-    AddNodeOp | RemoveNodeOp | RenameNodeOp | MoveNodeOp | SetOp | UnsetOp | BindOp | UnbindOp | RenameFlowOp,
+    AddNodeOp
+    | RemoveNodeOp
+    | RenameNodeOp
+    | MoveNodeOp
+    | SetOp
+    | UnsetOp
+    | BindOp
+    | UnbindOp
+    | RenameFlowOp
+    | RenameAgentOp
+    | DeleteAgentOp,
     Field(discriminator="op"),
 ]
 

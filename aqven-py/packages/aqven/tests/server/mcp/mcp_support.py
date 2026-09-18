@@ -88,6 +88,7 @@ def snapshot(last_seq: int) -> RunSnapshot:
         waits=(),
         lineage=None,
         execution_id="exec-1",
+        context=None,
         spec_version=SpecVersionInfo(
             id="spec-1",
             content_hash=CONTENT_HASH,

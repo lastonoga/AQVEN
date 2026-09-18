@@ -183,6 +183,16 @@ def test_hash_inside_quoted_string_is_not_a_comment() -> None:
     assert document is not None
 
 
+def test_empty_flow_sequence_is_allowed_as_the_only_empty_list_spelling() -> None:
+    document, problems = read_strict_yaml('a: []\nb:\n- "value"\n', "aqven.yaml")
+
+    assert document is not None and not problems
+    assert document.data == {"a": [], "b": ["value"]}
+
+    _, nonempty_problems = read_strict_yaml('a: ["value"]\n', "aqven.yaml")
+    assert any(problem.code == DiagnosticCode.E_YAML_FLOW_STYLE for problem in nonempty_problems)
+
+
 @pytest.mark.parametrize("path", list(ENTITY_IDS), ids=list(ENTITY_IDS))
 def test_ids_come_from_file_name_up_to_the_first_dot_or_the_flow_folder(path: str) -> None:
     assert (entity_id(path), expected_kind(path)) == ENTITY_IDS[path]

@@ -1,13 +1,16 @@
 import { redirect } from "@tanstack/react-router"
-import type { Locale } from "@/domain"
 import type { RouterContext } from "@/router"
-import { landingOf } from "@/lib/setup"
+import { landingFlow } from "@/lib/landing"
+import { ROUTE_PATH } from "@/lib/routes"
 
-export const redirectToLanding = async ({ sources }: RouterContext, locale: Locale): Promise<never> => {
-  const landing = landingOf(await sources.setup.overview())
-  if (landing.kind === "setup") throw redirect({ to: "/$locale/setup", params: { locale } })
-  throw redirect({
-    to: "/$locale/$workspaceId/$workflowId/schema",
-    params: { locale, workspaceId: landing.workspaceId, workflowId: landing.workflowId },
-  })
+const projectRedirect = (): never => {
+  throw redirect({ to: ROUTE_PATH.project })
+}
+
+export const redirectToLanding = async ({ api }: RouterContext): Promise<never> => {
+  const flows = await api.project.flows().catch(() => null)
+  if (flows === null) return projectRedirect()
+  const landing = landingFlow(flows)
+  if (landing.kind === "project") return projectRedirect()
+  throw redirect({ to: ROUTE_PATH.canvas, params: { flowId: landing.flowId } })
 }

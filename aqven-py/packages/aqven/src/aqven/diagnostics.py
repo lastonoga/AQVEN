@@ -92,6 +92,7 @@ class DiagnosticCode(StrEnum):
     E_APPROVAL_TOOL = "E_APPROVAL_TOOL"
     E_DYNAMIC_LIMITS = "E_DYNAMIC_LIMITS"
     E_DYNAMIC_SOURCE = "E_DYNAMIC_SOURCE"
+    E_DYNAMIC_VALUE_TYPE = "E_DYNAMIC_VALUE_TYPE"
     E_OPAQUE_ACCESS = "E_OPAQUE_ACCESS"
     E_NARROW_TARGET = "E_NARROW_TARGET"
     E_ALLOWED_SET_TYPE = "E_ALLOWED_SET_TYPE"
@@ -104,12 +105,22 @@ class DiagnosticCode(StrEnum):
     E_OPTIMIZATION_TARGET = "E_OPTIMIZATION_TARGET"
     E_PROVIDER_EXTRA_MISSING = "E_PROVIDER_EXTRA_MISSING"
     E_PROVIDER_NO_STREAMING = "E_PROVIDER_NO_STREAMING"
+    E_PROVIDER_FACTORY_INVALID = "E_PROVIDER_FACTORY_INVALID"
+    E_PROVIDER_ID_RESERVED = "E_PROVIDER_ID_RESERVED"
     E_OUTPUT_MODE_UNSUPPORTED = "E_OUTPUT_MODE_UNSUPPORTED"
     E_TYPES_PACKAGE = "E_TYPES_PACKAGE"
+    E_SIM_NODE_FAILED = "E_SIM_NODE_FAILED"
+    E_SIM_PROMPT_RENDER = "E_SIM_PROMPT_RENDER"
+    E_SIM_OUTPUT_INVALID = "E_SIM_OUTPUT_INVALID"
+    E_SIM_RUN_FAILED = "E_SIM_RUN_FAILED"
     W_PROMPT_SHADOWED = "W_PROMPT_SHADOWED"
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
     W_TYPES_SHADOWS_STDLIB = "W_TYPES_SHADOWS_STDLIB"
+    W_SIM_NODE_UNREACHED = "W_SIM_NODE_UNREACHED"
+    W_PROMPT_VALUE_UNREADABLE = "W_PROMPT_VALUE_UNREADABLE"
+    W_TOOL_ARG_UNREACHABLE = "W_TOOL_ARG_UNREACHABLE"
+    W_CONTEXT_KEY_UNUSED = "W_CONTEXT_KEY_UNUSED"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -138,6 +149,7 @@ RULE_BY_CODE: Final[Mapping[DiagnosticCode, str]] = {
     DiagnosticCode.E_SWITCH_ON_TYPE: "R-41",
     DiagnosticCode.E_DYNAMIC_LIMITS: "R-D2",
     DiagnosticCode.E_DYNAMIC_SOURCE: "R-D3",
+    DiagnosticCode.E_DYNAMIC_VALUE_TYPE: "R-D3",
     DiagnosticCode.E_OPAQUE_ACCESS: "R-D1",
     DiagnosticCode.E_NARROW_TARGET: "R-D1",
     DiagnosticCode.E_ALLOWED_SET_TYPE: "R-37a",
@@ -161,11 +173,19 @@ class DiagnosticText:
 DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.E_PROVIDER_EXTRA_MISSING: DiagnosticText(
         "model {model} needs provider {provider}, which is not installed",
-        "install the extra: uv add 'aqven[{extra}]'",
+        'install the extra: uv add "aqven[{extra}]"',
     ),
     DiagnosticCode.E_PROVIDER_NO_STREAMING: DiagnosticText(
         "model {model}: provider {provider} does not support streaming, and aqven streams every model request",
         "choose a model of a provider with streaming support",
+    ),
+    DiagnosticCode.E_PROVIDER_FACTORY_INVALID: DiagnosticText(
+        "provider {provider}: {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_PROVIDER_ID_RESERVED: DiagnosticText(
+        "provider id {provider} belongs to a built-in provider and cannot be declared with kind {kind}",
+        "rename the provider, for example {suggestion}, and write that name in the model of every agent",
     ),
     DiagnosticCode.E_OUTPUT_MODE_UNSUPPORTED: DiagnosticText(
         "output.mode {mode} is not supported by model {model}",
@@ -174,6 +194,26 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_OUTPUT_MODE_RESOLVED: DiagnosticText(
         "output.mode auto resolves to {mode} for model {model} ({source})",
         "set output.mode: {mode} to pin it",
+    ),
+    DiagnosticCode.E_SIM_NODE_FAILED: DiagnosticText(
+        "simulated run of flow {flow} (pass {pass}): node {address} failed: {code}: {message}",
+        "reproduce it with aqven run, or force the branch with a node output override; simulated flow input: {input}",
+    ),
+    DiagnosticCode.E_SIM_PROMPT_RENDER: DiagnosticText(
+        "simulated run of flow {flow} (pass {pass}): node {address} cannot build its prompt: {message}",
+        "check the prompt template, its variables and the inputs bound to the node; simulated flow input: {input}",
+    ),
+    DiagnosticCode.E_SIM_OUTPUT_INVALID: DiagnosticText(
+        "simulated run of flow {flow} (pass {pass}): node {address} returned an output its schema rejects: {message}",
+        "relax the output type or the checks of the node; simulated flow input: {input}",
+    ),
+    DiagnosticCode.E_SIM_RUN_FAILED: DiagnosticText(
+        "simulated run of flow {flow} (pass {pass}) did not finish: {code}: {message}",
+        "run the flow with aqven run to see the failure; simulated flow input: {input}",
+    ),
+    DiagnosticCode.W_SIM_NODE_UNREACHED: DiagnosticText(
+        "node {node} does not run in any simulated pass of flow {flow}",
+        "no simulated input reaches it: check the switch cases and the conditions above it, or remove the node",
     ),
     DiagnosticCode.W_TYPES_SHADOWS_STDLIB: DiagnosticText(
         "generated {module}/types.py shadows the standard library module types while {folder} is on sys.path",

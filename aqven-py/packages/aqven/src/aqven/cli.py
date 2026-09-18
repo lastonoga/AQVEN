@@ -6,8 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, NoReturn
 
+from pydantic import TypeAdapter
+
+from aqven.app.environment import InvalidRuntimeSetting
 from aqven.app.options import add_server_arguments, server_options
-from aqven.check import check_project
+from aqven.check import CheckReport, check_project
+from aqven.check.context_keys import flow_context_keys
+from aqven.check.graph import build_graph
 from aqven.check.output_modes import agent_modes, mode_note
 from aqven.codegen import GENERATED_TYPES, generate_types
 from aqven.console.command import (
@@ -23,11 +28,14 @@ from aqven.console.command import (
     add_format_argument,
     not_implemented,
 )
+from aqven.console.evals import EvalCommand
 from aqven.console.formats import EventFormat
 from aqven.console.models import ModelsCommand
 from aqven.console.new import NewCommand
 from aqven.console.project_env import open_project
-from aqven.diagnostics import format_text, has_errors
+from aqven.console.prompt import PromptCommand
+from aqven.console.secrets import SecretsCommand
+from aqven.diagnostics import Diagnostic, format_text, has_errors
 from aqven.loader import (
     PROJECT_FILE,
     EntityKey,
@@ -59,7 +67,9 @@ __all__ = [
 ]
 
 TARGET_SEPARATOR: Final = ":"
+CONTEXT_SEPARATOR: Final = "="
 CURRENT_FOLDER: Final = "."
+CONTEXT_TEXTS: Final[TypeAdapter[tuple[str, ...]]] = TypeAdapter(tuple[str, ...])
 
 
 type ServeModeName = Literal["studio", "serve"]
@@ -73,11 +83,16 @@ def project_start(root: Path | None, path: str | None, cwd: Path) -> Path:
 
 @dataclass(frozen=True, slots=True)
 class CheckCommand:
-    help: str = "check the project: definition models, references, types, prompts, referenced code"
+    help: str = "check the project statically and simulate every flow without network or tokens"
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         _path_argument(parser)
         add_format_argument(parser)
+        parser.add_argument("--static", action="store_true", help="skip the simulated run of every flow")
+        parser.add_argument(
+            "--simulation-only", action="store_true", help="print only the diagnostics of the simulated runs"
+        )
+        parser.add_argument("--no-cache", action="store_true", help="ignore the simulation cache in .aqven/cache")
 
     def execute(self, arguments: argparse.Namespace) -> int:
         output = OutputFormat(str(arguments.format))
@@ -86,8 +101,18 @@ class CheckCommand:
             return EXIT_FAILED
         generate_types(root)
         report = check_project(root)
-        print(FORMATTERS[output](report.diagnostics))
-        return EXIT_FAILED if has_errors(report.diagnostics) else EXIT_OK
+        simulated = self._simulated(arguments, report)
+        static = () if bool(arguments.simulation_only) else report.diagnostics
+        diagnostics = (*static, *simulated)
+        print(FORMATTERS[output](diagnostics))
+        return EXIT_FAILED if has_errors(diagnostics) else EXIT_OK
+
+    def _simulated(self, arguments: argparse.Namespace, report: CheckReport) -> tuple[Diagnostic, ...]:
+        if bool(arguments.static):
+            return ()
+        from aqven.check.simulation import SimulationOptions, simulate_project
+
+        return simulate_project(report, SimulationOptions(use_cache=not bool(arguments.no_cache)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +161,7 @@ class TreeCommand:
         loaded = _loaded(Path(str(arguments.path)))
         if loaded is None:
             return EXIT_FAILED
-        print(render_tree(build_index(loaded), _agent_notes(loaded)))
+        print(render_tree(build_index(loaded), _tree_notes(loaded)))
         return EXIT_OK
 
 
@@ -182,7 +207,13 @@ class ServerCommand:
         arguments.root = root
         from aqven.console.serve import SERVE_MODES, serve
 
-        return serve(SERVE_MODES[self.mode], server_options(arguments, root))
+        mode = SERVE_MODES[self.mode]
+        try:
+            options = server_options(arguments, root, defaults=mode.defaults)
+        except InvalidRuntimeSetting as invalid:
+            print(f"{PROGRAM} {self.mode}: {invalid}", file=sys.stderr)
+            return EXIT_USAGE
+        return serve(mode, options)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +225,14 @@ class RunCommand:
         parser.add_argument("--input", required=True, type=Path, metavar="FILE_JSON", help="flow input as JSON")
         parser.add_argument("--root", type=Path, default=None, help="project root; searched upward from cwd by default")
         parser.add_argument("--human-answers", type=Path, default=None, metavar="FILE_JSON")
+        parser.add_argument(
+            "--context",
+            action="append",
+            default=[],
+            type=_context_text,
+            metavar="KEY=VALUE",
+            help="run context entry; repeatable; keys: date, time_zone, locale, tenant_id",
+        )
         parser.add_argument("--cassettes", type=Path, default=None, metavar="DIR")
         parser.add_argument(
             "--cassette-mode", choices=[mode.value for mode in CassetteMode], default=CassetteMode.REPLAY_STRICT.value
@@ -211,6 +250,7 @@ class RunCommand:
             root=root,
             flow_id=str(arguments.flow),
             input_file=Path(str(arguments.input)),
+            context=_context_entries(arguments.context),
             answers_file=_optional_path(arguments.human_answers),
             cassettes=_optional_path(arguments.cassettes),
             cassette_mode=CassetteMode(str(arguments.cassette_mode)),
@@ -291,7 +331,9 @@ COMMANDS: Final[Mapping[str, Command]] = {
     "serve": ServerCommand("project server without a browser: Studio API, engine and MCP", "serve"),
     "mcp": McpCommand(),
     "models": ModelsCommand(),
-    "eval": PendingCommand("eval", "run evals and the gate", _eval_options),
+    "secrets": SecretsCommand(),
+    "prompt": PromptCommand(),
+    "eval": EvalCommand(),
     "optimize": PendingCommand("optimize", "optimize a prompt with GEPA", _eval_options),
 }
 
@@ -316,6 +358,23 @@ def run() -> NoReturn:
     sys.exit(main())
 
 
+def _context_text(text: str) -> str:
+    name, separator, _ = text.partition(CONTEXT_SEPARATOR)
+    if not separator or not name:
+        raise argparse.ArgumentTypeError(f"expected KEY{CONTEXT_SEPARATOR}VALUE, got {text}")
+    return text
+
+
+def _context_entries(value: object) -> tuple[tuple[str, str], ...]:
+    texts = CONTEXT_TEXTS.validate_python(value)
+    return tuple(_context_entry(text) for text in texts)
+
+
+def _context_entry(text: str) -> tuple[str, str]:
+    name, _, value = text.partition(CONTEXT_SEPARATOR)
+    return name, value
+
+
 def _path_argument(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("path", help=PATH_HELP)
 
@@ -334,6 +393,19 @@ def _loaded(path: Path) -> LoadedProject | None:
         print(format_text(loaded.diagnostics))
         return None
     return loaded.project
+
+
+def _tree_notes(project: LoadedProject) -> Mapping[EntityKey, str]:
+    return {**_agent_notes(project), **_flow_notes(project)}
+
+
+def _flow_notes(project: LoadedProject) -> Mapping[EntityKey, str]:
+    keys = flow_context_keys(build_graph(project))
+    return {
+        EntityKey(EntityKind.FLOW, flow_id): f"run context: {', '.join(key.value for key in found)}"
+        for flow_id, found in keys.items()
+        if found
+    }
 
 
 def _agent_notes(project: LoadedProject) -> Mapping[EntityKey, str]:

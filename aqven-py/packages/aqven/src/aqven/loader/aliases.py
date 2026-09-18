@@ -116,6 +116,10 @@ SITES: Final[Mapping[SpecKind, tuple[tuple[Pattern, Resolver], ...]]] = {
     SpecKind.TOOL: ((("run",), resolve_code), (("wait", "poll"), resolve_code)),
     SpecKind.INFERENCE: (
         (("prompt",), resolve_prompt),
+        (("display", "input", "run"), resolve_code),
+        (("display", "output", "run"), resolve_code),
+        (("display", "input", "template"), resolve_path),
+        (("display", "output", "template"), resolve_path),
         (("variants", ANY, "cases", ANY), resolve_path),
         (("variants", ANY, "default"), resolve_path),
         (("checks", ANY, "run"), resolve_code),

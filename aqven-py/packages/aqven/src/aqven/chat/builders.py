@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TypedDict
 
+from aqven.chat.agent import TurnAgent
 from aqven.chat.tool_names import ToolIdentity
 from aqven.ports.chat import (
     ApprovalDecision,
@@ -60,8 +61,10 @@ def clip(text: str, limit: int) -> Clip:
     return Clip(text[:limit], True)
 
 
-def turn_started(client_op_id: ClientOpId, text: str) -> ChatEventBuilder:
-    return lambda stamp: ChatTurnStarted(**stamp, client_op_id=client_op_id, text=text)
+def turn_started(client_op_id: ClientOpId, text: str, agent: TurnAgent) -> ChatEventBuilder:
+    return lambda stamp: ChatTurnStarted(
+        **stamp, client_op_id=client_op_id, text=text, backend=agent.backend, model=agent.model
+    )
 
 
 def text_delta(message_id: ChatMessageId, part_index: int, delta: str) -> ChatEventBuilder:
@@ -105,13 +108,15 @@ def file_edit(tool_call_id: ChatToolCallId, path: str, change: ChatFileChange, d
     return lambda stamp: ChatFileEdit(**stamp, tool_call_id=tool_call_id, path=path, change=change, diff=diff)
 
 
-def command_ran(tool_call_id: ChatToolCallId, command: str, description: str | None, output: Clip) -> ChatEventBuilder:
+def command_ran(
+    tool_call_id: ChatToolCallId, command: str, description: str | None, output: Clip, exit_code: int | None = None
+) -> ChatEventBuilder:
     return lambda stamp: ChatCommand(
         **stamp,
         tool_call_id=tool_call_id,
         command=command,
         description=description,
-        exit_code=None,
+        exit_code=exit_code,
         output_preview=output.text,
         truncated=output.truncated,
     )
@@ -154,7 +159,14 @@ def error_raised(code: ChatErrorCode, message: str, retryable: bool) -> ChatEven
     return lambda stamp: ChatErrorRaised(**stamp, code=code, message=message, retryable=retryable)
 
 
-def turn_finished(stop_reason: ChatStopReason, duration_ms: int, usage: ChatUsage | None) -> ChatEventBuilder:
+def turn_finished(
+    stop_reason: ChatStopReason, duration_ms: int, usage: ChatUsage | None, agent: TurnAgent
+) -> ChatEventBuilder:
     return lambda stamp: ChatTurnFinished(
-        **stamp, stop_reason=stop_reason, duration_ms=max(duration_ms, 0), usage=usage
+        **stamp,
+        stop_reason=stop_reason,
+        duration_ms=max(duration_ms, 0),
+        usage=usage,
+        backend=agent.backend,
+        model=agent.model,
     )

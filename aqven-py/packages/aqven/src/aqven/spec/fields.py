@@ -31,10 +31,12 @@ class InputField(FieldDecl):
 class OutputField(FieldDecl):
     schema_from: str | None = None
     limits: DynamicLimits | None = None
+    value_type: str | None = None
 
 
 class BoundField(FieldDecl):
     from_: str = Field(alias="from")
+    value_type: str | None = None
 
 
 class FieldBinding(SpecModel):

@@ -3,14 +3,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Final
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.routing import APIRoute
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
+from aqven.chat.backend_registry import BackendRegistry
+from aqven.chat.backend_selection import ChatBackendChoice, ChatBackendWrite
 from aqven.chat.errors import ChatFailure, ChatFailureCode
 from aqven.chat.journal import ChatSessionDirectory
 from aqven.ports.chat import (
-    AgentBackend,
     ApprovalAnswer,
     ApprovalDecision,
     ChatApprovalId,
@@ -28,6 +29,7 @@ from aqven.runtime.runs import Page
 from aqven.server.context import rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiErrorCode, ApiFailure
 from aqven.server.routes.runs import event_cursor
+from aqven.spec import FlowId
 
 CHAT_PREFIX: Final[str] = "/api/chat"
 CHAT_REST_ONLY: Final[str] = "studio chat agent"
@@ -63,6 +65,7 @@ class ChatRouteContext:
 
 
 class ChatSessionCreate(RequestModel):
+    flow_id: FlowId | None = None
     model: str | None = None
     permission_mode: ChatPermissionMode = "default"
     resume_session_id: ChatSessionId | None = None
@@ -82,7 +85,9 @@ def chat_frame(event: ChatEvent) -> ServerSentEvent:
     return ServerSentEvent(data=event, event=event.type, id=str(event.seq))
 
 
-def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, context: ChatRouteContext) -> APIRouter:
+def build_chat_router(
+    registry: BackendRegistry, sessions: ChatSessionDirectory, context: ChatRouteContext
+) -> APIRouter:
     router = APIRouter(prefix=CHAT_PREFIX, responses=ERROR_RESPONSES, route_class=ChatRoute)
 
     def session_view(session_id: ChatSessionId) -> ChatSession:
@@ -96,11 +101,19 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
 
     @router.get("/status", operation_id="chat_login_status", openapi_extra=rest_only(CHAT_REST_ONLY))
     async def chat_login_status() -> LoginStatus:
-        return await backend.login_status()
+        return await (await registry.selected()).login_status()
+
+    @router.get("/backend", operation_id="chat_backend_get", openapi_extra=rest_only(CHAT_REST_ONLY))
+    async def chat_backend_get() -> ChatBackendChoice:
+        return ChatBackendChoice(backend=await registry.selection.get())
+
+    @router.put("/backend", operation_id="chat_backend_put", openapi_extra=rest_only(CHAT_REST_ONLY))
+    async def chat_backend_put(body: ChatBackendWrite) -> ChatBackendChoice:
+        return ChatBackendChoice(backend=await registry.selection.set(body.backend))
 
     @router.get("/sessions", operation_id="chat_session_list", openapi_extra=rest_only(CHAT_REST_ONLY))
-    async def chat_session_list() -> Page[ChatSession]:
-        items = sessions.list_sessions()
+    async def chat_session_list(flow_id: Annotated[FlowId | None, Query()] = None) -> Page[ChatSession]:
+        items = sessions.list_sessions(flow_id)
         return Page[ChatSession](items=items, next_cursor=None, total_estimate=len(items))
 
     @router.post(
@@ -113,9 +126,15 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
         options = ChatSessionOptions(
             project_root=str(context.project_root),
             mcp_url=context.mcp_url,
+            flow_id=body.flow_id,
             model=body.model,
             permission_mode=body.permission_mode,
             resume_session_id=body.resume_session_id,
+        )
+        backend = (
+            await registry.selected()
+            if body.resume_session_id is None
+            else registry.for_session(session_view(body.resume_session_id))
         )
         return await backend.start_session(options)
 
@@ -125,7 +144,7 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
 
     @router.delete("/sessions/{session_id}", operation_id="chat_session_close", openapi_extra=rest_only(CHAT_REST_ONLY))
     async def chat_session_close(session: Annotated[ChatSession, Depends(existing_session)]) -> ChatSession:
-        await backend.close_session(session.session_id)
+        await registry.for_session(session).close_session(session.session_id)
         return session_view(session.session_id)
 
     @router.post(
@@ -137,7 +156,7 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
     async def chat_message_send(
         session: Annotated[ChatSession, Depends(existing_session)], body: ChatMessageRequest
     ) -> ChatTurnAccepted:
-        turn_id = await backend.send_message(session.session_id, body)
+        turn_id = await registry.for_session(session).send_message(session.session_id, body)
         return ChatTurnAccepted(session_id=session.session_id, turn_id=turn_id)
 
     @router.get(
@@ -149,7 +168,7 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
     async def chat_events(
         session: Annotated[ChatSession, Depends(existing_session)], start: Annotated[int, Depends(event_cursor)]
     ) -> AsyncIterable[ServerSentEvent]:
-        async for event in backend.events(session.session_id, start):
+        async for event in registry.for_session(session).events(session.session_id, start):
             yield chat_frame(event)
 
     @router.post(
@@ -161,14 +180,14 @@ def build_chat_router(backend: AgentBackend, sessions: ChatSessionDirectory, con
         session: Annotated[ChatSession, Depends(existing_session)], approval_id: str, body: ChatApprovalReply
     ) -> ChatSession:
         answer = ApprovalAnswer(approval_id=ChatApprovalId(approval_id), decision=body.decision, message=body.message)
-        await backend.answer_approval(session.session_id, answer)
+        await registry.for_session(session).answer_approval(session.session_id, answer)
         return session_view(session.session_id)
 
     @router.post(
         "/sessions/{session_id}/interrupt", operation_id="chat_interrupt", openapi_extra=rest_only(CHAT_REST_ONLY)
     )
     async def chat_interrupt(session: Annotated[ChatSession, Depends(existing_session)]) -> ChatSession:
-        await backend.interrupt(session.session_id)
+        await registry.for_session(session).interrupt(session.session_id)
         return session_view(session.session_id)
 
     return router

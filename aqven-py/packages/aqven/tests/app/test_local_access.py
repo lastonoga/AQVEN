@@ -41,7 +41,7 @@ async def socket_echo(websocket: WebSocket) -> None:
     await websocket.close()
 
 
-def guarded_app() -> AccessGuard:
+def guarded_app(*, require_token: bool = True) -> AccessGuard:
     inner = Starlette(
         routes=[
             Route("/api/runs", api, methods=["GET", "POST"]),
@@ -51,11 +51,34 @@ def guarded_app() -> AccessGuard:
             Route("/{path:path}", page),
         ]
     )
-    return AccessGuard(inner, local_access_policy(PORT, token=TOKEN, dev_origins=(DEV_ORIGIN,)))
+    return AccessGuard(
+        inner, local_access_policy(PORT, token=TOKEN, dev_origins=(DEV_ORIGIN,), require_token=require_token)
+    )
 
 
-def client() -> httpx2.AsyncClient:
-    return httpx2.AsyncClient(transport=httpx2.ASGITransport(app=guarded_app()), base_url=BASE)
+def client(*, require_token: bool = True) -> httpx2.AsyncClient:
+    return httpx2.AsyncClient(
+        transport=httpx2.ASGITransport(app=guarded_app(require_token=require_token)), base_url=BASE
+    )
+
+
+@pytest.mark.asyncio
+async def test_no_auth_policy_opens_api_without_redirecting_or_setting_cookie() -> None:
+    async with client(require_token=False) as http:
+        api_response = await http.get("/api/runs")
+        page_response = await http.get("/flows/triage", params={"access_token": TOKEN})
+    assert api_response.status_code == 200
+    assert page_response.status_code == 200
+    assert "set-cookie" not in page_response.headers
+
+
+@pytest.mark.asyncio
+async def test_no_auth_policy_still_rejects_foreign_host_and_origin() -> None:
+    async with client(require_token=False) as http:
+        foreign_host = await http.get("/api/runs", headers={"Host": "attacker.example:5180"})
+        foreign_origin = await http.post("/api/runs", headers={"Origin": "https://attacker.example"})
+    assert (foreign_host.status_code, foreign_host.json()["code"]) == (400, "HOST_NOT_ALLOWED")
+    assert (foreign_origin.status_code, foreign_origin.json()["code"]) == (403, "FORBIDDEN")
 
 
 @pytest.mark.asyncio
@@ -216,6 +239,14 @@ def test_websocket_with_bearer_is_accepted() -> None:
     with (
         TestClient(guarded_app(), base_url=BASE) as test_client,
         test_client.websocket_connect(SOCKET_URL, headers=headers) as socket,
+    ):
+        assert socket.receive_text() == "hello"
+
+
+def test_websocket_without_token_is_accepted_when_auth_is_disabled() -> None:
+    with (
+        TestClient(guarded_app(require_token=False), base_url=BASE) as test_client,
+        test_client.websocket_connect(SOCKET_URL) as socket,
     ):
         assert socket.receive_text() == "hello"
 

@@ -16,12 +16,14 @@ from aqven.console.command import EXIT_FAILED, EXIT_OK, PATH_HELP, Command, Outp
 from aqven.console.project_env import open_project
 from aqven.engine.llm.probe import ModelBuilder, ModelProbe, ModeProbe, ModeProber
 from aqven.loader import LoadedProject, load_project
+from aqven.models.providers import CUSTOM_KINDS, custom_options, key_variable
 from aqven.spec import AgentId, OutputModeSetting, StructuredMode
 from aqven_llm import (
     MissingProviderKey,
     ProviderKeys,
     ProviderMisconfigured,
     ProviderModelFactory,
+    ProviderOptions,
     ProviderUnavailable,
     UnknownProvider,
 )
@@ -99,9 +101,22 @@ class TargetNotFound(LookupError):
         self.target = target
 
 
-async def provider_model(model: str) -> Model:
-    key = await ProviderKeys(environ=os.environ).key(model)
-    return ProviderModelFactory().build(model, settings=None, api_key=key)
+@dataclass(frozen=True, slots=True)
+class ProjectModels:
+    providers: Mapping[str, ProviderOptions]
+    custom_keys: Mapping[str, str | None]
+
+    async def build(self, model: str) -> Model:
+        key = await ProviderKeys(environ=os.environ, custom=self.custom_keys).key(model)
+        return ProviderModelFactory(providers=self.providers).build(model, settings=None, api_key=key)
+
+
+def project_models(project: LoadedProject) -> ProjectModels:
+    specs = project.project.spec.providers
+    return ProjectModels(
+        providers={str(spec.id): custom_options(spec) for spec in specs},
+        custom_keys={str(spec.id): key_variable(spec.api_key) for spec in specs if spec.kind in CUSTOM_KINDS},
+    )
 
 
 def snippet(mode: StructuredMode) -> str:
@@ -192,7 +207,7 @@ def check_models(request: ModelsCheckRequest, build: ModelBuilder | None = None,
         return EXIT_FAILED
     try:
         targets = check_targets(loaded.project, request.target)
-        probes = asyncio.run(probe_targets(targets, _builder(request, build)))
+        probes = asyncio.run(probe_targets(targets, _builder(loaded.project, request, build)))
     except (TargetNotFound, *LIVE_ERRORS) as error:
         print(f"{PROGRAM}: {error}", file=sys.stderr)
         return EXIT_FAILED
@@ -238,10 +253,10 @@ class ModelsCommand:
         return MODELS_ACTIONS[str(getattr(arguments, ACTION_DESTINATION))].execute(arguments)
 
 
-def _builder(request: ModelsCheckRequest, build: ModelBuilder | None) -> ModelBuilder | None:
+def _builder(project: LoadedProject, request: ModelsCheckRequest, build: ModelBuilder | None) -> ModelBuilder | None:
     if not request.live:
         return None
-    return provider_model if build is None else build
+    return project_models(project).build if build is None else build
 
 
 def _mode_row(mode: StructuredMode, modes: ModelModes, probe: ModeProbe | None) -> ModeRow:

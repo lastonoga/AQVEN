@@ -99,7 +99,7 @@ async def test_aqven_check_timeout_is_structured(tmp_path: Path) -> None:
     result = await AqvenCheckTool(settings(tmp_path, runner)).check(AqvenCheckInput(timeout_seconds=1))
     assert (result.ok, result.timed_out) == (False, True)
     assert result.failure is not None
-    assert runner.calls[0][0][1:5] == ("-m", "aqven", "check", "--format")
+    assert runner.calls[0][0][1:6] == ("-P", "-m", "aqven", "check", "--format")
     assert runner.calls[0][2] == 1
 
 

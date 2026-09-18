@@ -8,9 +8,10 @@ from aqven.runtime.address import JsonObject
 from aqven.runtime.executions import RunError
 from aqven.runtime.human import ScriptedAnswer
 from aqven.runtime.options import CassetteConfig, ModelProfile, RunContext, RunOptions
+from aqven.runtime.overrides import NodeOutputOverride
 from aqven.runtime.replay import McpToolStub, ProviderFault
 from aqven.runtime.vocabulary import RunMode, TerminalRunStatus
-from aqven.spec import FlowId, Limits
+from aqven.spec import FlowId, Limits, NodeId
 
 RECORD_CONFIG: Final = ConfigDict(extra="forbid", frozen=True)
 
@@ -19,13 +20,19 @@ class RunSpec(BaseModel):
     model_config = RECORD_CONFIG
     flow_id: FlowId
     mode: RunMode = "live"
+    dataset_item_id: str | None = None
     context: RunContext | None = None
+    selected_nodes: tuple[NodeId, ...] | None = None
+    start_node: NodeId | None = None
+    end_node: NodeId | None = None
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
     cassettes: CassetteConfig | None = None
     human_answers: tuple[ScriptedAnswer, ...] = ()
     mcp_stubs: tuple[McpToolStub, ...] = ()
     faults: tuple[ProviderFault, ...] = ()
     limits: Limits | None = None
     models: ModelProfile | None = None
+    outputs: tuple[NodeOutputOverride, ...] = ()
 
     def run_context(self) -> JsonObject:
         if self.context is None:
@@ -44,6 +51,7 @@ def run_spec_of(flow_id: FlowId, options: RunOptions) -> RunSpec:
         faults=options.faults,
         limits=options.limits,
         models=options.models,
+        outputs=options.outputs,
     )
 
 
