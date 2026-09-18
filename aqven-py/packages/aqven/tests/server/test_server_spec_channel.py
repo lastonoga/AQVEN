@@ -144,5 +144,8 @@ def test_spec_sse_replays_with_last_event_id(
     assert server_client.get("/api/project").json()["spec_seq"] == 2
 
 
-def test_event_catalog_is_published(server_client: TestClient) -> None:
-    assert server_client.get("/api/schemas/events").json() == {"spec": [], "run": [], "chat": []}
+def test_spec_channel_events_are_published_with_their_schemas(server_client: TestClient) -> None:
+    schemas = server_client.get("/api/schemas/events").json()["schemas"]["spec"]
+
+    assert set(schemas) == {"files_changed", "diagnostics_changed", "resync"}
+    assert schemas["files_changed"]["properties"]["changes"]["items"]["$ref"].endswith("FileChange")

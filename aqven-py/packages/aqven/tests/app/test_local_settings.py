@@ -20,8 +20,8 @@ SECRET: Final = "sk-or-v1-dotenv-0123456789abcdef"
 ROTATED: Final = "sk-or-v1-rotated-fedcba9876543210"
 SHELL_SECRET: Final = "sk-or-v1-shell-000011112222"
 GEMINI_SECRET: Final = "AIza-gemini-0123456789abcdef"
-OPENROUTER_KEY: Final = provider_key_setting(ProviderName.OPENROUTER)
-GOOGLE_KEY: Final = provider_key_setting(ProviderName.GOOGLE)
+OPENROUTER_KEY: Final = provider_key_setting(ProviderName("openrouter"))
+GOOGLE_KEY: Final = provider_key_setting(ProviderName("google"))
 FIXED_TIME: Final = datetime(2026, 9, 17, 12, 0, tzinfo=UTC)
 PROJECT_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Project"
@@ -136,8 +136,8 @@ async def test_key_names_follow_aqven_yaml_refs_and_secret_convention(tmp_path: 
         ("secrets.slack_token", "SLACK_TOKEN"),
     ]
     by_provider = {name.provider: (name.env_var, name.declared) for name in names.providers()}
-    assert by_provider[ProviderName.GOOGLE] == ("GEMINI_API_KEY", True)
-    assert by_provider[ProviderName.ANTHROPIC] == ("ANTHROPIC_API_KEY", False)
+    assert by_provider[ProviderName("google")] == ("GEMINI_API_KEY", True)
+    assert by_provider[ProviderName("anthropic")] == ("ANTHROPIC_API_KEY", False)
     assert names.env_name(setting_key("secrets.not.an.env")) is None
     assert names.env_name(setting_key("ui.theme")) is None
 

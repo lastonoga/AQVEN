@@ -12,7 +12,7 @@ from aqven.app.locations import ProjectState
 from aqven.app.options import POLL_SECONDS, STARTUP_TIMEOUT_SECONDS
 from aqven.app.runtime_file import ServerRecord
 
-HEADLESS_SERVER_COMMAND: Final = (sys.executable, "-m", "aqven", "serve", "--headless", "--no-browser")
+HEADLESS_SERVER_COMMAND: Final = (sys.executable, "-P", "-m", "aqven", "serve", "--headless", "--no-browser")
 LOG_TAIL_BYTES: Final = 4000
 CLEAN_EXIT: Final = 0
 

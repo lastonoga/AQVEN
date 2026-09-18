@@ -36,6 +36,7 @@ from aqven.engine.human.dbos_adapters import DbosAnswerChannel, DbosStatusReader
 from aqven.engine.lifecycle import EngineSetup
 from aqven.engine.llm import FAILURE_BY_EXCEPTION, LlmDependencies, LlmFailureCode, llm_node_executor
 from aqven.engine.llm.tools import LiveMcpServers
+from aqven.engine.policies import PolicyFactory
 from aqven.engine.runtime import ToolServices
 from aqven.models import AmbiguousReplay, CassetteMiss, RefusedOutput, TruncatedOutput
 from aqven.ports.settings import SettingsStore
@@ -59,7 +60,7 @@ class StandardExtensions:
         index = SqliteWaitIndex.open(services.paths.state / WAITS_DATABASE)
         journal = DbosWaitJournal(index)
         forms = ModelFormRegistry(GeneratedForms(services.loader, services.package).model)
-        control = control_executors(supervisors=branch_supervisor)
+        control = control_executors(policies=self.policies(services), supervisors=branch_supervisor)
         return EngineExtensions(
             llm=llm_node_executor(self.llm_dependencies(services, journal)),
             human=HumanNodeExecutor(journal, forms),
@@ -73,6 +74,9 @@ class StandardExtensions:
                 statuses=IndexedRunStatus(DbosStatusReader(), index),
             ),
         )
+
+    def policies(self, services: ToolServices) -> PolicyFactory:
+        return PolicyFactory(loader=LoaderCode(services.loader))
 
     def llm_dependencies(self, services: ToolServices, journal: DbosWaitJournal) -> LlmDependencies:
         return LlmDependencies(

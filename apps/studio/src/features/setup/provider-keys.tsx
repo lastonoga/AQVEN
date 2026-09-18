@@ -1,47 +1,28 @@
 import { useTranslations } from "use-intl"
-import type { ProviderKey, SecretSource } from "@/domain"
-import { Actions, Tag, type Tone } from "@/components/studio"
+import type { ApiProviderKey } from "@/domain"
+import { Tag } from "@/components/studio"
+import type { Translator } from "@/i18n/translator"
+import { keySource, PROVIDER_SOURCE_TONE } from "./presenters"
 import { SettingRow, SettingRows } from "./setting-row"
 
-const SOURCE_TONE: Readonly<Record<SecretSource | "missing", Tone>> = {
-  project: "success",
-  studio: "success",
-  environment: "primary",
-  missing: "neutral",
+const keyDetail = (entry: ApiProviderKey, t: Translator<"setup.providers">): string => {
+  if (entry.masked === null) return t("notSet", { variable: entry.env_var })
+  return `${entry.masked} · ${entry.env_var}`
 }
 
-type ProvidersTranslator = ReturnType<typeof useTranslations<"setup.providers">>
-
-const keyDetail = (entry: ProviderKey, t: ProvidersTranslator): string => {
-  if (entry.masked === null) return t("notSet", { variable: entry.envVar })
-  if (entry.source === "environment") return `${entry.masked} · ${t("fromEnv", { variable: entry.envVar })}`
-  return entry.masked
-}
-
-function ProviderRow({ entry }: { readonly entry: ProviderKey }) {
+function ProviderRow({ entry }: { readonly entry: ApiProviderKey }) {
   const t = useTranslations("setup.providers")
-  const source = entry.source ?? "missing"
-  const detail = keyDetail(entry, t)
-  const actions =
-    entry.source === null || entry.source === "environment"
-      ? [{ id: "set", label: t("set") }]
-      : [
-          { id: "replace", label: t("replace") },
-          { id: "remove", label: t("remove"), variant: "ghost" as const },
-        ]
+  const source = keySource(entry)
   return (
-    <SettingRow title={t(`names.${entry.provider}`)} hint={detail}>
-      <div className="flex items-center gap-2">
-        <Tag tone={SOURCE_TONE[source]} size="xs">
-          {t(`source.${source}`)}
-        </Tag>
-        <Actions actions={actions} />
-      </div>
+    <SettingRow title={entry.provider} hint={keyDetail(entry, t)} detail={entry.declared ? t("declared") : undefined}>
+      <Tag tone={PROVIDER_SOURCE_TONE[source]} size="xs">
+        {t(`source.${source}`)}
+      </Tag>
     </SettingRow>
   )
 }
 
-export function ProviderKeys({ providers }: { readonly providers: readonly ProviderKey[] }) {
+export function ProviderKeys({ providers }: { readonly providers: readonly ApiProviderKey[] }) {
   return (
     <SettingRows>
       {providers.map((entry) => (

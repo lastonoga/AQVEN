@@ -58,18 +58,19 @@ class StoppingBrowser:
 def project_root(tmp_path: Path) -> Path:
     target = tmp_path / "studio_shop"
     assert create_project(NewProjectRequest(target=target, sync=False)) == 0
-    return (target / "src" / "studio_shop").resolve()
+    return (target / "studio_shop").resolve()
 
 
-def test_dev_serves_the_project_watches_files_and_opens_studio_at_the_token_url(
-    project_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(("extra", "expects_token"), [((), False), (("--require-auth",), True)])
+def test_dev_serves_the_project_watches_files_and_opens_studio_at_the_expected_url(
+    project_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, extra: tuple[str, ...], expects_token: bool
 ) -> None:
     captured = CapturedServer()
     browser = StoppingBrowser(project_root, captured)
     monkeypatch.setattr(serve_module, "studio_server", captured)
     monkeypatch.setattr(webbrowser, "open", browser.open)
 
-    code = main(["dev", str(project_root), "--port", str(free_port()), "--data-dir", str(tmp_path / "data")])
+    code = main(["dev", str(project_root), "--port", str(free_port()), "--data-dir", str(tmp_path / "data"), *extra])
 
     assert code == 0
     [(url, new)] = browser.opened
@@ -81,7 +82,11 @@ def test_dev_serves_the_project_watches_files_and_opens_studio_at_the_token_url(
     assert isinstance(server.engine, DbosEngineHost)
     parts = urlsplit(url)
     assert (parts.scheme, parts.hostname, parts.port) == ("http", LOOPBACK, record.port)
-    assert parse_qs(parts.query)[ACCESS_TOKEN_PARAMETER] == [record.token]
-    assert url == record.browser_url()
+    if expects_token:
+        assert parse_qs(parts.query)[ACCESS_TOKEN_PARAMETER] == [record.token]
+        assert url == record.browser_url()
+    else:
+        assert parts.query == ""
+        assert url == f"{record.url}/"
     assert new == NEW_TAB
     assert read_server_record(ProjectState(project_root)) is None

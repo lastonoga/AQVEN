@@ -5,7 +5,7 @@ from typing import Final
 
 from aqven.check.context import CheckContext
 from aqven.check.graph import NodeEntry
-from aqven.check.nodes import typed_entries
+from aqven.check.nodes import FieldRole, field_sites, typed_entries
 from aqven.check.scopes import InferenceScope, Resolution, Resolved
 from aqven.check.shapes import Missing, NotList, Opaque, is_dynamic, max_items, step_element, unwrap
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
@@ -14,6 +14,7 @@ from aqven.spec import (
     BUILTIN_TYPE_IDS,
     DYNAMIC,
     RECORD_LABEL,
+    BoundField,
     CodeNodeSpec,
     FieldSpec,
     FieldSpecTypeIssue,
@@ -61,7 +62,46 @@ class FieldSpecCall:
 
 def check_dynamic(context: CheckContext) -> Iterable[Diagnostic]:
     outputs = (item for site in _output_sites(context) for item in _output(site))
-    return (*outputs, *_narrows(context), *_field_spec_calls(context))
+    return (*outputs, *_value_type_hints(context), *_narrows(context), *_field_spec_calls(context))
+
+
+def _value_type_hints(context: CheckContext) -> Iterator[Diagnostic]:
+    for site in field_sites(context.graph):
+        field = site.decl
+        if site.role is not FieldRole.OUTPUT or not isinstance(field, OutputField | BoundField):
+            continue
+        hint = field.value_type
+        if hint is None:
+            continue
+        path: YamlPath = (*site.path, "value_type")
+        if field.type.removesuffix("?") != DYNAMIC:
+            yield diagnostic(
+                DiagnosticCode.E_DYNAMIC_VALUE_TYPE,
+                site.file,
+                path,
+                f"value_type is allowed only on a Dynamic output, but {field.name} is {field.type}",
+            )
+            continue
+        try:
+            ref = parse_type_ref(hint)
+        except TypeRefSyntaxError:
+            continue  # check_types reports the invalid reference syntax.
+        if ref.is_optional or ref.is_list:
+            yield diagnostic(
+                DiagnosticCode.E_DYNAMIC_VALUE_TYPE,
+                site.file,
+                path,
+                f"value_type must name one record or union type, but {hint} is optional or a list",
+            )
+            continue
+        target = context.project.types.get(ref.type_id)
+        if target is not None and not isinstance(target.spec, RecordType | UnionType):
+            yield diagnostic(
+                DiagnosticCode.E_DYNAMIC_VALUE_TYPE,
+                site.file,
+                path,
+                f"value_type must name a record or union type, but {hint} is {target.spec.type}",
+            )
 
 
 def _output_sites(context: CheckContext) -> Iterator[OutputSite]:

@@ -69,6 +69,7 @@ def host_name(host_header: str) -> str:
 class AccessPolicy:
     token: str = field(repr=False)
     port: int
+    require_token: bool = True
     trusted_origins: frozenset[str] = field(default_factory=frozenset[str])
     allowed_hosts: frozenset[str] = LOOPBACK_HOSTS
     protected_prefixes: tuple[str, ...] = PROTECTED_PREFIXES
@@ -100,12 +101,15 @@ class AccessPolicy:
         return f"{self.cookie_name}={self.token}; HttpOnly; SameSite=Strict; Path=/"
 
 
-def local_access_policy(port: int, *, token: str | None = None, dev_origins: Sequence[str] = ()) -> AccessPolicy:
+def local_access_policy(
+    port: int, *, token: str | None = None, dev_origins: Sequence[str] = (), require_token: bool = True
+) -> AccessPolicy:
     loopback = frozenset(normalized_origin(f"http://{host}:{port}") for host in LOOPBACK_ORIGIN_HOSTS)
     development = frozenset(normalized_origin(origin) for origin in dev_origins if origin)
     return AccessPolicy(
         token=new_access_token() if token is None else token,
         port=port,
+        require_token=require_token,
         trusted_origins=loopback | development,
     )
 
@@ -199,7 +203,12 @@ def check_preflight(policy: AccessPolicy, request: AccessRequest) -> AccessDecis
 
 
 def check_page_token(policy: AccessPolicy, request: AccessRequest) -> AccessDecision | None:
-    if request.kind != "http" or policy.protects(request.path) or request.method not in PAGE_METHODS:
+    if (
+        not policy.require_token
+        or request.kind != "http"
+        or policy.protects(request.path)
+        or request.method not in PAGE_METHODS
+    ):
         return None
     if not policy.accepts(request.query_token()):
         return None
@@ -213,6 +222,8 @@ def check_open_path(policy: AccessPolicy, request: AccessRequest) -> AccessDecis
 
 
 def check_credentials(policy: AccessPolicy, request: AccessRequest) -> AccessDecision | None:
+    if not policy.require_token:
+        return Admitted(issue_cookie=False)
     if policy.accepts(request.bearer()) or policy.accepts(request.cookie(policy.cookie_name)):
         return Admitted(issue_cookie=False)
     if policy.accepts(request.query_token()):

@@ -59,6 +59,7 @@ class WaitRequest:
     assignee: str
     timeout_seconds: float
     expiry: ExpiryPlan
+    attempt: int = FIRST_ATTEMPT
 
 
 type Received = HumanAnswered | WaitRecord
@@ -81,7 +82,7 @@ class HumanWaiter:
             suspend_data=request.suspend_data,
         )
         opening = await self._opening(
-            request.address, FIRST_ATTEMPT, request.assignee, request.timeout_seconds, request.expiry
+            request.address, request.attempt, request.assignee, request.timeout_seconds, request.expiry
         )
         record = opened_record(subject, opening)
         await self._suspend(record)

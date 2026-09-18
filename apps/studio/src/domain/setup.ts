@@ -1,4 +1,4 @@
-import type { IsoDateTime, ProjectRoot, TemplateId, WorkflowId, WorkspaceId } from "./core"
+import type { IsoDateTime, ProjectRoot } from "./core"
 
 export const AGENT_KINDS = ["claude", "codex"] as const
 export type AgentKind = (typeof AGENT_KINDS)[number]
@@ -35,22 +35,11 @@ export type AgentProbe = {
   readonly checkedAt: IsoDateTime
 }
 
-export type ProjectWorkflow = { readonly id: WorkflowId; readonly nodeCount: number }
-
 export type ProjectInfo = {
   readonly root: ProjectRoot
   readonly name: string
-  readonly workspaceId: WorkspaceId
   readonly git: { readonly branch: string; readonly dirty: boolean } | null
   readonly configFile: string | null
-  readonly workflows: readonly ProjectWorkflow[]
-}
-
-export type WorkflowTemplate = {
-  readonly id: TemplateId
-  readonly title: string
-  readonly summary: string
-  readonly nodeCount: number
 }
 
 export const AGENT_CHOICE_FIELDS = ["reasoning", "approvals", "sandbox"] as const

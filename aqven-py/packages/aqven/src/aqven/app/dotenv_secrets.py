@@ -5,7 +5,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Final
 
-from dotenv import dotenv_values, set_key, unset_key
+from dotenv import dotenv_values, load_dotenv, set_key, unset_key
 from pydantic import SecretStr
 
 from aqven.app.host_os import ensure_private_file
@@ -40,6 +40,13 @@ def ensure_env_ignored(root: Path) -> bool:
     separator = "" if not text or text.endswith("\n") else "\n"
     target.write_text(f"{text}{separator}{PROJECT_ENV_FILE}\n", encoding="utf-8")
     return True
+
+
+def load_project_env(root: Path) -> bool:
+    env_file = project_env_file(root)
+    if not env_file.is_file():
+        return False
+    return load_dotenv(env_file, override=False, interpolate=False)
 
 
 def valid_entry(raw_name: str, raw_value: str | None) -> DotenvEntry | None:

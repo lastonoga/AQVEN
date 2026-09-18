@@ -128,6 +128,7 @@ export function ChoiceGroup<V extends string>(props: ChoiceGroupProps<V>) {
   return (
     <ToggleGroup
       type="single"
+      role="radiogroup"
       aria-label={label}
       value={value ?? NO_VALUE}
       onValueChange={selectHandler(props)}

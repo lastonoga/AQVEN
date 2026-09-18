@@ -17,6 +17,7 @@ from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.instructions import join_instructions, output_limits
 from aqven.engine.llm.output import OutputPlan, agent_output_mode, agent_strict, output_plan
 from aqven.engine.llm.ports import CodeLoader, InferenceModels, MediaLoader, ModelSource, SecretSource, ToolContexts
+from aqven.engine.llm.prompt_trace import captured_prompt
 from aqven.engine.llm.prompts import (
     Conversation,
     PromptRenderer,
@@ -28,11 +29,13 @@ from aqven.engine.llm.prompts import (
 )
 from aqven.engine.llm.streaming import drain_events
 from aqven.engine.llm.tools import McpServers, ToolsetBuilder
-from aqven.ir import CompiledInference
+from aqven.ir import CompiledInference, TemplatePrompt
 from aqven.ir.nodes import OutputMode
+from aqven.models.usage import response_cost_usd
 from aqven.policies.paths import read
 from aqven.ports.execution import ExecutionScope
 from aqven.runtime.address import JsonObject
+from aqven.runtime.executions import PromptTrace
 from aqven.spec import AgentId, InferenceId, Limits, MediaValue, Modality, ModelSettingsSpec, RefRoot, parse_ref
 
 DEFAULT_REQUEST_LIMIT: Final = 50
@@ -62,6 +65,7 @@ class PreparedRun:
     agent: Agent[RunDeps, object]
     deps: RunDeps
     conversation: Conversation
+    prompt_trace: PromptTrace
     variants: dict[str, str]
     plan: OutputPlan
     limits: UsageLimits
@@ -130,12 +134,21 @@ class InferenceAgents:
         media = [await self.media.content(scope, item) for item in media_items]
         conversation = build_conversation(agent.instructions, rendered, example_messages(inference), media)
         plan = output_plan(call.output_mode or agent_output_mode(agent), shaped.model, agent_strict(agent))
+        instructions = _instructions(conversation, plan, shaped.model, agent.output.instruction)
+        trace = captured_prompt(
+            rendered,
+            conversation,
+            instructions,
+            media_items,
+            inference.prompt.template if isinstance(inference.prompt, TemplatePrompt) else None,
+            None if plan.image_field is not None else shaped.model.model_json_schema(),
+        )
         tools = await self.tools.build(scope, agent, nested=call.nested)
         output_type = [plan.spec, DeferredToolRequests] if tools.deferred else [plan.spec]
         built = Agent[RunDeps, object](
             await self.models.model(scope, agent, media_modalities(media_items)),
             output_type=output_type,
-            instructions=_instructions(conversation, plan, shaped.model, agent.output.instruction),
+            instructions=instructions,
             deps_type=RunDeps,
             name=agent.agent_id,
             retries={"output": agent.output.retries},
@@ -148,6 +161,7 @@ class InferenceAgents:
             agent=built,
             deps=deps,
             conversation=conversation,
+            prompt_trace=trace,
             variants=dict(rendered.variants),
             plan=plan,
             limits=usage_limits(limits),
@@ -202,20 +216,12 @@ def model_settings(spec: ModelSettingsSpec | None) -> ModelSettings | None:
 
 
 def response_cost(messages: Iterable[ModelMessage]) -> Decimal:
-    return sum((_cost(message) for message in messages if isinstance(message, ModelResponse)), Decimal(0))
+    responses = (message for message in messages if isinstance(message, ModelResponse))
+    return sum((response_cost_usd(response) for response in responses), Decimal(0))
 
 
 def response_count(messages: Iterable[ModelMessage]) -> int:
     return sum(1 for message in messages if isinstance(message, ModelResponse))
-
-
-def _cost(response: ModelResponse) -> Decimal:
-    if not response.model_name:
-        return Decimal(0)
-    try:
-        return response.cost().total_price
-    except LookupError:
-        return Decimal(0)
 
 
 def _smallest(values: Iterable[int | None]) -> int | None:

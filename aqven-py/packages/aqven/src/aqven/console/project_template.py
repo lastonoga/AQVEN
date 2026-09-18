@@ -16,7 +16,10 @@ PROJECT_TOKEN: Final = "__project__"
 AQVEN_REQUIREMENT_TOKEN: Final = "__aqven_requirement__"
 UV_SOURCES_TOKEN: Final = "__uv_sources__\n"
 MINIMAL_TEMPLATE: Final = "minimal"
-MODULE_ROOT: Final = f"src/{PACKAGE_TOKEN}"
+SHOWCASE_TEMPLATE: Final = "showcase"
+BINARY_SUFFIXES: Final = frozenset({".jpg", ".jpeg", ".png", ".pdf", ".mp4", ".wav", ".ico"})
+MODULE_ROOT: Final = PACKAGE_TOKEN
+TESTS_FOLDER: Final = "tests"
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +28,7 @@ class TemplateValues:
     project: str
     aqven_requirement: str
     uv_sources: str
+    with_tests: bool = False
 
     def tokens(self) -> Mapping[str, str]:
         return {
@@ -38,7 +42,7 @@ class TemplateValues:
 @dataclass(frozen=True, slots=True)
 class RenderedFile:
     path: PurePosixPath
-    content: str
+    content: str | bytes
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,8 +87,18 @@ def rendered_path(relative: PurePosixPath, tokens: Mapping[str, str]) -> PurePos
     return PurePosixPath(*(output_name(part, tokens) for part in relative.parts))
 
 
+def rendered_content(path: PurePosixPath, source: Traversable, tokens: Mapping[str, str]) -> str | bytes:
+    if path.suffix in BINARY_SUFFIXES:
+        return source.read_bytes()
+    return substituted(source.read_text(TEMPLATE_ENCODING), tokens)
+
+
 def template_folder(name: str) -> Traversable:
     return files(TEMPLATE_PACKAGE).joinpath(TEMPLATES_FOLDER, name)
+
+
+def in_tests(relative: PurePosixPath) -> bool:
+    return relative.parts[0] == TESTS_FOLDER
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,15 +110,23 @@ class PackageDataTemplate:
     def render(self, values: TemplateValues) -> RenderedProject:
         tokens = values.tokens()
         rendered = tuple(
-            RenderedFile(rendered_path(relative, tokens), substituted(source.read_text(TEMPLATE_ENCODING), tokens))
+            self._file(rendered_path(relative, tokens), source, tokens)
             for relative, source in template_files(template_folder(self.name), PurePosixPath())
+            if values.with_tests or not in_tests(relative)
         )
         return RenderedProject(files=rendered, module_root=PurePosixPath(substituted(self.module_root, tokens)))
+
+    def _file(self, path: PurePosixPath, source: Traversable, tokens: Mapping[str, str]) -> RenderedFile:
+        return RenderedFile(path, rendered_content(path, source, tokens))
 
 
 TEMPLATES: Final[Mapping[str, ProjectTemplate]] = {
     MINIMAL_TEMPLATE: PackageDataTemplate(
         name=MINIMAL_TEMPLATE,
         description="one flow with a code step, an llm step on OpenRouter, a tool, types and an offline test",
+    ),
+    SHOWCASE_TEMPLATE: PackageDataTemplate(
+        name=SHOWCASE_TEMPLATE,
+        description="the lumen example: two flows with every node kind, human waits, tools, evals and main.py",
     ),
 }

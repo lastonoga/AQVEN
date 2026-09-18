@@ -1,0 +1,11 @@
+{% section title: "Illustration brief" %}
+  {% card title: "Image brief", description: "Complete prompt and product context" %}
+    {% field label: "Product category", path: "/category" %}
+    {% text path: "/text" %}
+  {% endcard %}
+  {% if value.photo %}
+    {% card title: "Reference photo", description: "Customer-provided image" %}
+      {% media path: "/photo", alt: "Customer photo" %}
+    {% endcard %}
+  {% endif %}
+{% endsection %}

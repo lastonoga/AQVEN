@@ -1,0 +1,29 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "Lumen: поддержка покупателей бренда умного освещения — воркфлоу обращения и вызываемый им воркфлоу панели судей на все паттерны и режимы исполнения"
+package: "__package__"
+providers:
+- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "unknown"
+  routing:
+    data_collection: "deny"
+    zdr: false
+policies:
+  pii:
+    mask_in_traces: true
+    redact:
+    - "email"
+    - "phone"
+    - "card_number"
+    - "iban"
+  trust:
+    default_in: "untrusted"
+renames:
+- kind: "node"
+  from: "support_case.drafts__claude"
+  to: "support_case.drafts__mistral"
+  at: "2026-09-17T16:48:45Z"

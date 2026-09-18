@@ -2,15 +2,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final, get_args
 
-import pytest
-from pydantic import ValidationError
-
 from aqven.engine.interpreter import NodeFinishedBuilder, RunFinishedBuilder, record_of
 from aqven.engine.request import RunUsageTotals
 from aqven.ports.execution import EventStamp, NodeFailed, NodeSucceeded
 from aqven.runtime import (
     MODEL_OUTPUT_ERROR_CODES,
-    RAW_EXCERPT_LIMIT,
     RUN_EVENT_ADAPTER,
     AttemptCause,
     ModelErrorDetails,
@@ -21,7 +17,6 @@ from aqven.runtime import (
     RunError,
     RunFinished,
     RunId,
-    excerpt_of,
     node_address,
 )
 
@@ -104,9 +99,7 @@ def test_successful_node_finished_has_no_error() -> None:
     assert finished.cost_usd == Decimal(0)
 
 
-def test_raw_excerpt_is_bounded() -> None:
-    text = "x" * (RAW_EXCERPT_LIMIT + 10)
+def test_raw_excerpt_keeps_complete_long_output() -> None:
+    text = "x" * 5000
 
-    assert len(excerpt_of(text)) == RAW_EXCERPT_LIMIT
-    with pytest.raises(ValidationError):
-        ModelErrorDetails(raw_excerpt=text)
+    assert ModelErrorDetails(raw_excerpt=text).raw_excerpt == text

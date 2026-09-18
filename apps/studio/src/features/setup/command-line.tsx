@@ -8,7 +8,7 @@ const copyText = (text: string): void => {
 }
 
 export function CommandLine({ command }: { readonly command: string }) {
-  const t = useTranslations("setup.agent")
+  const t = useTranslations("setup.command")
   const copy = (
     <Button
       variant="ghost"

@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Answer a customer question"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$reply.out.answer"
+order:
+- "reply"

@@ -11,6 +11,7 @@ from aqven.runtime.address import ExecutionAddress, RequestModel, RunId
 from aqven.runtime.events import RunEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution
 from aqven.runtime.human import ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse
 from aqven.runtime.runs import (
     CancelRequest,
     CancelResult,
@@ -26,6 +27,8 @@ from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES
 from aqven.server.run_inputs import check_start
+from aqven.server.views.datasets import resolve_dataset_run
+from aqven.server.views.secrets import missing_secret_warnings
 
 ACCEPTED: Final = 202
 UNCONFIRMED_OUTCOME: Final = "sent"
@@ -74,8 +77,12 @@ def build_runs_router(context: ServerContext) -> APIRouter:
 
     @router.post("/runs", status_code=201, operation_id="run_start", openapi_extra=operation("run_start"))
     async def start_run(request: RunStartRequest) -> RunStarted:
-        check_start(await context.workspace.state(), request)
-        return await facade.start_run(request)
+        state = await context.workspace.state()
+        resolved = resolve_dataset_run(state, request)
+        check_start(state, resolved)
+        warnings = await missing_secret_warnings(context.settings, context.environ, state)
+        started = await facade.start_run(resolved, dataset_item_id=request.dataset_item_id)
+        return started.model_copy(update={"warnings": warnings})
 
     @router.get("/runs", operation_id="run_list", openapi_extra=operation("run_list"))
     async def list_runs(query: Annotated[RunListQuery, Query()]) -> Page[RunSummary]:
@@ -115,6 +122,14 @@ def build_runs_router(context: ServerContext) -> APIRouter:
     )
     async def get_execution(run_id: str, query: Annotated[ExecutionDetailQuery, Query()]) -> ExecutionDetail:
         return await facade.get_execution(RunId(run_id), query.address(), query.include_payloads)
+
+    @router.post(
+        "/runs/{run_id}/presentation",
+        operation_id="run_presentation",
+        openapi_extra=operation("run_get_node"),
+    )
+    async def present_run(run_id: str, request: PresentationRequest) -> PresentationResponse:
+        return await facade.present_run(RunId(run_id), request)
 
     @router.post("/runs/{run_id}/resume", operation_id="run_resume", openapi_extra=operation("run_resume"))
     async def resume_run(run_id: str, request: ResumeRequest, response: Response) -> ResumeResult:

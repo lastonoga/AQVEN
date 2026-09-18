@@ -1,18 +1,23 @@
+import asyncio
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Final, Protocol
+from typing import Final, Literal, Protocol
 
 from dbos import DBOS, SetWorkflowID, WorkflowHandleAsync, WorkflowStatus
 from dbos import error as dbos_errors
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
+from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.forking import locate_fork, new_run_id, perform_fork
 from aqven.engine.interpreter import run_flow
-from aqven.engine.projection import RunFold, fold_events
+from aqven.engine.listing import RunListing, WorkflowFilters
+from aqven.engine.llm.errors import LlmNodeError
+from aqven.engine.presentation import CurrentFormatterLoader, CurrentTemplateLoader, present_batch
+from aqven.engine.projection import ExecutionFold, RunFold, fold_events
 from aqven.engine.protocol import (
     POLLING_INTERVAL_SECONDS,
     RUN_FLOW_WORKFLOW,
@@ -20,12 +25,15 @@ from aqven.engine.protocol import (
 from aqven.engine.reader import TERMINAL_DBOS_STATUSES, RunEventLog
 from aqven.engine.request import RUN_CALL_ARGUMENTS, RunCall, RunRecord, RunSpec
 from aqven.engine.runtime import NO_OVERRIDES, EngineRuntime, RunOverrides
-from aqven.ir import CompiledProject, IrLookupError, flow_hash
+from aqven.engine.selection import SelectionError, execution_order, range_missing, range_order
+from aqven.ir import CompiledFlow, CompiledProject, IrHash, IrLookupError, flow_hash
 from aqven.ports.engine import EngineError, EventLogQuery, ExecutionQuery, RunListQuery
+from aqven.ports.identity import local_user, resolved_assignee
 from aqven.runtime.address import ExecutionAddress, JsonObject, Problem, RunId
 from aqven.runtime.events import RunEvent
-from aqven.runtime.executions import ExecutionDetail, NodeExecution, RunError
-from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.executions import ExecutionDetail, NodeExecution, ResolvedAllowedSet, RunError
+from aqven.runtime.human import HumanWait, HumanWaitDetail, OpenWaitFilter, ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse, PresentationResult
 from aqven.runtime.runs import (
     WORKING_COPY,
     CancelRequest,
@@ -42,18 +50,59 @@ from aqven.runtime.runs import (
 )
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import IncludePayloads, RunStatus
-from aqven.spec import FlowId
+from aqven.spec import FlowId, InferenceId, NodeId, RunContextKey
 
 QUEUED_DBOS_STATUSES: Final = frozenset({"ENQUEUED", "DELAYED"})
 SETTLED_STATUSES: Final = frozenset({"completed", "failed"})
 MILLISECONDS: Final = 1000
 UI_RUNS_PATH: Final = "/runs/"
 INPUT_PATH: Final = "input"
-FIRST_PAGE: Final = 0
+CONTEXT_PATH: Final = "context"
+CONTEXT_PROBLEM: Final = "CONTEXT_KEY_MISSING"
 
 
 class PlanSource(Protocol):
     def current(self) -> CompiledProject: ...
+
+
+def missing_context_keys(flow: CompiledFlow, spec: RunSpec) -> tuple[RunContextKey, ...]:
+    if spec.start_node is not None:
+        return ()
+    provided = spec.run_context()
+    return tuple(key for key in flow.context if key not in provided)
+
+
+def context_problem(flow: CompiledFlow, key: RunContextKey) -> Problem:
+    message = f"flow {flow.flow_id} reads $run.context.{key.value} and the run was started without it"
+    return Problem(path=(CONTEXT_PATH, key.value), code=CONTEXT_PROBLEM, message=message)
+
+
+def require_context(flow: CompiledFlow, spec: RunSpec) -> None:
+    missing = missing_context_keys(flow, spec)
+    if not missing:
+        return
+    names = ", ".join(key.value for key in missing)
+    message = f"flow {flow.flow_id} needs run context keys: {names}; pass them in context, the engine invents none"
+    raise EngineError(
+        "CONTEXT_MISSING",
+        message,
+        problems=tuple(context_problem(flow, key) for key in missing),
+        details={CONTEXT_PATH: [key.value for key in missing]},
+    )
+
+
+def recorded_allowed_sets(plan: CompiledProject | None, fold: ExecutionFold) -> tuple[ResolvedAllowedSet, ...]:
+    if plan is None or fold.inference is None or fold.input_stage != "normalized":
+        return ()
+    if not isinstance(fold.input_ref, InlineValue):
+        return ()
+    inference = plan.inferences.get(InferenceId(fold.inference))
+    if inference is None:
+        return ()
+    try:
+        return allowed_set_views(inference, fold.input_ref)
+    except LlmNodeError:
+        return ()
 
 
 def epoch_time(stamp: int | None) -> datetime:
@@ -143,6 +192,10 @@ class RunRecordView:
             definition_changed=False,
             waits=self.waits,
             lineage=Lineage(relation="fork", parent_run_id=RunId(forked_from)) if forked_from else None,
+            dataset_item_id=self.call.spec.dataset_item_id,
+            selected_nodes=self.call.spec.selected_nodes,
+            start_node=self.call.spec.start_node,
+            end_node=self.call.spec.end_node,
         )
 
     def snapshot(self) -> RunSnapshot:
@@ -153,6 +206,8 @@ class RunRecordView:
         return RunSnapshot(
             **summary.model_dump(),
             execution_id=self.run_id,
+            context=self.call.spec.context,
+            node_outputs=self.call.spec.node_outputs,
             spec_version=SpecVersionInfo(
                 id=self.call.ir_hash,
                 content_hash=summary.content_hash,
@@ -184,12 +239,42 @@ class DbosEngineFacade:
     plan_source: PlanSource | None = None
     log: RunEventLog = field(default_factory=RunEventLog)
 
-    async def start_run(self, request: RunStartRequest) -> RunStarted:
+    async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         if request.at != WORKING_COPY or request.dataset_item_id is not None:
             raise EngineError("NOT_RUNNABLE", "a run can start only from the working copy with an explicit input")
         plan = self._current_plan()
-        flow_input = self.validated_input(plan, request.flow_id, request.input)
-        spec = RunSpec(flow_id=request.flow_id, mode=request.mode, human_answers=request.human_answers or ())
+        if request.flow_id not in plan.flows:
+            raise EngineError("NOT_FOUND", f"flow {request.flow_id} is not in the plan")
+        try:
+            flow = plan.flow(request.flow_id)
+            if request.start_node is not None and request.end_node is not None:
+                range_order(flow, request.start_node, request.end_node)
+                if not isinstance(request.input, dict):
+                    raise EngineError("INPUT_INVALID", "a node range needs an input record")
+                flow_input = request.input
+                context = request.context.model_dump(mode="json", exclude_none=True) if request.context else {}
+                missing = range_missing(
+                    flow, request.start_node, request.end_node, flow_input, context, request.node_outputs
+                )
+                if missing:
+                    details = "; ".join(f"{item.reference}: {item.reason}" for item in missing)
+                    raise EngineError("INPUT_INVALID", f"node range is missing boundary data: {details}")
+            else:
+                flow_input = self.validated_input(plan, request.flow_id, request.input)
+                execution_order(flow, request.selected_nodes)
+        except SelectionError as error:
+            raise EngineError("INPUT_INVALID", str(error)) from error
+        spec = RunSpec(
+            flow_id=request.flow_id,
+            mode=request.mode,
+            dataset_item_id=dataset_item_id,
+            context=request.context,
+            selected_nodes=request.selected_nodes,
+            start_node=request.start_node,
+            end_node=request.end_node,
+            node_outputs=request.node_outputs,
+            human_answers=request.human_answers or (),
+        )
         return await self.launch(plan, spec, flow_input, NO_OVERRIDES)
 
     async def launch(
@@ -197,6 +282,7 @@ class DbosEngineFacade:
     ) -> RunStarted:
         if spec.flow_id not in plan.flows:
             raise EngineError("NOT_FOUND", f"flow {spec.flow_id} is not in the plan")
+        require_context(plan.flow(spec.flow_id), spec)
         ir_hash = self.runtime.plans.register(plan)
         run_id = RunId(str(uuid.uuid7()))
         self.runtime.services.overrides.register(run_id, overrides)
@@ -248,17 +334,26 @@ class DbosEngineFacade:
         return (await self._view(run_id)).snapshot()
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
-        statuses = await DBOS.list_workflows_async(name=RUN_FLOW_WORKFLOW, sort_desc=True, load_output=False)
-        views = [view for view in [await self._view_of(status) for status in statuses] if view is not None]
-        matching = [view.summary() for view in views if _matches(view, query)]
-        start = int(query.cursor) if query.cursor and query.cursor.isdigit() else FIRST_PAGE
-        page = matching[start : start + query.limit]
-        following = start + query.limit
-        return Page[RunSummary](
-            items=tuple(page),
-            next_cursor=str(following) if following < len(matching) else None,
-            total_estimate=len(matching),
+        services = self.runtime.services
+        user = await local_user(services.settings, services.environ)
+        wanted = query.model_copy(update={"assignee": resolved_assignee(query.assignee, user)})
+        return await RunListing(self).page(wanted)
+
+    async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]:
+        return await self.runtime.human_layer.open_runs(wanted)
+
+    async def summaries(self, filters: WorkflowFilters, run_ids: Sequence[RunId] | None) -> Sequence[RunSummary]:
+        statuses = await DBOS.list_workflows_async(
+            name=RUN_FLOW_WORKFLOW,
+            workflow_ids=None if run_ids is None else list(run_ids),
+            start_time=filters.start_time,
+            end_time=filters.end_time,
+            forked_from=filters.forked_from,
+            sort_desc=True,
+            load_output=False,
         )
+        views = [view for view in [await self._view_of(status) for status in statuses] if view is not None]
+        return [view.summary() for view in views]
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         await self._status(run_id)
@@ -297,20 +392,60 @@ class DbosEngineFacade:
             raise EngineError("NOT_FOUND", f"run {run_id} has no execution at {address.model_dump_json()}")
         execution = fold.view()
         finished = view.fold.finished
-        error = (
+        run_error = (
             finished.error if finished is not None and finished.error and finished.error.address == address else None
         )
+        error = fold.error or run_error
+        plan = self.runtime.plans.find(IrHash(view.call.ir_hash))
+        allowed_sets = recorded_allowed_sets(plan, fold) if include_payloads != "none" else ()
+        schema_source: Literal["run", "current", "unavailable"] = "run" if plan is not None else "unavailable"
+        if plan is None and self.plan_source is not None:
+            try:
+                plan = self._current_plan()
+                schema_source = "current"
+            except EngineError:
+                pass
+        node = plan.flow(view.call.spec.flow_id).nodes.get(NodeId(address.node_id)) if plan is not None else None
+        if node is None:
+            schema_source = "unavailable"
         return ExecutionDetail(
-            **execution.model_dump(exclude={"output_ref"}),
+            **execution.model_dump(exclude={"input_ref", "output_ref"}),
+            input_ref=None if include_payloads == "none" else execution.input_ref,
             output_ref=None if include_payloads == "none" else execution.output_ref,
             provenance={},
-            prompt=None,
+            input_schema=getattr(node, "input_schema", None),
+            output_schema=node.output_schema if node is not None else None,
+            schema_source=schema_source,
+            allowed_sets=allowed_sets,
+            prompt=fold.prompt,
             response=None,
             attempts=tuple(fold.attempts),
-            checks=(),
+            checks=tuple(fold.checks),
             rule_firings=(),
             error=error,
             human=await self._human_detail(run_id, address),
+        )
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
+        view = await self._view(run_id)
+        plan = self.runtime.plans.find(IrHash(view.call.ir_hash))
+        if plan is None:
+            return PresentationResponse(
+                results=tuple(
+                    PresentationResult(target=target, status="unavailable", error="run plan snapshot is unavailable")
+                    for target in request.targets
+                )
+            )
+        return await asyncio.to_thread(
+            present_batch,
+            plan,
+            view.call.spec.flow_id,
+            view.call.spec.run_context(),
+            view.fold,
+            request,
+            CurrentFormatterLoader(self.runtime.services.loader).load,
+            self.runtime.services.blobs.read,
+            CurrentTemplateLoader(self.runtime.services.loader.root).load,
         )
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:
@@ -389,14 +524,3 @@ class DbosEngineFacade:
             return await self.runtime.human_layer.wait_detail(run_id, address)
         except EngineError:
             return None
-
-
-def _matches(view: RunRecordView, query: RunListQuery) -> bool:
-    checks = (
-        query.flow_id is None or view.call.spec.flow_id == query.flow_id,
-        query.status is None or view.run_status == query.status,
-        query.mode is None or view.call.spec.mode == query.mode,
-        query.parent_run_id is None or view.status.forked_from == query.parent_run_id,
-        query.assignee is None or any(wait.assignee == query.assignee for wait in view.waits),
-    )
-    return all(checks)

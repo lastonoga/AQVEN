@@ -128,6 +128,8 @@ SITES: Final[Mapping[EntityKind, tuple[_Site, ...]]] = {
     EntityKind.INFERENCE: (
         *FIELD_TYPES,
         (("prompt",), EntityKind.CODE),
+        (("display", "input", "run"), EntityKind.CODE),
+        (("display", "output", "run"), EntityKind.CODE),
         (("allowed_sets", ANY, "type"), EntityKind.TYPE),
         *_evaluators("checks"),
     ),

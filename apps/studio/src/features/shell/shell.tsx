@@ -1,19 +1,22 @@
+import { useState } from "react"
 import { useTranslations } from "use-intl"
 import { SplitPane, Surface, type SplitPanel } from "@/components/studio"
 import { ChatPanel } from "@/features/chat"
-import { shellRouteApi } from "@/lib/routes"
-import { WorkflowPicker } from "./workflow-picker"
-import { WorkspaceFrame } from "./workspace-frame"
+import { SettingsDialog } from "@/features/setup"
+import { flowRouteApi } from "@/lib/routes"
+import { FlowPicker } from "./flow-picker"
+import { FlowFrame } from "./flow-frame"
 
 const CHAT_PANEL: Omit<SplitPanel, "content"> = { id: "chat", defaultSize: 352, minSize: 280, maxSize: 680, fixed: true }
 const WORKSPACE_PANEL: Omit<SplitPanel, "content"> = { id: "workspace", minSize: 560 }
 
 export function Shell() {
-  const { shell } = shellRouteApi.useLoaderData()
+  const { project, flows, flow } = flowRouteApi.useLoaderData()
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const t = useTranslations("shell")
   const panels: readonly SplitPanel[] = [
-    { ...CHAT_PANEL, content: <ChatPanel header={<WorkflowPicker shell={shell} />} /> },
-    { ...WORKSPACE_PANEL, content: <WorkspaceFrame latestRun={shell.latestRun} /> },
+    { ...CHAT_PANEL, content: <ChatPanel header={<FlowPicker project={project} flows={flows} flow={flow} onOpenSettings={() => { setSettingsOpen(true) }} />} /> },
+    { ...WORKSPACE_PANEL, content: <FlowFrame flow={flow} /> },
   ]
   return (
     <div className="relative h-full min-w-[1180px] overflow-hidden">
@@ -28,6 +31,12 @@ export function Shell() {
           panels={panels}
         />
       </div>
+      {settingsOpen ? (
+        <SettingsDialog
+          project={project}
+          onClose={() => { setSettingsOpen(false) }}
+        />
+      ) : null}
     </div>
   )
 }

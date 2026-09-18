@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
-import { daysAgo, FIXTURE_NOW, hoursAgo } from "@/mocks/data/clock"
+import { isoDateTime } from "@/data/ids"
 import { relativeTime, useRichTags } from "./format"
 
+const MS_PER_HOUR = 3_600_000
+const HOURS_PER_DAY = 24
+const FIXTURE_NOW = "2026-09-17T22:00:00.000Z"
+
 const now = new Date(FIXTURE_NOW)
+const hoursAgo = (hours: number) => isoDateTime(new Date(now.getTime() - hours * MS_PER_HOUR).toISOString())
+const daysAgo = (days: number) => hoursAgo(days * HOURS_PER_DAY)
 
 function RichTagsProbe() {
   const tags = useRichTags()

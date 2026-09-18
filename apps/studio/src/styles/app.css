@@ -200,3 +200,11 @@
   body { @apply text-base; }
   ::selection { @apply bg-muted; }
 }
+
+.aqven-flat-value { container: aqven-flat-value / inline-size; }
+.aqven-flat-value-short { display: none; text-decoration: none; }
+
+@container aqven-flat-value (max-width: 320px) {
+  .aqven-flat-value-full { display: none; }
+  .aqven-flat-value-short { display: inline; }
+}

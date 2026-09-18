@@ -1,41 +1,27 @@
-import type { ColumnPath, NestedBlock as NestedRun } from "@/domain"
-import { Heading, Surface, Tag } from "@/components/studio"
-import { columnPathOf, groupContext, openChildColumn, type TraceContext, type TraceScope } from "./context"
+import { NODE_KIND, Surface, Heading } from "@/components/studio"
+import { groupContext, openChildColumn, type TraceContext } from "./context"
 import { GroupMatrix } from "./group-matrix"
-import { nestedHeading } from "./nested"
 
-export type NestedBlockProps = {
-  readonly block: NestedRun
-  readonly path: ColumnPath
-  readonly depth: number
-  readonly scope: TraceScope
-}
+export type NestedBlockProps = { readonly ctx: TraceContext }
 
-export function NestedBlock({ block, path, depth, scope }: NestedBlockProps) {
-  const ctx = groupContext(scope, block.group, path, depth)
-  const heading = nestedHeading(block, depth, scope.t)
-  const tags = (
-    <>
-      <Tag>{heading.depthLabel}</Tag>
-      <Tag tone={heading.tone}>{heading.kindLabel}</Tag>
-    </>
-  )
+export function OpenNestedBlock({ ctx }: NestedBlockProps) {
+  const column = openChildColumn(ctx)
+  const child = column?.child
+  if (column === undefined || child === undefined || child === null) return null
+  const nested = groupContext(ctx, child.group, ctx.depth + 1)
   return (
-    <Surface variant="well" padding="sm" accent="left-3" tone={heading.tone} id={path}>
-      <Heading size="item" leading={tags} title={heading.title} description={heading.hint}>
-        <div className="flex flex-col gap-2.75">
-          <Surface variant="panel" radius="lg" className="overflow-x-auto">
-            <GroupMatrix ctx={ctx} label={heading.title} />
-          </Surface>
-          <OpenNestedBlock ctx={ctx} />
-        </div>
-      </Heading>
+    <Surface variant="panel" className="overflow-hidden" id={column.id}>
+      <Heading
+        size="label"
+        title={ctx.t("trace.nested.title", { name: column.name })}
+        tags={[{ tone: NODE_KIND[child.kind].tone, fill: "tint", size: "micro", children: NODE_KIND[child.kind].code }]}
+        description={ctx.t("trace.nested.fanOut", { count: child.fanOut })}
+        className="px-2.5 pt-2"
+      />
+      <div className="overflow-x-auto">
+        <GroupMatrix ctx={nested} label={column.name} />
+      </div>
+      <OpenNestedBlock ctx={nested} />
     </Surface>
   )
-}
-
-export function OpenNestedBlock({ ctx }: { readonly ctx: TraceContext }) {
-  const column = openChildColumn(ctx)
-  if (column?.child === undefined) return null
-  return <NestedBlock block={column.child.block} path={columnPathOf(ctx, column)} depth={ctx.depth + 1} scope={ctx} />
 }

@@ -1,21 +1,26 @@
 {
-  "modes": {
-    "navAria": "Workflow views"
+  "tabs": {
+    "navAria": "Flow views"
   },
   "run": {
-    "openAria": "Open run {run} in Dataflow"
+    "openAria": "Open run {run}"
   },
   "resizeChatAria": "Resize chat",
+  "frame": {
+    "io": "{input} → {output}",
+    "problems": "{count, plural, one {# problem} other {# problems}}",
+    "lastRun": "last run {status}",
+    "neverRun": "never run",
+    "unknownType": "?"
+  },
   "picker": {
-    "triggerAria": "Switch workflow",
-    "label": "Workflows in {workspace}",
-    "stages": "{count, plural, one {# stage} other {# stages}}",
+    "triggerAria": "Switch flow",
+    "label": "Flows in {project}",
+    "nodes": "{count, plural, one {# node} other {# nodes}}",
     "run": "run {run}",
     "neverRun": "never run",
     "current": "OPEN",
-    "newWorkflow": "New workflow",
-    "allWorkflows": "All workflows",
-    "settings": "Workflow settings",
+    "project": "Project overview",
     "studioSettings": "Studio settings"
   }
 }

@@ -15,6 +15,7 @@ from aqven.runtime.events import NodeStarted as NodeStartedEvent
 from aqven.runtime.events import RunEvent, RunFinished, RunStartedEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution
 from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse, PresentationResult
 from aqven.runtime.runs import (
     CancelRequest,
     CancelResult,
@@ -31,6 +32,9 @@ from aqven.runtime.runs import (
 from aqven.runtime.vocabulary import IncludePayloads, ResumeOutcome
 from aqven.spec import FlowId, NodeKind
 
+SERVER_TOKEN: Final = "test-token-0123456789"
+SERVER_BASE: Final = "http://127.0.0.1:5180"
+AUTH: Final = {"Authorization": f"Bearer {SERVER_TOKEN}"}
 FIXTURES: Final = Path(__file__).resolve().parents[1] / "fixtures"
 MOMENT: Final = datetime(2026, 9, 17, 10, 0, tzinfo=UTC)
 RUN_ID: Final = RunId("01a0aa21-b9a7-74fb-b1f3-f735bf7d04bd")
@@ -63,6 +67,7 @@ def run_snapshot(run_id: RunId, flow_id: str = "intake", ok: int = 2) -> RunSnap
         waits=(),
         lineage=None,
         execution_id=run_id,
+        context=None,
         spec_version=SpecVersionInfo(
             id="v1",
             content_hash="sha256-" + "0" * 64,
@@ -165,10 +170,12 @@ class FakeEngine:
     runs: dict[RunId, RunSnapshot] = field(default_factory=lambda: {RUN_ID: run_snapshot(RUN_ID)})
     events: dict[RunId, tuple[RunEvent, ...]] = field(default_factory=lambda: {RUN_ID: run_events(RUN_ID)})
     started: list[RunStartRequest] = field(default_factory=list[RunStartRequest])
+    started_dataset_items: list[str | None] = field(default_factory=list[str | None])
     list_queries: list[RunListQuery] = field(default_factory=list[RunListQuery])
     detail_requests: list[tuple[ExecutionAddress, IncludePayloads]] = field(
         default_factory=list[tuple[ExecutionAddress, IncludePayloads]]
     )
+    presentation_requests: list[PresentationRequest] = field(default_factory=list[PresentationRequest])
     resume_outcome: ResumeOutcome = "accepted"
     cancel_error: EngineError | None = None
     event_reads: list[int] = field(default_factory=list[int])
@@ -180,8 +187,9 @@ class FakeEngine:
             raise missing(run_id)
         return snapshot
 
-    async def start_run(self, request: RunStartRequest) -> RunStarted:
+    async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         self.started.append(request)
+        self.started_dataset_items.append(dataset_item_id)
         return RunStarted(
             run_id=RUN_ID,
             status="queued",
@@ -230,6 +238,16 @@ class FakeEngine:
         self._run(run_id)
         self.detail_requests.append((address, include_payloads))
         return execution_detail(address)
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
+        self._run(run_id)
+        self.presentation_requests.append(request)
+        return PresentationResponse(
+            results=tuple(
+                PresentationResult(target=target, status="unavailable", error="no formatter declared")
+                for target in request.targets
+            )
+        )
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:
         self._run(run_id)

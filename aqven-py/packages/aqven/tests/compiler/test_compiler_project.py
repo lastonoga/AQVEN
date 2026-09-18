@@ -48,7 +48,7 @@ from aqven.testing import copy_project
 
 FIXTURES: Final = Path(__file__).parents[1] / "fixtures"
 STANDARD: Final = FIXTURES / "standard_shop"
-LUMEN: Final = Path(__file__).parents[4] / "examples" / "showcase" / "lumen" / "src" / "lumen"
+LUMEN: Final = Path(__file__).parents[4] / "examples" / "lumen"
 INTAKE: Final = FlowId("intake")
 TITLE_KEY: Final = "title"
 
@@ -223,7 +223,8 @@ def test_agent_carries_instructions_models_tools_and_subagents(standard: Compile
     root = STANDARD
 
     assert writer.instructions == (root / "agents/writer/writer.instructions.md").read_text(encoding="utf-8")
-    assert [(model.model, model.provider) for model in writer.models] == [("openai:gpt-5.4-mini", ProviderName.OPENAI)]
+    openai = ProviderName("openai")
+    assert [(model.model, model.provider) for model in writer.models] == [("openai:gpt-5.4-mini", openai)]
     assert writer.primary.capabilities.strict is True
     assert writer.tools == (ToolId("stamp"),)
     assert [(sub.name, sub.agent, sub.inference) for sub in writer.subagents] == [("lookup", "critic", "lookup")]

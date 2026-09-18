@@ -1,0 +1,49 @@
+{
+  "title": "{package}",
+  "lead": "The project Studio was launched in.",
+  "summary": {
+    "title": "Project",
+    "root": "Folder",
+    "package": "Package",
+    "engine": "Engine",
+    "treeHash": "Tree hash",
+    "projectFile": "Project file",
+    "lockFile": "Lock file",
+    "noLockFile": "none",
+    "mcp": "MCP",
+    "specSeq": "Spec changes",
+    "none": "—"
+  },
+  "index": {
+    "title": "Index and checks",
+    "status": "Index",
+    "generation": "Generation",
+    "indexedAt": "Indexed",
+    "pending": "Pending files",
+    "problems": "Problems",
+    "clean": "no problems",
+    "counts": "{errors} errors · {warnings} warnings · {infos} info",
+    "quarantined": "Quarantined files",
+    "none": "none"
+  },
+  "flows": {
+    "title": "Workflows",
+    "navAria": "Workflows of the project",
+    "nodes": "{count, plural, one {# node} other {# nodes}}",
+    "io": "{input} → {output}",
+    "unknownType": "?",
+    "problems": {
+      "error": "{count, plural, one {# error} other {# errors}}",
+      "warning": "{count, plural, one {# warning} other {# warnings}}"
+    },
+    "empty": "No workflows yet",
+    "emptyHint": "Create a flow.yaml in a new flows folder, or ask the chat agent to draft the first workflow."
+  },
+  "server": {
+    "unreachable": "The project server is not answering",
+    "unreachableHint": "Start it with aqven studio in the project folder, then reload.",
+    "starting": "The project server is starting",
+    "startingHint": "Indexing the project files. This page reloads when it is ready.",
+    "stopping": "The project server is stopping"
+  }
+}

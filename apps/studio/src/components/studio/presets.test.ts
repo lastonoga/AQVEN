@@ -1,17 +1,55 @@
 import { describe, expect, it } from "vitest"
-import { OUTCOME_TONE, PROVENANCE, ROW_SHEET_TAB, TEXT_MARK, VERDICT_OUTCOME, scoreTone } from "./presets"
-import { TONES } from "./tone"
+import { EXECUTION_STATUSES, NODE_KINDS, RUN_STATUSES } from "@/domain"
+import {
+  COMPILE_STATUS_TONE,
+  EXECUTION_STATUS_TONE,
+  INDEX_STATUS_TONE,
+  NODE_KIND,
+  PROVENANCE,
+  RUN_STATUS_TONE,
+  SEVERITY_TONE,
+  TEXT_MARK,
+  WAIT_STATE_TONE,
+} from "./presets"
+import { TONES, type Tone } from "./tone"
+
+const tonesOf = (table: Readonly<Record<string, Tone>>): readonly Tone[] => Object.values(table)
 
 describe("presets", () => {
-  it("picks the score tone", () => {
-    expect(scoreTone(0.844, true)).toBe("loop")
-    expect(scoreTone(0.62, false)).toBe("warning")
-    expect(scoreTone(0.7, false)).toBe("success")
+  it("covers every engine node kind", () => {
+    expect(Object.keys(NODE_KIND).sort()).toEqual([...NODE_KINDS].sort())
   })
 
-  it("maps verdicts through outcomes to tones", () => {
-    expect(OUTCOME_TONE[VERDICT_OUTCOME.needs_human]).toBe("warning")
-    expect(OUTCOME_TONE[VERDICT_OUTCOME.invented]).toBe("destructive")
+  it("pins the run status tones", () => {
+    expect(RUN_STATUSES.map((status) => RUN_STATUS_TONE[status])).toEqual([
+      "neutral",
+      "primary",
+      "warning",
+      "success",
+      "destructive",
+      "neutral",
+    ])
+  })
+
+  it("pins the execution status tones", () => {
+    expect(EXECUTION_STATUSES.map((status) => EXECUTION_STATUS_TONE[status])).toEqual([
+      "neutral",
+      "primary",
+      "success",
+      "destructive",
+      "neutral",
+      "warning",
+      "neutral",
+    ])
+  })
+
+  it("marks broken compiles and timed-out waits as destructive", () => {
+    expect(COMPILE_STATUS_TONE.invalid).toBe("destructive")
+    expect(COMPILE_STATUS_TONE.not_runnable).toBe("warning")
+    expect(WAIT_STATE_TONE.timed_out).toBe("destructive")
+    expect(WAIT_STATE_TONE.waiting).toBe("warning")
+    expect(INDEX_STATUS_TONE.degraded).toBe("warning")
+    expect(SEVERITY_TONE.error).toBe("destructive")
   })
 
   it("derives provenance marks from the provenance table", () => {
@@ -20,13 +58,16 @@ describe("presets", () => {
     expect(TEXT_MARK.document).toEqual({ style: "chip", tone: "success" })
   })
 
-  it("maps matrix rows to call sheet tabs", () => {
-    expect(ROW_SHEET_TAB.columns).toBeNull()
-    expect(ROW_SHEET_TAB.postCheck).toBe("assertions")
-  })
-
   it("uses only declared tones", () => {
-    const used = Object.values(OUTCOME_TONE)
+    const used = [
+      ...tonesOf(RUN_STATUS_TONE),
+      ...tonesOf(EXECUTION_STATUS_TONE),
+      ...tonesOf(COMPILE_STATUS_TONE),
+      ...tonesOf(INDEX_STATUS_TONE),
+      ...tonesOf(WAIT_STATE_TONE),
+      ...tonesOf(SEVERITY_TONE),
+      ...Object.values(NODE_KIND).map((spec) => spec.tone),
+    ]
     expect(used.every((tone) => TONES.includes(tone))).toBe(true)
   })
 })

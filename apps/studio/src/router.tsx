@@ -1,16 +1,20 @@
 import { createRouter, stringifySearchWith } from "@tanstack/react-router"
-import type { StudioSources } from "@/data/ports"
-import { sources } from "@/data/sources"
+import { liveSources, type LiveSources } from "@/data/live/sources"
 import { studioNow } from "@/lib/clock"
 import { NotFound } from "@/routes/-not-found"
+import { RouteError, RoutePending } from "@/routes/-feedback"
 import { routeTree } from "./routeTree.gen"
 
-export type RouterContext = { readonly sources: StudioSources; readonly now: Date }
+export type RouterContext = { readonly api: LiveSources; readonly now: Date }
 
 export const router = createRouter({
   routeTree,
-  context: { sources, now: studioNow() },
+  context: { api: liveSources, now: studioNow() },
   defaultPreload: "intent",
+  defaultPendingMs: 300,
+  defaultPendingMinMs: 400,
+  defaultPendingComponent: RoutePending,
+  defaultErrorComponent: RouteError,
   defaultNotFoundComponent: NotFound,
   scrollRestoration: true,
   scrollToTopSelectors: ["[data-scroll-restoration-id=page]"],

@@ -22,7 +22,7 @@ from aqven.models.limiter import LimiterModel, UsageBudget
 from aqven.models.outcome import OutcomeGateModel
 from aqven.models.redaction import RedactingModel, RedactionPolicy
 from aqven.models.usage import DiscardUsage, UsageSink
-from aqven.ports.models import PROVIDER_KEY_ENV, ModelFactory, model_provider
+from aqven.ports.models import ModelFactory, model_provider, provider_env_var
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
 from aqven.runtime.options import CassetteConfig
 
@@ -85,10 +85,9 @@ def chain_links(model: Model) -> tuple[type[Model], ...]:
 
 
 class MissingProviderKey(LookupError):
-    def __init__(self, model: str, env_var: str) -> None:
-        super().__init__(
-            f"no API key for {model}: set it in project or studio settings, or in the {env_var} environment variable"
-        )
+    def __init__(self, model: str, env_var: str | None) -> None:
+        named = env_var or "the variable of the api_key ref in aqven.yaml"
+        super().__init__(f"no API key for {model}: set {named} in the project .env file or in the environment")
         self.model = model
         self.env_var = env_var
 
@@ -100,7 +99,7 @@ class ProviderKeyResolver:
 
     async def key_for(self, model: str) -> SecretStr:
         provider = model_provider(model)
-        env_var = PROVIDER_KEY_ENV[provider]
+        env_var = provider_env_var(provider)
         resolved = await resolve_secret(self.store, provider_key_setting(provider), env_var, self.environ)
         if resolved is None:
             raise MissingProviderKey(model, env_var)

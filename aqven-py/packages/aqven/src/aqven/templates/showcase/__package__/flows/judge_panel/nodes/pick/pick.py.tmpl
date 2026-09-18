@@ -1,0 +1,15 @@
+from typing import Annotated
+
+from pydantic import Field
+
+from __package__.types import JudgeVerdict, PanelOutcome, PanelVerdict, ReplyDraft
+
+
+def pick(
+    candidates: Annotated[list[ReplyDraft], Field(max_length=3)],
+    verdict: JudgeVerdict,
+    tie_broken: bool,
+    spread: Annotated[float, Field(ge=0, le=4)],
+) -> PanelOutcome:
+    winner = candidates[verdict.best_index] if verdict.best_index < len(candidates) else candidates[0]
+    return PanelOutcome(winner=winner, verdict=PanelVerdict(verdict=verdict, tie_broken=tie_broken, spread=spread))

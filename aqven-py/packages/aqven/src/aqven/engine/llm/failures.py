@@ -242,12 +242,13 @@ class FailureAnalysis:
         )
 
     def details(self, exchange: Exchange, classified: Classified) -> ModelErrorDetails:
+        raw_output = response_text(exchange.response, self.context.output_tools)
         return ModelErrorDetails(
             agent=self.context.agent_id,
             model=self.context.model,
             output_mode=self.context.mode,
             attempt=exchange.attempt,
-            raw_excerpt=excerpt(response_text(exchange.response, self.context.output_tools)),
+            raw_excerpt=REDACTOR.redact(raw_output),
             violations=classified.violations,
         )
 
@@ -292,21 +293,22 @@ def feature_unsupported(error: BaseException, context: FailureContext) -> FinalE
         )
     if not isinstance(error, ModelHTTPError) or error.status_code not in CLIENT_ERROR_STATUSES:
         return None
-    body = _body_text(error.body).lower()
+    raw_output = _body_text(error.body)
+    body = raw_output.lower()
     if not any(marker in body for marker in FEATURE_MARKERS) or not any(item in body for item in UNSUPPORTED_MARKERS):
         return None
     return FinalError(
         code=MODEL_FEATURE_UNSUPPORTED,
         message=(
             f"provider of model {context.model} rejected the {context.mode} output mode "
-            f"with HTTP {error.status_code}: {excerpt(_body_text(error.body))}"
+            f"with HTTP {error.status_code}: {excerpt(raw_output)}"
         ),
         hint=_hint(FEATURE_HINTS[context.mode], context),
         details=ModelErrorDetails(
             agent=context.agent_id,
             model=context.model,
             output_mode=context.mode,
-            raw_excerpt=excerpt(_body_text(error.body)),
+            raw_excerpt=REDACTOR.redact(raw_output),
         ),
     )
 

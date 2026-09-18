@@ -1,16 +1,19 @@
 import type { ReactNode } from "react"
 import { cva } from "class-variance-authority"
 import { cn } from "cn"
-import type { ContentPart, TextLine } from "@/domain"
+import type { ContentPart, TextLine } from "./presets"
 import { Heading } from "./heading"
 import { MediaPart } from "./media-part"
 import { PropertyList, type PropertyListVariant, type PropertyRow } from "./property-list"
 import { Surface } from "./surface"
 import { TextBlock } from "./text-block"
+import { StructuredValue } from "./value-display"
+import type { OutputMedia } from "./media-output"
 
 type SectionBodyFields = {
   readonly properties: { readonly rows: readonly PropertyRow[]; readonly variant?: PropertyListVariant }
   readonly text: { readonly lines: readonly TextLine[]; readonly variant?: "code" | "plain" }
+  readonly value: { readonly value: unknown; readonly media?: readonly OutputMedia[]; readonly mediaOnly?: boolean }
   readonly parts: { readonly parts: readonly ContentPart[] }
   readonly node: { readonly node: ReactNode }
 }
@@ -49,6 +52,11 @@ const SECTION_BODY: SectionBodyViews = {
   text: (body) => (
     <Surface variant="well" padding="sm">
       <TextBlock lines={body.lines} variant={body.variant ?? "code"} />
+    </Surface>
+  ),
+  value: (body) => (
+    <Surface variant="well" padding="sm">
+      <StructuredValue value={body.value} media={body.media} mediaOnly={body.mediaOnly} />
     </Surface>
   ),
   parts: (body) => (

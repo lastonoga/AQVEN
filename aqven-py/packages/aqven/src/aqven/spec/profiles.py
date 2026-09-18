@@ -5,6 +5,7 @@ from typing import Final
 
 from aqven.spec.agent import CapabilityOverride
 from aqven.spec.names import MODEL_PATTERN, Modality, ModelFamily, ProviderName
+from aqven.spec.project import ProviderCapabilitiesSpec
 
 MODEL: Final = re.compile(MODEL_PATTERN)
 PROVIDER_SEPARATOR: Final = ":"
@@ -51,6 +52,9 @@ PROFILE_ROWS: Final[tuple[ProfileRow, ...]] = (
     ("google:gemini-3.8-flash", ModelFamily.GOOGLE, ALL_INPUTS, TEXT_ONLY, True),
     ("google:gemini-3-pro-image", ModelFamily.GOOGLE, TEXT_AND_IMAGE, TEXT_AND_IMAGE, False),
     ("openrouter:openai/gpt-5.4-image-2", ModelFamily.OPENAI, DOCUMENT_VISION, TEXT_AND_IMAGE, False),
+    ("openrouter:openai/gpt-5-image-mini", ModelFamily.OPENAI, DOCUMENT_VISION, TEXT_AND_IMAGE, True),
+    ("openrouter:google/gemini-2.5-flash-lite", ModelFamily.GOOGLE, ALL_INPUTS, TEXT_ONLY, True),
+    ("openrouter:google/gemini-3.1-flash-lite-image", ModelFamily.GOOGLE, TEXT_AND_IMAGE, TEXT_AND_IMAGE, False),
     ("openrouter:anthropic/claude-sonnet-5", ModelFamily.ANTHROPIC, DOCUMENT_VISION, TEXT_ONLY, False),
     ("openrouter:x-ai/grok-4.6", ModelFamily.XAI, DOCUMENT_VISION, TEXT_ONLY, False),
     ("openrouter:deepseek/deepseek-v4-pro-0813", ModelFamily.DEEPSEEK, TEXT_ONLY, TEXT_ONLY, False),
@@ -79,9 +83,9 @@ VENDOR_FAMILIES: Final[Mapping[str, ModelFamily]] = {
 }
 
 PROVIDER_FAMILIES: Final[Mapping[str, ModelFamily]] = {
-    ProviderName.OPENAI: ModelFamily.OPENAI,
-    ProviderName.ANTHROPIC: ModelFamily.ANTHROPIC,
-    ProviderName.GOOGLE: ModelFamily.GOOGLE,
+    "openai": ModelFamily.OPENAI,
+    "anthropic": ModelFamily.ANTHROPIC,
+    "google": ModelFamily.GOOGLE,
 }
 
 
@@ -92,8 +96,10 @@ def parse_model(text: str) -> ModelRef:
     return ModelRef(ProviderName(provider), name)
 
 
-def resolve_profile(model: str, override: CapabilityOverride | None) -> ModelProfile:
-    base = MODEL_PROFILES.get(model) or _default_profile(model)
+def resolve_profile(
+    model: str, override: CapabilityOverride | None, declared: ProviderCapabilitiesSpec | None = None
+) -> ModelProfile:
+    base = _declared_profile(MODEL_PROFILES.get(model) or _default_profile(model), declared)
     if override is None:
         return base
     return replace(
@@ -103,6 +109,13 @@ def resolve_profile(model: str, override: CapabilityOverride | None) -> ModelPro
         output=_modalities(override.output, base.output),
         strict=base.strict if override.strict is None else override.strict,
     )
+
+
+def _declared_profile(base: ModelProfile, declared: ProviderCapabilitiesSpec | None) -> ModelProfile:
+    if declared is None:
+        return base
+    inputs = _modalities(declared.input, base.input)
+    return replace(base, input=inputs, output=_modalities(declared.output, base.output))
 
 
 def _default_profile(model: str) -> ModelProfile:

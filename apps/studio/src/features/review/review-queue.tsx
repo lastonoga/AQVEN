@@ -1,36 +1,37 @@
 import { useNow, useTranslations } from "use-intl"
-import type { ReviewId, ReviewQueueItem } from "@/domain"
 import { Dot, Empty, Heading, Surface, Text } from "@/components/studio"
+import { nodeId, runId } from "@/data/ids"
 import { reviewRouteApi } from "@/lib/routes"
-import { SLA, queueReason, runTitle, slaDotLabel, slaDuration, slaState, stageNode } from "./presenters"
+import { addressLabel, DEADLINE, deadlineDotLabel, deadlineDuration, deadlineState, entryKey, entryReason, entryTitle, type ReviewEntry } from "./presenters"
 
-type QueueCardProps = { readonly item: ReviewQueueItem; readonly selected: boolean }
+export type ReviewQueueProps = { readonly queue: readonly ReviewEntry[]; readonly selectedKey: string | null }
 
-export type ReviewQueueProps = { readonly queue: readonly ReviewQueueItem[]; readonly itemId: ReviewId | null }
-
-function QueueCard({ item, selected }: QueueCardProps) {
+function QueueCard({ entry, selected }: { readonly entry: ReviewEntry; readonly selected: boolean }) {
   const t = useTranslations("review")
-  const state = slaState(item.sla, useNow())
-  const look = SLA[state.kind]
+  const domain = useTranslations("domain")
+  const state = deadlineState(entry.wait, useNow())
+  const look = DEADLINE[state.kind]
+  const branch = entry.wait.address.branch_key
+  const search = { run: runId(entry.run.run_id), node: nodeId(entry.wait.address.node_id), ...(branch === null ? {} : { branch }) }
   return (
     <Surface variant="raised" padding="sm" interactive tone="llm" selected={selected} asChild>
-      <reviewRouteApi.Link to="." search={{ item: item.id }} resetScroll={false}>
+      <reviewRouteApi.Link to="." search={search} resetScroll={false}>
         <Heading
           size="item"
           titleAs="div"
-          leading={<Dot tone={look.dot} {...slaDotLabel(state, t)} />}
-          title={runTitle(item, t)}
+          leading={<Dot tone={look.dot} {...deadlineDotLabel(state, t)} />}
+          title={entryTitle(entry, t)}
           trailing={
             <Text role="tiny" tone={look.queue}>
-              {slaDuration(state, t)}
+              {deadlineDuration(state, t)}
             </Text>
           }
           below={[
             <Text as="div" role="hint" tone="default" className="mt-1.75">
-              {stageNode(item, t)}
+              {addressLabel(entry.wait.address)}
             </Text>,
             <Text as="div" role="body" tone="neutral" className="-mt-0.5">
-              {queueReason(item, t)}
+              {entryReason(entry, { t, domain })}
             </Text>,
           ]}
         />
@@ -39,14 +40,14 @@ function QueueCard({ item, selected }: QueueCardProps) {
   )
 }
 
-export function ReviewQueue({ queue, itemId }: ReviewQueueProps) {
+export function ReviewQueue({ queue, selectedKey }: ReviewQueueProps) {
   const t = useTranslations("review")
   const common = useTranslations("common")
   if (queue.length === 0) return <Empty title={common("empty.queue")} />
   return (
     <nav aria-label={t("queue.labelAria")} className="flex flex-col gap-1.75">
-      {queue.map((item) => (
-        <QueueCard key={item.id} item={item} selected={item.id === itemId} />
+      {queue.map((entry) => (
+        <QueueCard key={entryKey(entry)} entry={entry} selected={entryKey(entry) === selectedKey} />
       ))}
     </nav>
   )

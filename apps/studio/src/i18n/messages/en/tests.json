@@ -1,46 +1,54 @@
 {
-  "title": "Tests",
-  "actions": {
-    "newTest": "New test",
-    "runTestAria": "Run test {text}"
-  },
+  "title": "Evals",
+  "subtitle": "Evals of this flow, served by the engine",
+  "empty": "No evals for this flow. Evals live in evals/{flowId}/.",
   "columns": {
-    "testScope": "Test · scope",
+    "eval": "Eval",
+    "target": "Target",
+    "scorers": "Scorers",
     "dataset": "Dataset",
-    "pass": "Pass",
-    "lastRun": "Last run"
+    "file": "File"
   },
-  "scope": {
-    "call": "call",
-    "stage": "stage",
-    "stageNumber": "stage {value}",
-    "parallel": "{count, plural, one {# branch} other {# branches}} in parallel",
-    "loop": "loop to threshold {threshold}",
-    "workflowTitle": "whole workflow",
-    "workflowSubtitle": "end-to-end run from {text}"
+  "target": {
+    "title": "Target",
+    "inference": "inference",
+    "agent": "agent",
+    "dataset": "dataset"
   },
-  "rows": "{count, plural, one {# row} other {# rows}}",
-  "datasets": {
-    "title": "Datasets",
-    "buildWithAgent": "Build with agent",
-    "newDataset": "New dataset",
-    "assertions": "{count, plural, one {# assertion} other {# assertions}}",
-    "usedBy": "tests: {count}",
+  "scorers": {
+    "title": "Scorers",
+    "count": "{count, plural, one {# scorer} other {# scorers}}",
+    "empty": "This eval declares no scorers",
+    "note": "The engine names the scorers of a definition. What each one runs, and the thresholds it is held to, stay in {path}."
+  },
+  "policy": {
+    "title": "Policy",
+    "gate": "release gate",
+    "optimization": "prompt optimization",
+    "file": "file",
+    "declared": "declared",
+    "absent": "not declared"
+  },
+  "dataset": {
+    "title": "Dataset",
+    "cases": "cases",
+    "splits": "splits",
+    "usedBy": "used by",
+    "file": "file",
+    "missing": "Dataset {name} is not among the datasets the engine serves",
+    "note": "The engine counts the cases of a dataset and splits them. The case inputs themselves stay in the file."
+  },
+  "runs": {
+    "title": "Eval runs",
+    "count": "{count, plural, one {# run} other {# runs}}",
+    "empty": "No eval runs for {evalId} yet. The CLI command aqven eval --eval {evalId} produces one.",
+    "casesOf": "{ok} / {total}",
     "columns": {
-      "dataset": "Dataset",
-      "source": "Source",
-      "assertions": "Assertions",
-      "usedBy": "Used by",
-      "updated": "Updated"
-    },
-    "source": {
-      "spreadsheet": "spreadsheet",
-      "spreadsheetAgentExtended": "spreadsheet + agent-extended",
-      "agent": "agent",
-      "agentRuns": "from runs {from}…{to}",
-      "tool": "tool {text}",
-      "snapshot": "snapshot",
-      "manual": "manual"
+      "run": "Run",
+      "status": "Status",
+      "cases": "Cases ok",
+      "scorers": "Scorer means",
+      "cost": "Cost"
     }
   }
 }

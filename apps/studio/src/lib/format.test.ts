@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest"
-import { rowId, runId } from "@/data/ids"
 import {
   SEPARATOR,
   count,
@@ -16,7 +15,6 @@ import {
   percentChange,
   playTime,
   ratio,
-  rowRef,
   runRef,
   score,
   seconds,
@@ -85,9 +83,9 @@ describe("format", () => {
     expect(percentChange(0.27, 0.3)).toBe("10 %")
   })
 
-  it("prefixes run and row refs", () => {
-    expect(runRef(runId("8247"))).toBe("#8247")
-    expect(rowRef(rowId("07"))).toBe("#07")
+  it("references a run by the last six hex of its uuid", () => {
+    expect(runRef("01a0b104-4658-70aa-b49b-7c2586b56d92")).toBe("#b56d92")
+    expect(runRef("01a0b10f-c0bb-71b5-ab91-723388054f73")).toBe("#054f73")
   })
 
   it("formats minute clocks with zero padded minutes", () => {

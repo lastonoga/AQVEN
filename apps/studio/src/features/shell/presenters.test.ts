@@ -1,55 +1,110 @@
 import { describe, expect, it } from "vitest"
-import type { IsoDateTime, ShellData } from "@/domain"
-import { isoDateTime, runId, workflowId, workspaceId } from "@/data/ids"
-import { runBadge, workflowRows, type WorkflowRowCopy } from "./presenters"
+import type { ApiFlowDetail, RunStatus } from "@/domain"
+import { RUN_STATUS_TONE } from "@/components/studio"
+import { flowId } from "@/data/ids"
+import { liveFlowDetails, liveFlows, liveProject } from "@/mocks/data/project"
+import { flowRows, flowStatusTags, projectInitial, projectName, runBadge, type FlowRowCopy, type FlowStatusCopy } from "./presenters"
 
-const SINCE: Readonly<Record<string, string>> = {
-  "2026-09-16T10:00:00Z": "2 h ago",
-  "2026-09-15T12:00:00Z": "yesterday",
-}
+const SINCE_LABEL = "a while ago"
 
-const copy: WorkflowRowCopy = {
-  stages: (count) => `${String(count)} stages`,
+const rowCopy: FlowRowCopy = {
+  nodes: (count) => `${String(count)} nodes`,
   run: (ref) => `run ${ref}`,
   neverRun: "never run",
-  since: (date: IsoDateTime) => SINCE[date] ?? date,
+  since: () => SINCE_LABEL,
 }
 
-const shell: ShellData = {
-  workspace: { id: workspaceId("hotel_pitch"), initial: "A" },
-  currentWorkflowId: workflowId("pitch_pipeline"),
-  latestRun: { id: runId("8247"), status: "degraded" },
-  workflows: [
-    { id: workflowId("pitch_pipeline"), stageCount: 7, lastRun: { id: runId("8247"), startedAt: isoDateTime("2026-09-16T10:00:00Z") } },
-    { id: workflowId("seo_brief_writer"), stageCount: 4, lastRun: { id: runId("8102"), startedAt: isoDateTime("2026-09-15T12:00:00Z") } },
-    { id: workflowId("support_triage"), stageCount: 8, lastRun: null },
-  ],
+const statusCopy: FlowStatusCopy = {
+  io: (input, output) => `${input} → ${output}`,
+  problems: (count) => `${String(count)} problems`,
+  neverRun: "never run",
+  lastRun: (status) => `last run ${status}`,
+  unknownType: "?",
 }
 
-describe("workflowRows", () => {
-  it("joins stage count, run reference and relative time into one meta line", () => {
-    expect(workflowRows(shell, copy).map((row) => row.meta)).toEqual([
-      "7 stages · run #8247 · 2 h ago",
-      "4 stages · run #8102 · yesterday",
-      "8 stages · never run",
+const fixtureFlow = (id: string): ApiFlowDetail => {
+  const flow = liveFlowDetails[id]
+  if (flow === undefined) throw new Error(`no flow fixture for ${id}`)
+  return flow
+}
+
+const lastRunOf = (flow: ApiFlowDetail): NonNullable<ApiFlowDetail["last_run"]> => {
+  const run = flow.last_run
+  if (run === null) throw new Error(`flow ${flow.flow_id} has no run in the fixture`)
+  return run
+}
+
+const runRef = (flow: ApiFlowDetail): string => `#${lastRunOf(flow).run_id.slice(-6)}`
+
+const supportCase = fixtureFlow("support_case")
+const judgePanel = fixtureFlow("judge_panel")
+
+describe("projectName", () => {
+  it("reads the package of the live project", () => {
+    expect(projectName(liveProject)).toBe("lumen")
+    expect(projectInitial(liveProject)).toBe("L")
+  })
+
+  it("falls back to the last segment of the root when the package is unset", () => {
+    expect(projectName({ ...liveProject, package: null })).toBe("lumen")
+  })
+})
+
+describe("flowRows", () => {
+  it("joins node count, run reference and relative time into one meta line", () => {
+    expect(flowRows(liveFlows, flowId("support_case"), rowCopy).map((row) => row.meta)).toEqual([
+      "8 nodes · never run",
+      `30 nodes · run ${runRef(supportCase)} · ${SINCE_LABEL}`,
     ])
   })
 
-  it("marks only the current workflow and gives it the llm dot", () => {
-    expect(workflowRows(shell, copy).map((row) => [row.id, row.current, row.dot])).toEqual([
-      ["pitch_pipeline", true, "llm"],
-      ["seo_brief_writer", false, "neutral"],
-      ["support_triage", false, "neutral"],
+  it("marks only the current flow and gives it the llm dot", () => {
+    expect(flowRows(liveFlows, flowId("support_case"), rowCopy).map((row) => [row.id, row.current, row.dot])).toEqual([
+      ["judge_panel", false, "neutral"],
+      ["support_case", true, "llm"],
     ])
   })
 })
 
 describe("runBadge", () => {
   it.each([
-    ["degraded", "warning"],
-    ["ok", "success"],
+    ["queued", "neutral"],
+    ["running", "primary"],
+    ["suspended", "warning"],
+    ["completed", "success"],
     ["failed", "destructive"],
-  ] as const)("maps a %s run to the %s tone with a # reference", (status, tone) => {
-    expect(runBadge({ id: runId("8247"), status })).toEqual({ label: "#8247", tone })
+    ["cancelled", "neutral"],
+  ] as const)("maps a %s run to the %s tone", (status: RunStatus, tone) => {
+    expect(runBadge({ run_id: "01a0b104-4658-70aa-b49b-7c2586b56d92", status, started_at: "2026-09-17T20:17:22.522000Z" })).toEqual({
+      label: "#b56d92",
+      full: "01a0b104-4658-70aa-b49b-7c2586b56d92",
+      status,
+      tone,
+    })
+  })
+
+  it("keeps uuids that share a timestamp prefix apart", () => {
+    const started_at = "2026-09-17T20:17:22.522000Z"
+    const first = runBadge({ run_id: "01a0b104-4658-70aa-b49b-7c2586b56d92", status: "completed", started_at })
+    const second = runBadge({ run_id: "01a0b104-41b6-777e-89e2-4d0d9d904016", status: "completed", started_at })
+    expect([first.label, second.label]).toEqual(["#b56d92", "#904016"])
+  })
+})
+
+describe("flowStatusTags", () => {
+  it("shows the input to output contract and the last run of a clean flow", () => {
+    expect(flowStatusTags(supportCase, statusCopy)).toEqual([
+      { id: "io", label: "CaseRequest → CaseOutcome", tone: "neutral" },
+      { id: "run", label: `last run ${lastRunOf(supportCase).status}`, tone: RUN_STATUS_TONE[lastRunOf(supportCase).status] },
+    ])
+  })
+
+  it("says never run for a flow the engine has no run for", () => {
+    expect(flowStatusTags(judgePanel, statusCopy)[1]).toEqual({ id: "run", label: "never run", tone: "neutral" })
+  })
+
+  it("adds a destructive problems chip when the flow has errors", () => {
+    const broken: ApiFlowDetail = { ...supportCase, problems: { error: 2, warning: 1, info: 0 } }
+    expect(flowStatusTags(broken, statusCopy)[1]).toEqual({ id: "problems", label: "3 problems", tone: "destructive" })
   })
 })

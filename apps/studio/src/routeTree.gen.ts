@@ -10,198 +10,184 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LocaleRouteRouteImport } from './routes/$locale/route'
-import { Route as LocaleIndexRouteImport } from './routes/$locale/index'
-import { Route as LocaleDemoRouteImport } from './routes/$locale/demo'
-import { Route as LocaleSettingsRouteImport } from './routes/$locale/settings'
-import { Route as LocaleSetupRouteImport } from './routes/$locale/setup'
-import { Route as LocaleWorkspaceIdWorkflowIdRouteRouteImport } from './routes/$locale/$workspaceId/$workflowId/route'
-import { Route as LocaleWorkspaceIdWorkflowIdIndexRouteImport } from './routes/$locale/$workspaceId/$workflowId/index'
-import { Route as LocaleWorkspaceIdWorkflowIdDataflowRouteImport } from './routes/$locale/$workspaceId/$workflowId/dataflow'
-import { Route as LocaleWorkspaceIdWorkflowIdNodesRouteImport } from './routes/$locale/$workspaceId/$workflowId/nodes'
-import { Route as LocaleWorkspaceIdWorkflowIdReviewRouteImport } from './routes/$locale/$workspaceId/$workflowId/review'
-import { Route as LocaleWorkspaceIdWorkflowIdSchemaRouteImport } from './routes/$locale/$workspaceId/$workflowId/schema'
-import { Route as LocaleWorkspaceIdWorkflowIdTestsIndexRouteImport } from './routes/$locale/$workspaceId/$workflowId/tests/index'
-import { Route as LocaleWorkspaceIdWorkflowIdTestsTestIdRouteImport } from './routes/$locale/$workspaceId/$workflowId/tests/$testId'
+import { Route as DemoRouteImport } from './routes/demo'
+import { Route as ProjectRouteImport } from './routes/project'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SetupRouteImport } from './routes/setup'
+import { Route as FlowsFlowIdRouteRouteImport } from './routes/flows/$flowId/route'
+import { Route as FlowsFlowIdIndexRouteImport } from './routes/flows/$flowId/index'
+import { Route as FlowsFlowIdCanvasRouteImport } from './routes/flows/$flowId/canvas'
+import { Route as FlowsFlowIdDatasetsRouteImport } from './routes/flows/$flowId/datasets'
+import { Route as FlowsFlowIdEvalsRouteImport } from './routes/flows/$flowId/evals'
+import { Route as FlowsFlowIdNodesRouteImport } from './routes/flows/$flowId/nodes'
+import { Route as FlowsFlowIdReviewRouteImport } from './routes/flows/$flowId/review'
+import { Route as FlowsFlowIdRunsRouteImport } from './routes/flows/$flowId/runs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleRouteRoute = LocaleRouteRouteImport.update({
-  id: '/$locale',
-  path: '/$locale',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LocaleIndexRoute = LocaleIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => LocaleRouteRoute,
-} as any)
-const LocaleDemoRoute = LocaleDemoRouteImport.update({
+const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
-  getParentRoute: () => LocaleRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleSettingsRoute = LocaleSettingsRouteImport.update({
+const ProjectRoute = ProjectRouteImport.update({
+  id: '/project',
+  path: '/project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => LocaleRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleSetupRoute = LocaleSetupRouteImport.update({
+const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
-  getParentRoute: () => LocaleRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleWorkspaceIdWorkflowIdRouteRoute =
-  LocaleWorkspaceIdWorkflowIdRouteRouteImport.update({
-    id: '/$workspaceId/$workflowId',
-    path: '/$workspaceId/$workflowId',
-    getParentRoute: () => LocaleRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdIndexRoute =
-  LocaleWorkspaceIdWorkflowIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdDataflowRoute =
-  LocaleWorkspaceIdWorkflowIdDataflowRouteImport.update({
-    id: '/dataflow',
-    path: '/dataflow',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdNodesRoute =
-  LocaleWorkspaceIdWorkflowIdNodesRouteImport.update({
-    id: '/nodes',
-    path: '/nodes',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdReviewRoute =
-  LocaleWorkspaceIdWorkflowIdReviewRouteImport.update({
-    id: '/review',
-    path: '/review',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdSchemaRoute =
-  LocaleWorkspaceIdWorkflowIdSchemaRouteImport.update({
-    id: '/schema',
-    path: '/schema',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdTestsIndexRoute =
-  LocaleWorkspaceIdWorkflowIdTestsIndexRouteImport.update({
-    id: '/tests/',
-    path: '/tests/',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
-const LocaleWorkspaceIdWorkflowIdTestsTestIdRoute =
-  LocaleWorkspaceIdWorkflowIdTestsTestIdRouteImport.update({
-    id: '/tests/$testId',
-    path: '/tests/$testId',
-    getParentRoute: () => LocaleWorkspaceIdWorkflowIdRouteRoute,
-  } as any)
+const FlowsFlowIdRouteRoute = FlowsFlowIdRouteRouteImport.update({
+  id: '/flows/$flowId',
+  path: '/flows/$flowId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlowsFlowIdIndexRoute = FlowsFlowIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdCanvasRoute = FlowsFlowIdCanvasRouteImport.update({
+  id: '/canvas',
+  path: '/canvas',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdDatasetsRoute = FlowsFlowIdDatasetsRouteImport.update({
+  id: '/datasets',
+  path: '/datasets',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdEvalsRoute = FlowsFlowIdEvalsRouteImport.update({
+  id: '/evals',
+  path: '/evals',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdNodesRoute = FlowsFlowIdNodesRouteImport.update({
+  id: '/nodes',
+  path: '/nodes',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdReviewRoute = FlowsFlowIdReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
+const FlowsFlowIdRunsRoute = FlowsFlowIdRunsRouteImport.update({
+  id: '/runs',
+  path: '/runs',
+  getParentRoute: () => FlowsFlowIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$locale': typeof LocaleRouteRouteWithChildren
-  '/$locale/demo': typeof LocaleDemoRoute
-  '/$locale/settings': typeof LocaleSettingsRoute
-  '/$locale/setup': typeof LocaleSetupRoute
-  '/$locale/': typeof LocaleIndexRoute
-  '/$locale/$workspaceId/$workflowId': typeof LocaleWorkspaceIdWorkflowIdRouteRouteWithChildren
-  '/$locale/$workspaceId/$workflowId/dataflow': typeof LocaleWorkspaceIdWorkflowIdDataflowRoute
-  '/$locale/$workspaceId/$workflowId/nodes': typeof LocaleWorkspaceIdWorkflowIdNodesRoute
-  '/$locale/$workspaceId/$workflowId/review': typeof LocaleWorkspaceIdWorkflowIdReviewRoute
-  '/$locale/$workspaceId/$workflowId/schema': typeof LocaleWorkspaceIdWorkflowIdSchemaRoute
-  '/$locale/$workspaceId/$workflowId/': typeof LocaleWorkspaceIdWorkflowIdIndexRoute
-  '/$locale/$workspaceId/$workflowId/tests/$testId': typeof LocaleWorkspaceIdWorkflowIdTestsTestIdRoute
-  '/$locale/$workspaceId/$workflowId/tests/': typeof LocaleWorkspaceIdWorkflowIdTestsIndexRoute
+  '/demo': typeof DemoRoute
+  '/project': typeof ProjectRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
+  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
+  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
+  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
+  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
+  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
+  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
+  '/flows/$flowId/': typeof FlowsFlowIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$locale/demo': typeof LocaleDemoRoute
-  '/$locale/settings': typeof LocaleSettingsRoute
-  '/$locale/setup': typeof LocaleSetupRoute
-  '/$locale': typeof LocaleIndexRoute
-  '/$locale/$workspaceId/$workflowId/dataflow': typeof LocaleWorkspaceIdWorkflowIdDataflowRoute
-  '/$locale/$workspaceId/$workflowId/nodes': typeof LocaleWorkspaceIdWorkflowIdNodesRoute
-  '/$locale/$workspaceId/$workflowId/review': typeof LocaleWorkspaceIdWorkflowIdReviewRoute
-  '/$locale/$workspaceId/$workflowId/schema': typeof LocaleWorkspaceIdWorkflowIdSchemaRoute
-  '/$locale/$workspaceId/$workflowId': typeof LocaleWorkspaceIdWorkflowIdIndexRoute
-  '/$locale/$workspaceId/$workflowId/tests/$testId': typeof LocaleWorkspaceIdWorkflowIdTestsTestIdRoute
-  '/$locale/$workspaceId/$workflowId/tests': typeof LocaleWorkspaceIdWorkflowIdTestsIndexRoute
+  '/demo': typeof DemoRoute
+  '/project': typeof ProjectRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
+  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
+  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
+  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
+  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
+  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
+  '/flows/$flowId': typeof FlowsFlowIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$locale': typeof LocaleRouteRouteWithChildren
-  '/$locale/demo': typeof LocaleDemoRoute
-  '/$locale/settings': typeof LocaleSettingsRoute
-  '/$locale/setup': typeof LocaleSetupRoute
-  '/$locale/': typeof LocaleIndexRoute
-  '/$locale/$workspaceId/$workflowId': typeof LocaleWorkspaceIdWorkflowIdRouteRouteWithChildren
-  '/$locale/$workspaceId/$workflowId/dataflow': typeof LocaleWorkspaceIdWorkflowIdDataflowRoute
-  '/$locale/$workspaceId/$workflowId/nodes': typeof LocaleWorkspaceIdWorkflowIdNodesRoute
-  '/$locale/$workspaceId/$workflowId/review': typeof LocaleWorkspaceIdWorkflowIdReviewRoute
-  '/$locale/$workspaceId/$workflowId/schema': typeof LocaleWorkspaceIdWorkflowIdSchemaRoute
-  '/$locale/$workspaceId/$workflowId/': typeof LocaleWorkspaceIdWorkflowIdIndexRoute
-  '/$locale/$workspaceId/$workflowId/tests/$testId': typeof LocaleWorkspaceIdWorkflowIdTestsTestIdRoute
-  '/$locale/$workspaceId/$workflowId/tests/': typeof LocaleWorkspaceIdWorkflowIdTestsIndexRoute
+  '/demo': typeof DemoRoute
+  '/project': typeof ProjectRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
+  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
+  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
+  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
+  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
+  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
+  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
+  '/flows/$flowId/': typeof FlowsFlowIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/$locale'
-    | '/$locale/demo'
-    | '/$locale/settings'
-    | '/$locale/setup'
-    | '/$locale/'
-    | '/$locale/$workspaceId/$workflowId'
-    | '/$locale/$workspaceId/$workflowId/dataflow'
-    | '/$locale/$workspaceId/$workflowId/nodes'
-    | '/$locale/$workspaceId/$workflowId/review'
-    | '/$locale/$workspaceId/$workflowId/schema'
-    | '/$locale/$workspaceId/$workflowId/'
-    | '/$locale/$workspaceId/$workflowId/tests/$testId'
-    | '/$locale/$workspaceId/$workflowId/tests/'
+    | '/demo'
+    | '/project'
+    | '/settings'
+    | '/setup'
+    | '/flows/$flowId'
+    | '/flows/$flowId/canvas'
+    | '/flows/$flowId/datasets'
+    | '/flows/$flowId/evals'
+    | '/flows/$flowId/nodes'
+    | '/flows/$flowId/review'
+    | '/flows/$flowId/runs'
+    | '/flows/$flowId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/$locale/demo'
-    | '/$locale/settings'
-    | '/$locale/setup'
-    | '/$locale'
-    | '/$locale/$workspaceId/$workflowId/dataflow'
-    | '/$locale/$workspaceId/$workflowId/nodes'
-    | '/$locale/$workspaceId/$workflowId/review'
-    | '/$locale/$workspaceId/$workflowId/schema'
-    | '/$locale/$workspaceId/$workflowId'
-    | '/$locale/$workspaceId/$workflowId/tests/$testId'
-    | '/$locale/$workspaceId/$workflowId/tests'
+    | '/demo'
+    | '/project'
+    | '/settings'
+    | '/setup'
+    | '/flows/$flowId/canvas'
+    | '/flows/$flowId/datasets'
+    | '/flows/$flowId/evals'
+    | '/flows/$flowId/nodes'
+    | '/flows/$flowId/review'
+    | '/flows/$flowId/runs'
+    | '/flows/$flowId'
   id:
     | '__root__'
     | '/'
-    | '/$locale'
-    | '/$locale/demo'
-    | '/$locale/settings'
-    | '/$locale/setup'
-    | '/$locale/'
-    | '/$locale/$workspaceId/$workflowId'
-    | '/$locale/$workspaceId/$workflowId/dataflow'
-    | '/$locale/$workspaceId/$workflowId/nodes'
-    | '/$locale/$workspaceId/$workflowId/review'
-    | '/$locale/$workspaceId/$workflowId/schema'
-    | '/$locale/$workspaceId/$workflowId/'
-    | '/$locale/$workspaceId/$workflowId/tests/$testId'
-    | '/$locale/$workspaceId/$workflowId/tests/'
+    | '/demo'
+    | '/project'
+    | '/settings'
+    | '/setup'
+    | '/flows/$flowId'
+    | '/flows/$flowId/canvas'
+    | '/flows/$flowId/datasets'
+    | '/flows/$flowId/evals'
+    | '/flows/$flowId/nodes'
+    | '/flows/$flowId/review'
+    | '/flows/$flowId/runs'
+    | '/flows/$flowId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LocaleRouteRoute: typeof LocaleRouteRouteWithChildren
+  DemoRoute: typeof DemoRoute
+  ProjectRoute: typeof ProjectRoute
+  SettingsRoute: typeof SettingsRoute
+  SetupRoute: typeof SetupRoute
+  FlowsFlowIdRouteRoute: typeof FlowsFlowIdRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -213,157 +199,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$locale': {
-      id: '/$locale'
-      path: '/$locale'
-      fullPath: '/$locale'
-      preLoaderRoute: typeof LocaleRouteRouteImport
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$locale/': {
-      id: '/$locale/'
-      path: '/'
-      fullPath: '/$locale/'
-      preLoaderRoute: typeof LocaleIndexRouteImport
-      parentRoute: typeof LocaleRouteRoute
+    '/project': {
+      id: '/project'
+      path: '/project'
+      fullPath: '/project'
+      preLoaderRoute: typeof ProjectRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/$locale/demo': {
-      id: '/$locale/demo'
-      path: '/demo'
-      fullPath: '/$locale/demo'
-      preLoaderRoute: typeof LocaleDemoRouteImport
-      parentRoute: typeof LocaleRouteRoute
-    }
-    '/$locale/settings': {
-      id: '/$locale/settings'
+    '/settings': {
+      id: '/settings'
       path: '/settings'
-      fullPath: '/$locale/settings'
-      preLoaderRoute: typeof LocaleSettingsRouteImport
-      parentRoute: typeof LocaleRouteRoute
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/$locale/setup': {
-      id: '/$locale/setup'
+    '/setup': {
+      id: '/setup'
       path: '/setup'
-      fullPath: '/$locale/setup'
-      preLoaderRoute: typeof LocaleSetupRouteImport
-      parentRoute: typeof LocaleRouteRoute
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/$locale/$workspaceId/$workflowId': {
-      id: '/$locale/$workspaceId/$workflowId'
-      path: '/$workspaceId/$workflowId'
-      fullPath: '/$locale/$workspaceId/$workflowId'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRouteImport
-      parentRoute: typeof LocaleRouteRoute
+    '/flows/$flowId': {
+      id: '/flows/$flowId'
+      path: '/flows/$flowId'
+      fullPath: '/flows/$flowId'
+      preLoaderRoute: typeof FlowsFlowIdRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/$locale/$workspaceId/$workflowId/': {
-      id: '/$locale/$workspaceId/$workflowId/'
+    '/flows/$flowId/': {
+      id: '/flows/$flowId/'
       path: '/'
-      fullPath: '/$locale/$workspaceId/$workflowId/'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdIndexRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
+      fullPath: '/flows/$flowId/'
+      preLoaderRoute: typeof FlowsFlowIdIndexRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
     }
-    '/$locale/$workspaceId/$workflowId/dataflow': {
-      id: '/$locale/$workspaceId/$workflowId/dataflow'
-      path: '/dataflow'
-      fullPath: '/$locale/$workspaceId/$workflowId/dataflow'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdDataflowRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
+    '/flows/$flowId/canvas': {
+      id: '/flows/$flowId/canvas'
+      path: '/canvas'
+      fullPath: '/flows/$flowId/canvas'
+      preLoaderRoute: typeof FlowsFlowIdCanvasRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
     }
-    '/$locale/$workspaceId/$workflowId/nodes': {
-      id: '/$locale/$workspaceId/$workflowId/nodes'
+    '/flows/$flowId/datasets': {
+      id: '/flows/$flowId/datasets'
+      path: '/datasets'
+      fullPath: '/flows/$flowId/datasets'
+      preLoaderRoute: typeof FlowsFlowIdDatasetsRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
+    }
+    '/flows/$flowId/evals': {
+      id: '/flows/$flowId/evals'
+      path: '/evals'
+      fullPath: '/flows/$flowId/evals'
+      preLoaderRoute: typeof FlowsFlowIdEvalsRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
+    }
+    '/flows/$flowId/nodes': {
+      id: '/flows/$flowId/nodes'
       path: '/nodes'
-      fullPath: '/$locale/$workspaceId/$workflowId/nodes'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdNodesRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
+      fullPath: '/flows/$flowId/nodes'
+      preLoaderRoute: typeof FlowsFlowIdNodesRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
     }
-    '/$locale/$workspaceId/$workflowId/review': {
-      id: '/$locale/$workspaceId/$workflowId/review'
+    '/flows/$flowId/review': {
+      id: '/flows/$flowId/review'
       path: '/review'
-      fullPath: '/$locale/$workspaceId/$workflowId/review'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdReviewRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
+      fullPath: '/flows/$flowId/review'
+      preLoaderRoute: typeof FlowsFlowIdReviewRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
     }
-    '/$locale/$workspaceId/$workflowId/schema': {
-      id: '/$locale/$workspaceId/$workflowId/schema'
-      path: '/schema'
-      fullPath: '/$locale/$workspaceId/$workflowId/schema'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdSchemaRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
-    }
-    '/$locale/$workspaceId/$workflowId/tests/': {
-      id: '/$locale/$workspaceId/$workflowId/tests/'
-      path: '/tests'
-      fullPath: '/$locale/$workspaceId/$workflowId/tests/'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdTestsIndexRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
-    }
-    '/$locale/$workspaceId/$workflowId/tests/$testId': {
-      id: '/$locale/$workspaceId/$workflowId/tests/$testId'
-      path: '/tests/$testId'
-      fullPath: '/$locale/$workspaceId/$workflowId/tests/$testId'
-      preLoaderRoute: typeof LocaleWorkspaceIdWorkflowIdTestsTestIdRouteImport
-      parentRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRoute
+    '/flows/$flowId/runs': {
+      id: '/flows/$flowId/runs'
+      path: '/runs'
+      fullPath: '/flows/$flowId/runs'
+      preLoaderRoute: typeof FlowsFlowIdRunsRouteImport
+      parentRoute: typeof FlowsFlowIdRouteRoute
     }
   }
 }
 
-interface LocaleWorkspaceIdWorkflowIdRouteRouteChildren {
-  LocaleWorkspaceIdWorkflowIdDataflowRoute: typeof LocaleWorkspaceIdWorkflowIdDataflowRoute
-  LocaleWorkspaceIdWorkflowIdNodesRoute: typeof LocaleWorkspaceIdWorkflowIdNodesRoute
-  LocaleWorkspaceIdWorkflowIdReviewRoute: typeof LocaleWorkspaceIdWorkflowIdReviewRoute
-  LocaleWorkspaceIdWorkflowIdSchemaRoute: typeof LocaleWorkspaceIdWorkflowIdSchemaRoute
-  LocaleWorkspaceIdWorkflowIdIndexRoute: typeof LocaleWorkspaceIdWorkflowIdIndexRoute
-  LocaleWorkspaceIdWorkflowIdTestsTestIdRoute: typeof LocaleWorkspaceIdWorkflowIdTestsTestIdRoute
-  LocaleWorkspaceIdWorkflowIdTestsIndexRoute: typeof LocaleWorkspaceIdWorkflowIdTestsIndexRoute
+interface FlowsFlowIdRouteRouteChildren {
+  FlowsFlowIdCanvasRoute: typeof FlowsFlowIdCanvasRoute
+  FlowsFlowIdDatasetsRoute: typeof FlowsFlowIdDatasetsRoute
+  FlowsFlowIdEvalsRoute: typeof FlowsFlowIdEvalsRoute
+  FlowsFlowIdNodesRoute: typeof FlowsFlowIdNodesRoute
+  FlowsFlowIdReviewRoute: typeof FlowsFlowIdReviewRoute
+  FlowsFlowIdRunsRoute: typeof FlowsFlowIdRunsRoute
+  FlowsFlowIdIndexRoute: typeof FlowsFlowIdIndexRoute
 }
 
-const LocaleWorkspaceIdWorkflowIdRouteRouteChildren: LocaleWorkspaceIdWorkflowIdRouteRouteChildren =
-  {
-    LocaleWorkspaceIdWorkflowIdDataflowRoute:
-      LocaleWorkspaceIdWorkflowIdDataflowRoute,
-    LocaleWorkspaceIdWorkflowIdNodesRoute:
-      LocaleWorkspaceIdWorkflowIdNodesRoute,
-    LocaleWorkspaceIdWorkflowIdReviewRoute:
-      LocaleWorkspaceIdWorkflowIdReviewRoute,
-    LocaleWorkspaceIdWorkflowIdSchemaRoute:
-      LocaleWorkspaceIdWorkflowIdSchemaRoute,
-    LocaleWorkspaceIdWorkflowIdIndexRoute:
-      LocaleWorkspaceIdWorkflowIdIndexRoute,
-    LocaleWorkspaceIdWorkflowIdTestsTestIdRoute:
-      LocaleWorkspaceIdWorkflowIdTestsTestIdRoute,
-    LocaleWorkspaceIdWorkflowIdTestsIndexRoute:
-      LocaleWorkspaceIdWorkflowIdTestsIndexRoute,
-  }
-
-const LocaleWorkspaceIdWorkflowIdRouteRouteWithChildren =
-  LocaleWorkspaceIdWorkflowIdRouteRoute._addFileChildren(
-    LocaleWorkspaceIdWorkflowIdRouteRouteChildren,
-  )
-
-interface LocaleRouteRouteChildren {
-  LocaleDemoRoute: typeof LocaleDemoRoute
-  LocaleSettingsRoute: typeof LocaleSettingsRoute
-  LocaleSetupRoute: typeof LocaleSetupRoute
-  LocaleIndexRoute: typeof LocaleIndexRoute
-  LocaleWorkspaceIdWorkflowIdRouteRoute: typeof LocaleWorkspaceIdWorkflowIdRouteRouteWithChildren
+const FlowsFlowIdRouteRouteChildren: FlowsFlowIdRouteRouteChildren = {
+  FlowsFlowIdCanvasRoute: FlowsFlowIdCanvasRoute,
+  FlowsFlowIdDatasetsRoute: FlowsFlowIdDatasetsRoute,
+  FlowsFlowIdEvalsRoute: FlowsFlowIdEvalsRoute,
+  FlowsFlowIdNodesRoute: FlowsFlowIdNodesRoute,
+  FlowsFlowIdReviewRoute: FlowsFlowIdReviewRoute,
+  FlowsFlowIdRunsRoute: FlowsFlowIdRunsRoute,
+  FlowsFlowIdIndexRoute: FlowsFlowIdIndexRoute,
 }
 
-const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
-  LocaleDemoRoute: LocaleDemoRoute,
-  LocaleSettingsRoute: LocaleSettingsRoute,
-  LocaleSetupRoute: LocaleSetupRoute,
-  LocaleIndexRoute: LocaleIndexRoute,
-  LocaleWorkspaceIdWorkflowIdRouteRoute:
-    LocaleWorkspaceIdWorkflowIdRouteRouteWithChildren,
-}
-
-const LocaleRouteRouteWithChildren = LocaleRouteRoute._addFileChildren(
-  LocaleRouteRouteChildren,
-)
+const FlowsFlowIdRouteRouteWithChildren =
+  FlowsFlowIdRouteRoute._addFileChildren(FlowsFlowIdRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LocaleRouteRoute: LocaleRouteRouteWithChildren,
+  DemoRoute: DemoRoute,
+  ProjectRoute: ProjectRoute,
+  SettingsRoute: SettingsRoute,
+  SetupRoute: SetupRoute,
+  FlowsFlowIdRouteRoute: FlowsFlowIdRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

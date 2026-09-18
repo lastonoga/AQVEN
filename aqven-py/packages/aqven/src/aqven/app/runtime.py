@@ -187,7 +187,8 @@ class LocalServer:
 
     async def _reuse(self, record: ServerRecord, options: ServerOptions) -> ServeOutcome:
         self.announcer.announce(f"aqven: project server is already running (pid {record.pid}): {record.url}")
-        await self._open_browser(record, options)
+        if options.launches_browser:
+            await asyncio.to_thread(self.browser.open, record.browser_url(options.dev_origin))
         return Reused(record)
 
     async def _serve_locked(self, state: ProjectState, options: ServerOptions) -> ServeOutcome:
@@ -197,7 +198,9 @@ class LocalServer:
         dev_origins = () if options.dev_origin is None else (options.dev_origin,)
         async with AsyncExitStack() as stack:
             listener = stack.enter_context(contextlib.closing(bind_loopback(options.host, options.port)))
-            access = local_access_policy(bound_port(listener), dev_origins=dev_origins)
+            access = local_access_policy(
+                bound_port(listener), dev_origins=dev_origins, require_token=options.require_auth
+            )
             record = server_record(
                 host=options.host,
                 port=access.port,
@@ -259,11 +262,17 @@ class LocalServer:
 
     async def _on_started(self, record: ServerRecord, options: ServerOptions) -> None:
         self.readiness.mark_ready()
-        address = record.url if options.headless else record.browser_url(options.dev_origin)
+        address = record.url if options.headless else studio_browser_url(record, options)
         self.announcer.announce(f"aqven: {address} (MCP {record.mcp_url})")
         await self._open_browser(record, options)
 
     async def _open_browser(self, record: ServerRecord, options: ServerOptions) -> None:
         if not options.launches_browser:
             return
-        await asyncio.to_thread(self.browser.open, record.browser_url(options.dev_origin))
+        await asyncio.to_thread(self.browser.open, studio_browser_url(record, options))
+
+
+def studio_browser_url(record: ServerRecord, options: ServerOptions) -> str:
+    if options.require_auth:
+        return record.browser_url(options.dev_origin)
+    return f"{(options.dev_origin or record.url).rstrip('/')}/"

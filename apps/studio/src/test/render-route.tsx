@@ -3,6 +3,8 @@ import { createMemoryHistory, createRootRoute, createRouter, RouterProvider, typ
 import { act, render } from "@testing-library/react"
 import { router as appRouter } from "@/router"
 import { routeTree } from "@/routeTree.gen"
+import { RouteError, RoutePending } from "@/routes/-feedback"
+import { TEST_NOW } from "./clock"
 
 const mountRouter = async <R extends AnyRouter>(router: R): Promise<R> => {
   await act(async () => {
@@ -16,7 +18,11 @@ export const renderRoute = (path: string) =>
   mountRouter(
     createRouter({
       routeTree,
-      context: appRouter.options.context,
+      context: { ...appRouter.options.context, now: TEST_NOW },
+      defaultPendingMs: 300,
+      defaultPendingMinMs: 400,
+      defaultPendingComponent: RoutePending,
+      defaultErrorComponent: RouteError,
       history: createMemoryHistory({ initialEntries: [path] }),
     }),
   )

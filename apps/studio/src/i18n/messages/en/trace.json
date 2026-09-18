@@ -1,97 +1,84 @@
 {
-  "stage": {
-    "runStage": "run stage",
-    "waiting": "waiting",
-    "kindFanOut": "{code} ×{count}",
-    "desc": {
-      "toolCalls": "{count, plural, one {# tool call} other {# tool calls}}",
-      "map": "parallel · concurrency {concurrency} · N ← {source}",
-      "pureFunction": "pure function, no model call",
-      "families": "{count} model families on one input · join all",
-      "familiesRow": "{count} model families on row {row} input · join all",
-      "loopStagnation": "body: {body} · stop on stagnation",
-      "loopThreshold": "body: {body} · exit at threshold {threshold}"
-    }
+  "openCell": "Open {row} for {name}",
+  "matrixRow": {
+    "call": "Call",
+    "agent": "Agent",
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "postCheck": "Post check"
+  },
+  "matrixSub": {
+    "branches": "{count, plural, one {# branch in parallel} other {# branches in parallel}}",
+    "items": "{count, plural, one {# mapped item} other {# mapped items}}",
+    "iterations": "{count, plural, one {# iteration} other {# iterations}} · {calls, plural, one {# call} other {# calls}}",
+    "takenBranch": "{count, plural, one {# branch taken} other {# branches taken}}",
+    "calledNodes": "{count, plural, one {# called node} other {# called nodes}}",
+    "costTime": "cost · latency · tokens",
+    "declared": "agent and inference of the node",
+    "upstream": "outputs the node reads",
+    "modelRequest": "model request for this call",
+    "outputChecks": "checks on the output"
+  },
+  "coordinate": {
+    "branch": "branch {value}",
+    "iteration": "iteration {value}",
+    "item": "item {value}"
   },
   "call": {
-    "cached": "cached",
-    "actionsAria": "Call actions"
+    "cached": "cache hit",
+    "degraded": "degraded"
   },
   "agent": {
-    "noModel": "no model",
-    "noAgent": "no agent · deterministic call",
-    "noTokens": "— tokens",
-    "judgesWithFix": "{count} judges + fix",
-    "judgesWithFixNode": "{count} judges + {node}",
-    "judgesFixNotRun": "{count} judges · fix not run",
-    "panelCosts": "judge {judges} · fix {fix}",
-    "judgeCosts": "judge {judges}",
-    "calls": "{count, plural, one {# call} other {# calls}}",
-    "notCalled": "not called",
-    "waiting": "waiting {minutes} m",
-    "fromCassette": "from cassette",
-    "config": "agent {agent}",
-    "temperature": "t {value}",
-    "reasoning": "reasoning {value}"
+    "agent": "agent {value}",
+    "inference": "inference {value}",
+    "profile": "profile {value}",
+    "noModel": "no model"
   },
   "input": {
-    "identicalAcrossBranches": "hash {hash} — identical across all {count, plural, =2 {two branches} =3 {three branches} =4 {four branches} other {# branches}}",
-    "fromDataset": "from the dataset · ancestors frozen",
-    "expand": "expand the whole input",
-    "refUnchanged": "unchanged"
+    "fromUpstream": "recorded outputs of the upstream nodes"
   },
   "prompt": {
-    "none": "none — not a model call",
-    "open": "template and rendered prompt"
+    "inference": "inference {value}",
+    "level": "level {level}",
+    "notCaptured": "Model messages were not saved for this run"
   },
-  "output": {
-    "expand": "expand",
-    "open": "raw response and parse",
-    "skipped": "skipped · verdict ≠ {case}",
-    "awaiting": "awaiting a human decision",
-    "deadline": "deadline in {time}",
-    "aborted": "no output — the iteration was aborted by stagnation, shown as is"
-  },
-  "summary": {
-    "moreCalls": "+ {count} calls",
-    "expand": "expand",
-    "total": "total",
-    "median": "median {value}",
-    "oneType": "one type",
-    "spread": "spread",
-    "okCount": "{ok}/{total} ok"
-  },
-  "attempts": {
-    "title": "{call} · {count, plural, one {# attempt} other {# attempts}}",
-    "collapse": "collapse attempts",
-    "expand": "expand {count, plural, one {# attempt} other {# attempts}}",
-    "attempt": "attempt {n}",
-    "link": "link: {action}",
-    "billed": "Billed across all attempts <b>{billed}</b>, of that {failed} failed. Retrying the same model is banned by policy — the result cannot be “silently green”."
-  },
-  "join": {
-    "label": "Join",
-    "selected": "judges selected <code>{branch}</code> ({score})",
-    "droppedBilled": "branch {branch} dropped on an assertion, but its tokens were billed",
-    "dropped": "branch {branch} dropped on an assertion",
-    "compareOutputs": "Compare {count} outputs"
+  "ref": {
+    "inline": "inline",
+    "blob": "blob",
+    "media": "media {slot}"
   },
   "postCheck": {
-    "actual": "actual: {value}",
-    "expected": "expected: {value}",
-    "judgeVerdicts": "verdicts of {count} judges"
-  },
-  "nested": {
-    "depth": "L{depth}",
-    "hintScrollRight": "iterations run as columns — scroll right",
-    "hintQuorum": "quorum {required} of {total}",
-    "hintClaimPerColumn": "one claim per column",
-    "claim": "claim {n}"
+    "attempts": "{count, plural, one {# failed attempt} other {# failed attempts}}",
+    "rules": "{count, plural, one {# rule firing} other {# rule firings}}"
   },
   "expander": {
-    "loop": "loop ×{count}",
-    "judges": "judges ×{count}",
-    "map": "map ×{count}",
-    "toggleAria": "Toggle nested run for {name}"
+    "children": "{count, plural, one {# nested call} other {# nested calls}}",
+    "toggleAria": "Toggle the nested calls of {name}"
+  },
+  "nested": {
+    "title": "Inside {name}",
+    "fanOut": "{count, plural, one {# call} other {# calls}}"
+  },
+  "attempts": {
+    "title": "Failed attempts of {name} · {count, plural, one {# attempt} other {# attempts}}",
+    "aria": "Failed attempts of {name}",
+    "attempt": "Attempt",
+    "cause": "Cause",
+    "action": "Action",
+    "message": "Message",
+    "problems": "Fields",
+    "hint": "Hint",
+    "rawExcerpt": "Raw excerpt"
+  },
+  "exit": {
+    "reason": "loop exited on {reason}",
+    "selected": "kept iteration {iteration}",
+    "scores": "scores {scores}"
+  },
+  "stage": {
+    "calls": "{count, plural, =0 {single call} one {# call} other {# calls}}",
+    "pending": "not started"
   }
 }

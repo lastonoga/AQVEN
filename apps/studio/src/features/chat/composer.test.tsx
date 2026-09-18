@@ -1,10 +1,9 @@
-import { AssistantRuntimeProvider, useLocalRuntime, type DictationAdapter } from "@assistant-ui/react"
+import { AssistantRuntimeProvider, useLocalRuntime, type ChatModelAdapter, type DictationAdapter } from "@assistant-ui/react"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { IntlProvider } from "use-intl"
 import { describe, expect, it } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
-import { fixtureChatBackend } from "./backend"
 import { Composer } from "./composer"
 
 type SpeechListener = (result: DictationAdapter.Result) => void
@@ -46,8 +45,12 @@ const fakeDictation = () => {
   return { adapter, calls, say }
 }
 
+const stubModel: ChatModelAdapter = {
+  run: () => Promise.resolve({ content: [{ type: "text", text: "ok" }], status: { type: "complete", reason: "stop" } }),
+}
+
 function ComposerHarness({ dictation }: { readonly dictation: DictationAdapter | undefined }) {
-  const runtime = useLocalRuntime(fixtureChatBackend.model({ fixtureReply: "ok" }), { adapters: { dictation } })
+  const runtime = useLocalRuntime(stubModel, { adapters: { dictation } })
   return (
     <IntlProvider locale="en" messages={messages.en} timeZone="UTC">
       <TooltipProvider>

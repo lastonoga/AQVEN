@@ -1,0 +1,174 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-d382b34a621f812b0cde8ee41f0b283d7769c9273a980bb860dcc8a711bacbe6",
+  "request_key": "sha256-66a82b9d30ebe9717306bee0f5b5efbb0a9b13ff2e7c53ca6b13aa5c8bcabdc8",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to produce a reply with citations. Use only kb_strip0flck and kb_ctrlheat01. Provide steps in app? The fragments don't include app steps. So we can't mention steps. Just give advice from fragments. Also mention subscription? No subscription info in fragments. So no mention. Provide apology once. Provide citations. Ensure reply <=1500 chars. Citations up to 6 items. Use chunk ids. Provide quotes. Let's craft.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to produce a reply with citations. Use only kb_strip0flck and kb_ctrlheat01. Provide steps in app? The fragments don't include app steps. So we can't mention steps. Just give advice from fragments. Also mention subscription? No subscription info in fragments. So no mention. Provide apology once. Provide citations. Ensure reply <=1500 chars. Citations up to 6 items. Use chunk ids. Provide quotes. Let's craft.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"reply\":\"Уважаемый клиент,  \n\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.  \n\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.  \n\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.  \n\nС уважением, команда Lumen\",\"citations\":[{\"chunk",
+        "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"reply\":\"Уважаемый клиент,  \n\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.  \n\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.  \n\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.  \n\nС уважением, команда Lumen\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "We need to produce a reply with citations. Use only kb_strip0flck and kb_ctrlheat01. Provide steps in app? The fragments don't include app steps. So we can't mention steps. Just give advice from fragments. Also mention subscription? No subscription info in fragments. So no mention. Provide apology once. Provide citations. Ensure reply <=1500 chars. Citations up to 6 items. Use chunk ids. Provide quotes. Let's craft.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"reply\":\"Уважаемый клиент,  \n\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.  \n\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.  \n\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.  \n\nС уважением, команда Lumen\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "tooluse_7NpbYSENk27xxdTdA00Cub",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1156,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 326,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 105,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 105
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-17T17:35:27.137330Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:35:26Z",
+      "downstream_provider": "Amazon Bedrock",
+      "finish_reason": "tool_use",
+      "cost": 0.00012982,
+      "upstream_inference_cost": 0.00012982,
+      "upstream_inference_prompt_cost": 8.092e-05,
+      "upstream_inference_completions_cost": 4.89e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789666526-G2byO7p9QRpFcCk6YW9X",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

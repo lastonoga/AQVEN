@@ -4,6 +4,7 @@ from typing import assert_never
 from pydantic import ValidationError
 
 from aqven.check import CheckReport, CodeResolver, build_context, check_project
+from aqven.check.context_keys import flow_context_keys
 from aqven.compiler.context import CompileContext
 from aqven.compiler.errors import CompileError, compile_failure
 from aqven.compiler.flows import compile_flow
@@ -51,6 +52,7 @@ def _reported(report: CheckReport) -> LoadedProject:
 def _compiled(context: CompileContext) -> CompiledProject:
     project = context.project
     spec = context.check.spec
+    keys = flow_context_keys(context.graph)
     return CompiledProject(
         package=spec.package,
         description=spec.description,
@@ -70,7 +72,10 @@ def _compiled(context: CompileContext) -> CompiledProject:
             server_id: compile_mcp_server(server_id, source)
             for server_id, source in sorted(project.mcp_servers.items())
         },
-        flows={flow_id: compile_flow(context, loaded) for flow_id, loaded in sorted(project.flows.items())},
+        flows={
+            flow_id: compile_flow(context, loaded, keys.get(flow_id, ()))
+            for flow_id, loaded in sorted(project.flows.items())
+        },
     )
 
 

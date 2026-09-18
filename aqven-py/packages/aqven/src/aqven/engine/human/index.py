@@ -1,6 +1,6 @@
 import asyncio
 import sqlite3
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,11 +11,9 @@ from pydantic import AwareDatetime, Field
 from aqven.engine.human.keys import address_key
 from aqven.engine.human.records import WaitRecord
 from aqven.runtime.address import ExecutionAddress, RequestModel, ResourceModel, RunId
-from aqven.runtime.human import HumanWait
+from aqven.runtime.human import HumanWait, OpenWaitFilter
 from aqven.runtime.vocabulary import OnTimeoutAction, WaitKind, WaitState
 from aqven.spec import TypeId
-
-ASSIGNEE_ANYONE: Final = "me"
 
 
 class WaitIndexEntry(ResourceModel):
@@ -38,7 +36,25 @@ class WaitQuery(RequestModel):
     assignee: str | None = None
     deadline_before: AwareDatetime | None = None
     overdue_at: AwareDatetime | None = None
+    upcoming_at: AwareDatetime | None = None
     limit: Annotated[int, Field(ge=1)] | None = None
+
+
+def open_wait_query(wanted: OpenWaitFilter) -> WaitQuery:
+    return WaitQuery(
+        state="waiting",
+        assignee=wanted.assignee,
+        deadline_before=wanted.deadline_before,
+        overdue_at=wanted.overdue_at,
+        upcoming_at=wanted.upcoming_at,
+    )
+
+
+def run_order(entries: Sequence[WaitIndexEntry]) -> tuple[RunId, ...]:
+    ordered: dict[RunId, None] = {}
+    for entry in entries:
+        ordered.setdefault(entry.run_id, None)
+    return tuple(ordered)
 
 
 class WaitIndex(Protocol):
@@ -112,9 +128,7 @@ def _state_rule(query: WaitQuery) -> SqlCondition | None:
 
 
 def _assignee_rule(query: WaitQuery) -> SqlCondition | None:
-    if query.assignee is None or query.assignee == ASSIGNEE_ANYONE:
-        return None
-    return ("assignee = ?", query.assignee)
+    return None if query.assignee is None else ("assignee = ?", query.assignee)
 
 
 def _deadline_rule(query: WaitQuery) -> SqlCondition | None:
@@ -125,12 +139,17 @@ def _overdue_rule(query: WaitQuery) -> SqlCondition | None:
     return None if query.overdue_at is None else ("deadline_at < ?", query.overdue_at.timestamp())
 
 
+def _upcoming_rule(query: WaitQuery) -> SqlCondition | None:
+    return None if query.upcoming_at is None else ("deadline_at >= ?", query.upcoming_at.timestamp())
+
+
 CONDITION_RULES: Final[tuple[ConditionRule, ...]] = (
     _run_rule,
     _state_rule,
     _assignee_rule,
     _deadline_rule,
     _overdue_rule,
+    _upcoming_rule,
 )
 
 

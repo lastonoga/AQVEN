@@ -11,7 +11,9 @@ from pydantic_ai.profiles import ModelProfile as ProviderProfile
 from aqven.check.context import CheckContext, ResolvedAgent
 from aqven.diagnostics import Diagnostic, DiagnosticCode, templated_diagnostic
 from aqven.loader import YamlPath
-from aqven.spec import OutputModeSetting, OutputModeSource, StructuredMode
+from aqven.models.providers import declared_capabilities
+from aqven.spec import OutputModeSetting, OutputModeSource, ProviderSpec, StructuredMode
+from aqven_llm import ProviderCapabilities
 
 MODE_PREFERENCE: Final[tuple[StructuredMode, ...]] = ("tool", "native", "prompted")
 UNIVERSAL_MODE: Final[StructuredMode] = "prompted"
@@ -184,7 +186,15 @@ def provider_profile(model: str) -> ProviderProfile:
         return ProviderProfile()
 
 
-def model_modes(model: str) -> ModelModes:
+def model_modes(model: str, declared: ProviderCapabilities | None = None) -> ModelModes:
+    if declared is not None:
+        return ModelModes(
+            model=model,
+            tool=declared.tools,
+            native=declared.json_schema_output,
+            default=PROFILE_DEFAULT_MODE if declared.tools else UNIVERSAL_MODE,
+            known=known_model(model),
+        )
     profile = provider_profile(model)
     return ModelModes(
         model=model,
@@ -199,8 +209,13 @@ def agent_modes(declared: OutputModeSetting, models: Iterable[str]) -> AgentMode
     return AgentModes(declared=declared, models=tuple(model_modes(model) for model in models))
 
 
+def provider_capabilities(spec: ProviderSpec | None) -> ProviderCapabilities | None:
+    return None if spec is None else declared_capabilities(spec.capabilities)
+
+
 def resolved_agent_modes(agent: ResolvedAgent) -> AgentModes:
-    return agent_modes(agent.agent.output.mode, (model.model for model in agent.models))
+    models = tuple(model_modes(item.model, provider_capabilities(item.provider)) for item in agent.models)
+    return AgentModes(declared=agent.agent.output.mode, models=models)
 
 
 def mode_note(modes: AgentModes) -> str:

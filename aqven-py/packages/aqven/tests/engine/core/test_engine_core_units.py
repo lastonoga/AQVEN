@@ -84,7 +84,7 @@ def test_blobs_are_content_addressed(tmp_path: Path) -> None:
     media = asyncio.run(store.put(b"payload", "text/plain", "a.txt"))
     again = asyncio.run(store.put(b"payload", "text/plain", "b.txt"))
     assert media.blob_id == again.blob_id and asyncio.run(store.get(media)) == b"payload"
-    assert len(list(tmp_path.iterdir())) == 1
+    assert sorted(path.suffix for path in tmp_path.iterdir()) == [".bin", ".json"]
 
 
 def test_dbos_config_targets_project_sqlite(tmp_path: Path) -> None:

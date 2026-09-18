@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Final
 
 import aqven_llm.factory
+from aqven_llm import PROVIDERS
 
 PACKAGE_ROOT: Final = Path(__file__).resolve().parents[1]
 WORKSPACE_ROOT: Final = PACKAGE_ROOT.parents[1]
@@ -27,10 +28,34 @@ def test_package_bans_repeat_every_shared_ban() -> None:
     assert _package_bans() == shared
 
 
+PROVIDER_SDKS: Final = frozenset(
+    {
+        "openai",
+        "anthropic",
+        "google.genai",
+        "groq",
+        "mistralai",
+        "cohere",
+        "boto3",
+        "botocore",
+        "xai_sdk",
+        "huggingface_hub",
+    }
+)
+
+
 def test_root_bans_cover_provider_modules() -> None:
     provider_modules = {name for name, entry in _root_bans().items() if entry["msg"] == PROVIDER_MESSAGE}
 
-    assert {"openai", "pydantic_ai.providers", "pydantic_ai.models.openrouter"} <= provider_modules
+    assert provider_modules >= PROVIDER_SDKS
+    assert provider_modules >= {"pydantic_ai.providers", "pydantic_ai.models.openrouter"}
+
+
+def test_root_bans_cover_every_catalog_model_module() -> None:
+    banned = {name for name, entry in _root_bans().items() if entry["msg"] == PROVIDER_MESSAGE}
+    modules = {entry.model_class.module for entry in PROVIDERS.values()}
+
+    assert modules <= banned
 
 
 def test_factory_module_imports() -> None:

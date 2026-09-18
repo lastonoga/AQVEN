@@ -30,8 +30,6 @@ from aqven.ports.chat import (
     ChatApprovalRequested,
     ChatEvent,
     ChatMessageRequest,
-    ChatSession,
-    ChatSessionId,
     ChatToolCallFinished,
     ChatTurnFinished,
     ChatUsageReported,
@@ -39,12 +37,11 @@ from aqven.ports.chat import (
 from aqven.runtime.address import ClientOpId
 
 from .fixtures import (
-    FIXED_NOW,
     MCP_TOKEN,
     MCP_URL,
-    MODEL,
     assistant,
     chat_harness,
+    chat_session,
     init_message,
     result,
     streamed_answer_turn,
@@ -216,15 +213,7 @@ def test_can_use_tool_refuses_env_file_without_asking_studio(tmp_path: Path) -> 
 
 
 def stored_session(project_root: Path) -> StoredChatSession:
-    session = ChatSession(
-        session_id=ChatSessionId("session-1"),
-        backend="claude",
-        project_root=str(project_root),
-        model=MODEL,
-        permission_mode="default",
-        created_at=FIXED_NOW,
-        last_seq=0,
-    )
+    session = chat_session("session-1", project_root)
     return StoredChatSession(session=session, mcp_url=MCP_URL, backend_session_id=None, closed_at=None)
 
 

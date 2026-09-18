@@ -463,6 +463,7 @@ FILE_READERS: Final[Mapping[str, _FileReader]] = {
     ".yaml": _Collector.read_yaml,
     ".yml": _Collector.read_yaml,
     TEXT_SUFFIX: _Collector.read_text,
+    ".liquid": _Collector.read_text,
     ".py": _Collector.read_builder,
 }
 

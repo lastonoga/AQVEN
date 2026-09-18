@@ -2,9 +2,10 @@ import type { ReactNode } from "react"
 import { ThreadPrimitive, type MessageState } from "@assistant-ui/react"
 import { ArrowDown } from "lucide-react"
 import { useTranslations } from "use-intl"
-import { Surface } from "@/components/studio"
+import { Dot, Surface, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { AssistantMessage } from "./assistant-message"
+import type { ChatFailure, ChatState } from "./chat-events"
 import { Composer } from "./composer"
 import { Hint } from "./hint"
 import { UserMessage } from "./user-message"
@@ -33,7 +34,32 @@ function ScrollToBottom() {
   )
 }
 
-export function Thread() {
+function ThreadState({ state }: { readonly state: ChatState }) {
+  const t = useTranslations("chat.state")
+  if (state === "idle") return null
+  return (
+    <Text role="hint" tone="neutral" asChild>
+      <p role="status" aria-label={t("aria")} className="flex items-center gap-2 px-3.5 pb-1">
+        <Dot tone="primary" pulse />
+        {t(state)}
+      </p>
+    </Text>
+  )
+}
+
+function ThreadFailure({ failure }: { readonly failure: ChatFailure | null }) {
+  const t = useTranslations("chat")
+  if (failure === null) return null
+  return (
+    <Text role="hint" tone="destructive" asChild>
+      <p role="alert" className="px-3.5 pt-2">
+        {t(`error.${failure.code}`)}
+      </p>
+    </Text>
+  )
+}
+
+export function Thread({ failure, state }: { readonly failure: ChatFailure | null; readonly state: ChatState }) {
   return (
     <ThreadPrimitive.Root className="flex min-h-0 flex-1 flex-col">
       <ThreadPrimitive.Viewport className="flex min-h-0 flex-1 flex-col overflow-y-auto scroll-smooth">
@@ -43,6 +69,8 @@ export function Thread() {
         <Surface variant="plain" asChild>
           <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto">
             <ScrollToBottom />
+            <ThreadState state={state} />
+            <ThreadFailure failure={failure} />
             <Composer />
           </ThreadPrimitive.ViewportFooter>
         </Surface>

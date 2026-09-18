@@ -1,0 +1,68 @@
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+MODULE = "lumen"
+WATCHED_SUFFIXES = (".yaml", ".yml", ".md", ".py")
+BLOCK = 2
+PASS = 0
+
+
+def payload() -> dict[str, object]:
+    try:
+        document = json.load(sys.stdin)
+    except ValueError:
+        return {}
+    return document if isinstance(document, dict) else {}
+
+
+def project_dir() -> Path:
+    return Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
+
+
+def edited_path(event: dict[str, object]) -> str:
+    tool_input = event.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return ""
+    value = tool_input.get("file_path")
+    return value if isinstance(value, str) else ""
+
+
+def touches_module(event: dict[str, object], root: Path) -> bool:
+    edited = edited_path(event)
+    if not edited:
+        return False
+    target = Path(edited)
+    if not target.is_absolute():
+        target = root / target
+    return target.resolve().is_relative_to(root / MODULE) and target.suffix in WATCHED_SUFFIXES
+
+
+def check(root: Path, static: bool) -> int:
+    command = ["uv", "run", "aqven", "check", *(["--static"] if static else []), MODULE]
+    try:
+        finished = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
+    except OSError as error:
+        sys.stderr.write(f"aqven check did not start: {error}\n")
+        return PASS
+    if finished.returncode == 0:
+        return PASS
+    sys.stderr.write(f"{finished.stdout}\n{finished.stderr}\naqven check failed: fix every error before you finish.\n")
+    return BLOCK
+
+
+def main() -> int:
+    static = "--static" in sys.argv[1:]
+    event = payload()
+    root = project_dir()
+    if event.get("stop_hook_active") is True:
+        return PASS
+    if static and not touches_module(event, root):
+        return PASS
+    return check(root, static)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

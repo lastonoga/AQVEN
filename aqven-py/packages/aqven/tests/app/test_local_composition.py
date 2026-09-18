@@ -21,6 +21,13 @@ from aqven.engine.facade import DbosEngineFacade
 
 FIXTURES: Final = Path(__file__).resolve().parents[1] / "fixtures"
 WAIT_SECONDS: Final = 15.0
+MCP_INITIALIZE: Final = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "test", "version": "0"}},
+}
+MCP_HEADERS: Final = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
 
 
 def copy_project(name: str, target: Path) -> Path:
@@ -45,7 +52,7 @@ async def test_runtime_serves_studio_application_behind_the_access_guard(tmp_pat
         browser=RecordingBrowser(),
         announcer=RecordingAnnouncer(),
     )
-    options = ServerOptions(root=root, port=free_port(), data_dir=tmp_path / "data", headless=True)
+    options = ServerOptions(root=root, port=free_port(), data_dir=tmp_path / "data", headless=True, require_auth=True)
     task = asyncio.create_task(server.serve(options))
     try:
         async with asyncio.timeout(WAIT_SECONDS):
@@ -60,17 +67,50 @@ async def test_runtime_serves_studio_application_behind_the_access_guard(tmp_pat
             anonymous = await http.get("/api/project")
             by_bearer = await http.get("/api/project", headers=record.authorization())
             by_cookie = await http.get("/api/project", headers=cookie)
+            anonymous_mcp = await http.post("/mcp/", json=MCP_INITIALIZE, headers=MCP_HEADERS)
+            authenticated_mcp = await http.post(
+                "/mcp/", json=MCP_INITIALIZE, headers={**MCP_HEADERS, **record.authorization()}
+            )
         assert ready.status_code == 200
         assert health.status_code == 200
         assert anonymous.status_code == 401
         assert by_bearer.status_code == 200
         assert by_cookie.status_code == 200
+        assert (anonymous_mcp.status_code, authenticated_mcp.status_code) == (401, 200)
     finally:
         server.request_stop()
         async with asyncio.timeout(WAIT_SECONDS):
             outcome = await task
     assert isinstance(outcome, Started)
     assert read_server_record(ProjectState(root)) is None
+
+
+@pytest.mark.asyncio
+async def test_runtime_studio_api_and_mcp_are_anonymous_by_default(tmp_path: Path) -> None:
+    root = copy_project("standard_shop", tmp_path)
+    server = LocalServer(
+        application=ServerApplicationFactory(StudioFeatures(watch=False)),
+        engine=RecordingEngineHost(),
+        browser=RecordingBrowser(),
+        announcer=RecordingAnnouncer(),
+    )
+    options = ServerOptions(root=root, port=free_port(), data_dir=tmp_path / "data", headless=True)
+    task = asyncio.create_task(server.serve(options))
+    try:
+        async with asyncio.timeout(WAIT_SECONDS):
+            while not server.readiness.ready and not task.done():
+                await asyncio.sleep(0.02)
+        record = read_server_record(ProjectState(root))
+        assert record is not None
+        async with httpx2.AsyncClient(base_url=record.url, trust_env=False, timeout=10.0) as http:
+            project = await http.get("/api/project")
+            health = await http.get(HEALTH_PATH)
+            mcp = await http.post("/mcp/", json=MCP_INITIALIZE, headers=MCP_HEADERS)
+        assert (project.status_code, health.status_code, mcp.status_code) == (200, 200, 200)
+    finally:
+        server.request_stop()
+        async with asyncio.timeout(WAIT_SECONDS):
+            await task
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Tone of the answer"
+values:
+- value: "calm"
+  description: "Calm"
+- value: "warm"
+  description: "Warm"

@@ -9,7 +9,7 @@ from aqven.ir import CompiledProject, IrLookupError, flow_hash
 from aqven.spec import AgentId, FlowId, InferenceId, NodeId, ToolId
 
 FIXTURE: Final = Path(__file__).parents[1] / "fixtures" / "standard_shop"
-LUMEN: Final = Path(__file__).parents[4] / "examples" / "showcase" / "lumen" / "src" / "lumen"
+LUMEN: Final = Path(__file__).parents[4] / "examples" / "lumen"
 INTAKE: Final = FlowId("intake")
 
 

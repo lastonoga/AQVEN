@@ -42,7 +42,7 @@ def model_call(output: frozenset[Modality], media: frozenset[Modality], uses_too
     base = capabilities()
     model = AgentModel(
         model=ModelString("openrouter:openai/gpt-5.4-image-2"),
-        provider=ProviderName.OPENROUTER,
+        provider=ProviderName("openrouter"),
         capabilities=base.model_copy(update={"output": tuple(sorted(output))}),
     )
     return ModelCall(model=model, uses_tools=uses_tools, media=media)

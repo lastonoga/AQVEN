@@ -49,13 +49,14 @@ def stop_process(process: subprocess.Popen[bytes]) -> int:
 
 
 @pytest.mark.asyncio
-async def test_background_server_starts_detached_reuses_and_stops_gracefully(tmp_path: Path) -> None:
+async def test_background_server_with_auth_starts_detached_reuses_and_stops_gracefully(tmp_path: Path) -> None:
     root = make_project(tmp_path / "project")
     launcher = CountingLauncher()
     background = BackgroundServer(launcher=launcher, timeout_seconds=START_TIMEOUT_SECONDS)
-    record = await background.ensure(root, harness_arguments(tmp_path / "data"))
+    arguments = (*harness_arguments(tmp_path / "data"), "--require-auth")
+    record = await background.ensure(root, arguments)
     try:
-        again = await background.ensure(root, harness_arguments(tmp_path / "data"))
+        again = await background.ensure(root, arguments)
         async with httpx2.AsyncClient(base_url=record.url, trust_env=False) as http:
             health = await http.get(HEALTH_PATH, headers=record.authorization())
             anonymous = await http.get("/api/echo")

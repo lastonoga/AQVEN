@@ -1,0 +1,387 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-7a3d4e38fc075f44fef4a6232aeb54d7f2b72d39fb69df8272ac5d485b3d45ad",
+  "request_key": "sha256-1c582d5953ff18fafac0000402eed724fb18d8c05a23afc521385d7639138fe4",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "Need",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " proper",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " JSON",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " string",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " escaping",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Use",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " double",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " quotes",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " inside",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " quotes",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " escaped",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Let's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " craft",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "Need proper JSON string escaping. Use double quotes inside quotes escaped. Let's craft.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-813533c1e5f24c3bb255eda0d8af3b9d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "chatcmpl-tool-813533c1e5f24c3bb255eda0d8af3b9d",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"reply\":\"Уважаемый клиент,\\n\\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.\\n\\nС уважением, команда Lumen\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "chatcmpl-tool-813533c1e5f24c3bb255eda0d8af3b9d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"reply\":\"Уважаемый клиент,\\n\\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.\\n\\nС уважением, команда Lumen\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "chatcmpl-tool-813533c1e5f24c3bb255eda0d8af3b9d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "Need proper JSON string escaping. Use double quotes inside quotes escaped. Let's craft.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"reply\":\"Уважаемый клиент,\\n\\nСогласно нашей базе знаний, если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\\n\\nЕсли корпус контроллера становится горячим на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\\n\\nПожалуйста, свяжитесь с отделом поддержки для дальнейших действий.\\n\\nС уважением, команда Lumen\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. Если мерцание повторяется, контроллер подлежит гарантийной замене.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки.\"}]}",
+        "tool_call_id": "chatcmpl-tool-813533c1e5f24c3bb255eda0d8af3b9d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1804,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 252,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 22,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 22
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-17T17:35:28.457763Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-17T17:35:28Z",
+      "downstream_provider": "DeepInfra",
+      "finish_reason": "tool_calls",
+      "cost": 8.94e-05,
+      "upstream_inference_cost": 8.94e-05,
+      "upstream_inference_prompt_cost": 5.412e-05,
+      "upstream_inference_completions_cost": 3.528e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1789666528-tlViRMjtNGeBgNFyoXTX",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

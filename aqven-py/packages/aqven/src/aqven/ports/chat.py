@@ -5,6 +5,7 @@ from typing import Annotated, Final, Literal, NewType, Protocol, get_args
 from pydantic import AwareDatetime, Field, TypeAdapter
 
 from aqven.runtime.address import ClientOpId, JsonObject, RequestModel, ResourceModel
+from aqven.spec import FlowId
 
 ChatSessionId = NewType("ChatSessionId", str)
 ChatTurnId = NewType("ChatTurnId", str)
@@ -12,7 +13,7 @@ ChatMessageId = NewType("ChatMessageId", str)
 ChatToolCallId = NewType("ChatToolCallId", str)
 ChatApprovalId = NewType("ChatApprovalId", str)
 
-type AgentBackendKind = Literal["claude"]
+type AgentBackendKind = Literal["claude", "codex"]
 type ChatPermissionMode = Literal["default", "accept_edits", "plan"]
 type ChatState = Literal["idle", "thinking", "streaming", "running_tool", "waiting_approval", "interrupting"]
 type ChatToolStatus = Literal["ok", "error", "denied", "interrupted"]
@@ -35,6 +36,7 @@ type LoginMethod = Literal["subscription", "api_key"]
 class ChatSessionOptions(RequestModel):
     project_root: Annotated[str, Field(min_length=1)]
     mcp_url: Annotated[str, Field(min_length=1)]
+    flow_id: FlowId | None = None
     model: str | None = None
     permission_mode: ChatPermissionMode = "default"
     resume_session_id: ChatSessionId | None = None
@@ -44,6 +46,7 @@ class ChatSession(ResourceModel):
     session_id: ChatSessionId
     backend: AgentBackendKind
     project_root: str
+    flow_id: FlowId | None
     model: str | None
     permission_mode: ChatPermissionMode
     created_at: AwareDatetime
@@ -89,6 +92,8 @@ class ChatTurnStarted(ChatEventBase):
     type: Literal["chat_turn_started"] = "chat_turn_started"
     client_op_id: ClientOpId
     text: str
+    backend: AgentBackendKind = "claude"
+    model: str | None = None
 
 
 class ChatTextDelta(ChatEventBase):
@@ -184,6 +189,8 @@ class ChatTurnFinished(ChatEventBase):
     stop_reason: ChatStopReason
     duration_ms: Annotated[int, Field(ge=0)]
     usage: ChatUsage | None
+    backend: AgentBackendKind = "claude"
+    model: str | None = None
 
 
 type ChatEvent = Annotated[

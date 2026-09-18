@@ -1,75 +1,105 @@
-import type {
-  CallSheetTab,
-  ClaimVerdict,
-  GatewayMode,
-  JudgeVerdict,
-  ModelFamily,
-  NodeKind,
-  Outcome,
-  PartKind,
-  Provenance,
-  RowKey,
-  StageKind,
-  TextMark,
-  Verdict,
-} from "@/domain"
+import type { CompileStatus, ExecutionStatus, IndexStatus, ModelFamily, NodeKind, RunStatus, Severity, WaitState } from "@/domain"
 import type { Tone } from "./tone"
+
+export const PROVENANCES = ["static", "data", "knowledge", "generated", "human"] as const
+export type Provenance = (typeof PROVENANCES)[number]
+
+export const PART_KINDS = ["text", "json", "image", "audio", "document", "video"] as const
+export type PartKind = (typeof PART_KINDS)[number]
+
+export type DiffOp = "add" | "remove"
+export type TextMark = Provenance | PartKind | DiffOp | "issue" | "comment" | "code"
+export type TextRun = string | { readonly text: string; readonly mark: TextMark }
+export type TextLine = readonly TextRun[]
+
+export type ContentPart =
+  | { readonly kind: "text" | "json"; readonly name: string; readonly meta: string; readonly text: string }
+  | { readonly kind: "image"; readonly name: string; readonly meta: string; readonly width: number; readonly height: number; readonly caption: string; readonly version?: string }
+  | { readonly kind: "audio"; readonly name: string; readonly meta: string; readonly waveform: readonly number[] }
+  | { readonly kind: "document"; readonly name: string; readonly meta: string; readonly caption: string }
+  | { readonly kind: "video"; readonly name: string; readonly meta: string; readonly width: number; readonly height: number; readonly frameTimesS: readonly number[]; readonly playhead: number; readonly caption: string }
+
+export type ProvenancedValue = {
+  readonly provenance: Provenance
+  readonly label: string
+  readonly value?: string
+  readonly unchanged?: boolean
+}
 
 export type MarkerShape = "circle" | "diamond" | "end"
 export type KindSpec = { readonly code: string; readonly tone: Tone }
-export type StageKindSpec = KindSpec & { readonly marker: MarkerShape; readonly glyph: string | null }
-export type GatewaySpec = { readonly glyph: string; readonly tone: Tone }
 export type ProvenanceSpec = { readonly glyph: string; readonly tone: Tone; readonly dashed: boolean; readonly shape: "box" | "round" }
 export type TextMarkStyle = "chip" | "dashed" | "ink" | "code"
 export type TextMarkSpec = { readonly style: TextMarkStyle; readonly tone: Tone }
 
-const SCORE_WARNING_BELOW = 0.7
-
-export const OUTCOME_TONE: Readonly<Record<Outcome, Tone>> = {
-  ok: "success",
-  degraded: "warning",
-  failed: "destructive",
-  cached: "neutral",
-  idle: "neutral",
-  waiting: "warning",
-  skipped: "neutral",
-  aborted: "loop",
-  awaiting: "warning",
-  intermediate: "neutral",
-}
-
-export const VERDICT_OUTCOME: Readonly<Record<Verdict | JudgeVerdict | ClaimVerdict, Outcome>> = {
-  pass: "ok",
-  fail: "failed",
-  approved: "ok",
-  needs_human: "degraded",
-  rejected: "failed",
-  matched: "ok",
-  invented: "failed",
-}
-
 export const NODE_KIND: Readonly<Record<NodeKind, KindSpec>> = {
-  tool: { code: "TOOL", tone: "tool" },
   llm: { code: "LLM", tone: "llm" },
-  fn: { code: "FN", tone: "neutral" },
-  human: { code: "HUM", tone: "warning" },
-  image: { code: "IMG", tone: "llm" },
-  audio: { code: "AUD", tone: "tool" },
-  video: { code: "VID", tone: "warning" },
+  code: { code: "CODE", tone: "neutral" },
+  tool: { code: "TOOL", tone: "tool" },
+  human: { code: "HUMAN", tone: "warning" },
+  parallel: { code: "PAR", tone: "primary" },
+  map: { code: "MAP", tone: "tool" },
+  switch: { code: "SWITCH", tone: "warning" },
+  loop: { code: "LOOP", tone: "loop" },
+  call: { code: "CALL", tone: "success" },
+  narrow: { code: "NARROW", tone: "neutral" },
 }
 
-export const STAGE_KIND: Readonly<Record<StageKind, StageKindSpec>> = {
-  seq: { code: "SEQ", tone: "neutral", marker: "circle", glyph: null },
-  map: { code: "MAP", tone: "tool", marker: "diamond", glyph: "+" },
-  diverge: { code: "DIVERGE", tone: "llm", marker: "diamond", glyph: "+" },
-  parallel: { code: "PARALLEL", tone: "llm", marker: "circle", glyph: null },
-  loop: { code: "LOOP", tone: "loop", marker: "diamond", glyph: "⟳" },
-  switch: { code: "SWITCH", tone: "warning", marker: "diamond", glyph: "×" },
+export const RUN_STATUS_TONE: Readonly<Record<RunStatus, Tone>> = {
+  queued: "neutral",
+  running: "primary",
+  suspended: "warning",
+  completed: "success",
+  failed: "destructive",
+  cancelled: "neutral",
 }
 
-export const GATEWAY: Readonly<Record<GatewayMode, GatewaySpec>> = {
-  all: { glyph: "+", tone: "llm" },
-  one: { glyph: "×", tone: "warning" },
+export const EXECUTION_STATUS_TONE: Readonly<Record<ExecutionStatus, Tone>> = {
+  pending: "neutral",
+  running: "primary",
+  ok: "success",
+  failed: "destructive",
+  skipped: "neutral",
+  suspended: "warning",
+  cancelled: "neutral",
+}
+
+export const COMPILE_STATUS_TONE: Readonly<Record<CompileStatus, Tone>> = {
+  ok: "success",
+  not_runnable: "warning",
+  invalid: "destructive",
+  unreadable: "destructive",
+}
+
+export const INDEX_STATUS_TONE: Readonly<Record<IndexStatus, Tone>> = {
+  ready: "success",
+  building: "primary",
+  degraded: "warning",
+}
+
+export const WAIT_STATE_TONE: Readonly<Record<WaitState, Tone>> = {
+  waiting: "warning",
+  resolved: "success",
+  timed_out: "destructive",
+}
+
+export const SEVERITY_TONE: Readonly<Record<Severity, Tone>> = {
+  error: "destructive",
+  warning: "warning",
+}
+
+export const MODEL_FAMILY: Readonly<Record<ModelFamily, { readonly label: string }>> = {
+  openai: { label: "OpenAI" },
+  anthropic: { label: "Anthropic" },
+  google: { label: "Google" },
+  deepseek: { label: "DeepSeek" },
+  qwen: { label: "Qwen" },
+  moonshot: { label: "Moonshot" },
+  zhipu: { label: "Zhipu" },
+  xai: { label: "xAI" },
+  meta: { label: "Meta" },
+  mistral: { label: "Mistral" },
+  other: { label: "Other" },
 }
 
 export const PROVENANCE: Readonly<Record<Provenance, ProvenanceSpec>> = {
@@ -113,28 +143,4 @@ export const TEXT_MARK: Readonly<Record<TextMark, TextMarkSpec>> = {
   issue: { style: "chip", tone: "destructive" },
   comment: { style: "ink", tone: "neutral" },
   code: { style: "code", tone: "neutral" },
-}
-
-export const MODEL_FAMILY: Readonly<Record<ModelFamily, { readonly label: string }>> = {
-  anthropic: { label: "Anthropic" },
-  openai: { label: "OpenAI" },
-  google: { label: "Google" },
-  mistral: { label: "Mistral" },
-}
-
-export const ROW_SHEET_TAB: Readonly<Record<RowKey, CallSheetTab | null>> = {
-  columns: null,
-  call: "model",
-  agent: "model",
-  model: "model",
-  input: "input",
-  prompt: "prompt",
-  output: "output",
-  postCheck: "assertions",
-  assertions: "assertions",
-}
-
-export const scoreTone = (score: number, stopped: boolean): Tone => {
-  if (stopped) return "loop"
-  return score < SCORE_WARNING_BELOW ? "warning" : "success"
 }

@@ -38,7 +38,7 @@ class HumanApprovalGate:
 
     async def decide(self, scope: ExecutionScope, request: ApprovalRequest) -> Mapping[str, ToolApprovalDecision]:
         calls = human_calls(request)
-        outcome = await self.gate.decide(scope, request.spec, calls)
+        outcome = await self.gate.decide(scope, request.spec, calls, request.attempt)
         match outcome:
             case ToolApprovalGranted():
                 return decisions(outcome.answer, calls)

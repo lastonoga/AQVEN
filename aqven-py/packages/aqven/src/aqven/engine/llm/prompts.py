@@ -15,7 +15,7 @@ from aqven.check.templates import OUTPUT_FORMAT, MessageNode, MessageRole, promp
 from aqven.engine.llm.allowed import AllowedSet, flatten
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import CodeLoader
-from aqven.engine.llm.template_values import template_values
+from aqven.engine.llm.readable import readable_values
 from aqven.ir import CodePrompt, CompiledInference, CompiledPrompt, CompiledVariantSlot, FieldIr, TemplatePrompt
 from aqven.policies.paths import read
 from aqven.runtime.address import JsonObject
@@ -90,7 +90,7 @@ class PromptRenderer:
     def template(self, prompt: TemplatePrompt, source: PromptSource) -> RenderedParts:
         environment = prompt_environment(DictLoader(dict(prompt.partials)))
         document = source.document
-        values = template_values(source.inference, document)
+        values = readable_values(document)
         chosen = {name: _variant(name, slot, document) for name, slot in source.inference.variants.items()}
         variants = {name: _render_text(environment, text, values) for name, (_, text) in chosen.items()}
         variables: dict[str, object] = {**values, OUTPUT_FORMAT: source.output_format, VARIANTS_VARIABLE: variants}
@@ -245,8 +245,12 @@ def _inputs_section(source: PromptSource) -> str:
     fields = text_fields(source.inference)
     if not fields:
         return ""
-    lines = (f"{field.name} ({field.description}):\n{_json_text(source.document.get(field.name))}" for field in fields)
+    lines = (_input_line(field, source.document.get(field.name)) for field in fields)
     return SECTION_SEPARATOR.join(("Inputs:", *lines))
+
+
+def _input_line(field: FieldIr, value: JsonValue) -> str:
+    return f"{field.name} ({field.description}):\n{_json_text(value)}"
 
 
 def _allowed_lines(item: AllowedSet) -> Iterator[str]:

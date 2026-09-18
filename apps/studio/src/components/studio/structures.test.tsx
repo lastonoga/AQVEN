@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { ContentPart } from "@/domain"
+import type { ContentPart } from "@/components/studio"
 import { renderInRouter } from "@/test/render-route"
+import { Actions } from "./actions"
 import { ChoiceGroup, ChoiceLink, ChoiceList } from "./choice"
 import { Matrix, RowLink, type MatrixField, type MatrixSpanField } from "./matrix"
 import { MatrixCell } from "./matrix-cell"
@@ -224,6 +225,16 @@ describe("ChoiceGroup", () => {
     expect(selected.getAttribute("data-state")).toBe("on")
     fireEvent.click(selected)
     expect(onValueChange).toHaveBeenCalledWith(null)
+  })
+})
+
+describe("Actions", () => {
+  it("keeps the action label visible while announcing pending work", () => {
+    render(<Actions actions={[{ id: "save", label: "Save dataset", pending: true, onClick: vi.fn() }]} />)
+    const save = screen.getByRole("button", { name: "Save dataset" })
+    expect(save.hasAttribute("disabled")).toBe(true)
+    expect(save.getAttribute("aria-busy")).toBe("true")
+    expect(save.querySelector('[data-slot="spinner"]')).toBeTruthy()
   })
 })
 

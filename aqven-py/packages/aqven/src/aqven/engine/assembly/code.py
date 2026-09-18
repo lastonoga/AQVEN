@@ -3,6 +3,7 @@ from typing import Final
 
 from pydantic import BaseModel
 
+from aqven.codegen import GENERATED_MODULE
 from aqven.engine.human.forms import UnknownForm
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.loading import CodeLoader
@@ -10,7 +11,6 @@ from aqven.ir import CompiledInference
 from aqven.ports.execution import ExecutionScope
 from aqven.spec import TypeId
 
-GENERATED_TYPES_MODULE: Final = "types"
 INPUT_SUFFIX: Final = "In"
 OUTPUT_SUFFIX: Final = "Out"
 
@@ -39,7 +39,7 @@ class LoaderInferenceModels:
         return self._model(inference, OUTPUT_SUFFIX)
 
     def _model(self, inference: CompiledInference, suffix: str) -> type[BaseModel]:
-        module_name = f"{self.package}.{GENERATED_TYPES_MODULE}"
+        module_name = f"{self.package}.{GENERATED_MODULE}"
         name = f"{pascal(inference.inference_id)}{suffix}"
         found: object = getattr(self.loader.module(module_name, f"{module_name}:{name}"), name, None)
         if isinstance(found, type) and issubclass(found, BaseModel):

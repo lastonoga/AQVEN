@@ -1,7 +1,7 @@
 from decimal import Decimal
-from typing import Annotated, Final
+from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, JsonValue
 
 from aqven.runtime.address import ExecutionAddress, JsonObject, Problem, ResourceModel
 from aqven.runtime.human import HumanWaitDetail
@@ -15,13 +15,7 @@ from aqven.runtime.vocabulary import (
     PromptRole,
     ResolvedOutputMode,
 )
-from aqven.spec import MediaValue, NodeKind, OnFail, PromptLevel
-
-RAW_EXCERPT_LIMIT: Final = 2000
-
-
-def excerpt_of(text: str) -> str:
-    return text[:RAW_EXCERPT_LIMIT]
+from aqven.spec import MediaValue, NodeKind, OnFail, PromptLevel, TypeId
 
 
 class ModelErrorDetails(ResourceModel):
@@ -29,7 +23,7 @@ class ModelErrorDetails(ResourceModel):
     model: str | None = None
     output_mode: ResolvedOutputMode | None = None
     attempt: Annotated[int, Field(ge=1)] | None = None
-    raw_excerpt: Annotated[str, Field(max_length=RAW_EXCERPT_LIMIT)] | None = None
+    raw_excerpt: str | None = None
     violations: tuple[Problem, ...] = ()
 
 
@@ -137,8 +131,24 @@ class CheckOutcome(ResourceModel):
     attempt: Annotated[int, Field(ge=1)]
 
 
+class AllowedSetMember(ResourceModel):
+    value: str
+    label: str | None
+
+
+class ResolvedAllowedSet(ResourceModel):
+    type_id: TypeId
+    source: str
+    labels_from: str | None
+    members: tuple[AllowedSetMember, ...]
+
+
 class ExecutionDetail(NodeExecution):
     provenance: dict[str, SlotProvenance]
+    input_schema: JsonValue = None
+    output_schema: JsonValue = None
+    schema_source: Literal["run", "current", "unavailable"] = "unavailable"
+    allowed_sets: tuple[ResolvedAllowedSet, ...] = ()
     prompt: PromptTrace | None
     response: ResponseTrace | None
     attempts: tuple[Attempt, ...]

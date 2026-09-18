@@ -164,8 +164,34 @@ def test_side_effect_call_with_invalid_arguments_is_retried_before_asking_for_ap
 
     assert isinstance(outcome, NodeSucceeded)
     assert [[call.tool_call_id for call in request.calls] for request in bed.approvals.requests] == [["call-9"]]
+    assert [request.attempt for request in bed.approvals.requests] == [1]
     assert calls == ["LUM-1:call-9"]
     assert "invalid arguments for tool issue_refund" in retry_texts(bed.scripted.seen[1][0])[0]
+
+
+def test_each_approval_round_of_one_execution_gets_its_own_number() -> None:
+    calls: list[str] = []
+    turns = [
+        [tool_call("issue_refund", '{"order_id": 5}', "call-7")],
+        [tool_call("issue_refund", '{"order_id": "LUM-1"}', "call-8")],
+        [tool_call("issue_refund", '{"order_id": "LUM-2"}', "call-9")],
+        [tool_call(OUTPUT_TOOL_NAME, FINAL, "out-1")],
+    ]
+    bed = llm_bed(
+        turns,
+        answer_node(),
+        [agent(tools=(ToolId("issue_refund"),), approval=_approval())],
+        [answer_inference()],
+        RUN_INPUT,
+        tools=[_tool("issue_refund", REFUND_REF, Effect.WRITE)],
+        code={REFUND_REF: refund_issuer(calls)},
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeSucceeded)
+    assert [request.attempt for request in bed.approvals.requests] == [1, 2]
+    assert calls == ["LUM-1:call-8", "LUM-2:call-9"]
 
 
 def test_denied_approval_returns_denial_to_the_model_without_running_the_tool() -> None:
@@ -272,7 +298,7 @@ class _NoNested:
 
 
 class _NeverFactory:
-    def build(self, model: str, *, settings: ModelSettings | None, api_key: SecretStr) -> Model:
+    def build(self, model: str, *, settings: ModelSettings | None, api_key: SecretStr | None) -> Model:
         raise AssertionError("the factory is not called without a key")
 
 

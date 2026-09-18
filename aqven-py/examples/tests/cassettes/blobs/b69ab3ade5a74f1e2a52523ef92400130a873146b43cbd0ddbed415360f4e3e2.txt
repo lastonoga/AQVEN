@@ -1,0 +1,29 @@
+We need to produce final response via function final_result. We must produce rationale string <=600 chars, scores array up to 3 items with criterion and score 1-5, best_index 0-2.
+
+We must analyze panel verdicts: three judges. Two say candidate 1 best, one says candidate 0 best, third says all 1. We need to check disagreements.
+
+We need to examine the candidates: both say no info in knowledge base. The KB chunks provided do not mention Lumen Glow E27 or Wi-Fi. So both are correct. The difference: candidate 0: "К сожалению, в базе знаний нет информации о совместимости Lumen Glow E27 с Wi‑Fi 5 ГГц." Candidate 1: "К сожалению, в нашей базе знаний нет информации о совместимости лампы Lumen Glow E27 с Wi-Fi 5 ГГц." So candidate 1 adds "нашей" and "лампы". Candidate 0 is slightly shorter. Tone: both polite. Candidate 1 uses "нашей", maybe slightly more friendly. Candidate 0 is more concise.
+
+We need to evaluate criteria:
+
+- Grounded: both correct. Score 5.
+
+- Helpful: Both give same info. But maybe candidate 0 is slightly less helpful because it doesn't mention next steps. Candidate 1 also doesn't. So both 3 maybe. But judge 2 gave 4 to candidate 0 for helpfulness. They think candidate 0 is more concise and clear. But helpfulness includes providing next steps. Neither does. So maybe 3 for both. But we need to choose best candidate. We need to pick one.
+
+- Tone: Both polite. Candidate 1 uses "нашей" maybe more friendly. Candidate 0 is neutral. Judge 2 gave 5 to candidate 0 for tone. Judge 1 gave 4 to candidate 1. Which is better? Tone is subjective. We can decide.
+
+We need to produce our own verdict. We need to examine panel disagreements: Judge 1 and 2 disagree on best_index. Judge 3 gave all 1. We need to analyze.
+
+We need to check if any candidate violates criteria: no. So both are valid.
+
+We need to decide best. Let's weigh helpfulness: Both same. But candidate 0 is more concise, maybe better for support. So we might choose candidate 0. But judge 1 gave candidate 1 best due to tone. But we can argue tone difference is minimal. So choose candidate 0.
+
+Thus best_index = 0.
+
+Now produce rationale: mention that both are grounded, no info in KB. Both same helpfulness. Tone difference minimal. Choose candidate 0 for conciseness and clarity. Provide scores: grounded 5, helpful 3, tone 4? But judge 2 gave tone 5 to candidate 0. But we can give 5. But we need to be consistent: we choose candidate 0. So we give scores: grounded 5, helpful 3, tone 5? But helpful 3 maybe. But we can give helpful 4? But we need to justify. Let's decide helpful 3 because no additional info. Tone 5 because neutral and polite. So scores: grounded 5, helpful 3, tone 5.
+
+We need to keep within 600 characters. Let's craft.
+
+Rationale: "Both candidates correctly state that the KB lacks data on Lumen Glow E27 compatibility with Wi‑Fi 5 GHz, so grounded score 5. Neither provides extra guidance, so helpful score 3. Tone is polite and neutral; candidate 0 is slightly more concise, giving it a slight edge, so tone 5." That's about 250 chars.
+
+Now produce final_result.

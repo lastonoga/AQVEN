@@ -431,16 +431,17 @@ def test_cassette_policy_from_run_options(tmp_path: Path) -> None:
 
 class RecordingFactory:
     def __init__(self) -> None:
-        self.keys: list[SecretStr] = []
+        self.keys: list[SecretStr | None] = []
 
-    def build(self, model: str, *, settings: ModelSettings | None, api_key: SecretStr) -> Model:
+    def build(self, model: str, *, settings: ModelSettings | None, api_key: SecretStr | None) -> Model:
         self.keys.append(api_key)
-        return ScriptedModel([text_script(f"answer with {api_key.get_secret_value()}")])
+        secret = "" if api_key is None else api_key.get_secret_value()
+        return ScriptedModel([text_script(f"answer with {secret}")])
 
 
 def test_guarded_factory_resolves_keys_project_first_and_scrubs_them(tmp_path: Path) -> None:
     settings = MemorySettings()
-    key = provider_key_setting(ProviderName.OPENROUTER)
+    key = provider_key_setting(ProviderName("openrouter"))
     settings.secrets[("studio", key)] = SecretStr("studio-key-0000000000")
     settings.secrets[("project", key)] = SecretStr("project-key-000000000")
     factory = RecordingFactory()
@@ -454,7 +455,7 @@ def test_guarded_factory_resolves_keys_project_first_and_scrubs_them(tmp_path: P
     asyncio.run(model.request(prompt("hi"), None, ModelRequestParameters()))
     written = "".join(path.read_text() for path in tmp_path.rglob("*.json"))
 
-    assert [secret.get_secret_value() for secret in factory.keys] == ["project-key-000000000"]
+    assert [secret.get_secret_value() for secret in factory.keys if secret] == ["project-key-000000000"]
     assert "project-key-000000000" not in written
     assert chain_links(model) == CHAIN_ORDER
 
@@ -469,7 +470,7 @@ def test_guarded_factory_falls_back_to_environment_and_reports_missing_keys() ->
     with pytest.raises(MissingProviderKey):
         asyncio.run(without_env.build(MODEL_REF, settings=None, policy=call_policy))
 
-    assert factory.keys[0].get_secret_value() == "env-key"
+    assert [secret.get_secret_value() for secret in factory.keys if secret] == ["env-key"]
 
 
 def test_response_is_a_model_response() -> None:

@@ -25,7 +25,7 @@ from aqven.console.project_template import (
 AQVEN_PACKAGE: Final = Path(__file__).resolve().parents[2]
 RUN_SECONDS: Final = 300
 PACKAGE: Final = "demo_shop"
-MODULE: Final = f"src/{PACKAGE}"
+MODULE: Final = PACKAGE
 TOKENS: Final = ("__package__", "__project__", "__aqven_requirement__", "__uv_sources__")
 FAKE_UV: Final = "/opt/uv/bin/uv"
 
@@ -47,10 +47,10 @@ def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
 def created(tmp_path_factory: pytest.TempPathFactory) -> Path:
     workspace = tmp_path_factory.mktemp("new")
     completed = run_python(
-        workspace, "-m", "aqven", "new", "demo-shop", "--aqven-path", str(AQVEN_PACKAGE), "--no-sync"
+        workspace, "-m", "aqven", "new", "demo-shop", "--aqven-path", str(AQVEN_PACKAGE), "--no-sync", "--with-tests"
     )
     assert completed.returncode == 0, completed.stderr
-    assert "uv run aqven dev src/demo_shop" in completed.stdout
+    assert "uv run aqven dev demo_shop" in completed.stdout
     return workspace / "demo-shop"
 
 
@@ -64,6 +64,8 @@ def test_new_writes_the_standard_layout(created: Path) -> None:
         "pyproject.toml",
         "tests/test_answer_question.py",
         f"{MODULE}/__init__.py",
+        f"{MODULE}/__main__.py",
+        f"{MODULE}/app.py",
         f"{MODULE}/.env.example",
         f"{MODULE}/aqven.yaml",
         f"{MODULE}/agents/assistant.yaml",
@@ -105,7 +107,10 @@ def test_new_writes_project_settings_for_uv_git_and_agents(created: Path) -> Non
     assert manifest["tool"]["uv"]["sources"]["aqven"] == {"path": AQVEN_PACKAGE.as_posix(), "editable": True}
     assert manifest["tool"]["pytest"]["ini_options"]["aqven_project"] == MODULE
     assert {".env", ".aqven/", f"{MODULE}/types.py"} <= set(ignored)
-    assert (created / MODULE / ".env.example").read_text(encoding="utf-8") == "OPENROUTER_API_KEY=\n"
+    environment = (created / MODULE / ".env.example").read_text(encoding="utf-8").splitlines()
+    assert environment[0] == "OPENROUTER_API_KEY="
+    defaults = {"AQVEN_STUDIO=true", "AQVEN_HOST=127.0.0.1", "AQVEN_PORT=5180", "AQVEN_OPEN_BROWSER=false"}
+    assert defaults <= set(environment)
     assert servers["aqven"] == {"type": "stdio", "command": "uv", "args": ["run", "aqven", "mcp", MODULE]}
     assert (created / "CLAUDE.md").read_text(encoding="utf-8").startswith("@AGENTS.md\n")
     assert all(rule in agents for rule in ("aqven check", "flow_patch", "types.py", ".env"))
@@ -132,7 +137,7 @@ def test_created_project_imports_its_generated_models(created: Path) -> None:
         "print(Question(text='hi', tone='formal').tone, CountWordsOut(words=2).words, types.SimpleNamespace.__module__)"
     )
 
-    completed = run_python(created, "-c", f"import sys; sys.path.insert(0, 'src'); {probe}")
+    completed = run_python(created, "-c", f"import sys; sys.path.insert(0, '.'); {probe}")
 
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.split() == ["formal", "2", "types"]
@@ -162,7 +167,7 @@ def test_new_refuses_a_folder_that_is_not_empty_unless_forced(
     assert not written_when_refused
     assert forced == 0
     assert (target / "notes.txt").read_text(encoding="utf-8") == "keep"
-    assert (target / "src" / "shop" / GENERATED_TYPES).is_file()
+    assert (target / "shop" / GENERATED_TYPES).is_file()
 
 
 def test_new_derives_the_package_from_the_folder_name(tmp_path: Path) -> None:
@@ -173,7 +178,7 @@ def test_new_derives_the_package_from_the_folder_name(tmp_path: Path) -> None:
     manifest = tomllib.loads((target / "pyproject.toml").read_text(encoding="utf-8"))
     assert manifest["project"]["name"] == "my-shop-2"
     assert "sources" not in manifest["tool"]["uv"]
-    assert (target / "src" / "my_shop_2" / "aqven.yaml").is_file()
+    assert (target / "my_shop_2" / "aqven.yaml").is_file()
 
 
 @pytest.mark.parametrize(
@@ -215,7 +220,7 @@ class RecordingRunner:
     calls: list[tuple[tuple[str, ...], Path, bool]] = field(default_factory=list[tuple[tuple[str, ...], Path, bool]])
 
     def run(self, command: Sequence[str], cwd: Path) -> int:
-        self.calls.append((tuple(command), cwd, (cwd / "src" / "shop" / GENERATED_TYPES).exists()))
+        self.calls.append((tuple(command), cwd, (cwd / "shop" / GENERATED_TYPES).exists()))
         return self.exit_code
 
 
@@ -235,7 +240,7 @@ def test_new_syncs_the_environment_before_generating_models(tmp_path: Path) -> N
 
     assert code == 0
     assert runner.calls == [((FAKE_UV, "sync"), target, False)]
-    assert (target / "src" / "shop" / GENERATED_TYPES).is_file()
+    assert (target / "shop" / GENERATED_TYPES).is_file()
 
 
 def test_new_reports_a_failed_sync(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -244,7 +249,7 @@ def test_new_reports_a_failed_sync(tmp_path: Path, capsys: pytest.CaptureFixture
     assert creator.create(NewProjectRequest(target=tmp_path / "shop")) == 1
 
     assert "uv sync failed with exit code 3" in capsys.readouterr().err
-    assert not (tmp_path / "shop" / "src" / "shop" / GENERATED_TYPES).exists()
+    assert not (tmp_path / "shop" / "shop" / GENERATED_TYPES).exists()
 
 
 def test_new_reports_missing_uv(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -286,3 +291,14 @@ def test_unknown_template_lists_the_available_ones(tmp_path: Path, capsys: pytes
     assert create_project(NewProjectRequest(target=tmp_path / "shop", template="huge", sync=False)) == 2
 
     assert f"unknown template 'huge'; available templates: {MINIMAL_TEMPLATE}" in capsys.readouterr().err
+
+
+def test_tests_are_created_only_when_asked(tmp_path: Path) -> None:
+    without = tmp_path / "plain"
+    with_tests = tmp_path / "tested"
+
+    assert create_project(NewProjectRequest(target=without, sync=False)) == 0
+    assert create_project(NewProjectRequest(target=with_tests, sync=False, with_tests=True)) == 0
+
+    assert not (without / "tests").exists()
+    assert (with_tests / "tests" / "test_answer_question.py").is_file()

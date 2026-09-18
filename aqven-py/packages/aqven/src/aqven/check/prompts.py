@@ -17,11 +17,23 @@ from liquid.span import Span
 from liquid.static_analysis import TemplateAnalysis, Variable
 from liquid.template import BoundTemplate
 from liquid.token import Token
+from pydantic import JsonValue
 
 from aqven.check.conditions import condition_problems, follow, path_annotation, resolved
 from aqven.check.context import CheckContext
 from aqven.check.inferences import variant_file, variant_refs
-from aqven.check.shapes import Missing, NotList, Opaque, enum_values, is_list, is_media, max_items, step_element
+from aqven.check.shapes import (
+    Missing,
+    NotList,
+    Opaque,
+    enum_values,
+    is_dynamic,
+    is_list,
+    is_media,
+    max_items,
+    record_fields,
+    step_element,
+)
 from aqven.check.templates import (
     ALLOWED_FILTERS,
     ALLOWED_TAGS,
@@ -32,15 +44,18 @@ from aqven.check.templates import (
     prompt_environment,
     walk,
 )
+from aqven.check.typeinfo import decl_type_id
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader import LoadedInference, SourceSpec, include_candidates, text_file, text_key, within
-from aqven.spec import InferenceSpec, VariantSlot, annotated_record
+from aqven.spec import MEDIA_TYPES, InferenceSpec, VariantSlot, annotated_record
 
 CONDITION_RULE: Final = "R-T3"
 LOOP_RULE: Final = "R-T5"
 PROMPT_KEY: Final = "prompt"
 VARIANTS_VARIABLE: Final = "variants"
 IN_PREFIX: Final = "$in."
+LIST_SUFFIX: Final = "[]"
+FIELD_DEPTH_LIMIT: Final = 6
 SELECTOR_ROOT: Final = re.compile(r"[.\[]")
 
 
@@ -152,17 +167,7 @@ def _template_prompt(
     context: CheckContext, loaded: LoadedInference, spec: InferenceSpec, main: PromptSource, ignored: frozenset[str]
 ) -> Iterator[Diagnostic]:
     slots = spec.variants or {}
-    texts = context.project.texts
-    files = sorted(
-        {
-            found
-            for name, slot in slots.items()
-            for _, variant in variant_refs(name, slot)
-            if (found := variant_file(context, loaded, name, variant)) is not None
-        }
-    )
-    sources = [PromptSource(path, texts[path]) for path in files]
-    parsed = [_parse(_files(context, loaded, source)) for source in (main, *sources)]
+    parsed = [_parse(_files(context, loaded, source)) for source in (main, *_variant_sources(context, loaded, slots))]
     failures = [item for item in parsed if isinstance(item, Diagnostic)]
     templates = [item for item in parsed if isinstance(item, Template)]
     if failures:
@@ -175,10 +180,89 @@ def _template_prompt(
         yield from _fragment_variables(template)
     inputs = {decl.name: context.refs.field_annotation(decl) for decl in spec.in_}
     variables = {VARIANTS_VARIABLE: annotated_record(VARIANTS_VARIABLE, dict.fromkeys(slots, str))} if slots else {}
-    yield from _usage(templates[0], templates[1:], inputs, slots)
+    yield from _usage(templates[0], templates[1:], inputs, slots, _external_uses(spec))
     yield from _checked(templates[0], {**inputs, **variables}, frozenset({OUTPUT_FORMAT}))
     for template in templates[1:]:
         yield from _checked(template, inputs, frozenset())
+
+
+def _variant_sources(
+    context: CheckContext, loaded: LoadedInference, slots: Mapping[str, VariantSlot]
+) -> tuple[PromptSource, ...]:
+    texts = context.project.texts
+    files = sorted(
+        {
+            found
+            for name, slot in slots.items()
+            for _, variant in variant_refs(name, slot)
+            if (found := variant_file(context, loaded, name, variant)) is not None
+        }
+    )
+    return tuple(PromptSource(path, texts[path]) for path in files)
+
+
+def rendered_paths(context: CheckContext, loaded: LoadedInference) -> frozenset[str] | None:
+    source = loaded.source
+    if source is None or source.spec.prompt_code is not None:
+        return None
+    spec = source.spec
+    main = _main_prompt(context, loaded, spec)
+    if main is None:
+        return None
+    slots = spec.variants or {}
+    parsed = [_parse(_files(context, loaded, item)) for item in (main, *_variant_sources(context, loaded, slots))]
+    templates = [item for item in parsed if isinstance(item, Template)]
+    if len(templates) != len(parsed):
+        return None
+    if not _dynamic_globals(templates[0]) and not templates[0].analysis.tags and not slots:
+        return frozenset(decl.name for decl in spec.in_)
+    return frozenset(path for template in templates for path in _printed(template))
+
+
+def _printed(template: Template) -> Iterator[str]:
+    context = RenderContext(template.bound)
+    return _printed_nodes(template.bound.nodes, {}, context)
+
+
+def _printed_nodes(nodes: Iterable[Node], scope: Mapping[str, str], context: RenderContext) -> Iterator[str]:
+    for node in nodes:
+        yield from _printed_path(node, scope)
+        inner = _path_scope(node, scope)
+        yield from _printed_nodes(node.children(context, include_partials=True), inner, context)
+
+
+def _printed_path(node: Node, scope: Mapping[str, str]) -> Iterator[str]:
+    if not isinstance(node, OutputNode):
+        return
+    expression = node.expression
+    left = expression.left if isinstance(expression, FilteredExpression) else expression
+    path = _path_text(left, scope)
+    if path is not None:
+        yield path
+
+
+def _path_text(expression: object, scope: Mapping[str, str]) -> str | None:
+    if not isinstance(expression, Path):
+        return None
+    segments = list(expression.path)
+    head = segments[0] if segments else None
+    if not isinstance(head, str):
+        return None
+    return "".join((scope.get(head, head), *(_segment_text(segment) for segment in segments[1:])))
+
+
+def _segment_text(segment: object) -> str:
+    return f".{segment}" if isinstance(segment, str) else LIST_SUFFIX
+
+
+def _path_scope(node: Node, scope: Mapping[str, str]) -> Mapping[str, str]:
+    if not isinstance(node, ForNode):
+        return scope
+    loop = node.expression
+    iterable = _path_text(loop.iterable, scope)
+    if iterable is None:
+        return scope
+    return {**scope, loop.identifier: f"{iterable}{LIST_SUFFIX}"}
 
 
 def _files(context: CheckContext, loaded: LoadedInference, main: PromptSource) -> PromptFiles:
@@ -240,7 +324,11 @@ def _structure(template: Template) -> Iterator[Diagnostic]:
 
 
 def _usage(
-    main: Template, variants: Sequence[Template], inputs: Mapping[str, object | None], slots: Mapping[str, VariantSlot]
+    main: Template,
+    variants: Sequence[Template],
+    inputs: Mapping[str, object | None],
+    slots: Mapping[str, VariantSlot],
+    external: frozenset[str],
 ) -> Iterator[Diagnostic]:
     globals_ = _dynamic_globals(main)
     if not globals_ and not main.analysis.tags and not slots:
@@ -250,16 +338,50 @@ def _usage(
         message = f"{{{{ {OUTPUT_FORMAT} }}}} occurs {count} times, but must occur exactly once"
         yield diagnostic(DiagnosticCode.E_PROMPT_OUTPUT_FORMAT, main.files.main.file, (), message)
     selectors = {SELECTOR_ROOT.split(slot.on.removeprefix(IN_PREFIX))[0] for slot in slots.values()}
-    used = {name for template in (main, *variants) for name in _dynamic_globals(template)} | selectors
+    used = {name for template in (main, *variants) for name in _dynamic_globals(template)} | selectors | external
     for name in (name for name in inputs if name not in used):
         message = f"input {name} is declared, but the template does not use it"
-        yield diagnostic(DiagnosticCode.E_PROMPT_INPUT_UNUSED, main.files.main.file, (), message)
+        hint = f"render {{{{ {name} }}}} in the prompt, or remove the input from in"
+        yield diagnostic(DiagnosticCode.E_PROMPT_INPUT_UNUSED, main.files.main.file, (), message, hint=hint)
     rendered = {str(item.segments[1]) for item in globals_.get(VARIANTS_VARIABLE, []) if len(item.segments) > 1}
     for slot in (slot for slot in slots if slot not in rendered):
         message = (
             f"variants slot {slot} is declared, but the prompt does not render {{{{ {VARIANTS_VARIABLE}.{slot} }}}}"
         )
         yield diagnostic(DiagnosticCode.E_PROMPT_INPUT_UNUSED, main.files.main.file, (), message)
+
+
+def _external_uses(spec: InferenceSpec) -> frozenset[str]:
+    media = {decl.name for decl in spec.in_ if decl_type_id(decl) in MEDIA_TYPES}
+    referenced = {root for text in _external_texts(spec) if (root := _input_root(text)) is not None}
+    return frozenset(media | referenced)
+
+
+def _external_texts(spec: InferenceSpec) -> Iterator[str]:
+    for allowed in spec.allowed_sets or ():
+        yield allowed.from_
+        yield from (labels for labels in (allowed.labels_from,) if labels is not None)
+    yield from (field.schema_from for field in spec.out if field.schema_from is not None)
+    for check in spec.checks or ():
+        yield from _json_texts(check.with_)
+
+
+def _json_texts(value: JsonValue) -> Iterator[str]:
+    match value:
+        case str():
+            yield value
+        case dict():
+            yield from (text for item in value.values() for text in _json_texts(item))
+        case list():
+            yield from (text for item in value for text in _json_texts(item))
+        case _:
+            return
+
+
+def _input_root(text: str) -> str | None:
+    if not text.startswith(IN_PREFIX):
+        return None
+    return SELECTOR_ROOT.split(text.removeprefix(IN_PREFIX))[0] or None
 
 
 def _checked(template: Template, scope: Mapping[str, object | None], reserved: frozenset[str]) -> Iterator[Diagnostic]:
@@ -368,12 +490,36 @@ def _output(template: Template, node: OutputNode, scope: Mapping[str, object | N
     expression = node.expression
     left = expression.left if isinstance(expression, FilteredExpression) else expression
     annotation = resolved(path_annotation(left, scope))
-    if annotation is None or not is_media(annotation):
+    if annotation is None:
+        return
+    if is_media(annotation):
+        message = (
+            f"media slot {left} cannot be rendered as text: media is sent as a message part, use it only in conditions"
+        )
+        yield _token_at(DiagnosticCode.E_PROMPT_MEDIA_RENDERED, template.files, node.token, message)
+        return
+    if has_text_form(annotation):
         return
     message = (
-        f"media slot {left} cannot be rendered as text: media is sent as a message part, use it only in conditions"
+        f"value {left} has no text form: every field it carries is media, "
+        "and media is sent as a message part, not as text"
     )
-    yield _token_at(DiagnosticCode.E_PROMPT_MEDIA_RENDERED, template.files, node.token, message)
+    hint = f"remove {{{{ {left} }}}} from the prompt, or render a text field of the value"
+    yield _token_at(DiagnosticCode.W_PROMPT_VALUE_UNREADABLE, template.files, node.token, message, hint=hint)
+
+
+def has_text_form(annotation: object, depth: int = 0) -> bool:
+    if depth >= FIELD_DEPTH_LIMIT or is_dynamic(annotation):
+        return True
+    if is_media(annotation):
+        return False
+    element = step_element(annotation)
+    if not isinstance(element, NotList | Missing | Opaque):
+        return has_text_form(element, depth + 1)
+    fields = record_fields(annotation)
+    if fields is None:
+        return True
+    return any(has_text_form(item, depth + 1) for item in fields.values())
 
 
 def _case(template: Template, node: CaseNode, scope: Mapping[str, object | None]) -> Iterator[Diagnostic]:
@@ -427,14 +573,28 @@ def _span_at(code: DiagnosticCode, files: PromptFiles, span: Span, message: str)
 
 
 def _token_at(
-    code: DiagnosticCode, files: PromptFiles, token: Token, message: str, *, rule: str | None = None
+    code: DiagnosticCode,
+    files: PromptFiles,
+    token: Token,
+    message: str,
+    *,
+    rule: str | None = None,
+    hint: str | None = None,
 ) -> Diagnostic:
-    return _at(code, files.by_text(token.source), token.start_index, message, rule=rule)
+    return _at(code, files.by_text(token.source), token.start_index, message, rule=rule, hint=hint)
 
 
-def _at(code: DiagnosticCode, source: PromptSource, index: int, message: str, *, rule: str | None = None) -> Diagnostic:
+def _at(
+    code: DiagnosticCode,
+    source: PromptSource,
+    index: int,
+    message: str,
+    *,
+    rule: str | None = None,
+    hint: str | None = None,
+) -> Diagnostic:
     line, column = _line_col(source.text, index)
-    return diagnostic(code, source.file, (), message, line=line, column=column, rule=rule)
+    return diagnostic(code, source.file, (), message, line=line, column=column, rule=rule, hint=hint)
 
 
 def _line_col(text: str, index: int) -> tuple[int | None, int | None]:

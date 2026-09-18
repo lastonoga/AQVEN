@@ -6,7 +6,7 @@ from mcp_support import FakeEngine, call, mcp_client, shop_copy, structured
 
 from aqven.write.model import FlowPatchRequest, WriteActor, WriteResult
 
-PROJECT_TOOLS: Final = frozenset({"flow_list", "flow_get", "catalog_list", "catalog_get"})
+PROJECT_TOOLS: Final = frozenset({"flow_list", "flow_get", "catalog_list", "catalog_get", "prompt_preview"})
 RUNNER_TOOLS: Final = frozenset({"aqven_check", "pyright_check", "pytest_run"})
 RUN_TOOLS: Final = frozenset(
     {"run_start", "run_get", "run_list", "run_get_node", "run_events", "run_resume", "run_fork", "run_cancel"}

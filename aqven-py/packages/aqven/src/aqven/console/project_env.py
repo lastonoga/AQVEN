@@ -1,24 +1,12 @@
 from pathlib import Path
-from typing import Final
 
-from dotenv import load_dotenv
-
+from aqven.app.dotenv_secrets import load_project_env
 from aqven.console.command import FORMATTERS, OutputFormat
 from aqven.diagnostics import DiagnosticCode, diagnostic
 from aqven.loader import ProjectNotFound, find_project_root
+from aqven.ports.settings import PROJECT_ENV_FILE, project_env_file
 
-PROJECT_ENV_FILE: Final = ".env"
-
-
-def project_env_file(root: Path) -> Path:
-    return root / PROJECT_ENV_FILE
-
-
-def load_project_env(root: Path) -> bool:
-    env_file = project_env_file(root)
-    if not env_file.is_file():
-        return False
-    return load_dotenv(env_file, override=False, interpolate=False)
+__all__ = ["PROJECT_ENV_FILE", "load_project_env", "open_project", "project_env_file"]
 
 
 def open_project(start: Path, output: OutputFormat) -> Path | None:

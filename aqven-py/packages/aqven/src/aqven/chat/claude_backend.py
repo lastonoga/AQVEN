@@ -47,6 +47,7 @@ class ClaudeAgentBackend:
             session_id=ChatSessionId(self._runtime.ids()),
             backend=self.kind,
             project_root=options.project_root,
+            flow_id=options.flow_id,
             model=options.model,
             permission_mode=options.permission_mode,
             created_at=self._runtime.clock(),
@@ -115,7 +116,7 @@ class ClaudeAgentBackend:
         known = self._runners.get(stored.session_id)
         if known is not None:
             return known
-        created = ClaudeSessionRunner(stored.session_id, Path(stored.session.project_root), self._runtime)
+        created = ClaudeSessionRunner(stored.session, self._runtime)
         self._runners[stored.session_id] = created
         return created
 

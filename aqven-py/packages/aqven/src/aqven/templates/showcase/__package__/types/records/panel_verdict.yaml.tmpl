@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Итог панели судей"
+fields:
+- name: "verdict"
+  type: "JudgeVerdict"
+  description: "Итоговый вердикт панели"
+- name: "tie_broken"
+  type: "Bool"
+  description: "Разногласие судей разрешено тай-брейком"
+- name: "spread"
+  type: "Float"
+  description: "Наибольший разброс баллов судей, выбравших кандидата большинства, по одному критерию"
+  minimum: 0
+  maximum: 4

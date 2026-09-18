@@ -1,37 +1,31 @@
 import type {
-  CallId,
-  ColumnId,
-  ColumnPath,
-  DatasetId,
+  AgentId,
+  BlobId,
+  ChatSessionId,
+  ContentHash,
+  FilePath,
+  FlowId,
+  InferenceId,
   IsoDateTime,
-  ProjectRoot,
   NodeId,
-  RegistryEntryId,
-  ReviewId,
-  RevisionId,
-  RowId,
+  ProjectRoot,
   RunId,
-  StageId,
-  TemplateId,
-  TestId,
-  WorkflowId,
-  WorkspaceId,
+  SettingKey,
+  TypeId,
 } from "@/domain"
 
-export const workspaceId = (raw: string): WorkspaceId => raw as WorkspaceId
-export const workflowId = (raw: string): WorkflowId => raw as WorkflowId
+export const flowId = (raw: string): FlowId => raw as FlowId
 export const nodeId = (raw: string): NodeId => raw as NodeId
 export const runId = (raw: string): RunId => raw as RunId
-export const callId = (raw: string): CallId => raw as CallId
-export const stageId = (raw: string): StageId => raw as StageId
-export const columnId = (raw: string): ColumnId => raw as ColumnId
-export const columnPath = (raw: string): ColumnPath => raw as ColumnPath
-export const testId = (raw: string): TestId => raw as TestId
-export const datasetId = (raw: string): DatasetId => raw as DatasetId
-export const rowId = (raw: string): RowId => raw as RowId
-export const reviewId = (raw: string): ReviewId => raw as ReviewId
-export const revisionId = (raw: string): RevisionId => raw as RevisionId
-export const registryEntryId = (raw: string): RegistryEntryId => raw as RegistryEntryId
+export const typeId = (raw: string): TypeId => raw as TypeId
+export const blobId = (raw: string): BlobId => raw as BlobId
+export const chatSessionId = (raw: string): ChatSessionId => raw as ChatSessionId
+export const agentId = (raw: string): AgentId => raw as AgentId
+export const inferenceId = (raw: string): InferenceId => raw as InferenceId
+export const contentHash = (raw: string): ContentHash => raw as ContentHash
+export const filePath = (raw: string): FilePath => raw as FilePath
+export const settingKey = (raw: string): SettingKey => raw as SettingKey
 export const isoDateTime = (raw: string): IsoDateTime => raw as IsoDateTime
 export const projectRoot = (raw: string): ProjectRoot => raw as ProjectRoot
-export const templateId = (raw: string): TemplateId => raw as TemplateId
+
+export const clientOpId = (): string => globalThis.crypto.randomUUID()

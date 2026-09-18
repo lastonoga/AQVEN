@@ -1,5 +1,6 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
+import { createRootRouteWithContext, Navigate, Outlet, useLocation } from "@tanstack/react-router"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ChatBackendProvider } from "@/features/chat-backend"
 import type { RouterContext } from "@/router"
 import { DEFAULT_LOCALE } from "@/routes/-defaults"
 import { StudioIntl } from "@/routes/-intl"
@@ -11,17 +12,25 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootLayout() {
+  const { api, now } = Route.useRouteContext()
   return (
     <TooltipProvider>
-      <div className="h-dvh">
-        <Outlet />
-      </div>
+      <StudioIntl locale={DEFAULT_LOCALE} now={now}>
+        <ChatBackendProvider api={api.chat}>
+          <div className="h-dvh">
+            <Outlet />
+          </div>
+        </ChatBackendProvider>
+      </StudioIntl>
     </TooltipProvider>
   )
 }
 
 function RootNotFound() {
   const { now } = Route.useRouteContext()
+  const { pathname, search } = useLocation()
+  const canonicalPath = pathname === "/en" ? "/" : pathname.startsWith("/en/") ? pathname.slice(3) : null
+  if (canonicalPath !== null) return <Navigate to={canonicalPath} search={search} replace />
   return (
     <StudioIntl locale={DEFAULT_LOCALE} now={now}>
       <NotFound />

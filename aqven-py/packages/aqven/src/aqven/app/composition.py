@@ -2,6 +2,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Final
 
@@ -17,7 +18,7 @@ from aqven.engine.facade import PlanSource
 from aqven.ir import CompiledProject
 from aqven.server import ServerExtensions, ServerOptions, create_app
 from aqven.server.app import LifespanFactory
-from aqven.server.chat import claude_chat_parts
+from aqven.server.chat import studio_chat_parts
 from aqven.server.mcp import (
     McpPorts,
     ProjectPaths,
@@ -43,6 +44,8 @@ class StudioFeatures:
     mcp: bool = True
     chat: bool = True
     watch: bool = True
+    api: bool = True
+    bearer: bool = True
 
 
 def project_workspace(root: Path) -> Path:
@@ -50,16 +53,17 @@ def project_workspace(root: Path) -> Path:
     return next((folder for folder in resolved.parents if (folder / WORKSPACE_MARKER).is_file()), resolved)
 
 
-def studio_server_options(launch: ApplicationLaunch, *, watch: bool) -> ServerOptions:
+def studio_server_options(launch: ApplicationLaunch, features: StudioFeatures) -> ServerOptions:
     return ServerOptions(
         access_token=launch.access.token,
         port=launch.record.port,
         guard=False,
         studio_dist=launch.studio_dist,
         serve_studio=not launch.headless,
+        serve_api=features.api,
         dev_origin=launch.dev_origin,
         mcp_url=launch.record.mcp_url,
-        watch=watch,
+        watch=features.watch,
         compiler=ReportCompiler(),
     )
 
@@ -100,38 +104,49 @@ def write_recovery(writer: WriteService) -> LifespanFactory:
     return lifespan
 
 
-def mcp_parts(launch: ApplicationLaunch) -> ApplicationParts:
+def mcp_parts(launch: ApplicationLaunch, bearer: bool = True) -> ApplicationParts:
     writer = WriteService(launch.project_root)
-    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer), AccessPolicy(token=launch.access.token))
+    policy = AccessPolicy(token=launch.access.token) if bearer and launch.access.require_token else None
+    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer), policy)
     return ApplicationParts(mounts=endpoint.mounts(), lifespans=(write_recovery(writer), endpoint.lifespan))
 
 
 def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
-    chat = claude_chat_parts(launch.project_root, launch.record.mcp_url, SecretStr(launch.access.token))
+    chat = studio_chat_parts(
+        launch.project_root, launch.record.mcp_url, SecretStr(launch.access.token), launch.settings
+    )
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 
 
 def feature_builders(features: StudioFeatures) -> tuple[PartsBuilder, ...]:
-    table: tuple[tuple[bool, PartsBuilder], ...] = ((features.mcp, mcp_parts), (features.chat, chat_parts))
+    table: tuple[tuple[bool, PartsBuilder], ...] = (
+        (features.mcp, partial(mcp_parts, bearer=features.bearer)),
+        (features.chat, chat_parts),
+    )
     return tuple(builder for enabled, builder in table if enabled)
+
+
+def assemble_app(launch: ApplicationLaunch, features: StudioFeatures, extra: ApplicationParts) -> FastAPI:
+    parts = extra
+    for builder in feature_builders(features):
+        parts = parts.plus(builder(launch))
+    return create_app(
+        launch.project_root,
+        launch.engine,
+        launch.settings,
+        parts.routers,
+        options=studio_server_options(launch, features),
+        extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class ServerApplicationFactory:
     features: StudioFeatures = field(default_factory=StudioFeatures)
+    extra: ApplicationParts = field(default_factory=ApplicationParts)
 
     def build(self, launch: ApplicationLaunch) -> ASGIApp:
-        parts = ApplicationParts()
-        for builder in feature_builders(self.features):
-            parts = parts.plus(builder(launch))
-        return create_app(
-            launch.project_root,
-            launch.engine,
-            launch.settings,
-            parts.routers,
-            options=studio_server_options(launch, watch=self.features.watch),
-            extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),
-        )
+        return assemble_app(launch, self.features, self.extra)
 
 
 def studio_server(

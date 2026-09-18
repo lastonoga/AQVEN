@@ -37,7 +37,11 @@ def _secret_sites(context: CheckContext) -> Iterator[tuple[str, YamlPath, str]]:
     spec = context.spec
     file = context.project_file
     project = context.project
-    yield from ((file, ("providers", index, "api_key"), item.api_key) for index, item in enumerate(spec.providers))
+    yield from (
+        (file, ("providers", index, "api_key"), item.api_key)
+        for index, item in enumerate(spec.providers)
+        if item.api_key is not None
+    )
     yield from (
         (source.path, ("headers", index, "value"), header.value)
         for source in project.mcp_servers.values()

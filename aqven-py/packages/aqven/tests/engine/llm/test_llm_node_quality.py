@@ -16,6 +16,7 @@ from llm_harness import (
 )
 from pydantic import JsonValue
 
+from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.llm import OUTPUT_TOOL_NAME
 from aqven.ir import (
     BuiltinEvaluator,
@@ -27,6 +28,8 @@ from aqven.ir import (
     TemplatePrompt,
 )
 from aqven.ports.execution import NodeFailed, NodeSucceeded
+from aqven.runtime.events import RUN_EVENT_ADAPTER, InferenceChecksCaptured
+from aqven.runtime.values import InlineValue
 from aqven.spec import AgentId, CodeRef, InferenceId, Limits, OnFail, TypeId
 
 RUN_INPUT: dict[str, JsonValue] = {"question": "where is my order?", "product": None}
@@ -76,6 +79,21 @@ def _enums(schema: JsonValue) -> list[JsonValue]:
     return []
 
 
+def test_allowed_set_view_uses_recorded_input_values_and_labels() -> None:
+    input_ref = InlineValue(value={"policies": POLICIES})
+
+    views = allowed_set_views(_pick_inference(), input_ref)
+
+    assert len(views) == 1
+    assert views[0].type_id == "PolicyId"
+    assert views[0].source == "$in.policies[*].policy_id"
+    assert views[0].labels_from == "$in.policies[*].title"
+    assert [(member.value, member.label) for member in views[0].members] == [
+        ("pol_refund", "Money refund"),
+        ("pol_repair", "Warranty repair"),
+    ]
+
+
 def test_retry_check_discards_attempt_and_retries_with_feedback() -> None:
     inference = answer_inference(checks=(_code_check(OnFail.RETRY),))
     turns = [_answer("bad news", "out-1"), _answer("good news", "out-2")]
@@ -116,6 +134,12 @@ def test_flag_check_passes_value_and_counts_failure() -> None:
     assert isinstance(outcome, NodeSucceeded)
     assert outcome.checks_failed == 1
     assert bed.scope.output.discards() == []
+    captured = [event for event in bed.scope.events.emitted if isinstance(event, InferenceChecksCaptured)]
+    assert len(captured) == 1
+    assert [(check.check, check.passed, check.feedback) for check in captured[0].checks] == [
+        ("clean", False, "reply contains the forbidden word bad")
+    ]
+    assert RUN_EVENT_ADAPTER.validate_json(captured[0].model_dump_json()) == captured[0]
 
 
 def test_builtin_evaluator_retries_until_value_fits() -> None:

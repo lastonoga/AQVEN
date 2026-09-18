@@ -17,6 +17,7 @@ from claude_agent_sdk import (
     ToolPermissionContext,
 )
 
+from aqven.chat.agent import session_agent
 from aqven.chat.approvals import DENY_MESSAGES, ApprovalVerdict, await_verdict, forced_verdict
 from aqven.chat.builders import ChatEventBuilders, approval_requested, approval_resolved, turn_started
 from aqven.chat.claude_runtime import ClaudeChatRuntime, ClaudeClient
@@ -30,7 +31,7 @@ from aqven.chat.routes import first_match
 from aqven.chat.tool_names import claude_tool_identity
 from aqven.ports.chat import (
     ChatApprovalId,
-    ChatSessionId,
+    ChatSession,
     ChatState,
     ChatStopReason,
     ChatToolCallId,
@@ -82,11 +83,11 @@ def settled_verdict(future: asyncio.Future[ApprovalVerdict]) -> ApprovalVerdict:
 
 
 class ClaudeSessionRunner:
-    def __init__(self, session_id: ChatSessionId, project_root: Path, runtime: ClaudeChatRuntime) -> None:
-        self._session_id = session_id
+    def __init__(self, session: ChatSession, runtime: ClaudeChatRuntime) -> None:
+        self._session_id = session.session_id
         self._runtime = runtime
-        self._emitter = ChatEmitter(runtime.journal, runtime.signals, session_id)
-        self._normalizer = ClaudeEventNormalizer(project_root, runtime.ids)
+        self._emitter = ChatEmitter(runtime.journal, runtime.signals, session.session_id)
+        self._normalizer = ClaudeEventNormalizer(Path(session.project_root), runtime.ids, session_agent(session))
         self._client: ClaudeClient | None = None
         self._mcp_config: McpConfigFile | None = None
         self._reader: asyncio.Task[None] | None = None
@@ -104,7 +105,8 @@ class ClaudeSessionRunner:
         self._emitter.turn_id = turn_id
         self._turn_started_at = time.monotonic()
         self._normalizer.begin_turn()
-        self._emitter.emit((turn_started(client_op_id, text), *self._normalizer.transition("thinking")))
+        agent = self._normalizer.agent
+        self._emitter.emit((turn_started(client_op_id, text, agent), *self._normalizer.transition("thinking")))
         self._delivery = asyncio.create_task(self._deliver(text))
         return turn_id
 

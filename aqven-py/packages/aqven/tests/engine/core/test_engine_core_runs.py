@@ -22,6 +22,7 @@ from engine_core_plan import relay_project
 from pydantic import JsonValue
 
 from aqven.engine import DbosEngineFacade, RunOverrides, RunRecord, RunSpec
+from aqven.engine.blobs import FileBlobStore
 from aqven.ports.engine import EngineError, EventLogQuery, ExecutionQuery, RunListQuery
 from aqven.runtime import (
     CancelRequest,
@@ -31,11 +32,12 @@ from aqven.runtime import (
     RunFinished,
     RunSnapshot,
     RunStartRequest,
+    RunSummary,
     node_address,
 )
 from aqven.runtime.address import JsonObject, RunId
 from aqven.runtime.replay import McpToolStub
-from aqven.spec import FlowId, McpServerId
+from aqven.spec import FlowId, McpServerId, NodeId, RunContextKey
 
 WORKER: Final = Path(__file__).parent / "engine_core_worker.py"
 RESULT_PREFIX: Final = "RESULT "
@@ -92,7 +94,7 @@ def test_relay_runs_code_switch_and_tool_in_order(tmp_path: Path, trace: Path) -
     assert isinstance(stamped, dict)
     assert str(stamped["key"]).startswith("sha256-")
     assert stamped["token_tail"] == RELAY_TOKEN[-2:]
-    assert (tmp_path / "state" / "blobs" / str(stamped["blob_id"]).removeprefix("sha256-")).is_file()
+    assert FileBlobStore(tmp_path / "state" / "blobs").exists(str(stamped["blob_id"]))
     assert [request.url.host for request in service.requests] == ["stamp.example", "stamp.example"]
     assert snapshot.status == "completed"
     assert snapshot.node_counts.ok == 5
@@ -222,6 +224,112 @@ def test_start_run_validates_input_and_lists_runs(tmp_path: Path, trace: Path) -
         invalid, paths, unknown, listed, ok_executions = asyncio.run(scenario(facade))
 
     assert (invalid, paths, unknown, listed, ok_executions) == ("INPUT_INVALID", ("input.priority",), "NOT_FOUND", 1, 1)
+
+
+def test_selected_run_executes_dependencies_and_returns_selected_outputs(tmp_path: Path, trace: Path) -> None:
+    source = StaticPlanSource(relay_project())
+
+    async def scenario(facade: DbosEngineFacade) -> tuple[RunRecord, RunSnapshot, RunSummary]:
+        started = await facade.launch(
+            relay_project(),
+            RunSpec(
+                flow_id=FlowId("relay"),
+                mode="replay",
+                dataset_item_id="support_case_cases/bulb_app_offline_advice",
+                selected_nodes=(NodeId("route"),),
+            ),
+            LOW,
+            RunOverrides(),
+        )
+        record = await facade.result(started.run_id)
+        snapshot = await facade.get_run(started.run_id)
+        listed = await facade.list_runs(RunListQuery(flow_id=FlowId("relay")))
+        return record, snapshot, listed.items[0]
+
+    with launched_facade(tmp_path / "state", source) as facade:
+        record, snapshot, summary = asyncio.run(scenario(facade))
+
+    assert record.status == "completed"
+    assert isinstance(record.output, dict) and set(record.output) == {"route"}
+    assert snapshot.order == ("normalize", "route")
+    assert snapshot.selected_nodes == ("route",)
+    assert summary.dataset_item_id == "support_case_cases/bulb_app_offline_advice"
+    assert summary.selected_nodes == ("route",)
+    assert trace_lines(trace) == ["normalize"]
+
+
+def test_dataset_range_runs_middle_node_from_fixture_without_upstream_execution(tmp_path: Path, trace: Path) -> None:
+    source = StaticPlanSource(relay_project())
+
+    async def scenario(facade: DbosEngineFacade) -> tuple[RunRecord, RunSnapshot]:
+        started = await facade.start_run(
+            RunStartRequest(
+                flow_id=FlowId("relay"),
+                mode="replay",
+                input={"priority": "low"},
+                start_node=NodeId("route"),
+                end_node=NodeId("route"),
+                node_outputs={NodeId("normalize"): {"text": "prepared"}},
+            )
+        )
+        return await facade.result(started.run_id), await facade.get_run(started.run_id)
+
+    with launched_facade(tmp_path / "state", source) as facade:
+        record, snapshot = asyncio.run(scenario(facade))
+
+    assert record.status == "completed"
+    assert record.output == {"route": {"text": "prepared"}}
+    assert snapshot.order == ("route",)
+    assert (snapshot.start_node, snapshot.end_node) == ("route", "route")
+    assert snapshot.node_outputs == {"normalize": {"text": "prepared"}}
+    assert trace_lines(trace) == []
+
+
+def test_dataset_range_rejects_missing_boundary_fixture(tmp_path: Path) -> None:
+    source = StaticPlanSource(relay_project())
+
+    async def scenario(facade: DbosEngineFacade) -> EngineError:
+        with pytest.raises(EngineError) as error:
+            await facade.start_run(
+                RunStartRequest(
+                    flow_id=FlowId("relay"),
+                    mode="replay",
+                    input={"priority": "low"},
+                    start_node=NodeId("route"),
+                    end_node=NodeId("route"),
+                )
+            )
+        return error.value
+
+    with launched_facade(tmp_path / "state", source) as facade:
+        error = asyncio.run(scenario(facade))
+
+    assert error.code == "INPUT_INVALID"
+    assert "$normalize.out.text" in str(error)
+
+
+def test_dataset_range_needs_only_context_referenced_inside_the_range(tmp_path: Path) -> None:
+    plan = relay_project()
+    relay = plan.flow(FlowId("relay")).model_copy(update={"context": (RunContextKey.DATE,)})
+    plan = plan.model_copy(update={"flows": {**plan.flows, FlowId("relay"): relay}})
+
+    async def scenario(facade: DbosEngineFacade) -> RunRecord:
+        started = await facade.start_run(
+            RunStartRequest(
+                flow_id=FlowId("relay"),
+                mode="replay",
+                input={"priority": "low"},
+                start_node=NodeId("route"),
+                end_node=NodeId("route"),
+                node_outputs={NodeId("normalize"): {"text": "prepared"}},
+            )
+        )
+        return await facade.result(started.run_id)
+
+    with launched_facade(tmp_path / "state", StaticPlanSource(plan)) as facade:
+        record = asyncio.run(scenario(facade))
+
+    assert record.status == "completed"
 
 
 def crash_and_recover(tmp_path: Path, flow_id: str) -> tuple[str, list[str]]:

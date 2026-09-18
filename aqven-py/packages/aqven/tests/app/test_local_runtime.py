@@ -60,12 +60,16 @@ async def wait_ready(server: LocalServer, task: asyncio.Task[ServeOutcome]) -> N
 
 
 @asynccontextmanager
-async def running(root: Path, data_dir: Path, *, headless: bool = False) -> AsyncGenerator[RunningServer]:
+async def running(
+    root: Path, data_dir: Path, *, headless: bool = False, require_auth: bool = True
+) -> AsyncGenerator[RunningServer]:
     browser = RecordingBrowser()
     engine = RecordingEngineHost()
     application = EchoApplicationFactory()
     server = LocalServer(application=application, engine=engine, browser=browser, announcer=RecordingAnnouncer())
-    options = ServerOptions(root=root, port=free_port(), data_dir=data_dir, headless=headless)
+    options = ServerOptions(
+        root=root, port=free_port(), data_dir=data_dir, headless=headless, require_auth=require_auth
+    )
     task = asyncio.create_task(server.serve(options))
     await wait_ready(server, task)
     state = ProjectState(root)
@@ -81,6 +85,22 @@ async def running(root: Path, data_dir: Path, *, headless: bool = False) -> Asyn
 
 def http_client(record: ServerRecord) -> httpx2.AsyncClient:
     return httpx2.AsyncClient(base_url=record.url, trust_env=False, timeout=5.0)
+
+
+@pytest.mark.asyncio
+async def test_default_local_server_allows_anonymous_requests_and_keeps_host_origin_checks(tmp_path: Path) -> None:
+    root = make_project(tmp_path / "project")
+    async with running(root, tmp_path / "data", require_auth=False) as live:
+        async with http_client(live.record) as http:
+            api_response = await http.get("/api/echo")
+            health_response = await http.get(HEALTH_PATH)
+            mcp_response = await http.post("/mcp/")
+            foreign_host = await http.get("/api/echo", headers={"Host": "rebind.example"})
+            foreign_origin = await http.post("/api/echo", headers={"Origin": "https://attacker.example"})
+        assert (api_response.status_code, health_response.status_code, mcp_response.status_code) == (200, 200, 200)
+        assert (foreign_host.status_code, foreign_origin.status_code) == (400, 403)
+        assert live.browser.opened == [f"{live.record.url}/"]
+        assert live.application.launches[0].access.require_token is False
 
 
 @pytest.mark.asyncio

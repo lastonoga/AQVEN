@@ -263,7 +263,9 @@ def writer_agent() -> CompiledAgent:
         family=ModelFamily.OPENAI, input=(Modality.TEXT,), output=(Modality.TEXT,), strict=True
     )
     model = AgentModel(
-        model=ModelString("openrouter:openai/gpt-oss-20b"), provider=ProviderName.OPENROUTER, capabilities=capabilities
+        model=ModelString("openrouter:openai/gpt-oss-20b"),
+        provider=ProviderName("openrouter"),
+        capabilities=capabilities,
     )
     return CompiledAgent(agent_id=AgentId("writer"), description="Writer", models=(model,))
 

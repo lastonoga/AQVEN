@@ -1,6 +1,7 @@
 import hashlib
 from collections.abc import AsyncGenerator, AsyncIterator, Mapping
 from contextlib import aclosing, asynccontextmanager, suppress
+from datetime import datetime
 from types import TracebackType
 from typing import Final, Self
 from urllib.parse import quote
@@ -10,6 +11,7 @@ from pydantic import BaseModel, JsonValue
 
 from aqven.client.errors import BlobIntegrityError, EventStreamLost, raise_for_failure
 from aqven.client.events import EventCursor, decode_run_event
+from aqven.ports.engine import RunSort
 from aqven.runtime import (
     BlobUploaded,
     CancelRequest,
@@ -96,6 +98,11 @@ class AqvenClient:
         flow_id: str | None = None,
         status: RunStatus | None = None,
         assignee: str | None = None,
+        deadline_before: datetime | None = None,
+        overdue: bool | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        sort: RunSort | None = None,
         cursor: str | None = None,
         limit: int = 20,
     ) -> Page[RunSummary]:
@@ -103,6 +110,11 @@ class AqvenClient:
             "flow_id": flow_id,
             "status": status,
             "assignee": assignee,
+            "deadline_before": _moment(deadline_before),
+            "overdue": None if overdue is None else str(overdue).lower(),
+            "since": _moment(since),
+            "until": _moment(until),
+            "sort": sort,
             "cursor": cursor,
             "limit": limit,
         }
@@ -195,3 +207,7 @@ class AqvenClient:
 
     def _url(self, *segments: str) -> str:
         return "/".join((self._base_url, "api", *(quote(segment, safe="") for segment in segments)))
+
+
+def _moment(value: datetime | None) -> str | None:
+    return None if value is None else value.isoformat()

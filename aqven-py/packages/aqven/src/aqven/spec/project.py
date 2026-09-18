@@ -1,10 +1,22 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, JsonValue
 
 from aqven.spec.common import Limits, SpecModel
-from aqven.spec.names import PiiDetector, ProviderName, Retention, SecretRef, TrustLevel
+from aqven.spec.names import (
+    PROVIDER_NAME_PATTERN,
+    CodeRef,
+    Modality,
+    PiiDetector,
+    ProviderName,
+    Retention,
+    SecretRef,
+    TrustLevel,
+)
+
+type ProviderNameField = Annotated[ProviderName, Field(pattern=PROVIDER_NAME_PATTERN)]
+type ProviderKind = Literal["catalog", "code", "openai_compatible"]
 
 type RenameKind = Literal[
     "flow",
@@ -46,9 +58,20 @@ class OpenRouterRouting(SpecModel):
     zdr: bool
 
 
+class ProviderCapabilitiesSpec(SpecModel):
+    input: list[Modality] | None = None
+    output: list[Modality] | None = None
+    tools: bool | None = None
+    json_schema_output: bool | None = None
+
+
 class ProviderSpec(SpecModel):
-    id: ProviderName
-    api_key: SecretRef
+    id: ProviderNameField
+    kind: ProviderKind = "catalog"
+    api_key: SecretRef | None = None
+    run: CodeRef | None = None
+    params: dict[str, JsonValue] | None = None
+    capabilities: ProviderCapabilitiesSpec | None = None
     base_url: str | None = None
     data_policy: DataPolicy
     routing: OpenRouterRouting | None = None

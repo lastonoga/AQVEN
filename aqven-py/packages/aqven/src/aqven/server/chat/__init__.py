@@ -1,4 +1,4 @@
-from aqven.server.chat.extension import ChatServerParts, claude_chat_parts
+from aqven.server.chat.extension import ChatServerParts, studio_chat_parts
 from aqven.server.chat.router import (
     ChatApprovalReply,
     ChatRoute,
@@ -16,5 +16,5 @@ __all__ = [
     "ChatSessionCreate",
     "ChatTurnAccepted",
     "build_chat_router",
-    "claude_chat_parts",
+    "studio_chat_parts",
 ]

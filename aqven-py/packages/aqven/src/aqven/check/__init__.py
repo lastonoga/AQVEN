@@ -9,6 +9,7 @@ from aqven.check.capabilities import check_capabilities
 from aqven.check.code import check_code
 from aqven.check.context import CheckContext, CheckRule, ResolvedAgent, ResolvedModel, resolve_agents
 from aqven.check.control import check_control
+from aqven.check.display import check_display
 from aqven.check.dynamic import check_dynamic
 from aqven.check.evals import check_evals
 from aqven.check.flows import check_flows
@@ -27,6 +28,7 @@ from aqven.check.report import CheckReport
 from aqven.check.resolver import CodeFailure, CodeResolver, CodeTarget
 from aqven.check.scopes import RefResolver
 from aqven.check.secrets import check_secrets
+from aqven.check.tool_args import check_tool_args
 from aqven.check.types import check_types
 from aqven.diagnostics import Diagnostic, sort_diagnostics
 from aqven.loader import LoadedProject, Position, YamlPath, load_project, locate
@@ -42,6 +44,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_bindings,
     check_prompts,
     check_code,
+    check_display,
     check_policies,
     check_bounds,
     check_capabilities,
@@ -51,6 +54,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_dynamic,
     check_flows,
     check_secrets,
+    check_tool_args,
     check_evals,
     check_generated,
 )

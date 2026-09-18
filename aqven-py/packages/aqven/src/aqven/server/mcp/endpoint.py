@@ -14,6 +14,7 @@ from aqven.server.mcp.catalog import ToolRegistration
 from aqven.server.mcp.check_tools import AqvenCheckTool, RunnerSettings
 from aqven.server.mcp.patch_tools import PatchFlow, PatchTools
 from aqven.server.mcp.paths import ProjectPaths
+from aqven.server.mcp.preview_tools import PreviewTools
 from aqven.server.mcp.processes import ProcessRunner, SubprocessRunner
 from aqven.server.mcp.project_tools import LoaderProjectSource, ProjectSource, ProjectTools
 from aqven.server.mcp.pyright_tool import PyrightTool
@@ -29,7 +30,8 @@ UNAUTHORIZED_MESSAGE: Final = "MCP requires Authorization: Bearer <token from .a
 INSTRUCTIONS: Final = (
     "AQVEN: flow definitions are project files. Edit prompt text and make point edits with your own Read/Edit/Write; "
     "make structural and cross-file edits with flow_patch using expects from flow_get. After every edit call "
-    "aqven_check, and for code also pyright_check and pytest_run. Run: run_start, then run_get and run_events; "
+    "aqven_check, and for code also pyright_check and pytest_run; after a prompt edit also prompt_preview. "
+    "Run: run_start, then run_get and run_events; "
     "waits for a human answer: run_list(status=suspended), run_get_node, run_resume."
 )
 
@@ -51,6 +53,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
     patch = PatchTools(ports.patch_flow).operations() if ports.patch_flow is not None else ()
     return (
         *ProjectTools(source).operations(),
+        *PreviewTools(source).operations(),
         *AqvenCheckTool(settings).operations(),
         *PyrightTool(settings).operations(),
         *PytestTool(settings).operations(),
@@ -64,6 +67,10 @@ def build_mcp_server(catalog: Iterable[ToolRegistration]) -> MCPServer:
     for registration in catalog:
         registration.register_tool(server)
     return server
+
+
+def guarded(app: ASGIApp, policy: AccessPolicy | None) -> ASGIApp:
+    return app if policy is None else BearerGuard(app, policy)
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,7 +102,7 @@ class McpEndpoint:
 
 def build_mcp_endpoint(
     catalog: Iterable[ToolRegistration],
-    policy: AccessPolicy,
+    policy: AccessPolicy | None,
     transport_security: TransportSecuritySettings | None = None,
 ) -> McpEndpoint:
     server = build_mcp_server(catalog)
@@ -103,4 +110,4 @@ def build_mcp_endpoint(
         streamable_http_path=STREAMABLE_HTTP_PATH,
         transport_security=transport_security,
     )
-    return McpEndpoint(server=server, app=BearerGuard(transport, policy))
+    return McpEndpoint(server=server, app=guarded(transport, policy))

@@ -13,7 +13,7 @@ from aqven.ports.engine import EngineError
 from aqven.ports.execution import ChildEntry, ExecutionScope, NodeExecutor, NodeFailed, NodeOutcome
 from aqven.runtime.address import ExecutionAddress, RunId
 from aqven.runtime.executions import RunError
-from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.human import HumanWait, HumanWaitDetail, OpenWaitFilter, ResumeRequest, ResumeResult
 from aqven.spec import NodeKind
 
 EXECUTOR_MISSING = "EXECUTOR_MISSING"
@@ -21,6 +21,8 @@ EXECUTOR_MISSING = "EXECUTOR_MISSING"
 
 class HumanLayer(Protocol):
     async def waits(self, run_id: RunId) -> tuple[HumanWait, ...]: ...
+
+    async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]: ...
 
     async def wait_detail(self, run_id: RunId, address: ExecutionAddress) -> HumanWaitDetail: ...
 
@@ -30,6 +32,9 @@ class HumanLayer(Protocol):
 @dataclass(frozen=True, slots=True)
 class NoHumanLayer:
     async def waits(self, run_id: RunId) -> tuple[HumanWait, ...]:
+        return ()
+
+    async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]:
         return ()
 
     async def wait_detail(self, run_id: RunId, address: ExecutionAddress) -> HumanWaitDetail:

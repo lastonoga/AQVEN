@@ -13,7 +13,7 @@ function TimelineStep({ item }: { readonly item: TimelineItem }) {
         {item.marker}
         <span aria-hidden className="w-[1.5px] flex-1 bg-border" />
       </div>
-      <div id={item.id} className="col-start-2 min-w-0 scroll-mt-20 pb-6.5">
+      <div id={item.id} className="col-start-2 min-w-0 scroll-mt-24 pb-6.5">
         {item.content}
       </div>
     </>

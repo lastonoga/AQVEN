@@ -6,12 +6,6 @@ import "@fontsource-variable/geist-mono"
 import { router } from "./router"
 import "./styles/app.css"
 
-const enableMocking = async (): Promise<void> => {
-  if (import.meta.env.VITE_MOCK === "false") return
-  const { worker } = await import("./mocks/browser")
-  await worker.start({ onUnhandledRequest: "bypass", quiet: true })
-}
-
 const mount = (): void => {
   const container = document.getElementById("root")
   if (container === null) return
@@ -22,8 +16,18 @@ const mount = (): void => {
   )
 }
 
-const reportMockingFailure = (error: unknown): void => {
-  console.error(error)
+const unregisterLegacyMockWorker = async (): Promise<void> => {
+  if (!("serviceWorker" in navigator)) return
+  const registrations = await navigator.serviceWorker.getRegistrations()
+  await Promise.all(
+    registrations
+      .filter((registration) => {
+        const worker = registration.active ?? registration.waiting ?? registration.installing
+        return worker !== null && new URL(worker.scriptURL).pathname === "/mockServiceWorker.js"
+      })
+      .map((registration) => registration.unregister()),
+  )
 }
 
-void enableMocking().catch(reportMockingFailure).finally(mount)
+void unregisterLegacyMockWorker().catch(console.error)
+mount()

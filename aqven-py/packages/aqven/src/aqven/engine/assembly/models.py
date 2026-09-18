@@ -15,13 +15,14 @@ from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.request import RunSpec
 from aqven.ir import AgentModel, CompiledAgent, CompiledProject
 from aqven.models import CallPolicy, DeclaredModel, cassette_policy, current_call_site, guard_model
+from aqven.models.providers import CUSTOM_KINDS, custom_options, key_variable
 from aqven.models.streams import StreamContext, StreamFirstModel
 from aqven.ports.execution import ExecutionScope
-from aqven.ports.models import PROVIDER_KEY_ENV, ModelFactory, model_provider
+from aqven.ports.models import ModelFactory, model_provider, provider_env_var
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
 from aqven.runtime.options import ModelCall, ModelRoute
 from aqven.runtime.replay import ProviderFault
-from aqven.spec import Modality, ProviderSpec
+from aqven.spec import Modality, ProviderName, ProviderSpec
 from aqven.spec import OpenRouterRouting as RoutingSpec
 from aqven_llm import (
     HttpClientFactory,
@@ -78,7 +79,22 @@ def provider_routing(spec: RoutingSpec | None, route: ModelRoute | None) -> Open
 
 
 def provider_options(spec: ProviderSpec, route: ModelRoute | None) -> ProviderOptions:
-    return ProviderOptions(base_url=spec.base_url, routing=provider_routing(spec.routing, route))
+    options = custom_options(spec)
+    return ProviderOptions(
+        base_url=options.base_url,
+        routing=provider_routing(spec.routing, route),
+        factory=options.factory,
+        params=options.params,
+        capabilities=options.capabilities,
+        api_key_env=options.api_key_env,
+    )
+
+
+def key_requirement(project: CompiledProject, provider: str) -> KeyRequirement:
+    spec = next((item for item in project.providers if str(item.id) == provider), None)
+    if spec is None or spec.kind not in CUSTOM_KINDS:
+        return KeyRequirement(provider_env_var(ProviderName(provider)), required=True)
+    return KeyRequirement(key_variable(spec.api_key), required=spec.api_key is not None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,10 +102,16 @@ class ProjectModelFactories:
     http_client: HttpClientFactory = default_http_client
 
     def factory(self, project: CompiledProject, route: ModelRoute | None, choice: AgentModel) -> ModelFactory:
-        providers = {spec.id.value: provider_options(spec, route) for spec in project.providers}
+        providers = {str(spec.id): provider_options(spec, route) for spec in project.providers}
         actual = choice.model if route is None else route.model
         overrides = {actual: ModelOverride(media=MEDIA_OUTPUTS[Modality.IMAGE in choice.capabilities.output])}
         return ProviderModelFactory(providers=providers, overrides=overrides, http_client=self.http_client)
+
+
+@dataclass(frozen=True, slots=True)
+class KeyRequirement:
+    env_var: str | None
+    required: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,22 +119,23 @@ class ProviderKeys:
     settings: SettingsStore | None
     environ: Mapping[str, str]
 
-    async def key(self, model: str, replay: bool) -> SecretStr:
+    async def key(self, model: str, replay: bool, requirement: KeyRequirement | None = None) -> SecretStr | None:
         provider = model_provider(model)
-        env_var = PROVIDER_KEY_ENV[provider]
-        found = await self._resolved(model, env_var)
+        needed = KeyRequirement(provider_env_var(provider)) if requirement is None else requirement
+        found = await self._resolved(model, needed.env_var)
         if found is not None:
             return found
+        if not needed.required:
+            return None
         if replay:
             return REPLAY_API_KEY
-        message = (
-            f"no API key for provider {provider.value} ({model}): set {env_var} in the project .env or the environment"
-        )
+        named = needed.env_var or f"the variable of the api_key ref of provider {provider} in aqven.yaml"
+        message = f"no API key for provider {provider} ({model}): set {named} in the project .env or the environment"
         raise LlmNodeError(LlmFailureCode.PROVIDER_KEY_MISSING, message)
 
-    async def _resolved(self, model: str, env_var: str) -> SecretStr | None:
+    async def _resolved(self, model: str, env_var: str | None) -> SecretStr | None:
         if self.settings is None:
-            value = self.environ.get(env_var, "")
+            value = "" if env_var is None else self.environ.get(env_var, "")
             return SecretStr(value) if value else None
         setting = provider_key_setting(model_provider(model))
         resolved = await resolve_secret(self.settings, setting, env_var, self.environ)
@@ -163,9 +186,11 @@ class EngineModelSource:
     ) -> Model:
         route = model_route(spec, agent, choice, media)
         actual = choice.model if route is None else route.model
-        api_key = await self.keys.key(actual, scope.mode == REPLAY_MODE)
+        requirement = key_requirement(scope.project, model_provider(actual))
+        api_key = await self.keys.key(actual, scope.mode == REPLAY_MODE, requirement)
         factory = self.factories.factory(scope.project, route, choice)
         provider_model = factory.build(actual, settings=None, api_key=api_key)
-        cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=(api_key,))
+        secrets = () if api_key is None else (api_key,)
+        cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=secrets)
         guarded = guard_model(provider_model, model_ref=choice.model, policy=CallPolicy(cassettes=cassettes))
         return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), choice.model)

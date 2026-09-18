@@ -20,6 +20,7 @@ const noScroll = (): void => {
 
 beforeAll(() => {
   Object.defineProperty(Element.prototype, "scrollTo", { value: noScroll, configurable: true, writable: true })
+  Object.defineProperty(Element.prototype, "scrollIntoView", { value: noScroll, configurable: true, writable: true })
   Object.defineProperty(window, "scrollTo", { value: noScroll, configurable: true, writable: true })
   server.listen({ onUnhandledRequest: "error" })
 })

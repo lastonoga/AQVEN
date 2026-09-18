@@ -119,7 +119,7 @@ def _agent(agent_id: str, tools: tuple[ToolId, ...] = ()) -> CompiledAgent:
     )
     model = AgentModel(
         model=ModelString("openrouter:openai/gpt-oss-20b"),
-        provider=ProviderName.OPENROUTER,
+        provider=ProviderName("openrouter"),
         capabilities=capabilities,
     )
     return CompiledAgent(agent_id=AgentId(agent_id), description="агент", models=(model,), tools=tools)
@@ -507,7 +507,7 @@ class _MemorySettings:
 def test_secret_resolution_order(
     stored: dict[tuple[SettingScope, SettingKey], str], environ: dict[str, str], expected: str | None
 ) -> None:
-    key = provider_key_setting(ProviderName.OPENROUTER)
+    key = provider_key_setting(ProviderName("openrouter"))
     resolved = asyncio.run(resolve_secret(_MemorySettings(stored), key, "OPENROUTER_API_KEY", environ))
 
     assert (None if resolved is None else resolved.source) == expected
@@ -517,7 +517,7 @@ def test_secret_mask_and_provider_parsing() -> None:
     assert mask_secret("sk-or-v1-0123456789abcd") == "••••abcd"
     assert mask_secret("short") == "••••"
     assert "sk-or" not in repr(SecretStr("sk-or-v1-0123456789abcd"))
-    assert model_provider("openrouter:openai/gpt-oss-20b") is ProviderName.OPENROUTER
+    assert model_provider("openrouter:openai/gpt-oss-20b") == ProviderName("openrouter")
 
 
 class _SkipExecutor:

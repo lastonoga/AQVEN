@@ -7,6 +7,7 @@ from pydantic import AwareDatetime
 from aqven.chat.builders import ChatEventBuilder
 from aqven.ports.chat import ChatEvent, ChatSession, ChatSessionId, ChatTurnId
 from aqven.runtime.address import ClientOpId, ResourceModel
+from aqven.spec import FlowId
 
 type Clock = Callable[[], datetime]
 type IdFactory = Callable[[], str]
@@ -30,7 +31,7 @@ class StoredChatSession(ResourceModel):
 class ChatSessionDirectory(Protocol):
     def get_session(self, session_id: ChatSessionId) -> StoredChatSession | None: ...
 
-    def list_sessions(self) -> tuple[ChatSession, ...]: ...
+    def list_sessions(self, flow_id: FlowId | None = None) -> tuple[ChatSession, ...]: ...
 
 
 class ChatJournal(ChatSessionDirectory, Protocol):

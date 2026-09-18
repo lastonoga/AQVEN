@@ -1,0 +1,20 @@
+{% section title: "Customer reply" %}
+  {% card title: "Revised answer", description: "Complete customer-facing response", tone: "positive" %}
+    {% text path: "/reply/text" %}
+  {% endcard %}
+  {% if value.reply.citations %}
+    {% card title: "Evidence", description: "Full source quotations supporting this answer" %}
+      {% list title: "Citations" %}
+        {% for citation in value.reply.citations %}
+          {% assign citation_title = "Source " | append: forloop.index %}
+          {% assign source_path = "/reply/citations/" | append: forloop.index0 | append: "/chunk_id" %}
+          {% assign quote_path = "/reply/citations/" | append: forloop.index0 | append: "/quote" %}
+          {% section title: citation_title %}
+            {% field label: "Source", path: source_path %}
+            {% text path: quote_path %}
+          {% endsection %}
+        {% endfor %}
+      {% endlist %}
+    {% endcard %}
+  {% endif %}
+{% endsection %}

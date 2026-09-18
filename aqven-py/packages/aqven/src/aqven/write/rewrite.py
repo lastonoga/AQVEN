@@ -1,9 +1,11 @@
+import posixpath
 import re
 from collections.abc import Callable, Mapping
 from typing import Final
 
 from pydantic import JsonValue
 
+from aqven.loader.layout import ROOT_PATH_PREFIX
 from aqven.write.canonical import JsonObject
 
 type StringRewrite = Callable[[str], str]
@@ -27,6 +29,23 @@ def node_ref_rewrite(old: str, new: str) -> StringRewrite:
 def flow_alias_rewrite(old: str, new: str) -> StringRewrite:
     prefix = f"@{old}."
     return lambda text: f"@{new}.{text.removeprefix(prefix)}" if text.startswith(prefix) else text
+
+
+def moved_file_rewrite(moves: Mapping[str, str]) -> StringRewrite:
+    paths = {source: target for source, target in moves.items() if source != target}
+    names = {posixpath.basename(source): posixpath.basename(target) for source, target in paths.items()}
+    renamed_names = {source: target for source, target in names.items() if source != target}
+
+    def rewrite(text: str) -> str:
+        moved = paths.get(text.removeprefix(ROOT_PATH_PREFIX))
+        if moved is not None:
+            return f"{ROOT_PATH_PREFIX}{moved}" if text.startswith(ROOT_PATH_PREFIX) else moved
+        renamed = renamed_names.get(posixpath.basename(text))
+        if renamed is None:
+            return text
+        return posixpath.join(posixpath.dirname(text), renamed)
+
+    return rewrite
 
 
 def rewrite_strings(value: JsonValue, rewrite: StringRewrite) -> JsonValue:

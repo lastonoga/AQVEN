@@ -4,7 +4,7 @@ from typing import Protocol
 
 from pydantic import SecretStr
 
-from aqven_llm.catalog import PROVIDERS, ProviderEntry, split_model
+from aqven_llm.catalog import PROVIDER_SEPARATOR, PROVIDERS, ProviderEntry, split_model
 from aqven_llm.errors import MissingProviderKey
 
 
@@ -34,9 +34,23 @@ class ProviderKeys:
     environ: Mapping[str, str]
     store: ProviderKeyStore | None = None
     catalog: Mapping[str, ProviderEntry] = field(default_factory=lambda: PROVIDERS)
+    custom: Mapping[str, str | None] = field(default_factory=dict[str, str | None])
 
     async def key(self, model: str) -> SecretStr | None:
+        provider = model.partition(PROVIDER_SEPARATOR)[0]
+        if provider in self.custom:
+            return await self._custom_key(provider, self.custom[provider])
         entry, _ = split_model(model, self.catalog)
-        stored = None if self.store is None else await self.store.provider_key(entry.name)
-        found = stored if stored is not None and stored.get_secret_value() else environment_key(entry, self.environ)
-        return required_key(entry, found)
+        stored = await self._stored(entry.name)
+        return required_key(entry, stored or environment_key(entry, self.environ))
+
+    async def _custom_key(self, provider: str, env_var: str | None) -> SecretStr | None:
+        stored = await self._stored(provider)
+        if stored is not None:
+            return stored
+        value = "" if env_var is None else self.environ.get(env_var, "")
+        return SecretStr(value) if value else None
+
+    async def _stored(self, provider: str) -> SecretStr | None:
+        found = None if self.store is None else await self.store.provider_key(provider)
+        return found if found is not None and found.get_secret_value() else None

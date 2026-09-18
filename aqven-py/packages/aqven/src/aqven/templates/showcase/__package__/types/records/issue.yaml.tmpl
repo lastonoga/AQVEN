@@ -1,0 +1,33 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Типизированная проблема проверки для обратной связи между итерациями"
+fields:
+- name: "path"
+  type: "Text[]"
+  description: "Путь до поля с проблемой, по сегментам"
+  maxLength: 64
+  maxItems: 8
+- name: "code"
+  type: "Text"
+  description: "Машинный код проблемы"
+  maxLength: 64
+- name: "message"
+  type: "Text"
+  description: "Что не так, человеческим языком"
+  maxLength: 400
+- name: "severity"
+  type: "IssueSeverity"
+  description: "Серьёзность проблемы"
+- name: "expected"
+  type: "Text?"
+  description: "Что ожидалось; null, если ожидание не формулируется значением"
+  maxLength: 200
+- name: "observed"
+  type: "Text?"
+  description: "Что получено; null, если значения не было"
+  maxLength: 400
+- name: "repair_hint"
+  type: "Text?"
+  description: "Подсказка, как исправить; null, если подсказки нет"
+  maxLength: 300

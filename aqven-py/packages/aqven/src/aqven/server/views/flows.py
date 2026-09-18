@@ -25,7 +25,7 @@ from aqven.server.views.common import (
 )
 from aqven.server.views.nodes import node_schemas, ordered_nodes
 from aqven.server.workspace import FileStat, WorkspaceState
-from aqven.spec import FlowId
+from aqven.spec import FlowId, RunContextKey
 
 type StatusRule = Callable[[WorkspaceState, LoadedFlow, tuple[Diagnostic, ...]], bool]
 
@@ -58,6 +58,16 @@ def compile_status(state: WorkspaceState, flow: LoadedFlow, problems: tuple[Diag
     return "ok"
 
 
+def context_keys(state: WorkspaceState, flow: LoadedFlow) -> tuple[RunContextKey, ...]:
+    compiled = state.compiled
+    known = compiled.flows.get(flow.flow_id) if compiled is not None else None
+    if known is not None:
+        return known.context
+    source = flow.source
+    declared = () if source is None or source.spec.context is None else source.spec.context
+    return tuple(declared)
+
+
 def content_hash(state: WorkspaceState, flow_id: str) -> str | None:
     compiled = state.compiled
     if compiled is None or FlowId(flow_id) not in compiled.flows:
@@ -77,6 +87,7 @@ def flow_summary(state: WorkspaceState, flow: LoadedFlow, last_run: RunBrief | N
         node_count=len(flow.nodes),
         input_type=None if source is None else source.spec.input,
         output_type=None if source is None else source.spec.output,
+        context=context_keys(state, flow),
         content_hash=content_hash(state, flow.flow_id),
         last_run=last_run,
     )
@@ -140,6 +151,6 @@ def flow_schemas(state: WorkspaceState, flow_id: str) -> FlowSchemas:
         flow_id=flow_id,
         input=ref_schema(models, None if source is None else source.spec.input),
         output=ref_schema(models, None if source is None else source.spec.output),
-        context=() if source is None or source.spec.context is None else tuple(source.spec.context),
+        context=context_keys(state, flow),
         nodes=node_schemas(state, flow),
     )

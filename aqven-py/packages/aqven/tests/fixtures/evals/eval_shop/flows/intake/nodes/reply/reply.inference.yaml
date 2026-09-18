@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "One short answer to a customer question"
+in:
+- name: "question"
+  type: "Text"
+  description: "Customer question"
+  maxLength: 200
+out:
+- name: "answer"
+  type: "Text"
+  description: "Answer"
+  maxLength: 200
+- name: "mood"
+  type: "Mood"
+  description: "Tone the answer came out in"

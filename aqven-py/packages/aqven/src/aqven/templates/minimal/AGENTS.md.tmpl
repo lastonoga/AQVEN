@@ -1,15 +1,17 @@
 # Rules for coding agents
 
 `__project__` is an aqven project: AI workflows are YAML files next to the Python code they use. The aqven module is
-`src/__package__/`; its `aqven.yaml` marks the project root, and every aqven command takes that folder as its path.
+`__package__/`; its `aqven.yaml` marks the project root, and every aqven command takes that folder as its path.
 
 ## Layout
 
 ```
-src/__package__/
+__package__/
   aqven.yaml                           project: model providers, data policies
   .env.example                         names of the API keys; copy it to .env next to it
   types.py                             generated models: never edit, never commit
+  app.py                               the ASGI app, the in-process run helper and the mounting example
+  __main__.py                          the runner: python -m __package__ starts the server
   agents/<agent>.yaml                  model "provider:model", settings, tools
   tools/<tool>.yaml                    tool contract; functions live in tools/functions.py
   types/{enums,ids,records,unions,values}/<type>.yaml
@@ -22,7 +24,7 @@ src/__package__/
     <node>.prompt.md                   prompt of that inference
     <node>.py                          code of the step, referenced as run: "<function>"
     <child>.node.yaml                  nested steps sit flat in the folder of their top-level step
-tests/                                 offline tests
+tests/                                 offline tests, created only by aqven new --with-tests
 ```
 
 - The file path is the identity: an id is the file name up to the first dot, a flow id is its folder name. There is no
@@ -33,27 +35,72 @@ tests/                                 offline tests
 
 ## Rules
 
-1. Never edit `src/__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
-   the YAML instead. Never create `src/__package__/types/__init__.py`: it hides the generated models.
-2. Run `uv run aqven check src/__package__` after every change and fix every error before you finish.
+1. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
+   folder it is the whole safety net: it checks the files statically and then simulates every flow with generated
+   values, without a network and without spending tokens. Fix every error before you finish; do not ask a model to try
+   the flow instead.
+2. Never edit `__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
+   the YAML instead. Never create `__package__/types/__init__.py`: it hides the generated models.
 3. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
    flow, node, agent, tool or type, adding or removing a node. It updates references and the rename journal. Edit by
    hand only inside one file: prompt text, descriptions, settings, one node. If `flow_patch` answers `STALE_FILE`,
    read the file again and repeat the change; never overwrite a file by force.
-4. API keys live only in `src/__package__/.env`, which is gitignored; variables of the process environment take
+4. **After editing a prompt, a fragment, a variant or an inference, run
+   `aqven prompt preview <flow>.<node> --project __package__`** and read
+   what the model will actually receive: the instructions, every message and the output contract. Wrong data wiring
+   shows up there as an empty or literal placeholder in the message.
+5. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
+   what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
+   want.
+6. API keys live only in `__package__/.env`, which is gitignored; variables of the process environment take
    precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or commits.
-5. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases).
-6. Tests never call model providers: they replace models with `FunctionModel`, as in `tests/test_answer_question.py`.
+7. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
+8. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
+   Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
+   a flow takes. A project created without `--with-tests` has no `tests/` folder; `aqven check` is its gate.
+9. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
+
+   ```python
+   from aqven.testing import node_output, offline_options
+
+   options = offline_options(cassettes=cassette_config, outputs=[node_output("classify", {"category": "refund"})])
+   ```
+
+   `node_failure("charge", "card declined")` forces the failure path; `branch_key`, `iteration` and `item_index` pick
+   one branch of a `parallel`, `loop` or `map`.
+
+## How to read `aqven check`
+
+Every diagnostic has a code, a file with a path inside it, a message and often a hint that names the exact fix.
+
+| Code starts with | Meaning | What to do |
+|---|---|---|
+| `E_` | error: the project is not runnable | fix it; `aqven check` exits with code 1 while any error is left |
+| `W_` | warning: the project runs, something is unclear | read the hint; pin what it asks you to pin |
+| `E_SIM_` | a simulated run of a flow failed | the hint carries the flow input the simulation used; reproduce it with `aqven run` |
+| `W_SIM_NODE_UNREACHED` | no simulated input reaches this node | check the switch cases and conditions above it, or delete the node |
+
+Examples: `E_REF_MISSING` (a binding points at something that does not exist), `E_BINDING_TYPE` (the bound value does
+not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `E_PROMPT_MISSING`,
+`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`, `W_GENERATED_STALE`.
+
+The hooks in `.claude/settings.json` run `aqven check --static` after every file edit and the full `aqven check` when
+you stop, so a broken tree comes back to you instead of reaching a commit.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `uv run aqven dev src/__package__` | project server, file watching, Studio in the browser |
-| `uv run aqven check src/__package__` | regenerates `types.py` and checks YAML, references, types, prompts and code |
-| `uv run aqven generate src/__package__` | writes `src/__package__/types.py` |
-| `uv run aqven tree src/__package__` | entities by kind with their files |
-| `uv run aqven run answer_question --root src/__package__ --input question.json` | runs a flow without a server |
-| `uv run aqven mcp src/__package__` | MCP over stdio, registered in `.mcp.json` |
-| `uv run pytest` | offline tests |
+| `uv run aqven dev __package__` | project server, file watching, Studio in the browser |
+| `uv run aqven check __package__` | static check plus a simulated run of every flow |
+| `uv run aqven check --static __package__` | static check only, without the simulated runs |
+| `uv run aqven prompt preview answer_question.reply --project __package__` | the exact messages that llm node sends to the model |
+| `... --input question.json --variant tone=warm` | the same preview with your own input and a forced prompt variant |
+| `uv run aqven models check --project __package__` | output modes of every agent model; `--live` sends one tiny request per mode |
+| `uv run aqven generate __package__` | writes `__package__/types.py` |
+| `uv run aqven tree __package__` | entities by kind with their files |
+| `uv run aqven run answer_question --root __package__ --input question.json` | runs a flow without a server |
+| `uv run aqven mcp __package__` | MCP over stdio, registered in `.mcp.json` |
+| `uv run python -m __package__` | the same server from the project's own entry point |
+| `uv run pytest` | offline tests, when the project has a `tests/` folder |
 | `uv run ruff check . && uv run ruff format --check .` | lint and formatting |

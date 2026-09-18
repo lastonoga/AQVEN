@@ -58,7 +58,7 @@ def setting_key(text: str) -> SettingKey:
 
 
 def provider_key_setting(provider: ProviderName) -> SettingKey:
-    return setting_key(f"providers.{provider.value}.api_key")
+    return setting_key(f"providers.{provider}.api_key")
 
 
 def env_name(text: str) -> EnvName | None:
@@ -160,6 +160,14 @@ class SettingsStore(Protocol):
     async def read_secret(self, scope: SettingScope, key: SettingKey) -> SecretStr | None: ...
 
 
+def resolved_of(from_dotenv: str, from_environment: str) -> ResolvedSecret | None:
+    if from_environment and from_environment != from_dotenv:
+        return ResolvedSecret(SecretStr(from_environment), "environment")
+    if not from_dotenv:
+        return None
+    return ResolvedSecret(SecretStr(from_dotenv), "dotenv")
+
+
 async def resolve_secret(
     store: SettingsStore,
     key: SettingKey,
@@ -168,9 +176,4 @@ async def resolve_secret(
 ) -> ResolvedSecret | None:
     stored = await store.read_secret(SECRET_SCOPE, key)
     from_dotenv = "" if stored is None else stored.get_secret_value()
-    from_environment = "" if env_var is None else environ.get(env_var, "")
-    if from_environment and from_environment != from_dotenv:
-        return ResolvedSecret(SecretStr(from_environment), "environment")
-    if not from_dotenv:
-        return None
-    return ResolvedSecret(SecretStr(from_dotenv), "dotenv")
+    return resolved_of(from_dotenv, "" if env_var is None else environ.get(env_var, ""))

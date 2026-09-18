@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Наблюдение разбора: какой сигнал найден и в чём он проявился"
+fields:
+- name: "key"
+  type: "SignalKey"
+  description: "Ключ сигнала из списка категории"
+- name: "value"
+  type: "Text"
+  description: "Что именно замечено в тексте или вложениях"
+  maxLength: 200

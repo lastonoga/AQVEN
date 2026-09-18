@@ -36,7 +36,7 @@ def unavailable() -> NoReturn:
 
 
 class ContractEngine:
-    async def start_run(self, request: RunStartRequest) -> RunStarted:
+    async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         unavailable()
 
     async def get_run(self, run_id: RunId) -> RunSnapshot:

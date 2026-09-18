@@ -12,6 +12,17 @@
   "collapse": "collapse",
   "notFound": "Page not found",
   "quoted": "“{text}”",
+  "previewOnly": "Preview only · full value unavailable",
+  "media": {
+    "openImage": "Open image: {name}",
+    "playVideo": "Play video: {name}",
+    "openFile": "Open {name}"
+  },
+  "valueMode": {
+    "label": "Value format",
+    "flat": "Flat",
+    "json": "JSON"
+  },
   "units": {
     "seconds": "{value} s",
     "tokens": "{count, plural, one {# token} other {# tokens}}",

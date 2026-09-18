@@ -1,81 +1,126 @@
 {
-  "title": "Model call",
-  "tabsAria": "Call sections",
-  "emptyTab": {
-    "model": "No model details recorded for this call",
-    "input": "Nothing was passed into this call",
-    "prompt": "No prompt — this step is not a model call",
-    "output": "No output recorded for this call",
-    "assertions": "No assertions recorded for this call"
+  "closeAria": "Close the call panel",
+  "tabsAria": "Sections of this call",
+  "notRecorded": "The engine recorded nothing here",
+  "blobSection": "Blob {blob}",
+  "tab": {
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "checks": "Checks"
   },
-  "header": {
-    "context": "branch {branch} · stage {stage} · row {row}",
-    "meta": "{callId} · attempt {attempt} of {attempts} · {cost} total"
+  "emptyTab": {
+    "model": "No model facts for this call",
+    "input": "No input recorded for this call",
+    "prompt": "This node has no prompt on disk",
+    "output": "No output recorded for this call",
+    "checks": "No checks recorded for this call"
+  },
+  "address": {
+    "branch": "branch {value}",
+    "iteration": "iteration {value}",
+    "item": "item {value}"
+  },
+  "flag": {
+    "true": "yes",
+    "false": "no"
+  },
+  "ref": {
+    "section": "Reference",
+    "sectionOf": "Reference of {node}",
+    "kind": "Kind",
+    "inline": "inline value",
+    "blob": "blob",
+    "hash": "Content hash",
+    "mediaType": "Media type",
+    "size": "Size",
+    "mediaSlot": "Media at {slot}"
   },
   "model": {
-    "providerSection": "Provider and model",
-    "provider": "provider",
-    "model": "model",
-    "snapshot": "snapshot",
-    "api": "API",
-    "region": "region",
-    "quantization": "quantization",
-    "context": "context",
-    "billing": "billing",
-    "routingSection": "Routing",
-    "profile": "profile",
-    "order": "order",
-    "fallbackReason": "fallback reason",
-    "retries": "retries",
-    "timeout": "timeout",
-    "cassette": "cassette",
-    "paramsSection": "Call parameters",
-    "changedValue": "{value} ({revision}, was {previous})",
-    "billedSection": "What was billed",
-    "inputOutput": "input / output",
-    "tokensInOut": "{input} / {output} tokens",
-    "pricePer1k": "price per 1k",
-    "attemptN": "attempt {n}",
-    "failedAttempts": "failed attempts",
-    "callTotal": "call total"
+    "section": "Model",
+    "noModel": "No model used",
+    "technical": "Execution details"
+  },
+  "schema": {
+    "fields": "Schema fields",
+    "unavailable": "Schema unavailable for this run",
+    "currentNotice": "Current flow schema; the original run plan is unavailable.",
+    "required": "required",
+    "allowedValues": "Allowed values",
+    "type": "Type: {type}"
+  },
+  "field": {
+    "node": "Node",
+    "branch": "Branch",
+    "iteration": "Iteration",
+    "item": "Item",
+    "kind": "Kind",
+    "status": "Status",
+    "agent": "Agent",
+    "inference": "Inference",
+    "model": "Model",
+    "profile": "Profile",
+    "cost": "Cost",
+    "tokens": "Tokens in / out",
+    "latency": "Latency",
+    "attempts": "Attempts",
+    "cacheHit": "Cache hit",
+    "degraded": "Degraded",
+    "startedAt": "Started",
+    "finishedAt": "Finished",
+    "traceId": "Trace id",
+    "spanId": "Span id",
+    "summary": "Summary"
   },
   "input": {
-    "partsSection": "Input parts · multimodal · {count}",
-    "slotsSection": "Input slots · {count}",
-    "rowValuesSection": "Row {row} values",
-    "freezeSection": "What came from the freeze",
-    "freezeRecorded": "recorded value from run {run}",
-    "freezeKnowledge": "knowledge"
+    "schemaSection": "Input schema",
+    "section": "Actual input",
+    "noneRecorded": "This run did not save the per-node input.",
+    "upstreamSection": "Output of {node}"
   },
   "prompt": {
-    "templateSection": "Template <v>{template} · revision {revision}</v>",
-    "systemSection": "Compiled prompt · system",
-    "userSection": "Compiled prompt · user · {tokens, number} tokens",
-    "diffSection": "Diff against previous revision"
+    "renderedSection": "Generated prompt",
+    "timeline": "Message timeline",
+    "notCaptured": "This run did not save the messages sent to the model. The current template below cannot reconstruct them.",
+    "variants": "Selected variants",
+    "section": "Current prompt template",
+    "showTemplate": "Show template source",
+    "fileSection": "Prompt file",
+    "inference": "Inference",
+    "level": "Level",
+    "path": "Path",
+    "fileHash": "File hash",
+    "slotsSection": "Slots"
   },
   "output": {
-    "partsSection": "Output parts · multimodal · {count}",
-    "rawSection": "Raw response · {tokens, number} tokens",
-    "parsedSection": "Parsed against <v>{type}</v>",
-    "parsedOkOf": "ok · {length} of {max} chars",
-    "parsedOk": "ok · {length} chars",
-    "emptyString": "empty string",
-    "validationSection": "Schema validation",
-    "validationRest": "{errors, plural, =0 {all fields valid} other {other fields valid}} · strict mode",
-    "comparisonSection": "Comparison with expected",
-    "actual": "actual:",
-    "expected": "expected:",
-    "scores": "semantic match {semantic} · factual {factual}"
+    "schemaSection": "Output schema",
+    "effectiveSchemaSection": "Output schema used for this call",
+    "section": "Actual output",
+    "responseSection": "Recorded model response text",
+    "noResponse": "The engine streamed no model output for this call"
   },
   "checks": {
-    "assertionsSection": "Row {row} assertions",
-    "judgesSection": "Judges · <v>quorum({quorum})</v>",
-    "judgeLabel": "{node} · {model}",
-    "decisionLabel": "decision",
-    "decision": "{verdict, select, approved {accepted {passed} of {total}} rejected {rejected {passed} of {total}} other {{verdict}}}",
-    "historySection": "History for this row",
-    "draft": "draft",
-    "historyValue": "{status} · {note}",
-    "dataset": "dataset"
+    "section": "Checks",
+    "noneRecorded": "No check results were recorded for this call",
+    "onFail": "on failure: {policy}",
+    "rawSection": "Checks, raw",
+    "rulesSection": "Rule firings, raw",
+    "noRules": "No rule firings recorded",
+    "attemptsSection": "Attempts, raw",
+    "errorSection": "Error, raw",
+    "attempt": "attempt {attempt}",
+    "true": "passed",
+    "false": "failed"
+  },
+  "human": {
+    "section": "Human step",
+    "answerSection": "Answer payload",
+    "waitKind": "Wait kind",
+    "state": "State",
+    "assignee": "Assignee",
+    "formType": "Form type",
+    "deadline": "Deadline",
+    "resolvedBy": "Resolved by"
   }
 }

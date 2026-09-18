@@ -23,7 +23,7 @@ export type SidePanelProps<V extends string> = {
 
 const CONTENT_CLASS = cn(
   surfaceVariants({ variant: "sheet" }),
-  "absolute inset-y-0 right-0 z-20 flex h-full min-h-0 w-[520px] max-w-[88%] flex-col outline-none",
+  "absolute inset-y-0 right-0 z-20 flex h-full min-h-0 w-[520px] max-w-[88%] flex-col outline-none max-[1179px]:fixed",
 )
 
 const MISSING_DESCRIPTION = { "aria-describedby": undefined }
@@ -37,7 +37,7 @@ function Backdrop({ open, onOpenChange }: Pick<SidePanelProps<string>, "open" | 
   return (
     <div
       aria-hidden
-      className="absolute inset-0 z-20 bg-overlay"
+      className="absolute inset-0 z-20 bg-overlay max-[1179px]:fixed"
       onClick={() => {
         onOpenChange(false)
       }}

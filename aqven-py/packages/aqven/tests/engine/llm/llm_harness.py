@@ -354,7 +354,7 @@ def capabilities(strict: bool = True) -> ModelCapabilities:
 
 
 def agent(agent_id: str = "writer", **update: object) -> CompiledAgent:
-    model = AgentModel(model=MODEL, provider=ProviderName.OPENROUTER, capabilities=capabilities())
+    model = AgentModel(model=MODEL, provider=ProviderName("openrouter"), capabilities=capabilities())
     base = CompiledAgent(agent_id=AgentId(agent_id), description="agent", models=(model,))
     return base.model_copy(update=update)
 

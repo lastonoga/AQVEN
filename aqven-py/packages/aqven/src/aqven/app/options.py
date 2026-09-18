@@ -1,14 +1,34 @@
 import argparse
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from aqven.app.environment import (
+    AQVEN_HOST,
+    AQVEN_OPEN_BROWSER,
+    AQVEN_PORT,
+    AQVEN_STUDIO,
+    DEFAULT_PORT,
+    LOOPBACK_HOST,
+    RuntimeSettings,
+    runtime_settings,
+)
 from aqven.loader import find_project_root
 
-DEFAULT_PORT: Final = 5180
-LOOPBACK_HOST: Final = "127.0.0.1"
 STARTUP_TIMEOUT_SECONDS: Final = 30.0
 POLL_SECONDS: Final = 0.1
+
+__all__ = [
+    "DEFAULT_PORT",
+    "LOOPBACK_HOST",
+    "POLL_SECONDS",
+    "STARTUP_TIMEOUT_SECONDS",
+    "ServerOptions",
+    "add_server_arguments",
+    "server_arguments",
+    "server_options",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +41,7 @@ class ServerOptions:
     studio_dist: Path | None = None
     dev_origin: str | None = None
     host: str = LOOPBACK_HOST
+    require_auth: bool = False
     startup_timeout_seconds: float = STARTUP_TIMEOUT_SECONDS
     poll_seconds: float = POLL_SECONDS
 
@@ -31,12 +52,23 @@ class ServerOptions:
 
 def add_server_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--root", type=Path, default=None, help="project root; searched upward from cwd by default")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="port; if it is busy, the next free one is used")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help=f"port; if it is busy, the next free one is used; {AQVEN_PORT} or {DEFAULT_PORT} by default",
+    )
     parser.add_argument("--data-dir", type=Path, default=None, help="Studio data directory instead of the system one")
-    parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
-    parser.add_argument("--headless", action="store_true", help="no browser, no Studio static files: API and MCP only")
+    parser.add_argument("--no-browser", action="store_true", help=f"do not open the browser; see {AQVEN_OPEN_BROWSER}")
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help=f"no browser, no Studio static files: API, SSE and MCP only; see {AQVEN_STUDIO}",
+    )
     parser.add_argument("--studio-dist", type=Path, default=None, help="built Studio directory for development")
     parser.add_argument("--dev-origin", default=None, help="Vite dev server origin, for example http://localhost:5173")
+    parser.add_argument("--host", default=None, help=f"bind address; {AQVEN_HOST} or {LOOPBACK_HOST} by default")
+    parser.add_argument("--require-auth", action="store_true", help="require a launch token for local API and MCP")
 
 
 def _path(value: object) -> Path | None:
@@ -47,19 +79,34 @@ def _text(value: object) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
-def server_options(arguments: argparse.Namespace, cwd: Path) -> ServerOptions:
-    root = find_project_root(_path(arguments.root) or cwd)
+def _number(value: object) -> int | None:
+    return value if isinstance(value, int) else None
+
+
+def server_options(
+    arguments: argparse.Namespace,
+    cwd: Path,
+    *,
+    defaults: RuntimeSettings | None = None,
+    environ: Mapping[str, str] | None = None,
+) -> ServerOptions:
+    settings = runtime_settings(environ, defaults)
+    port = _number(arguments.port)
+    host = _text(arguments.host)
     return ServerOptions(
-        root=root,
-        port=int(arguments.port),
+        root=find_project_root(_path(arguments.root) or cwd),
+        port=settings.port if port is None else port,
         data_dir=_path(arguments.data_dir),
-        open_browser=not bool(arguments.no_browser),
-        headless=bool(arguments.headless),
+        open_browser=False if bool(arguments.no_browser) else settings.open_browser,
+        headless=True if bool(arguments.headless) else not settings.studio,
         studio_dist=_path(arguments.studio_dist),
         dev_origin=_text(arguments.dev_origin),
+        host=settings.host if host is None else host,
+        require_auth=bool(arguments.require_auth),
     )
 
 
 def server_arguments(options: ServerOptions) -> tuple[str, ...]:
     data_dir = () if options.data_dir is None else ("--data-dir", str(options.data_dir))
-    return ("--root", str(options.root), "--port", str(options.port), *data_dir)
+    auth = ("--require-auth",) if options.require_auth else ()
+    return ("--root", str(options.root), "--port", str(options.port), *data_dir, *auth)

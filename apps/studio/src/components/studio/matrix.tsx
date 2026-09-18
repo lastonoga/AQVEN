@@ -1,5 +1,6 @@
 import type { ComponentProps, CSSProperties, ReactElement, ReactNode } from "react"
 import { createLink, type LinkComponent } from "@tanstack/react-router"
+import { ArrowUpRight } from "lucide-react"
 import { cn } from "cn"
 import {
   columnsMinWidth,
@@ -38,6 +39,8 @@ export type MatrixField<T> = FieldBase & {
   readonly render: (item: T, index: number) => ReactNode
   readonly paint?: (item: T) => CellPaint
   readonly onActivate?: (item: T) => void
+  readonly activationLabel?: (item: T) => string
+  readonly interactiveContent?: boolean
   readonly isActivatable?: (item: T) => boolean
 }
 
@@ -93,6 +96,8 @@ type CellFrameProps = {
   readonly paint: ResolvedPaint
   readonly padding: string
   readonly onActivate: (() => void) | undefined
+  readonly activationLabel?: string | undefined
+  readonly interactiveContent?: boolean | undefined
   readonly className?: string
   readonly style?: CSSProperties
   readonly children: ReactNode
@@ -193,16 +198,40 @@ function CellAccent({ accent }: { readonly accent: Tone | undefined }) {
   return <span aria-hidden data-tone={accent} className="absolute inset-y-0 left-0 w-0.5 bg-tone" />
 }
 
-function CellBody({ padding, onActivate, children }: Pick<CellFrameProps, "padding" | "onActivate" | "children">) {
+function CellBody({ padding, onActivate, activationLabel, interactiveContent, children }: Pick<CellFrameProps, "padding" | "onActivate" | "activationLabel" | "interactiveContent" | "children">) {
   if (onActivate === undefined) return <>{children}</>
+  if (interactiveContent === true) {
+    return (
+      <div
+        className={cn("relative min-h-full min-w-0 cursor-pointer pr-7 hover:inset-ring-2 hover:inset-ring-ring", padding)}
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest("summary, [data-media-interactive], [data-slot=dialog-content]") !== null) return
+          onActivate()
+        }}
+      >
+        <div className="min-w-0">{children}</div>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onActivate()
+          }}
+          aria-label={activationLabel}
+          className="absolute top-1.5 right-1.5 z-1 flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <ArrowUpRight aria-hidden className="size-3.5" />
+        </button>
+      </div>
+    )
+  }
   return (
-    <button type="button" onClick={onActivate} className={cn(ACTIVATE_CLASS, padding)}>
+    <button type="button" onClick={onActivate} aria-label={activationLabel} className={cn(ACTIVATE_CLASS, padding)}>
       {children}
     </button>
   )
 }
 
-function CellFrame({ role, paint, padding, onActivate, className, style, children }: CellFrameProps) {
+function CellFrame({ role, paint, padding, onActivate, activationLabel, interactiveContent, className, style, children }: CellFrameProps) {
   return (
     <div
       role={role}
@@ -211,7 +240,7 @@ function CellFrame({ role, paint, padding, onActivate, className, style, childre
       className={cn(CELL_CLASS, surfaceClass(paint.surface), onActivate === undefined && padding, className)}
     >
       <CellAccent accent={paint.accent} />
-      <CellBody padding={padding} onActivate={onActivate}>
+      <CellBody padding={padding} onActivate={onActivate} activationLabel={activationLabel} interactiveContent={interactiveContent}>
         {children}
       </CellBody>
     </div>
@@ -273,6 +302,8 @@ function BodyRow<T>({ item, index, fields, spec, rowLink, selected, style }: Bod
           paint={resolvePaint(spec.paintsGround ? (field.ground ?? "card") : "none", itemPaint, field.paint?.(item) ?? NO_PAINT)}
           padding={spec.bodyPadding}
           onActivate={itemActivation(field, item)}
+          activationLabel={field.activationLabel?.(item)}
+          interactiveContent={field.interactiveContent}
           className={cn(ALIGN_CLASS[field.align ?? "start"], linked && LINKED_CELL_CLASS)}
         >
           {field.render(item, index)}
@@ -363,6 +394,8 @@ function FieldValues<T>({ field, items, itemKey, itemPaint, trailing }: FieldVal
           paint={resolvePaint(ground, itemPaint?.(item) ?? NO_PAINT, field.paint?.(item) ?? NO_PAINT)}
           padding={VALUE_PADDING}
           onActivate={itemActivation(field, item)}
+          activationLabel={field.activationLabel?.(item)}
+          interactiveContent={field.interactiveContent}
           className={ALIGN_CLASS[field.align ?? "start"]}
         >
           {field.render(item, index)}

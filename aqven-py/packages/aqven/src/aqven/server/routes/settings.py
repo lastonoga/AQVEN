@@ -4,7 +4,9 @@ from typing import Annotated, Final
 
 from fastapi import APIRouter, Body, Path
 
+from aqven.app.secret_declarations import SecretDeclaration, declared_secrets
 from aqven.app.secret_names import ProjectSecretNames, ProviderKeyName
+from aqven.ports.identity import ASSIGNEE_SETTING, AssigneeSource, local_user
 from aqven.ports.settings import (
     SECRET_MASK,
     SETTING_KEY_PATTERN,
@@ -22,6 +24,8 @@ from aqven.ports.settings import (
 from aqven.runtime.address import Problem, ResourceModel
 from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure, not_found
+from aqven.server.views.common import loaded_project
+from aqven.server.views.secrets import SecretStatus, secret_status
 from aqven.spec import ProviderName
 
 SECRETS_REST_ONLY: Final = "secrets stay outside MCP"
@@ -36,6 +40,12 @@ class ProviderKeyStatus(ResourceModel):
     declared: bool
     source: SecretSource | None
     masked: str | None
+
+
+class LocalUserView(ResourceModel):
+    assignee: str
+    source: AssigneeSource
+    setting_key: str
 
 
 class SettingDeleted(ResourceModel):
@@ -67,6 +77,13 @@ async def provider_status(store: SettingsStore, environ: Mapping[str, str], name
     )
 
 
+async def declaration_status(
+    store: SettingsStore, environ: Mapping[str, str], declaration: SecretDeclaration
+) -> SecretStatus:
+    resolved = await resolve_secret(store, declaration.setting_key, declaration.env_var, environ)
+    return secret_status(declaration, resolved)
+
+
 async def write_setting(store: SettingsStore, scope: SettingScope, key: SettingKey, write: SettingWrite) -> SettingView:
     if isinstance(write, SecretSettingWrite):
         return await store.set_secret(scope, key, write.secret)
@@ -82,6 +99,17 @@ def build_settings_router(context: ServerContext) -> APIRouter:
     async def provider_keys() -> tuple[ProviderKeyStatus, ...]:
         providers = await asyncio.to_thread(names.providers)
         return tuple([await provider_status(store, context.environ, name) for name in providers])
+
+    @router.get("/secrets", operation_id="secret_list", openapi_extra=rest_only(SECRETS_REST_ONLY))
+    async def list_secrets() -> tuple[SecretStatus, ...]:
+        project = loaded_project(await context.workspace.state())
+        declarations = await asyncio.to_thread(declared_secrets, project, names)
+        return tuple([await declaration_status(store, context.environ, item) for item in declarations])
+
+    @router.get("/user", operation_id="local_user_get", openapi_extra=rest_only("local user identity"))
+    async def get_local_user() -> LocalUserView:
+        user = await local_user(store, context.environ)
+        return LocalUserView(assignee=user.assignee, source=user.source, setting_key=ASSIGNEE_SETTING)
 
     @router.get("/{scope}", operation_id="setting_list", openapi_extra=rest_only(SECRETS_REST_ONLY))
     async def list_settings(scope: SettingScope) -> tuple[SettingView, ...]:

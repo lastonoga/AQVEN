@@ -19,6 +19,7 @@ from aqven.engine.addressing import (
 from aqven.engine.events import BatchedOutputSink, BufferedEventSink, EventSink, StreamEventSink
 from aqven.engine.failures import failure_of, run_error
 from aqven.engine.forking import root_run_id
+from aqven.engine.overrides import override_outcome
 from aqven.engine.protocol import POLLING_INTERVAL_SECONDS, RUN_BRANCH_WORKFLOW, RUN_FLOW_WORKFLOW
 from aqven.engine.request import (
     NODE_OUTCOME_ADAPTER,
@@ -29,6 +30,7 @@ from aqven.engine.request import (
     RunUsageTotals,
 )
 from aqven.engine.runtime import EngineRuntime, active_runtime
+from aqven.engine.selection import SelectionError, execution_order, range_order
 from aqven.engine.steps import node_boundary
 from aqven.engine.values import RefSources, RefUnresolved, ValueStore, evaluate_ref
 from aqven.ir import (
@@ -56,6 +58,7 @@ from aqven.ports.execution import (
 )
 from aqven.runtime.address import ExecutionAddress, JsonObject, RunId
 from aqven.runtime.events import NodeFinished, NodeStarted, RunEvent, RunFinished, RunStartedEvent
+from aqven.runtime.overrides import override_for
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import FinishedExecutionStatus, RunMode
 from aqven.spec import FlowId, NodeId, NodeKind
@@ -340,6 +343,9 @@ class NodeFinishedBuilder:
 
 
 async def guarded_execute(scope: NodeScope, node: CompiledNode) -> NodeOutcome:
+    override = override_for(scope.state.spec.outputs, scope.address)
+    if override is not None:
+        return override_outcome(override, scope.address)
     try:
         return await execute_node(scope.state.runtime.executors, node, scope)
     except Exception as error:
@@ -380,10 +386,22 @@ async def run_flow_nodes(state: RunState, frame: FlowFrame, chain: tuple[Address
         frame=ScopeFrame(),
         output=BatchedOutputSink(run_id=state.run_id, address=anchor),
     )
-    for node_id in frame.flow.order:
+    selected = state.spec.selected_nodes if not frame.prefix else None
+    ranged = not frame.prefix and state.spec.start_node is not None and state.spec.end_node is not None
+    order = (
+        range_order(frame.flow, state.spec.start_node, state.spec.end_node)
+        if ranged and state.spec.start_node is not None and state.spec.end_node is not None
+        else execution_order(frame.flow, selected)
+    )
+    selected_outputs: dict[str, JsonValue] = {}
+    for node_id in order:
         outcome = await run_node(root.scope_for(frame.flow.node(node_id), chain, ScopeFrame()))
         if stops_flow(outcome):
             return outcome
+        if ranged or (selected is not None and node_id in selected):
+            selected_outputs[node_id] = outcome.output if isinstance(outcome, NodeSucceeded) else None
+    if ranged or selected is not None:
+        return NodeSucceeded(output=selected_outputs)
     try:
         return NodeSucceeded(output=root.bind(frame.flow.returns))
     except RefUnresolved as error:
@@ -510,6 +528,7 @@ class RunStartedBuilder:
     content_hash: str
     mode: RunMode
     flow_input: JsonObject
+    order: tuple[NodeId, ...]
 
     def __call__(self, stamp: EventStamp) -> RunEvent:
         return RunStartedEvent(
@@ -519,7 +538,7 @@ class RunStartedBuilder:
             flow_id=self.flow.flow_id,
             content_hash=self.content_hash,
             mode=self.mode,
-            order=tuple(self.flow.order),
+            order=self.order,
             input_ref=InlineValue(value=self.flow_input),
         )
 
@@ -583,9 +602,23 @@ async def interpret(runtime: EngineRuntime, ir_hash: IrHash, flow_input: JsonObj
     if spec.flow_id not in plan.flows:
         return await finish(sink, failed_record(FLOW_NOT_FOUND, f"flow {spec.flow_id} is not in plan {ir_hash}"))
     flow = plan.flow(spec.flow_id)
-    await sink.emit(RunStartedBuilder(flow, flow_hash(plan, spec.flow_id), spec.mode, flow_input))
+    try:
+        order = (
+            range_order(flow, spec.start_node, spec.end_node)
+            if spec.start_node is not None and spec.end_node is not None
+            else execution_order(flow, spec.selected_nodes)
+        )
+    except SelectionError as error:
+        return await finish(sink, failed_record("INPUT_INVALID", str(error)))
+    await sink.emit(RunStartedBuilder(flow, flow_hash(plan, spec.flow_id), spec.mode, flow_input, order))
     state = RunState(runtime=runtime, run_id=run_id, ir_hash=ir_hash, spec=spec, project=plan, events=sink)
-    frame = FlowFrame(flow=flow, flow_input=flow_input, prefix="", values=ValueStore())
+    values = ValueStore()
+    if spec.start_node is not None:
+        first = flow.order.index(spec.start_node)
+        for node_id in flow.order[:first]:
+            if node_id in spec.node_outputs:
+                values.put(ROOT_CONTEXT.at(node_id), spec.node_outputs[node_id])
+    frame = FlowFrame(flow=flow, flow_input=flow_input, prefix="", values=values)
     outcome = await guarded_flow(state, frame)
     return await finish(sink, record_of(outcome, state.usage))
 
