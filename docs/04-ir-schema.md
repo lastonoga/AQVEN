@@ -62,7 +62,7 @@ IR — единственная форма, в которой воркфлоу �
 | `meta` | изменяем всегда | вне хеша, не вызывает новую версию и не инвалидирует кэш реплея |
 | Развёрнутый вид | производный | вычисляется из модульного, хранится как кэш, руками не правится (§5) |
 
-Релиз фиксирует не только спеку: `release_hash = hash('wf/release/v1', { spec_hash, prompt_pins, model_profile_pins, component_lock })` — это исполнение спеки §15 «спека, скомпилированные промты и профили моделей фиксируются вместе».
+Релиз фиксирует не только спеку: `release_hash = hash('aqven/release/v1', { spec_hash, prompt_pins, model_profile_pins, component_lock })` — это исполнение спеки §15 «спека, скомпилированные промты и профили моделей фиксируются вместе».
 
 ### 1.3. Две схемы, а не одна
 
@@ -91,7 +91,7 @@ IR — единственная форма, в которой воркфлоу �
 | одна запись `nodes` | `flows/<flow_id>/nodes/<node_id>.yaml` |
 | тело вложенного подграфа (`map.do`, `loop.body`, ветка) | `flows/<flow_id>/nodes/<node_id>/<inner>.yaml` |
 | `prompt` узла | `<node_id>.prompt.md` рядом с узлом, общий — `prompts/<key>.md` |
-| развёрнутый вид и план компиляции | `.wf/cache/`, в `.gitignore` |
+| развёрнутый вид и план компиляции | `.aqven/cache/`, в `.gitignore` |
 
 | Правило | Формулировка |
 |---|---|
@@ -122,7 +122,7 @@ export const validateFlowSpec = ajv.compile<FlowSpec>(flowSpecSchema);
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wf.local/schemas/ir/1/flow-spec.normal.json",
+  "$id": "https://aqven.local/schemas/ir/1/flow-spec.normal.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["ir_version", "flow", "version", "input", "output", "returns", "context",
@@ -298,7 +298,7 @@ export const validateFlowSpec = ajv.compile<FlowSpec>(flowSpecSchema);
 
 ```json
 {
-  "$id": "https://wf.local/schemas/ir/1/node-llm.json",
+  "$id": "https://aqven.local/schemas/ir/1/node-llm.json",
   "allOf": [{ "$ref": "flow-spec.normal.json#/$defs/node_common" }],
   "unevaluatedProperties": false,
   "required": ["kind", "archetype", "prompt", "model_role", "overrides", "allowed_sets", "output_contract", "trust_in"],
@@ -369,7 +369,7 @@ export const validateFlowSpec = ajv.compile<FlowSpec>(flowSpecSchema);
 
 ```json
 {
-  "$id": "https://wf.local/schemas/ir/1/node-map.json",
+  "$id": "https://aqven.local/schemas/ir/1/node-map.json",
   "allOf": [{ "$ref": "flow-spec.normal.json#/$defs/node_common" }],
   "unevaluatedProperties": false,
   "required": ["kind", "over", "item_type", "concurrency", "on_item_error", "max_items", "do"],
@@ -395,7 +395,7 @@ export const validateFlowSpec = ajv.compile<FlowSpec>(flowSpecSchema);
 
 ```json
 {
-  "$id": "https://wf.local/schemas/ir/1/node-loop.json",
+  "$id": "https://aqven.local/schemas/ir/1/node-loop.json",
   "allOf": [{ "$ref": "flow-spec.normal.json#/$defs/node_common" }],
   "unevaluatedProperties": false,
   "required": ["kind", "loop_type", "body", "feedback", "carry", "stop_when",
@@ -570,13 +570,13 @@ import { bytesToHex, concatBytes, utf8ToBytes } from "@noble/hashes/utils";
 import canonicalize from "canonicalize";
 
 export type Domain =
-  | "wf/flow-spec/v1"
-  | "wf/node-body/v1"
-  | "wf/node-behavior/v1"
-  | "wf/component/v1"
-  | "wf/prompt/v1"
-  | "wf/expansion/v1"
-  | "wf/release/v1";
+  | "aqven/flow-spec/v1"
+  | "aqven/node-body/v1"
+  | "aqven/node-behavior/v1"
+  | "aqven/component/v1"
+  | "aqven/prompt/v1"
+  | "aqven/expansion/v1"
+  | "aqven/release/v1";
 
 const SEPARATOR = new Uint8Array([0x00]);
 
@@ -594,10 +594,10 @@ export const hashOf = (domain: Domain, value: unknown): Hash => {
 
 | Хеш | Домен | Что подаётся на вход | Для чего |
 |---|---|---|---|
-| `spec_hash` | `wf/flow-spec/v1` | весь документ без `meta` | идентичность версии спеки, `manifest.specVersions[]`, сравнение «та же ли это версия» |
-| `behavior_hash` узла | `wf/node-behavior/v1` | тело узла без `description`, плюс пины промта, профиля модели и компонента | ключ инвалидации replay-кэша и кассет |
-| `body_hash` узла | `wf/node-body/v1` | тело узла целиком | детект переименования (§7): удалён `a`, добавлен `b`, `body_hash` равны и окрестности совпадают |
-| `release_hash` | `wf/release/v1` | `{spec_hash, prompt_pins, model_profile_pins, component_lock, env_overlay_hash}` | неизменяемость выпуска (спека §15), lineage на выходах прогона |
+| `spec_hash` | `aqven/flow-spec/v1` | весь документ без `meta` | идентичность версии спеки, `manifest.specVersions[]`, сравнение «та же ли это версия» |
+| `behavior_hash` узла | `aqven/node-behavior/v1` | тело узла без `description`, плюс пины промта, профиля модели и компонента | ключ инвалидации replay-кэша и кассет |
+| `body_hash` узла | `aqven/node-body/v1` | тело узла целиком | детект переименования (§7): удалён `a`, добавлен `b`, `body_hash` равны и окрестности совпадают |
+| `release_hash` | `aqven/release/v1` | `{spec_hash, prompt_pins, model_profile_pins, component_lock, env_overlay_hash}` | неизменяемость выпуска (спека §15), lineage на выходах прогона |
 | `blob_sha256` | домена нет | байты файла как есть | CAS записи (`expects[{path, file_hash}]`), сильный ETag, сверка индекса с деревом |
 
 `blob_sha256` не заменяет `spec_hash` и не сравнивается с ним: он считается по байтам без доменной сепарации и меняется от любого форматирования, поэтому отвечает только на «тот ли это файл, что я читал». Идентичность версии — по-прежнему `spec_hash`.
@@ -680,7 +680,7 @@ flowchart LR
 2. **Развёрнутый вид — то, что реально исполнялось.** Прогон ссылается на `expansion_hash`, поэтому воспроизведение через год не зависит от того, что сегодня лежит в библиотеке.
 3. **Канвас обязан показывать примитивы** (спека §6.0: «любой компонент раскрывается на канвасе до примитивов»), а раскрытие на каждый рендер — лишняя работа и лишний источник расхождений.
 
-Развёрнутый вид — кэш, а не документ: ключ `expansion_hash = hashOf('wf/expansion/v1', { spec_hash, component_lock })`, запись в БД перестраиваемая, руками не редактируется, в рабочем дереве не лежит (`.wf/cache/`, в `.gitignore`: иначе на одну сущность в диффе приходится два файла), в бандл кладётся рядом с модульным (`flows/<flowId>@<version>.yaml` и `expanded/<flowId>@<version>.json`), потому что чужой фреймворк при миграции читает именно развёрнутый вид.
+Развёрнутый вид — кэш, а не документ: ключ `expansion_hash = hashOf('aqven/expansion/v1', { spec_hash, component_lock })`, запись в БД перестраиваемая, руками не редактируется, в рабочем дереве не лежит (`.aqven/cache/`, в `.gitignore`: иначе на одну сущность в диффе приходится два файла), в бандл кладётся рядом с модульным (`flows/<flowId>@<version>.yaml` и `expanded/<flowId>@<version>.json`), потому что чужой фреймворк при миграции читает именно развёрнутый вид.
 
 ## 6. Сериализация: YAML-файл — истина, JSONB — индекс
 
@@ -724,7 +724,7 @@ export const toTransportYaml = (spec: NormalizedFlowSpec): string => YAML.string
 
 Каждая опция закрывает конкретный способ сломать байтовое равенство: `lineWidth: 0` убирает зависимость от ширины терминала, `blockQuote: false` запрещает `|` и `>` (многострочные строки едут как `"a\nb"`), `collectionStyle: "block"` запрещает flow-коллекции, `doubleQuotedAsJSON: true` выравнивает экранирование с JCS, `version: "1.2"` закрывает norway-bug (в 1.1 `yes`/`on` становятся `true`).
 
-Канонизация применяется **при записи** — агентом, Studio и `wf fmt`, — а не при чтении. Канонизация при открытии означала бы, что `git status` пачкается после каждого просмотра файла, а рабочее дерево перестаёт совпадать с тем, что человек закоммитил.
+Канонизация применяется **при записи** — агентом, Studio и `aqven fmt`, — а не при чтении. Канонизация при открытии означала бы, что `git status` пачкается после каждого просмотра файла, а рабочее дерево перестаёт совпадать с тем, что человек закоммитил.
 
 ### 6.3. Запреты, каждый из которых проверен пробой
 
@@ -814,7 +814,7 @@ detectRenames(ga, gb):
   added   = gb.ids - ga.ids
   for a_id in removed:
     candidates = [b_id for b_id in added
-                  if hashOf('wf/node-body/v1', ga.nodes[a_id]) === hashOf('wf/node-body/v1', gb.nodes[b_id])
+                  if hashOf('aqven/node-body/v1', ga.nodes[a_id]) === hashOf('aqven/node-body/v1', gb.nodes[b_id])
                   and sameNeighbourhood(ga, a_id, gb, b_id)]
     if candidates.length !== 1: continue
     yield { from: a_id, to: candidates[0] }
@@ -1159,7 +1159,7 @@ fix__iterate:
 3. **Авторская строковая форма предиката (`$.score >= 0.8`) против структурной.** Нужен ли парсер строк в authoring-схеме, или Claude сразу пишет структурный предикат. Что сделать: прототип MCP-тула `flow_patch` на узле `fix` и замер, сколько попыток уходит на обе формы.
 4. **`views` типов (спека §7.1) и проекции `pick`/`omit`.** Считается ли `pick{[name, beach_entry]}` тем же, что объявленный view `brief`, и требуем ли мы именованный view на границе узла. Что сделать: решить в реестре типов, зафиксировать правило совместимости в §3.3.1.
 5. **Где принимается решение о форме динамического allowed-set.** Порог (≤ 50 значений — `enum`, выше — индексный выбор, потолок порядка 416 UUID) зависит от мощности множества в рантайме, которая неизвестна при компиляции. Что сделать: описать в документе о компиляции схем, кто и когда выбирает форму, и нужен ли IR-флаг, фиксирующий выбор принудительно.
-6. **Хеши библиотечных сущностей в `uses`.** Домены `wf/component/v1` и `wf/prompt/v1` объявлены здесь, но вычисляются в реестрах. Что сделать: согласовать с реестрами, что именно подаётся на вход хешу компонента (тело плюс сигнатура плюс контракты, без `meta`).
+6. **Хеши библиотечных сущностей в `uses`.** Домены `aqven/component/v1` и `aqven/prompt/v1` объявлены здесь, но вычисляются в реестрах. Что сделать: согласовать с реестрами, что именно подаётся на вход хешу компонента (тело плюс сигнатура плюс контракты, без `meta`).
 7. **Кто присваивает `version` при публикации.** Транзакционный счётчик базы удалён, в именах файлов версии нет, а поле `version` в `flow.yaml` кто-то обязан двигать. Что сделать: зафиксировать вместе с формой релиза (тег, ветка или файл релиза) в ADR о git как истории и сослаться отсюда.
 8. **Реестр типов ошибок для `try.catch`.** Ключи `catch` — типы ошибок, их список ядром не задан. Что сделать: перечислить типизированные ошибки рантайма (`timeout`, `rate_limit`, `schema_invalid`, `contract_violation`, `budget_exceeded`, `policy_violation`) и закрепить их как enum.
 9. **Покрывают ли источники `andMap` (`value | data | input | context | step | fn`) все проекции `via`.** `flatten` и `map{select}` могут не выражаться декларативно и потребовать эмиссии в `andThen`, что портит инспектируемость графа. Что сделать: спайк компилятора на узле `score_hotels` и `render`.

@@ -142,7 +142,7 @@ ALTER TABLE app.spec_versions ALTER COLUMN compiled SET COMPRESSION lz4;
 | `root_path` | путь корня определения в дереве (`flows/hotel_pitch/`), он же идентичность: поля `id` в файлах нет |
 | `origin` | `working_copy` — снимок незакоммиченного дерева; `release` — снимок опубликованного релиза |
 | `content_hash` | sha256 канонического JSON по RFC 8785 (`canonicalize@5.0.0`) с доменной сепарацией — идентичность снимка |
-| `release_hash` | пин релиза для `origin = 'release'`, он же ключ в `wf.lock.yaml` |
+| `release_hash` | пин релиза для `origin = 'release'`, он же ключ в `aqven.lock.yaml` |
 | `git_commit` | справочная привязка к истории; **не** идентичность: один контент живёт в разных коммитах |
 | `sources` | карта `путь → sha256 байтов файла` по всем файлам, вошедшим в снимок; по ней видно, разошлось ли дерево |
 
@@ -160,8 +160,8 @@ ALTER TABLE app.spec_versions ALTER COLUMN compiled SET COMPRESSION lz4;
 `base_rev` из базы заменён на compare-and-swap по sha256 **байтов файла**: клиент присылает
 `expects[{path, file_hash}]`, `file_hash: null` означает «файла быть не должно». Коды отказа —
 `STALE_FILE`, `FILE_VANISHED`, `FILE_EXISTS`, `LOCK_BUSY`, `TREE_DIRTY`. Счётчика ревизий база
-не ведёт: транзакцией на N файлов владеет staging `.wf/txn/<ulid>` с `intent.json` и серией
-атомарных `rename(2)`, межпроцессная блокировка — `.wf/lock`.
+не ведёт: транзакцией на N файлов владеет staging `.aqven/txn/<ulid>` с `intent.json` и серией
+атомарных `rename(2)`, межпроцессная блокировка — `.aqven/lock`.
 
 ```sql
 CREATE TABLE app.spec_fs_sync (
@@ -311,10 +311,10 @@ CREATE INDEX search_trgm_idx ON idx.search USING gin (snippet gin_trgm_ops);
 
 Аппрув — свойство определения, а не строки в базе: `status` и `approved_by` правятся диффом
 и ревьюятся в PR, индекс их только отражает, а факт аппрува пишется в `app.access_log` (§2.16).
-Резолв активной записи идёт по `idx.objects` с `status = 'approved'`, пин версии — по `wf.lock.yaml`
+Резолв активной записи идёт по `idx.objects` с `status = 'approved'`, пин версии — по `aqven.lock.yaml`
 и `release_hash`, а не по `max(version)`.
 
-Разобранный AST промта, план компиляции и развёрнутый вид держит `.wf/cache/`, а не база:
+Разобранный AST промта, план компиляции и развёрнутый вид держит `.aqven/cache/`, а не база:
 это производное от файла, восстанавливаемое за те же миллисекунды, что и чтение строки.
 
 ### 2.7. Прогоны
@@ -1500,20 +1500,20 @@ export async function withTenant<T>(
 
 | Пакет | Содержимое | Кому виден |
 |---|---|---|
-| `@wf/ir` + `@wf/types` + `@wf/ports` | сущности, branded-типы идентификаторов, Zod-схемы, **порты репозиториев** | всем |
-| `@wf/db` | таблицы Drizzle, миграции, `drizzle.config.ts`, пул соединений, `withTenant`, **адаптеры репозиториев**, `BlobStore` | только слою композиции |
-| `@wf/fs` | `FileSpecStore` (рабочее дерево, CAS по хешу байтов, `.wf/txn`, `.wf/lock`), `GitPort`, `FileWatcher` | только слою композиции |
-| `@wf/index` | `IndexProjector`: разбор файлов и запись схемы `idx` | только слою композиции |
-| `apps/api`, `@wf/mcp-server`, `@wf/runtime-volt` | прикладной код | зависят от `@wf/ir`/`@wf/ports`, получают адаптеры инъекцией |
+| `@aqven/ir` + `@aqven/types` + `@aqven/ports` | сущности, branded-типы идентификаторов, Zod-схемы, **порты репозиториев** | всем |
+| `@aqven/db` | таблицы Drizzle, миграции, `drizzle.config.ts`, пул соединений, `withTenant`, **адаптеры репозиториев**, `BlobStore` | только слою композиции |
+| `@aqven/fs` | `FileSpecStore` (рабочее дерево, CAS по хешу байтов, `.aqven/txn`, `.aqven/lock`), `GitPort`, `FileWatcher` | только слою композиции |
+| `@aqven/index` | `IndexProjector`: разбор файлов и запись схемы `idx` | только слою композиции |
+| `apps/api`, `@aqven/mcp-server`, `@aqven/runtime-volt` | прикладной код | зависят от `@aqven/ir`/`@aqven/ports`, получают адаптеры инъекцией |
 
 Схема таблиц разложена по файлам предметных областей — `schema/spec_versions.ts`, `schema/runs.ts`,
 `schema/evals.ts`, `schema/blobs.ts`, `schema/vectors.ts` — и собирается в `schema/index.ts`,
 на который указывает `drizzle.config.ts`. Дробление не косметическое: drizzle-kit читает один
 барельный экспорт, а разработчик читает один файл на область.
 
-**Запрет импорта `drizzle-orm` вне `@wf/db`** — правилом `no-restricted-imports` в Biome, тем же
-механизмом, которым `ai` и `@ai-sdk/*` заперты в `@wf/llm`. Сырой SQL через `db.execute`
-разрешён **только** внутри `@wf/db` и только в трёх местах: миграции, аналитические запросы,
+**Запрет импорта `drizzle-orm` вне `@aqven/db`** — правилом `no-restricted-imports` в Biome, тем же
+механизмом, которым `ai` и `@ai-sdk/*` заперты в `@aqven/llm`. Сырой SQL через `db.execute`
+разрешён **только** внутри `@aqven/db` и только в трёх местах: миграции, аналитические запросы,
 установка `SET LOCAL`. В прикладном коде сырого SQL нет, потому что он не проходит через порт,
 а значит не проходит через `withTenant` и обходит RLS.
 
@@ -1551,7 +1551,7 @@ export interface UnitOfWork {
 }
 ```
 
-Адаптер в `@wf/db` реализует порт поверх транзакции и не создаёт её сам — транзакцией владеет
+Адаптер в `@aqven/db` реализует порт поверх транзакции и не создаёт её сам — транзакцией владеет
 `UnitOfWork`. Это убирает вопрос «а не начнётся ли вложенная транзакция в репозитории».
 
 ```ts
@@ -1591,7 +1591,7 @@ export interface BlobStore {
 | Операция | Уровень изоляции | Почему |
 |---|---|---|
 | Материализация снимка плана | `read committed` | дедуп ловит `UNIQUE (project_id, root_path, content_hash)` и `ON CONFLICT DO NOTHING`; счётчиков нет |
-| Применение `flow_patch` | `read committed` | конфликт ловит CAS по хешу байтов файла и `.wf/lock`, а не база |
+| Применение `flow_patch` | `read committed` | конфликт ловит CAS по хешу байтов файла и `.aqven/lock`, а не база |
 | Инкрементальный шаг индексатора | `read committed` | `DELETE` рёбер по `src_path` и `COPY` новых в одной транзакции |
 | Резервирование ключа идемпотентности | `read committed` | конфликт ловит уникальный индекс и `ON CONFLICT` |
 | Захват следующего прогона из очереди | `read committed` + `FOR UPDATE SKIP LOCKED` | очередь на pg-boss, блокировки без ожидания |
@@ -1625,7 +1625,7 @@ Prepared statements (`.prepare('name')` плюс `sql.placeholder(...)`) при�
 ```
 project/
   project.yaml
-  wf.lock.yaml
+  aqven.lock.yaml
   .gitattributes
   types/
   flows/<flow_id>/flow.yaml
@@ -1634,18 +1634,18 @@ project/
   components/<name>/component.yaml
   prompts/<key>.md
   models/ agents/ tools/ context/ datasets/
-  .wf/cache/
-  .wf/drafts/
-  .wf/txn/
-  .wf/lock
+  .aqven/cache/
+  .aqven/drafts/
+  .aqven/txn/
+  .aqven/lock
 ```
 
 | Путь | Что внутри | Отношение к базе |
 |---|---|---|
 | `flows/`, `components/`, `types/`, `prompts/`, `models/`, `agents/`, `tools/` | определения, источник истины | индексируются в `idx`, снимок в `app.spec_versions` на старте прогона |
 | `project.yaml` | `project_id`, `ir_version`, политики, журнал `renames` | `project_id` связывает дерево со строкой `app.projects` |
-| `wf.lock.yaml` | пины `uses` по `content_hash` | материализуются в `sources` снимка |
-| `.wf/cache/`, `.wf/drafts/`, `.wf/txn/`, `.wf/lock` | производное, черновики промтов, staging транзакции, блокировка | в `.gitignore`, в базу не попадают |
+| `aqven.lock.yaml` | пины `uses` по `content_hash` | материализуются в `sources` снимка |
+| `.aqven/cache/`, `.aqven/drafts/`, `.aqven/txn/`, `.aqven/lock` | производное, черновики промтов, staging транзакции, блокировка | в `.gitignore`, в базу не попадают |
 | `datasets/<name>.yaml` | метаданные набора | строки — в `app.dataset_items`, кроме golden-наборов `storage: rows_in_file` |
 
 Полная раскладка и правила именования — [files-first/layout.md](files-first/layout.md).
@@ -1738,7 +1738,7 @@ export default defineConfig({
 ### Сиды
 
 Определения сидами больше не вставляются: они лежат в `fixtures/demo_project/` обычным деревом
-файлов, и локальный старт — это `wf index fixtures/demo_project`. Сид на TypeScript остаётся для
+файлов, и локальный старт — это `aqven index fixtures/demo_project`. Сид на TypeScript остаётся для
 всего, что деревом быть не может, и вызывает те же репозитории, что и продакшен-код. Набор `dev`:
 
 | Что | Зачем |
@@ -1810,7 +1810,7 @@ await container.snapshot();
    документа о структурированном выводе и профилях моделей, зафиксировать `probe_version = 1`.
 8. **Модель эмбеддингов и размерность вектора не выбраны.** В §5 стоит `vector(1536)` как пример
    из заметок. Колонка `vector` не допускает разных размерностей, поэтому смена модели — миграция
-   с полной переиндексацией. *Закрыть:* выбрать модель вместе со слоем `@wf/llm`, проверить
+   с полной переиндексацией. *Закрыть:* выбрать модель вместе со слоем `@aqven/llm`, проверить
    сигнатуру `embedMany` в `ai@6` (не проверялась) и решить, нужен ли `halfvec` ради памяти.
 9. **План RLS-политики через подзапрос по `projects` не измерялся.** §7 обходит вопрос
    денормализацией `tenant_id` в горячие таблицы, но составной FK `(project_id, tenant_id)`

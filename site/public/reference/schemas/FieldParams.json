@@ -1,0 +1,19 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    }
+  },
+  "required": [
+    "field"
+  ],
+  "title": "FieldParams",
+  "type": "object"
+}

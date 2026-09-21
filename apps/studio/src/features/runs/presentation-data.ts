@@ -124,9 +124,10 @@ export const documentPointersValid = (value: unknown, document: DisplayDocument)
     return (node.represented_paths ?? []).every((path) => resolvePointer(value, path).found)
   })
 
-export const renderableDocument = (raw: unknown, value: unknown, media: readonly OutputMedia[], mediaOnly = false): DisplayDocument | null => {
+export const renderableDocument = (raw: unknown, value: unknown, media: readonly OutputMedia[], mediaOnly = false, example = false): DisplayDocument | null => {
   const document = parseDisplayDocument(raw)
   if (document === null || !documentPointersValid(value, document)) return null
+  if (example) return document
   const mediaValid = walkNodes(document.root).every((node) => node.kind !== "media" || mediaAt(value, node.path, node.alt, media, mediaOnly) !== null)
   return mediaValid ? document : null
 }

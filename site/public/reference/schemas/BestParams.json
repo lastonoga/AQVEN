@@ -1,0 +1,19 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "path": {
+      "$ref": "#/$defs/RefPath"
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "title": "BestParams",
+  "type": "object"
+}

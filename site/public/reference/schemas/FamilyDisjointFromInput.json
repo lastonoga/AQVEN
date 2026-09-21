@@ -1,0 +1,29 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "input": {
+      "title": "Input",
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "rule": {
+      "const": "family_disjoint_from_input",
+      "title": "Rule",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule",
+    "nodes",
+    "input"
+  ],
+  "title": "FamilyDisjointFromInput",
+  "type": "object"
+}

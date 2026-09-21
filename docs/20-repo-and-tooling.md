@@ -27,10 +27,10 @@
 | Интеграционные | testcontainers + @testcontainers/postgresql | 12.1.0 | MIT | реальный Postgres 18, только Linux-раннеры |
 | E2E | @playwright/test | 1.63.0 | Apache-2.0 | сквозные сценарии Studio |
 | Гигиена тест-сьюта | @stryker-mutator/core + vitest-runner + typescript-checker | 10.0.0 | Apache-2.0 | nightly, только `packages/compiler` и `packages/ir` |
-| Kill-критерий 1 | **свой доменный IR-мутатор** в `@wf/conformance` | наш | — | Stryker мутирует наш код, спека §18.1 требует мутировать IR |
+| Kill-критерий 1 | **свой доменный IR-мутатор** в `@aqven/conformance` | наш | — | Stryker мутирует наш код, спека §18.1 требует мутировать IR |
 | Линт и формат | @biomejs/biome | 2.5.13 | MIT OR Apache-2.0 | type-aware линт без `ts.Program` → не привязывает к потолку версии TS; один бинарник вместо 10 пакетов |
-| Линт React | eslint + eslint-plugin-react-hooks + eslint-config-next | 10.10.0 | MIT | только `apps/studio`, правила хуков Biome покрывает не полностью |
-| Форматтер | Biome (Prettier **не ставим**) | — | — | Biome форматирует TS, JSX и CSS; `eslint-config-prettier` не нужен. Исключение — `prettier@3.9.6` внутри `@wf/export` как часть кодогенератора |
+| Линт React | eslint + typescript-eslint + eslint-plugin-react-hooks + eslint-plugin-react-refresh | 10.10.0 / 8.70.0 / 7.1.1 / 0.5.7 | MIT | только `apps/studio`, правила хуков Biome покрывает не полностью; `eslint-config-next` не ставим ([ADR-0024](adr/0024-studio-on-vite.md)) |
+| Форматтер | Biome (Prettier **не ставим**) | — | — | Biome форматирует TS, JSX и CSS; `eslint-config-prettier` не нужен. Исключение — `prettier@3.9.6` внутри `@aqven/export` как часть кодогенератора |
 | Релизы | @changesets/cli | 3.0.2 | MIT | `linked`-группа формата бандла, provenance при публикации |
 | CI | GitHub Actions | — | — | матрица Node 22.12/24, remote cache с `signature: true` |
 
@@ -38,19 +38,20 @@
 структура читается агентом), **tsup** (не поддерживается), **unbuild** (13 месяцев без релиза),
 **двойная сборка CJS** (dual-package hazard молча ломает branded types и `instanceof`),
 **Effect 3.22** (второй рантайм рядом с VoltAgent, красит все сигнатуры), **Prettier** (дублирует Biome),
-**`paths: {"@wf/*": ["packages/*/src"]}`** (делает «всё видит всё» и ломает границы пакетов).
+**`paths: {"@aqven/*": ["packages/*/src"]}`** (делает «всё видит всё» и ломает границы пакетов).
 
 ## 1. Дерево монорепо
 
-Правило именования: каталог `packages/<name>` ↔ пакет `@wf/<name>`, каталог `apps/<name>` ↔
-приложение (не публикуется). Слои ровно те же, что в [02. Архитектура](02-architecture.md):
-L0 контракты → L1 домен → L2 адаптеры → L3 композиция. Стрелка вверх по слоям запрещена физически.
+Правило именования: каталог `packages/<name>` ↔ пакет `@aqven/<name>`, каталог `apps/<name>` ↔
+приложение `@aqven/<name>` с `private: true` (не публикуется; `apps/studio` — `@aqven/studio`). Слои ровно
+те же, что в [02. Архитектура](02-architecture.md): L0 контракты → L1 домен → L2 адаптеры →
+L3 композиция. Стрелка вверх по слоям запрещена физически.
 
 ```
 ai-workflows-automate/
 ├─ apps/
-│  ├─ studio/           Next.js 16.3.4 + React 19.3.0, канвас, инспектор, трассы
-│  ├─ api/              Hono + @hono/zod-openapi 1.6.3, VoltAgent server-hono, монтирует @wf/mcp-server
+│  ├─ studio/           @aqven/studio: SPA на Vite 8.3.0 + React 19.3.0 (ADR-0024), канвас, инспектор, трассы, чат
+│  ├─ api/              Hono + @hono/zod-openapi 1.6.3, VoltAgent server-hono, монтирует @aqven/mcp-server
 │  └─ worker/           процесс pg-boss 12: джобы, дедлайны, cron, возобновление по таймауту
 ├─ packages/
 │  ├─ ir/               L0  схемы IR, branded ids, семантический дифф
@@ -77,7 +78,7 @@ ai-workflows-automate/
 │  ├─ conformance/      L2  golden-фикстуры, IR-мутатор, раннер конформанса (не публикуется)
 │  ├─ mcp-server/       L3  @modelcontextprotocol/sdk 1.30.0, тулы flow_*/run_*/experiment_*
 │  ├─ sdk/              L3  типизированный клиент: openapi-typescript 7.13.0 + openapi-fetch
-│  ├─ cli/              L3  wf check/fmt/init/export/import/verify/replay/eval, запуск mcp-server по stdio
+│  ├─ cli/              L3  aqven check/fmt/init/export/import/verify/replay/eval, запуск mcp-server по stdio
 │  ├─ graph-view/       L3  @xyflow/react 12.11.6 + elkjs 0.12.0, общий с Studio
 │  ├─ testkit/          инфраструктура тестов: фабрики IR, контейнеры, кассеты (не публикуется)
 │  └─ tsconfig/         базовые tsconfig (не публикуется)
@@ -93,65 +94,65 @@ ai-workflows-automate/
 
 | Пакет | Слой | Ответственность | Публичный API (entry) | Зависит от | НЕ имеет права зависеть от |
 |---|---|---|---|---|---|
-| `@wf/ir` | L0 | схема IR, branded ids, инварианты, семантический дифф | `.`, `./diff`, `./testing` | `zod`, `jsondiffpatch`, `rfc6902` | всего остального в репозитории |
-| `@wf/types` | L0 | реестр предметных типов и их совместимость | `.` | `@wf/ir`, `zod` | L1+ |
-| `@wf/contracts` | L0 | zod-схемы границы: конверт MCP, DTO REST, события стрима | `.`, `./mcp`, `./http` | `@wf/ir`, `zod` | L1+, любой адаптер |
-| `@wf/ports` | L0 | интерфейсы портов (Port/Adapter) | `.` | `@wf/ir`, `zod` | любой реализации порта |
-| `@wf/canon` | L0 | канонизация RFC 8785, sha256, Merkle | `.` | `canonicalize`, `@noble/hashes` | всего остального |
-| `@wf/compiler` | L1 | правила `R-*`, план цепочки, статические оценки | `.`, `./rules`, `./testing` | `@wf/ir`, `@wf/types`, `@wf/prompts`, `@wf/registries`, `@wf/ports` (только типы), `ts-pattern` | `@voltagent/*`, `ai`, `drizzle-orm`, `pg`, `@langfuse/*` |
-| `@wf/prompts` | L1 | liquidjs-визитор, теги `message`/`case`, точки кэширования, оценка размера | `.` | `@wf/ir`, `liquidjs`, `gpt-tokenizer` | `ai`, рантайма, БД |
-| `@wf/registries` | L1 | профили моделей, агенты, тулы, архетипы (паттерн Registry) | `.` | `@wf/ir`, `@wf/types`, `@wf/ports` | адаптеров |
-| `@wf/stats` | L1 | чистая статистика гейтов | `.` | ноль рантайм-зависимостей | VoltAgent, Langfuse, БД |
-| `@wf/usecases` | L1 | сценарии приложения поверх портов | `.` | домен + `@wf/ports` | конкретных адаптеров |
-| `@wf/runtime-volt` | L2 | сборка `Workflow` из плана, исполнители узлов, suspend/resume | `.` | `@voltagent/core`, `@wf/ports`, `@wf/ir` | `apps/*`, `@wf/mcp-server` |
-| `@wf/llm` | L2 | единственная точка входа к моделям, replay-кэш как `LanguageModelMiddleware` | `.`, `./middleware` | `ai`, `@ai-sdk/*`, `@openrouter/*`, `@wf/ports` | других адаптеров |
-| `@wf/tools` | L2 | вызов инструмента, таймаут, одобрение, внешние MCP-серверы | `.` | `@voltagent/core`, `@wf/ports` | `@wf/llm` |
-| `@wf/store` | L2 | `FileTreePort` и `GitPort`: чтение и атомарная запись определений, CAS по sha256 байтов, `.wf/lock`, коммит эпизода | `.`, `./git` | `isomorphic-git`, `@parcel/watcher`, `@wf/ir`, `@wf/canon`, `@wf/ports` | `@wf/db`, домена, `apps/*` |
-| `@wf/index` | L2 | `IndexPort`: разбор дерева, инкрементальная и полная переиндексация в схему `idx`, запросы влияния | `.` | `@wf/store`, `@wf/ir`, `@wf/db`, `@wf/ports` | `apps/*`, `@wf/llm` |
-| `@wf/db` | L2 | схемы `app` и `idx`, миграции, RLS, репозитории; **определения не пишет** | `.`, `./schema`, `./migrations` | `drizzle-orm`, `pg`, `@wf/ports` | доменной логики |
-| `@wf/blob` | L2 | правило трёх зон, адресация по sha256 | `.` | `@wf/canon`, `@wf/ports` | `@wf/db` напрямую |
-| `@wf/queue` | L2 | джобы, дедлайны, идемпотентность | `.` | `pg-boss`, `@wf/ports` | домена |
-| `@wf/trace` | L2 | спаны `wf.*`, экспорт в Langfuse и OTLP | `.` | `@langfuse/tracing`, `@langfuse/otel`, `@opentelemetry/*`, `@wf/ports` | домена |
-| `@wf/evals` | L2 | эксперимент, node-level агрегация, гейт, отчёты | `.` | `@voltagent/evals`, `@wf/stats`, `@wf/ports` | `apps/*` |
-| `@wf/export` | L2 | бандл, детерминированный tar, импорт, codegen | `.`, `./codegen`, `./cjs-shim` | `@wf/ir`, `@wf/canon`, `tar-stream`, `yaml`, `prettier` | БД напрямую (только через порты) |
-| `@wf/conformance` | L2 | golden-фикстуры, IR-мутатор, раннер, отчёт | `.`, `./mutator` | `@wf/ir`, `@wf/compiler`, `@wf/export` | `apps/*` |
-| `@wf/mcp-server` | L3 | тулы `flow_*`/`run_*`/`experiment_*`, фазовое раскрытие | `.`, `./stdio` | `@modelcontextprotocol/sdk`, `@wf/usecases`, `@wf/contracts` | `@wf/db`, `@wf/llm` напрямую |
-| `@wf/sdk` | L3 | типизированный HTTP-клиент из OpenAPI | `.` | `openapi-fetch`, сгенерированные типы | серверных пакетов |
-| `@wf/cli` | L3 | `wf check/fmt/init` над деревом проекта, `wf export/import/verify/replay/eval`, запуск MCP по stdio | `.` (bin `wf`) | `@wf/usecases`, `@wf/store`, `@wf/export`, `@wf/mcp-server` | — |
-| `@wf/graph-view` | L3 | канвас графа, авто-раскладка | `.` | `@xyflow/react`, `elkjs`, `@wf/ir`, `@wf/contracts` | серверных адаптеров |
-| `@wf/utils` | L0 | мелкие чистые хелперы без доменных знаний | `.` | ноль рантайм-зависимостей | всего остального |
-| `@wf/graph-algos` | L1 | алгоритмы над графом: доминаторы, топосорт, критический путь, достижимость | `.` | `@wf/ir` | адаптеров, `apps/*` |
-| `@wf/nodes` | L2 | исполнители узлов по видам (`llm`, `tool`, `switch`, `loop`, `map`) | `.` | `@wf/ir`, `@wf/ports`, `@wf/prompts` | `apps/*`, `@wf/db` |
-| `@wf/datasets` | L2 | датасеты, сплиты, покрытие, генерация | `.` | `@wf/ir`, `@wf/ports` | `apps/*` |
-| `@wf/scorers` | L2 | детерминированные скореры и судьи | `.` | `@voltagent/scorers`, `@wf/ports` | `apps/*` |
-| `@wf/blame` | L2 | атрибуция падения метрики на узел | `.` | `@wf/stats`, `@wf/ir`, `@wf/ports` | `apps/*` |
-| `@wf/model-matrix` | L2 | матрица моделей и граница Парето «качество × цена × латентность» | `.` | `@wf/evals`, `@wf/registries`, `@wf/ports` | `apps/*` |
-| `@wf/sandbox` | L2 | изоляция кодовых проверок и тулов с побочными эффектами | `.` | `@wf/ports` | домена |
-| `@wf/obs-langfuse` | L2 | адаптер `TraceSink` на Langfuse | `.` | `@langfuse/tracing`, `@langfuse/client`, `@wf/ports` | домена |
-| `@wf/obs-otel` | L2 | адаптер `TraceSink` на OTLP | `.` | `@opentelemetry/*`, `@wf/ports` | домена |
-| `@wf/api-types` | L3 | типы REST, сгенерированные `openapi-typescript` из схемы `apps/api` | `.` | сгенерированные типы | рантайм-зависимостей |
-| `@wf/virtual-data-table` | L3 | виртуализованная таблица трасс и элементов датасета | `.` | `@tanstack/react-table`, `@tanstack/react-virtual` | серверных адаптеров |
-| `@wf/testkit` | L3 (dev) | фикстуры, testcontainers-хелперы, фабрики IR | `.` | `testcontainers`, `@wf/ir` | продакшен-кода |
-| `@wf/tsconfig` | — | общие `tsconfig`-пресеты | — | — | — |
+| `@aqven/ir` | L0 | схема IR, branded ids, инварианты, семантический дифф | `.`, `./diff`, `./testing` | `zod`, `jsondiffpatch`, `rfc6902` | всего остального в репозитории |
+| `@aqven/types` | L0 | реестр предметных типов и их совместимость | `.` | `@aqven/ir`, `zod` | L1+ |
+| `@aqven/contracts` | L0 | zod-схемы границы: конверт MCP, DTO REST, события стрима | `.`, `./mcp`, `./http` | `@aqven/ir`, `zod` | L1+, любой адаптер |
+| `@aqven/ports` | L0 | интерфейсы портов (Port/Adapter) | `.` | `@aqven/ir`, `zod` | любой реализации порта |
+| `@aqven/canon` | L0 | канонизация RFC 8785, sha256, Merkle | `.` | `canonicalize`, `@noble/hashes` | всего остального |
+| `@aqven/compiler` | L1 | правила `R-*`, план цепочки, статические оценки | `.`, `./rules`, `./testing` | `@aqven/ir`, `@aqven/types`, `@aqven/prompts`, `@aqven/registries`, `@aqven/ports` (только типы), `ts-pattern` | `@voltagent/*`, `ai`, `drizzle-orm`, `pg`, `@langfuse/*` |
+| `@aqven/prompts` | L1 | liquidjs-визитор, теги `message`/`case`, точки кэширования, оценка размера | `.` | `@aqven/ir`, `liquidjs`, `gpt-tokenizer` | `ai`, рантайма, БД |
+| `@aqven/registries` | L1 | профили моделей, агенты, тулы, архетипы (паттерн Registry) | `.` | `@aqven/ir`, `@aqven/types`, `@aqven/ports` | адаптеров |
+| `@aqven/stats` | L1 | чистая статистика гейтов | `.` | ноль рантайм-зависимостей | VoltAgent, Langfuse, БД |
+| `@aqven/usecases` | L1 | сценарии приложения поверх портов | `.` | домен + `@aqven/ports` | конкретных адаптеров |
+| `@aqven/runtime-volt` | L2 | сборка `Workflow` из плана, исполнители узлов, suspend/resume | `.` | `@voltagent/core`, `@aqven/ports`, `@aqven/ir` | `apps/*`, `@aqven/mcp-server` |
+| `@aqven/llm` | L2 | единственная точка входа к моделям, replay-кэш как `LanguageModelMiddleware` | `.`, `./middleware` | `ai`, `@ai-sdk/*`, `@openrouter/*`, `@aqven/ports` | других адаптеров |
+| `@aqven/tools` | L2 | вызов инструмента, таймаут, одобрение, внешние MCP-серверы | `.` | `@voltagent/core`, `@aqven/ports` | `@aqven/llm` |
+| `@aqven/store` | L2 | `FileTreePort` и `GitPort`: чтение и атомарная запись определений, CAS по sha256 байтов, `.aqven/lock`, коммит эпизода | `.`, `./git` | `isomorphic-git`, `@parcel/watcher`, `@aqven/ir`, `@aqven/canon`, `@aqven/ports` | `@aqven/db`, домена, `apps/*` |
+| `@aqven/index` | L2 | `IndexPort`: разбор дерева, инкрементальная и полная переиндексация в схему `idx`, запросы влияния | `.` | `@aqven/store`, `@aqven/ir`, `@aqven/db`, `@aqven/ports` | `apps/*`, `@aqven/llm` |
+| `@aqven/db` | L2 | схемы `app` и `idx`, миграции, RLS, репозитории; **определения не пишет** | `.`, `./schema`, `./migrations` | `drizzle-orm`, `pg`, `@aqven/ports` | доменной логики |
+| `@aqven/blob` | L2 | правило трёх зон, адресация по sha256 | `.` | `@aqven/canon`, `@aqven/ports` | `@aqven/db` напрямую |
+| `@aqven/queue` | L2 | джобы, дедлайны, идемпотентность | `.` | `pg-boss`, `@aqven/ports` | домена |
+| `@aqven/trace` | L2 | спаны `aqven.*`, экспорт в Langfuse и OTLP | `.` | `@langfuse/tracing`, `@langfuse/otel`, `@opentelemetry/*`, `@aqven/ports` | домена |
+| `@aqven/evals` | L2 | эксперимент, node-level агрегация, гейт, отчёты | `.` | `@voltagent/evals`, `@aqven/stats`, `@aqven/ports` | `apps/*` |
+| `@aqven/export` | L2 | бандл, детерминированный tar, импорт, codegen | `.`, `./codegen`, `./cjs-shim` | `@aqven/ir`, `@aqven/canon`, `tar-stream`, `yaml`, `prettier` | БД напрямую (только через порты) |
+| `@aqven/conformance` | L2 | golden-фикстуры, IR-мутатор, раннер, отчёт | `.`, `./mutator` | `@aqven/ir`, `@aqven/compiler`, `@aqven/export` | `apps/*` |
+| `@aqven/mcp-server` | L3 | тулы `flow_*`/`run_*`/`experiment_*`, фазовое раскрытие | `.`, `./stdio` | `@modelcontextprotocol/sdk`, `@aqven/usecases`, `@aqven/contracts` | `@aqven/db`, `@aqven/llm` напрямую |
+| `@aqven/sdk` | L3 | типизированный HTTP-клиент из OpenAPI | `.` | `openapi-fetch`, сгенерированные типы | серверных пакетов |
+| `@aqven/cli` | L3 | `aqven check/fmt/init` над деревом проекта, `aqven export/import/verify/replay/eval`, запуск MCP по stdio | `.` (bin `aqven`) | `@aqven/usecases`, `@aqven/store`, `@aqven/export`, `@aqven/mcp-server` | — |
+| `@aqven/graph-view` | L3 | канвас графа, авто-раскладка | `.` | `@xyflow/react`, `elkjs`, `@aqven/ir`, `@aqven/contracts` | серверных адаптеров |
+| `@aqven/utils` | L0 | мелкие чистые хелперы без доменных знаний | `.` | ноль рантайм-зависимостей | всего остального |
+| `@aqven/graph-algos` | L1 | алгоритмы над графом: доминаторы, топосорт, критический путь, достижимость | `.` | `@aqven/ir` | адаптеров, `apps/*` |
+| `@aqven/nodes` | L2 | исполнители узлов по видам (`llm`, `tool`, `switch`, `loop`, `map`) | `.` | `@aqven/ir`, `@aqven/ports`, `@aqven/prompts` | `apps/*`, `@aqven/db` |
+| `@aqven/datasets` | L2 | датасеты, сплиты, покрытие, генерация | `.` | `@aqven/ir`, `@aqven/ports` | `apps/*` |
+| `@aqven/scorers` | L2 | детерминированные скореры и судьи | `.` | `@voltagent/scorers`, `@aqven/ports` | `apps/*` |
+| `@aqven/blame` | L2 | атрибуция падения метрики на узел | `.` | `@aqven/stats`, `@aqven/ir`, `@aqven/ports` | `apps/*` |
+| `@aqven/model-matrix` | L2 | матрица моделей и граница Парето «качество × цена × латентность» | `.` | `@aqven/evals`, `@aqven/registries`, `@aqven/ports` | `apps/*` |
+| `@aqven/sandbox` | L2 | изоляция кодовых проверок и тулов с побочными эффектами | `.` | `@aqven/ports` | домена |
+| `@aqven/obs-langfuse` | L2 | адаптер `TraceSink` на Langfuse | `.` | `@langfuse/tracing`, `@langfuse/client`, `@aqven/ports` | домена |
+| `@aqven/obs-otel` | L2 | адаптер `TraceSink` на OTLP | `.` | `@opentelemetry/*`, `@aqven/ports` | домена |
+| `@aqven/api-types` | L3 | типы REST, сгенерированные `openapi-typescript` из схемы `apps/api` | `.` | сгенерированные типы | рантайм-зависимостей |
+| `@aqven/virtual-data-table` | L3 | виртуализованная таблица трасс и элементов датасета | `.` | `@tanstack/react-table`, `@tanstack/react-virtual` | серверных адаптеров |
+| `@aqven/testkit` | L3 (dev) | фикстуры, testcontainers-хелперы, фабрики IR | `.` | `testcontainers`, `@aqven/ir` | продакшен-кода |
+| `@aqven/tsconfig` | — | общие `tsconfig`-пресеты | — | — | — |
 | `apps/api` | L3 | HTTP-фасад, композиция адаптеров, монтирование MCP | — | всё L0–L3 | — |
-| `apps/worker` | L3 | исполнение джоб, таймеры, cron | — | `@wf/queue`, `@wf/usecases`, `@wf/runtime-volt` | `apps/api`, `apps/studio` |
-| `apps/studio` | L3 | UI: канвас, инспектор, трассы, эксперименты | — | `@wf/sdk`, `@wf/graph-view`, `@wf/contracts` | любого серверного адаптера (`@wf/db`, `@wf/llm`, `@wf/queue`, `@wf/runtime-volt`) |
+| `apps/worker` | L3 | исполнение джоб, таймеры, cron | — | `@aqven/queue`, `@aqven/usecases`, `@aqven/runtime-volt` | `apps/api`, `apps/studio` |
+| `apps/studio` (`@aqven/studio`) | L3 | UI: SPA на Vite, статику `dist/` раздаёт `aqven dev`; канвас, инспектор, трассы, эксперименты | — | `@aqven/sdk`, `@aqven/graph-view`, `@aqven/contracts` | любого серверного адаптера (`@aqven/db`, `@aqven/llm`, `@aqven/queue`, `@aqven/runtime-volt`) |
 
 Дерево проекта пользователя (`flows/`, `prompts/`, `components/`, `types/`, `agents/`, `tools/`,
-`context/`, `.wf/`) — **не часть монорепо**: это данные, которые продукт читает и пишет. Его раскладка
+`context/`, `.aqven/`) — **не часть монорепо**: это данные, которые продукт читает и пишет. Его раскладка
 описана в [ADR-0017](adr/0017-files-as-source-of-truth.md); в монорепо от неё есть только фикстуры
 в `packages/conformance/fixtures/`.
 
 Четыре границы, нарушение которых считается архитектурной регрессией, а не стилем:
 
-1. **`ai`, `@ai-sdk/*`, `@openrouter/*` импортирует ровно один пакет — `@wf/llm`.** Это то, что делает
+1. **`ai`, `@ai-sdk/*`, `@openrouter/*` импортирует ровно один пакет — `@aqven/llm`.** Это то, что делает
    миграцию на `ai@7` одним коммитом (DECISIONS, ось версий).
 2. **Домен (L1) не импортирует `@voltagent/*`.** Компилятор выдаёт сериализуемый план; в `Workflow`
-   его превращает `@wf/runtime-volt`.
-3. **Studio не импортирует серверные адаптеры.** Единственная дверь на сервер — `@wf/sdk` поверх
+   его превращает `@aqven/runtime-volt`.
+3. **Studio не импортирует серверные адаптеры.** Единственная дверь на сервер — `@aqven/sdk` поверх
    сгенерированных из OpenAPI типов.
-4. **Определения пишет ровно один пакет — `@wf/store`; в схему `idx` пишет ровно один — `@wf/index`.**
-   `@wf/db` под ролью приложения имеет на `idx` только `SELECT`; `INSERT`/`UPDATE` даёт роль `wf_indexer`.
+4. **Определения пишет ровно один пакет — `@aqven/store`; в схему `idx` пишет ровно один — `@aqven/index`.**
+   `@aqven/db` под ролью приложения имеет на `idx` только `SELECT`; `INSERT`/`UPDATE` даёт роль `wf_indexer`.
 
 ## 2. Конфиги
 
@@ -186,7 +187,7 @@ onlyBuiltDependencies:
 overrides: {}
 ```
 
-Внутренние ссылки — только `"@wf/ir": "workspace:*"`, внешние версии ядра — только `"zod": "catalog:"`
+Внутренние ссылки — только `"@aqven/ir": "workspace:*"`, внешние версии ядра — только `"zod": "catalog:"`
 и `"react": "catalog:react19"`. Прямая запись версии внешнего пакета в `package.json` библиотечного
 пакета запрещена для всего, что перечислено в `catalog:` — это и есть защита от «разъехались minor
 одной либы в двух пакетах ядра».
@@ -236,7 +237,7 @@ overrides: {}
 |---|---|---|
 | `"outputs": []` | значит «кэшировать только логи», а не «не кэшировать» | отключение кэша — только `"cache": false` |
 | переменная окружения не указана в `env`/`globalEnv` | не входит в хэш → кэш-хит от прогона с другим ключом | всё, что ходит к провайдерам и в БД, помечено `"cache": false` |
-| перекрёстные `inputs` за пределы пакета | работают, но невидимы в графе | фикстуры конформанса — отдельный пакет `@wf/conformance` и обычный `dependsOn` |
+| перекрёстные `inputs` за пределы пакета | работают, но невидимы в графе | фикстуры конформанса — отдельный пакет `@aqven/conformance` и обычный `dependsOn` |
 
 ### tsconfig.base.json
 
@@ -287,14 +288,15 @@ overrides: {}
 
 `references` + `composite: true` дают инкрементальный `turbo typecheck` по пакетам и запрещают импорт
 из чужого `src/` мимо публичного входа — это дешёвый заменитель Nx boundary rules. `apps/studio`
-наследует отдельный base: `"module": "preserve"`, `"moduleResolution": "bundler"`, `"jsx": "preserve"`,
-`"noEmit": true`, `"lib": ["ES2024", "DOM", "DOM.Iterable"]`, **без** `isolatedDeclarations`.
+живёт на своих tsconfig под Vite: `tsconfig.app.json` — `"module": "esnext"`, `"moduleResolution": "bundler"`,
+`"jsx": "react-jsx"`, `"noEmit": true`, `"types": ["vite/client"]`, `"lib": ["ES2023", "DOM", "DOM.Iterable"]`,
+**без** `isolatedDeclarations`; `vite.config.ts` проверяет отдельный `tsconfig.node.json`.
 
 ### packages/ir/package.json и tsdown.config.ts
 
 ```jsonc
 {
-  "name": "@wf/ir",
+  "name": "@aqven/ir",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
@@ -337,7 +339,7 @@ export default defineConfig({
   exports: true,
   unused: true,
   nodeProtocol: "strip",
-  deps: { dts: { neverBundle: [/^@wf\//] } },
+  deps: { dts: { neverBundle: [/^@aqven\//] } },
 });
 ```
 
@@ -352,9 +354,9 @@ export default defineConfig({
   пакете;
 - типы `workspace:*`-зависимостей в `.d.ts` не инлайним (`deps.dts.neverBundle`) — они публикуются рядом.
 
-**CJS не собираем.** Node 24 умеет `require()` ESM, Next 16 и VoltAgent 2.10 — ESM-first, а двойная
+**CJS не собираем.** Node 24 умеет `require()` ESM, Vite 8 и VoltAgent 2.10 — ESM-first, а двойная
 сборка даёт dual-package hazard: два экземпляра модуля → два реестра и два `Symbol`, branded types и
-`instanceof` ломаются молча. Единственное исключение — entry `./cjs-shim` в `@wf/export` для
+`instanceof` ломаются молча. Единственное исключение — entry `./cjs-shim` в `@aqven/export` для
 встраивания экспортированного проекта в чужой CJS-код.
 
 ## 3. Правило зависимостей и как оно принуждается
@@ -365,10 +367,10 @@ export default defineConfig({
 | Механизм | Что ловит | Где падает |
 |---|---|---|
 | pnpm workspace (жёсткий `node_modules`) | импорт пакета, которого нет в `dependencies` | `pnpm build`, сразу |
-| `exports` map пакета | импорт `@wf/compiler/src/internal/x` мимо публичного входа | резолв модуля |
+| `exports` map пакета | импорт `@aqven/compiler/src/internal/x` мимо публичного входа | резолв модуля |
 | TS `references` без `paths` | тот же случай на уровне типов | `tsc --noEmit` |
 | Biome `noRestrictedImports` | запрещённая пара «слой → слой» и запрещённые внешние либы | `biome ci .` |
-| `scripts/check-graph.mjs` | цикл в графе пакетов, ребро против слоёв, `@wf/llm`-исключение | джоба `verify` |
+| `scripts/check-graph.mjs` | цикл в графе пакетов, ребро против слоёв, `@aqven/llm`-исключение | джоба `verify` |
 
 Правило зависимостей в Biome задаётся не абстрактно, а поимённо. В корневом `biome.json` лежит общий
 запрет, во вложенных `biome.json` пакетов — точечные:
@@ -384,12 +386,12 @@ export default defineConfig({
           "level": "error",
           "options": {
             "paths": {
-              "ai": "Провайдеры моделей только через @wf/llm.",
-              "@ai-sdk/openai": "Провайдеры моделей только через @wf/llm.",
-              "@openrouter/ai-sdk-provider": "Провайдеры моделей только через @wf/llm.",
-              "@voltagent/core": "Домен не знает рантайма: план исполняет @wf/runtime-volt.",
-              "drizzle-orm": "Доступ к данным только через порты @wf/ports.",
-              "pg-boss": "Очередь только через @wf/queue."
+              "ai": "Провайдеры моделей только через @aqven/llm.",
+              "@ai-sdk/openai": "Провайдеры моделей только через @aqven/llm.",
+              "@openrouter/ai-sdk-provider": "Провайдеры моделей только через @aqven/llm.",
+              "@voltagent/core": "Домен не знает рантайма: план исполняет @aqven/runtime-volt.",
+              "drizzle-orm": "Доступ к данным только через порты @aqven/ports.",
+              "pg-boss": "Очередь только через @aqven/queue."
             }
           }
         }
@@ -428,7 +430,7 @@ const violations = (pkgs: readonly Pkg[]): readonly string[] => [
 ```
 
 `externalsOutsideOwner` — это ровно та проверка, которая делает миграцию на `ai@7` дешёвой: если `ai`
-появился в `dependencies` любого пакета кроме `@wf/llm` (и `@ai-sdk/*`, `@openrouter/*` — там же),
+появился в `dependencies` любого пакета кроме `@aqven/llm` (и `@ai-sdk/*`, `@openrouter/*` — там же),
 джоба `verify` падает с текстом, называющим владельца зависимости. Сценарий «поднять мажор одной
 библиотеки» из [02. Архитектура](02-architecture.md) держится этим гвоздём, а не договорённостью.
 
@@ -477,7 +479,7 @@ Zod 4 навешивает `$brand`, поэтому `NodeId` и `SlotId` вза�
 ### Исчерпываемость
 
 Базовый инструмент — `switch` по дискриминанту + `assertNever`. ts-pattern 5.9.0 — точечно и только
-в `@wf/compiler`, где матч идёт по нескольким полям сразу.
+в `@aqven/compiler`, где матч идёт по нескольким полям сразу.
 
 ```ts
 export class UnreachableError extends Error {
@@ -528,8 +530,8 @@ const diagnose = (edge: Edge): Diagnostic | null =>
 
 | Слой | Подход | Почему именно так |
 |---|---|---|
-| Домен: `@wf/ir`, `@wf/compiler`, `@wf/registries`, `@wf/stats` | размеченные объединения, **без** `Result`-библиотеки | компилятор не «падает на первой ошибке», он собирает список диагностик. Короткое замыкание `Result.andThen` спрятало бы 9 ошибок из 10, а продукт ровно в том, чтобы вернуть агенту все ошибки с кандидатами |
-| Границы I/O: `@wf/mcp-server`, `@wf/llm`, `@wf/db`, `@wf/export`, `apps/*` | `Result`-библиотека (**true-myth 9.4.0**) | здесь короткое замыкание как раз нужно, и оно убирает вложенные `try/catch` |
+| Домен: `@aqven/ir`, `@aqven/compiler`, `@aqven/registries`, `@aqven/stats` | размеченные объединения, **без** `Result`-библиотеки | компилятор не «падает на первой ошибке», он собирает список диагностик. Короткое замыкание `Result.andThen` спрятало бы 9 ошибок из 10, а продукт ровно в том, чтобы вернуть агенту все ошибки с кандидатами |
+| Границы I/O: `@aqven/mcp-server`, `@aqven/llm`, `@aqven/db`, `@aqven/export`, `apps/*` | `Result`-библиотека (**true-myth 9.4.0**) | здесь короткое замыкание как раз нужно, и оно убирает вложенные `try/catch` |
 | Везде | **Effect 3.22 — нет** | Effect это не библиотека ошибок, а второй рантайм (планировщик, файберы, Layer-DI). Рантайм у нас уже есть — VoltAgent. Плюс `Effect<A, E, R>` красит все сигнатуры, а ядро доверия обязано читаться без спец-нотации |
 
 ```ts
@@ -596,7 +598,7 @@ Vitest 5.0.0 требует Node ≥ 22.12 и Vite ≥ 6.4. Ломающие и�
 
 | Уровень | Проект vitest | Что тестируем | Чем | Где живёт |
 |---|---|---|---|---|
-| Юнит на чистые функции | `core` | правила `R-*` по одной, нормализация IR, статистика `@wf/stats`, оценка размера промта | обычные `expect`, таблицы кейсов | `packages/*/src/**/*.test.ts` |
+| Юнит на чистые функции | `core` | правила `R-*` по одной, нормализация IR, статистика `@aqven/stats`, оценка размера промта | обычные `expect`, таблицы кейсов | `packages/*/src/**/*.test.ts` |
 | Типовые тесты | `core` (`typecheck.enabled`) | branded types не смешиваются, `assertNever` ловит новый вариант, публичные сигнатуры | `*.test-d.ts`, `expectTypeOf` | рядом с кодом |
 | Property-based | `core` | инварианты IR и компилятора (таблица ниже) | fast-check 4.10.0 + `@fast-check/vitest` | `packages/ir`, `packages/compiler`, `packages/export` |
 | Golden-фикстуры | `core` | компиляция эталонных воркфлоу, отрисованные промты | `toEqual` против файла, `toMatchFileSnapshot` для текста промта | `packages/conformance/fixtures` |
@@ -735,7 +737,7 @@ export const teardown = async (): Promise<void> => {
 | Гигиена тест-сьюта | **наш исходный код** | поймают ли это наши **тесты** | качество тестов | Stryker 10 |
 
 Stryker второе не умеет в принципе — он ничего не знает про IR. Поэтому kill-критерий 1 закрывается
-собственным доменным мутатором в `@wf/conformance`, а Stryker берётся дополнительно, узко и nightly.
+собственным доменным мутатором в `@aqven/conformance`, а Stryker берётся дополнительно, узко и nightly.
 
 ### Домен мутатора
 
@@ -824,9 +826,9 @@ bail-on-first-failure. `checkers: ["typescript"]` отсеивает мутан�
 ## 8. Линт и формат
 
 **Biome 2.5.13 — форматтер и линтер на весь репозиторий. ESLint 10.10.0 остаётся только в
-`apps/studio` и только ради `eslint-plugin-react-hooks` и `eslint-config-next`. Prettier не ставим
+`apps/studio` и только ради `eslint-plugin-react-hooks` и `eslint-plugin-react-refresh`. Prettier не ставим
 вообще** — Biome форматирует TS, JSX и CSS, поэтому `eslint-config-prettier` не нужен. Единственное
-исключение — `prettier@3.9.6` как рантайм-зависимость `@wf/export`: он форматирует **сгенерированный**
+исключение — `prettier@3.9.6` как рантайм-зависимость `@aqven/export`: он форматирует **сгенерированный**
 код, и там важна не наша стилистика, а детерминизм (`format(x) === format(format(x))`, проверено).
 
 Почему Biome именно у нас:
@@ -881,7 +883,7 @@ bail-on-first-failure. `checkers: ["typescript"]` отсеивает мутан�
 | Стиль, импорты, сложность, `any`, плавающие промисы — в **нашем** коде | Biome | сообщение линтера, код правила Biome |
 | Хуки React | ESLint в `apps/studio` | сообщение линтера |
 | Границы пакетов (слои, владелец внешней зависимости) | Biome `noRestrictedImports` + `scripts/check-graph.mjs` | падение джобы `verify` |
-| **Всё про пользовательский воркфлоу**: непривязанный слот, несовместимый тип, ветка без предиката, цикл без бюджета, неполный `switch` по enum, промт с сырой интерполяцией | `@wf/compiler`, правила `R-*` | `Diagnostic { rule, node, slot, message, candidates }` в конверте MCP |
+| **Всё про пользовательский воркфлоу**: непривязанный слот, несовместимый тип, ветка без предиката, цикл без бюджета, неполный `switch` по enum, промт с сырой интерполяцией | `@aqven/compiler`, правила `R-*` | `Diagnostic { rule, node, slot, message, candidates }` в конверте MCP |
 
 Граница жёсткая: линтер не знает про IR, компилятор не ругается на форматирование. Защищающий тест:
 множества кодов правил `R-*` и правил Biome не пересекаются, и **каждое правило `R-*` имеет хотя бы
@@ -891,16 +893,16 @@ bail-on-first-failure. `checkers: ["typescript"]` отсеивает мутан�
 
 Определения лежат файлами, и Claude Code правит их нативными `Write`/`Edit`, минуя `flow_patch`.
 Транзакция с валидатором до записи в этом пути отсутствует, поэтому инвариант держат четыре вещи —
-и только они. Комплект ставится в проект пользователя командой `wf init`.
+и только они. Комплект ставится в проект пользователя командой `aqven init`.
 
 | Средство | Что даёт | Где живёт |
 |---|---|---|
-| JSON Schema 2020-12, генерируется из IR ([04](04-ir-schema.md) §2) | `$schema` в шапке файла: редактор и агент ловят структурные ошибки **до** записи | `.wf/schema/<formatVersion>.json` в проекте |
-| `wf check [пути] --format json` | полная проверка тем же `@wf/compiler`, что у сервера; `problems[]` в формате конверта MCP; ненулевой exit code | `@wf/cli` |
-| `wf fmt` / `wf fmt --check` | канонический YAML: убивает классы конфликтов «порядок ключей» и «стиль», держит kill 13 | `@wf/cli` |
+| JSON Schema 2020-12, генерируется из IR ([04](04-ir-schema.md) §2) | `$schema` в шапке файла: редактор и агент ловят структурные ошибки **до** записи | `.aqven/schema/<formatVersion>.json` в проекте |
+| `aqven check [пути] --format json` | полная проверка тем же `@aqven/compiler`, что у сервера; `problems[]` в формате конверта MCP; ненулевой exit code | `@aqven/cli` |
+| `aqven fmt` / `aqven fmt --check` | канонический YAML: убивает классы конфликтов «порядок ключей» и «стиль», держит kill 13 | `@aqven/cli` |
 | Хук `flow_check` на `PostToolUse` (`Write`, `Edit` по маске `flows/**/*.yaml`, `prompts/**/*.md`) | агент получает `problems[]` в том же ходу, без опроса и без второго тула | `.claude/settings.json` проекта |
-| Хук `pre-commit`: `wf check --staged` + `wf fmt --check` + детектор маркеров конфликта | битое не уезжает в ветку | `.githooks/`, ставится `wf init` |
-| Секция в `CLAUDE.md` проекта, генерируемая `wf init` | правила словами: файлы править можно; после правки — `wf check`; `.wf/` и раскладку канваса не трогать; пины в `wf.lock.yaml` руками не редактировать — `wf pin`; конфликт путей — к человеку | корень проекта |
+| Хук `pre-commit`: `aqven check --staged` + `aqven fmt --check` + детектор маркеров конфликта | битое не уезжает в ветку | `.githooks/`, ставится `aqven init` |
+| Секция в `CLAUDE.md` проекта, генерируемая `aqven init` | правила словами: файлы править можно; после правки — `aqven check`; `.aqven/` и раскладку канваса не трогать; пины в `aqven.lock.yaml` руками не редактировать — `aqven pin`; конфликт путей — к человеку | корень проекта |
 
 ```json
 {
@@ -908,14 +910,14 @@ bail-on-first-failure. `checkers: ["typescript"]` отсеивает мутан�
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "hooks": [{ "type": "command", "command": "wf check --changed --format json" }]
+        "hooks": [{ "type": "command", "command": "aqven check --changed --format json" }]
       }
     ]
   }
 }
 ```
 
-Расхождение диагностик между CLI и сервером исключается конформанс-тестом: `wf check` и `flow_compile`
+Расхождение диагностик между CLI и сервером исключается конформанс-тестом: `aqven check` и `flow_compile`
 на одном входе обязаны дать идентичный `problems[]`. Ядро компилятора одно, оболочек две.
 
 ## 9. CI: GitHub Actions
@@ -927,11 +929,11 @@ bail-on-first-failure. `checkers: ["typescript"]` отсеивает мутан�
 |---|---|---|---|---|
 | `verify` | PR, push | да | 25 мин | матрица Node 22.12 / 24: `biome ci`, `check-graph`, `typecheck`, `build`, `test` |
 | `tsgo` | PR, push | нет (`continue-on-error`) | 10 мин | TypeScript 7 как ранний предупредитель (§5) |
-| `flow-check` | PR, push | да | 10 мин | `wf check` и `wf fmt --check` по деревьям-фикстурам проектов |
+| `flow-check` | PR, push | да | 10 мин | `aqven check` и `aqven fmt --check` по деревьям-фикстурам проектов |
 | `conformance` | PR, push | да | 20 мин | IR-мутанты (kill 1), round-trip бандла (kill 13), проверка сгенерированного проекта (kill 15) |
 | `integration` | PR, push | да | 30 мин | testcontainers + Postgres 18, только Linux; в том числе `DROP SCHEMA idx CASCADE` + переиндексация с нуля и сверка «индекс == файлы» |
 | `e2e` | PR, push | да | 30 мин | Playwright, артефакт отчёта при падении |
-| `mutation` | nightly или метка `run-mutation` | нет | 90 мин | Stryker по `@wf/compiler` и `@wf/ir`, инкрементально |
+| `mutation` | nightly или метка `run-mutation` | нет | 90 мин | Stryker по `@aqven/compiler` и `@aqven/ir`, инкрементально |
 | `evals` | `workflow_dispatch` или nightly | нет | 45 мин | прогон датасетов с бюджетом, `environment: evals` |
 | `release` | push в `main`, после `verify` и `conformance` | — | — | changesets: версии, changelog, публикация с provenance |
 
@@ -1005,9 +1007,9 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@wf/cli...
-      - run: pnpm --filter @wf/cli exec wf fmt --check packages/conformance/fixtures/projects
-      - run: pnpm --filter @wf/cli exec wf check packages/conformance/fixtures/projects --format json
+      - run: pnpm turbo run build --filter=@aqven/cli...
+      - run: pnpm --filter @aqven/cli exec aqven fmt --check packages/conformance/fixtures/projects
+      - run: pnpm --filter @aqven/cli exec aqven check packages/conformance/fixtures/projects --format json
 
   conformance:
     name: conformance (kill 1, 13, 15)
@@ -1019,14 +1021,14 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@wf/conformance...
+      - run: pnpm turbo run build --filter=@aqven/conformance...
       - name: IR mutants
-        run: pnpm --filter @wf/conformance run test:conformance
+        run: pnpm --filter @aqven/conformance run test:conformance
         env: { FC_SEED: "${{ github.run_id }}" }
       - name: bundle round-trip
-        run: pnpm --filter @wf/export run test:roundtrip
+        run: pnpm --filter @aqven/export run test:roundtrip
       - name: generated project builds and typechecks
-        run: pnpm --filter @wf/export run test:codegen
+        run: pnpm --filter @aqven/export run test:codegen
       - name: gate
         run: node scripts/gate-conformance.mjs conformance-report.json
       - uses: actions/upload-artifact@v4
@@ -1054,8 +1056,8 @@ jobs:
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm turbo run build --filter=studio...
-      - run: pnpm --filter studio run test:e2e
+      - run: pnpm turbo run build --filter=@aqven/studio...
+      - run: pnpm --filter @aqven/studio run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
         with: { name: playwright-report, path: apps/studio/playwright-report/ }
@@ -1076,7 +1078,7 @@ jobs:
           path: packages/compiler/reports/stryker-incremental.json
           key: stryker-${{ github.sha }}
           restore-keys: stryker-
-      - run: pnpm --filter @wf/compiler exec stryker run --incremental
+      - run: pnpm --filter @aqven/compiler exec stryker run --incremental
 
   evals:
     name: evals (budgeted)
@@ -1091,7 +1093,7 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @wf/evals run eval -- --budget-usd "${{ vars.EVAL_BUDGET_USD }}" --dataset golden-15
+      - run: pnpm --filter @aqven/evals run eval -- --budget-usd "${{ vars.EVAL_BUDGET_USD }}" --dataset golden-15
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -1154,14 +1156,14 @@ jobs:
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "linked": [["@wf/ir", "@wf/compiler", "@wf/export"]],
-  "ignore": ["studio", "api", "worker", "@wf/conformance", "@wf/testkit", "@wf/tsconfig"]
+  "linked": [["@aqven/ir", "@aqven/compiler", "@aqven/export"]],
+  "ignore": ["@aqven/studio", "@aqven/api", "@aqven/worker", "@aqven/conformance", "@aqven/testkit", "@aqven/tsconfig"]
 }
 ```
 
 ### Linked-группа формата бандла
 
-`@wf/ir`, `@wf/compiler`, `@wf/export` определяют формат бандла и обязаны иметь **одну** версию. Это
+`@aqven/ir`, `@aqven/compiler`, `@aqven/export` определяют формат бандла и обязаны иметь **одну** версию. Это
 техническая реализация kill-критерия 13: бандл, помеченный версией `X`, читается ровно связкой версии
 `X`, и невозможна ситуация «новый экспортёр × старый парсер IR» внутри одного релиза.
 
@@ -1172,7 +1174,7 @@ Semver пакетов и версия формата — разные вещи. 
 
 | Правило | Как принуждается |
 |---|---|
-| `formatVersion` меняется только вместе с major-changeset у `@wf/ir` | тест в `@wf/conformance`, сверяет `formatVersion` с `.changeset/*.md` |
+| `formatVersion` меняется только вместе с major-changeset у `@aqven/ir` | тест в `@aqven/conformance`, сверяет `formatVersion` с `.changeset/*.md` |
 | На каждый исторический `formatVersion` в `packages/conformance/fixtures/` лежит бандл, который обязан читаться текущим кодом | тест обратной совместимости чтения, блокирующий |
 | Импорт бандла с несовместимым мажором `formatVersion` — отказ с внятным текстом, а не частичный разбор | первый шаг процедуры импорта (см. [18. Экспорт и конформанс](18-export-and-conformance.md)) |
 | `manifest.signatures` зарезервирован пустым массивом и **не входит** в `merkleRoot` | подпись добавляется позже без смены `formatVersion` |
@@ -1198,12 +1200,12 @@ Semver пакетов и версия формата — разные вещи. 
 2. **`isolatedDeclarations` × Zod 4.** Главный технический риск связки: `export type X = z.infer<typeof S>`
    и ре-экспорты выведенных типов исторически конфликтуют с isolated declarations, а от этого флага
    зависит и скорость `.d.ts` (генератор `oxc`), и запрет на протечку внутренних типов. Что сделать:
-   спайк на `@wf/ir` — собрать пакет tsdown-ом с `isolatedDeclarations: true` и проверить, что `.d.ts`
+   спайк на `@aqven/ir` — собрать пакет tsdown-ом с `isolatedDeclarations: true` и проверить, что `.d.ts`
    содержит полные типы IR, а не `unknown`. Если не проходит — решить, что уступает: флаг или
    выведение типов из Zod.
 3. **`@stryker-mutator/typescript-checker@10` на нашем tsconfig** (`isolatedDeclarations` +
    `erasableSyntaxOnly`) вживую не проверен: возможны ложные «не компилируется», которые раздуют
-   долю отсечённых мутантов. Что сделать: прогнать один раз на `@wf/ir` и зафиксировать долю
+   долю отсечённых мутантов. Что сделать: прогнать один раз на `@aqven/ir` и зафиксировать долю
    `CompileError` в отчёте; при ложных срабатываниях — отключить checker и принять шум.
 4. **Экшен установки pnpm 12 в Actions.** В заметке фигурирует `pnpm/setup@v1` как замена
    `pnpm/action-setup` для pnpm 11+, но это не подтверждено; в YAML выше стоит проверенный
@@ -1217,11 +1219,11 @@ Semver пакетов и версия формата — разные вещи. 
    Формально конфликта нет (в сгенерированном проекте нет потребителей API TS), но две версии в одном
    CI — источник расхождения диагностик. Что сделать: решить ADR-ом — либо проверять генерат тем же
    6.0.3, либо явно зафиксировать 7.0.2 и объяснить, почему различие безопасно.
-7. **Разнобой в именах пакетов между документами.** `@wf/trace` ([02](02-architecture.md)) против
-   `@wf/obs-otel` / `@wf/obs-langfuse` ([12](12-observability.md)); `@wf/registries` ([02]) против
+7. **Разнобой в именах пакетов между документами.** `@aqven/trace` ([02](02-architecture.md)) против
+   `@aqven/obs-otel` / `@aqven/obs-langfuse` ([12](12-observability.md)); `@aqven/registries` ([02]) против
    `packages/types` ([05](05-type-system.md)). Реестр пакетов в разделе «Ответственность, публичный
    API, границы» сведён с упоминаниями в 05, 07, 09, 12, 13, 15, 16, 19, 22 и считается полным:
-   `@wf/sdk` и `@wf/api-types` — разные пакеты (клиент против сгенерированных типов)
+   `@aqven/sdk` и `@aqven/api-types` — разные пакеты (клиент против сгенерированных типов)
    в дереве §1 не выделены. Что сделать: завести в этом документе единственный нормативный реестр имён
    пакетов и привести остальные документы к нему одним PR; до тех пор дерево §1 считать черновиком в
    части имён адаптеров наблюдаемости и evals.
@@ -1234,9 +1236,9 @@ Semver пакетов и версия формата — разные вещи. 
 10. **Нижняя граница Node не зафиксирована в DECISIONS.** Vitest 5 требует ≥ 22.12, матрица CI —
     22.12 и 24, прод-образы предполагаются на 24. Что сделать: записать в DECISIONS «Node 24 в
     продакшене, 22.12 — минимум в `engines`», либо убрать 22.12 из матрицы и не платить за неё временем.
-11. **Состав linked-группы формата.** Сейчас это `@wf/ir + @wf/compiler + @wf/export`, но байты бандла
-    определяет ещё и `@wf/canon` (канонизация и хеш). Что сделать: решить, входит ли `@wf/canon` в
-    linked-группу; если нет — добавить тест, что смена мажора `@wf/canon` обязана менять `formatVersion`.
+11. **Состав linked-группы формата.** Сейчас это `@aqven/ir + @aqven/compiler + @aqven/export`, но байты бандла
+    определяет ещё и `@aqven/canon` (канонизация и хеш). Что сделать: решить, входит ли `@aqven/canon` в
+    linked-группу; если нет — добавить тест, что смена мажора `@aqven/canon` обязана менять `formatVersion`.
 12. **Порог `total >= 50` для мутантов — из §18.1, но он нижний.** Не зафиксировано, сколько мутантов
     на класс считается достаточным (сейчас число задаётся seeded RNG и размером набора фикстур).
     Что сделать: добавить в гейт минимум по каждому классу (например, `byClass[*].total >= 3`), чтобы

@@ -1,0 +1,40 @@
+{
+  "$defs": {
+    "VariantRef": {
+      "pattern": "^([a-z][a-z0-9_]{0,62}|(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md)$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "additionalProperties": {
+        "$ref": "#/$defs/VariantRef"
+      },
+      "minProperties": 1,
+      "title": "Cases",
+      "type": "object"
+    },
+    "default": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VariantRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "on": {
+      "title": "On",
+      "type": "string"
+    }
+  },
+  "required": [
+    "on",
+    "cases"
+  ],
+  "title": "VariantSlot",
+  "type": "object"
+}

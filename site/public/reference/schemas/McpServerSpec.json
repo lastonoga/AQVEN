@@ -1,0 +1,88 @@
+{
+  "$defs": {
+    "SecretHeader": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "SecretHeader",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "headers": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/SecretHeader"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Headers"
+    },
+    "kind": {
+      "const": "McpServer",
+      "title": "Kind",
+      "type": "string"
+    },
+    "schema_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Schema Hash"
+    },
+    "transport": {
+      "const": "streamable_http",
+      "title": "Transport",
+      "type": "string"
+    },
+    "url": {
+      "minLength": 1,
+      "title": "Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "transport",
+    "url"
+  ],
+  "title": "McpServerSpec",
+  "type": "object"
+}

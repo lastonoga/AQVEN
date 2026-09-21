@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "policy": {
+      "const": "fail",
+      "title": "Policy",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy"
+  ],
+  "title": "FailOnTimeout",
+  "type": "object"
+}

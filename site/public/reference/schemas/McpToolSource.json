@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "server": {
+      "title": "Server",
+      "type": "string"
+    },
+    "tool": {
+      "minLength": 1,
+      "title": "Tool",
+      "type": "string"
+    }
+  },
+  "required": [
+    "server",
+    "tool"
+  ],
+  "title": "McpToolSource",
+  "type": "object"
+}

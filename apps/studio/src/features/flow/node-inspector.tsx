@@ -1,12 +1,14 @@
 import { useState, type ReactNode } from "react"
 import { useTranslations } from "use-intl"
-import type { ApiNodeDetail, ApiPromptDetail, ApiPromptSlot } from "@/domain"
+import type { ApiNodeDetail, ApiPromptDetail, ApiPromptSlot, FlowId } from "@/domain"
+import * as ids from "@/data/ids"
 import { Dot, Empty, NODE_KIND, PropertyList, SectionStack, SidePanel, StructuredValue, Surface, Tag, ValueDisplayProvider, type ChoiceItem, type PropertyRow, type SectionSpec } from "@/components/studio"
 import { SchemaCard, ScrollBox } from "@/features/call-sheet"
 import { isJsonObject, schemaTypeLabel } from "@/features/nodes"
 import { PresentationModeChoice, type PresentationMode } from "@/features/runs"
 import { specDescription, specFacts } from "./node-facts"
 import { AgentSections } from "./node-agent-sections"
+import { NodeDisplayExample } from "./node-display-example"
 
 type InspectorTranslator = ReturnType<typeof useTranslations<"flow.inspector">>
 type InspectorTab = "definition" | "input" | "prompt" | "output" | "config" | "problems"
@@ -149,9 +151,9 @@ const promptSections = (detail: ApiNodeDetail, prompt: ApiPromptDetail | null, t
       ...optionalRow(t("inference"), prompt.inference_id),
       ...optionalRow(t("level"), prompt.level === null ? null : String(prompt.level)),
     ]),
-    ...textSection("prompt-source", t("templateSource"), prompt.source?.text ?? null),
     ...(prompt.slots.length === 0 ? [] : [{ id: "prompt-slots", title: t("promptInputs"), body: { kind: "node" as const, node: <PromptSlots slots={prompt.slots} descriptions={fieldInfo(detail, "in").descriptions} t={t} /> } }]),
     ...promptVariants(detail, t, false),
+    ...textSection("prompt-source", t("templateSource"), prompt.source?.text ?? null),
   ]
 }
 
@@ -381,9 +383,10 @@ const dynamicSlotSections = (detail: ApiNodeDetail, t: InspectorTranslator, raw:
   })
 }
 
-const outputSections = (detail: ApiNodeDetail, t: InspectorTranslator, raw: boolean): readonly SectionSpec[] => {
+const outputSections = (detail: ApiNodeDetail, t: InspectorTranslator, raw: boolean, flowId: FlowId): readonly SectionSpec[] => {
   const fields = fieldInfo(detail, "out")
   const dynamic = dynamicOutputFields(detail, t)
+  const outputTemplate = detail.inference_spec?.display?.output?.template
   return [
     ...schemaSection("output-schema", t("outSchema"), detail.out_schema, raw,
       { ...fields, types: { ...fields.types, ...dynamic.types } }, true, dynamic.details),
@@ -392,6 +395,11 @@ const outputSections = (detail: ApiNodeDetail, t: InspectorTranslator, raw: bool
     ...allowedSetSections(detail, t, raw),
     ...(raw || detail.out_schema === null ? dynamicSlotSections(detail, t, raw) : []),
     ...displaySections(detail, "output", t),
+    ...(outputTemplate && detail.display_sources?.output ? [{
+      id: "output-display-example",
+      title: t("templateDisplay"),
+      body: { kind: "node" as const, node: <NodeDisplayExample flowId={flowId} nodeId={ids.nodeId(detail.node_id)} /> },
+    }] : []),
   ]
 }
 
@@ -436,7 +444,7 @@ const problemSections = (detail: ApiNodeDetail, t: InspectorTranslator): readonl
     body: { kind: "properties", rows: [{ key: t("problem"), value: problem.message, tone: "destructive" }] },
   }))
 
-function InspectorContent({ detail, prompt, onClose }: { readonly detail: ApiNodeDetail; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {
+function InspectorContent({ flowId, detail, prompt, onClose }: { readonly flowId: FlowId; readonly detail: ApiNodeDetail; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {
   const t = useTranslations("flow.inspector")
   const [selected, setSelected] = useState<InspectorTab>("definition")
   const [mode, setMode] = useState<PresentationMode>("formatted")
@@ -447,7 +455,7 @@ function InspectorContent({ detail, prompt, onClose }: { readonly detail: ApiNod
   const sections: readonly SectionSpec[] = active === "definition" ? definitionSections(detail, t)
     : active === "input" ? inputSections(detail, t, mode === "raw")
     : active === "prompt" ? promptSections(detail, prompt, t, mode === "raw")
-    : active === "output" ? outputSections(detail, t, mode === "raw")
+    : active === "output" ? outputSections(detail, t, mode === "raw", flowId)
     : active === "config" ? configSections(detail, t, mode === "raw")
     : problemSections(detail, t)
 
@@ -476,7 +484,7 @@ function InspectorContent({ detail, prompt, onClose }: { readonly detail: ApiNod
   )
 }
 
-export function NodeInspector({ detail, prompt, onClose }: { readonly detail: ApiNodeDetail | null; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {
+export function NodeInspector({ flowId, detail, prompt, onClose }: { readonly flowId: FlowId; readonly detail: ApiNodeDetail | null; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {
   if (detail === null) return null
-  return <InspectorContent key={detail.node_id} detail={detail} prompt={prompt} onClose={onClose} />
+  return <InspectorContent key={`${flowId}/${detail.node_id}`} flowId={flowId} detail={detail} prompt={prompt} onClose={onClose} />
 }

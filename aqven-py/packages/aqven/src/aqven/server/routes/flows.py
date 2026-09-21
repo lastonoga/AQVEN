@@ -2,8 +2,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, Query
 from fastapi.responses import JSONResponse, Response
+from pydantic import Field, JsonValue
 
-from aqven.engine.selection import SelectionError, execution_order, range_missing
+from aqven.engine.selection import (
+    SelectionError,
+    boundary_fixture_node,
+    execution_order,
+    range_missing,
+    range_references,
+)
 from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineError, RunListQuery
 from aqven.preview import PromptPreview
 from aqven.runtime.address import RequestModel, ResourceModel
@@ -28,11 +35,12 @@ from aqven.server.resources import (
 )
 from aqven.server.views.common import loaded_project, page_of
 from aqven.server.views.flows import flow_detail, flow_ir, flow_schemas, flow_spec_view, flow_summaries
+from aqven.server.views.node_display_preview import NodeDisplayPreview, node_output_display_preview
 from aqven.server.views.nodes import node_detail, node_summaries
 from aqven.server.views.preview import PromptPreviewBody, prompt_preview
 from aqven.server.views.prompts import prompt_detail, prompt_summaries
 from aqven.server.views.types import type_detail, type_summaries
-from aqven.spec import DatasetId, FlowId, NodeId
+from aqven.spec import DatasetId, FlowId, NodeId, RefRoot, parse_ref
 
 NOT_MODIFIED = 304
 
@@ -67,6 +75,32 @@ class DatasetRangePair(ResourceModel):
 class DatasetRangePreview(ResourceModel):
     order: tuple[NodeId, ...]
     ranges: tuple[DatasetRangePair, ...]
+
+
+class ManualRangeRequest(RequestModel):
+    input: JsonValue = Field(default_factory=dict)
+    context: dict[str, JsonValue] = Field(default_factory=dict)
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
+
+
+class ManualMissingRangeData(ResourceModel):
+    reference: str
+    reason: str
+
+
+class ManualRangePair(ResourceModel):
+    start_node: NodeId
+    end_node: NodeId
+    available: bool
+    input_paths: tuple[str, ...]
+    context_keys: tuple[str, ...]
+    node_output_paths: tuple[str, ...]
+    missing: tuple[ManualMissingRangeData, ...]
+
+
+class ManualRangePreview(ResourceModel):
+    order: tuple[NodeId, ...]
+    ranges: tuple[ManualRangePair, ...]
 
 
 async def last_run(context: ServerContext, flow_id: str) -> RunBrief | None:
@@ -190,6 +224,56 @@ def build_flows_router(context: ServerContext) -> APIRouter:
                 )
         return DatasetRangePreview(order=flow.order, ranges=tuple(ranges))
 
+    @router.post(
+        "/flows/{flow_id}/manual-range",
+        operation_id="flow_manual_range",
+        openapi_extra=rest_only("preview input and boundary data for manually selected execution ranges"),
+    )
+    async def preview_manual_range(flow_id: str, body: ManualRangeRequest) -> ManualRangePreview:
+        state = await context.workspace.state()
+        wanted_flow = FlowId(flow_id)
+        if state.compiled is None or wanted_flow not in state.compiled.flows:
+            raise ApiFailure("NOT_RUNNABLE", f"flow {flow_id} has no compiled execution plan")
+        flow = state.compiled.flow(wanted_flow)
+        ranges: list[ManualRangePair] = []
+        for first, start_node in enumerate(flow.order):
+            for end_node in flow.order[first:]:
+                included = frozenset(flow.order[first:flow.order.index(end_node) + 1])
+                references = range_references(
+                    flow, start_node, end_node, body.input, body.context, body.node_outputs
+                )
+                inputs: dict[str, None] = {}
+                context_keys: dict[str, None] = {}
+                fixtures: dict[str, None] = {}
+                for member_id, reference in references:
+                    parsed = parse_ref(reference)
+                    if parsed.root is RefRoot.INPUT:
+                        inputs[reference] = None
+                    elif parsed.root is RefRoot.RUN_CONTEXT and parsed.key is not None:
+                        context_keys[parsed.key] = None
+                    elif parsed.root is RefRoot.NODE and parsed.node_id is not None:
+                        fixture = boundary_fixture_node(flow, member_id, parsed.node_id, included)
+                        if fixture is not None:
+                            fixtures[reference.replace(f"${parsed.node_id}.out", f"${fixture}.out", 1)] = None
+                missing = tuple(
+                    ManualMissingRangeData(reference=item.reference, reason=item.reason)
+                    for item in range_missing(
+                        flow, start_node, end_node, body.input, body.context, body.node_outputs
+                    )
+                )
+                if "$input" in inputs and body.input == {} and not any(item.reference == "$input" for item in missing):
+                    missing += (ManualMissingRangeData(reference="$input", reason="flow input is empty"),)
+                ranges.append(ManualRangePair(
+                    start_node=start_node,
+                    end_node=end_node,
+                    available=not missing,
+                    input_paths=tuple(inputs),
+                    context_keys=tuple(context_keys),
+                    node_output_paths=tuple(fixtures),
+                    missing=missing,
+                ))
+        return ManualRangePreview(order=flow.order, ranges=tuple(ranges))
+
     @router.get("/flows/{flow_id}/nodes", operation_id="flow_nodes", openapi_extra=operation("flow_get"))
     async def list_nodes(flow_id: str) -> tuple[NodeSummary, ...]:
         state = await context.workspace.state()
@@ -199,6 +283,15 @@ def build_flows_router(context: ServerContext) -> APIRouter:
     async def get_node(flow_id: str, node_id: str) -> NodeDetail:
         state = await context.workspace.state()
         return node_detail(state, flow_id, node_id)
+
+    @router.get(
+        "/flows/{flow_id}/nodes/{node_id}/display-preview",
+        operation_id="flow_node_display_preview",
+        openapi_extra=rest_only("render an example of the node output display template"),
+    )
+    async def get_node_display_preview(flow_id: str, node_id: str) -> NodeDisplayPreview:
+        state = await context.workspace.state()
+        return node_output_display_preview(state, flow_id, node_id)
 
     @router.get(
         "/flows/{flow_id}/nodes/{node_id}/prompt",

@@ -1,0 +1,23 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "data_collection": {
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "title": "Data Collection",
+      "type": "string"
+    },
+    "zdr": {
+      "title": "Zdr",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "data_collection",
+    "zdr"
+  ],
+  "title": "OpenRouterRouting",
+  "type": "object"
+}

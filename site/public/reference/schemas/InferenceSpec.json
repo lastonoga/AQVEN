@@ -1,0 +1,694 @@
+{
+  "$defs": {
+    "AllowedSetSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "labels_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Labels From"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "from"
+      ],
+      "title": "AllowedSetSpec",
+      "type": "object"
+    },
+    "CheckSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent"
+        },
+        "inference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inference"
+        },
+        "on_fail": {
+          "$ref": "#/$defs/OnFail"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        },
+        "use": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Use"
+        },
+        "with": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "With"
+        }
+      },
+      "required": [
+        "on_fail"
+      ],
+      "title": "CheckSpec",
+      "type": "object"
+    },
+    "DisplayFormatterSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "run": {
+          "anyOf": [
+            {
+              "pattern": "^([a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@root/([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.py:[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "pattern": "^(@root/|(?:\\.\\.?/)*)?(?:[A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.display\\.liquid$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template"
+        },
+        "variables": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DisplayVariableRef"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/DisplayVariableName"
+          },
+          "title": "Variables",
+          "type": "object"
+        }
+      },
+      "title": "DisplayFormatterSpec",
+      "type": "object"
+    },
+    "DisplayVariableName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "DisplayVariableRef": {
+      "pattern": "^\\$(input|in|out|item|index|case|acc|iter|loop|ok|failed|branch\\.[a-z][a-z0-9_]{0,62}|run\\.context\\.(date|time_zone|locale|tenant_id)|[a-z][a-z0-9_]{0,62}\\.out)(\\.[a-z][a-z0-9_]{0,62}|\\[\\*\\]|\\[[0-9]{1,4}\\])*$",
+      "type": "string"
+    },
+    "DynamicLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_depth": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Max Depth",
+          "type": "integer"
+        },
+        "max_fields": {
+          "minimum": 1,
+          "title": "Max Fields",
+          "type": "integer"
+        },
+        "max_items": {
+          "minimum": 1,
+          "title": "Max Items",
+          "type": "integer"
+        },
+        "max_text_length": {
+          "minimum": 1,
+          "title": "Max Text Length",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_fields",
+        "max_depth",
+        "max_text_length",
+        "max_items"
+      ],
+      "title": "DynamicLimits",
+      "type": "object"
+    },
+    "ExampleSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "in": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "In",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "out": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Out",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "in",
+        "out"
+      ],
+      "title": "ExampleSpec",
+      "type": "object"
+    },
+    "FieldDecl": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum"
+        },
+        "maxItems": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxitems"
+        },
+        "maxLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxlength"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "description"
+      ],
+      "title": "FieldDecl",
+      "type": "object"
+    },
+    "InferenceDisplaySpec": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DisplayFormatterSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "output": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DisplayFormatterSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "InferenceDisplaySpec",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "OnFail": {
+      "enum": [
+        "retry",
+        "fail",
+        "flag"
+      ],
+      "title": "OnFail",
+      "type": "string"
+    },
+    "OutputField": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum"
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DynamicLimits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "maxItems": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxitems"
+        },
+        "maxLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxlength"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "schema_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema From"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "value_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value Type"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "description"
+      ],
+      "title": "OutputField",
+      "type": "object"
+    },
+    "VariantRef": {
+      "pattern": "^([a-z][a-z0-9_]{0,62}|(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md)$",
+      "type": "string"
+    },
+    "VariantSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "cases": {
+          "additionalProperties": {
+            "$ref": "#/$defs/VariantRef"
+          },
+          "minProperties": 1,
+          "title": "Cases",
+          "type": "object"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VariantRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "on": {
+          "title": "On",
+          "type": "string"
+        }
+      },
+      "required": [
+        "on",
+        "cases"
+      ],
+      "title": "VariantSlot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allowed_sets": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/AllowedSetSpec"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Allowed Sets"
+    },
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "checks": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/CheckSpec"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Checks"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "display": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/InferenceDisplaySpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "examples": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ExampleSpec"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Examples"
+    },
+    "in": {
+      "items": {
+        "$ref": "#/$defs/FieldDecl"
+      },
+      "title": "In",
+      "type": "array"
+    },
+    "kind": {
+      "const": "Inference",
+      "title": "Kind",
+      "type": "string"
+    },
+    "out": {
+      "items": {
+        "$ref": "#/$defs/OutputField"
+      },
+      "minItems": 1,
+      "title": "Out",
+      "type": "array"
+    },
+    "prompt": {
+      "anyOf": [
+        {
+          "pattern": "^([a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@root/([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.py:[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*|(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md)$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prompt"
+    },
+    "variants": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/VariantSlot"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Variants"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "out"
+  ],
+  "title": "InferenceSpec",
+  "type": "object"
+}

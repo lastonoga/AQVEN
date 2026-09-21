@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "agent": {
+      "title": "Agent",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "inference": {
+      "title": "Inference",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "agent",
+    "inference"
+  ],
+  "title": "SubagentSpec",
+  "type": "object"
+}

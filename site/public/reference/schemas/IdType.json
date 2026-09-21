@@ -1,0 +1,102 @@
+{
+  "$defs": {
+    "AllowedSetMode": {
+      "enum": [
+        "dynamic",
+        "none"
+      ],
+      "type": "string"
+    },
+    "CodeFormat": {
+      "enum": [
+        "prefixed_ordinal",
+        "identity"
+      ],
+      "type": "string"
+    },
+    "PiiClass": {
+      "enum": [
+        "none",
+        "pii",
+        "sensitive"
+      ],
+      "title": "PiiClass",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allowed_set": {
+      "$ref": "#/$defs/AllowedSetMode",
+      "default": "none"
+    },
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "code_format": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CodeFormat"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Type",
+      "title": "Kind",
+      "type": "string"
+    },
+    "maxLength": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Maxlength"
+    },
+    "pattern": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pattern"
+    },
+    "pii": {
+      "$ref": "#/$defs/PiiClass",
+      "default": "none"
+    },
+    "type": {
+      "const": "id",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "type",
+    "description"
+  ],
+  "title": "IdType",
+  "type": "object"
+}

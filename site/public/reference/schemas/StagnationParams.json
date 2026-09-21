@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "min_delta": {
+      "minimum": 0,
+      "title": "Min Delta",
+      "type": "number"
+    },
+    "path": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "window": {
+      "maximum": 5,
+      "minimum": 1,
+      "title": "Window",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "path",
+    "window",
+    "min_delta"
+  ],
+  "title": "StagnationParams",
+  "type": "object"
+}

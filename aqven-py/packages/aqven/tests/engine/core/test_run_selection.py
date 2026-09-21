@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from engine_core_plan import fan_flow, relay_flow
+from engine_core_plan import code_node, fan_flow, relay_flow
 
 from aqven.compiler import compile_root
 from aqven.engine.selection import SelectionError, execution_order, range_missing, range_order
@@ -78,3 +78,17 @@ def test_range_switch_ignores_inactive_child_when_fixture_selects_case() -> None
         {NodeId("tally"): {"agreement": "agreed", "intent": "usage_question"}},
     )
     assert missing == ()
+
+
+def test_range_can_use_a_nested_output_fixture_from_an_earlier_stage() -> None:
+    source = fan_flow()
+    after = code_node("after", "finalize", "$fan__left.out.text")
+    flow = source.model_copy(update={"nodes": {**source.nodes, NodeId("after"): after}})
+
+    missing = range_missing(flow, NodeId("after"), NodeId("after"), {}, {}, {})
+    supplied = range_missing(
+        flow, NodeId("after"), NodeId("after"), {}, {}, {NodeId("fan__left"): {"text": "ready"}}
+    )
+
+    assert missing[0].reference == "$fan__left.out.text"
+    assert supplied == ()

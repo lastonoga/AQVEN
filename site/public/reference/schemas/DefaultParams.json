@@ -1,0 +1,16 @@
+{
+  "$defs": {
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "value": {
+      "$ref": "#/$defs/JsonValue"
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "title": "DefaultParams",
+  "type": "object"
+}

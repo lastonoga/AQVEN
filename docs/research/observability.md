@@ -103,7 +103,7 @@ propagateAttributes({
   traceName: "workflow:invoice-extract",   // <=200 символов
   userId,                                   // <=200
   sessionId: runId,                         // <=200 (группировка: наш run = session)
-  tags: ["env:prod", "wf:invoice", "v:12"],
+  tags: ["env:prod", "aqven:invoice", "v:12"],
   version: workflowVersion,
   metadata: { tenantId, workflowId },       // ТОЛЬКО string->string, <=200 символов, иначе дропается с warning
   environment: "production",
@@ -166,7 +166,7 @@ console.log(await result.format());
 
 Из README пакета дословно: основной вход следует semver 2.0 и содержит только стабильные конвенции; incubating-вход "_NOT_ subject to the restrictions of semantic versioning and _MAY_ contain breaking changes in minor releases".
 
-ВЫВОД ДЛЯ АРХИТЕКТУРЫ: на `gen_ai.*` нельзя завязывать наш контракт данных напрямую. Мы пишем их ДОПОЛНИТЕЛЬНО (для совместимости с чужими бэкендами), но собственные гейты/UI читают НАШИ `wf.*` ключи (§7), которые версионируем сами. Константы импортировать через `/incubating` и ПИНОВАТЬ точную версию semconv.
+ВЫВОД ДЛЯ АРХИТЕКТУРЫ: на `gen_ai.*` нельзя завязывать наш контракт данных напрямую. Мы пишем их ДОПОЛНИТЕЛЬНО (для совместимости с чужими бэкендами), но собственные гейты/UI читают НАШИ `aqven.*` ключи (§7), которые версионируем сами. Константы импортировать через `/incubating` и ПИНОВАТЬ точную версию semconv.
 
 ### 2.2 Реальные ключи gen_ai.* (1.43.0, полный список из пакета)
 Операция и провайдер:
@@ -218,7 +218,7 @@ gen_ai.retrieval.query.text, gen_ai.retrieval.documents
 gen_ai.embeddings.dimension.count
 gen_ai.evaluation.name, .score.value, .score.label, .explanation
 ```
-ВАЖНО: НЕТ стандартного атрибута для СТОИМОСТИ. Стоимость — наша зона (`wf.cost.*` + Langfuse `costDetails`).
+ВАЖНО: НЕТ стандартного атрибута для СТОИМОСТИ. Стоимость — наша зона (`aqven.cost.*` + Langfuse `costDetails`).
 
 ### 2.3 Лимиты на размер атрибутов — ПРОВЕРЕНО по исходникам SDK
 `@opentelemetry/sdk-trace-base/build/src/utility.js`:
@@ -409,7 +409,7 @@ EE нужен только когда придут корпоративные к
 ### Цена миграции (это главное — она должна быть низкой by design)
 Мы пишем спаны в **ванильный OTel**, а Langfuse подключаем как ОДИН `SpanProcessor` среди нескольких. Тогда:
 - смена бэкенда трасс = замена одного процессора (Langfuse -> Phoenix/OTLP-коллектор). Дни, не месяцы;
-- **наши `wf.*` атрибуты (§7) и наш Postgres (§6) от бэкенда не зависят вообще** — гейты, кассеты, провенанс и экспорт (§15.1) продолжают работать при полностью отключённом Langfuse;
+- **наши `aqven.*` атрибуты (§7) и наш Postgres (§6) от бэкенда не зависят вообще** — гейты, кассеты, провенанс и экспорт (§15.1) продолжают работать при полностью отключённом Langfuse;
 - что реально теряется при миграции: датасеты/эксперименты/annotation queues/scores, накопленные в Langfuse. Митигация: (а) `langfuse.api.*` — полноценный REST для выгрузки датасетов и скоров; (б) blob-storage export; (в) ПРАВИЛО: **определения датасетов и наборы кассет — источник истины в НАШЕМ репозитории/Postgres, Langfuse — зеркало.** Тогда потеря — только история прогонов.
 
 АРХИТЕКТУРНОЕ ПРАВИЛО (SOLID/DIP): в коде домена не должно быть ни одного `import` из `@langfuse/*`. Только порт `TraceSink` / `EvalStore` и адаптер `LangfuseTraceSink`. Это буквально и есть плоскость замены.
@@ -434,7 +434,7 @@ EE нужен только когда придут корпоративные к
 | Node-level метрики для гейтов (latency, tokens, cost, retries, valid) | **Postgres** `node_metric` | да | гейт должен читать их синхронно и транзакционно |
 | Бюджет рана (лимит, потрачено, остаток) | **Postgres** `run_budget` | да, снапшот | решение «остановить ран» нельзя ставить в зависимость от внешнего SaaS |
 | Сработавшие правила/гварды | **Postgres** `rule_firing` | да | аудит решений; экспорт §15.1 |
-| Версия воркфлоу, граф, определения узлов | **Postgres** | ссылкой (`wf.version`) | это наш домен |
+| Версия воркфлоу, граф, определения узлов | **Postgres** | ссылкой (`aqven.version`) | это наш домен |
 | Артефакты экспорта (§15.1) | **Postgres** + blob | нет | детерминированный экспорт не может зависеть от внешнего API |
 | Идемпотентность/дедуп ключи, очередь задач | **Postgres** | нет | |
 | Дерево спанов, waterfall, тайминги | **Langfuse (ClickHouse)** | — | это его работа, не наша |
@@ -448,131 +448,131 @@ EE нужен только когда придут корпоративные к
 
 ### Правило связывания
 Каждая наша строка несёт `trace_id` (32 hex) и `span_id` (16 hex) — те же, что у OTel-спана (`getActiveTraceId()` / `getActiveSpanId()` из `@langfuse/tracing`). Это делает переход «строка в нашей БД -> спан в Langfuse» дешёвым и однозначным в обе стороны, без своей мапы id.
-Обратно: `langfuse.observation.metadata` несёт наши `wf.run_id`/`wf.node_id`, чтобы из UI Langfuse можно было вернуться в нашу Studio.
+Обратно: `langfuse.observation.metadata` несёт наши `aqven.run_id`/`aqven.node_id`, чтобы из UI Langfuse можно было вернуться в нашу Studio.
 
 
-## 7. Схема наших спан-атрибутов (`wf.*`)
+## 7. Схема наших спан-атрибутов (`aqven.*`)
 
-Namespace `wf.` — наш, версионируемый нами (`wf.schema_version`). `gen_ai.*` пишем ДОПОЛНИТЕЛЬНО (§2.1: он incubating, ломается в минорах — на него нельзя опираться). `langfuse.*` (§1.5) пишем для отрисовки в UI.
+Namespace `aqven.` — наш, версионируемый нами (`aqven.schema_version`). `gen_ai.*` пишем ДОПОЛНИТЕЛЬНО (§2.1: он incubating, ломается в минорах — на него нельзя опираться). `langfuse.*` (§1.5) пишем для отрисовки в UI.
 
 Тип значений OTel-атрибута: `string | number | boolean | string[] | number[] | boolean[]`. Вложенных объектов НЕТ — всё либо плоские ключи, либо JSON-строка. Все JSON-строки подчиняются правилу §2.4 (preview + sha256 + size + ref + truncated).
 
 ### 7.1 Идентификация и версии
 ```
-wf.schema_version        int      // версия ЭТОЙ схемы атрибутов, начинаем с 1
-wf.tenant_id             string
-wf.workflow_id           string
-wf.workflow_version      int
-wf.run_id                string   // == session.id в Langfuse
-wf.run_mode              string   // "live" | "replay" | "eval" | "dry_run"
-wf.node_id               string   // стабильный id узла в графе
-wf.node_type             string   // "llm" | "tool" | "router" | "map" | "gate" | "subflow" | ...
-wf.node_attempt          int      // номер попытки (retry)
-wf.parent_node_id        string
-wf.checkpoint_id         string   // ссылка на строку в нашем Postgres
+aqven.schema_version        int      // версия ЭТОЙ схемы атрибутов, начинаем с 1
+aqven.tenant_id             string
+aqven.workflow_id           string
+aqven.workflow_version      int
+aqven.run_id                string   // == session.id в Langfuse
+aqven.run_mode              string   // "live" | "replay" | "eval" | "dry_run"
+aqven.node_id               string   // стабильный id узла в графе
+aqven.node_type             string   // "llm" | "tool" | "router" | "map" | "gate" | "subflow" | ...
+aqven.node_attempt          int      // номер попытки (retry)
+aqven.parent_node_id        string
+aqven.checkpoint_id         string   // ссылка на строку в нашем Postgres
 ```
 
 ### 7.2 Отрисованный промт (самое важное для отладчика §11)
 ```
-wf.prompt.template_id        string
-wf.prompt.template_version   int
-wf.prompt.template_sha256    string   // хэш ШАБЛОНА — меняется при правке промта
-wf.prompt.rendered_sha256    string   // хэш ОТРЕНДЕРЕННОГО текста — меняется при смене данных
-wf.prompt.rendered_preview   string   // <= 4096 симв.
-wf.prompt.rendered_size      int      // байт
-wf.prompt.rendered_truncated boolean
-wf.prompt.rendered_ref       string   // blob://sha256/<hash>
-wf.prompt.variables_json     string   // плоская мапа имя->превью значения, JSON
-wf.prompt.messages_count     int
-wf.prompt.system_sha256      string   // отдельно: system-часть меняется редко, дедуплицируется
+aqven.prompt.template_id        string
+aqven.prompt.template_version   int
+aqven.prompt.template_sha256    string   // хэш ШАБЛОНА — меняется при правке промта
+aqven.prompt.rendered_sha256    string   // хэш ОТРЕНДЕРЕННОГО текста — меняется при смене данных
+aqven.prompt.rendered_preview   string   // <= 4096 симв.
+aqven.prompt.rendered_size      int      // байт
+aqven.prompt.rendered_truncated boolean
+aqven.prompt.rendered_ref       string   // blob://sha256/<hash>
+aqven.prompt.variables_json     string   // плоская мапа имя->превью значения, JSON
+aqven.prompt.messages_count     int
+aqven.prompt.system_sha256      string   // отдельно: system-часть меняется редко, дедуплицируется
 ```
 Разделение `template_sha256` / `rendered_sha256` — принципиальное: позволяет в UI ответить на «промт изменился или данные изменились?» без diff'а текстов.
 
 ### 7.3 Провенанс слотов
 Один слот = одна запись. Массивы параллельны по индексу (OTel не даёт вложенности):
 ```
-wf.slot.names[]        string[]  // ["invoice.total", "customer.name", ...]
-wf.slot.sources[]      string[]  // "input" | "node:<id>" | "default" | "const" | "tool:<name>" | "memory" | "human"
-wf.slot.origin_span_ids[] string[] // span_id узла-производителя, "" если нет
-wf.slot.confidences[]  number[]  // 0..1, -1 если неприменимо
-wf.slot.value_sha256[] string[]
-wf.slot.required[]     boolean[]
-wf.slot.missing[]      string[]  // отдельный список незаполненных обязательных
-wf.slot.count          int
+aqven.slot.names[]        string[]  // ["invoice.total", "customer.name", ...]
+aqven.slot.sources[]      string[]  // "input" | "node:<id>" | "default" | "const" | "tool:<name>" | "memory" | "human"
+aqven.slot.origin_span_ids[] string[] // span_id узла-производителя, "" если нет
+aqven.slot.confidences[]  number[]  // 0..1, -1 если неприменимо
+aqven.slot.value_sha256[] string[]
+aqven.slot.required[]     boolean[]
+aqven.slot.missing[]      string[]  // отдельный список незаполненных обязательных
+aqven.slot.count          int
 ```
-АЛЬТЕРНАТИВА (если параллельные массивы окажутся неудобны): одна JSON-строка `wf.slot.provenance_json` + полный объект в Postgres. Массивы выбраны потому, что бэкенды трасс умеют по ним фильтровать, а по JSON-строке — нет. РЕШИТЬ на прототипе.
+АЛЬТЕРНАТИВА (если параллельные массивы окажутся неудобны): одна JSON-строка `aqven.slot.provenance_json` + полный объект в Postgres. Массивы выбраны потому, что бэкенды трасс умеют по ним фильтровать, а по JSON-строке — нет. РЕШИТЬ на прототипе.
 
 ### 7.4 Эффективная конфигурация
 ```
-wf.config.hash           string  // sha256 канонизированного эффективного конфига (canonicalize + sha256)
-wf.config.preview        string  // JSON, <= 4096
-wf.config.ref            string  // blob://
-wf.config.sources[]      string[] // ["node_default","workflow_override","run_override","env"] — порядок мержа
-wf.config.model          string
-wf.config.model_alias    string   // наш логический алиас до резолва в конкретную модель
-wf.config.temperature    number
-wf.config.max_tokens     int
-wf.config.seed           int
-wf.config.timeout_ms     int
-wf.config.retry_policy   string
-wf.config.cache_policy   string   // "off" | "read" | "read_write"
+aqven.config.hash           string  // sha256 канонизированного эффективного конфига (canonicalize + sha256)
+aqven.config.preview        string  // JSON, <= 4096
+aqven.config.ref            string  // blob://
+aqven.config.sources[]      string[] // ["node_default","workflow_override","run_override","env"] — порядок мержа
+aqven.config.model          string
+aqven.config.model_alias    string   // наш логический алиас до резолва в конкретную модель
+aqven.config.temperature    number
+aqven.config.max_tokens     int
+aqven.config.seed           int
+aqven.config.timeout_ms     int
+aqven.config.retry_policy   string
+aqven.config.cache_policy   string   // "off" | "read" | "read_write"
 ```
-`wf.config.hash` — ключ для «почему два рана разошлись»: если хэши равны, дело в данных или в недетерминизме модели.
+`aqven.config.hash` — ключ для «почему два рана разошлись»: если хэши равны, дело в данных или в недетерминизме модели.
 
 ### 7.5 Сработавшие правила / гварды
 ```
-wf.rules.evaluated_count   int
-wf.rules.fired[]           string[]  // id правил, которые сработали
-wf.rules.fired_actions[]   string[]  // "block" | "warn" | "retry" | "fallback" | "route" | "redact"
-wf.rules.fired_severities[] string[] // "info" | "warn" | "error" | "fatal"
-wf.rules.blocked           boolean   // хотя бы одно правило остановило узел
-wf.rules.details_json      string    // подробности, превью
-wf.guard.schema_valid      boolean   // прошла ли валидация выходной схемы (zod)
-wf.guard.schema_errors     string    // JSON-превью ошибок zod
-wf.guard.repair_attempts   int       // сколько раз чинили структурированный выход
+aqven.rules.evaluated_count   int
+aqven.rules.fired[]           string[]  // id правил, которые сработали
+aqven.rules.fired_actions[]   string[]  // "block" | "warn" | "retry" | "fallback" | "route" | "redact"
+aqven.rules.fired_severities[] string[] // "info" | "warn" | "error" | "fatal"
+aqven.rules.blocked           boolean   // хотя бы одно правило остановило узел
+aqven.rules.details_json      string    // подробности, превью
+aqven.guard.schema_valid      boolean   // прошла ли валидация выходной схемы (zod)
+aqven.guard.schema_errors     string    // JSON-превью ошибок zod
+aqven.guard.repair_attempts   int       // сколько раз чинили структурированный выход
 ```
 
 ### 7.6 Бюджет
 ```
-wf.budget.scope            string  // "run" | "node" | "tenant" | "day"
-wf.budget.limit_usd        number
-wf.budget.spent_usd        number  // на момент ЗАВЕРШЕНИЯ этого узла
-wf.budget.remaining_usd    number
-wf.budget.limit_tokens     int
-wf.budget.spent_tokens     int
-wf.budget.exceeded         boolean
-wf.budget.action           string  // "none" | "warn" | "downgrade_model" | "abort"
+aqven.budget.scope            string  // "run" | "node" | "tenant" | "day"
+aqven.budget.limit_usd        number
+aqven.budget.spent_usd        number  // на момент ЗАВЕРШЕНИЯ этого узла
+aqven.budget.remaining_usd    number
+aqven.budget.limit_tokens     int
+aqven.budget.spent_tokens     int
+aqven.budget.exceeded         boolean
+aqven.budget.action           string  // "none" | "warn" | "downgrade_model" | "abort"
 ```
 
 ### 7.7 Стоимость и usage
 ```
-wf.cost.input_usd          number
-wf.cost.output_usd         number
-wf.cost.cache_read_usd     number
-wf.cost.cache_write_usd    number
-wf.cost.total_usd          number
-wf.cost.pricing_version    string  // версия НАШЕЙ таблицы цен — стоимость должна быть пересчитываемой
-wf.cost.estimated          boolean // true, если провайдер не вернул точный usage
-wf.tokens.input            int
-wf.tokens.output           int
-wf.tokens.cache_read       int
-wf.tokens.cache_write      int
-wf.tokens.reasoning        int
+aqven.cost.input_usd          number
+aqven.cost.output_usd         number
+aqven.cost.cache_read_usd     number
+aqven.cost.cache_write_usd    number
+aqven.cost.total_usd          number
+aqven.cost.pricing_version    string  // версия НАШЕЙ таблицы цен — стоимость должна быть пересчитываемой
+aqven.cost.estimated          boolean // true, если провайдер не вернул точный usage
+aqven.tokens.input            int
+aqven.tokens.output           int
+aqven.tokens.cache_read       int
+aqven.tokens.cache_write      int
+aqven.tokens.reasoning        int
 ```
 Плюс зеркало в Langfuse: `costDetails: {input, output, cache_read, cache_write, total}` и `usageDetails: {...}` — они рисуются в его UI и агрегируются по sessions/users.
 
 ### 7.8 Тайминги и результат
 ```
-wf.timing.queue_ms         int
-wf.timing.render_ms        int
-wf.timing.provider_ms      int
-wf.timing.ttft_ms          int   // дублируется в langfuse completionStartTime и gen_ai.response.time_to_first_chunk
-wf.timing.validate_ms      int
-wf.result.status           string // "ok" | "retried" | "failed" | "skipped" | "blocked" | "cached"
-wf.result.error_kind       string // "provider" | "timeout" | "schema" | "guard" | "budget" | "internal"
-wf.cache.hit               boolean
-wf.cassette.id             string // при run_mode=replay — какая кассета проигрывается
-wf.cassette.match          string // "exact" | "fuzzy" | "miss"
+aqven.timing.queue_ms         int
+aqven.timing.render_ms        int
+aqven.timing.provider_ms      int
+aqven.timing.ttft_ms          int   // дублируется в langfuse completionStartTime и gen_ai.response.time_to_first_chunk
+aqven.timing.validate_ms      int
+aqven.result.status           string // "ok" | "retried" | "failed" | "skipped" | "blocked" | "cached"
+aqven.result.error_kind       string // "provider" | "timeout" | "schema" | "guard" | "budget" | "internal"
+aqven.cache.hit               boolean
+aqven.cassette.id             string // при run_mode=replay — какая кассета проигрывается
+aqven.cassette.match          string // "exact" | "fuzzy" | "miss"
 ```
 
 ### 7.9 Что пишем параллельно в чужих неймспейсах
@@ -588,14 +588,14 @@ gen_ai.response.finish_reasons, gen_ai.tool.name/.call.id, gen_ai.workflow.name,
 langfuse.observation.type = "generation"|"tool"|"agent"|"retriever"|"guardrail"|"chain"|"span"
 langfuse.observation.input/.output (превью!), .model.name, .model.parameters,
 .usage_details, .cost_details, .level, .status_message, .prompt.name, .prompt.version
-user.id, session.id (= wf.run_id), langfuse.trace.tags, langfuse.environment, langfuse.release
+user.id, session.id (= aqven.run_id), langfuse.trace.tags, langfuse.environment, langfuse.release
 ```
 
 ### 7.10 Дисциплина
 1. Лимит `spanLimits.attributeValueLengthLimit = 8192` как предохранитель (§2.3).
-2. Держаться в пределах ~128 атрибутов на спан (дефолтный `attributeCountLimit`) — при массивах слотов это реально; если слотов много, уходить в `wf.slot.provenance_json` + blob.
+2. Держаться в пределах ~128 атрибутов на спан (дефолтный `attributeCountLimit`) — при массивах слотов это реально; если слотов много, уходить в `aqven.slot.provenance_json` + blob.
 3. Ни одного PII в инлайн-превью: маскирование ДО записи атрибута, не только в `mask` Langfuse (§3.4 — `mask` не защищает наш Postgres-процессор).
-4. Ключи только snake_case, только ASCII, стабильные навсегда: удаление ключа = bump `wf.schema_version`.
+4. Ключи только snake_case, только ASCII, стабильные навсегда: удаление ключа = bump `aqven.schema_version`.
 5. Единственное место формирования атрибутов — фабрика `buildNodeSpanAttributes(ctx): Attributes` (SRP). Никаких `span.setAttribute` россыпью по коду.
 
 

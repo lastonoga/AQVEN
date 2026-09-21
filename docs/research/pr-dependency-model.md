@@ -47,14 +47,14 @@ RPM инвалидирует все промты; дословно `--action_env
 Предлагаем два уровня, как у Turborepo, и ровно по той же причине — разная гранулярность промаха.
 
 ```
-global_hash  = H('wf/prompt-global/v1', {liquidjs_version, emitter_rev, rules_rev,
+global_hash  = H('aqven/prompt-global/v1', {liquidjs_version, emitter_rev, rules_rev,
                  tokenizer_rev, schema_profile_rev, probe_suite_rev})
-type_facet   = H('wf/type-facet/v1', {используемые поля view: имя, тип, description,
+type_facet   = H('aqven/type-facet/v1', {используемые поля view: имя, тип, description,
                  значения enum с расшифровками, ограничения; порядок — из IR, не сортируется})
-profile_facet= H('wf/profile-facet/v1', {schema_profile, cache_style, cache_min_tokens,
+profile_facet= H('aqven/profile-facet/v1', {schema_profile, cache_style, cache_min_tokens,
                  cache_max_breakpoints, json_mode_word_required, prefill_supported,
                  tool_choice_forcing, required_phrases[]})
-prompt_hash  = H('wf/prompt/v1', {global_hash, template_bytes, lang, cache_mode, profile_facet,
+prompt_hash  = H('aqven/prompt/v1', {global_hash, template_bytes, lang, cache_mode, profile_facet,
                  fragments: [{ref, version, bytes_hash}] в порядке включения, examples_hash,
                  slots: [{name, type_ref, type_facet}], out: {type_ref, type_facet}, output_format_bytes})
 ```

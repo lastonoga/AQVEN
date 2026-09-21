@@ -1,17 +1,16 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { GripVertical, Play } from "lucide-react"
-import { Slider } from "radix-ui"
+import { Play } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ApiDatasetCase, ApiDatasetRangePair, ApiDatasetRangePreview, ApiDatasetSummary, FlowId } from "@/domain"
 import { Text, TitledPanel } from "@/components/studio"
+import { StageRangeTimeline } from "@/components/studio/stage-range-timeline"
 import { Button } from "@/components/ui/button"
 import * as ids from "@/data/ids"
 import { datasetsRouteApi, ROUTE_PATH } from "@/lib/routes"
 
 type RangeMissing = ApiDatasetRangePair["missing"][number]
 type PreviewResult = { readonly key: string; readonly preview: ApiDatasetRangePreview | null; readonly error: string | null }
-type DragMode = "move" | "start" | "end"
 
 type DatasetRunProps = {
   readonly flowId: FlowId
@@ -29,11 +28,6 @@ const rangeAt = (preview: ApiDatasetRangePreview | null, startNode: string | und
 const missingText = (missing: readonly RangeMissing[]): string | null => {
   if (missing.length === 0) return null
   return missing.map((item) => `${item.case_name}: ${item.reference}${item.reason ? ` — ${item.reason}` : ""}`).join("; ")
-}
-
-const shiftRange = (current: readonly [number, number], steps: number, count: number): readonly [number, number] => {
-  const first = Math.max(0, Math.min(count - 1 - (current[1] - current[0]), current[0] + steps))
-  return [first, first + current[1] - current[0]]
 }
 
 function useRangePreview(flowId: FlowId, datasetId: string, caseNames: readonly string[] | null): PreviewResult | null {
@@ -65,8 +59,6 @@ export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: 
   const navigate = useNavigate()
   const t = useTranslations("datasets")
   const [range, setRange] = useState<readonly [number, number]>(() => [0, Math.max(0, order.length - 1)])
-  const trackRef = useRef<HTMLSpanElement | null>(null)
-  const dragRef = useRef<{ pointerId: number; clientX: number; range: readonly [number, number]; mode: DragMode } | null>(null)
   const [pending, setPending] = useState<"case" | "batch" | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
   const caseResult = useRangePreview(flowId, dataset.dataset_id, [caseItem.name])
@@ -79,108 +71,6 @@ export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: 
   const caseRange = rangeAt(caseResult?.preview ?? null, startNode, endNode)
   const batchRange = rangeAt(batchResult?.preview ?? null, startNode, endNode)
   const markedNodes = order.slice(range[0], range[1] + 1)
-
-  const moveRange = (next: number[]): void => {
-    const nextStart = next[0]
-    const nextEnd = next[1]
-    if (nextStart === undefined || nextEnd === undefined) return
-    setRange([nextStart, nextEnd])
-  }
-
-  const moveEdge = (edge: "start" | "end", event: KeyboardEvent<HTMLSpanElement>): void => {
-    if (event.key !== "Home" && event.key !== "End") return
-    event.preventDefault()
-    event.stopPropagation()
-    setRange((current) => {
-      if (edge === "start") return [event.key === "Home" ? 0 : current[1], current[1]]
-      return [current[0], event.key === "Home" ? current[0] : order.length - 1]
-    })
-  }
-
-  const beginDrag = (mode: DragMode, event: PointerEvent<HTMLElement>): void => {
-    event.preventDefault()
-    event.stopPropagation()
-    event.currentTarget.focus()
-    dragRef.current = { pointerId: event.pointerId, clientX: event.clientX, range, mode }
-    if ("setPointerCapture" in event.currentTarget) event.currentTarget.setPointerCapture(event.pointerId)
-  }
-
-  const dragRange = (event: PointerEvent<HTMLElement>): void => {
-    const drag = dragRef.current
-    if (drag === null || drag.pointerId !== event.pointerId) return
-    event.stopPropagation()
-    const width = trackRef.current?.getBoundingClientRect().width ?? 0
-    if (width <= 20 || order.length < 2) return
-    const stepWidth = (width - 20) / (order.length - 1)
-    const steps = Math.round((event.clientX - drag.clientX) / stepWidth)
-    if (drag.mode === "move") {
-      setRange(shiftRange(drag.range, steps, order.length))
-    } else if (drag.mode === "start") {
-      setRange([Math.max(0, Math.min(drag.range[1], drag.range[0] + steps)), drag.range[1]])
-    } else {
-      setRange([drag.range[0], Math.max(drag.range[0], Math.min(order.length - 1, drag.range[1] + steps))])
-    }
-  }
-
-  const endDrag = (event: PointerEvent<HTMLElement>): void => {
-    if (dragRef.current?.pointerId !== event.pointerId) return
-    event.stopPropagation()
-    dragRef.current = null
-    if ("releasePointerCapture" in event.currentTarget) event.currentTarget.releasePointerCapture(event.pointerId)
-  }
-
-  const moveClipByKey = (event: KeyboardEvent<HTMLButtonElement>): void => {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "Home" && event.key !== "End") return
-    event.preventDefault()
-    event.stopPropagation()
-    setRange((current) => {
-      const span = current[1] - current[0]
-      if (event.key === "Home") return [0, span]
-      if (event.key === "End") return [order.length - 1 - span, order.length - 1]
-      return shiftRange(current, event.key === "ArrowLeft" ? -1 : 1, order.length)
-    })
-  }
-
-  const indexRatio = (index: number): number => order.length < 2 ? 0.5 : index / (order.length - 1)
-  const startRatio = indexRatio(range[0])
-  const endRatio = indexRatio(range[1])
-  const clipHalfWidth = range[0] === range[1] ? 28 : 12
-  const clipStyle = {
-    left: `calc(${String(startRatio * 100)}% + ${String(10 - 20 * startRatio - clipHalfWidth)}px)`,
-    width: `calc(${String((endRatio - startRatio) * 100)}% + ${String(-20 * (endRatio - startRatio) + clipHalfWidth * 2)}px)`,
-  }
-  const staggerLabels = order.length > 12
-  const labelWidth = order.length < 2 ? 100 : Math.min(45, (staggerLabels ? 180 : 90) / (order.length - 1))
-
-  const stageLabels = (above: boolean) => order.map((nodeId, index) => {
-    if (above !== (staggerLabels && index % 2 === 0)) return null
-    const possible = rangeAt(preview, nodeId, endNode)
-    const canStart = preview?.ranges.some((item) => item.start_node === nodeId && item.available) === true
-    const inRange = index >= range[0] && index <= range[1]
-    const selectedBoundary = index === range[0] || index === range[1]
-    const edge = order.length < 2 ? null : index === 0 ? "first" : index === order.length - 1 ? "last" : null
-    const tick = <span aria-hidden className={`block h-1.5 w-px shrink-0 ${inRange ? "bg-primary" : "bg-border"} ${edge === "first" ? "ml-2.5 self-start" : edge === "last" ? "mr-2.5 self-end" : "self-center"}`} />
-    return (
-      <button
-        key={nodeId}
-        type="button"
-        aria-label={t("selectOnlyNode", { node: nodeId })}
-        aria-pressed={range[0] === index && range[1] === index}
-        onClick={() => { setRange([index, index]) }}
-        data-start-available={preview === null ? "pending" : String(canStart)}
-        data-current-end-compatible={preview === null ? "pending" : String(possible?.available === true)}
-        className={`absolute top-0 flex h-6 min-w-0 cursor-pointer flex-col items-center gap-1 overflow-hidden rounded-sm bg-transparent font-mono text-3xs leading-tight outline-none hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring ${edge === "first" ? "text-left" : edge === "last" ? "text-right" : "text-center"} ${selectedBoundary ? activeRange?.available === false ? "text-destructive" : "text-foreground" : canStart ? "text-muted-foreground" : "text-muted-foreground/40"}`}
-        style={{
-          left: `calc(${String(indexRatio(index) * 100)}% + ${String(10 - 20 * indexRatio(index))}px)`,
-          width: `${String(edge === null ? labelWidth : Math.min(labelWidth, (staggerLabels ? 110 : 50) / (order.length - 1)))}%`,
-          transform: edge === "first" ? "translateX(-10px)" : edge === "last" ? "translateX(calc(-100% + 10px))" : "translateX(-50%)",
-        }}
-        title={[nodeId, !canStart && possible !== null ? missingText(possible.missing) : null].filter(Boolean).join(" — ")}
-      >
-        {above ? <><span className="block w-full min-w-0 truncate">{nodeId}</span>{tick}</> : <>{tick}<span className="block w-full min-w-0 truncate">{nodeId}</span></>}
-      </button>
-    )
-  })
 
   const start = async (kind: "case" | "batch"): Promise<void> => {
     if (pending !== null || startNode === undefined || endNode === undefined) return
@@ -228,65 +118,29 @@ export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: 
             {selectedCases.length > 0 ? t("rangeForCases", { count: selectedCases.length }) : t("rangeForCase", { name: caseItem.name })}
           </Text>
         </div>
-        {order.length === 0 ? <Text as="p" role="hint" tone="neutral">{t("noStages")}</Text> : (
-          <div data-testid="dataset-range-timeline" className="min-w-0 px-5 pt-1">
-            <div className="min-w-0">
-              {staggerLabels ? <div className="relative h-6">{stageLabels(true)}</div> : null}
-              <Slider.Root
-                min={0}
-                max={order.length - 1}
-                step={1}
-                minStepsBetweenThumbs={0}
-                value={[range[0], range[1]]}
-                onValueChange={moveRange}
-                className="relative flex h-12 w-full touch-none items-center select-none [&>span:nth-last-child(-n+2)]:pointer-events-none"
-              >
-                <Slider.Track ref={trackRef} data-testid="dataset-range-track" className="relative h-8 w-full grow rounded-sm bg-muted">
-                  <Slider.Range className="absolute h-full rounded-sm bg-primary/20" />
-                </Slider.Track>
-                <button
-                  type="button"
-                  aria-label={t("moveRange")}
-                  aria-description={t("moveRangeHint")}
-                  title={t("moveRangeHint")}
-                  data-testid="dataset-range-clip"
-                  onPointerDown={(event) => { beginDrag("move", event) }}
-                  onPointerMove={dragRange}
-                  onPointerUp={endDrag}
-                  onPointerCancel={endDrag}
-                  onKeyDown={moveClipByKey}
-                  style={clipStyle}
-                  className="absolute top-2 flex h-8 touch-none items-center justify-center overflow-hidden rounded-sm border border-primary bg-primary/20 text-primary shadow-xs outline-none cursor-grab active:cursor-grabbing focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <GripVertical aria-hidden className={`size-3.5 shrink-0 ${range[0] === range[1] ? "-translate-x-5" : ""}`} />
-                </button>
-                <Slider.Thumb
-                  aria-label={t("startNode")}
-                  aria-valuetext={startNode}
-                  onKeyDown={(event) => { moveEdge("start", event) }}
-                  onPointerDown={(event) => { beginDrag("start", event) }}
-                  onPointerMove={dragRange}
-                  onPointerUp={endDrag}
-                  onPointerCancel={endDrag}
-                  style={{ left: range[0] === range[1] ? "-18px" : undefined }}
-                  className="relative z-20 block h-9 w-5 touch-none rounded-sm border-2 border-primary bg-background shadow-xs outline-none pointer-events-auto cursor-ew-resize focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
-                <Slider.Thumb
-                  aria-label={t("endNode")}
-                  aria-valuetext={endNode}
-                  onKeyDown={(event) => { moveEdge("end", event) }}
-                  onPointerDown={(event) => { beginDrag("end", event) }}
-                  onPointerMove={dragRange}
-                  onPointerUp={endDrag}
-                  onPointerCancel={endDrag}
-                  style={{ left: range[0] === range[1] ? "18px" : undefined }}
-                  className="relative z-20 block h-9 w-5 touch-none rounded-sm border-2 border-primary bg-background shadow-xs outline-none pointer-events-auto cursor-ew-resize focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
-              </Slider.Root>
-              <div className="relative h-6">{stageLabels(false)}</div>
-            </div>
-          </div>
-        )}
+        {order.length === 0 ? <Text as="p" role="hint" tone="neutral">{t("noStages")}</Text> : <StageRangeTimeline
+          order={order}
+          range={range}
+          onRangeChange={setRange}
+          testIdPrefix="dataset-range"
+          rangeAvailable={activeRange?.available ?? null}
+          stageStatus={(nodeId, currentEndNode) => {
+            if (preview === null) return null
+            const possible = rangeAt(preview, nodeId, currentEndNode)
+            return {
+              canStart: preview.ranges.some((item) => item.start_node === nodeId && item.available),
+              compatible: possible?.available === true,
+              unavailableReason: possible === null ? null : missingText(possible.missing),
+            }
+          }}
+          labels={{
+            selectOnlyNode: (node) => t("selectOnlyNode", { node }),
+            moveRange: t("moveRange"),
+            moveRangeHint: t("moveRangeHint"),
+            startNode: t("startNode"),
+            endNode: t("endNode"),
+          }}
+        />}
         <Text as="p" role="hint" tone="neutral">{t("rangeLegend")}</Text>
         <div className="space-y-1.5">
           <Text as="p" role="meta" weight="medium">{startNode === undefined || endNode === undefined ? t("noStages") : t("selectedRange", { start: startNode, end: endNode, count: markedNodes.length })}</Text>

@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "From"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "value": {
+      "$ref": "#/$defs/JsonValue",
+      "default": null
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "title": "FieldBinding",
+  "type": "object"
+}

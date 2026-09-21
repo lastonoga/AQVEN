@@ -2,21 +2,21 @@
 
 Срез: оболочка. Соседние — `scope.md`, `data.md`, `references.md`, `build-order.md`.
 
-## 1. Запуск: `wf dev`
+## 1. Запуск: `aqven dev`
 
 Одна команда в корне проекта: один процесс, один порт, ни докера, ни внешнего хоста.
 ```
-$ wf dev
-wf dev -> http://localhost:5180   project ~/hotel-project   flows 3   synth 31 ms
+$ aqven dev
+aqven dev -> http://localhost:5180   project ~/hotel-project   flows 3   synth 31 ms
 ```
 
-Шаги: (1) поиск корня вверх от cwd до `wf.yaml`, нет — ошибка `wf init`, не дефолт на cwd;
-(2) открытие `.wf/playground.db`, WAL, `CREATE TABLE IF NOT EXISTS`, чистка старых прогонов;
+Шаги: (1) поиск корня вверх от cwd до `aqven.yaml`, нет — ошибка `aqven init`, не дефолт на cwd;
+(2) открытие `.aqven/playground.db`, WAL, `CREATE TABLE IF NOT EXISTS`, чистка старых прогонов;
 (3) первый синтез `src/**/*.flow.ts` в изоляте (ADR-0018) → IR в памяти → компилятор → диагностика;
-(4) Vite в middleware-режиме; (5) watcher; (6) печать URL и открытие браузера (`--no-open`
+(4) раздача собранного `apps/studio/dist` (в разработке UI — отдельный `vite dev`, проксирующий `/api` на 5180, [ADR-0024](../adr/0024-studio-on-vite.md)); (5) watcher; (6) печать URL и открытие браузера (`--no-open`
 и `$BROWSER=none` отключают). Ошибка синтеза не роняет процесс: флоу помечается `broken`,
 сервер стартует, экран показывает файл и строку. **Порт 5180, фиксированный, без автоподбора**
-(занят — падаем с текстом `wf dev --port N`): скачущий порт ломает закладку и историю браузера,
+(занят — падаем с текстом `aqven dev --port N`): скачущий порт ломает закладку и историю браузера,
 а это половина удобства дебаг-панели; 5180 свободен от 5173 (Vite), 4000 (Cube), 4983 (Drizzle
 Studio), 3141 (VoltAgent). **Слушаем только `127.0.0.1`**: панель читает ФС проекта и ходит в провайдеров с ключами из `.env`.
 
@@ -64,7 +64,7 @@ type ServerEvent = { t: "synth"; flows: string[]; ms: number } | { t: "diagnosti
 
 ## 3. Watcher и hot reload
 
-`@parcel/watcher@2.6.0`, подписка на корень, `ignore: ["node_modules", ".git", ".wf"]`; нативный
+`@parcel/watcher@2.6.0`, подписка на корень, `ignore: ["node_modules", ".git", ".aqven"]`; нативный
 FSEvents/inotify, chokidar здесь лишний слой. Цепочка: файл → debounce 50 мс → пересинтез
 затронутых флоу в горячем изоляте → компилятор → дифф по `irHash` → SSE `synth` \| `diagnostics`
 \| `synth_error` → мерж IR на клиенте, elk, перерисовка.
@@ -93,7 +93,7 @@ FSEvents/inotify, chokidar здесь лишний слой. Цепочка: ф�
 
 **ORM — `drizzle-orm@0.45.2`**, тот же пин, что в DECISIONS, только импорт
 `drizzle-orm/better-sqlite3` и схемы из `drizzle-orm/sqlite-core`. Один навык на команду.
-`drizzle-kit` не нужен: миграций нет, схема применяется при старте. БД — `.wf/playground.db`
+`drizzle-kit` не нужен: миграций нет, схема применяется при старте. БД — `.aqven/playground.db`
 в `.gitignore`, `PRAGMA journal_mode = WAL`, `foreign_keys = ON`. **IR, граф и диагностика
 в БД не попадают** — выводятся из файлов за десятки миллисекунд и живут в памяти. Храним
 только непересчитываемое:
@@ -127,7 +127,7 @@ elkjs (7,7 МБ, EPL/GPL) отложен до Studio — см. 00-canvas-decisio
 
 | Строка DECISIONS | В плейграунде |
 |---|---|
-| `next 16.3.4` | Vite 8.3.0 + React 19.3.0. Отмена по решению заказчика |
+| `next 16.3.4` (до ADR-0024) | Vite 8.3.0 + React 19.3.0. Отмена по решению заказчика; [ADR-0024](../adr/0024-studio-on-vite.md) перенёс это в DECISIONS для всей Studio, отмены больше нет |
 | PostgreSQL 18 + pgvector, драйвер `pg 8.23.0` | SQLite через `better-sqlite3@12.11.1` |
 | `drizzle-kit 0.31.10`, миграции, схемы `app`/`idx` | одна БД, три таблицы, `CREATE TABLE IF NOT EXISTS` |
 | Hono + `@hono/zod-openapi` → `openapi-typescript` | `node:http`, типы руками |

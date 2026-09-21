@@ -1,0 +1,53 @@
+{
+  "$defs": {
+    "DisplayVariableName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "DisplayVariableRef": {
+      "pattern": "^\\$(input|in|out|item|index|case|acc|iter|loop|ok|failed|branch\\.[a-z][a-z0-9_]{0,62}|run\\.context\\.(date|time_zone|locale|tenant_id)|[a-z][a-z0-9_]{0,62}\\.out)(\\.[a-z][a-z0-9_]{0,62}|\\[\\*\\]|\\[[0-9]{1,4}\\])*$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "run": {
+      "anyOf": [
+        {
+          "pattern": "^([a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*|@root/([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.py:[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run"
+    },
+    "template": {
+      "anyOf": [
+        {
+          "pattern": "^(@root/|(?:\\.\\.?/)*)?(?:[A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.display\\.liquid$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Template"
+    },
+    "variables": {
+      "additionalProperties": {
+        "$ref": "#/$defs/DisplayVariableRef"
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/DisplayVariableName"
+      },
+      "title": "Variables",
+      "type": "object"
+    }
+  },
+  "title": "DisplayFormatterSpec",
+  "type": "object"
+}

@@ -1,0 +1,90 @@
+{
+  "$defs": {
+    "Modality": {
+      "enum": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "document"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "ModelFamily": {
+      "enum": [
+        "openai",
+        "anthropic",
+        "google",
+        "deepseek",
+        "qwen",
+        "moonshot",
+        "zhipu",
+        "xai",
+        "meta",
+        "mistral",
+        "other"
+      ],
+      "title": "ModelFamily",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "family": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelFamily"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "input": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Modality"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Input"
+    },
+    "output": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Modality"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Output"
+    },
+    "strict": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Strict"
+    }
+  },
+  "title": "CapabilityOverride",
+  "type": "object"
+}

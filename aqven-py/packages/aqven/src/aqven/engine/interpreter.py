@@ -615,9 +615,15 @@ async def interpret(runtime: EngineRuntime, ir_hash: IrHash, flow_input: JsonObj
     values = ValueStore()
     if spec.start_node is not None:
         first = flow.order.index(spec.start_node)
-        for node_id in flow.order[:first]:
-            if node_id in spec.node_outputs:
-                values.put(ROOT_CONTEXT.at(node_id), spec.node_outputs[node_id])
+        preceding = frozenset(flow.order[:first])
+        for node_id, output in spec.node_outputs.items():
+            if node_id not in flow.nodes:
+                continue
+            owner = node_id
+            while (parent := flow.node(owner).parent) is not None:
+                owner = parent
+            if owner in preceding:
+                values.put(ROOT_CONTEXT.at(node_id), output)
     frame = FlowFrame(flow=flow, flow_input=flow_input, prefix="", values=values)
     outcome = await guarded_flow(state, frame)
     return await finish(sink, record_of(outcome, state.usage))

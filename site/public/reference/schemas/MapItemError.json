@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "maxLength": 64,
+      "title": "Code",
+      "type": "string"
+    },
+    "index": {
+      "minimum": 0,
+      "title": "Index",
+      "type": "integer"
+    },
+    "message": {
+      "maxLength": 400,
+      "title": "Message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "index",
+    "code",
+    "message"
+  ],
+  "title": "MapItemError",
+  "type": "object"
+}

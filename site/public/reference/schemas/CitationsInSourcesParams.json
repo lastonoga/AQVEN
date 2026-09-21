@@ -1,0 +1,38 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "citations": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "quote": {
+      "title": "Quote",
+      "type": "string"
+    },
+    "sources": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "citations",
+    "sources",
+    "id",
+    "quote",
+    "text"
+  ],
+  "title": "CitationsInSourcesParams",
+  "type": "object"
+}

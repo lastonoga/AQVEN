@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requests"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tokens"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        },
+        "usd_micros": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Micros"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "from": {
+      "title": "From",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Node",
+      "title": "Kind",
+      "type": "string"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Limits"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "node": {
+      "const": "narrow",
+      "title": "Node",
+      "type": "string"
+    },
+    "to": {
+      "title": "To",
+      "type": "string"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "node",
+    "description",
+    "from",
+    "to"
+  ],
+  "title": "NarrowNodeSpec",
+  "type": "object"
+}

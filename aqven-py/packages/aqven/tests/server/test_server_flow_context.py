@@ -217,3 +217,46 @@ def test_dataset_range_can_omit_context_used_only_after_its_endpoint(context_cli
     )
     first = next(row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "classify")
     assert first["available"] is True, first
+
+
+def test_manual_range_reports_inputs_needed_by_each_selected_stage(context_client: TestClient) -> None:
+    preview = context_client.post("/api/flows/triage/manual-range", json={})
+
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["order"] == ["classify", "route", "summarize"]
+    classify = next(
+        row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "classify"
+    )
+    assert classify["input_paths"] == ["$input"]
+    assert classify["context_keys"] == []
+    assert classify["node_output_paths"] == []
+    assert classify["available"] is False
+    assert classify["missing"] == [{"reference": "$input", "reason": "flow input is empty"}]
+
+
+def test_manual_range_resolves_switch_branch_using_draft_upstream_output(context_client: TestClient) -> None:
+    billing = context_client.post(
+        "/api/flows/triage/manual-range",
+        json={"node_outputs": {"classify": {"category": "billing"}}},
+    )
+    delivery = context_client.post(
+        "/api/flows/triage/manual-range",
+        json={"node_outputs": {"classify": {"category": "delivery"}}},
+    )
+
+    assert billing.status_code == 200, billing.text
+    assert delivery.status_code == 200, delivery.text
+    billing_route = next(
+        row for row in billing.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
+    )
+    delivery_route = next(
+        row for row in delivery.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
+    )
+    assert billing_route["input_paths"] == []
+    assert billing_route["context_keys"] == []
+    assert billing_route["node_output_paths"] == ["$classify.out.category"]
+    assert billing_route["available"] is True
+    assert delivery_route["input_paths"] == ["$input"]
+    assert delivery_route["context_keys"] == ["date"]
+    assert delivery_route["node_output_paths"] == ["$classify.out.category"]
+    assert {item["reference"] for item in delivery_route["missing"]} == {"$input", "$run.context.date"}

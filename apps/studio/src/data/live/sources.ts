@@ -9,6 +9,7 @@ import type {
   ApiFileKind,
   ApiForkRequest,
   ApiIncludePayloads,
+  ApiJsonValue,
   ApiPromptPreviewBody,
   ApiResumeRequest,
   ApiRunStartRequest,
@@ -109,6 +110,8 @@ const flow = {
   nodes: async (flowId: FlowId) => unwrap(await api.GET("/api/flows/{flow_id}/nodes", { params: { path: { flow_id: flowId } } })),
   node: async (flowId: FlowId, nodeId: NodeId) =>
     unwrap(await api.GET("/api/flows/{flow_id}/nodes/{node_id}", { params: { path: { flow_id: flowId, node_id: nodeId } } })),
+  nodeDisplayPreview: async (flowId: FlowId, nodeId: NodeId) =>
+    unwrap(await api.GET("/api/flows/{flow_id}/nodes/{node_id}/display-preview", { params: { path: { flow_id: flowId, node_id: nodeId } } })),
   prompt: async (flowId: FlowId, nodeId: NodeId) =>
     unwrap(await api.GET("/api/flows/{flow_id}/nodes/{node_id}/prompt", { params: { path: { flow_id: flowId, node_id: nodeId } } })),
   promptPreview: async (flowId: FlowId, nodeId: NodeId, body: ApiPromptPreviewBody) =>
@@ -129,6 +132,11 @@ const flow = {
     unwrap(await api.POST("/api/flows/{flow_id}/dataset-range", {
       params: { path: { flow_id: flowId } },
       body: { dataset_id: datasetId, case_names: [...caseNames] },
+    })),
+  manualRange: async (flowId: FlowId, body: { input: ApiJsonValue; context: Record<string, ApiJsonValue>; node_outputs: Record<string, ApiJsonValue> }) =>
+    unwrap(await api.POST("/api/flows/{flow_id}/manual-range", {
+      params: { path: { flow_id: flowId } },
+      body,
     })),
 }
 

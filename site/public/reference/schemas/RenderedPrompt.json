@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "PromptMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/PromptRole"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "text"
+      ],
+      "title": "PromptMessage",
+      "type": "object"
+    },
+    "PromptRole": {
+      "enum": [
+        "system",
+        "user",
+        "assistant"
+      ],
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/PromptMessage"
+      },
+      "minItems": 1,
+      "title": "Messages",
+      "type": "array"
+    }
+  },
+  "required": [
+    "messages"
+  ],
+  "title": "RenderedPrompt",
+  "type": "object"
+}

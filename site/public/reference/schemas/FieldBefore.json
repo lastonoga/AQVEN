@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "first": {
+      "title": "First",
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "rule": {
+      "const": "field_before",
+      "title": "Rule",
+      "type": "string"
+    },
+    "second": {
+      "title": "Second",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule",
+    "nodes",
+    "first",
+    "second"
+  ],
+  "title": "FieldBefore",
+  "type": "object"
+}

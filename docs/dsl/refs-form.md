@@ -75,9 +75,9 @@ name 'hotel'.`
 ## 6. `hotel_pitch` целиком на ссылках
 
 ```ts
-import { defineFlow, defineComponent, tool, llm, code, call, human, map, branch, root, c } from "@wf/dsl"
-import { diverge, judge, criticLoop } from "@wf/std"
-import { hotelsByFilters } from "@wf/lib/db"
+import { defineFlow, defineComponent, tool, llm, code, call, human, map, branch, root, c } from "@aqven/dsl"
+import { diverge, judge, criticLoop } from "@aqven/std"
+import { hotelsByFilters } from "@aqven/lib/db"
 import { pickTopK, renderPitch } from "./code/pitch.js"
 import { scoreHotel, pitchGen as pitchGenFn } from "./prompts/index.js"
 import { t, Hotel, TourRequest } from "./types.js"

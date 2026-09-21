@@ -1,0 +1,23 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allowed": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    }
+  },
+  "required": [
+    "field",
+    "allowed"
+  ],
+  "title": "IdsInAllowedSetParams",
+  "type": "object"
+}

@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "PromptRole": {
+      "enum": [
+        "system",
+        "user",
+        "assistant"
+      ],
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "$ref": "#/$defs/PromptRole"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "role",
+    "text"
+  ],
+  "title": "PromptMessage",
+  "type": "object"
+}

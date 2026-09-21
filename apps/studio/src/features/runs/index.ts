@@ -1,5 +1,6 @@
 export { RunsScreen } from "./runs-screen"
 export { PresentationModeChoice, PresentationModeSwitch, PresentationValue } from "./presentation-state"
+export { FormattedDocument } from "./presentation"
 export { usePresentationMode } from "./presentation-context"
 export type { PresentationMode } from "./presentation-context"
 export type { PresentationSide } from "./presentation-data"

@@ -53,7 +53,7 @@ REST: context идёт внутри `options`:
 
 Рекомендация: наш IR-овский `agent_ref + overrides` компилировать так — overrides для
 model/temperature/maxOutputTokens кладём в опции вызова, а overrides для instructions/tools —
-в `context` по фиксированным ключам (`wf.instructions`, `wf.toolset`), а агент строится один раз
+в `context` по фиксированным ключам (`aqven.instructions`, `aqven.toolset`), а агент строится один раз
 с dynamic-функциями, читающими эти ключи. Иначе придётся пересоздавать Agent на каждый узел.
 
 ## 2. Параметры вызова generateText / streamText / generateObject / streamObject

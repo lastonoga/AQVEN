@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "in": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "In",
+      "type": "object"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "out": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Out",
+      "type": "object"
+    }
+  },
+  "required": [
+    "name",
+    "in",
+    "out"
+  ],
+  "title": "ExampleSpec",
+  "type": "object"
+}

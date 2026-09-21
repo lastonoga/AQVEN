@@ -1,0 +1,589 @@
+{
+  "$defs": {
+    "AgentOutputSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/OutputModeSetting",
+          "default": "auto"
+        },
+        "on_refusal": {
+          "$ref": "#/$defs/OutcomePolicy",
+          "default": "fail"
+        },
+        "on_truncated": {
+          "$ref": "#/$defs/OutcomePolicy",
+          "default": "fail"
+        },
+        "retries": {
+          "default": 1,
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Retries",
+          "type": "integer"
+        },
+        "strict": {
+          "default": true,
+          "title": "Strict",
+          "type": "boolean"
+        }
+      },
+      "title": "AgentOutputSpec",
+      "type": "object"
+    },
+    "CapabilityOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelFamily"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Modality"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input"
+        },
+        "output": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Modality"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output"
+        },
+        "strict": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strict"
+        }
+      },
+      "title": "CapabilityOverride",
+      "type": "object"
+    },
+    "DefaultOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "const": "default",
+          "title": "Policy",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "policy",
+        "value"
+      ],
+      "title": "DefaultOnTimeout",
+      "type": "object"
+    },
+    "EscalateOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "assignee": {
+          "minLength": 1,
+          "title": "Assignee",
+          "type": "string"
+        },
+        "policy": {
+          "const": "escalate",
+          "title": "Policy",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "minimum": 1,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "policy",
+        "assignee",
+        "timeout_seconds"
+      ],
+      "title": "EscalateOnTimeout",
+      "type": "object"
+    },
+    "FailOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "const": "fail",
+          "title": "Policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy"
+      ],
+      "title": "FailOnTimeout",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requests"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tokens"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        },
+        "usd_micros": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Micros"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    },
+    "Modality": {
+      "enum": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "document"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "ModelFamily": {
+      "enum": [
+        "openai",
+        "anthropic",
+        "google",
+        "deepseek",
+        "qwen",
+        "moonshot",
+        "zhipu",
+        "xai",
+        "meta",
+        "mistral",
+        "other"
+      ],
+      "title": "ModelFamily",
+      "type": "string"
+    },
+    "ModelField": {
+      "pattern": "^[a-z][a-z0-9_-]{0,62}:[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$",
+      "type": "string"
+    },
+    "ModelSettingsSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "max_tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Tokens"
+        },
+        "provider_options": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Options"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seed"
+        },
+        "temperature": {
+          "anyOf": [
+            {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature"
+        },
+        "top_p": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Top P"
+        }
+      },
+      "title": "ModelSettingsSpec",
+      "type": "object"
+    },
+    "OutcomePolicy": {
+      "enum": [
+        "fail",
+        "fallback"
+      ],
+      "title": "OutcomePolicy",
+      "type": "string"
+    },
+    "OutputModeSetting": {
+      "enum": [
+        "auto",
+        "tool",
+        "native",
+        "prompted"
+      ],
+      "title": "OutputModeSetting",
+      "type": "string"
+    },
+    "SubagentSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "agent": {
+          "title": "Agent",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "inference": {
+          "title": "Inference",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "agent",
+        "inference"
+      ],
+      "title": "SubagentSpec",
+      "type": "object"
+    },
+    "TimeoutPolicy": {
+      "discriminator": {
+        "mapping": {
+          "default": "#/$defs/DefaultOnTimeout",
+          "escalate": "#/$defs/EscalateOnTimeout",
+          "fail": "#/$defs/FailOnTimeout"
+        },
+        "propertyName": "policy"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FailOnTimeout"
+        },
+        {
+          "$ref": "#/$defs/DefaultOnTimeout"
+        },
+        {
+          "$ref": "#/$defs/EscalateOnTimeout"
+        }
+      ]
+    },
+    "ToolApprovalSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "assignee": {
+          "minLength": 1,
+          "title": "Assignee",
+          "type": "string"
+        },
+        "on_timeout": {
+          "$ref": "#/$defs/TimeoutPolicy"
+        },
+        "timeout_seconds": {
+          "minimum": 1,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tools",
+        "assignee",
+        "timeout_seconds",
+        "on_timeout"
+      ],
+      "title": "ToolApprovalSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "approval": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolApprovalSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "capabilities": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CapabilityOverride"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "fallback_models": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ModelField"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fallback Models"
+    },
+    "instructions": {
+      "anyOf": [
+        {
+          "pattern": "^(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Instructions"
+    },
+    "kind": {
+      "const": "Agent",
+      "title": "Kind",
+      "type": "string"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Limits"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "mcp_servers": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mcp Servers"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelField"
+    },
+    "output": {
+      "$ref": "#/$defs/AgentOutputSpec"
+    },
+    "settings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelSettingsSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "subagents": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/SubagentSpec"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subagents"
+    },
+    "tools": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tools"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "model"
+  ],
+  "title": "AgentSpec",
+  "type": "object"
+}

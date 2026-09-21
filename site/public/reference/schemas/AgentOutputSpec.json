@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "OutcomePolicy": {
+      "enum": [
+        "fail",
+        "fallback"
+      ],
+      "title": "OutcomePolicy",
+      "type": "string"
+    },
+    "OutputModeSetting": {
+      "enum": [
+        "auto",
+        "tool",
+        "native",
+        "prompted"
+      ],
+      "title": "OutputModeSetting",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "$ref": "#/$defs/OutputModeSetting",
+      "default": "auto"
+    },
+    "on_refusal": {
+      "$ref": "#/$defs/OutcomePolicy",
+      "default": "fail"
+    },
+    "on_truncated": {
+      "$ref": "#/$defs/OutcomePolicy",
+      "default": "fail"
+    },
+    "retries": {
+      "default": 1,
+      "maximum": 5,
+      "minimum": 0,
+      "title": "Retries",
+      "type": "integer"
+    },
+    "strict": {
+      "default": true,
+      "title": "Strict",
+      "type": "boolean"
+    }
+  },
+  "title": "AgentOutputSpec",
+  "type": "object"
+}

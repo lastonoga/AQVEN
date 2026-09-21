@@ -63,7 +63,7 @@
 | Свойство | Канал графа (файл) | Канал раскладки (база) |
 |---|---|---|
 | Операция | `flow_patch({expects[{path, file_hash}], ops[1..50], client_op_id})` | `flow_layout_set({layout_rev, entries[{path,value,at}]})` |
-| Носитель | `flows/<flow_id>/flow.yaml` и `nodes/<node_id>.yaml`; пишет компилятор транзакцией `.wf/txn/<ulid>` под `.wf/lock` | таблицы раскладки в Postgres |
+| Носитель | `flows/<flow_id>/flow.yaml` и `nodes/<node_id>.yaml`; пишет компилятор транзакцией `.aqven/txn/<ulid>` под `.aqven/lock` | таблицы раскладки в Postgres |
 | Ось версий | sha256 байтов файла плюс git-история | `layout_rev`, `updated_at` на запись |
 | Оптимистичная блокировка | CAS по `file_hash` (`If-Match`), отказ `STALE_FILE`, `FILE_VANISHED`, `FILE_EXISTS` | нет: хеш не проверяется, 409 невозможен |
 | Семантика конфликта | отказ валидатора либо ребейз либо вопрос человеку | LWW по полю, проигравшие возвращаются в `dropped[]` |
@@ -203,14 +203,14 @@ Redo — прямой повтор `ops` тем же механизмом. У к
 | `flow_revert` | новая; пишет восстановленное содержимое новым коммитом, не переписывает историю | откат патча агента; агенту доступна только для коммитов с его же `actor` | BLOCKER P0 |
 | `flow_layout_get`, `flow_layout_set` | новые | канал раскладки: драг не пишет файл, не рождает коммит и не отбивает CAS агента | BLOCKER P0 |
 | `flow_lock_status` | новая | индикатор «Claude редактирует» — единственная дешёвая профилактика коллизий | BLOCKER P0 |
-| SSE `/api/specs/:id/events` | новая, но **транспорт, а не тул**: типизируется в `@wf/contracts` рядом с конвертом | MCP-тул не толкает события клиенту, а клиент агента рвёт стрим по idle timeout 5 мин | BLOCKER P0 |
+| SSE `/api/specs/:id/events` | новая, но **транспорт, а не тул**: типизируется в `@aqven/contracts` рядом с конвертом | MCP-тул не толкает события клиенту, а клиент агента рвёт стрим по idle timeout 5 мин | BLOCKER P0 |
 | `flow_patch` | изменение: `base_rev` → `expects[{path, file_hash}]`, `client_op_id` обязателен, `intent?`, `expect_lock?`; на выходе `applied_ops[]`, `files[{path, file_hash}]`, `conflict{current[{path, file_hash}], their_ops[], overlapping_paths[]}` | CAS по байтам файла — единственное, что Studio, агент и редактор видят одинаково; без `client_op_id` UI не отличает свой патч от чужого по SSE | P0 для `expects` и `client_op_id`, фаза 2 для `conflict.their_ops[]` |
 | `flow_get` | изменение: `at?: commit \| 'working'` на вход; `files[{path, file_hash}]`, `etag`, `dirty`, `lock`, `layout_rev` на выход | UI обязан знать хеши до первой правки; без `at?` дифф «до и после патча» неоткуда взять | BLOCKER P0 |
 | `flow_lock` | изменение: `reason`, `holder_kind` на вход; `takeover_allowed`, `previous` на выход | человек видит, кто и зачем держит документ; агент узнаёт, что его выселили | BLOCKER P0 |
 | Конверт `Envelope` §3.1 | изменение: `actor{kind,id}` и `client_op_id` в `version` | одно поле закрывает «кто сделал» и для UI, и для аудита | BLOCKER P0 |
 | `flow_compile` | изменение: `at?` на вход, хеши файлов на выход; по умолчанию читает рабочую копию | отчёт компиляции устаревает при чужой правке файла, и это должно быть видно | BLOCKER P0 |
 | `flow_lock_takeover` | новая, **REST и только человеку**, в MCP-поверхности отсутствует | выселение человека из документа не должно быть доступно автоматике | фаза 2 |
-| `flow_commit` | новая | промт и любая правка коммитятся явно: черновик в `.wf/drafts/` не пинится прогоном | BLOCKER P0 |
+| `flow_commit` | новая | промт и любая правка коммитятся явно: черновик в `.aqven/drafts/` не пинится прогоном | BLOCKER P0 |
 | `external_changes_list` | новая | лента внешних правок: что приехало из `fs`/`git` и что в карантине | фаза 2 |
 | `type_usages`, `type_impact` | новые | R14: где используется тип и что сломает его изменение; проверяется на экране реестра | фаза 2 |
 | `catalog_list(kind='type')` | изменение: `usage_count` на выход | иначе `type_usages` дёргается на каждую строку списка | фаза 2 |

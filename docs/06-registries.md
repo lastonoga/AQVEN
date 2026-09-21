@@ -45,7 +45,7 @@
 | `rev` | `integer` | монотонная ревизия, начинается с 1, растёт на аппруве |
 | `status` | `registry_status` | `draft` \| `proposed` \| `approved` \| `deprecated` \| `archived` |
 | `body` | `jsonb` | тело записи по схеме вида (§2–§7) |
-| `content_hash` | `text` | `sha256-` от RFC 8785 канонизации `body` с доменной сепарацией `wf.registry.<kind>` |
+| `content_hash` | `text` | `sha256-` от RFC 8785 канонизации `body` с доменной сепарацией `aqven.registry.<kind>` |
 | `signature_hash` | `text` | хеш только тех полей тела, которые образуют внешний контракт (§1.4) |
 | `supersedes_rev` | `integer \| null` | предыдущая ревизия того же `(tenant, kind, key)` |
 | `created_by`, `approved_by` | `text \| null` | автор предложения и аппрувер |
@@ -378,7 +378,7 @@ fast». Поэтому в функциях нет ни БД, ни HTTP, ни р�
 import { Agent } from "@voltagent/core";
 import type { AgentModelConfig, DynamicValueOptions } from "@voltagent/core";
 
-export const EFFECTIVE_SLOT: unique symbol = Symbol.for("wf.effective");
+export const EFFECTIVE_SLOT: unique symbol = Symbol.for("aqven.effective");
 
 type EffectiveCall = {
   readonly nodeId: NodeId;
@@ -393,7 +393,7 @@ const isEffectiveCall = (value: unknown): value is EffectiveCall =>
 
 const readSlot = ({ context }: DynamicValueOptions): EffectiveCall => {
   const slot = context.get(EFFECTIVE_SLOT);
-  if (!isEffectiveCall(slot)) throw new MissingEffectiveConfigError(context.get("wf.nodeId"));
+  if (!isEffectiveCall(slot)) throw new MissingEffectiveConfigError(context.get("aqven.nodeId"));
   return slot;
 };
 
@@ -429,7 +429,7 @@ const invoke = async (agent: Agent, effective: EffectiveCall, node: CompiledLlmN
   agent.generateText(node.input, {
     context: new Map<string | symbol, unknown>([
       [EFFECTIVE_SLOT, effective],
-      ["wf.nodeId", effective.nodeId],
+      ["aqven.nodeId", effective.nodeId],
     ]),
     temperature: node.params.temperature,
     maxOutputTokens: node.params.maxOutputTokens,
@@ -527,7 +527,7 @@ type EffectiveConfig = {
   на L6 — ошибка R-O7; на L4/L5 — разрешена только если поле не входит в бюджет прогона.
 - `replace` — полная замена значения.
 
-`hash` — `sha256-` от RFC 8785 канонизации `value` с доменной сепарацией `wf.effective`. Именно этот
+`hash` — `sha256-` от RFC 8785 канонизации `value` с доменной сепарацией `aqven.effective`. Именно этот
 хеш попадает в кассету, в ключ replay-кэша и в атрибут спана, поэтому порядок ключей в `value`
 нормализуется каноникализатором, а не порядком применения патчей.
 
@@ -538,7 +538,7 @@ type EffectiveConfig = {
 | `app.plan_nodes.effective_config jsonb` | `value` + `hash` на каждый вызов (узел × `vary`-индекс) |
 | `app.plan_nodes.provenance jsonb` | массив `Provenance` |
 | `app.runs.effective_override jsonb` | патч L6 и полученный прогонный `effective_hash` |
-| трасса (OTel/Langfuse) | атрибуты `wf.effective_hash`, `wf.model.requested`, `wf.model.resolved` (из `onFallback`), `wf.node_id` |
+| трасса (OTel/Langfuse) | атрибуты `aqven.effective_hash`, `aqven.model.requested`, `aqven.model.resolved` (из `onFallback`), `aqven.node_id` |
 | Studio, панель узла | таблица «поле — значение — уровень — источник», подсветка полей уровней L4–L6 |
 | MCP | `registry_get` и ответ компиляции: `focus` на узле, `refs[]` на записи реестра, `problems[]` с кодами R-O* |
 
@@ -661,7 +661,7 @@ export const compileTool = (entry: RegistryEntry<"tool", ToolBody>, handler: Too
 
 ```ts
 const schemaHashOf = (raw: AnyToolConfig): `sha256-${string}` =>
-  domainHash("wf.mcp.tool", canonicalize({ name: raw.name, parameters: raw.parameters, outputSchema: raw.outputSchema }));
+  domainHash("aqven.mcp.tool", canonicalize({ name: raw.name, parameters: raw.parameters, outputSchema: raw.outputSchema }));
 
 export const verifyPins = async (config: MCPConfiguration<string>, pins: ReadonlyMap<string, string>) => {
   const toolsets = await config.getRawToolsets();

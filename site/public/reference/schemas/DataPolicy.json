@@ -1,0 +1,34 @@
+{
+  "$defs": {
+    "Retention": {
+      "enum": [
+        "zero",
+        "logged",
+        "unknown"
+      ],
+      "title": "Retention",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allows_pii": {
+      "title": "Allows Pii",
+      "type": "boolean"
+    },
+    "allows_sensitive": {
+      "title": "Allows Sensitive",
+      "type": "boolean"
+    },
+    "retention": {
+      "$ref": "#/$defs/Retention"
+    }
+  },
+  "required": [
+    "allows_pii",
+    "allows_sensitive",
+    "retention"
+  ],
+  "title": "DataPolicy",
+  "type": "object"
+}

@@ -1,7 +1,7 @@
 # 15. Studio: фронтенд
 
 > Статус: draft
-> Зависит от: [02. Архитектура](02-architecture.md), [10. Рантайм](10-runtime.md), [09. Модель контекста](09-context-model.md), [08. Промты](08-prompts.md), [19. Безопасность и политики](19-security-and-policies.md)
+> Зависит от: [02. Архитектура](02-architecture.md), [10. Рантайм](10-runtime.md), [09. Модель контекста](09-context-model.md), [08. Промты](08-prompts.md), [19. Безопасность и политики](19-security-and-policies.md), [ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0024](adr/0024-studio-on-vite.md)
 > Источники: `research/nextjs-shell.md`, `research/design-system.md`, `research/graph-canvas.md`, `research/api-layer.md`, `research/00-verified-by-lead.md`; спека §11, §12, §14, §15
 
 ## Зачем этот слой
@@ -16,118 +16,146 @@ Studio — единственная поверхность, где челове�
 
 | Решение | Что берём | Версия | Лицензия | Почему |
 |---|---|---|---|---|
-| Модель приложения | серверная оболочка маршрута + клиентские острова | — | — | отладчик и канвас меняются чаще, чем оправдан RSC round-trip; SPA теряет route-level splitting пяти тяжёлых подсистем |
-| Фреймворк | `next` (App Router, Turbopack) | 16.3.4 | MIT | DECISIONS; `proxy.ts` на Node-рантайме снимает ограничения edge-middleware |
+| Модель приложения | SPA; статический бандл `apps/studio/dist` и `/api` отдаёт `aqven dev` с одного порта | — | — | [ADR-0024](adr/0024-studio-on-vite.md): локальному инструменту RSC, Server Actions и `proxy.ts` ничего не дают; `next` 16.3.4 отвергнут |
+| Сборка | `vite` + `@vitejs/plugin-react` + `@rolldown/plugin-babel` с `reactCompilerPreset` | 8.3.0 / 6.1.1 / 0.2.4 | MIT | React Compiler без Next; Vitest 5 и Studio на одном Vite-конфиге |
+| Маршруты | `@tanstack/react-router` + `@tanstack/router-plugin`, файловые маршруты | 1.170.36 / 1.168.38 | MIT | типизированные `params` и search-параметры; `autoCodeSplitting` режет бандл по маршрутам |
 | UI-рантайм | `react` | 19.3.0 | MIT | DECISIONS; `<Activity>` и View Transitions нужны инспектору |
-| Стили | `tailwindcss` (CSS-first, без `tailwind.config.js`) | 4.3.3 | MIT | семантические токены как CSS-переменные — единственный источник истины для CSS, канваса и чартов |
-| Компоненты | shadcn/ui через CLI `shadcn` | 4.21.0 | MIT | код в репозитории, а не зависимость; свой namespace-реестр для доменных компонентов |
+| Стили | `tailwindcss` + `@tailwindcss/vite` (CSS-first, без `tailwind.config.js`) | 4.3.3 | MIT | семантические токены как CSS-переменные — единственный источник истины для CSS, канваса и чартов |
+| Компоненты | shadcn/ui через CLI `shadcn`, стиль `radix-nova` | 4.21.0 | MIT | код в репозитории, а не зависимость; свой namespace-реестр для доменных компонентов |
 | Серверный кэш | `@tanstack/react-query` | 5.102.8 | MIT | единственный владелец серверных данных на клиенте |
 | Таблицы | `@tanstack/react-table` + `@tanstack/react-virtual` | 9.2.4 / 3.14.12 | MIT | DECISIONS; v9 — другой API, см. §2 |
 | Локальное состояние | `zustand` | 5.0.15 | MIT | высокочастотное и «моё личное» состояние вида |
-| Состояние в URL | `nuqs` | 2.10.1 | MIT | ссылка на срез/узел/вкладку обязана работать |
+| Состояние в URL | search-параметры `@tanstack/react-router` через `validateSearch` | 1.170.36 | MIT | ссылка на срез/узел/вкладку обязана работать; типы параметров выводятся из схемы, `nuqs` не нужен |
+| Локализация | `use-intl`, локали `en`, `ru` | 4.14.5 | MIT | ICU-сообщения и API next-intl без привязки к фреймворку |
+| Чат | `@assistant-ui/react` + `@assistant-ui/react-markdown`, `useLocalRuntime` | 0.15.20 / 0.14.15 | MIT | готовые примитивы треда; `ai` и `@ai-sdk/*` в Studio не импортируются |
 | Канвас | `@xyflow/react` | 12.11.6 | MIT | React-компоненты внутри узлов = продуктовый UI на тех же токенах |
 | Раскладка | `elkjs` в web worker | 0.12.0 | **EPL-2.0 OR GPL-3.0-or-later** | единственный, кто умеет вложенность И порты; лицензия — открытый вопрос ОВ-1 |
 | Клиент API | `openapi-fetch` поверх `openapi-typescript` | 0.17.0 / 7.13.0 | MIT | контракт = OpenAPI 3.1 control plane, не TS-типы по проводу |
 | Стриминг прогона | `eventsource-parser` + свой `fetch`-обёртка | 4.1.0 | MIT | нативный `EventSource` — GET-only и без заголовков |
-| Редактор | CodeMirror 6 (`@codemirror/*`), своя обёртка | state 6.7.4 / view 6.43.11 | MIT | Monaco требует бандлер-плагин, которого для Turbopack нет; противоречие заметок — ОВ-2 |
+| Редактор | CodeMirror 6 (`@codemirror/*`), своя обёртка | state 6.7.4 / view 6.43.11 | MIT | TS language service Monaco не нужен, диагностика приходит от компилятора; противоречие заметок — ОВ-2 |
 | Рантайм-формы | `@rjsf/core` + `@rjsf/validator-ajv8` + `@rjsf/shadcn` | 6.10.0 | Apache-2.0 | единственный живой генератор UI из JSON Schema |
 | Статические формы | `react-hook-form` + `zod` | 7.87.0 / 4.6.2 | MIT | схема известна на сборке — генератор не нужен |
-| Тема | `next-themes` | 0.4.6 | MIT | класс на `<html>` + анти-FOUC скрипт; план Б описан в §8 |
+| Тема | класс `.dark` на `<html>`, inline-скрипт в `index.html`, свой провайдер | — | — | в SPA нет гидрации серверного HTML; `next-themes` 0.4.6 не ставим, см. §8.4 |
+| Шрифты | `@fontsource-variable/geist` + `@fontsource-variable/geist-mono` | 5.3.0 | OFL-1.1 | самохостинг импортом в CSS, без `next/font` |
 
-## 1. Архитектура приложения: серверная оболочка + клиентские острова
+## 1. Архитектура приложения: SPA на Vite
 
 ### 1.1. Правило границы
 
-**У каждой поверхности ровно один владелец данных: либо сервер (RSC + Server Action + `updateTag`),
-либо клиент (TanStack Query + REST/SSE). Смешивать владение на одних и тех же данных запрещено.**
+**У каждой поверхности ровно один владелец данных на клиенте: TanStack Query (REST/SSE к API `aqven dev`)
+либо локальный стор. Смешивать владение на одних и тех же данных запрещено.**
+
+Серверного рендера нет ([ADR-0024](adr/0024-studio-on-vite.md)). `aqven dev` отдаёт статический бандл
+`apps/studio/dist` и `/api` с одного порта, любой путь вне `/api` получает `index.html`. В разработке
+UI Vite dev-сервер проксирует `/api` на `aqven dev`.
 
 Граница проходит по частоте изменения и по тому, кто инициирует изменение:
 
 | Признак поверхности | Владелец | Транспорт чтения | Транспорт записи |
 |---|---|---|---|
-| Меняется только по действию человека, живёт долго (реестры, версии, датасеты) | сервер | RSC-фетч в `'use cache'`-скоупе | Server Action → `updateTag(tag)` (read-your-writes) |
-| Меняется сама, без участия вкладки (прогон, очередь, шина событий) | клиент | `useQuery` + SSE-дельты | `useMutation` → `invalidateQueries` |
+| Меняется только по действию человека, живёт долго (реестры, версии, датасеты) | TanStack Query | `loader` маршрута → `queryClient.ensureQueryData`, дальше `useQuery` | `useMutation` → `await invalidateQueries` до закрытия формы (read-your-writes) |
+| Меняется сама, без участия вкладки (прогон, очередь, шина событий) | TanStack Query | `useQuery` + SSE-дельты | `useMutation` → `invalidateQueries` |
 | Меняется чаще ~10 раз/сек (вьюпорт, drag, hover, набор в редакторе) | клиент, вне React-дерева данных | внутренний стор библиотеки / zustand | — |
 
-Обоснование «ни RSC-heavy, ни SPA»:
+Обоснование «SPA, а не RSC»:
 
 - RSC-heavy не годится для §11: отладчик меняется несколько раз в секунду, каждый ре-рендер — сетевой
   round-trip; канвас — 60 fps pointer-события и раскладка в воркере, серверу там делать нечего.
-  Главный козырь RSC (готовый HTML без JS для анонима) не монетизируется: Studio — аутентифицированный
-  внутренний инструмент без SEO.
-- SPA внутри Next не годится, потому что теряются: route-level code splitting пяти тяжёлых подсистем
-  (канвас, ELK-воркер, редактор, таблицы, чарты), partial prefetching и loading shells, Server Actions
-  как транспорт мутаций реестров, серверная проверка прав до отрисовки (гейт аппрува побочных
-  эффектов, спека §15).
+  Главный козырь RSC (готовый HTML без JS для анонима) не монетизируется: Studio — внутренний
+  инструмент без SEO.
+- Прежние возражения против SPA сняты: разбиение пяти тяжёлых подсистем (канвас, ELK-воркер, редактор,
+  таблицы, чарты) по маршрутам даёт `autoCodeSplitting` плагина роутера, предзагрузку —
+  `defaultPreload: 'intent'`, мутации идут одним путём — типизированным HTTP. Проверка прав живёт в
+  хендлерах API ([19. Безопасность](19-security-and-policies.md) §7), UI отражает `403` как состояние
+  экрана; проверка до отрисовки нужна только размещённому мультитенантному режиму, который вне
+  приоритета.
 
 ### 1.2. Карта маршрутов
 
-| Маршрут | Тип | Владелец данных |
-|---|---|---|
-| `proxy.ts` (Node runtime) | сервер | только сессия и редирект на workspace; **данные не грузит** |
-| `app/layout.tsx` | RSC | шрифты, `<ThemeProvider>` (клиентский островок), ничего не фетчит |
-| `app/[workspaceId]/layout.tsx` | RSC | членство, навигация, флаги; `'use cache'` + `cacheTag('ws:'+id)` |
-| `.../workflows` | RSC + Suspense | сервер; таблица — островок с `initialData` |
-| `.../workflows/[id]` | RSC-оболочка | сервер отдаёт IR один раз пропом; канвас — `'use client'` + `dynamic({ ssr:false })` |
-| `.../runs` | RSC + Suspense | сервер; фильтры из `nuqs` → ключ Query |
-| `.../runs/[runId]` | RSC-оболочка | сервер отдаёт **снимок**; дельты — SSE. Терминальный прогон `cacheTag('run:'+id)`, живой не кэшируется |
-| `.../prompts/[templateId]` | RSC-оболочка | сервер отдаёт шаблон и фикстуры; редактор client-only |
-| `.../registry/(types\|models\|agents\|tools)` | RSC | сервер: Server Actions + `updateTag('registry:types')` |
-| `.../evals/*` | RSC + streaming | сервер для списков, клиент для виртуализованных таблиц результатов |
-| `.../tasks/[taskId]` | RSC-оболочка | сервер отдаёт JSON Schema + контекст; сабмит Server Action → resume воркфлоу |
-| `.../versions/compare` | RSC | полностью серверный; пара версий в URL через `nuqs` |
-| `app/api/[...path]` (route handler, Node) | сервер | прокси к control plane: подстановка `Authorization` из сессии, ретрансляция SSE |
+Файловые маршруты `@tanstack/router-plugin` в `apps/studio/src/routes/`; дерево `routeTree.gen.ts`
+генерирует плагин.
 
-Client-only и только через `dynamic(..., { ssr: false, loading: Skeleton })`: канвас, модуль ELK-раскладки,
-CodeMirror, водопад, виртуализованные таблицы, live-tail логов. Suspense вокруг них не помогает —
-проблема в загрузке чанка, а не в данных.
+| Маршрут | Что делает | Владелец данных |
+|---|---|---|
+| `__root.tsx` | провайдеры: `QueryClientProvider`, `IntlProvider` (`use-intl`), `TooltipProvider`, тема; ничего не фетчит | — |
+| `$workspaceId/route.tsx` | layout: навигация, флаги; `loader` → `ensureQueryData(['ws', id])` | Query |
+| `.../workflows` | список; фильтры в `validateSearch` → ключ Query | Query |
+| `.../workflows/$id` | `loader` кладёт IR в кэш один раз; канвас — ленивый чанк | Query → zustand-документ |
+| `.../runs` | фильтры в `validateSearch` → ключ Query | Query |
+| `.../runs/$runId` | **снимок** — Query, дельты — SSE. Терминальный прогон `staleTime: Infinity`, живой — `staleTime: 0` | Query + `runStore` |
+| `.../prompts/$templateId` | `loader` грузит шаблон и фикстуры; редактор — ленивый чанк | Query |
+| `.../registry/$kind` (`types\|models\|agents\|tools`) | правка — `useMutation` + `invalidateQueries(['registry', kind])` | Query |
+| `.../evals/*` | списки и виртуализованные таблицы результатов | Query |
+| `.../tasks/$taskId` | JSON Schema + контекст; сабмит — `useMutation` → resume воркфлоу | Query |
+| `.../versions/compare` | пара версий в search-параметре `?diff=` | Query |
+
+`proxy.ts` и `app/api/[...path]` исчезли вместе с Next: `/api` отдаёт тот же процесс, что и статику,
+поэтому клиент ходит в API с того же origin без прокси-слоя; в `vite dev` эту роль играет
+`server.proxy` в `vite.config.ts`.
+
+Ленивые чанки — `React.lazy(() => import(...))` под `<Suspense fallback={<Skeleton />}>`: канвас, модуль
+ELK-раскладки, CodeMirror, водопад, виртуализованные таблицы, live-tail логов. Suspense здесь ждёт
+загрузку чанка, а не данных.
 
 ### 1.3. Дерево Suspense-границ
 
-Правила (они же — предусловия будущего `cacheComponents: true`):
+Правила:
 
 1. Одна граница на один независимо загружающийся регион, не одна на страницу.
-2. Граница ставится **выше** чтения данных: под `cacheComponents` любое некэшированное чтение
-   (`cookies()`, `headers()`, fetch без `'use cache'`) без границы над ним — ошибка сборки.
-3. `fallback` — скелет, а не спиннер: под `partialPrefetching` именно fallback становится
-   префетченной оболочкой. Спиннер в fallback = мгновенная навигация в никуда.
+2. Граница ставится **выше** ленивого чанка или `useSuspenseQuery`. Ожидание `loader` — это
+   `pendingComponent` маршрута с `pendingMs`, а не граница вокруг всей страницы.
+3. `fallback` — скелет, а не спиннер: при `defaultPreload: 'intent'` загрузка обычно заканчивается до
+   клика, а когда не успела, скелет держит геометрию региона. Спиннер в fallback = прыжок раскладки.
 
-Нарезка `/runs/[runId]`: шапка прогона (id, статус, версия спеки) в layout без границы;
+Нарезка `/runs/$runId`: шапка прогона (id, статус, версия спеки) в layout без границы;
 далее четыре независимые границы — граф прогона (скелет = серая сетка узлов), инспектор узла
 (каркас вкладок), водопад, лог/трасса.
 
-### 1.4. Флаги Next и порядок включения
+### 1.4. Сборка
 
-| Флаг | Фаза 0 | Фаза 1 | Почему так |
+| Настройка | Где | Почему | Что заменила в Next |
 |---|---|---|---|
-| `reactCompiler: true` | вкл | вкл | канвас, таблицы и отладчик иначе обмазываются `memo`/`useMemo` руками |
-| `experimental.turbopackRustReactCompiler: true` | вкл | вкл | Babel-путь делает сборку неприемлемо долгой; Rust-порт даёт −34% cold / −46% warm |
-| `cacheComponents` + `partialPrefetching` | выкл | вкл | включение требует Suspense над каждым чтением сессии — это рефакторинг дерева границ, а не флаг; дерево по §1.3 проектируем сразу под него |
-| `useOffline` | выкл | выкл | экспериментально, см. ОВ-8 |
+| `babel({ presets: [reactCompilerPreset()] })` | `vite.config.ts` | канвас, таблицы и отладчик иначе обмазываются `memo`/`useMemo` руками; Rust-порт (`react({ compiler: true })` + `oxc-transform-react`) помечен experimental — не берём | `reactCompiler: true`, `turbopackRustReactCompiler` |
+| `tanstackRouter({ target: 'react', autoCodeSplitting: true })` **перед** `react()` | `vite.config.ts` | файловые маршруты и разбиение по маршрутам; при обратном порядке генерация и разбиение молча не работают | App Router, route-level splitting |
+| `defaultPreload: 'intent'` | `createRouter` | чанк и `loader` маршрута грузятся по наведению на ссылку | `partialPrefetching` |
+| `server.proxy['/api']` → `aqven dev` | `vite.config.ts` | один origin в разработке, без CORS | `app/api/[...path]` |
+| `@tailwindcss/vite` | `vite.config.ts` | Tailwind v4 без PostCSS-конфига | `@tailwindcss/postcss` |
 
-Breaking, которые надо заложить в скелет сразу, иначе билд падает поздно и неожиданно:
-`params`/`searchParams`/`cookies()`/`headers()` — только `await`; parallel routes требуют явный
-`default.js` в **каждом** слоте (у нас слоты инспектора/канваса/логов будут); `next lint` удалён —
-линт отдельным шагом turbo; `middleware.ts` не пишем вообще, сразу `proxy.ts`.
+Что заложить в скелет сразу: `declare module '@tanstack/react-router' { interface Register { router: typeof router } }` —
+без него `Link`, `useSearch` и `useParams` теряют типы; `routeTree.gen.ts` исключён из линта
+(`globalIgnores`); `react-refresh/only-export-components` выключен для `src/routes/**` и
+`src/components/ui/**`, иначе файлы маршрутов с экспортом `Route` ломают правило. Флагов
+`cacheComponents` и `useOffline` в SPA нет.
 
 ## 2. Стек: версии и лицензии
 
-Все версии проверены `npm view` на 2026-09-11. Пин точный, диапазоны не используем.
+Все версии проверены `npm view` на 2026-09-11; строки сборки, маршрутов, локализации, чата, шрифтов,
+линта, `cn` и `lucide-react` — на 2026-09-16 ([ADR-0024](adr/0024-studio-on-vite.md)). Пин точный,
+диапазоны не используем.
 
 | Пакет | Версия | Лицензия | Роль | Примечание |
 |---|---|---|---|---|
-| `next` | 16.3.4 | MIT | оболочка, маршруты, Server Actions | Node ≥ 20.9, Turbopack по умолчанию |
+| `vite` | 8.3.0 | MIT | сборка и dev-сервер | Node `^20.19.0 \|\| >=22.12.0`; `server.proxy['/api']` на `aqven dev` |
+| `@vitejs/plugin-react` | 6.1.1 | MIT | JSX, Fast Refresh, `reactCompilerPreset` | peer `vite ^8` |
+| `@rolldown/plugin-babel` + `babel-plugin-react-compiler` | 0.2.4 / 1.0.0 | MIT | React Compiler через Babel | peer `@babel/core ^7.29.0 \|\| ^8.0.0-rc.1` |
 | `react` / `react-dom` | 19.3.0 | MIT | рантайм | `<Activity>`, View Transitions |
-| `tailwindcss` + `@tailwindcss/postcss` | 4.3.3 | MIT | стили | конфиг в CSS, `tailwind.config` отсутствует |
-| `shadcn` (CLI) | 4.21.0 | MIT | генерация компонентов | `style: new-york`, `baseColor: neutral`, `cssVariables: true` |
+| `@tanstack/react-router` | 1.170.36 | MIT | маршруты, search-параметры | `validateSearch` принимает Standard Schema — схема zod 4 без адаптера |
+| `@tanstack/router-plugin` | 1.168.38 | MIT | файловые маршруты, `routeTree.gen.ts`, `autoCodeSplitting` | peer `@tanstack/react-router ^1.170.36`; в `plugins` строго перед `react()` |
+| `use-intl` | 4.14.5 | MIT | локализация `en`, `ru` | ядро next-intl без Next |
+| `@assistant-ui/react` / `@assistant-ui/react-markdown` | 0.15.20 / 0.14.15 | MIT | чат-панель | `useLocalRuntime` с адаптером модели; модельный SDK не импортируется |
+| `remark-gfm` / `tw-shimmer` | 4.0.1 / 0.4.13 | MIT | GFM в сообщениях чата, класс `shimmer` у активных блоков reasoning и тулов | зависимости компонентов assistant-ui |
+| `tailwindcss` + `@tailwindcss/vite` | 4.3.3 | MIT | стили | конфиг в CSS, `tailwind.config` отсутствует; Vite-плагин вместо PostCSS |
+| `shadcn` (CLI) | 4.21.0 | MIT | генерация компонентов | `style: radix-nova`, `baseColor: neutral`, `cssVariables: true`, `rsc: false` |
 | `radix-ui` (единый пакет) | 1.6.7 | MIT | примитивы под shadcn | заменил россыпь `@radix-ui/react-*` |
-| `cn` | 0.2.6 | MIT | склейка классов | **заменяет `clsx` + `tailwind-merge`**, их не ставим |
-| `lucide-react` | 1.45.0 | ISC | иконки | мажор v1 |
+| `cn` | 0.3.0 | MIT | склейка классов | **заменяет `clsx` + `tailwind-merge`**, их не ставим |
+| `class-variance-authority` | 0.7.1 | **Apache-2.0** | варианты компонентов shadcn | |
+| `tw-animate-css` | 1.4.0 | MIT | CSS-анимации компонентов shadcn | импорт в `src/index.css` |
+| `lucide-react` | 1.46.0 | ISC | иконки | мажор v1 |
+| `@fontsource-variable/geist` / `@fontsource-variable/geist-mono` | 5.3.0 | OFL-1.1 | шрифты | импорт в `src/index.css`, без сети на старте |
 | `@tanstack/react-query` | 5.102.8 | MIT | серверный кэш | |
 | `@tanstack/react-table` | 9.2.4 | MIT | таблицы | **v9, не v8**: `useTable`, `features`, `table.FlexRender` |
 | `@tanstack/react-virtual` | 3.14.12 | MIT | виртуализация | 1D и 2D, динамические высоты |
 | `zustand` | 5.0.15 | MIT | локальное состояние | `persist` для настроек вида |
-| `nuqs` | 2.10.1 | MIT | состояние в URL | peer `next >= 14.2` |
 | `@xyflow/react` | 12.11.6 | MIT | канвас | целиком MIT, Pro — только примеры и поддержка |
 | `elkjs` | 0.12.0 | **EPL-2.0 OR GPL-3.0-or-later** | раскладка | единственная не-MIT зависимость фронта, ОВ-1 |
 | `openapi-fetch` | 0.17.0 | MIT | клиент API | ~2 КБ, без кодогена в рантайме |
@@ -149,13 +177,15 @@ Breaking, которые надо заложить в скелет сразу, �
 | `react-hotkeys-hook` | 5.3.3 | MIT | хоткеи | `HotkeysProvider` + scopes |
 | `cmdk` | 1.1.1 | MIT | командная палитра | тишина ~12.5 мес — риск под наблюдением |
 | `sonner` | 2.0.8 | MIT | тосты | `toast`/`use-toast` из реестра удалены |
-| `next-themes` | 0.4.6 | MIT | тема | тишина ~18 мес, план Б в §8.4 |
 | `graphology` + `graphology-dag` + `graphology-traversal` | 0.26.0 / 0.4.1 / 0.3.1 | MIT | графовые алгоритмы | помечаем `unmaintained-but-stable`; ~300 строк используемого кода |
 | `@playwright/test` | 1.63 | Apache-2.0 | e2e | DECISIONS |
 | `vitest` | 5.0.0 | MIT | unit | DECISIONS |
 | `fast-check` | — | MIT | property-based | DECISIONS |
+| `eslint` + `typescript-eslint` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh` | 10.10.0 / 8.70.0 / 7.1.1 / 0.5.7 | MIT | линт `apps/studio` | без `eslint-config-next`; `no-restricted-imports` на `next`, `ai`, `@ai-sdk/*`, `@openrouter/*` |
 
-**Не берём и почему:** `@monaco-editor/react` (нет плагина под Turbopack, CDN-загрузка по умолчанию),
+**Не берём и почему:** `next` 16.3.4, `nuqs` 2.10.1, `next-themes` 0.4.6 ([ADR-0024](adr/0024-studio-on-vite.md):
+SPA на Vite; состояние в URL — `validateSearch`, тема — §8.4),
+`@monaco-editor/react` (CDN-загрузка по умолчанию, TS language service не нужен — §11.1),
 `@textea/json-viewer` (тянет MUI — вторая дизайн-система), `@autoform/*` (генерирует из zod, а тема
 shadcn мертва с 2024-10), `@nivo/*` (15 мес тишины), `diff2html` (HTML-строка вне токен-системы),
 `drawer`/`vaul` кроме реально мобильных шторок (релиз 2024-12), `clsx` и `tailwind-merge` (их заменил `cn`),
@@ -170,7 +200,8 @@ example-рецепт под TanStack Table v8), `tree`, `timeline`, `stepper`, `
 
 Правила применяются по порядку, первый сработавший выигрывает.
 
-1. **Можно дать ссылку коллеге, и он увидит то же самое?** → URL, `nuqs`.
+1. **Можно дать ссылку коллеге, и он увидит то же самое?** → URL, search-параметры маршрута
+   (`validateSearch` у `@tanstack/react-router`).
 2. **Обновляется чаще ~10 раз/сек или это «мои настройки вида»?** → `zustand` (+ `persist` для настроек).
 3. **Источник истины на сервере и может измениться без меня?** → TanStack Query.
 
@@ -182,24 +213,24 @@ example-рецепт под TanStack Table v8), `tree`, `timeline`, `stepper`, `
 | Состояние | Хранилище | Ключ / параметр | Примечание |
 |---|---|---|---|
 | Вьюпорт канваса (`x,y,zoom`), drag, рамка выделения, hover, рисуемое соединение | внутренний стор React Flow | — | доступ снаружи только через `useReactFlow()` / `useStore(selector)` |
-| Первичный выделенный узел | nuqs | `?node=<nodeId>` | `{ history: 'replace', shallow: true }`; без этого ссылка «посмотри этот узел» не работает |
+| Первичный выделенный узел | search-параметр | `?node=<nodeId>` | `navigate({ search: (prev) => ({ ...prev, node }), replace: true })`; без этого ссылка «посмотри этот узел» не работает |
 | Мультивыделение, локальные раскрытия подворкфлоу, режим канваса до фиксации | zustand | — | слишком волатильно для URL |
-| Режим просмотра графа прогона | nuqs | `?view=aggregated\|expanded` | `parseAsStringLiteral(['aggregated','expanded'])` |
-| Группировка по стадиям | nuqs | `?group=stage` | часть «что я показываю» |
+| Режим просмотра графа прогона | search-параметр | `?view=aggregated\|expanded` | поле `view: z.enum(['aggregated','expanded']).catch('aggregated')` в схеме `validateSearch` |
+| Группировка по стадиям | search-параметр | `?group=stage` | часть «что я показываю» |
 | Результат ELK-раскладки | не состояние | — | derived data: worker → мемоизация по хешу IR → `useRef` |
 | Снимок прогона и результаты узлов | Query | `['run', runId]` | терминальный: `staleTime: Infinity`; живой: `staleTime: 0` **без polling** |
 | Дельты живого прогона | Query через `setQueryData` | `['run', runId]` | применяются из SSE, см. §4.3 |
 | Точки останова | Query + мутация | `['run', runId, 'breakpoints']` | это **серверное** состояние рантайма; в zustand нельзя — после релоада прогон встанет не там, где показывает UI |
 | Черновик правки входа для replay | `react-hook-form` | — | на сервер только при сабмите |
 | Заморозка выходов верхних узлов | zustand | `frozen: Set<nodeId>` | до сабмита replay |
-| Открытая вкладка инспектора | nuqs | `?tab=prompt\|raw\|checks\|cost` | |
+| Открытая вкладка инспектора | search-параметр | `?tab=prompt\|raw\|checks\|cost` | |
 | Раскрытые строки водопада, высоты панелей, «показывать свёрнутые повторы» | zustand + `persist` | localStorage | личная настройка рабочего места |
-| Фильтры, сортировка, курсор пагинации всех таблиц | nuqs | `status`, `node`, `q`, `cursor` | `q` с `.withOptions({ throttleMs: 300 })`, `shallow: true` обязателен |
-| Ключ запроса таблицы | Query, **выводится** из распарсенных nuqs-значений | `['runs', filters]` | зеркалировать фильтры в zustand запрещено |
+| Фильтры, сортировка, курсор пагинации всех таблиц | search-параметры | `status`, `node`, `q`, `cursor` | `q` — дебаунс 300 мс до `navigate({ replace: true })`; в `loaderDeps` только параметры, от которых зависит `loader`, иначе каждый символ `q` перезапускает загрузку маршрута |
+| Ключ запроса таблицы | Query, **выводится** из `useSearch()` | `['runs', filters]` | зеркалировать фильтры в zustand запрещено |
 | Выделенные строки для батч-действий | zustand | эфемерно | |
 | Открытость/размеры панелей | zustand + `persist`, `autoSaveId` у `react-resizable-panels` | per-screen | |
 | Открытость инспектора | **выводится** из наличия `?node=` | — | отдельный флаг = два источника истины и мигание |
-| Шаримые модалки (дифф версий) | nuqs | `?diff=v12..v15` | не `useState` |
+| Шаримые модалки (дифф версий) | search-параметр | `?diff=v12..v15` | не `useState` |
 
 ### 3.2. Данные прогона и узлы канваса
 
@@ -212,38 +243,39 @@ example-рецепт под TanStack Table v8), `tree`, `timeline`, `stepper`, `
 
 ### 4.1. Клиент из OpenAPI
 
-Источник истины — `@wf/contracts` (zod-схемы домена). Control plane объявляет операции через
+Источник истины — `@aqven/contracts` (zod-схемы домена). Control plane объявляет операции через
 `createRoute` из `@hono/zod-openapi@1.6.3` и отдаёт OpenAPI 3.1 (`app.doc31`). В CI генерируем типы и
 коммитим их; расхождение сгенерированного файла с коммитом — красный билд, это и есть гейт на дрейф
 контракта.
 
 ```
-@wf/contracts ──> createRoute() ──> GET /openapi.json (3.1)
+@aqven/contracts ──> createRoute() ──> GET /openapi.json (3.1)
               └─> z.toJSONSchema() ─> MCP tool inputSchema
-GET /openapi.json ──openapi-typescript@7.13.0 (CI)──> @wf/api-types/schema.d.ts
+GET /openapi.json ──openapi-typescript@7.13.0 (CI)──> @aqven/api-types/schema.d.ts
 Studio ──openapi-fetch createClient<paths>()──> типизированный fetch
 ```
 
 ```ts
 import createClient from "openapi-fetch";
-import type { paths } from "@wf/api-types";
+import type { paths } from "@aqven/api-types";
 
 export const api = createClient<paths>({ baseUrl: "/api" });
 ```
 
-Браузер ходит не в control plane напрямую, а в route handler `app/api/[...path]`: он читает сессию
-better-auth из HttpOnly-cookie и подставляет `Authorization: Bearer` в проксируемый запрос. Наружу
-cookie-сессия не покидает домен Studio, а control plane знает только Bearer — тот же путь, что у
-MCP-агента, значит одна модель прав и один аудит.
+Браузер ходит в `/api` того же origin: статику и API отдаёт один процесс `aqven dev`
+([ADR-0024](adr/0024-studio-on-vite.md)), прокси-слоя между ними нет; в `vite dev` запрос проксирует
+`server.proxy`. Локальный `aqven dev` слушает только `127.0.0.1`. Прежний BFF `app/api/[...path]`, который
+читал сессию better-auth из HttpOnly-cookie и подставлял `Authorization: Bearer`, исчез вместе с Next;
+чем его заменить в режиме `hosted` — ОВ-18.
 
-Server Actions используются только для мутаций, которых **нет** в MCP-контракте (переименовать вкладку,
-сохранить раскладку панелей) и для сабмита human-задач. Всё, что должен уметь агент, доступно
-единственным способом — типизированным HTTP.
+Мутации, которых **нет** в MCP-контракте (переименовать вкладку, сохранить раскладку панелей), и сабмит
+human-задач идут тем же типизированным HTTP; второго транспорта (прежде — Server Actions) нет. Всё, что
+должен уметь агент, доступно единственным способом.
 
 ### 4.2. SSE прогона: почему не нативный `EventSource`
 
-Канал прогона — `POST /workflows/:id/stream` у `@voltagent/server-hono@2.0.14`, проксируемый нашим
-route handler. Нативный `EventSource` не годится по двум причинам сразу: он GET-only (а запуск прогона
+Канал прогона — `POST /workflows/:id/stream` у `@voltagent/server-hono@2.0.14` на том же origin, что
+и Studio. Нативный `EventSource` не годится по двум причинам сразу: он GET-only (а запуск прогона
 несёт тело), и он не умеет заголовков, то есть не может передать `Authorization`. Берём
 `eventsource-parser@4.1.0` — парсер только SSE-фрейминга — и тонкую обёртку на `fetch` +
 `ReadableStream`. Фолбэк, если не захочется писать reconnect самим, — `@microsoft/fetch-event-source@2.0.1`
@@ -294,19 +326,16 @@ flowchart LR
 
 | Мутация | Действие |
 |---|---|
-| Правка реестра (типы, модели, агенты, тулы) — Server Action | `updateTag('registry:<kind>')` — read-your-writes: человек видит своё изменение в том же запросе |
-| Запуск прогона | `refresh()` в Server Action освежает только некэшированные данные (счётчик активных прогонов в шапке), кэшированные оболочки не сбрасывает |
+| Правка реестра (типы, модели, агенты, тулы) | `useMutation` → `await invalidateQueries(['registry', kind])` до закрытия формы — read-your-writes: человек видит своё изменение сразу |
+| Запуск прогона | `useMutation` → `invalidateQueries(['runs', 'active'])` освежает только счётчик активных прогонов в шапке, снимки завершённых прогонов не трогает |
 | Replay узла / fork с узла k | `useMutation` → при успехе либо `invalidateQueries(['run'])`, либо навигация на новый `runId` |
 | Патч документа воркфлоу (`flow_patch` с `base_rev`) | оптимистичное применение в zustand-документе, при `409 conflict` — откат и показ серверной ревизии |
-| Публикация версии, аппрув, откат | `revalidateTag('flow:'+id, 'max')` + `invalidateQueries(['flow', id])` |
-
-`revalidateTag(tag, profile)` — второй аргумент обязателен (`'max'` для долгоживущего контента),
-иначе попадаем на deprecated-путь.
+| Публикация версии, аппрув, откат | `invalidateQueries(['flow', id])` |
 
 ## 5. Карта экранов (§14)
 
 Имена в строках «shadcn» проверены по реестру `@shadcn` на 2026-09-11 и существуют. Строка «своё» —
-то, чего в реестре нет; эти компоненты уезжают в наш namespace-реестр `@wf` (§9).
+то, чего в реестре нет; эти компоненты уезжают в наш namespace-реестр `@aqven` (§9).
 
 ### 5.1. Канвас (§14.1)
 
@@ -319,8 +348,8 @@ flowchart LR
   `hover-card`, `popover`, `badge`, `command`, `kbd`, `separator`, `empty`, `alert`.
 - **Внешнее:** `@xyflow/react`, `elkjs` (worker), `graphology-dag` (`willCreateCycle`).
 - **Своё:** `StageNode`, `SubworkflowNode`, `TypedPort`, `BindingEdge`, `CompileErrorOverlay`, `MiniMapLegend`.
-- **Данные:** RSC отдаёт IR и диагностику компилятора один раз пропом; далее документ живёт в zustand,
-  патчи — `flow_patch` с `base_rev`.
+- **Данные:** `loader` маршрута кладёт IR и диагностику компилятора в кэш Query один раз; далее документ
+  живёт в zustand, патчи — `flow_patch` с `base_rev`.
 
 ### 5.2. Отладчик прогона (§14.2, §11)
 
@@ -341,7 +370,7 @@ flowchart LR
   `sheet`, `empty`, `pagination`.
 - **Внешнее:** `@tanstack/react-table@9` + `@tanstack/react-virtual`.
 - **Своё:** `TypeSchemaView`, `UsageList`, `ImpactTree`.
-- **Данные:** RSC, `'use cache'` + `cacheTag('registry:types')`; правки — Server Action + `updateTag`.
+- **Данные:** Query `['registry', 'types']`; правки — `useMutation` + `invalidateQueries`.
 
 ### 5.4. Реестр моделей (§14.3)
 
@@ -351,7 +380,7 @@ flowchart LR
 - **shadcn:** `table`, `card`, `field` + `field-group`, `switch`, `native-select`, `badge`, `tooltip`,
   `dialog`, `alert-dialog`.
 - **Своё:** `CapabilityMatrixCell`, `FallbackChain`, `PriceTierBadge`.
-- **Данные:** RSC + Server Action, `updateTag('registry:models')`.
+- **Данные:** Query `['registry', 'models']` + `useMutation`.
 
 ### 5.5. Реестры агентов и тулов (§14.3)
 
@@ -362,7 +391,7 @@ flowchart LR
   `accordion`, `collapsible`, `alert`, `hover-card`, `dialog`.
 - **Внешнее:** `json-edit-react` (схема), `jsondiffpatch` (дрейф схемы).
 - **Своё:** `AgentCard`, `ToolBindingList`, `McpSchemaPin`, `SchemaDriftBanner`.
-- **Данные:** RSC + Server Action; форма правки агента — RJSF, потому что набор полей задаётся схемой
+- **Данные:** Query + `useMutation`; форма правки агента — RJSF, потому что набор полей задаётся схемой
   профиля модели в рантайме (§10).
 
 ### 5.6. Evals: датасеты (§14.4)
@@ -373,7 +402,7 @@ flowchart LR
 - **shadcn:** `table`, `input-group`, `checkbox`, `dropdown-menu`, `sheet`, `progress`, `empty`, `pagination`.
 - **Внешнее:** `@tanstack/react-table@9` + virtual (10k+ строк).
 - **Своё:** `DatasetRowPreview`, `SplitBadge`.
-- **Данные:** Query, курсорная пагинация, фильтры из nuqs.
+- **Данные:** Query, курсорная пагинация, фильтры из search-параметров маршрута.
 
 ### 5.7. Evals: сравнение экспериментов, очередь разметки, калибровка судей (§14.4)
 
@@ -400,7 +429,7 @@ flowchart LR
 - **Внешнее:** `jsondiffpatch` (delta), `rfc6902` (патч на запись), `react-diff-viewer-continued`
   (текстовые поля), `@xyflow/react` в read-only для lineage.
 - **Своё:** `SemanticDiffTree`, `EvidencePanel`, `ApprovalGate`, `LineageGraph`, `VersionRail`.
-- **Данные:** полностью серверный RSC-экран; пара версий в URL.
+- **Данные:** Query по паре версий из search-параметра `?diff=`.
 - **Важно:** delta от `jsondiffpatch` рендерим **своим** React-компонентом, а не их HTML-форматтером —
   иначе дифф выпадает из токен-системы и не умеет показывать провенанс поля.
 
@@ -412,7 +441,7 @@ flowchart LR
   `scroll-area`, `empty`.
 - **Внешнее:** `@tanstack/react-table@9` + virtual.
 - **Своё:** `DecisionEntry`, `DecisionFilterBar`, `RationaleExcerpt`.
-- **Данные:** Query, курсор в nuqs.
+- **Данные:** Query, курсор в search-параметрах.
 
 ### 5.10. Редактор шаблонов промтов (§14.7)
 
@@ -421,7 +450,7 @@ flowchart LR
 - **shadcn:** `resizable` (три панели), `tabs`, `select`, `field`, `alert`, `badge`, `tooltip`, `button-group`.
 - **Внешнее:** CodeMirror 6, `react-diff-viewer-continued`.
 - **Своё:** `SlotDecorator`, `RenderPreview`, `FixturePicker`, `RenderDiffPane`.
-- **Данные:** RSC отдаёт шаблон и фикстуры; отрисовка и диагностика — по HTTP к компилятору.
+- **Данные:** `loader` маршрута грузит шаблон и фикстуры в Query; отрисовка и диагностика — по HTTP к компилятору.
 
 ### 5.11. Граф контекста (§14.8)
 
@@ -430,7 +459,7 @@ flowchart LR
 - **Взаимодействия:** фильтр по виду источника и по стадии (по умолчанию не «весь граф сразу»),
   подсветка 1-hop соседей при hover с затемнением остального, переход к узлу-потребителю.
 - **shadcn:** `sidebar`, `resizable`, `badge`, `tooltip`, `toggle-group`, `hover-card`.
-- **Внешнее:** `@xyflow/react` + `elkjs` — тот же пакет `@wf/graph-view`, другой пресет раскладки.
+- **Внешнее:** `@xyflow/react` + `elkjs` — тот же пакет `@aqven/graph-view`, другой пресет раскладки.
 - **Своё:** `ContextKindLegend`, `NeedNode`, `SourceNode`, `UnsatisfiedNeedBadge`.
 - **Кодировка:** форма + иконка + цвет одновременно (пять цветов на графе неразличимы, плюс дальтонизм):
 
@@ -452,7 +481,7 @@ flowchart LR
 - **Взаимодействия:** две проекции на одном экране — слева граф «фрагмент → шаблон → узел», справа
   панель сборки конкретного промта с подсвеченными слотами; клик по слоту ведёт к источнику.
 - **shadcn:** `resizable`, `accordion`, `collapsible`, `item`, `badge`, `scroll-area`, `hover-card`, `breadcrumb`.
-- **Внешнее:** `@wf/graph-view` (пресет `elk.direction: 'DOWN'` — «сборка сверху вниз» читается лучше);
+- **Внешнее:** `@aqven/graph-view` (пресет `elk.direction: 'DOWN'` — «сборка сверху вниз» читается лучше);
   для длинных списков использований — `@tanstack/react-virtual`.
 - **Своё:** `PromptAssemblyTrace`, `FragmentUsageList`, `OutputToPromptEdge`.
 - **Сквозное требование:** цвет слота = вид источника из §5.11. Две разные кодировки на двух экранах —
@@ -513,7 +542,7 @@ flowchart LR
   `accordion`, `sonner`, `empty`.
 - **Своё:** `ExportTargetPicker`, `LossReport`, `ConformanceRunReport`.
 - **Данные:** запуск — мутация, прогресс — SSE того же формата, что прогон; ссылка на бандл —
-  route handler, отдающий поток.
+  HTTP-эндпоинт API, отдающий поток.
 
 ### 5.18. Шелл (все экраны)
 
@@ -632,7 +661,7 @@ const elk = new ELK({
 ```
 
 `type: "classic"` обязателен — `elk-worker.min.js` не ESM. Модуль тянет ~1.4 МБ, поэтому весь модуль
-раскладки грузится через `dynamic(() => import(...), { ssr: false })`, иначе попадает в initial bundle.
+раскладки грузится динамическим `import()` за `React.lazy` (§1.2), иначе попадает в initial bundle.
 Отмены раскладки нет: дебаунс ~150 мс плюс generation-счётчик, устаревший результат игнорируется.
 Измеренная стоимость (node, цепочки со скип-рёбрами и вложенными группами): 60 узлов — 81 мс,
 200 — 76 мс, 500 — 146 мс, 1000 — 180 мс. ELK не узкое место; воркер нужен не ради этих чисел, а ради
@@ -699,11 +728,11 @@ undo/redo и оптимистичные апдейты. Uncontrolled (`defaultNo
 
 ### 6.6. Переиспользование канваса
 
-`@wf/graph-view` — один пакет с пропами `{ nodes, edges, nodeTypes, layoutPreset }`. Три экрана
+`@aqven/graph-view` — один пакет с пропами `{ nodes, edges, nodeTypes, layoutPreset }`. Три экрана
 (канвас воркфлоу §5.1, граф контекста §5.11, карта промтов §5.12) — три пресета раскладки и три набора
 `nodeTypes`. Ядро не трогается при добавлении нового вида графа: Open-Closed по пресетам.
 
-Графовые алгоритмы живут в изоморфном `@wf/graph-algos` и используются и сервером (валидация), и UI
+Графовые алгоритмы живут в изоморфном `@aqven/graph-algos` и используются и сервером (валидация), и UI
 (подсветка): топосорт, детект цикла и `willCreateCycle` — из `graphology-dag`; доминаторы
 (Cooper-Harvey-Kennedy, ~40 строк), ancestor-check «B гарантированно до A» (~20 строк) и критический
 путь поверх топосорта (~25 строк) — свои. Пакет `dominators@1.1.2` существует, но 4 года без релиза;
@@ -818,7 +847,7 @@ Swimlane: строка на итерацию, внутри — спаны. Мо�
 
 ### 8.1. Механика Tailwind v4
 
-Tailwind v4 — CSS-first, `tailwind.config.js` не существует, всё живёт в `app/globals.css`.
+Tailwind v4 — CSS-first, `tailwind.config.js` не существует, всё живёт в `apps/studio/src/index.css`.
 `@theme` объявляет токены, из которых генерируются утилиты (`--color-ctx-data` → `bg-ctx-data`,
 `text-ctx-data`, `border-ctx-data`). Содержимое `@theme` статично, поэтому переключаемые по теме
 значения задаются связкой: сырые переменные в `:root` / `.dark`, а `@theme **inline**` только ссылается
@@ -899,7 +928,8 @@ Tailwind v4 — CSS-first, `tailwind.config.js` не существует, вс�
   --color-chart-4: var(--ctx-human);
   --color-chart-5: var(--ctx-static);
 
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 ```
 
@@ -931,26 +961,28 @@ shadcn `baseColor: neutral` в 2026 уже в OKLCH; смешивать hsl и o
 
 ### 8.4. Тема и токены в JS
 
-`next-themes@0.4.6` с `attribute="class"` как **клиентский** компонент в root layout;
-`<html suppressHydrationWarning>` обязателен. `children` при этом остаются серверными: они передаются
-пропом и в клиентский бандл не втягиваются. Плюс `color-scheme: light dark` — во внутреннем инструменте
-с плотным UI нативные скроллбары, поля и `<select>` заметны.
+Тема — класс `.dark` на `<html>`. Блокирующий inline-скрипт в `apps/studio/index.html` до загрузки
+бандла читает выбор из `localStorage` и `matchMedia('(prefers-color-scheme: dark)')` и ставит класс —
+иначе первый кадр мигает светлой темой. Провайдер в `__root.tsx` хранит выбор и переключает класс.
+Плюс `color-scheme: light dark` — во внутреннем инструменте с плотным UI нативные скроллбары, поля и
+`<select>` заметны.
 
 Отдельная проблема: канвас и чарты рисуются в JS, а токены живут в CSS.
 **Единственный источник истины — CSS-переменные.** В React Flow и чарты цвета прокидываются хуком,
 который читает `getComputedStyle(document.documentElement).getPropertyValue('--...')` и переподписывается
-на смену темы через `useTheme()`. Дублировать палитру в TypeScript запрещено — это гарантированный
+на смену темы через хук провайдера темы. Дублировать палитру в TypeScript запрещено — это гарантированный
 рассинхрон светлой и тёмной темы.
 
-Риск `next-themes`: последний релиз 2025-03-11. Библиотека фактически feature-complete (~300 строк:
-класс на `<html>`, `localStorage`, блокирующий анти-FOUC скрипт, `matchMedia`). Митигация: точный пин
-версии; если сломается на будущем мажоре React — заменяется своим провайдером за полдня. Форк не нужен.
+`next-themes@0.4.6` не ставим ([ADR-0024](adr/0024-studio-on-vite.md)): в SPA нет серверного HTML и
+гидрации, с которыми он согласует класс, а всё его содержимое (класс на `<html>`, `localStorage`,
+анти-FOUC скрипт, `matchMedia`) — это провайдер выше, прежде записанный планом Б. Зависимость с
+последним релизом 2025-03-11 ради ~300 строк не окупается.
 
 ## 9. Внутренний UI-кит
 
 ### 9.1. Что кладём в реестр
 
-В свой namespace-реестр `@wf` уезжает только то, чего нет в `@shadcn` и что используется больше чем на
+В свой namespace-реестр `@aqven` уезжает только то, чего нет в `@shadcn` и что используется больше чем на
 одном экране:
 
 | Компонент | Почему свой |
@@ -964,8 +996,9 @@ shadcn `baseColor: neutral` в 2026 уже в OKLCH; смешивать hsl и o
 
 Всё остальное берём готовым. Список компонентов реестра, которые Studio **не** ставит, чтобы не тащить
 лишнего: `carousel`, `input-otp`, `aspect-ratio`, `menubar`, `navigation-menu`, `drawer` (риск `vaul`),
-AI-чат примитивы `attachment`/`bubble`/`marker`/`message`/`message-scroller` (берём их только если
-появится панель «спроси Claude о прогоне» — тогда именно их, а не свой чат).
+AI-чат примитивы `attachment`/`bubble`/`marker`/`message`/`message-scroller` — чат-панель собрана на
+`@assistant-ui/react` ([ADR-0024](adr/0024-studio-on-vite.md)), его компоненты лежат в
+`src/components/assistant-ui/`, второго чата не заводим.
 
 ### 9.2. Как ставится
 
@@ -979,31 +1012,34 @@ npx shadcn@latest add button button-group input input-group field form label \
   command accordion collapsible progress alert breadcrumb pagination avatar \
   resizable sidebar sonner kbd toggle toggle-group calendar combobox chart
 
-npx shadcn@latest add @shadcn/font-inter @shadcn/font-jetbrains-mono
 npx shadcn@latest add @shadcn/sidebar-15
 ```
+
+Шрифты — не из реестра, а пакетами `@fontsource-variable/geist` и `@fontsource-variable/geist-mono`
+импортом в `src/index.css`: `next/font` в Vite нет.
 
 Свой реестр публикуется приватным GitHub-репозиторием и адресуется namespace-синтаксисом: кто может
 читать репозиторий, тот может ставить из него.
 
 ```jsonc
 {
-  "registries": { "@wf": "https://raw.githubusercontent.com/<org>/<repo>/main/registry/{name}.json" }
+  "registries": { "@aqven": "https://raw.githubusercontent.com/<org>/<repo>/main/registry/{name}.json" }
 }
 ```
 
 ```bash
-npx shadcn@latest add @wf/virtual-data-table
+npx shadcn@latest add @aqven/virtual-data-table
 npx shadcn@latest build
 ```
 
 `components.json` для Tailwind v4: `tailwind.config` — **пустая строка** (файла конфига нет),
-`style: "new-york"` (единственный поддерживаемый), `baseColor: "neutral"`, `cssVariables: true`,
-`iconLibrary: "lucide"`, `rsc: true`.
+`tailwind.css: "src/index.css"`, `style: "radix-nova"`, `baseColor: "neutral"`, `cssVariables: true`,
+`iconLibrary: "lucide"`, `rsc: false` (серверных компонентов нет, CLI не добавляет `'use client'`).
 
 Два подводных камня установки: `shadcn/chart` пинит `recharts@3.8.0` — вручную recharts не обновляем
-без визуальных тестов; `cn` теперь отдельный npm-пакет (`cn@0.2.6`), новые компоненты импортируют
-`import { cn } from "cn"` — начинаем сразу с него и не плодим второй путь через `@/lib/utils`.
+без визуальных тестов; `cn` теперь отдельный npm-пакет (`cn@0.3.0`). Компоненты импортируют `cn` через
+алиас `@/lib/utils`, а он — только реэкспорт `export { cn } from "cn"`: своей реализации склейки
+классов в репозитории нет.
 
 ### 9.3. Таблицы на TanStack Table v9
 
@@ -1065,8 +1101,8 @@ JSON Schema → zod через `json-schema-to-zod`, а он выдаёт **ст
 
 ### 10.3. Сабмит human-задачи
 
-Форма рендерится из JSON Schema, полученной RSC-оболочкой `/tasks/[taskId]`; сабмит — Server Action,
-которая зовёт resume воркфлоу. `suspendSchema`/`resumeSchema` задаются **на каждом шаге** и шаговая
+Форма рендерится из JSON Schema, которую `loader` маршрута `/tasks/$taskId` кладёт в Query; сабмит —
+`useMutation` к операции resume воркфлоу. `suspendSchema`/`resumeSchema` задаются **на каждом шаге** и шаговая
 схема переопределяет воркфлоу-схему, поэтому UI не угадывает форму по типу узла, а всегда берёт схему
 конкретного приостановленного шага. Таймаут задачи возобновляет не VoltAgent, а наш планировщик
 (pg-boss `sendAfter` + сверяющий cron) — UI показывает дедлайн, но не отвечает за него.
@@ -1079,14 +1115,15 @@ JSON Schema → zod через `json-schema-to-zod`, а он выдаёт **ст
 **без** `@uiw/react-codemirror`: обёртка тянет `@babel/runtime`, навязывает свой набор расширений и тему
 `one-dark` и лишает контроля над жизненным циклом `EditorView`, а нам нужен императивный
 `dispatch(setDiagnostics(...))` из стрима. Своя обёртка на `useRef` + `useEffect` — около 80 строк и
-ноль зависимостей. Компонент грузится через `dynamic(() => import('./Editor'), { ssr: false })`.
+ноль зависимостей. Компонент грузится через `React.lazy(() => import('./Editor'))`.
 
-Monaco отклонён по трём причинам в порядке важности: (1) Monaco требует web workers на язык, канонический
-путь — `monaco-editor-webpack-plugin`, которого для Turbopack не существует, а Turbopack в Next 16 —
-дефолтный бандлер; `@monaco-editor/react` по умолчанию грузит Monaco с CDN, что неприемлемо за
-корпоративным периметром; (2) главная фича Monaco — TypeScript language service — нам не нужна: наша
-диагностика приходит **от нашего компилятора** по сети; (3) вес и глобальная (а не по-инстансная)
-регистрация Monarch-грамматики, которая ломается при HMR и нескольких редакторах на странице.
+Monaco отклонён по трём причинам в порядке важности: (1) главная фича Monaco — TypeScript language
+service — нам не нужна: наша диагностика приходит **от нашего компилятора** по сети; (2) вес и
+глобальная (а не по-инстансная) регистрация Monarch-грамматики, которая ломается при HMR и нескольких
+редакторах на странице; (3) `@monaco-editor/react` по умолчанию грузит Monaco с CDN, что неприемлемо за
+корпоративным периметром. Прежний первый довод — у Turbopack нет плагина для воркеров Monaco — снят
+[ADR-0024](adr/0024-studio-on-vite.md): Vite 8.3.0 собирает воркеры сам (`new Worker(new URL(...))`,
+импорт `?worker`).
 
 Цена решения — отсутствие готового `DiffEditor`; дифф отрисовки закрываем
 `react-diff-viewer-continued@4.4.0`, который всё равно нужен для §5.8 и §7.5. Это же снимает Monaco
@@ -1179,14 +1216,16 @@ const push = (view: EditorView, diags: readonly Diagnostic[]) =>
 
 Нужна стабильная поверхность для визуальной проверки всех состояний узла
 (`idle / running / ok / failed / skipped / cached / retrying / needs-approval`), инспектора и водопада
-на фикстуре прогона. Базовый вариант — Storybook; связка Storybook 9 + Next 16.3 + Tailwind v4 не
-проверена (ОВ-7). Дешёвая замена, которую закладываем как запасную: страница `/dev/gallery` в самом
-приложении — все состояния на одной странице, без лишней зависимости и без второй сборки.
+на фикстуре прогона. Базовый вариант — Storybook; связка `@storybook/react-vite` + Vite 8 + Tailwind v4
+на нашем конфиге не проверена (ОВ-7). Дешёвая замена, которую закладываем как запасную: страница
+`/dev/gallery` в самом приложении — все состояния на одной странице, без лишней зависимости и без
+второй сборки.
 
 ### 12.5. Производительность как тест
 
-Регрессии скорости навигации закрываются e2e-тестом с `instant()` из `@next/playwright`; не-мгновенные
-навигации в разработке ловятся DevTools (Instant Insights, Navigation Inspector с паузой на shell).
+Регрессии скорости навигации закрываются e2e-замером Playwright: время от клика до появления скелета
+и до готовности региона. Предзагрузка чанка и `loader` по наведению (`defaultPreload: 'intent'`) — то,
+что замер защищает от регрессии.
 
 ## Открытые вопросы
 
@@ -1202,10 +1241,10 @@ const push = (view: EditorView, diags: readonly Diagnostic[]) =>
    CodeMirror 6 и явный отказ от Monaco (нет плагина воркеров под Turbopack, CDN-загрузка по умолчанию,
    не нужен TS language service). `research/design-system.md` в инвентаре экрана §14.7 и в разделе
    диффов назначает `@monaco-editor/react@4.7.0` (ради встроенного `DiffEditor`). Документ выбрал
-   CodeMirror 6 + `react-diff-viewer-continued`, потому что аргумент про Turbopack проверен, а `DiffEditor`
-   закрывается уже имеющейся зависимостью. *Закрыть:* спайк — CodeMirror 6 в Next 16.3 с нашей
-   подсветкой слотов, автодополнением и `setDiagnostics`; при провале спайка — обратный ADR с Monaco и
-   решением вопроса воркеров.
+   CodeMirror 6 + `react-diff-viewer-continued`, потому что TS language service не нужен, а `DiffEditor`
+   закрывается уже имеющейся зависимостью; аргумент про Turbopack снят
+   [ADR-0024](adr/0024-studio-on-vite.md). *Закрыть:* спайк — CodeMirror 6 в Vite-сборке Studio с нашей
+   подсветкой слотов, автодополнением и `setDiagnostics`; при провале спайка — обратный ADR с Monaco.
 3. **ОВ-3. Противоречие по водопаду.** Заметка по дизайн-системе предлагает Recharts stacked `BarChart`
    с прозрачной базой; заметка по канвасу — свой компонент на CSS-позиционировании, потому что нужны
    sticky-заголовки, виртуализация 1000+ спанов, раскрытие поддеревьев и синхронное выделение с канвасом.
@@ -1218,15 +1257,15 @@ const push = (view: EditorView, diags: readonly Diagnostic[]) =>
    DECISIONS фиксирует, что zod 4 из коробки даёт невалидный для OpenAI strict вывод именно на
    `z.discriminatedUnion`. Вопрос фронта — переваривает ли RJSF полученный `oneOf`. *Закрыть:* тест
    «IR-тип → JSON Schema → форма RJSF → валидный экземпляр» на трёх реальных типах реестра.
-6. **ОВ-6. Сборка Next 16.3 + Turbopack с `new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url))`.**
-   Не проверена на реальной сборке. Фолбэк, который точно работает: положить `elk-worker.min.js`
-   в `public/` и `new Worker('/elk-worker.min.js')`. *Закрыть:* прогнать `next build` на скелете.
-7. **ОВ-7. Storybook 9 + Next 16.3 + Tailwind v4.** Совместимость не проверена. *Закрыть:* полдня на
-   установку; при дороговизне — страница `/dev/gallery` (§12.4).
-8. **ОВ-8. `experimental.useOffline` и хук `useOffline`.** Для длинных прогонов во внутреннем
-   инструменте выглядит полезно (софт-навигации и Server Actions ждут и ретраятся при обрыве сети), но
-   флаг экспериментальный и в проде не проверен. *Закрыть:* пробовать не раньше фазы 1, отдельным
-   фича-флагом.
+6. **ОВ-6. Сборка Vite 8.3.0 с `new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), { type: 'classic' })`.**
+   Не проверена на реальной сборке: воркер не ESM и лежит в `node_modules`. Фолбэк, который точно
+   работает: положить `elk-worker.min.js` в `public/` и `new Worker('/elk-worker.min.js')`.
+   *Закрыть:* прогнать `pnpm --filter @aqven/studio build` на скелете.
+7. **ОВ-7. Storybook + Vite 8 + Tailwind v4.** Совместимость по peer подтверждена
+   ([frontend/mocks.md](frontend/mocks.md) §6), сборка с нашим `vite.config.ts` не проверена.
+   *Закрыть:* полдня на установку; при дороговизне — страница `/dev/gallery` (§12.4).
+8. **ОВ-8. Снят [ADR-0024](adr/0024-studio-on-vite.md).** `experimental.useOffline` — флаг Next, в SPA
+   его нет; обрыв сети посреди прогона закрывает реконнект SSE по `Last-Event-ID` (§4.3).
 9. **ОВ-9. API `@voltagent/resumable-streams@2.0.1`.** Пакет уже зависимость `server-hono`, но README в
    `node_modules` пуст; возобновление SSE по `Last-Event-ID` после релоада вкладки не подтверждено.
    *Закрыть:* прочитать `dist/*.d.ts`, поставить e2e-сценарий «релоад вкладки посреди прогона».
@@ -1242,20 +1281,26 @@ const push = (view: EditorView, diags: readonly Diagnostic[]) =>
     критический путь v1; замерить журнал без воркера и вернуться к вопросу по факту.
 13. **ОВ-13. Бенчмарки, которых нет.** Не измерены: рендер React Flow на 200–500 узлах (цифры §6.4 —
     из практики сообщества, не свои); ELK на плотном графе `|E| ≈ 4|V|`, где crossing minimization
-    растёт нелинейно; итоговый вес CodeMirror после минификации Turbopack (оценка 130–150 КБ gzip
+    растёт нелинейно; итоговый вес CodeMirror после минификации `vite build` (оценка 130–150 КБ gzip
     получена пересчётом из неминифицированных 249 КБ). *Закрыть:* три замера на скелете приложения до
     начала работ над каждым из этих экранов.
 14. **ОВ-14. Адаптер по умолчанию в shadcn `form`.** Реестр раздаёт четыре семейства примеров
     (`form-rhf-*`, `form-tanstack-*`, `form-formisch-*`, `form-next-*`); какой адаптер стоит в самом
-    компоненте `form` в стиле new-york — не проверено. *Закрыть:* `npx shadcn@latest view @shadcn/form`
+    компоненте `form` в стиле `radix-nova` — не проверено. *Закрыть:* `npx shadcn@latest view @shadcn/form`
     перед первой формой.
 15. **ОВ-15. Форма ответа `langfuse.api.trace.get`.** Подтверждено только наличие метода в `.d.ts`;
     состав полей (observations, usage, cost) не проверен, а от него зависит, сколько данных водопада мы
     берём из Langfuse, а сколько из своей БД. *Закрыть:* один живой вызов на тестовом трейсе.
-16. **ОВ-16. Миграция на `cacheComponents: true`.** Требует Suspense-границу над каждым чтением сессии;
-    у нас сессия читается почти везде. Откладывать дорого: Vercel заявил, что поведение Instant
-    Navigations станет дефолтом в следующем мажоре. *Закрыть:* пройти официальный гайд миграции на
-    скелете в конце фазы 0 и оценить объём.
+16. **ОВ-16. Снят [ADR-0024](adr/0024-studio-on-vite.md).** `cacheComponents` — флаг Next; в SPA
+    сессия на сервере до отрисовки не читается, миграции нет.
 17. **ОВ-17. React Flow Pro.** Технического блокера нет, библиотека MIT целиком. Единственный аргумент
     «за» — готовый темплейт «AI workflow editor» как референс за разовые $169. *Закрыть:* решение
     заказчика.
+18. **ОВ-18. Studio в режиме `hosted`: раздача бандла и сессия человека без BFF.** До
+    [ADR-0024](adr/0024-studio-on-vite.md) cookie-сессию better-auth в `Authorization: Bearer` переводил
+    route handler `app/api/[...path]` ([19. Безопасность](19-security-and-policies.md) §7, контур
+    «Человек»). Локальный `aqven dev` на `127.0.0.1` отдаёт `dist` и API сам и авторизации не требует. Для
+    `hosted` не выбраны ни процесс, отдающий `dist` (`ROLE=api` или отдельная статика,
+    [02. Архитектура](02-architecture.md) §2), ни замена BFF: control plane сам принимает cookie-сессию с
+    того же origin либо SPA получает короткоживущий Bearer. *Закрыть:* решение вместе с вводом режима
+    `hosted`, правка контура в 19 §7 через ADR.
