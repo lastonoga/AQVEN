@@ -3395,52 +3395,51 @@
     },
     "/api/runs/{run_id}/events/log": {
       "get": {
-        "summary": "Run Event Log",
         "operationId": "run_event_log",
         "parameters": [
           {
-            "name": "run_id",
             "in": "path",
+            "name": "run_id",
             "required": true,
             "schema": {
-              "type": "string",
-              "title": "Run Id"
+              "title": "Run Id",
+              "type": "string"
             }
           },
           {
+            "in": "query",
             "name": "after_seq",
-            "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
               "default": 0,
-              "title": "After Seq"
+              "minimum": 0,
+              "title": "After Seq",
+              "type": "integer"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 20,
               "maximum": 200,
               "minimum": 1,
-              "default": 20,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_RunEvent_"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "400": {
             "content": {
@@ -3533,7 +3532,8 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "event replay"
+        "summary": "Run Event Log",
+        "x-aqven-operation": "run_events"
       }
     },
     "/api/runs/{run_id}/executions": {

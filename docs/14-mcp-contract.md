@@ -1,7 +1,7 @@
 # 14. MCP-контракт для агентов
 
-> Статус: draft
-> Зависит от: [07. Компилятор](07-compiler.md), [12. Наблюдаемость и отладка](12-observability.md), [02. Архитектура системы](02-architecture.md), [23. API локальной студии](23-studio-api.md), [ADR-0008](adr/0008-mcp-tool-naming-and-phasing.md), [ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0025](adr/0025-python-engine.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md), [ADR-0028](adr/0028-studio-api-contract.md), [ADR-0029](adr/0029-trust-and-quality-python.md)
+> Статус: draft; §2 и §5 описывают реализованную поверхность, остальные разделы — проект
+> Зависит от: [07. Компилятор](07-compiler.md), [12. Наблюдаемость и отладка](12-observability.md), [02. Архитектура системы](02-architecture.md), [23. API локальной студии](23-studio-api.md), [ADR-0008](adr/0008-mcp-tool-naming-and-phasing.md), [ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0025](adr/0025-python-engine.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md), [ADR-0028](adr/0028-studio-api-contract.md), [ADR-0029](adr/0029-trust-and-quality-python.md), [ADR-0042](adr/0042-mcp-is-the-action-surface.md)
 > Источники: research/mcp-server.md, research/api-layer.md, research/00-verified-by-lead.md, [research/py-stack-runtime.md](research/py-stack-runtime.md) §5.5, §7, [research/studio-api-inventory.md](research/studio-api-inventory.md) §2.3–§2.4, §3, спека §13.1–§13.4
 
 ## Зачем этот слой
@@ -11,8 +11,14 @@
 стоит не вместо файлов, а поверх них: он закрывает проблему «агент не видит последствий своего действия» из
 §8 — доменная операция валидируется до записи на всём дереве проекта, пишется транзакцией по набору файлов и
 возвращает локальный контекст, машиночитаемые проблемы и готовые к применению кандидаты исправления. Второй
-закрываемый риск — бюджет контекста: полный реестр (78 тулов, 79 с `project_export`) стоит 20–47k токенов
-определений до первого действия, поэтому поверхность раскрывается по фазам цикла.
+закрываемый риск — бюджет контекста, и закрыт он размером поверхности, а не механизмом: реестр
+проектировался на 78 тулов и стоил бы 20–47k токенов определений до первого действия, а реализованная
+поверхность — 18 тулов действий, около 3k ([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Читающих
+тулов нет: файлы агент читает своими средствами.
+
+**Что здесь реализовано, а что спроектировано.** §2 — поверхность как она есть, §5 — отменённое фазовое
+раскрытие. Разделы §3, §4, §6–§10 описывают замысел: конверт ответа, права, скилл цикла и протокол §13.3
+реализованы частично или не реализованы, и ссылаются на тулы из §2.6, которых на поверхности нет.
 
 ## Решения
 
@@ -96,95 +102,70 @@ pyright 1.1.414 strict и `ruff check` 0.16.7 (`E`, `F`) без замечани
 проверки аргументов по модели входа `mcp` 2.2.0 отдаёт текстом SDK с `isError`, без конверта
 ([ADR-0028](adr/0028-studio-api-contract.md) ОВ 2).
 
-## 2. Полный реестр тулов
+## 2. Реестр тулов
 
 Имя сервера — `aqven` ([ADR-0025](adr/0025-python-engine.md) §8). Короткое намеренно: Claude Code префиксует
 тулы как `mcp__<server>__<tool>`, а имя в Messages API ограничено по длине и по алфавиту — точка не входит.
-Имена только `snake_case`, точки из §13.1 спеки переименованы. Самое длинное имя —
-`mcp__aqven__component_propose_to_library`, 40 символов; проверка — `len("mcp__aqven__") + len(name) <= 128`.
+Имена только `snake_case`, точки из §13.1 спеки переименованы; проверка длины — `len("mcp__aqven__") + len(name) <= 128`.
 
-Тулы регистрируются из того же каталога операций, что и маршруты FastAPI
-([ADR-0028](adr/0028-studio-api-contract.md) §2); REST-двойник каждого тула — [23](23-studio-api.md) §13.2.
-Аргумент `spec_id` — имя каталога `flows/<flow_id>/`; переименование аргумента в `flow_id` —
-[23](23-studio-api.md) ОВ 8 (открытый вопрос 20).
+**MCP — поверхность действий, а не чтения** ([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Определения
+лежат файлами ([ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md)),
+и агент читает их своими Read, Grep и Glob. Тул попадает на поверхность, только если делает то, чего файлами
+не сделать: запускает, проверяет, пишет транзакционно. Поэтому читающих тулов нет и фазового раскрытия нет:
+18 определений стоят порядка 3k токенов.
 
-Колонка «фаза» — когда тул включён: `core` = всегда, остальное включается `mode_set`.
-Столбцы «вход»/«выход» дают состав аргументов и полезной нагрузки; общий конверт (§3) не повторяется.
+Тул и маршрут студии зовут один use-case из `server/views/` — не «одинаковый», а тот же самый объект
+([ADR-0042](adr/0042-mcp-is-the-action-surface.md) §3). REST-двойник каждого тула — [23](23-studio-api.md) §13.2;
+разметку держит `operation("<имя>")` на маршруте, у маршрутов без тула — `rest_only("<причина>")`.
 
-### 2.1 Служебные (группа `core`)
+### 2.1 Проверки (группа `check`)
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `mode_set` | core | Переключает фазу цикла, включая/выключая группы тулов | `phase`, `reason` | `enabled_tools[]`, `disabled_tools[]` | core |
-| `help_contract` | core | Возвращает реестр кодов проблем, семантику фаз, список тулов текущей фазы | `topic?`, `code?` | `codes[]`, `phases[]`, `tools[]` | core |
-| `studio_open` | core | Строит `ui_url` на конкретный объект и, при необходимости, просит человека подтвердить через URL-elicitation | `target{kind,id}`, `elicit?` | `ui_url`, `elicited?` | core |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `aqven_check` | Полная проверка дерева тем же компилятором, что и сервер | `paths?`, `include_warnings?`, `static?`, `limit?`, `timeout_seconds?` | `AqvenCheckResult`: `ok`, `errors`, `warnings`, `problems[]` |
+| `pyright_check` | pyright strict по коду шагов проекта | `paths?`, `limit?`, `timeout_seconds?` | `PyrightResult` |
+| `pytest_run` | pytest по тестам проекта | `paths?`, `keyword?`, `max_failures?`, `limit?`, `timeout_seconds?` | `PytestResult` |
 
-### 2.2 Каталог, бриф, журнал, архитектуры
+Обязательны после правки: `aqven_check` всегда, `pyright_check` и `pytest_run` — после правки кода.
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `catalog_list` | catalog | Перечисляет архетипы, типы, профили моделей, тулы, паттерны | `kind`, `filter?`, `limit=20`, `cursor?` | `items[]`, `next_cursor`, `total_estimate` | core |
-| `catalog_get` | catalog | Схема одного элемента каталога | `kind`, `id`, `view='summary'` | `schema`, `examples[]` | core |
-| `brief_submit` | brief | Записывает бриф, возвращает пробелы, меняющие структуру воркфлоу | `brief`, `expects?` | `gaps[]` (как `problems[]`), `version` | discover |
-| `brief_get` | brief | Текущий бриф и незакрытые пробелы | `view='summary'` | `brief`, `gaps[]` | discover |
-| `journal_read` | journal | История решений с обоснованиями | `since?`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | core |
-| `journal_append` | journal | Дописывает решение с обоснованием в `journal/*.md`; коммитится вместе с правкой | `decision`, `rationale`, `evidence[]` | `path`, `version` | core |
-| `architecture_search` | architecture | Кандидаты паттернов по требуемым свойствам | `features[]`, `limit=5` | `items[]` с `cost_estimate`, `typical_failures[]` | discover |
-| `architecture_get` | architecture | Описание паттерна, его узлы, стоимость, типовые сбои | `id`, `view` | `pattern`, `failures[]` | discover |
-| `architecture_instantiate` | architecture | Разворачивает паттерн в подворкфлоу внутри спеки | `id`, `params`, `spec_id`, `expects`, `client_op_id` | `version`, `focus`, `problems[]`, `paths[]` | discover, author |
+### 2.2 Промт (группа `prompt`)
 
-### 2.3 Спека и компиляция
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `prompt_preview` | Что узел `llm` реально отправит модели: инструкции, сообщения с фрагментами и выбранными вариантами, вложения, тулы, разрешённый `output.mode` | `flow_id`, `node_id`, `input?`, `variants?` | `PromptPreview` |
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `flow_create` | flow | Создаёт каталог воркфлоу по раскладке ([files-first/layout.md](files-first/layout.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §2) из архетипа или пустой | `name`, `archetype?`, `client_op_id` | `spec_id`, `paths[]`, `version` | author |
-| `flow_get` | flow | Читает спеку целиком или окрестность узла | `spec_id`, `node_id?`, `at?: commit\|'working'`, `view='summary'`, `depth=1` | `focus`, `refs[]`, `version{files[{path, file_hash}], dirty}`, `layout_rev` | core |
-| `flow_import` | flow | Импортирует документ `agent_workflow_spec` (спека §12) в YAML-файлы рабочего дерева; источник-бандл отменён вместе с экспортом | `source{kind: 'agent_workflow_spec', payload}`, `client_op_id` | `spec_id`, `paths[]`, `problems[]` (незакрытые вопросы §13.4) | author |
-| **`flow_patch`** | flow | **Консолидирует `flow.add_node`, `flow.bind`, `flow.set`, `flow.remove`**: атомарный массив операций над набором файлов с CAS по содержимому | `spec_id`, `expects[{path, file_hash\|null}]`, `ops[1..50]`, `client_op_id`, `intent?`, `expect_lock=false`, `exclusive=false`, `dry_run=false` | `version{files[{path, file_hash}], dirty, actor, client_op_id}`, `changed_paths[]`, `applied_ops[]`, `focus`, `problems[]`, `candidates[]`, `conflict?` | author |
-| `flow_commit` | flow | Фиксирует эпизод правки: коммит на набор путей, автор в трейлерах | `paths[]`, `message`, `intent?` | `commit`, `files[{path, file_hash, status}]`, `compile{ok, problems[]}` | author, ship |
-| `flow_history` | flow | История правок поверх git с актором и намерением | `path?`, `spec_id?`, `since?`, `until?`, `actor_kind?`, `limit=20`, `cursor?`, `view='summary'` | `items[]`, `next_cursor` | core |
-| `flow_diff` | flow | Семантический (по умолчанию) или текстовый дифф двух состояний | `from`, `to`, `path?`, `scope='semantic'\|'text'`, `view` | `deltas[]`, `layout_changed`, `problems[]` | author, debug, ship |
-| `flow_revert` | flow | Откат движением вперёд: новый коммит, не переписывание истории | `to: commit`, `paths?`, `message`, `base{commit}`, `dry_run=false` | `commit`, `reverted[]`, `compile{ok,...}`, `conflicts[]` | author, ship |
-| `flow_lock` | flow | Advisory-lock спеки на время работы агента: lockfile в дереве, перехватываемый человеком | `spec_id`, `ttl_s=300`, `reason?`, `release=false` | `lock{holder, holder_kind, expires_at, takeover_allowed}` | author |
-| `flow_compile` | flow | Компилирует спеку: ошибки, предупреждения, статический отчёт | `spec_id`, `at?: commit\|'working'` (по умолчанию рабочая копия), `view='summary'` | `report`, `problems[]`, `candidates[]` | author, run, ship |
+Тул нужен потому, что собранного промта на диске нет: он — результат работы компилятора над файлами.
 
-Консолидация: шесть тонких тулов §13.1 (`add_node`, `bind`, `set`, `remove` + два скрытых в
-«правке») схлопнуты в один `flow_patch` с дискриминированным union операций. Это одновременно
-(а) сокращает поверхность, (б) делает правку атомарной, (в) даёт единственную точку оптимистичной
-блокировки. `dry_run: true` заменяет отдельный `flow_validate`. Вход `flow_patch` совпадает с телом
-`PATCH /api/flows/{flow_id}` ([23](23-studio-api.md) §12.1): это одна модель и один use-case.
+### 2.3 Правка (группа `flow`)
 
-### 2.4 Контекст и провайдеры
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `flow_patch` | Атомарно применяет 1..50 операций к файлам воркфлоу: `add_node`, `remove_node`, `rename_node`, `move_node`, `set`, `unset`, `bind`, `unbind`, `rename_flow`, `rename_agent`, `delete_agent` | `flow_id`, `expects[{path, file_hash\|null}]`, `ops[1..50]`, `client_op_id`, `intent?`, `expect_lock?`, `exclusive?`, `dry_run?` | `WriteResult` |
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `context_plan` | context | Потребности в контексте для каждого решения в графе | `spec_id`, `node_id?` | `needs[]`, `problems[]` (R-C) | author |
-| `context_bind` | context | Привязывает источники к потребностям | `spec_id`, `expects`, `bindings[]`, `client_op_id` | `version`, `problems[]` (R-C) | author |
-| `context_graph` | context | Граф «решение → источник → индекс» с нарушениями R-C | `spec_id`, `view='summary'` | `graph`, `problems[]` | author |
-| `kb_indexes` | context | Состояние индексов базы знаний | `filter?`, `limit=20` | `items[]`, `next_cursor` | author |
-| `provider_models` | provider | Каталог моделей с ценами и проверенными возможностями | `filter{capability,price_max,ctx_min}`, `limit=20` | `items[]`, `next_cursor` | author, evaluate |
-| `provider_probe` | provider | Проверяет реальные возможности модели (strict-схемы, тулы, длина ответа) | `model`, `checks[]` | `capabilities`, `problems[]` | author, evaluate |
+`file_hash` агент считает сам: `"sha256-"` плюс sha256 байтов файла. Источника хешей на поверхности нет
+намеренно — файл у агента и так открыт. `dry_run: true` заменяет отдельный `flow_validate`; на `STALE_FILE`
+файл перечитывается и намерение переигрывается, перезаписывать силой запрещено.
 
-### 2.5 Прогон и отладка
+Консолидация: шесть тонких тулов §13.1 (`add_node`, `bind`, `set`, `remove` и два скрытых в «правке»)
+схлопнуты в один `flow_patch` с дискриминированным union операций. Это одновременно (а) сокращает
+поверхность, (б) делает правку атомарной, (в) даёт единственную точку оптимистичной блокировки. Вход
+совпадает с телом `PATCH /api/flows/{flow_id}` ([23](23-studio-api.md) §12.1).
+
+### 2.4 Прогон и отладка (группа `run`)
 
 Адрес исполнения узла — структура `address{node_id, branch_key, iteration, item_index}`, строковая склейка
 запрещена ([ADR-0028](adr/0028-studio-api-contract.md) §5, [23](23-studio-api.md) §6.2).
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `run_start` | run | Материализует план в снимок и запускает прогон в режиме live или replay | `spec_id`, `at?: commit\|'working'`, `mode`, `input?`, `dataset_id?`, `human_answers?` | `run_id`, `status`, `content_hash`, `ui_url` | run |
-| `run_get` | run | Статус прогона и сводка по стадиям | `run_id`, `view='summary'` | `status`, `stages[]`, `cost` | core |
-| `run_get_node` | run | По адресу исполнения: промт, провенанс, ответ, проверки, стоимость; у ждущего узла — ожидание человека с формой | `run_id`, `node_id`, `branch_key?`, `iteration?`, `item_index?`, `include_payloads='truncated'` | `focus`, `prompt`, `provenance`, `checks[]`, `cost`, `human?{form_schema, suspend_data, attempt, deadline_at, on_timeout, attempts[]}` | core |
-| `run_list` | run | Листинг прогонов; «что ждёт меня» — фильтр, а не отдельный инбокс | `status?`, `assignee?`, `spec_id?`, `overdue?`, `deadline_before?`, `sort?`, `limit=20`, `cursor?` | `Page<RunSummary>`: `items[{run_id, flow_id, status, …, waits[{address, wait_kind, attempt, assignee, waiting_since, deadline_at, on_timeout, form_type_id}]}]`, `next_cursor`, `total_estimate` | core |
-| `run_resume` | run | Возобновляет приостановленный прогон ответом человека | `run_id`, `address`, `attempt`, `payload`, `client_op_id` | `ResumeResult{outcome: accepted\|replayed\|sent, status, address, attempt}` | run |
-| `run_cancel` | run | Отменяет прогон | `run_id`, `reason` | `status='cancelled'` | run |
-| `run_get_trace` | run | Трейс прогона по узлам с проблемами и кандидатами | `run_id`, `node_id?`, `view='summary'`, `limit=20`, `cursor?` | `items[]`, `problems[]`, `candidates[]`, `next_cursor` | core |
-| `run_replay_node` | run | Переисполняет один узел на зафиксированном входе (через replay-кэш) | `run_id`, `address`, `overrides?` | `run_id` (форк), `diff`, `problems[]` | debug |
-| `run_fork` | run | Форк прогона с точки шага | `run_id`, `from: address`, `overrides?` | `run_id`, `lineage_parent` | debug |
-| `run_diff` | run | Семантический дифф двух прогонов по узлам | `run_id_a`, `run_id_b`, `view='summary'` | `deltas[]` | debug |
-| `run_stages` | run | Поэтапные результаты прогона на датасете | `run_id`, `limit=20`, `cursor?` | `stages[]`, `next_cursor` | debug, evaluate |
-| `run_lineage` | run | Дерево происхождения прогона (форки, реплеи) | `run_id`, `depth=3` | `tree` | debug |
-| `run_blame` | run | Виновный узел: какой узел объясняет падение метрики | `run_id`, `metric`, `baseline_run_id?` | `culprits[]` с `confidence`, `candidates[]` | debug |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `run_start` | Запускает прогон из рабочей копии и возвращает `run_id` сразу, не дожидаясь конца | `flow_id`, `mode`, ровно одно из `input`/`dataset_item_id`, `at?`, `context?`, `selected_nodes?`, `start_node?`, `end_node?`, `node_outputs?`, `cassette_id?`, `human_answers?` | `RunStarted`: `run_id`, `status`, `content_hash`, `ui_url`, `warnings[]` |
+| `run_get` | Статус, стоимость, исполнения узлов, открытые ожидания человека, `last_seq` | `run_id` | `RunSnapshot` |
+| `run_list` | Листинг прогонов; «что ждёт меня» — фильтр, а не отдельный инбокс | `flow_id?`, `status?`, `mode?`, `assignee?`, `parent_run_id?`, `deadline_before?`, `overdue?`, `since?`, `until?`, `sort?`, `cursor?`, `limit?` | `Page<RunSummary>` |
+| `run_get_node` | Одно исполнение по адресу: промт, провенанс, ответ, проверки, стоимость; у ждущего узла — форма ожидания | `run_id`, `node_id`, `branch_key?`, `iteration?`, `item_index?`, `include_payloads?` | `ExecutionDetail` |
+| `run_events` | Страница журнала событий прогона после `after_seq` | `run_id`, `after_seq?`, `limit?` | `Page<RunEvent>` |
+| `run_resume` | Возобновляет приостановленный прогон ответом человека | `run_id`, `address`, `attempt`, `payload`, `client_op_id` | `ResumeResult` |
+| `run_fork` | Форк прогона с точки шага | `run_id`, `address`, `overrides?`, `at?` | `RunForked` |
+| `run_cancel` | Отменяет прогон | `run_id`, `reason` | `CancelResult` |
 
 Подсистемы задач нет: шесть операций `human_task_list/get/answer/reassign/escalate/cancel`
 **отменены**. Ожидание человека — узел `human` на примитивах DBOS ([ADR-0025](adr/0025-python-engine.md) §9,
@@ -196,57 +177,47 @@ pyright 1.1.414 strict и `ruff check` 0.16.7 (`E`, `F`) без замечани
 | Форма | `run_get_node` по адресу из `waits[].address` | `human.form_schema` — JSON Schema модели Pydantic типа `form` узла, `human.suspend_data` — значения `in` узла ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §13); справочника `form_kind` нет, тип формы — `form_type_id` |
 | Ответ | `run_resume` | `payload` проверяется моделью формы до `DBOS.send`: ошибка — `ApiError` с `INPUT_INVALID` и `problems[{path, code, message}]`, прогон остаётся `suspended`; `attempt` обязателен, ответ для прежней попытки после эскалации — `WAIT_ATTEMPT_STALE`; нет открытого ожидания — `NOT_WAITING`; ответ другим ключом — `ALREADY_RESUMED`; срок истёк — `RUN_TIMED_OUT`; `client_op_id` уходит в DBOS как `idempotency_key` у `send`, повтор с тем же ключом даёт `outcome: replayed`; цепочка проверок — [23](23-studio-api.md) §6.8 |
 | Одобрение тула внутри `llm` | те же `run_list`, `run_get_node`, `run_resume` | ожидание с `wait_kind: tool_approval`, `suspend_data` — вызовы, ждущие решения ([23](23-studio-api.md) §6.10) |
-| Тест и повторный вопрос | `run_start` с `human_answers[{address, attempt, payload}]`, `run_fork` с `from` на узле `human` | сценарные ответы кладутся в топики ожидания заранее; форк на узле `human` спрашивает заново ([23](23-studio-api.md) §6.9) |
+| Тест и повторный вопрос | `run_start` с `human_answers[{address, attempt, payload}]`, `run_fork` с `address` на узле `human` | сценарные ответы кладутся в топики ожидания заранее; форк на узле `human` спрашивает заново ([23](23-studio-api.md) §6.9) |
 
 Таймаут — не операция и не задача планировщика: узел объявляет `timeout_seconds` и `on_timeout`
 (`fail | default | escalate`), срок исполняет сам DBOS-workflow — `recv` с таймаутом, дедлайн — выход шага
 `DBOS.sleep`, который переживает перезапуск процесса. Следующий узел после резюма приходит событиями
 run-канала ([23](23-studio-api.md) §11.2), поля `next_node_id` нет.
 
-### 2.6 Evals, компоненты, агенты
+### 2.5 Датасеты и эвалы (группа `eval`)
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `dataset_add_from_run` | eval | Кладёт элементы прогона в датасет | `run_id`, `dataset_id`, `filter?` | `added`, `dataset_id` | evaluate |
-| `dataset_get` | eval | Датасет и его метаданные | `dataset_id`, `view='summary'`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | evaluate |
-| `dataset_generate` | eval | Генерирует датасет под цели покрытия | `spec_id`, `coverage_goals[]`, `size` | `dataset_id`, `coverage` | evaluate |
-| `dataset_coverage` | eval | Покрытие датасета по осям решений | `dataset_id`, `spec_id` | `coverage`, `problems[]` | evaluate |
-| `scorer_create` | eval | Создаёт скорер (детерминированный или судья) | `kind`, `config` | `scorer_id`, `problems[]` | evaluate |
-| `experiment_run` | eval | Запускает эксперимент на узле или воркфлоу | `spec_id`, `dataset_id`, `scorers[]`, `scope` | `experiment_id`, `status` | evaluate |
-| `experiment_compare` | eval | Сравнение экспериментов с дельтами по узлам и статистикой | `experiment_id_a`, `experiment_id_b`, `view='summary'` | `deltas[]`, `stats`, `verdict` | evaluate |
-| `experiment_model_matrix` | eval | Матрица моделей, граница Парето «качество × цена × латентность» | `spec_id`, `node_id`, `models[]`, `dataset_id` | `pareto[]`, `items[]` | evaluate |
-| `feedback_list` | eval | Разметка и обратная связь по прогонам | `filter?`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | evaluate |
-| `component_list` | component | Компоненты ядра, общей библиотеки и локальные | `scope`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | author |
-| `component_get` | component | Сигнатура и контракт компонента | `id`, `view` | `signature`, `contract` | author |
-| `component_expand` | component | Раскрывает компонент до примитивов | `id`, `depth=1` | `graph` | author, debug |
-| `component_propose_to_library` | component | Заявка на добавление компонента в общую библиотеку | `id`, `evidence[]` | `proposal_id`, `status='pending_approval'` | ship |
-| `agent_get` | agent | Определение агента | `id` | `agent` | author |
-| `agent_effective_config` | agent | Итоговая конфигурация вызова на узле с происхождением каждого поля | `spec_id`, `node_id` | `config`, `provenance[]` | author, debug |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `dataset_batch_start` | Прогоняет названные кейсы датасета воркфлоу и возвращает батч сразу, не дожидаясь конца; `selected_nodes`, `start_node` и `end_node` сужают прогон так же, как у `run_start` | `flow_id`, `dataset_id`, `case_names[1..N]`, `selected_nodes?`, `start_node?`, `end_node?`, `mode?` | `DatasetBatchRecord` |
+| `dataset_batch_get` | Прогресс батча: статус, счётчики, прогон каждого кейса | `batch_id` | `DatasetBatchRecord` |
+| `eval_run_start` | Прогоняет эвал по его датасету и возвращает запись сразу; `baseline_run_id` сравнивает с прежним прогоном и заполняет гейт, `repeats` повторяет каждый кейс | `eval_id`, `dataset_id?`, `baseline_run_id?`, `repeats?` | `EvalRunRecord` |
+| `eval_run_get` | Статус, оценки по каждому скореру, отчёт гейта, если был baseline | `eval_run_id` | `EvalRunRecord` |
+| `eval_gate` | Отчёт гейта против baseline: какие метрики сдвинулись, насколько, проходит ли гейт. Без baseline — ошибка | `eval_run_id` | `GateReport` |
 
-### 2.7 Реестры и версии (группа `export` отменена)
+Создание датасетов тулом **не делается**: датасет — файл `datasets/<id>.yaml`, агент пишет его сам
+([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §2). Импорт CSV и черновики схем остаются маршрутами
+студии: это операции её редактора, а не агента.
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| **`registry_propose`** | registry | **Консолидирует `registry.propose_type`, `.propose_profile`, `.propose_agent`**: заявка на аппрув | `kind: 'type'\|'profile'\|'agent'`, `payload`, `rationale` | `proposal_id`, `status='pending_approval'`, `ui_url` | author, ship |
-| `version_propose` | version | Заявка на выпуск версии с доказательствами; грязное дерево → `DIRTY_WORKTREE` | `spec_id`, `commit`, `evidence[]` | `proposal_id`, `gate{verdict}`, `status='pending_approval'` | ship |
-| `version_status` | version | Статус заявки и результат гейта | `proposal_id` | `status`, `gate`, `blockers[]` | ship |
+### 2.6 Что спроектировано и не реализовано
 
-Группа `export` отменена решением владельца от 2026-09-16 ([ADR-0025](adr/0025-python-engine.md) §7):
-`project_import`, `project_conformance`, `project_verify_migration` и `project_export` в бандл и целевые рантаймы.
-`project_export` с целью `agent_workflow_spec` — открытый вопрос 16.
+Реестр этого документа проектировался на 78 тулов в 14 группах; поверхность — 18
+([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Ниже — что осталось замыслом, чтобы это не приходилось
+выяснять по отсутствию.
 
-Итого 59 тулов в 14 группах (`core`, `catalog`, `brief`, `journal`, `architecture`, `flow`, `context`,
-`provider`, `run`, `eval`, `component`, `agent`, `registry`, `version`) и `project_export` до решения владельца.
-История счёта: было 57, отменён `component_define` (локальный компонент — это файл), добавлены семь операций
-файловой модели (`flow_commit`, `flow_history`, `flow_diff`, `flow_revert`, `run_list`, `run_resume`,
-`run_cancel`) — 63; отменены три тула группы `export`, судьба четвёртого не решена — 59. Ещё 19 недостающих
-операций (`repo_status`, `index_rebuild`, `external_changes_list`, поиск и влияние, аппрувы, раскладка) в реестр
-не внесены; [files-first/contract.md](files-first/contract.md) §6 считал с ними 82 тула до отмены экспорта,
-итоговая поверхность теперь — **78 тулов**, 79 с `project_export`. Выходят ли на MCP-поверхность REST-ресурсы с
-именами тулов вне реестра (`flow_list`, `type_usages`, `type_impact`, `template_render`, `prompt_map`), решается
-при пересборке реестра ([23](23-studio-api.md) §13.3). Одновременно включено не более 25 (§5).
+| Группа | Тулы | Почему не на поверхности |
+|---|---|---|
+| Чтение проекта | `flow_list`, `flow_get`, `catalog_list`, `catalog_get` | **убраны**: агент читает файлы своими средствами, тул дал бы второй формат тех же данных |
+| Служебные | `mode_set`, `help_contract`, `studio_open` | фазовое раскрытие отменено (§5), `ui_url` приходит в `RunStarted` |
+| Бриф, журнал, архитектуры | `brief_*`, `journal_*`, `architecture_*` | не реализовано |
+| История и релиз | `flow_create`, `flow_import`, `flow_commit`, `flow_history`, `flow_diff`, `flow_revert`, `flow_lock`, `flow_compile` | не реализовано; `flow_compile` покрывает `aqven_check`, история — git у агента |
+| Контекст и провайдеры | `context_*`, `kb_indexes`, `provider_models`, `provider_probe` | не реализовано |
+| Отладка прогонов | `run_get_trace`, `run_replay_node`, `run_diff`, `run_stages`, `run_lineage`, `run_blame` | не реализовано; `run_events` и `run_get_node` покрывают трассу |
+| Эвалы сверх пяти | `dataset_add_from_run`, `dataset_get`, `dataset_generate`, `dataset_coverage`, `scorer_create`, `experiment_model_matrix`, `feedback_list` | не реализовано; `experiment_run` и `experiment_compare` переименованы в `eval_run_start` и `eval_gate` |
+| Компоненты и агенты | `component_*`, `agent_get`, `agent_effective_config` | не реализовано |
+| Реестры и версии | `registry_propose`, `version_propose`, `version_status` | не реализовано |
+| Экспорт | `project_import`, `project_conformance`, `project_verify_migration`, `project_export` | группа отменена решением владельца 2026-09-16 ([ADR-0025](adr/0025-python-engine.md) §7); `project_export` в `agent_workflow_spec` — открытый вопрос 16 |
 
-### 2.8 Два уровня редактирования
+### 2.7 Два уровня редактирования
 
 Файловых операций `file_read`/`file_write` в MCP **не заводим**: у Claude Code уже есть Read, Edit,
 Write и git, а дублирующий тул записи означал бы вторую схему CAS и второй способ обойти валидатор.
@@ -586,8 +557,8 @@ class Page[T: BaseModel](BaseModel):
 история и трейсы дописываются во время листинга. `total_estimate` — именно оценка, точный `count` на
 партиционированных `run_nodes` не считаем.
 
-`tools/list` тоже пагинируется (`params.cursor` → `result.nextCursor`) — при 78–79 тулах это нужно,
-если клиент запросит полный список без фазового фильтра.
+`tools/list` тоже пагинируется (`params.cursor` → `result.nextCursor`) — на поверхности из 18 тулов
+это не нужно, но остаётся верным, если поверхность вырастет.
 
 ### 4.4 Что делаем при усечении
 
@@ -616,177 +587,29 @@ class Page[T: BaseModel](BaseModel):
    обязывает клиента поддерживать MCP resources: тот же объект достаётся тулом, указанным в
    `truncated.hint`.
 
-## 5. Фазовое раскрытие тулов
+## 5. Фазовое раскрытие тулов — отменено
 
-### 5.1 Почему без этого нельзя
+**Отменено [ADR-0042](adr/0042-mcp-is-the-action-surface.md).** Раскрытие проектировалось под 78–79 тулов:
+при 250–600 токенах на определение со сложной схемой это 20–47k токенов **до первого сообщения
+пользователя**, и цель была держать одновременно активными ≤ 20–25. Поверхность — 18 тулов действий (§2),
+их определения стоят порядка 3k токенов, то есть дешевле, чем `mode_set` и `help_contract`, которыми
+раскрытие управлялось бы.
 
-78–79 тулов × 250–600 токенов на определение с нетривиальной схемой = 20–47k токенов **до первого
-сообщения пользователя**. Это бюджет, который нужен на трейсы. Anthropic измеряла тот же эффект: у
-крупных наборов загрузка всех определений съедала порядка 150k токенов, и ленивое раскрытие снижало
-это на ~98,7%. Цель: одновременно активны ≤ 20–25 тулов.
+Механизм и не был доступен: у `MCPServer` 2.2.0 нет `RegisteredTool.enable()/disable()`
+([ADR-0025](adr/0025-python-engine.md) §8, открытый вопрос 18), а подменять каталог через приватный
+`_tool_manager` запрещено ([ADR-0028](adr/0028-studio-api-contract.md) «Альтернативы»).
 
-### 5.2 Ядро (всегда включено, 13 тулов)
+Что остаётся вместо раскрытия:
 
-`mode_set`, `help_contract`, `studio_open`, `catalog_list`, `catalog_get`, `journal_read`,
-`journal_append`, `flow_get`, `flow_history`, `run_get`, `run_list`, `run_get_node`, `run_get_trace`.
+| Было в плане | Стало |
+|---|---|
+| `mode_set` переключает фазу и включает группы | фазы нет, поверхность одна |
+| `help_contract` объясняет контракт и текущую фазу | `instructions` сервера MCP: порядок работы в одном абзаце, его видит клиент при `initialize` |
+| Ядро из 13 тулов, из которых достижимы остальные | все 18 доступны всегда |
+| `studio_open` строит `ui_url` | `ui_url` приходит полем в `RunStarted` |
 
-Критерий попадания в ядро: тул нужен в любой фазе **или** нужен для выхода из тупика (переключить
-фазу, узнать контракт, посмотреть, что происходит). Ядро самодостаточно: из него всегда достижим
-`mode_set`, а значит любая другая группа.
-
-### 5.3 Фазы и группы
-
-| Фаза | Дополнительно включается | Всего активно |
-|---|---|---|
-| `discover` | `brief_*`, `architecture_*` | 16 |
-| `author` | `flow_*`, `context_*`, `kb_indexes`, `component_*` (кроме `propose_to_library`), `agent_*`, `provider_*`, `registry_propose` | 25 |
-| `run` | `run_start`, `flow_compile` | 13 |
-| `debug` | `run_replay_node`, `run_fork`, `run_diff`, `run_stages`, `run_lineage`, `run_blame`, `agent_effective_config`, `component_expand` | 19 |
-| `evaluate` | `dataset_*`, `scorer_create`, `experiment_*`, `feedback_list`, `provider_*`, `run_stages` | 23 |
-| `ship` | `version_*`, `component_propose_to_library`, `registry_propose`, `flow_compile` | 20 |
-
-Колонка «всего активно» считалась для реестра из 57 тулов, до операций файловой модели и до отмены группы
-`export`, и требует пересборки целиком: состав фаз пересматривается вместе с распределением операций по группам
-(открытый вопрос 11).
-
-Переход делается либо явно (`mode_set({ phase: 'debug', reason: '...' })`), либо автоматически по
-контексту: `run_get` с `status: 'failed'` включает группу `debug` и говорит об этом в `next[]`.
-Автопереход всегда отражается в ответе полем `phase_changed`, чтобы агент знал о смене поверхности,
-даже не перечитывая `tools/list`.
-
-### 5.4 Механизм
-
-`RegisteredTool.enable()/disable()` из TS SDK в `mcp` 2.2.0 нет. В SDK есть `MCPServer.add_tool`,
-`MCPServer.remove_tool(name)` и `ServerSession.send_tool_list_changed()`; работают ли они на сессию, а не на
-весь сервер, не проверено ([ADR-0025](adr/0025-python-engine.md) ОВ 18, [23](23-studio-api.md) ОВ 12) — открытый
-вопрос 13. Поэтому решение «что включить» отделено от переключения: дельта считается над таблицей групп,
-применение — порт `ToolSwitch`, адаптер которого выбирается спайком. Уведомление
-`notifications/tools/list_changed` и capability `tools.listChanged` нужны при любом адаптере.
-
-```python
-from collections.abc import Mapping
-from dataclasses import dataclass
-from enum import StrEnum
-from typing import NewType, Protocol
-
-ToolName = NewType("ToolName", str)
-
-
-class Phase(StrEnum):
-    DISCOVER = "discover"
-    AUTHOR = "author"
-    RUN = "run"
-    DEBUG = "debug"
-    EVALUATE = "evaluate"
-    SHIP = "ship"
-
-
-class ToolGroup(StrEnum):
-    BRIEF = "brief"
-    ARCHITECTURE = "architecture"
-    FLOW = "flow"
-    CONTEXT = "context"
-    COMPONENT = "component"
-    AGENT = "agent"
-    PROVIDER = "provider"
-    REGISTRY = "registry"
-    RUN_EXEC = "run_exec"
-    RUN_DEBUG = "run_debug"
-    EVAL = "eval"
-    VERSION = "version"
-    LIBRARY = "library"
-
-
-PHASE_GROUPS: Mapping[Phase, frozenset[ToolGroup]] = {
-    Phase.DISCOVER: frozenset({ToolGroup.BRIEF, ToolGroup.ARCHITECTURE}),
-    Phase.AUTHOR: frozenset(
-        {
-            ToolGroup.FLOW,
-            ToolGroup.CONTEXT,
-            ToolGroup.COMPONENT,
-            ToolGroup.AGENT,
-            ToolGroup.PROVIDER,
-            ToolGroup.REGISTRY,
-        }
-    ),
-    Phase.RUN: frozenset({ToolGroup.RUN_EXEC}),
-    Phase.DEBUG: frozenset({ToolGroup.RUN_DEBUG, ToolGroup.AGENT, ToolGroup.COMPONENT}),
-    Phase.EVALUATE: frozenset(
-        {ToolGroup.EVAL, ToolGroup.PROVIDER, ToolGroup.RUN_DEBUG}
-    ),
-    Phase.SHIP: frozenset({ToolGroup.VERSION, ToolGroup.REGISTRY, ToolGroup.LIBRARY}),
-}
-
-
-@dataclass(frozen=True, slots=True)
-class SurfaceDelta:
-    enabled: frozenset[ToolName]
-    disabled: frozenset[ToolName]
-
-
-class ToolSwitch(Protocol):
-    async def apply(self, session_id: str, delta: SurfaceDelta) -> None: ...
-
-
-@dataclass(frozen=True, slots=True)
-class ToolSurface:
-    groups: Mapping[ToolGroup, frozenset[ToolName]]
-    switch: ToolSwitch
-
-    def tools_for(self, phase: Phase) -> frozenset[ToolName]:
-        return frozenset(
-            tool
-            for group in PHASE_GROUPS[phase]
-            for tool in self.groups.get(group, frozenset())
-        )
-
-    async def set_phase(
-        self, session_id: str, active: frozenset[ToolName], phase: Phase
-    ) -> SurfaceDelta:
-        wanted = self.tools_for(phase)
-        delta = SurfaceDelta(enabled=wanted - active, disabled=active - wanted)
-        await self.switch.apply(session_id, delta)
-        return delta
-```
-
-Это Registry групп (`groups`: группа → имена тулов из каталога) + плоская таблица `PHASE_GROUPS` вместо
-лестницы условий; `ToolSwitch` — порт (Port/Adapter), `active` — включённые тулы сессии вне ядра. Ядро в
-`groups` не входит вообще, поэтому выключить его нельзя структурно. Контрактный тест и снапшот `tools/list`
-строят сервер из полного каталога, а не из текущей фазы ([ADR-0028](adr/0028-studio-api-contract.md) §2,
-правило 8).
-
-### 5.5 Риск и страховка
-
-**Риск:** не все MCP-клиенты перечитывают `tools/list` после `notifications/tools/list_changed`.
-Поведение Claude Code при смене списка в середине сессии не проверено на живом сервере. Если клиент
-не перечитал список, агент вызовет тул, который сервер считает выключенным.
-
-Страховка — четыре независимых механизма:
-
-1. **Ядро самодостаточно.** Даже при полностью «залипшем» списке из ядра достижимо всё: посмотреть
-   состояние, прочитать контракт, переключить фазу.
-2. **Выключенный тул отвечает по-человечески, а не «unknown tool».** Вызов выключенного тула
-   перехватывается общей обёрткой, которая возвращает конверт с `code: 'TOOL_PHASE_DISABLED'` и кандидатом
-   `apply: { tool: 'mode_set', arguments: { phase: <нужная фаза> } }`. Агент делает ровно один
-   восстановительный шаг. Для этого хендлер должен остаться достижимым после выключения: вызов тула,
-   снятого `remove_tool`, `mcp` 2.2.0 отдаёт текстом `Unknown tool: <имя>` без `structuredContent`
-   (проба, «Решения»), поэтому адаптер `ToolSwitch` на `remove_tool` эту страховку не даёт — открытый вопрос 13.
-3. **Автовключение по требованию.** Если вызванный тул принадлежит группе, разрешённой текущей ролью,
-   сервер включает фазу сам, выполняет вызов и сообщает `phase_changed` в ответе. Отказ — только
-   если группа запрещена правами (§6), и это уже не про фазы.
-4. **Аварийный выключатель.** `mode_set({ phase: 'all' })` включает всю поверхность. Нужен для
-   клиентов без `listChanged` и для отладки; в ответе помечается `surface: 'full'`, чтобы это было
-   видно в журнале.
-
-Следствие для тестов: контрактный тест на каждый тул — «вызов в чужой фазе возвращает
-`TOOL_PHASE_DISABLED` с валидным кандидатом», а не исключение.
-
-### 5.6 Чего не делаем
-
-Tool Search Tool (platform.claude.com) — официальный ответ Anthropic на большие наборы, но это фича
-**Messages API**, а не MCP-сервера: как сервер мы её не включаем. Она остаётся релевантной, если наш
-собственный раннер пойдёт в Messages API напрямую, минуя Claude Code — тогда 78–79 тулов перестают быть
-проблемой и фазы можно оставить только как организующий приём.
+Возврат к раскрытию — когда поверхность перевалит за 40 тулов; до тех пор цена механизма выше цены
+определений.
 
 ## 6. Права агента
 
@@ -1251,11 +1074,9 @@ Query инвалидируется по паре `path` + `file_hash`. Ника�
 
 ## Открытые вопросы
 
-1. **Поведение Claude Code при `notifications/tools/list_changed` в середине сессии не проверено.**
-   Вся стратегия фазового раскрытия (§5) держится на том, что клиент перечитывает `tools/list`.
-   *Что сделать:* поднять `aqven dev` с `MCPServer("aqven")` 2.2.0, подключить Claude Code по streamable
-   HTTP (`/mcp/`), переключить фазу адаптером `ToolSwitch` из вопроса 13 и зафиксировать, видит ли клиент
-   новый список без перезапуска сессии. До подтверждения страховка §5.5 обязательна, а не желательна.
+1. ~~**Поведение Claude Code при `notifications/tools/list_changed` в середине сессии не проверено.**~~
+   Закрыт отменой фазового раскрытия ([ADR-0042](adr/0042-mcp-is-the-action-surface.md), §5): поверхность
+   не меняется в течение сессии, и перечитывание `tools/list` ни на что не влияет.
 
 2. **Точная регулярка имени тула в Messages API не подтверждена.** Известно, что точка в именах —
    гарантированный источник проблем, и решение переименовать §13.1 в `snake_case` принято, но точный

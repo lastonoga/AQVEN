@@ -102,7 +102,7 @@ def build_runs_router(context: ServerContext) -> APIRouter:
             if event.type == FINAL_EVENT:
                 return
 
-    @router.get("/runs/{run_id}/events/log", operation_id="run_event_log", openapi_extra=rest_only("event replay"))
+    @router.get("/runs/{run_id}/events/log", operation_id="run_event_log", openapi_extra=operation("run_events"))
     async def run_event_log(run_id: str, query: Annotated[EventLogQuery, Query()]) -> Page[RunEvent]:
         return await facade.event_log(RunId(run_id), query)
 

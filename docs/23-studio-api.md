@@ -1310,49 +1310,42 @@ use-case'ы, что REST, и регистрируются из каталога 
 
 ### 13.2. Соответствие тулов и ресурсов
 
-| Тул ([14](14-mcp-contract.md) §2) | REST | Фаза |
-|---|---|---|
-| `mode_set` | нет: фаза MCP-сессии | — |
-| `help_contract` | `GET /api/help/codes` | позже |
-| `studio_open` | нет: строит `ui_url` на маршрут студии | — |
-| `catalog_list`, `catalog_get` | `GET /api/catalog/{kind}`, `GET /api/catalog/{kind}/{id}`; типы — `GET /api/types`, `GET /api/types/{type_id}` | позже |
-| `brief_submit`, `brief_get` | `PUT /api/brief`, `GET /api/brief` | позже |
-| `journal_read`, `journal_append` | `GET /api/journal`, `POST /api/journal` | позже |
-| `architecture_search`, `architecture_get`, `architecture_instantiate` | `GET /api/architectures`, `GET /api/architectures/{id}`, `POST /api/architectures/{id}/instantiate` | позже |
-| `flow_create` | `POST /api/flows` | позже |
-| `flow_get` | `GET /api/flows/{flow_id}`, `.../spec`, `.../ir`, `.../nodes`, `.../nodes/{node_id}` | спайк |
-| `flow_import` | `POST /api/flow-imports` | позже |
-| `flow_patch` | `PATCH /api/flows/{flow_id}` | позже |
-| `flow_commit` | `POST /api/commits` | позже |
-| `flow_history` | `GET /api/history` | позже |
-| `flow_diff` | `GET /api/diff` | позже |
-| `flow_revert` | `POST /api/reverts` | позже |
-| `flow_lock` | `GET\|PUT /api/flows/{flow_id}/lock` | позже |
-| `flow_compile` | `POST /api/flows/{flow_id}/compile`, `GET /api/flows/{flow_id}/diagnostics` | позже; проблемы в `FlowDetail` — спайк |
-| `context_plan`, `context_bind`, `context_graph` | `GET .../context/plan`, `POST .../context/bindings`, `GET .../context/graph` | позже |
-| `kb_indexes` | `GET /api/kb-indexes` | позже |
-| `provider_models`, `provider_probe` | `GET /api/models`, `POST /api/models/{provider}/{model_id}/probes` | позже |
-| `run_start` | `POST /api/runs` | спайк |
-| `run_get` | `GET /api/runs/{run_id}`, `GET /api/runs/{run_id}/executions` | спайк |
-| `run_get_node` | `GET /api/runs/{run_id}/executions/detail`; вход тула расширяется полями адреса §6.2 | спайк |
-| `run_list` | `GET /api/runs` | спайк |
-| `run_resume`, `run_cancel` | `POST /api/runs/{run_id}/resume`, `.../cancel` | позже |
-| `run_get_trace` | `GET /api/runs/{run_id}/trace` | позже |
-| `run_replay_node`, `run_fork` | `POST /api/runs/{run_id}/replay`, `.../fork` | позже |
-| `run_diff`, `run_stages`, `run_lineage`, `run_blame` | `GET /api/run-diffs`, `GET .../stages`, `GET .../lineage`, `POST .../blames` | позже |
-| `dataset_add_from_run`, `dataset_get`, `dataset_generate`, `dataset_coverage` | `POST .../items/from-run`, `GET /api/datasets/{name}`, `POST .../generate`, `GET .../coverage` | позже |
-| `scorer_create` | `POST /api/scorers` | позже |
-| `experiment_run`, `experiment_compare`, `experiment_model_matrix` | `POST /api/experiments`, `GET .../compare/{baseline_id}`, `POST /api/model-matrices` | позже |
-| `feedback_list` | `GET /api/feedback` | позже |
-| `component_list`, `component_get`, `component_expand` | `GET /api/components`, `/{component_id}`, `/{component_id}/expand` | позже |
-| `component_propose_to_library`, `registry_propose`, `version_propose` | `POST /api/proposals` с `kind` | позже |
-| `version_status` | `GET /api/proposals/{proposal_id}` | позже |
-| `agent_get`, `agent_effective_config` | `GET /api/agents/{agent_id}`, `GET .../nodes/{node_id}/effective-config` | позже |
-| `project_import`, `project_conformance`, `project_verify_migration` | отменены вместе с экспортом решением владельца от 2026-09-16 ([ADR-0025](adr/0025-python-engine.md) §7): интеграция — вызовы по HTTP и MCP | — |
-| `project_export` | вне контракта до решения: бандл и целевые рантаймы отменены, открыт только экспорт IR в `agent_workflow_spec` (открытый вопрос 13, [ADR-0025](adr/0025-python-engine.md) ОВ 19) | — |
+Поверхность MCP — 18 тулов действий ([14](14-mcp-contract.md) §2,
+[ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Тул и его маршрут зовут один и тот же use-case из
+`server/views/`, а не два похожих; разметку несёт сам маршрут: `operation("<имя тула>")` у тех, у кого тул
+есть, `rest_only("<причина>")` у остальных, и тест контракта требует ровно одну из двух на каждой операции
+OpenAPI.
 
-Итого 63 тула из [14](14-mcp-contract.md) §2: 57 получают REST-ресурс, 2 остаются только в MCP,
-3 отменены, 1 ждёт решения.
+| Тул | REST | Общий use-case |
+|---|---|---|
+| `aqven_check` | нет: проверка запускается подпроцессом `aqven check` | — |
+| `pyright_check`, `pytest_run` | нет: те же подпроцессы | — |
+| `prompt_preview` | `POST /api/flows/{flow_id}/nodes/{node_id}/prompt/preview` | `preview_prompt` |
+| `flow_patch` | нет: `PATCH /api/flows/{flow_id}` (§12.1) не реализован | `WriteService.patch_flow` |
+| `run_start` | `POST /api/runs` | `RunStartService.start` |
+| `run_get` | `GET /api/runs/{run_id}` | `EngineFacade.get_run` |
+| `run_list` | `GET /api/runs` | `EngineFacade.list_runs` |
+| `run_get_node` | `GET /api/runs/{run_id}/executions/detail` | `EngineFacade.get_execution` |
+| `run_events` | `GET /api/runs/{run_id}/events/log`; поток — SSE `.../events` | `EngineFacade.event_log` |
+| `run_resume` | `POST /api/runs/{run_id}/resume` | `EngineFacade.resume` |
+| `run_fork` | `POST /api/runs/{run_id}/fork` | `EngineFacade.fork` |
+| `run_cancel` | `POST /api/runs/{run_id}/cancel` | `EngineFacade.cancel` |
+| `dataset_batch_start` | `POST /api/dataset-batches` | `DatasetBatchJobs.start` |
+| `dataset_batch_get` | `GET /api/dataset-batches/{batch_id}` | `DatasetBatchJobs.get` |
+| `eval_run_start` | `POST /api/eval-runs` | `EvalJobs.start` |
+| `eval_run_get` | `GET /api/eval-runs/{eval_run_id}` | `EvalJobs.run` |
+| `eval_gate` | `GET /api/eval-runs/{eval_run_id}/gate` | `EvalJobs.gate` |
+
+`EvalJobs` и `DatasetBatchJobs` держат хранилище SQLite и множество фоновых задач, поэтому экземпляр у
+маршрута и у тула **один**: держатель `StudioServices` собирается в `assemble_app` до сборки частей и
+передаётся и в роутеры, и в `McpPorts`. Иначе батч, запущенный по MCP, был бы не виден маршруту опроса.
+
+Тулы, спроектированные в [14](14-mcp-contract.md) §2 и не реализованные (`catalog_*`, `brief_*`,
+`journal_*`, `architecture_*`, `context_*`, `component_*`, `registry_*`, `version_*`, отладочные `run_*`),
+перечислены с причинами в [14](14-mcp-contract.md) §2.6. Читающие `flow_list`, `flow_get`, `catalog_list`,
+`catalog_get` убраны с поверхности: определения — файлы, и агент читает их своими Read, Grep и Glob;
+соответствующие маршруты студии остаются и помечены
+`rest_only("project files: the agent reads them directly")`.
 
 ### 13.3. Только REST
 

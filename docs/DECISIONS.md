@@ -172,7 +172,7 @@ Kitaru 0.26.0 (Apache-2.0) слоем надёжного исполнения н
 | Компилятор, IR-мутатор, модели описания, канонический писатель YAML, конвертеры `apiVersion` | формат и правила наши |
 | Индекс определений (`idx`) и запись файлов с CAS | [ADR-0017](adr/0017-files-as-source-of-truth.md) |
 | Динамическая форма: `FieldSpec`, проверка `limits`, шаг `narrow` | `StructuredDict` не валидирует, BAML `@@dynamic` живёт в своём DSL ([ADR-0027](adr/0027-dynamic-io-shapes.md)) |
-| Каталог операций `Operation` и адаптеры REST/MCP | [ADR-0028](adr/0028-studio-api-contract.md) |
+| Каталог операций `Operation` и адаптеры REST/MCP | [ADR-0028](adr/0028-studio-api-contract.md); поверхность MCP и общие use-case'ы — [ADR-0042](adr/0042-mcp-is-the-action-surface.md) |
 | Гейт выпуска поверх pydantic-evals, scipy и statsmodels; Krippendorff alpha и ICC | статистики и спаривания в pydantic-evals нет; единственный пакет alpha с порядковой дистанцией — GPL |
 | Адаптер GEPA над шаблоном: `TemplateUnitsAdapter`, `AdmissibleReflection`, `PromptOptimizerPort` | GEPA не знает структуры Liquid-шаблона и правил R-T |
 
