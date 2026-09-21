@@ -172,7 +172,7 @@ sidebar: [
   },
   {
     label: "Reference",
-    autogenerate: { directory: "reference" },
+    items: [{ autogenerate: { directory: "reference" } }],
   },
   {
     label: "Concepts",
@@ -187,6 +187,11 @@ sidebar: [
 Пустые `items: []` у «Движок», «Studio», «MCP и CLI», «Интеграции» заполняются их отдельными планами —
 не оставлять как «TODO» в коде, пустой массив валиден для Starlight и просто не показывает группу
 без страниц (Starlight скрывает группы без `items`, проверить это в Шаге 3).
+
+**Найдено при выполнении (не было в исходной версии этого плана):** установленный
+`@astrojs/starlight@0.42.1` убрал форму `{ label, autogenerate }` верхнего уровня в релизе 0.39.0 —
+исправлено выше на `items: [{ autogenerate: {...} }]`, это и есть корректный синтаксис для установленной
+версии, не устаревший API, по которому план был написан изначально.
 
 - [ ] **Шаг 2: Заменить `navLinks`**
 
@@ -214,11 +219,96 @@ Run: `pnpm --filter @aqven/site check`
 Expected: ошибки о **недостающих файлах** для `start/*` и `concepts/*` (страницы ещё не написаны —
 это ожидаемо на этом шаге, следующие задачи их создают). Ошибок **синтаксиса конфига** быть не должно.
 
-- [ ] **Шаг 4: Коммит**
+- [ ] **Шаг 4: Добавить редирект корня**
+
+`apps/site/src/content/docs/index.mdx` удалён в Task 0.4 и не восстанавливается (новый контент не
+адаптирует старый). Без файла на корневом пути `/` ничего не резолвится. Добавить в `redirects`
+(тот же объект, что правит Task 0.3):
+```js
+"/": "/start/",
+```
+
+- [ ] **Шаг 5: Коммит**
 
 ```bash
 git add apps/site/astro.config.mjs
 git commit -m "docs: scaffold the new 7-area sidebar for apps/site"
+```
+
+### Task 0.6: Обновить `ManualSidebar.astro` под новые 7 групп
+
+**Найдено при выполнении Task 0.5, не было в исходной версии этого плана.** `ManualSidebar.astro`
+не использует стандартный многогрупповой sidebar Starlight — он жёстко выбирает **одну** группу по
+имени (`'Documentation Home'` / `'AQVEN Studio'` / `'AQVEN Engineering'`) в зависимости от префикса
+URL, и рендерит только её. С новыми 7 группами (`Start`/`Engine`/`Studio`/`MCP & CLI`/`Integrations`/
+`Reference`/`Concepts`) старое сопоставление ничего не найдёт — сайдбар будет пустым на каждой
+странице, пока это не поправлено. Без этой задачи Wave 1 не самодостаточна (страницы есть, но
+навигация к ним не рендерится).
+
+**Files:**
+- Modify: `apps/site/src/components/ManualSidebar.astro:4-11`
+
+- [ ] **Шаг 1: Обобщить сопоставление URL → группа**
+
+Было (строки 4-11):
+```astro
+const { sidebar } = Astro.locals.starlightRoute;
+const isStudio = Astro.url.pathname.startsWith('/studio/');
+const isHome = Astro.url.pathname === '/' || Astro.url.pathname.startsWith('/home/');
+const manualLabel = isHome ? 'Documentation Home' : isStudio ? 'AQVEN Studio' : 'AQVEN Engineering';
+const manual = sidebar.flatMap((entry) =>
+  entry.type === 'group' && entry.label === manualLabel ? entry.entries : [],
+);
+const manualId = isHome ? 'home' : isStudio ? 'studio' : 'engineering';
+```
+
+Заменить на таблицу «префикс пути → {label, id}» вместо цепочки `isX`-переменных (плоский код,
+таблица вместо if/else-лестницы — закон проекта):
+```astro
+const { sidebar } = Astro.locals.starlightRoute;
+
+const AREA_BY_PREFIX: { prefix: string; label: string; id: string }[] = [
+  { prefix: '/start/', label: 'Start', id: 'start' },
+  { prefix: '/engine/', label: 'Engine', id: 'engine' },
+  { prefix: '/studio/', label: 'Studio', id: 'studio' },
+  { prefix: '/mcp-cli/', label: 'MCP & CLI', id: 'mcp-cli' },
+  { prefix: '/integrations/', label: 'Integrations', id: 'integrations' },
+  { prefix: '/reference/', label: 'Reference', id: 'reference' },
+  { prefix: '/concepts/', label: 'Concepts', id: 'concepts' },
+];
+const currentArea =
+  AREA_BY_PREFIX.find((area) => Astro.url.pathname.startsWith(area.prefix)) ?? AREA_BY_PREFIX[0];
+const isHome = currentArea.id === 'start';
+const manual = sidebar.flatMap((entry) =>
+  entry.type === 'group' && entry.label === currentArea.label ? entry.entries : [],
+);
+const manualId = currentArea.id;
+```
+
+Это Astro-файл, не строгий TypeScript-проект (`apps/site` не под pyright/строгую ось движка), но
+всё равно без `any`, что и было в оригинале. Файл `.astro`, не `.ts` — если инлайн-типизация массива
+объектов вызывает ошибку в frontmatter-блоке `.astro`, использовать `as const` без явной аннотации типа
+вместо явного type-указания (сохранить дух «без `any`», убрать только то, что реально не компилируется).
+
+`isHome` ниже по файлу (строка ~20, `{isHome ? (...) : (...)}`) используется для рендера отдельного
+`<h2 class="home-sidebar-title">Documentation Home</h2>` — заголовок текста тоже поменять на `Start`,
+раз это больше не «Documentation Home»:
+```astro
+<h2 class="home-sidebar-title">Start</h2>
+```
+(было: `<h2 class="home-sidebar-title">Documentation Home</h2>`)
+
+- [ ] **Шаг 2: Проверить**
+
+Run: `pnpm --filter @aqven/site check`
+Expected: без новых ошибок, относящихся к этому файлу (ошибки о недостающих `start/*`/`concepts/*`
+контентных файлах по-прежнему ожидаемы, пока не выполнены Phase 1/2).
+
+- [ ] **Шаг 3: Коммит**
+
+```bash
+git add apps/site/src/components/ManualSidebar.astro
+git commit -m "docs: point ManualSidebar at the new 7-area sidebar groups"
 ```
 
 ---
