@@ -105,7 +105,12 @@ export default defineConfig({
         },
         {
           label: "Integrations",
-          items: [],
+          items: [
+            { slug: "integrations" },
+            { slug: "integrations/model-providers" },
+            { slug: "integrations/external-mcp-servers" },
+            { slug: "integrations/secrets-and-environment" },
+          ],
         },
         {
           label: "Reference",
