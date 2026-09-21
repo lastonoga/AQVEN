@@ -156,7 +156,14 @@ const givenContext = (body: unknown): readonly string[] => {
 const missingContext = (body: unknown): readonly string[] => {
   const flowId = flowIdOf(body)
   const given = givenContext(body)
-  return (liveFlowDetails[flowId]?.context ?? []).filter((key) => !given.includes(key))
+  const start = isRecord(body) && typeof body["start_node"] === "string" ? body["start_node"] : null
+  const end = isRecord(body) && typeof body["end_node"] === "string" ? body["end_node"] : null
+  const range = rangeOrder(flowId, start, end)
+  const needed = range === null ? liveFlowDetails[flowId]?.context ?? [] : [
+    ...(range.includes("record") ? ["date"] : []),
+    ...(range.includes("search_kb") ? ["tenant_id"] : []),
+  ]
+  return needed.filter((key) => !given.includes(key))
 }
 
 const contextMissing = (body: unknown, missing: readonly string[]): Response =>
@@ -244,6 +251,31 @@ export const handlers = [
     const value = isRecord(body) ? body["selected_nodes"] : null
     const selected = Array.isArray(value) && value.every((item: unknown) => typeof item === "string") ? value : null
     return served({ selected_nodes: selected, order: scopeOrder(flowId, selected) })
+  }),
+
+  http.post(`${API_BASE}/flows/:flowId/manual-range`, async ({ params, request }) => {
+    const flowId = text(params, "flowId")
+    const order = liveFlowDetails[flowId]?.order
+    if (order === undefined) return notFound("flow_manual_range", `flow ${flowId} is not in the project`)
+    const body: unknown = await request.json()
+    const input = isRecord(body) && isRecord(body["input"]) ? body["input"] : {}
+    const context = isRecord(body) && isRecord(body["context"]) ? body["context"] : {}
+    const outputs = isRecord(body) && isRecord(body["node_outputs"]) ? body["node_outputs"] : {}
+    const ranges = order.flatMap((startNode, first) => order.slice(first).map((endNode, offset) => {
+      const selected = order.slice(first, first + offset + 1)
+      const inputPaths = selected.includes("prepare") ? ["$input"] : selected.includes("triage") ? ["$input.customer.customer_id"] : []
+      const contextKeys = [...(selected.includes("record") ? ["date"] : []), ...(selected.includes("search_kb") ? ["tenant_id"] : [])]
+      const previous = order[first - 1]
+      const nodeOutputPaths = previous === undefined ? [] : [`$${previous}.out`]
+      const missing = [
+        ...(inputPaths.includes("$input") && Object.keys(input).length === 0 ? [{ reference: "$input", reason: "flow input is empty" }] : []),
+        ...(inputPaths.includes("$input.customer.customer_id") && (!isRecord(input["customer"]) || !input["customer"]["customer_id"]) ? [{ reference: "$input.customer.customer_id", reason: "flow input field is missing" }] : []),
+        ...contextKeys.filter((key) => !context[key]).map((key) => ({ reference: `$run.context.${key}`, reason: "run context field is missing" })),
+        ...(previous !== undefined && outputs[previous] === undefined ? [{ reference: `$${previous}.out`, reason: `output fixture for node ${previous} is missing` }] : []),
+      ]
+      return { start_node: startNode, end_node: endNode, available: missing.length === 0, input_paths: inputPaths, context_keys: contextKeys, node_output_paths: nodeOutputPaths, missing }
+    }))
+    return served({ order, ranges })
   }),
 
   http.post(`${API_BASE}/flows/:flowId/dataset-range`, async ({ params, request }) => {

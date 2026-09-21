@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "Modality": {
+      "enum": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "document"
+      ],
+      "title": "Modality",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "input": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Modality"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Input"
+    },
+    "json_schema_output": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Json Schema Output"
+    },
+    "output": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Modality"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Output"
+    },
+    "tools": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tools"
+    }
+  },
+  "title": "ProviderCapabilitiesSpec",
+  "type": "object"
+}

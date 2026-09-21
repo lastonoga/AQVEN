@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "from": {
+      "title": "From",
+      "type": "string"
+    },
+    "labels_from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Labels From"
+    },
+    "type": {
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "from"
+  ],
+  "title": "AllowedSetSpec",
+  "type": "object"
+}

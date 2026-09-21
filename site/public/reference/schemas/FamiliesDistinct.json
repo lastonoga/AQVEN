@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "min": {
+      "minimum": 1,
+      "title": "Min",
+      "type": "integer"
+    },
+    "nodes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "rule": {
+      "const": "families_distinct",
+      "title": "Rule",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule",
+    "nodes",
+    "min"
+  ],
+  "title": "FamiliesDistinct",
+  "type": "object"
+}

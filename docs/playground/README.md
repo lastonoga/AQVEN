@@ -17,11 +17,21 @@ Dev-панель в стиле Cube Playground: открыл каталог пр
 
 | Вопрос | Варианты в срезах | Решение | Почему |
 |---|---|---|---|
-| Команда и порт | `wf playground` :5173 / `wf dev` :4000 / `wf dev` :5180 | **`wf dev`, порт 5180** | 5173 занят самим Vite, 4000 у Cube, 4983 у Drizzle, 3141 у VoltAgent |
+| Команда и порт | `aqven playground` :5173 / `aqven dev` :4000 / `aqven dev` :5180 | **`aqven dev`, порт 5180** | 5173 занят самим Vite, 4000 у Cube, 4983 у Drizzle, 3141 у VoltAgent |
 | Сервер | Hono против голого `node:http` | **Hono 4.13.7 + @hono/node-server 2.1.1** | MIT, ноль зависимостей, есть `streamSSE`. Свой роутер — это ручной SSE-фрейминг, keep-alive, `Last-Event-ID` и backpressure. И бэкенд всё равно будет на Hono: VoltAgent на нём построен |
 | Рантайм | Node 20.19.0 из пробы | **Node 24 LTS** | Node 20 EOL 24.03.2026, Node 22 EOL 28.07.2026 — оба без обновлений безопасности |
 | Хранилище | better-sqlite3 12.x против 13.x | **`node:sqlite`, встроенный** | На Node 24 статус Release Candidate (`Stability: 1.2`, проверено по docs). Убирает нативный модуль, требующий `npm rebuild` при смене Node |
 | Раскладка | elkjs против dagre | **@dagrejs/dagre@3.1.1** | Решение заказчика: [00-canvas-decision.md](00-canvas-decision.md). elkjs — 7,7 МБ и EPL/GPL, нужен только для вложенных графов, которых в плейграунде нет |
+
+## После ADR-0024
+
+[ADR-0024](../adr/0024-studio-on-vite.md) сделал панель частью Studio. Поверх арбитража выше:
+
+| Что в срезах | Как теперь |
+|---|---|
+| Приложение `apps/playground` (`@aqven/playground`) | `apps/studio` (`@aqven/studio`); прежний каталог удалён |
+| Vite в middleware-режиме внутри `aqven dev` ([shell.md](shell.md) §1–§2) | `aqven dev` раздаёт собранный `apps/studio/dist` и `/api` с порта 5180; в разработке UI — отдельный `vite dev` с `server.proxy['/api']` на 5180 |
+| Без shadcn/ui и роутера ([shell.md](shell.md) §5) | shadcn со стилем `radix-nova` и `@tanstack/react-router`; стек — [15. Studio](../15-studio-frontend.md) §2 |
 
 ## Состав
 
@@ -60,11 +70,11 @@ Dev-панель в стиле Cube Playground: открыл каталог пр
 
 ## Порядок работ
 
-12 шагов по полдня. Первый работающий результат — конец второго дня: `wf dev --once` печатает
+12 шагов по полдня. Первый работающий результат — конец второго дня: `aqven dev --once` печатает
 список воркфлоу из настоящего каталога. Проходит весь путь чтения, не требует ни React, ни HTTP,
 ни базы, и сразу даёт негативный сценарий с путём и строкой ошибки.
 
-Критический путь: скелет монорепо → `@wf/dsl` + `@wf/ir` → `@wf/synth` → `wf dev` → сервер и SSE →
+Критический путь: скелет монорепо → `@aqven/dsl` + `@aqven/ir` → `@aqven/synth` → `aqven dev` → сервер и SSE →
 Vite → канвас → инспектор → исполнитель и база. Шаги watcher, форма входа и раскрытие компонентов
 параллельны и откладываются без вреда.
 

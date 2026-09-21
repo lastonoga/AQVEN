@@ -150,6 +150,45 @@ def _excluded(flow: CompiledFlow, member: CompiledNode, excluded: set[NodeId]) -
     return any(container in excluded for container in _containers(flow, member.node_id))
 
 
+def range_references(
+    flow: CompiledFlow,
+    start_node: NodeId,
+    end_node: NodeId,
+    inputs: JsonValue,
+    context: Mapping[str, JsonValue],
+    node_outputs: Mapping[NodeId, JsonValue],
+) -> tuple[tuple[NodeId, str], ...]:
+    """References consumed by the selected range, pruning known switch branches."""
+    order = range_order(flow, start_node, end_node)
+    included = frozenset(order)
+    references: dict[tuple[NodeId, str], None] = {}
+    for top_level in order:
+        excluded: set[NodeId] = set()
+        for member in _members(flow, top_level):
+            if _excluded(flow, member, excluded):
+                continue
+            payload = member.model_dump(mode="json")
+            if isinstance(member, CompiledSwitchNode):
+                known, selected_value = _switch_value(flow, member, included, inputs, context, node_outputs)
+                if known:
+                    active = matching_case(member, selected_value)
+                    if active is not None:
+                        excluded.update(
+                            case.node for name, case in member.cases.items() if name != active and case.node is not None
+                        )
+                        payload["cases"] = {active: payload["cases"][active]}
+            for reference in _references(payload):
+                references[member.node_id, reference] = None
+    return tuple(references)
+
+
+def boundary_fixture_node(
+    flow: CompiledFlow, member_id: NodeId, referenced_id: NodeId, included: frozenset[NodeId]
+) -> NodeId | None:
+    visible = _visible(flow, member_id, referenced_id)
+    return visible if visible is not None and _top_level(flow, visible) not in included else None
+
+
 def range_missing(
     flow: CompiledFlow,
     start_node: NodeId,
@@ -198,12 +237,10 @@ def range_missing(
                     else:
                         owner = _top_level(flow, visible)
                         if owner not in included:
-                            if visible != owner:
-                                reason = "nested output outside the range cannot be supplied as a top-level fixture"
-                            elif owner not in node_outputs:
-                                reason = f"output fixture for node {owner} is missing"
-                            elif not _path_present(node_outputs[owner], ref.steps):
-                                reason = f"output fixture for node {owner} lacks the referenced field"
+                            if visible not in node_outputs:
+                                reason = f"output fixture for node {visible} is missing"
+                            elif not _path_present(node_outputs[visible], ref.steps):
+                                reason = f"output fixture for node {visible} lacks the referenced field"
                 if reason is not None:
                     missing[text] = MissingBoundary(reference=text, reason=reason)
     return tuple(missing.values())

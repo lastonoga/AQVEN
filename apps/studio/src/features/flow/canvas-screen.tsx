@@ -31,7 +31,7 @@ export function CanvasScreen(): JSX.Element {
           setLegend((open) => !open)
         }}
       />
-      <NodeInspector detail={detail} prompt={prompt} onClose={close} />
+      <NodeInspector flowId={flowId} detail={detail} prompt={prompt} onClose={close} />
     </div>
   )
 }

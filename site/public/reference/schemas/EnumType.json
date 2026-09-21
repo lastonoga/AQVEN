@@ -1,0 +1,77 @@
+{
+  "$defs": {
+    "EnumValue": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "description"
+      ],
+      "title": "EnumValue",
+      "type": "object"
+    },
+    "PiiClass": {
+      "enum": [
+        "none",
+        "pii",
+        "sensitive"
+      ],
+      "title": "PiiClass",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Type",
+      "title": "Kind",
+      "type": "string"
+    },
+    "pii": {
+      "$ref": "#/$defs/PiiClass",
+      "default": "none"
+    },
+    "type": {
+      "const": "enum",
+      "title": "Type",
+      "type": "string"
+    },
+    "values": {
+      "items": {
+        "$ref": "#/$defs/EnumValue"
+      },
+      "minItems": 1,
+      "title": "Values",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "type",
+    "description",
+    "values"
+  ],
+  "title": "EnumType",
+  "type": "object"
+}

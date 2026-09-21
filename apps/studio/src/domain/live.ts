@@ -34,6 +34,8 @@ export type ApiDatasetBatchStartRequest = S["DatasetBatchStartRequest"]
 export type ApiRunScopePreview = S["RunScopePreview"]
 export type ApiDatasetRangePreview = S["DatasetRangePreview"]
 export type ApiDatasetRangePair = S["DatasetRangePair"]
+export type ApiManualRangePreview = S["ManualRangePreview"]
+export type ApiManualRangePair = S["ManualRangePair"]
 
 export type ApiNode = S["NodeSummary"]
 export type ApiNodeDetail = S["NodeDetail"]

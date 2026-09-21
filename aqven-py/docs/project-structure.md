@@ -1,8 +1,10 @@
 # AQVEN project structure
 
 > Status: standard layout as of 2026-09-17 (owner decisions O14–O22 in
-> [examples/showcase/DESIGN.md](../examples/showcase/DESIGN.md) §1). Reference project: `examples/showcase/lumen/src/lumen`.
+> [examples/DESIGN.md](../examples/DESIGN.md) §1). Reference project: `examples`.
 > This file is source material for the library documentation and for AI agents that edit AQVEN projects.
+> How to build a flow well inside this layout — data wiring, prompts, models and output modes, scenario tests
+> and check diagnostics — is [building-flows.md](building-flows.md).
 
 ## 1. The idea in one paragraph
 
@@ -29,8 +31,25 @@ models are generated from them, so code never re-declares a shape.
 
 ## 3. Standard tree
 
+A project is **one** Python project: one `pyproject.toml`, the module under `src/<package>`, `tests/`, `samples/` when
+the example needs input files, and at most one `main.py`. There is no `app/` folder and no second package for the host.
+
 ```
-<module>/                                   Python package, e.g. lumen/src/lumen
+<project>/                                  one pyproject, e.g. examples
+  pyproject.toml                            name, dependency aqven, [tool.pytest.ini_options] aqven_project = "src/<package>"
+  main.py                                   optional single host file: builds the ASGI app and runs a flow in-process
+  .mcp.json                                 stdio MCP server for Claude Code: uv run aqven mcp src/<package>
+  .gitignore                                .env, .aqven/, .venv/, __pycache__/, src/<package>/types.py
+  CLAUDE.md, AGENTS.md                      rules for coding agents; CLAUDE.md is @AGENTS.md plus the MCP tool names
+  .claude/settings.json, .claude/hooks/     PostToolUse runs aqven check --static, Stop runs the full aqven check
+  tests/                                    scenario tests, offline by default
+  samples/                                  sample inputs and media, when the project needs them
+  src/<package>/                            the AQVEN module, everything below is described by this document
+```
+
+```
+<module>/                                   Python package, e.g. examples/src/lumen
+  .env                                      provider API keys, gitignored; .env.example is committed
   aqven.yaml                                kind Project: providers, data policies, trust defaults
   types.py                                  generated models (aqven generate), gitignored, first line: DO NOT EDIT header
   agents/
@@ -67,9 +86,12 @@ models are generated from them, so code never re-declares a shape.
       <child>.inference.yaml, .prompt.md, .variants/, .py
 ```
 
-Host application around the module (see `examples/showcase`): `app/` (embedding or remote client), `tests/`,
-`pyproject.toml`, `.gitignore` with `<module>/types.py`. Runtime state of a project lives in `.aqven/` (drafts, lock,
-transactions, blobs, SQLite databases); it is never hand-edited and never committed.
+`.env` and `.aqven/` sit next to `aqven.yaml`, that is, inside the module folder. Runtime state lives in `.aqven/`
+(drafts, lock, transactions, blobs, the simulation cache, SQLite databases); it is never hand-edited and never
+committed. A build must exclude `.aqven`, `.env` and `.env.example` from the wheel and sdist, because the build
+backend does not read `.gitignore`.
+
+`aqven new <path>` writes exactly this tree from a template; see §9.
 
 ## 4. Kind → location
 
@@ -188,7 +210,128 @@ Rules for code:
   (this file is generated, edits are overwritten, change the YAML source). `aqven check` regenerates the file before
   checking, so it may rewrite `types.py`.
 
-## 7. Where to put a new thing (checklist for agents)
+## 7. Providers, models and output mode
+
+`aqven.yaml` lists the providers the project may use; an agent names a model as `provider:model`. Every model request is
+streamed, so a provider that cannot stream is rejected by `aqven check`, not at run time.
+
+| Key of a `providers[]` entry | Meaning |
+|---|---|
+| `id` | the provider prefix used in `model:` (`openrouter:openai/gpt-oss-20b`) |
+| `kind` | `catalog` (default), `code` or `openai_compatible` |
+| `api_key` | `ref:env/NAME`; optional for a keyless provider (Ollama, vLLM, Bedrock) |
+| `base_url` | required for `openai_compatible` |
+| `run` | `module:function` factory, only with `kind: code` |
+| `params`, `capabilities` | extra settings passed to the factory; declared modalities, `tools`, `json_schema_output` |
+| `data_policy`, `routing` | PII and retention policy, OpenRouter routing (`data_collection`, `zdr`) |
+
+**Catalog providers.** `kind: catalog` forwards `provider:model` to the Pydantic AI provider registry. A provider is
+installed as an extra: `uv add "aqven[groq]"`. A missing extra is `E_PROVIDER_EXTRA_MISSING` with that exact command in
+the hint; a provider that cannot stream is `E_PROVIDER_NO_STREAMING` (Cohere in pydantic-ai-slim 2.43.0 has no
+`request_stream`). `openai:` goes to the OpenAI Responses API; `openai-chat:` is chat completions.
+
+**Custom providers.** Three ways, in precedence order project > installed package > built-in catalog:
+
+| Way | How |
+|---|---|
+| YAML only | `kind: openai_compatible` with `base_url` and an optional `api_key`; builds an `OpenAIChatModel` over the AQVEN `httpx2` client with retries off |
+| Project code | `kind: code` with `run: "@root.code.<module>:<function>"`; the function is `def build(model_name: str, context: ProviderContext) -> Model` |
+| Installed package | an entry point in the group `aqven.providers`, name = provider id, pointing at the same kind of factory |
+
+`ProviderContext` carries the resolved key, `base_url`, an `httpx2.AsyncClient` to use, the `params` from `aqven.yaml`
+and the model settings. The returned object is a plain `pydantic_ai.models.Model`, so a custom provider goes through the
+same guarantee chain as a catalog one (outcome gate, PII redaction, cassettes, budget, backoff). `aqven check` resolves
+the factory and reports `E_PROVIDER_FACTORY_INVALID` (missing `run`, unresolvable ref, wrong signature, missing
+`base_url`) and `E_PROVIDER_ID_RESERVED` (an id that shadows a built-in). Adapter authors test against the conformance
+kit: `from aqven.testing import AdapterCase, check_adapter` runs text streaming, structured output per mode, usage,
+clean cancellation and exactly one request per failed call.
+
+**Output mode.** An agent declares `output.mode: auto | tool | native | prompted` (default `auto`).
+
+| Mode | What the model is asked to do |
+|---|---|
+| `tool` | call an output tool with the declared schema |
+| `native` | use the provider's native structured-output support |
+| `prompted` | answer with JSON described in the instructions |
+| `auto` | resolved once at compile time: a table of known models shipped inside aqven first, then the Pydantic AI model profile; mixed fallback models resolve to `prompted` |
+
+`auto` is deterministic. There is no environment flag and no automatic switch at run time. The resolved mode, where it
+came from and why are visible in `aqven tree`, in the compiled IR and over the Studio API; `aqven check` reports
+`W_OUTPUT_MODE_RESOLVED` when `auto` differs from the profile default, and `E_OUTPUT_MODE_UNSUPPORTED` when an explicit
+mode is impossible for that model. `output.strict` still applies to `tool` and `native` only. A structured-output
+failure at run time carries a code and a fix hint: `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_INVALID_JSON`,
+`MODEL_SCHEMA_MISMATCH`, `MODEL_FEATURE_UNSUPPORTED`, `MODEL_RETRIES_EXHAUSTED`, shown in run events, the CLI, logs, the
+Studio API and MCP. `aqven models check [TARGET] [--project PATH] [--live]` prints what each mode would do for an agent
+or a `provider:model`, and with `--live` sends one tiny request per mode.
+
+## 8. Secrets: the project `.env`
+
+Provider API keys live in `<module>/.env`, next to `aqven.yaml`. The file is gitignored; `.env.example` is committed
+with the variable names and no values.
+
+- A process environment variable wins over the `.env` entry of the same name; the resolved source is reported as
+  `environment` or `dotenv`. There is no SQLite storage of keys.
+- `api_key: "ref:env/NAME"` in `aqven.yaml` names the variable; without it the provider's default variable is used
+  (`OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` and so on).
+- The API never returns a secret value, only a mask; a key never reaches DBOS step inputs and outputs, run events, logs
+  or cassettes.
+- Studio chat agents cannot read or edit `.env` files. Claude uses deny rules, a `PreToolUse` hook and a permission
+  callback. Codex uses a project-scoped filesystem profile that denies `.env` and `.aqven/server.json`. Both receive
+  a stripped process environment without provider keys.
+
+Studio Settings → Chat agent selects Claude Code or Codex for new threads in this project. Sign in to the selected
+CLI first (`claude /login` or `codex login`); the app does not store either login. The chat panel lists all project
+threads, including those made with the other agent. Select an existing thread to continue its original agent, or
+choose **New thread** to start a separate conversation with the currently selected agent. Both agents see the same
+project files and AQVEN MCP tools, but a new thread does not inherit another thread's messages.
+
+## 9. Commands and the runtime environment
+
+| Command | Does |
+|---|---|
+| `aqven new <path> [--template minimal\|showcase] [--package NAME]` | writes a project from a template, runs `uv sync`, then `aqven generate` |
+| `aqven dev [PATH]` (alias `aqven studio`) | starts the server, watches files and opens Studio in the browser |
+| `aqven serve [PATH]` | the same server without a browser: Studio API, engine and MCP |
+| `aqven check [PATH] [--static] [--simulation-only] [--no-cache]` | static checks, then a simulated run of every flow |
+| `aqven generate`, `aqven tree`, `aqven refs` | write `types.py`, print the flow tree with resolved modes, print code refs |
+| `aqven run <flow>`, `aqven models check`, `aqven prompt preview <flow>.<node>` | run a flow, probe models, print the exact request a node will send |
+| `aqven mcp [PATH]` | stdio MCP bridge; starts a headless server if none is running |
+
+`aqven check` runs in two stages. The static stage checks references, types, prompts, code signatures, provider extras
+and output modes. The simulated stage then runs every flow end to end with values generated from the schemas and
+simulated model answers — no network, no tokens, `ALLOW_MODEL_REQUESTS=False` — and reports `E_SIM_NODE_FAILED`,
+`E_SIM_PROMPT_RENDER`, `E_SIM_OUTPUT_INVALID`, `E_SIM_RUN_FAILED` and `W_SIM_NODE_UNREACHED`. Its results are cached per
+flow in `.aqven/cache/simulation.json`, keyed by the flow hash, a digest of every `.py` file in the project and the
+installed aqven version; `--no-cache` ignores the cache.
+
+Runtime settings, in precedence order explicit argument > process environment or `.env` > default:
+
+| Variable | Controls | Default |
+|---|---|---|
+| `AQVEN_STUDIO` | serve the Studio SPA | on for `dev`, off for `serve` |
+| `AQVEN_HOST` | bind address | `127.0.0.1` |
+| `AQVEN_PORT` | port | `5180`, next free when taken |
+| `AQVEN_OPEN_BROWSER` | open the browser after the server is ready | on for `dev` |
+
+## 10. AQVEN as a library
+
+The engine is a library first; Studio is one client of it. A host project chooses how much of it to use.
+
+| Use | API |
+|---|---|
+| Run a flow in-process | `Project.load(<module>)`, `project.flow_typed(flow_id, In, Out)`, `await flow.run(input, RunOptions(...))` |
+| Mount the API inside an existing ASGI app | `create_local_app(<module>, LocalAppOptions(access=...))`, then `host.mount("/aqven", app)` under `local_app_lifespan(app)` |
+| Pluggable auth | `LocalAppOptions.access` takes any `AppAccess`; `LocalTokenAccess` is the bundled bearer-token implementation |
+| Standalone MCP server | `create_mcp_server(<module>)`, or `aqven mcp` over stdio, or `/mcp/` on the running server |
+| Any HTTP client | OpenAPI at `/api/openapi.json`, run events as SSE at `/api/runs/{run_id}/events`; the event registry is `/api/schemas/events` |
+| Any MCP client | the same operations as tools over streamable HTTP or stdio |
+| Scenario tests | the bundled pytest plugin: the `aqven_engine` fixture, `FixedModels`, cassettes, `RunOptions(outputs=(node_output(...),))` to force a branch |
+
+Everything public is importable from the `aqven` package root (`from aqven import Project, RunOptions, create_local_app`).
+`examples/main.py` shows all three shapes in one file: an in-process `handle_case`, `host_application()` that
+mounts the app under `/aqven`, and `serve()` that runs it with uvicorn.
+
+## 11. Where to put a new thing (checklist for agents)
 
 | Task | Do |
 |---|---|
@@ -206,7 +349,7 @@ Rules for code:
 | Dataset or eval | `evals/<flow>/<id>.yaml`; the id is the file name, no `name:` key |
 | Structural change across files (rename, move, add node) | the `flow_patch` operation, not hand edits; then `aqven check` |
 
-## 8. Known gaps
+## 12. Known gaps
 
 - `include` does not accept `@flow/` yet (O20 allows it in prompt paths).
 - A node or inference `out` is a list of fields and cannot reference a type, so some generated models duplicate a

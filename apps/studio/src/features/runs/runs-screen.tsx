@@ -7,7 +7,7 @@ import { Empty, Page, PageHeader } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { CallSheet, type BlobText, type CallDetail, type CallSheetTab } from "@/features/call-sheet"
 import { executionKey, type RowKey, type TraceRun } from "@/features/trace"
-import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
+import { ROUTE_PATH, flowRouteApi, runsRouteApi } from "@/lib/routes"
 import { DEFAULT_LOCALE } from "@/routes/-defaults"
 import { RunDetail, RunHeader, RunOverview } from "./run-detail"
 import { RunDataset } from "./run-dataset"
@@ -22,6 +22,7 @@ type RunsBodyProps = {
   readonly starting: boolean
   readonly flowId: FlowId
   readonly schemas: ApiFlowSchemas
+  readonly order: readonly string[]
   readonly today: string
   readonly snapshot: ApiRunSnapshot | null
   readonly blobs: readonly BlobText[]
@@ -32,9 +33,9 @@ type RunsBodyProps = {
   readonly onCancel: () => void
 }
 
-function RunsBody({ starting, flowId, schemas, today, snapshot, blobs, trace, selectedKey, onOpenCall, onStarted, onCancel }: RunsBodyProps) {
+function RunsBody({ starting, flowId, schemas, order, today, snapshot, blobs, trace, selectedKey, onOpenCall, onStarted, onCancel }: RunsBodyProps) {
   const t = useTranslations("runs")
-  if (starting) return <StartRun key={flowId} flowId={flowId} schemas={schemas} today={today} onStarted={onStarted} onCancel={onCancel} />
+  if (starting) return <StartRun key={flowId} flowId={flowId} schemas={schemas} order={order} previousRun={snapshot} today={today} onStarted={onStarted} onCancel={onCancel} />
   if (snapshot === null || trace === null) return <Empty title={t("selectRun")} />
   return (
     <RunDetail snapshot={snapshot} blobs={blobs} trace={trace} selectedKey={selectedKey} onOpenCall={onOpenCall} />
@@ -62,6 +63,7 @@ const ROW_TAB: Readonly<Record<RowKey, CallSheetTab>> = {
 }
 
 export function RunsScreen(): JSX.Element {
+  const { flow } = flowRouteApi.useLoaderData()
   const { runs, runId, snapshot, execution, schemas, nodes, prompts, events, blobs } = runsRouteApi.useLoaderData()
   const search = runsRouteApi.useSearch()
   const tab = search.tab ?? "output"
@@ -149,6 +151,7 @@ export function RunsScreen(): JSX.Element {
           starting={starting}
           flowId={params.flowId}
           schemas={schemas}
+          order={flow.order}
           today={isoDate(now)}
           snapshot={snapshot}
           blobs={blobs}

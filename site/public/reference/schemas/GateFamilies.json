@@ -1,0 +1,48 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "primary": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Primary",
+      "type": "array"
+    },
+    "safety": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Safety"
+    },
+    "secondary": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Secondary"
+    }
+  },
+  "required": [
+    "primary"
+  ],
+  "title": "GateFamilies",
+  "type": "object"
+}

@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "key": {
+      "title": "Key",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field",
+    "key"
+  ],
+  "title": "UniqueItemsParams",
+  "type": "object"
+}

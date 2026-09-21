@@ -45,6 +45,19 @@ describe("FormattedDocument", () => {
     expect(screen.getByRole("button", { name: "Open image: Preview" })).toBeTruthy()
   })
 
+  it("shows a media component placeholder for a schema-generated example", () => {
+    render(<IntlProvider locale="en" messages={messages.en} timeZone="UTC"><FormattedDocument
+      value={{ image: { $media: "<$media>", blob_id: "<blob_id>", size_bytes: 1 } }}
+      document={{ version: 1, root: { kind: "section", title: "Generated illustration", children: [
+        { kind: "card", title: "Generated image", children: [{ kind: "media", path: "/image", alt: "Illustration" }] },
+      ] } }}
+      example
+    /></IntlProvider>)
+    expect(screen.getByRole("heading", { name: "Generated image" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Illustration" })).toBeTruthy()
+    expect(screen.queryByText("Additional data")).toBeNull()
+  })
+
   it("maps text and field tones to readable Studio text and keeps field semantics", () => {
     renderValue({ message: "Review this\ncarefully", outcome: "Approved" }, {
       version: 1,

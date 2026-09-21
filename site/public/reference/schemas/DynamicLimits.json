@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "max_depth": {
+      "maximum": 3,
+      "minimum": 1,
+      "title": "Max Depth",
+      "type": "integer"
+    },
+    "max_fields": {
+      "minimum": 1,
+      "title": "Max Fields",
+      "type": "integer"
+    },
+    "max_items": {
+      "minimum": 1,
+      "title": "Max Items",
+      "type": "integer"
+    },
+    "max_text_length": {
+      "minimum": 1,
+      "title": "Max Text Length",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "max_fields",
+    "max_depth",
+    "max_text_length",
+    "max_items"
+  ],
+  "title": "DynamicLimits",
+  "type": "object"
+}

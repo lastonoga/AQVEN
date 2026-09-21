@@ -203,6 +203,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/flows/{flow_id}/manual-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Manual Range */
+        post: operations["flow_manual_range"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/flows/{flow_id}/nodes": {
         parameters: {
             query?: never;
@@ -229,6 +246,23 @@ export interface paths {
         };
         /** Get Node */
         get: operations["flow_node"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/flows/{flow_id}/nodes/{node_id}/display-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Node Display Preview */
+        get: operations["flow_node_display_preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4325,6 +4359,49 @@ export interface components {
          * @enum {string}
          */
         LoopStopReason: "policy" | "max_iter" | "budget";
+        /** ManualMissingRangeData */
+        ManualMissingRangeData: {
+            /** Reference */
+            reference: string;
+            /** Reason */
+            reason: string;
+        };
+        /** ManualRangePair */
+        ManualRangePair: {
+            /** Start Node */
+            start_node: string;
+            /** End Node */
+            end_node: string;
+            /** Available */
+            available: boolean;
+            /** Input Paths */
+            input_paths: string[];
+            /** Context Keys */
+            context_keys: string[];
+            /** Node Output Paths */
+            node_output_paths: string[];
+            /** Missing */
+            missing: components["schemas"]["ManualMissingRangeData"][];
+        };
+        /** ManualRangePreview */
+        ManualRangePreview: {
+            /** Order */
+            order: string[];
+            /** Ranges */
+            ranges: components["schemas"]["ManualRangePair"][];
+        };
+        /** ManualRangeRequest */
+        ManualRangeRequest: {
+            input?: components["schemas"]["JsonValue"];
+            /** Context */
+            context?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Node Outputs */
+            node_outputs?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+        };
         /** MapNodeSpec */
         MapNodeSpec: {
             /**
@@ -4649,6 +4726,18 @@ export interface components {
             allowed_set_descriptions?: {
                 [key: string]: string;
             };
+        };
+        /** NodeDisplayPreview */
+        NodeDisplayPreview: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "example" | "schema";
+            /** Example Name */
+            example_name?: string | null;
+            sample_output: components["schemas"]["JsonObject"];
+            document: components["schemas"]["DisplayDocument"];
         };
         /** NodeDisplaySource */
         NodeDisplaySource: {
@@ -6694,6 +6783,10 @@ export type SchemaLoopExited = components['schemas']['LoopExited'];
 export type SchemaLoopIterationFinished = components['schemas']['LoopIterationFinished'];
 export type SchemaLoopNodeSpec = components['schemas']['LoopNodeSpec'];
 export type SchemaLoopStopReason = components['schemas']['LoopStopReason'];
+export type SchemaManualMissingRangeData = components['schemas']['ManualMissingRangeData'];
+export type SchemaManualRangePair = components['schemas']['ManualRangePair'];
+export type SchemaManualRangePreview = components['schemas']['ManualRangePreview'];
+export type SchemaManualRangeRequest = components['schemas']['ManualRangeRequest'];
 export type SchemaMapNodeSpec = components['schemas']['MapNodeSpec'];
 export type SchemaMcpToolSource = components['schemas']['McpToolSource'];
 export type SchemaMediaValue = components['schemas']['MediaValue'];
@@ -6717,6 +6810,7 @@ export type SchemaNodeBindingView = components['schemas']['NodeBindingView'];
 export type SchemaNodeCode = components['schemas']['NodeCode'];
 export type SchemaNodeCounts = components['schemas']['NodeCounts'];
 export type SchemaNodeDetail = components['schemas']['NodeDetail'];
+export type SchemaNodeDisplayPreview = components['schemas']['NodeDisplayPreview'];
 export type SchemaNodeDisplaySource = components['schemas']['NodeDisplaySource'];
 export type SchemaNodeExecution = components['schemas']['NodeExecution'];
 export type SchemaNodeFinished = components['schemas']['NodeFinished'];
@@ -8059,6 +8153,113 @@ export interface operations {
             };
         };
     };
+    flow_manual_range: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualRangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualRangePreview"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     flow_nodes: {
         parameters: {
             query?: never;
@@ -8181,6 +8382,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NodeDetail"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    flow_node_display_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow_id: string;
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeDisplayPreview"];
                 };
             };
             /** @description Bad Request */

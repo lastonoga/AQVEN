@@ -1,0 +1,72 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import type { StarlightRouteData } from '@astrojs/starlight/route-data';
+
+interface Props {
+  sublist: StarlightRouteData['sidebar'];
+  nested?: boolean;
+}
+
+const { sublist, nested = false } = Astro.props;
+const containsCurrent = (entries: StarlightRouteData['sidebar']): boolean =>
+  entries.some((entry) =>
+    entry.type === 'link' ? entry.isCurrent : containsCurrent(entry.entries),
+  );
+---
+
+{
+  sublist.map((entry) =>
+    entry.type === 'link' ? (
+      <a
+        href={entry.href}
+        aria-current={entry.isCurrent ? 'page' : undefined}
+        class:list={['entry-link', entry.attrs.class]}
+        {...entry.attrs}
+      >
+        <span class="entry-link-inner">
+          {entry.label}
+          {entry.badge && <span class="entry-badge">{entry.badge.text}</span>}
+        </span>
+      </a>
+    ) : nested ? (
+      <details class="entry-group" open={!entry.collapsed || containsCurrent(entry.entries)}>
+        <summary class="entry-group-summary">
+          <span class="entry-link-inner">
+            {entry.label}
+            {entry.badge && <span class="entry-badge">{entry.badge.text}</span>}
+          </span>
+          <Icon name="right-caret" class="entry-group-caret" size="1rem" />
+        </summary>
+        <div class="container-group-link nested">
+          <Astro.self sublist={entry.entries} nested />
+        </div>
+      </details>
+    ) : (
+      <section class="container-sidebar-entry">
+        <h4 class="entry-title">{entry.label}</h4>
+        <div class="container-group-link">
+          <Astro.self sublist={entry.entries} nested />
+        </div>
+      </section>
+    )
+  )
+}
+
+<style>
+  .container-sidebar-entry { display: flex; flex-direction: column; gap: 0.5rem; }
+  .entry-title { margin: 0; padding: 0.3rem 0.5rem; border-radius: calc(var(--radius) - 2px); color: var(--muted-foreground); font-size: 0.75rem; font-weight: 600; line-height: 1.2rem; overflow-wrap: anywhere; }
+  .container-group-link { display: grid; grid-auto-flow: row; grid-auto-rows: max-content; gap: 0.25rem; font-size: 0.875rem; line-height: 1.25rem; }
+  .container-group-link.nested { margin-left: calc(var(--spacing) * 2); padding-left: calc(var(--spacing) * 2); border-left: 1px solid var(--border); }
+  .entry-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .entry-group-summary { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.25rem; min-height: 2rem; padding: 0.35rem 0.5rem; cursor: pointer; list-style: none; border-radius: calc(var(--radius) - 2px); color: var(--foreground); font-size: 0.8rem; line-height: 1.25rem; }
+  .entry-group-summary::-webkit-details-marker { display: none; }
+  .entry-group-summary:hover { background: var(--secondary); color: var(--secondary-foreground); }
+  .entry-group-caret { flex-shrink: 0; margin-top: 0.15rem; color: var(--muted-foreground); transition: transform 0.15s; }
+  .entry-group[open] > .entry-group-summary .entry-group-caret { transform: rotate(90deg); }
+  .entry-link { display: flex; align-items: stretch; width: 100%; min-height: 2rem; color: var(--foreground); font-size: 0.8rem; font-weight: 400; line-height: 1.25rem; text-decoration: none; }
+  .entry-link-inner { display: flex; width: 100%; min-width: 0; min-height: 2rem; align-items: flex-start; padding: 0.35rem 0.5rem; border-radius: calc(var(--radius) - 2px); overflow-wrap: anywhere; transition: color 0.15s, background-color 0.15s; }
+  .entry-link[aria-current='page'] { font-weight: 500; }
+  .entry-link[aria-current='page'] .entry-link-inner { background: var(--accent); color: var(--accent-foreground); }
+  .entry-link:hover:not([aria-current='page']) .entry-link-inner { background: var(--secondary); color: var(--secondary-foreground); }
+  .entry-badge { flex-shrink: 0; margin-left: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 0.5) calc(var(--spacing) * 1.5); border-radius: calc(var(--radius) - 2px); background: rgb(173 250 29); color: rgb(0 0 0); font-size: 0.75rem; line-height: 1; }
+</style>

@@ -80,7 +80,7 @@ onlyBuiltDependencies:
 overrides: {}
 ```
 
-Пакеты ссылаются друг на друга через `"@wf/ir": "workspace:*"` и на каталог через `"zod": "catalog:"` / `"react": "catalog:react19"`.
+Пакеты ссылаются друг на друга через `"@aqven/ir": "workspace:*"` и на каталог через `"zod": "catalog:"` / `"react": "catalog:react19"`.
 
 Раскладка:
 ```
@@ -146,7 +146,7 @@ packages/tsconfig    # базовые tsconfig (не публикуется)
 
 - Сборка артефактов — tsdown (см. §2). `tsc` у нас только `--noEmit` для typecheck и `--emitDeclarationOnly` там, где нужен максимально точный `.d.ts`.
 - `references` + `composite: true` дают: (а) быстрый инкрементальный `turbo typecheck` (каждый пакет чекается отдельно, Turbo кэширует по пакету), (б) **запрет на импорт из чужого `src/` мимо публичного входа** — это и есть дешёвый заменитель Nx boundary rules.
-- Анти-паттерн, который надо запретить: `paths: { "@wf/*": ["packages/*/src"] }` в корневом tsconfig. Он делает «всё видит всё», ломает границы и расходится с тем, что реально попадёт в `dist`. Границы держим на `workspace:*` + `exports`, а не на `paths`.
+- Анти-паттерн, который надо запретить: `paths: { "@aqven/*": ["packages/*/src"] }` в корневом tsconfig. Он делает «всё видит всё», ломает границы и расходится с тем, что реально попадёт в `dist`. Границы держим на `workspace:*` + `exports`, а не на `paths`.
 
 ---
 
@@ -200,7 +200,7 @@ export default defineConfig({
 
 ```jsonc
 {
-  "name": "@wf/ir",
+  "name": "@aqven/ir",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
@@ -728,8 +728,8 @@ for (const fixture of goldenFixtures) {
           "level": "error",
           "options": {
             "paths": {
-              "@wf/compiler/src": "Импорт мимо публичного входа пакета запрещён.",
-              "ai": "Провайдеры только через @wf/providers."
+              "@aqven/compiler/src": "Импорт мимо публичного входа пакета запрещён.",
+              "ai": "Провайдеры только через @aqven/providers."
             }
           }
         }
@@ -827,9 +827,9 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@wf/compiler...
+      - run: pnpm turbo run build --filter=@aqven/compiler...
       - name: run IR mutants
-        run: pnpm --filter @wf/conformance run test:conformance
+        run: pnpm --filter @aqven/conformance run test:conformance
         env: { FC_SEED: ${{ github.run_id }} }
       - name: gate — zero survivors, >= 50 mutants
         run: node scripts/gate-conformance.mjs conformance-report.json
@@ -881,7 +881,7 @@ jobs:
           path: packages/compiler/reports/stryker-incremental.json
           key: stryker-${{ github.sha }}
           restore-keys: stryker-
-      - run: pnpm --filter @wf/compiler exec stryker run --incremental
+      - run: pnpm --filter @aqven/compiler exec stryker run --incremental
 
   evals:
     name: evals (budgeted, manual/nightly)
@@ -896,7 +896,7 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version: "24", cache: "pnpm" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @wf/evals run eval -- --budget-usd "${{ vars.EVAL_BUDGET_USD }}" --dataset golden-15
+      - run: pnpm --filter @aqven/evals run eval -- --budget-usd "${{ vars.EVAL_BUDGET_USD }}" --dataset golden-15
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -947,13 +947,13 @@ jobs:
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "linked": [["@wf/ir", "@wf/compiler", "@wf/export"]],
-  "ignore": ["studio", "@wf/conformance"]
+  "linked": [["@aqven/ir", "@aqven/compiler", "@aqven/export"]],
+  "ignore": ["studio", "@aqven/conformance"]
 }
 ```
 
 - **`linked`** для `ir + compiler + export` — эти три пакета определяют формат бандла и обязаны иметь одну версию. Это техническая реализация kill-критерия №13 (round-trip): бандл, помеченный версией `X`, читается ровно связкой версии `X`.
-- В самом бандле держим отдельное поле `formatVersion` (целое, не semver), а в репозитории — тест: `formatVersion` меняется **только** вместе с major-changeset у `@wf/ir`, и на каждый `formatVersion` в `packages/conformance/fixtures/` лежит бандл, который обязан читаться текущим кодом (тест обратной совместимости чтения).
+- В самом бандле держим отдельное поле `formatVersion` (целое, не semver), а в репозитории — тест: `formatVersion` меняется **только** вместе с major-changeset у `@aqven/ir`, и на каждый `formatVersion` в `packages/conformance/fixtures/` лежит бандл, который обязан читаться текущим кодом (тест обратной совместимости чтения).
 - `ignore` для `studio` и `conformance` — они не публикуются, версии им не нужны.
 - Гейт в PR: `pnpm changeset status --since=origin/main` падает, если тронут публикуемый пакет без changeset-а.
 
@@ -965,9 +965,9 @@ jobs:
 |---|---|---|
 | Монорепо | pnpm 12 workspaces + Turborepo 2.10.12 | Нулевая инвазия, читаемость для агента; Nx окупается от ~30 пакетов |
 | Сборка | tsdown 0.23 (пин точной версии) | tsup не поддерживается с 2025-11; tsdown — официальный преемник от Rolldown |
-| CJS | Нет (кроме одного entry в `@wf/export`) | dual-package hazard ломает branded types молча |
+| CJS | Нет (кроме одного entry в `@aqven/export`) | dual-package hazard ломает branded types молча |
 | TypeScript | **6.0.3** как источник истины, TS 7 (tsgo) — non-blocking job | `typescript-eslint@8.70` peer `<6.1.0`; у TS 7.0 нет стабильного API до 7.1 |
-| Исчерпываемость | `switch` + `assertNever`; ts-pattern только в `@wf/compiler` | Даёт kill-критерий №6 бесплатно |
+| Исчерпываемость | `switch` + `assertNever`; ts-pattern только в `@aqven/compiler` | Даёт kill-критерий №6 бесплатно |
 | Ошибки | Домен — размеченные объединения; I/O — true-myth 9.4; **Effect — нет** | Компилятор собирает список диагностик, а не короткозамыкается |
 | Тесты | Vitest 5.0 (`projects`), Playwright 1.63, testcontainers 12.1, fast-check 4.10 | Node >=22.12, Vite >=6.4 |
 | Мутации | **Свой IR-мутатор = kill-критерий №1**; Stryker 10 — nightly, только ядро | Stryker мутирует наш код, спека требует мутировать IR |

@@ -7,15 +7,22 @@
     "node": ">=24.21.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro check && astro build",
+    "dev": "node scripts/generate_llms.mjs && astro dev",
+    "build": "corepack pnpm reference:check && node scripts/generate_llms.mjs && astro check && astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "reference": "cd ../aqven-py && uv run python ../site/scripts/generate_reference.py",
+    "reference:check": "cd ../aqven-py && uv run python ../site/scripts/generate_reference.py --check",
+    "llms": "node scripts/generate_llms.mjs",
+    "llms:check": "node scripts/generate_llms.mjs --check",
+    "landing:check": "corepack pnpm build && node scripts/check-landing-page.mjs"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/starlight": "0.42.1",
     "astro": "7.3.3",
     "astro-mermaid": "2.1.0",
+    "lucode-starlight": "1.0.0",
     "mermaid": "11.17.2",
     "sharp": "0.35.4"
   },

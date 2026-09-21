@@ -1,0 +1,147 @@
+{
+  "$defs": {
+    "PiiClass": {
+      "enum": [
+        "none",
+        "pii",
+        "sensitive"
+      ],
+      "title": "PiiClass",
+      "type": "string"
+    },
+    "ValueBase": {
+      "enum": [
+        "Text",
+        "Int",
+        "Float",
+        "Bool",
+        "Date",
+        "DateTime"
+      ],
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "base": {
+      "$ref": "#/$defs/ValueBase"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "enum": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Enum"
+    },
+    "kind": {
+      "const": "Type",
+      "title": "Kind",
+      "type": "string"
+    },
+    "maxItems": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Maxitems"
+    },
+    "maxLength": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Maxlength"
+    },
+    "maximum": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Maximum"
+    },
+    "minimum": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Minimum"
+    },
+    "pattern": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pattern"
+    },
+    "pii": {
+      "$ref": "#/$defs/PiiClass",
+      "default": "none"
+    },
+    "type": {
+      "const": "value",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "type",
+    "description",
+    "base"
+  ],
+  "title": "ValueType",
+  "type": "object"
+}

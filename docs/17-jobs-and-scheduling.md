@@ -219,7 +219,7 @@ Transactional outbox нужен ровно тогда, когда бизнес-�
 
 ```
 idempotency_key = "sha256-" + hex(sha256(
-  "wf:tool-effect:v1" || 0x00 ||
+  "aqven:tool-effect:v1" || 0x00 ||
   tenant_id || 0x00 || workflow_id || 0x00 || execution_id || 0x00 ||
   node_id || 0x00 || attempt_scope || 0x00 || jcs(tool_input)
 ))
@@ -227,7 +227,7 @@ idempotency_key = "sha256-" + hex(sha256(
 
 | Компонент | Откуда берётся | Зачем |
 |---|---|---|
-| `"wf:tool-effect:v1"` | константа | доменная сепарация: хеши эффектов не должны сталкиваться с хешами экспорта и кассет |
+| `"aqven:tool-effect:v1"` | константа | доменная сепарация: хеши эффектов не должны сталкиваться с хешами экспорта и кассет |
 | `tenant_id` | контекст вызова | изоляция арендаторов; ключ одного тенанта не может «попасть» в журнал другого |
 | `workflow_id`, `execution_id`, `node_id` | контекст шага VoltAgent | пара `execution_id + node_id` уже уникальна в рамках прогона — этого достаточно для ретрая одного и того же шага |
 | `attempt_scope` | номер итерации из `workflowState` для узлов внутри `andDoWhile`/`andDoUntil`/`andForEach`, иначе `"0"` | в цикле один и тот же `node_id` выполняется N раз, и это N **разных** эффектов, а не дубликаты |

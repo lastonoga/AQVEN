@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "PiiDetector": {
+      "enum": [
+        "email",
+        "phone",
+        "card_number",
+        "iban",
+        "ip_address"
+      ],
+      "title": "PiiDetector",
+      "type": "string"
+    },
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "detectors": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/PiiDetector"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detectors"
+    },
+    "fields": {
+      "items": {
+        "$ref": "#/$defs/RefPath"
+      },
+      "minItems": 1,
+      "title": "Fields",
+      "type": "array"
+    }
+  },
+  "required": [
+    "fields"
+  ],
+  "title": "NoPiiParams",
+  "type": "object"
+}

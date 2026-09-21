@@ -111,7 +111,7 @@ UI на это время — read-only с плашкой «Claude перест�
 
 ## 6. Мок
 
-`AgentDriver` поверх `@wf/mock-server`: лента `spec_ops` играется тем же плеером `/dev/tape`,
+`AgentDriver` поверх `@aqven/mock-server`: лента `spec_ops` играется тем же плеером `/dev/tape`,
 что и лента прогона — новый механизм не заводится.
 
 ```ts

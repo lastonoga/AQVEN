@@ -18,7 +18,7 @@ from engine_core_harness import (
     launched_facade,
     trace_lines,
 )
-from engine_core_plan import relay_project
+from engine_core_plan import ref, relay_project
 from pydantic import JsonValue
 
 from aqven.engine import DbosEngineFacade, RunOverrides, RunRecord, RunSpec
@@ -283,6 +283,34 @@ def test_dataset_range_runs_middle_node_from_fixture_without_upstream_execution(
     assert (snapshot.start_node, snapshot.end_node) == ("route", "route")
     assert snapshot.node_outputs == {"normalize": {"text": "prepared"}}
     assert trace_lines(trace) == []
+
+
+def test_range_uses_a_nested_output_fixture_from_an_earlier_stage(tmp_path: Path, trace: Path) -> None:
+    plan = relay_project()
+    flow = plan.flow(FlowId("relay"))
+    finish = flow.node(NodeId("finish")).model_copy(update={"inputs": (ref("text", "$route__loud.out.text"),)})
+    flow = flow.model_copy(update={"nodes": {**flow.nodes, NodeId("finish"): finish}})
+    plan = plan.model_copy(update={"flows": {**plan.flows, FlowId("relay"): flow}})
+
+    async def scenario(facade: DbosEngineFacade) -> RunRecord:
+        started = await facade.start_run(
+            RunStartRequest(
+                flow_id=FlowId("relay"),
+                mode="replay",
+                input={},
+                start_node=NodeId("finish"),
+                end_node=NodeId("finish"),
+                node_outputs={NodeId("route__loud"): {"text": "prepared"}},
+            )
+        )
+        return await facade.result(started.run_id)
+
+    with launched_facade(tmp_path / "state", StaticPlanSource(plan)) as facade:
+        record = asyncio.run(scenario(facade))
+
+    assert record.status == "completed"
+    assert record.output == {"finish": {"text": "prepared."}}
+    assert trace_lines(trace) == ["finalize"]
 
 
 def test_dataset_range_rejects_missing_boundary_fixture(tmp_path: Path) -> None:

@@ -1488,6 +1488,136 @@
         "x-aqven-rest-only": "preview contiguous dataset execution ranges"
       }
     },
+    "/api/flows/{flow_id}/manual-range": {
+      "post": {
+        "summary": "Preview Manual Range",
+        "operationId": "flow_manual_range",
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flow Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualRangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualRangePreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "preview input and boundary data for manually selected execution ranges"
+      }
+    },
     "/api/flows/{flow_id}/nodes": {
       "get": {
         "summary": "List Nodes",
@@ -1739,6 +1869,135 @@
           }
         },
         "x-aqven-operation": "flow_get"
+      }
+    },
+    "/api/flows/{flow_id}/nodes/{node_id}/display-preview": {
+      "get": {
+        "summary": "Get Node Display Preview",
+        "operationId": "flow_node_display_preview",
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flow Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeDisplayPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "render an example of the node output display template"
       }
     },
     "/api/flows/{flow_id}/nodes/{node_id}/prompt": {
@@ -19874,6 +20133,127 @@
         ],
         "title": "LoopStopReason"
       },
+      "ManualMissingRangeData": {
+        "properties": {
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reference",
+          "reason"
+        ],
+        "title": "ManualMissingRangeData"
+      },
+      "ManualRangePair": {
+        "properties": {
+          "start_node": {
+            "type": "string",
+            "title": "Start Node"
+          },
+          "end_node": {
+            "type": "string",
+            "title": "End Node"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "input_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Input Paths"
+          },
+          "context_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Context Keys"
+          },
+          "node_output_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Output Paths"
+          },
+          "missing": {
+            "items": {
+              "$ref": "#/components/schemas/ManualMissingRangeData"
+            },
+            "type": "array",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_node",
+          "end_node",
+          "available",
+          "input_paths",
+          "context_keys",
+          "node_output_paths",
+          "missing"
+        ],
+        "title": "ManualRangePair"
+      },
+      "ManualRangePreview": {
+        "properties": {
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Order"
+          },
+          "ranges": {
+            "items": {
+              "$ref": "#/components/schemas/ManualRangePair"
+            },
+            "type": "array",
+            "title": "Ranges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order",
+          "ranges"
+        ],
+        "title": "ManualRangePreview"
+      },
+      "ManualRangeRequest": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "context": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Context"
+          },
+          "node_outputs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Node Outputs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ManualRangeRequest"
+      },
       "MapNodeSpec": {
         "properties": {
           "apiVersion": {
@@ -20921,6 +21301,42 @@
           "problems"
         ],
         "title": "NodeDetail"
+      },
+      "NodeDisplayPreview": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "example",
+              "schema"
+            ],
+            "title": "Source"
+          },
+          "example_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example Name"
+          },
+          "sample_output": {
+            "$ref": "#/components/schemas/JsonObject"
+          },
+          "document": {
+            "$ref": "#/components/schemas/DisplayDocument"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "sample_output",
+          "document"
+        ],
+        "title": "NodeDisplayPreview"
       },
       "NodeDisplaySource": {
         "properties": {

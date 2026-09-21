@@ -10,6 +10,7 @@ type Props = {
   readonly compact?: boolean
   readonly media?: readonly OutputMedia[]
   readonly mediaOnly?: boolean
+  readonly example?: boolean
 }
 
 type NodeProps = {
@@ -18,6 +19,7 @@ type NodeProps = {
   readonly media: readonly OutputMedia[]
   readonly mediaOnly: boolean
   readonly compact: boolean
+  readonly example: boolean
   readonly depth: number
 }
 
@@ -34,19 +36,19 @@ function DisplayHeading({ title, depth }: { readonly title: string | undefined; 
   return <Text asChild role="hint" tone="default" weight="semibold"><h6>{title}</h6></Text>
 }
 
-function SectionView({ title, children, value, media, mediaOnly, compact, depth }: Omit<NodeProps, "node"> & {
+function SectionView({ title, children, value, media, mediaOnly, compact, example, depth }: Omit<NodeProps, "node"> & {
   readonly title: string | undefined
   readonly children: readonly DisplayNode[]
 }) {
   return (
     <section className="min-w-0 space-y-2">
       <DisplayHeading title={title} depth={depth} />
-      {children.map((child, index) => <Node key={index} node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} depth={depth + 1} />)}
+      {children.map((child, index) => <Node key={index} node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} example={example} depth={depth + 1} />)}
     </section>
   )
 }
 
-function ListView({ title, children, value, media, mediaOnly, compact, depth }: Omit<NodeProps, "node"> & {
+function ListView({ title, children, value, media, mediaOnly, compact, example, depth }: Omit<NodeProps, "node"> & {
   readonly title: string | undefined
   readonly children: readonly DisplayNode[]
 }) {
@@ -54,13 +56,13 @@ function ListView({ title, children, value, media, mediaOnly, compact, depth }: 
     <div className="min-w-0 space-y-1">
       <DisplayHeading title={title} depth={depth} />
       <ul className="min-w-0 list-disc space-y-1 pl-4">
-        {children.map((child, index) => <li key={index} className="min-w-0"><Node node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} depth={depth + 1} /></li>)}
+        {children.map((child, index) => <li key={index} className="min-w-0"><Node node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} example={example} depth={depth + 1} /></li>)}
       </ul>
     </div>
   )
 }
 
-function CardView({ title, description, cardTone, children, value, media, mediaOnly, compact, depth }: Omit<NodeProps, "node"> & {
+function CardView({ title, description, cardTone, children, value, media, mediaOnly, compact, example, depth }: Omit<NodeProps, "node"> & {
   readonly title: string
   readonly description: string | null | undefined
   readonly cardTone: DisplayTone | undefined
@@ -72,7 +74,7 @@ function CardView({ title, description, cardTone, children, value, media, mediaO
       <article>
         <DisplayHeading title={title} depth={depth} />
         {description ? <Text as="p" role="note" tone="faint" className="min-w-0 whitespace-pre-wrap wrap-anywhere">{description}</Text> : null}
-        {children.map((child, index) => <Node key={index} node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} depth={depth + 1} />)}
+        {children.map((child, index) => <Node key={index} node={child} value={value} media={media} mediaOnly={mediaOnly} compact={compact} example={example} depth={depth + 1} />)}
       </article>
     </Surface>
   )
@@ -95,10 +97,14 @@ function BadgeView({ content, valueTone }: { readonly content: string; readonly 
   return <Tag tone={tone(valueTone)} fill="tint" size="sm" wrap>{content}</Tag>
 }
 
-function MediaView({ value, path, alt, media, mediaOnly, compact }: Pick<NodeProps, "value" | "media" | "mediaOnly" | "compact"> & {
+function MediaView({ value, path, alt, media, mediaOnly, compact, example }: Pick<NodeProps, "value" | "media" | "mediaOnly" | "compact" | "example"> & {
   readonly path: string
   readonly alt: string | undefined
 }) {
+  const t = useTranslations("runs.presentation")
+  if (example) return <div role="img" aria-label={alt ?? t("exampleMedia")} className="flex min-h-28 min-w-0 items-center justify-center rounded-md border border-dashed border-border bg-muted/40 px-3 py-6 text-center text-xs text-muted-foreground">
+    {alt ?? t("exampleMedia")}
+  </div>
   const item = mediaAt(value, path, alt, media, mediaOnly)
   return item === null ? null : <MediaOutput media={item} compact={compact} />
 }
@@ -108,8 +114,8 @@ const scalarContent = (node: { readonly path?: string; readonly value?: unknown 
   return textValue(resolved.found ? resolved.value : "")
 }
 
-function Node({ node, value, media, mediaOnly, compact, depth }: NodeProps) {
-  const shared = { value, media, mediaOnly, compact, depth }
+function Node({ node, value, media, mediaOnly, compact, example, depth }: NodeProps) {
+  const shared = { value, media, mediaOnly, compact, example, depth }
   if (node.kind === "section") return <SectionView title={node.title} children={node.children} {...shared} />
   if (node.kind === "list") return <ListView title={node.title} children={node.children} {...shared} />
   if (node.kind === "card") return <CardView title={node.title} description={node.description} cardTone={node.tone} children={node.children} {...shared} />
@@ -119,16 +125,16 @@ function Node({ node, value, media, mediaOnly, compact, depth }: NodeProps) {
   return <BadgeView content={scalarContent(node, value)} valueTone={node.tone} />
 }
 
-export function FormattedDocument({ value, document: rawDocument, compact = false, media = [], mediaOnly = false }: Props) {
+export function FormattedDocument({ value, document: rawDocument, compact = false, media = [], mediaOnly = false, example = false }: Props) {
   const t = useTranslations("runs.presentation")
-  const document = renderableDocument(rawDocument, value, media, mediaOnly)
+  const document = renderableDocument(rawDocument, value, media, mediaOnly, example)
   if (document === null) {
     return <StructuredValue value={value} media={media} mediaOnly={mediaOnly} compact={compact} />
   }
-  const additional = remainingEntries(value, document)
+  const additional = example ? [] : remainingEntries(value, document)
   return (
     <div className="min-w-0 space-y-3" data-presentation="formatted">
-      <Node node={document.root} value={value} media={media} mediaOnly={mediaOnly} compact={compact} depth={0} />
+      <Node node={document.root} value={value} media={media} mediaOnly={mediaOnly} compact={compact} example={example} depth={0} />
       {additional.length === 0 ? null : (
         <section className="min-w-0">
           <Separator decorative className="mb-2" />

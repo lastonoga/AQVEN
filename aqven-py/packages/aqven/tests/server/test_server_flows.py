@@ -120,6 +120,27 @@ def test_node_detail_includes_display_template_source(server_project: Path, serv
     }
 
 
+def test_node_output_display_preview_uses_template_components(server_options: ServerOptions) -> None:
+    lumen = Path(__file__).resolve().parents[4] / "examples" / "lumen"
+    app = create_app(lumen, FakeEngine(), MemorySettings(), options=server_options)
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        reply = client.get("/api/flows/support_case/nodes/polish__revise/display-preview")
+        image = client.get("/api/flows/support_case/nodes/illustrate/display-preview")
+        missing = client.get("/api/flows/support_case/nodes/triage/display-preview")
+
+    assert reply.status_code == 200
+    reply_body = reply.json()
+    assert reply_body["source"] == "schema"
+    assert reply_body["sample_output"]["reply"]["text"] == "<text>"
+    assert reply_body["document"]["root"]["title"] == "Customer reply"
+    assert reply_body["document"]["root"]["children"][0]["kind"] == "card"
+
+    assert image.status_code == 200
+    image_body = image.json()
+    assert image_body["document"]["root"]["children"][0]["children"][0]["kind"] == "media"
+    assert missing.status_code == 404
+
+
 def test_prompts(server_client: TestClient) -> None:
     listing = server_client.get("/api/prompts", params={"flow_id": "intake"}).json()
     assert {(item["node_id"], item["inference_id"]) for item in listing["items"]} >= {("reply", "reply")}

@@ -77,6 +77,34 @@ describe("CanvasScreen", () => {
     expect(within(dialog).queryByText(/triage\.inference\.yaml/)).toBeNull()
   })
 
+  it("shows the output template and its rendered component example in order", async () => {
+    const base = liveNodeDetails["support_case/triage"]
+    if (base === undefined || base.inference_spec === null) throw new Error("Missing triage node fixture")
+    server.use(http.get(`${API_BASE}/flows/support_case/nodes/triage`, () => HttpResponse.json({
+      ...base,
+      inference_spec: { ...base.inference_spec, display: { input: null, output: { run: null, template: "triage.output.display.liquid", variables: {} } } },
+      display_sources: { output: { path: "flows/support_case/nodes/triage/triage.output.display.liquid", text: "{% section %}{% card title: 'Revised answer' %}{% text path: '/reply/text' %}{% endcard %}{% endsection %}" } },
+    })), http.get(`${API_BASE}/flows/support_case/nodes/triage/display-preview`, () => HttpResponse.json({
+      source: "schema",
+      example_name: null,
+      sample_output: { reply: { text: "Example reply", citations: [] } },
+      document: { version: 1, root: { kind: "section", title: "Customer reply", children: [
+        { kind: "card", title: "Revised answer", description: null, tone: "positive", children: [
+          { kind: "text", path: "/reply/text", tone: "neutral" },
+        ] },
+      ] } },
+    })))
+    await renderRoute("/flows/support_case/canvas?node=triage")
+    const dialog = await screen.findByRole("dialog", { name: "triage" })
+    fireEvent.mouseDown(within(dialog).getByRole("tab", { name: "Output" }))
+    const source = within(dialog).getByRole("heading", { name: "Template source" })
+    const display = within(dialog).getByRole("heading", { name: "Template display" })
+    expect(source.compareDocumentPosition(display) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(await within(dialog).findByText("Example reply")).toBeTruthy()
+    expect(within(dialog).getByText("Revised answer")).toBeTruthy()
+    expect(within(dialog).getByText("Example values generated from the output schema")).toBeTruthy()
+  })
+
   it("shows every field of every declared dynamic output form", async () => {
     const base = liveNodeDetails["support_case/triage"]
     if (base === undefined) throw new Error("Missing triage node fixture")

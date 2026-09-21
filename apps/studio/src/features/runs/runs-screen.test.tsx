@@ -7,6 +7,7 @@ import { server } from "@/mocks/node"
 import { liveDatasets } from "@/mocks/data/evals"
 import { COMPLETED_RUN_ID, FAILED_RUN_ID, liveExecutionDetails, liveRunSnapshots, liveRuns } from "@/mocks/data/runs"
 import { renderRoute } from "@/test/render-route"
+import { TEST_NOW } from "@/test/clock"
 import { isoDate } from "./start-form"
 import type { PresentationTarget } from "./presentation-data"
 
@@ -710,35 +711,41 @@ describe("RunsScreen", () => {
   it("asks for the context keys the flow declares and for nothing else", async () => {
     await renderRoute(RUNS)
     await openStartForm()
-    expect(screen.getByLabelText("Date")).toHaveProperty("value", isoDate(new Date()))
-    expect(screen.getByLabelText("Tenant")).toHaveProperty("value", "")
+    expect(await screen.findByLabelText("Date")).toHaveProperty("value", isoDate(TEST_NOW))
+    expect(await screen.findByLabelText("Tenant")).toHaveProperty("value", "")
     expect(screen.queryByLabelText("Locale")).toBeNull()
     expect(screen.queryByLabelText("Time zone")).toBeNull()
   })
 
-  it("builds a field for every property of the flow input schema", async () => {
+  it("renders structured input for the selected nodes", async () => {
     await renderRoute(RUNS)
     await openStartForm()
-    expect(screen.getByLabelText("message")).toBeTruthy()
-    expect(screen.getByRole("radiogroup", { name: "urgent" })).toBeTruthy()
-    expect(screen.getByLabelText("customer")).toHaveProperty("value", "{}")
+    expect(await screen.findByLabelText("message *")).toBeTruthy()
+    expect(screen.getByLabelText("urgent *")).toBeTruthy()
+    expect(screen.getByLabelText("customer id *")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Select only triage" }))
+    expect(await screen.findByLabelText("Output of prepare")).toBeTruthy()
+    expect(screen.getByLabelText("customer id *")).toBeTruthy()
+    expect(screen.queryByLabelText("message *")).toBeNull()
+    expect(screen.queryByLabelText("urgent *")).toBeNull()
   })
 
-  it("marks the context field the engine refused to invent", async () => {
+  it("shows required context before the user can start", async () => {
     await renderRoute(RUNS)
     await openStartForm()
-    fireEvent.change(screen.getByLabelText("message"), { target: { value: "lamp flickers" } })
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }))
-    expect(await screen.findByText("flow support_case reads $run.context.tenant_id and the run was started without it")).toBeTruthy()
-    expect(screen.getByLabelText("message")).toHaveProperty("value", "lamp flickers")
+    expect(await screen.findByLabelText("Tenant")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Start run" })).toHaveProperty("disabled", true)
   })
 
   it("starts the run with the context and the input and opens it", async () => {
     const router = await renderRoute(RUNS)
     await openStartForm()
-    fireEvent.change(screen.getByLabelText("message"), { target: { value: "lamp flickers" } })
+    fireEvent.change(await screen.findByLabelText("message *"), { target: { value: "lamp flickers" } })
+    fireEvent.change(screen.getByLabelText("customer id *"), { target: { value: "cus_123" } })
     fireEvent.change(screen.getByLabelText("Tenant"), { target: { value: "lumen" } })
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }))
+    const start = screen.getByRole("button", { name: "Start run" })
+    await waitFor(() => { expect(start).toHaveProperty("disabled", false) })
+    fireEvent.click(start)
     await waitFor(() => {
       expect(router.state.location.search).toHaveProperty("run")
     })

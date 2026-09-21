@@ -1,170 +1,286 @@
-# 10. Рантайм: сборщик цепочек, исполнители узлов, состояние
+# 10. Рантайм: исполнитель IR, исполнители узлов, состояние
 
 > Статус: draft
-> Зависит от: [07. Компилятор](07-compiler.md), [06. Реестры](06-registries.md), [05. Система типов](05-type-system.md), [16. Модель данных](16-data-model.md), [12. Наблюдаемость](12-observability.md)
-> Источники: research/volt-primitives.md, research/volt-durability.md, research/volt-agents.md, research/volt-integrations.md, research/structured-output.md, research/00-verified-by-lead.md, research/ai-sdk-decision.md, спека §10, §20.1–§20.4, §6.5, §7.2, §8.5, §8.6, §8.12
+> Зависит от: [07. Компилятор](07-compiler.md), [06. Реестры](06-registries.md), [05. Система типов](05-type-system.md), [03. Ядро языка](03-core-language.md), [04. Формат IR](04-ir-schema.md), [16. Модель данных](16-data-model.md), [12. Наблюдаемость](12-observability.md), [23. API локальной студии](23-studio-api.md), [ADR-0025](adr/0025-python-engine.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md), [ADR-0027](adr/0027-dynamic-io-shapes.md), [ADR-0028](adr/0028-studio-api-contract.md), [ADR-0029](adr/0029-trust-and-quality-python.md)
+> Источники: [research/py-stack-runtime.md](research/py-stack-runtime.md) §3, §4, §5, §10; [research/py-quality-layer.md](research/py-quality-layer.md) §1; спека §10, §6.5, §7.2, §8.5, §8.6, §8.12; спека §20.1–§20.4 заменена [ADR-0025](adr/0025-python-engine.md) §7
 
 ## Зачем этот слой
 
-Компилятор доказывает свойства графа до запуска, но ничего не гарантирует во время запуска. Рантайм закрывает §8.5 (управление потоком: `switch` без first-match, циклы без лимита, кворумы, `on_item_error`), §8.6 (надёжность: чекпоинты, рестарт, детерминированный реплей), §8.12 (люди в цикле: таймауты приостановок) и бюджетную часть §8.7/§8.11 (rate limits провайдера, взрыв стоимости). VoltAgent даёт исполнение шагов, чекпоинты, suspend/resume и time travel; наш слой добавляет ровно то, чего у него нет, и ни строкой больше.
+Компилятор доказывает свойства графа до запуска, но ничего не гарантирует во время запуска. Рантайм закрывает §8.5
+(управление потоком: `switch` без first-match, циклы без лимита, кворумы, `on_item_error`), §8.6 (надёжность:
+чекпоинты, рестарт, детерминированный реплей), §8.12 (люди в цикле: таймауты ожиданий) и бюджетную часть §8.7/§8.11
+(rate limits провайдера, взрыв стоимости). DBOS 2.31.1 даёт чекпоинт результата шага, восстановление после падения,
+fork с шага, ожидание сообщения с долговечным таймаутом и поток событий прогона; Pydantic AI 2.43.0 — вызов модели с
+типизированным выходом и повтором, бюджеты и точку врезки `WrapperModel`. Модели графа нет ни у того, ни у другого:
+исполнитель IR, семантика конструкций и гарантии узлов — наш слой, и ни строкой больше
+([ADR-0025](adr/0025-python-engine.md) §3).
 
 ## Решения
 
 | Решение | Что берём | Версия | Лицензия | Почему |
 |---|---|---|---|---|
-| Исполнение цепочки шагов | `createWorkflowChain` из `@voltagent/core` | 2.10.0 | MIT | готовые чекпоинты, suspend/resume, time travel, поток событий |
-| Горячая (пере)регистрация версий | `WorkflowRegistry.registerWorkflow/unregisterWorkflow`, `VoltAgent.registerWorkflows` | 2.10.0 | MIT | выпуск версии без рестарта процесса (проверено в `dist/index.d.ts`) |
-| Долговечность прогона | running-чекпоинты VoltAgent + `restart` / `restartAllActiveWorkflowRuns` | 2.10.0 | MIT | crash-recovery без своего журнала |
-| Реплей и форк | `workflow.timeTravel` / `timeTravelStream` | 2.10.0 | MIT | новое исполнение из исторического состояния, с переопределениями |
-| Хранилище исполнений | `@voltagent/postgres` (схема `voltagent`) | 2.1.3 | MIT | один Postgres на всё; наши таблицы — схема `app` |
-| Вызов моделей и врезка гарантий | `ai` + `wrapLanguageModel({ model, middleware })` | 6.0.280 | Apache-2.0 | кассеты, бюджеты, PII работают и для вызовов мимо нашего фасада |
-| Структурированный вывод | `Output.object({ schema })` из `ai`, прокинутый через `agent.generateText` | 6.0.280 | Apache-2.0 | `generateObject`/`streamObject` в VoltAgent 2.x депрекейтнуты; `output` сохраняет tool-calling |
-| Схемы шагов и узлов | `zod` | 4.6.2 | MIT | peer VoltAgent `^3.25 \|\| ^4`; горячий путь валидации |
-| Синтаксический ремонт JSON | `jsonrepair` | по 09 | MIT | только ветка `ok`, одна попытка |
-| Таймеры приостановок | `pg-boss` (`sendAfter` + сверяющий cron) | 12.x | MIT | VoltAgent сам по таймауту не возобновляет |
-| Гардрейлы PII и инъекций | `createPIIInputGuardrail`, `createDefaultPIIGuardrails`, `createPromptInjectionGuardrail` | 2.10.0 | MIT | свой regex-зоопарк не пишем |
-| Отмена узла | штатный `AbortController` + `isAbortError` | 2.10.0 | MIT | сигнал уходит в провайдера, в тулы и в сабагентов |
-| Отмена прогона | `createSuspendController()` + `WorkflowRegistry.activeExecutions` | 2.10.0 | MIT | отмена любого живого исполнения по `executionId` |
+| Исполнение плана | наша функция `@DBOS.workflow()` — Interpreter над планом скомпилированного IR | dbos 2.31.1 | MIT | чекпоинт шага, восстановление, fork и история шагов готовы; модели графа у DBOS нет, у pydantic-graph нет сохранения состояния ([ADR-0025](adr/0025-python-engine.md) §3) |
+| Исполнение узла с вводом-выводом | `@DBOS.step(retries_allowed=False)` | dbos 2.31.1 | MIT | выход шага пишется в системную БД и после падения не повторяется (запуск 3.14.7, [research/py-stack-runtime.md](research/py-stack-runtime.md) §5.1) |
+| Узел `llm` внутри DBOS | один `DBOS.step` на узел или `agent.run()` под capability `DBOSDurability` в функции workflow | dbos 2.31.1, pydantic-ai-slim 2.43.0 | MIT | выбор — [ADR-0025](adr/0025-python-engine.md) ОВ 4; одобрение тула возможно только во втором варианте (§8.6) |
+| Системная БД DBOS | SQLite локально с `use_listen_notify = False`, PostgreSQL 18 в проде (схема `dbos`) | `sqlite3.sqlite_version` 3.53.1 / 18 | public domain / PostgreSQL License | `aqven dev` без отдельного сервиса ([ADR-0025](adr/0025-python-engine.md) §4) |
+| Восстановление после падения | `DBOS.launch()` | dbos 2.31.1 | MIT | незавершённые прогоны продолжаются без повтора завершённых шагов |
+| Реплей и форк | `DBOS.fork_workflow(workflow_id, start_step, ...)`, `WorkflowStatus.forked_from` | dbos 2.31.1 | MIT | новый прогон с копией шагов до выбранного, связь с исходным хранит DBOS |
+| Вызов модели | `Agent.run(output_type=..., model=..., instructions=..., usage=..., usage_limits=..., retries=...)` | pydantic-ai-slim 2.43.0 | MIT | типизированный выход с повтором, модель и инструкции на вызове |
+| Гарантии на каждом вызове модели | цепочка `WrapperModel` из фабрики `aqven_llm` | pydantic-ai-slim 2.43.0 | MIT | исход, редакция, кассета, лимитер и ретрай для любого вызова, включая судей и reflection ([ADR-0029](adr/0029-trust-and-quality-python.md) §1) |
+| Транспортный ретрай | `BackoffModel` на tenacity; SDK провайдеров с `max_retries=0` | 9.1.4 | Apache-2.0 | единственный слой транспортного ретрая |
+| Бюджеты | `UsageLimits` + общий `RunUsage` на прогон; цены — снимок genai-prices | pydantic-ai-slim 2.43.0 / genai-prices 0.1.7 | MIT | журнал общий для всех агентов прогона ([ADR-0029](adr/0029-trust-and-quality-python.md) §4) |
+| Проверка значений на границах | pydantic | 2.13.5 | MIT | вход и выход узла и воркфлоу, ответ человека ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §7) |
+| Шаблоны промтов | python-liquid | 2.3.1 | MIT | `StrictUndefined`, статический анализ ([ADR-0029](adr/0029-trust-and-quality-python.md) §8) |
+| Ожидание человека и дедлайн | `DBOS.set_event`, `DBOS.recv_async(topic, timeout_seconds)`, `DBOS.send`; дедлайн — выход шага `DBOS.sleep` | dbos 2.31.1 | MIT | внешнего планировщика нет, дедлайн переживает SIGKILL ([ADR-0025](adr/0025-python-engine.md) §9) |
+| События прогона | `DBOS.write_stream_async("run_events", ...)` | dbos 2.31.1 | MIT | запись exactly-once, `seq` = смещение + 1, своей outbox-таблицы нет ([23](23-studio-api.md) §11.4) |
+| Строки адреса для DBOS, ключи идемпотентности | `rfc8785` + `hashlib` | 0.1.4 | Apache-2.0 | один кодировщик адреса ([ADR-0025](adr/0025-python-engine.md) §9) |
+| Сериализация шагов | по умолчанию pickle (`py_pickle`), кандидат — `portable_json` | dbos 2.31.1 | MIT | выбор — [ADR-0025](adr/0025-python-engine.md) ОВ 7; на границе шага в любом случае только JSON-совместимые значения (§6.2) |
+| Отмена прогона | `DBOS.cancel_workflow` | dbos 2.31.1 | MIT | по доке, запуском не проверено — открытый вопрос 2 |
+| Фильтр инъекций на входе | не выбран | — | — | открытый вопрос 8 |
 
-Пишем сами (в исследованиях явно «нет готового»): сборщик цепочек, исполнители узлов `llm`/`tool`/`human`/`code`, кворумы и политики ошибок веток, лимиты итераций циклов, `on_item_error`, replay-кэш, бюджеты, лимитер профиля, планировщик таймаутов.
+Пишем сами (у DBOS и Pydantic AI этого нет): исполнитель IR и таблицы интерпретаторов, исполнители узлов `llm`,
+`tool`, `code`, `human`, `narrow`, `switch`, сведение веток `all`/`any`/`quorum(k)`/`first_success`, лимиты циклов,
+`on_item_error`, связь шагов DBOS с адресом исполнения, ключи идемпотентности, слой узла `human` поверх примитивов
+DBOS, исполнитель исходов вызова, расчёт лимитов вызова, RPM/TPM-бакет профиля. jsonrepair и pg-boss в рантайме нет
+([ADR-0029](adr/0029-trust-and-quality-python.md) §7, [ADR-0025](adr/0025-python-engine.md) §4).
 
 ## 1. Схема исполнения
 
-План компилятора (`ExecutionPlan`) — сериализуемый список шагов в топологическом порядке, без замыканий. Он собирается из файлов проекта один раз и материализуется снимком в базе (§2.4); **исполнение файлов не читает вовсе**. Сборщик превращает снимок в объект `Workflow` и кладёт в реестр. Дальше всё идёт внутри VoltAgent, а наш код живёт в `execute` каждого шага.
+Компилятор (`aqven check`, `aqven build`) собирает YAML, промты и `code/*.py` в IR со `spec_hash`; IR — производный
+артефакт в `.aqven/cache/` и в wheel, в git не коммитится ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §9). План
+исполнения (`ExecutionPlan`) — сериализуемое представление IR без замыканий: узлы по `node_id`, виды, схемы, политики,
+бюджеты. При запуске план материализуется снимком в хранилище прогонов до старта workflow (§2.4); **исполнение файлов
+не читает вовсе**. Прогон — один DBOS-workflow `run_flow(ir_hash, flow_input)`, идентификатор workflow равен
+`execution_id`; внутри него интерпретатор обходит план.
 
 ```mermaid
 flowchart TB
-  subgraph build["Сборка (один раз на версию)"]
-    FILES["Файлы проекта — истина:<br/>flow.yaml, nodes/*.yaml, *.prompt.md"] --> COMP["Компилятор §07"]
-    COMP --> PLAN["ExecutionPlan:<br/>steps[], stepId, kind,<br/>schemas, policies, budgets"]
-    PLAN --> SNAP["Снимок в базе:<br/>origin, release_hash,<br/>source_commit"]
-    SNAP --> ASM["Сборщик цепочек<br/>ChainAssembler"]
-    ASM --> CHAIN["createWorkflowChain(...)<br/>.andThen/.andMap/.andAll/.andBranch"]
-    CHAIN --> REG["WorkflowRegistry.registerWorkflow"]
+  subgraph buildPhase["Сборка: aqven check, aqven build"]
+    FILES["Файлы проекта — истина:<br/>aqven.yaml, flow.yaml, nodes/*.yaml,<br/>*.prompt.md, code/*.py"] --> COMP["Компилятор §07"]
+    COMP --> IR["IR + spec_hash<br/>.aqven/cache/, wheel"]
+    IR --> PLAN["ExecutionPlan:<br/>узлы по node_id, kind,<br/>схемы, политики, бюджеты"]
   end
 
-  subgraph run["Прогон"]
-    REG --> RUN["workflow.run / stream / startAsync"]
-    RUN --> STEP["Шаг VoltAgent<br/>WorkflowExecuteContext"]
-    STEP --> DISP{"kind шага"}
-    DISP -->|llm| XL["LlmExecutor"]
-    DISP -->|tool| XT["ToolExecutor"]
-    DISP -->|human| XH["HumanExecutor → suspend()"]
-    DISP -->|code| XC["CodeExecutor"]
-    DISP -->|control| XR["Сведение: switch/quorum/loop/map"]
-    XL --> MW["@wf/llm: wrapLanguageModel<br/>кассета → бюджет → PII → вызов"]
-    XL --> ST["setWorkflowState: выход + провенанс"]
-    XT --> ST
-    XH --> ST
-    XC --> ST
-    XR --> ST
-    ST --> CKPT["running-чекпоинт<br/>metadata.__voltagent_restart_checkpoint"]
+  subgraph startPhase["Запуск"]
+    API["POST /api/runs, run_start,<br/>flows.x.run(...)"] --> VAL["проверка входа<br/>моделью Pydantic"]
+    VAL --> SNAP["снимок плана:<br/>origin, release_hash, source_commit"]
+    PLAN --> SNAP
+    SNAP --> WF["DBOS workflow run_flow(ir_hash, input)<br/>workflow id = execution_id"]
   end
 
-  CKPT -.->|restart| RUN
-  CKPT -.->|timeTravel| RUN
+  subgraph runPhase["Прогон внутри workflow"]
+    WF --> INT["Interpreter: INTERPRETERS[kind]"]
+    INT -->|"seq, switch, loop, parallel, map,<br/>race, try, call, const, narrow"| INT
+    INT -->|"llm, code, tool"| STEP["@DBOS.step execute_node"]
+    INT -->|"human, gate"| HUM["set_event → recv_async(topic, timeout)<br/>дедлайн — шаг DBOS.sleep"]
+    STEP --> LLM["llm: agent.run + цепочка aqven_llm<br/>OutcomeGate → Redaction → Cassette →<br/>Limiter → Backoff → провайдер"]
+    STEP --> SYS["выход шага в системной БД DBOS"]
+    HUM --> SYS
+    INT --> EV["write_stream run_events → SSE"]
+  end
+
+  SYS -.->|"DBOS.launch: восстановление"| WF
+  SYS -.->|"fork_workflow(start_step)"| WF
 ```
 
-Правило разделения: **VoltAgent отвечает за «когда исполнить шаг», наш исполнитель — за «что считается успехом шага»**. Ни один узел ядра не превращается в несколько шагов VoltAgent без нужды: лишние шаги — это лишние UPSERT'ы строки исполнения (§7).
+Правило разделения: **DBOS отвечает за «что уже записано и что повторить после падения», интерпретатор — за «что
+исполнить следующим и что считается успехом узла»**. Исполнение узла с вводом-выводом — ровно один DBOS-шаг,
+конструкции без ввода-вывода шагов не создают: каждый шаг — запись в системную БД (§7.1) и копия при форке (§7.3).
 
-## 2. Сборщик цепочек
+Функция workflow детерминирована. Время, случайность, сеть и вызовы моделей — только внутри шагов; чтение
+неизменяемого снимка плана по хешу допустимо. После восстановления DBOS заново исполняет функцию workflow, завершённые
+шаги возвращают записанные выходы ([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.1), и интерпретатор
+приходит в то же состояние; конкурентные шаги дока DBOS допускает при детерминированном порядке старта (там же §5.5).
+
+## 2. Исполнитель плана
 
 ### 2.1. Контракт
 
-```ts
-type FlowId = string & { readonly __brand: "FlowId" };
-type FlowVersion = string & { readonly __brand: "FlowVersion" };
-type StepId = string & { readonly __brand: "StepId" };
-type WorkflowKey = `${FlowId}@${FlowVersion}`;
+```python
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import NewType, Protocol
 
-interface ExecutionPlan {
-  readonly flowId: FlowId;
-  readonly version: FlowVersion;
-  readonly planHash: string;
-  readonly input: z.ZodType;
-  readonly result: z.ZodType;
-  readonly steps: readonly PlanStep[];
-  readonly budgets: RunBudgetSpec;
-  readonly checkpointInterval: number;
+from dbos import DBOS
+from pydantic import JsonValue
+
+FlowId = NewType("FlowId", str)
+IrHash = NewType("IrHash", str)
+NodeId = NewType("NodeId", str)
+ExecutionId = NewType("ExecutionId", str)
+
+type JsonObject = dict[str, JsonValue]
+
+
+class NodeKind(StrEnum):
+    LLM = "llm"
+    CODE = "code"
+    TOOL = "tool"
+    HUMAN = "human"
+    CONST = "const"
+    NARROW = "narrow"
+    SEQ = "seq"
+    PARALLEL = "parallel"
+    MAP = "map"
+    SWITCH = "switch"
+    LOOP = "loop"
+    RACE = "race"
+    GATE = "gate"
+    TRY = "try"
+    CALL = "call"
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledNode:
+    node_id: NodeId
+    kind: NodeKind
+    spec: NodeSpec
+
+
+def spec_of[S: NodeSpec](node: CompiledNode, expected: type[S]) -> S:
+    if isinstance(node.spec, expected):
+        return node.spec
+    raise PlanCorrupted(node.node_id, node.kind)
+
+
+class ExecutionPlan(Protocol):
+    @property
+    def ir_hash(self) -> IrHash: ...
+    @property
+    def root(self) -> NodeId: ...
+    def node(self, node_id: NodeId) -> CompiledNode: ...
+
+
+class RunContext(Protocol):
+    @property
+    def ir_hash(self) -> IrHash: ...
+    def bind_inputs(self, node: CompiledNode, address: ExecutionAddress) -> JsonObject: ...
+    async def interpret(self, node_id: NodeId, address: ExecutionAddress) -> JsonValue: ...
+
+
+type StepExecutor = Callable[[CompiledNode, JsonObject], Awaitable[JsonValue]]
+type Interpretation = Callable[[RunContext, CompiledNode, ExecutionAddress], Awaitable[JsonValue]]
+
+STEP_EXECUTORS: Mapping[NodeKind, StepExecutor] = {
+    NodeKind.LLM: execute_llm,
+    NodeKind.CODE: execute_code,
+    NodeKind.TOOL: execute_tool,
 }
 
-interface ChainAssembler {
-  assemble(plan: ExecutionPlan): Workflow<z.ZodType, z.ZodType>;
+
+@DBOS.step(retries_allowed=False)
+async def execute_node(ir_hash: IrHash, node_id: NodeId, address: JsonObject, inputs: JsonObject) -> JsonValue:
+    node = plan_for(ir_hash).node(node_id)
+    return await STEP_EXECUTORS[node.kind](node, inputs)
+
+
+async def run_as_step(run: RunContext, node: CompiledNode, address: ExecutionAddress) -> JsonValue:
+    inputs = run.bind_inputs(node, address)
+    return await execute_node(run.ir_hash, node.node_id, address.model_dump(mode="json"), inputs)
+
+
+INTERPRETERS: Mapping[NodeKind, Interpretation] = {
+    **{kind: run_as_step for kind in STEP_EXECUTORS},
+    NodeKind.CONST: interpret_const,
+    NodeKind.NARROW: interpret_narrow,
+    NodeKind.HUMAN: wait_for_human,
+    NodeKind.SEQ: interpret_seq,
+    NodeKind.PARALLEL: interpret_parallel,
+    NodeKind.MAP: interpret_map,
+    NodeKind.SWITCH: interpret_switch,
+    NodeKind.LOOP: interpret_loop,
+    NodeKind.RACE: interpret_race,
+    NodeKind.GATE: interpret_gate,
+    NodeKind.TRY: interpret_try,
+    NodeKind.CALL: interpret_call,
 }
 
-interface StepEmitter<S extends PlanStep = PlanStep> {
-  readonly kind: S["kind"];
-  emit(chain: WorkflowChain, step: S, ctx: EmitContext): WorkflowChain;
-}
+
+@DBOS.workflow()
+async def run_flow(ir_hash: IrHash, flow_input: JsonObject) -> JsonValue:
+    plan = plan_for(ir_hash)
+    run = start_run(plan, flow_input)
+    root = ExecutionAddress(node_id=plan.root, branch_key=None, iteration=None, item_index=None)
+    return await run.interpret(plan.root, root)
 ```
 
-Сборщик — Strategy поверх таблицы эмиттеров `Record<PlanStep["kind"], StepEmitter>`. Никаких `switch`-лестниц: `kind` шага — ключ словаря, неизвестный `kind` — отказ сборки, а не ветка по умолчанию.
+Исполнитель — Interpreter над планом, вид узла выбирается таблицей (Strategy). `STEP_EXECUTORS` — узлы с вводом-выводом,
+они исполняются DBOS-шагом `execute_node`. Остальные строки `INTERPRETERS` исполняются в самой функции workflow:
+конструкции без ввода-вывода и узел `human`, потому что `DBOS.recv` внутри шага бросает `DBOSException`
+([ADR-0025](adr/0025-python-engine.md) ОВ 4). Полноту таблицы держит тест: множество ключей
+`INTERPRETERS` равно `NodeKind`, ветки по умолчанию нет. `spec_of` — guard clause: расхождение вида узла и его
+спецификации — `PlanCorrupted`, а не молчаливое приведение.
 
-```ts
-const emitters: Record<PlanStep["kind"], StepEmitter> = {
-  llm: llmEmitter, tool: toolEmitter, human: humanEmitter, code: codeEmitter,
-  map: mapEmitter, parallel: parallelEmitter, switch: switchEmitter, loop: loopEmitter,
-  wire: wireEmitter, guard: guardEmitter, component: componentEmitter,
-};
+`ExecutionAddress` — модель [23](23-studio-api.md) §2, §6.2. `start_run` строит `WorkflowRun` — реализацию `RunContext`
+(не показана): хранит выходы исполнений по адресу, резолвит привязки по грамматике [04](04-ir-schema.md) §3.1–§3.2,
+пишет события `node_started` и `node_finished` в поток `run_events` (Observer) и вызывает `INTERPRETERS[node.kind]`.
+Остальные члены `RunContext` (`read_text`, `read_items`, `budget_snapshot`, `now`, `scheduler`) появляются в
+разделах, где нужны. В `execute_node` адрес уходит JSON-значением, а `node_id` — отдельно: на границе шага только
+JSON-совместимые значения (§6.2). В сниппете узел `llm` исполняется шагом; форма `DBOSDurability` переносит его в
+интерпретаторы уровня workflow, выбор — [ADR-0025](adr/0025-python-engine.md) ОВ 4.
 
-function assemble(plan: ExecutionPlan): Workflow<z.ZodType, z.ZodType> {
-  const base = createWorkflowChain({
-    id: workflowKey(plan),
-    name: plan.flowId,
-    input: plan.input,
-    result: plan.result,
-    checkpointInterval: plan.checkpointInterval,
-    retryConfig: { attempts: 0, delayMs: 0 },
-    hooks: buildHooks(plan),
-  });
-  const ctx = createEmitContext(plan);
-  return plan.steps.reduce((chain, step) => emitters[step.kind].emit(chain, step, ctx), base).toWorkflow();
-}
-```
+Сниппеты разделов 2–10 прошли pyright 1.1.414 strict на CPython 3.14.7 (dbos 2.31.1, pydantic-ai-slim 2.43.0,
+pydantic 2.13.5) вместе с заглушками типов, которых в тексте нет (проба при переписывании документа 2026-09-16);
+исполнением не проверялись. Проверенная запуском форма исполнителя — [ADR-0025](adr/0025-python-engine.md) §3.
 
-`retryConfig: { attempts: 0 }` задан явно: ретраи VoltAgent триггерятся только выброшенным исключением и не умеют backoff (только фиксированный `delayMs`). Наши ретраи — внутри `execute`, с экспонентой и джиттером, чтобы не плодить шаги в таймлайне и не получать мультипликативный взрыв попыток `retries × maxRetries × maxMiddlewareRetries`.
+### 2.2. Адрес исполнения и шаги DBOS
 
-### 2.2. Идентификаторы шагов
+Адрес исполнения — единственный ключ, по которому интерпретатор достаёт чужой выход, студия запрашивает исполнение,
+API переводит форк в шаг DBOS, а события и спаны склеиваются. Он детерминирован для одного плана и одного входа.
 
-`stepId` — единственный ключ, по которому узел достаёт чужой выход (`getStepData(stepId)`, `getStepResult<T>(stepId)`), по которому делается `timeTravel({ stepId })` и по которому склеиваются спаны. Поэтому он детерминирован и стабилен между сборками одной версии.
+| Конструкция | Адрес исполнения |
+|---|---|
+| Узел верхнего уровня | `node_id`, остальные поля `null` |
+| Ветка `parallel`, ячейка `switch` | `branch_key` — ключ ветки или значение дискриминанта |
+| Проход тела `loop` | `iteration` 0..n; итог узла-цикла — отдельное исполнение с `iteration: null` |
+| Элемент `map` | `item_index` 0..n |
+| Узел тела компонента `call`, вложенные конструкции | не определён — открытый вопрос 1 |
+| Попытка | не часть адреса: список `attempts[]` внутри исполнения ([23](23-studio-api.md) §6.3) |
 
-| Конструкция | Шаблон `stepId` | Пример |
+Правила:
+
+- `node_id` берётся из IR и уже проверен компилятором. Адрес — структура: строковые ключи (`n:<nodeId>`,
+  `nodeId#branch`, `nodeId@iteration`) запрещены в API, событиях и хранилище ([ADR-0028](adr/0028-studio-api-contract.md) §5).
+- Строки, которых требует DBOS, — топик ожидания и id дочернего workflow — выводит один кодировщик: `address_key` —
+  JSON адреса по RFC 8785; строки живут только внутри адаптера DBOS и обратно не разбираются
+  ([ADR-0025](adr/0025-python-engine.md) §9).
+- Переименование узла меняет IR и `spec_hash`: адреса прогонов прежней версии на новую не переносятся, резолверы lineage
+  читают журнал `renames` в `aqven.yaml`.
+- DBOS знает шаги по `function_id` и имени функции (`execute_node`, `DBOS.recv`, `DBOS.sleep`,
+  `<имя агента>__model.request`), а не по адресу. Связь «адрес → `function_id` первого шага исполнения» записывает
+  исполнитель; форма записи — [ADR-0025](adr/0025-python-engine.md) ОВ 8, [23](23-studio-api.md) ОВ 28.
+
+### 2.3. Версия плана и версия исполнителя
+
+Реестра версий воркфлоу нет: DBOS регистрирует одну функцию `run_flow`, а граф приходит входом прогона. Оси версий
+разведены ([ADR-0025](adr/0025-python-engine.md) §4, §9):
+
+| Ось | Что несёт | Когда меняется |
 |---|---|---|
-| Узел ядра | `n:<nodeId>` | `n:extract_intent` |
-| Ребро-маппер | `w:<fromNodeId>-><toNodeId>` | `w:extract_intent->route` |
-| Ветвление | `c:<nodeId>:branch`, сведение — `c:<nodeId>:join` | `c:route:branch` |
-| Параллель | `p:<nodeId>:all`, ветка — `p:<nodeId>:b<i>:<branchNodeId>` | `p:panel:b0:judge_a` |
-| Цикл | `l:<nodeId>:body`, страж — `l:<nodeId>:guard` | `l:refine:body` |
-| Map | `m:<nodeId>:each`, сведение — `m:<nodeId>:collect` | `m:score:each` |
-| Компонент | `k:<componentId>@<componentVersion>:<innerStepId>` | `k:rag@2:n:retrieve` |
+| `ir_hash` во входе workflow | граф, промты, схемы, политики — снимок плана (§2.4) | каждая правка определения; новый прогон берёт новый хеш, процесс не перезапускается |
+| `application_version` в `DBOSConfig` | протокол исполнителя: форма `run_flow`, таблицы интерпретаторов, порядок шагов | только несовместимая правка исполнителя. По умолчанию DBOS считает версию по исходникам функций workflow, и правка кода оставила ждущие прогоны без восстановления (проверено) |
 
-Правила: `nodeId` берётся из IR и валиден как идентификатор (компилятор это уже проверил); коллизия `stepId` — ошибка сборки; переименование узла в IR — новая версия воркфлоу, потому что оно ломает адресацию форков и кассет.
+`plan_for(ir_hash)` — ленивая загрузка (Registry + Lazy Initialization):
 
-### 2.3. Регистрация версии
+1. Кэш процесса по `ir_hash` → есть, вернуть.
+2. Нет — загрузить снимок плана из хранилища прогонов (§2.4); в файловое дерево и в `.aqven/cache/` `plan_for` не ходит.
+3. Снимка нет — `PlanMissing`: прогон падает типизированной ошибкой, а не исполняет другой граф.
 
-Ключ воркфлоу — `flow@version`, ровно как в спеке §20.3. Регистрация и снятие идут через глобальный синглтон `WorkflowRegistry.getInstance()` (`globalThis.___voltagent_workflow_registry`), поэтому реестр обязан быть обёрнут нашим фасадом: тесты и тенанты иначе видят друг друга.
+План по хешу неизменяем, поэтому кэш — LRU, вытеснение безопасно в любой момент. Тестовый прогон рабочей копии
+(`at: working`, [23](23-studio-api.md) §6.4) материализуется тем же путём.
 
-```ts
-interface WorkflowSupplier {
-  ensure(key: WorkflowKey): Promise<Workflow<z.ZodType, z.ZodType>>;
-  release(key: WorkflowKey): void;
-}
-```
-
-`ensure` — ленивая компиляция по требованию (паттерн Registry + Lazy Initialization):
-
-1. `cache.get(key)` → есть, вернуть.
-2. Нет — загрузить `ExecutionPlan` из снимка в `app` по `key` (§2.4); в файловое дерево `ensure` не ходит.
-3. `assemble(plan)` → `WorkflowRegistry.getInstance().registerWorkflow(workflow)` → положить в LRU.
-4. Вытеснение из LRU вызывает `unregisterWorkflow(id)` только при нулевом числе живых исполнений этой версии (`WorkflowRegistry.activeExecutions` даёт срез живых `executionId`).
-
-Триггеры сборки: первый запуск версии после старта процесса, выпуск новой версии, тестовый прогон черновика (`flow@draft-<content_hash:7>`, материализуется из рабочей копии тем же путём и снимается по TTL). Рестарт процесса ничего не ломает: `restartAllActiveWorkflowRuns({ workflowId })` вызывается **после** `ensure` для каждой версии, у которой есть незавершённые прогоны — иначе восстанавливать будет некуда.
-
-Инвариант версии: `planHash` хранится в `metadata` исполнения. Несовпадение `planHash` прогона и текущего плана при `restart`/`timeTravel` — отказ с типизированной ошибкой `PlanDrift`, а не молчаливое исполнение другого графа.
+Инвариант версии: у восстановленного и у форкнутого прогона тот же `ir_hash`, что у исходного, — DBOS копирует вход
+workflow. Сменить граф у живого прогона нельзя, только новым прогоном. Горячая загрузка новой версии и восстановление
+прогона под старым хешем после правки файлов запуском не проверены, перенос ждущих прогонов на новую
+`application_version` через `fork_workflow(application_version=...)` не запускался — [ADR-0025](adr/0025-python-engine.md) ОВ 6.
 
 ### 2.4. Материализация плана
 
-Определения живут файлами ([ADR-0017](adr/0017-files-as-source-of-truth.md)), но **прогон файлов не читает** — ни при старте, ни в процессе. Компилятор материализует план один раз и кладёт снимок в базу; дальше исполняется снимок. Та же конструкция, что `status.storedWorkflowSpec` у Argo и `created_dag_version_id` у Airflow 3.
+Определения живут файлами ([ADR-0017](adr/0017-files-as-source-of-truth.md)), но **прогон файлов не читает** — ни при
+старте, ни в процессе. План материализуется из IR один раз и кладётся снимком в базу до старта workflow
+([23](23-studio-api.md) §6.4); дальше исполняется снимок. Та же конструкция, что `status.storedWorkflowSpec` у Argo и
+`created_dag_version_id` у Airflow 3.
 
 | Поле прогона | Значение | Роль |
 |---|---|---|
@@ -172,219 +288,375 @@ interface WorkflowSupplier {
 | `release_hash` | `hash(spec_hash, prompt_pins, model_profile_pins, component_lock, env_overlay_hash)` | **авторитетная идентичность исполненного**: по ней сравнивают и воспроизводят прогоны |
 | `spec_version_id` | строка со снимком IR и `ExecutionPlan` | физическое тело плана; читается вечно и не зависит от состояния репозитория |
 | `source_commit` | sha коммита эпизода, nullable | провенанс: blame, дифф двух прогонов в git |
-| `source_ref` | `refs/heads/main` или `wf/agent/<session>` | откуда пришло: прогон с ветки агента видно сразу |
+| `source_ref` | `refs/heads/main` или `aqven/agent/<session>` | откуда пришло: прогон с ветки агента видно сразу |
 | `source_dirty` | `true`, если эпизод ещё не закоммичен | честный признак «запуск из-под руки»; воспроизводимость не страдает, снимок уже в базе |
 
-Авторитетен **хеш содержимого, а не commit sha**: sha меняется от косметики (переезд файла, правка соседнего воркфлоу в том же коммите) и исчезает при пересоздании репозитория, а прогоны живут дольше репозитория. Пишем оба: хеш для равенства, sha для истории.
+Авторитетен **хеш содержимого, а не commit sha**: sha меняется от косметики (переезд файла, правка соседнего
+воркфлоу в том же коммите) и исчезает при пересоздании репозитория, а прогоны живут дольше репозитория. Пишем оба:
+хеш для равенства, sha для истории.
 
 | Событие во время прогона | Что происходит |
 |---|---|
-| Файл узла изменён, промт переписан, определение откачено, переключена ветка | прогон идёт на снимке; изменение подхватит следующий запуск, в карточке — отметка «определение изменилось после старта» |
-| Индекс отстал или снесён (`DROP SCHEMA idx CASCADE`) | прогон не затронут: `ExecutionPlan` лежит в `app`, а не в `idx` |
-| `restart`, `timeTravel`, форк | берут тот же снимок по `spec_version_id`; расхождение `planHash` — `PlanDrift` (§2.3), а не молчаливое исполнение другого графа |
+| Файл узла изменён, промт переписан, определение откачено, переключена ветка | прогон идёт на снимке; изменение подхватит следующий запуск, в карточке — отметка «определение изменилось после старта» (`definition_changed`) |
+| Индекс отстал или снесён (`DROP SCHEMA idx CASCADE`), удалён `.aqven/cache/` | прогон не затронут: `ExecutionPlan` лежит в `app`, а не в `idx` и не в кэше сборки |
+| Восстановление после падения, форк | берут тот же снимок по `ir_hash` из входа workflow; снимка нет — `PlanMissing` (§2.3), а не молчаливое исполнение другого графа |
 
-## 3. Компиляция конструкций ядра в шаги VoltAgent
+## 3. Интерпретация конструкций ядра на DBOS
 
-| Конструкция ядра | Примитив VoltAgent | Что даёт фреймворк | Что дописывает наш слой |
+| Конструкция ядра | Где исполняется | Что даёт DBOS или Pydantic AI | Что дописывает наш слой |
 |---|---|---|---|
-| `seq` | `.andThen({ id, execute })` | типы по цепи, `getStepData`/`getStepResult`, чекпоинт после шага | ничего сверх генерации `stepId` |
-| ребро / выражение | `.andMap({ id, map })` с `source: "value" \| "data" \| "input" \| "context" \| "step" \| "fn"` | чтение по dot-пути из входа, данных, контекста, выхода шага | граф остаётся сериализуемым; `source: "fn"` — аварийный люк, провенанс для него пишем сами |
-| `switch` (ровно одна ветка) | `.andBranch({ id, branches })` + `.andThen` сведения | параллельный запуск **всех** истинных условий, результат — массив по порядку веток с `undefined` у несработавших | взаимоисключающие предикаты, `default` как отрицание объединения, шаг сведения «единственный не-`undefined`» |
-| `if` | `.andWhen({ id, condition, step })` | true → шаг, false → данные проходят насквозь | `else` — второй `andWhen` с отрицанием |
-| `parallel` | `.andAll({ id, steps })` + сведение | параллельный запуск на одном входе, merge результатов в один объект | ветки в `Result<T,E>` под явными ключами (merge затирает одинаковые поля), политики `all/quorum(k)/any/first_success`; голый `andAll` падает целиком при провале любой ветки |
-| `race` | `.andRace({ id, steps })` | `Promise.any`-семантика: провал быстрого не валит гонку | реальная отмена проигравших своим `AbortController`, дискриминатор источника в схеме, учёт стоимости всех веток |
-| `map` | `.andForEach({ id, step, items, map, concurrency })` | порядок результатов сохраняется, лимит параллелизма | `on_item_error` (`fail_fast \| skip \| collect`), лимит размера коллекции, батчи |
-| `loop` | `.andDoWhile` / `.andDoUntil({ id, step\|steps, condition })` | тело выполняется минимум один раз, условие может быть async | **лимита итераций нет**: `max_iter`, бюджет, стагнация, best-of — счётчики в `workflowState`, условие генерирует компилятор |
-| `gate` (страж качества) | `.andGuardrail({ id, inputGuardrails, outputGuardrails })` | цепочка проверок с `pass/action: "modify"`, наблюдаемость гардрейлов | перевод блокировки в типизированный `PolicyViolation` вместо голого throw |
-| `human` | `suspend(reason, suspendData)` + `resumeData`, `suspendSchema`/`resumeSchema` **на шаге** | чекпоинт с `workflowState`, REST-резюм, событие `workflow-suspended` | таймаут приостановки (§8), идемпотентность повторного входа в шаг |
-| `component` | `.andWorkflow(workflow)` | вложенный воркфлоу как шаг (`stepType: "workflow"`) | версионирование компонента и проверка схем на границе |
-| `llm` (без стрима) | `.andThen` + `agent.generateText({ output: Output.object({ schema }) })` | tools продолжают работать вместе со строгим выводом | весь конвейер §4 |
-| `llm` (со стримом) | `.andThen` + `agent.streamText` + `ctx.writer.pipeFrom(fullStream, { prefix, agentId, filter })` | маппинг частей стрима в события воркфлоу, `part.usage → metadata.usage` | ручной учёт usage: `state.usage` накапливается только для `andAgent` |
-| ранний выход | `ctx.bail(result)` | успешное завершение воркфлоу с результатом | политика «достаточно хорошо» и её провенанс |
-| аварийный выход | `ctx.abort()` / throw | прерывание | типизированная ошибка узла в `{ code, message, details }` |
+| `seq` | функция workflow, по порядку `steps` | выход каждого шага записан и после падения не повторяется | порядок, привязки, события `node_started`/`node_finished` |
+| привязка, проекция | функция workflow, закрытая грамматика [04](04-ir-schema.md) §3.2 | — | провенанс значения; вычисление детерминировано, шага нет |
+| `switch` (ровно одна ветка) | функция workflow, выбор ячейки по значению дискриминанта (§3.1) | — | `default` только с `default_reason`, `SwitchArityError`, `branch_key` в адресе |
+| `parallel` | функция workflow, ветки через `BranchScheduler` (§3.3) | дочерние workflow (`DBOS.start_workflow_async`) проверены для веток с человеком ([ADR-0025](adr/0025-python-engine.md) §9, H5); конкурентные шаги при детерминированном порядке старта — по доке | сведение `all`/`any`/`quorum(k)`/`first_success`, `on_branch_error`, стоимость всех веток; форма для веток без человека — [ADR-0025](adr/0025-python-engine.md) ОВ 1 |
+| `race` | как `parallel` | — | отмена проигравших, дискриминатор источника, стоимость всех веток; механизм отмены — открытый вопрос 2 |
+| `map` | функция workflow, элементы через `BranchScheduler` с лимитом `concurrency` (§3.4) | `Queue` с лимитом конкурентности — по доке, не проверено | `on_item_error`, `max_items`, батчи (§9.3), `item_index` в адресе; форма — [ADR-0025](adr/0025-python-engine.md) ОВ 1 |
+| `loop` | функция workflow, цикл интерпретатора (§3.2) | проходы тела — записанные шаги | `max_iter`, бюджет, стагнация, `dedup`, `select: last \| best`; `iteration` в адресе |
+| `try` | функция workflow, `try`/`except` вокруг интерпретации `body` по таблице `catch` | как записываются исключения шага и повторяет ли их восстановление — не проверено ([ADR-0025](adr/0025-python-engine.md) ОВ 3) | типизированные ошибки узлов; `finally` — отдельный узел |
+| `gate` | функция workflow | `recv_async` с таймаутом | `waits_for: human` — исполнитель §8; `waits_for: event` — открытый вопрос 5 |
+| `call` | функция workflow, тело компонента из плана по пину | — | проверка схем на границе компонента; адреса узлов тела — открытый вопрос 1 |
+| `const` | функция workflow | — | значение из IR |
+| `narrow` | функция workflow | проверка Pydantic до типа реестра | несовпадение — `WorkflowIssue` с `severity: "assert"` без повтора модели ([ADR-0027](adr/0027-dynamic-io-shapes.md)) |
+| `human` | функция workflow (§8) | `set_event`, `recv_async`, `send`, шаг `DBOS.sleep` | индекс `suspended`, защита резюма, проверка срока и payload, политики `on_timeout` |
+| `code` | шаг `execute_node` | запись выхода | вызов функции проекта `module:function` в процессе модуля, проверка выхода моделью с `revalidate_instances="always"` ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §5, §7) |
+| `tool` | шаг `execute_node` | запись выхода | ключ идемпотентности при `effect: write \| external` (§7.2) |
+| `llm` | шаг `execute_node` или `agent.run()` под `DBOSDurability` в функции workflow | повтор выхода через `RetryPromptPart`, `UsageLimits`, цепочка `WrapperModel` | конвейер §4; выбор формы — [ADR-0025](adr/0025-python-engine.md) ОВ 4 |
+| ранний выход | функция workflow возвращает результат | — | политика «достаточно хорошо» и её провенанс |
+| аварийный выход | типизированное исключение узла | прогон завершается ошибкой | ошибка узла `{code, message, details}` |
 
-`andAgent` не используем для узлов `llm`: он не стримит, а его выход без четвёртого аргумента `map` затирает данные шага. Узел `llm` — всегда `andThen` с явным исполнителем.
+### 3.1. `switch`: выбор ячейки и арность
 
-### 3.1. `switch`: взаимоисключающие предикаты + сведение
+Компилятор проверяет полноту enum и взаимоисключаемость ячеек (R-41), `default` допустим только с `default_reason`
+([04](04-ir-schema.md) §2.5). Интерпретатор выбирает ячейку поиском по таблице `cases`; first-match по значению
+дискриминанта тривиален, потому что ключи уникальны. Ячейка со значением (`{value: Binding}`) представлена в плане
+узлом `const`.
 
-`andBranch` вычисляет условия независимо и запускает все истинные ветки параллельно; first-match и else отсутствуют. Компилятор эмитит предикаты вида «дискриминант равен значению ветки», а `default` — отрицание объединения; полнота enum проверена до сборки.
+```python
+@dataclass(frozen=True, slots=True)
+class SwitchSpec:
+    on: Projection
+    cases: Mapping[str, NodeId]
+    default: NodeId | None
 
-```ts
-const switchEmitter: StepEmitter<SwitchStep> = {
-  kind: "switch",
-  emit: (chain, step, ctx) =>
-    chain
-      .andBranch({
-        id: `c:${step.nodeId}:branch`,
-        branches: step.cases.map((c) => ({
-          condition: ({ data }) => readDiscriminant(data, step.discriminantPath) === c.value,
-          step: ctx.emitSubgraph(c.body),
-        })),
-      })
-      .andThen({
-        id: `c:${step.nodeId}:join`,
-        outputSchema: step.outputSchema,
-        execute: async ({ data }) => selectSingleBranch(data as readonly unknown[], step.nodeId),
-      }),
-};
 
-function selectSingleBranch(results: readonly unknown[], nodeId: string): unknown {
-  const taken = results.filter((r) => r !== undefined);
-  if (taken.length === 1) return taken[0];
-  throw new SwitchArityError(nodeId, taken.length);
-}
+class SwitchArityError(Exception):
+    def __init__(self, node_id: NodeId, value: str) -> None:
+        super().__init__(f"switch {node_id}: no case for {value!r}")
+        self.node_id = node_id
+        self.value = value
+
+
+def select_case(node: CompiledNode, spec: SwitchSpec, value: str) -> NodeId:
+    chosen = spec.cases.get(value, spec.default)
+    if chosen is None:
+        raise SwitchArityError(node.node_id, value)
+    return chosen
+
+
+async def interpret_switch(run: RunContext, node: CompiledNode, address: ExecutionAddress) -> JsonValue:
+    spec = spec_of(node, SwitchSpec)
+    value = run.read_text(spec.on, address)
+    chosen = select_case(node, spec, value)
+    return await run.interpret(chosen, address.model_copy(update={"node_id": chosen, "branch_key": value}))
 ```
 
-`SwitchArityError` — не «не должно случиться», а контролируемый отказ: ноль веток означает дыру в полноте enum, больше одной — сломанную взаимоисключаемость. Оба случая идут в провенанс как ошибка узла, а не как пустой выход.
+`SwitchArityError` — не «не должно случиться», а контролируемый отказ: значение вне `cases` без `default` означает
+расхождение плана и данных (дыра в полноте enum или значение из непроверенного источника). Отказ идёт в провенанс
+как ошибка узла, а не как пустой выход.
 
-### 3.2. `loop` с `max_iter`: страж из `workflowState`
+### 3.2. `loop` с `max_iter`: правила остановки
 
-Счётчик, бюджет, стагнация и лучший кандидат живут в `workflowState` под ключом узла. Условие цикла — чистая функция от этого счётчика, собранная из таблицы предикатов остановки (Chain of Responsibility: первый сработавший стоп решает).
+Тело выполняется минимум один раз ([03](03-core-language.md) §3.4). Счётчик, лучший кандидат и стагнация — локальное
+состояние интерпретатора: после восстановления проходы тела возвращают записанные выходы, и счётчик приходит в то же
+значение (§1). Условие остановки собрано из таблицы правил (Chain of Responsibility): первое сработавшее правило решает.
 
-```ts
-interface LoopCounter {
-  readonly iteration: number;
-  readonly bestScore: number | null;
-  readonly bestStepId: string | null;
-  readonly noImprovementStreak: number;
-  readonly spentTokens: number;
-}
+```python
+type LoopStopReason = Literal["stop_when", "max_iter", "stagnation", "duplicate", "budget_exhausted", "deadline"]
 
-type StopRule = (c: LoopCounter, spec: LoopSpec, budget: BudgetSnapshot) => LoopStopReason | null;
 
-const stopRules: readonly StopRule[] = [
-  (c, s) => (c.iteration >= s.maxIter ? "max_iter" : null),
-  (c, s) => (s.targetScore !== null && c.bestScore !== null && c.bestScore >= s.targetScore ? "target_reached" : null),
-  (c, s) => (c.noImprovementStreak >= s.stagnationLimit ? "stagnation" : null),
-  (_, __, b) => (b.remainingTokens <= 0 || b.remainingCostUsd <= 0 ? "budget_exhausted" : null),
-  (_, __, b) => (b.remainingMs <= 0 ? "deadline" : null),
-];
+@dataclass(frozen=True, slots=True)
+class LoopCounter:
+    iteration: int
+    stop_when_met: bool
+    duplicate: bool
+    best_score: float | None
+    best_iteration: int | None
+    no_improvement_streak: int
 
-const firstStop = (c: LoopCounter, s: LoopSpec, b: BudgetSnapshot): LoopStopReason | null =>
-  stopRules.reduce<LoopStopReason | null>((found, rule) => found ?? rule(c, s, b), null);
 
-const loopEmitter: StepEmitter<LoopStep> = {
-  kind: "loop",
-  emit: (chain, step, ctx) =>
-    chain
-      .andDoUntil({
-        id: `l:${step.nodeId}:body`,
-        steps: [ctx.emitSubgraph(step.body), makeLoopBookkeeping(step)],
-        condition: ({ workflowState }) =>
-          firstStop(readCounter(workflowState, step.nodeId), step.spec, readBudget(workflowState)) !== null,
-      })
-      .andThen({
-        id: `l:${step.nodeId}:guard`,
-        outputSchema: step.outputSchema,
-        execute: async ({ workflowState, getStepResult }) =>
-          finalizeLoop(readCounter(workflowState, step.nodeId), step, getStepResult),
-      }),
-};
+type StopRule = Callable[[LoopCounter, LoopSpec, BudgetSnapshot], LoopStopReason | None]
+
+
+def stop_when_met(counter: LoopCounter, spec: LoopSpec, budget: BudgetSnapshot) -> LoopStopReason | None:
+    return "stop_when" if counter.stop_when_met else None
+
+
+def max_iter_reached(counter: LoopCounter, spec: LoopSpec, budget: BudgetSnapshot) -> LoopStopReason | None:
+    return "max_iter" if counter.iteration >= spec.max_iter else None
+
+
+def stagnated(counter: LoopCounter, spec: LoopSpec, budget: BudgetSnapshot) -> LoopStopReason | None:
+    return "stagnation" if counter.no_improvement_streak >= spec.stagnation.window else None
+
+
+STOP_RULES: tuple[StopRule, ...] = (
+    stop_when_met,
+    max_iter_reached,
+    stagnated,
+    duplicated,
+    budget_exhausted,
+    deadline_passed,
+)
+
+
+def first_stop(counter: LoopCounter, spec: LoopSpec, budget: BudgetSnapshot) -> LoopStopReason | None:
+    for rule in STOP_RULES:
+        reason = rule(counter, spec, budget)
+        if reason is not None:
+            return reason
+    return None
+
+
+async def interpret_loop(run: RunContext, node: CompiledNode, address: ExecutionAddress) -> JsonValue:
+    spec = spec_of(node, LoopSpec)
+    counter = initial_counter()
+    outputs: list[JsonValue] = []
+    stop: LoopStopReason | None = None
+    while stop is None:
+        body = address.model_copy(update={"node_id": spec.body, "iteration": counter.iteration})
+        outputs.append(await run.interpret(spec.body, body))
+        counter = counter.advance(outputs[-1], spec)
+        stop = first_stop(counter, spec, await run.budget_snapshot())
+        await emit_loop_iteration(address, counter, stop)
+    return finalize_loop(node, counter, outputs, stop)
 ```
 
-`makeLoopBookkeeping` — шаг, который обновляет счётчик через `setWorkflowState(prev => next)` и запоминает лучший кандидат по `stepId`, а не сам объект: в состоянии лежит ссылка, тело достаётся через `getStepResult`. `finalizeLoop` возвращает лучший кандидат и причину остановки; исход `max_iter`/`stagnation`/`budget_exhausted` без достижения `targetScore` — это выход с пометкой качества, а не тихий успех.
+`LoopCounter.advance` (метод не показан, как и `initial_counter`, `emit_loop_iteration` и остальные правила) обновляет
+счётчик по выходу прохода: структурный предикат `stop_when` ([04](04-ir-schema.md) §2.4),
+лучший кандидат по `score` — индекс итерации, а не копия значения (значение уже записано выходом шага), серия без
+улучшения больше `stagnation.min_delta`, хеш кандидата для `dedup`. `finalize_loop` возвращает кандидата по `select` и
+причину остановки; остановка по `max_iter`, `stagnation`, `budget_exhausted` или `deadline` без выполненного `stop_when` —
+выход с пометкой качества, а не тихий успех. Каждый проход пишет `loop_iteration_finished`, выход из цикла —
+`loop_exited` с `selected_iteration` ([23](23-studio-api.md) §11.2). `budget_snapshot()` асинхронный: текущее время для
+правила `deadline` берётся из шага, иначе функция workflow перестаёт быть детерминированной.
 
 ### 3.3. `parallel` с `quorum(k)`
 
-Каждая ветка оборачивается в `Result` внутри собственного шага и пишется под уникальным ключом — `andAll` мержит результаты веток в один объект, одинаковые ключи затирают друг друга. Обёртка гасит исключение ветки: иначе падение одной ветки валит весь `andAll`.
+Ветки получают один вход. Исключение `NodeFailure` ветки превращается в `BranchFailed` в обёртке ветки: иначе падение
+одной ветки роняет узел до сведения. Каждая ветка несёт свой `branch_key` в адресе, результаты не сливаются в общий
+объект — сведение делает таблица политик (Strategy).
 
-```ts
-type Result<T> = { ok: true; value: T } | { ok: false; error: NodeError };
+```python
+@dataclass(frozen=True, slots=True)
+class BranchOk:
+    branch_key: str
+    value: JsonValue
 
-const branchStep = (branch: PlanBranch, index: number, nodeId: string) => ({
-  id: `p:${nodeId}:b${index}:${branch.nodeId}`,
-  execute: async (c: WorkflowExecuteContext): Promise<Record<string, Result<unknown>>> => {
-    const value = await runBranch(branch, c).catch(toNodeError);
-    return { [`b${index}`]: isNodeError(value) ? { ok: false, error: value } : { ok: true, value } };
-  },
-});
 
-const quorumPolicies: Record<JoinPolicy, (r: readonly Result<unknown>[], k: number) => JoinOutcome> = {
-  all: (r) => (r.every((x) => x.ok) ? accept(r) : reject(r, "all")),
-  quorum: (r, k) => (r.filter((x) => x.ok).length >= k ? accept(r) : reject(r, "quorum")),
-  any: (r) => (r.some((x) => x.ok) ? accept(r) : reject(r, "any")),
-  first_success: (r) => {
-    const hit = r.find((x) => x.ok);
-    return hit ? accept([hit]) : reject(r, "first_success");
-  },
-};
+@dataclass(frozen=True, slots=True)
+class BranchFailed:
+    branch_key: str
+    error: NodeError
 
-const parallelEmitter: StepEmitter<ParallelStep> = {
-  kind: "parallel",
-  emit: (chain, step, ctx) =>
-    chain
-      .andAll({ id: `p:${step.nodeId}:all`, steps: step.branches.map((b, i) => branchStep(b, i, step.nodeId)) })
-      .andThen({
-        id: `p:${step.nodeId}:join`,
-        outputSchema: step.outputSchema,
-        execute: async ({ data }) =>
-          quorumPolicies[step.join.policy](orderedResults(data, step.branches.length), step.join.k ?? step.branches.length),
-      }),
-};
+
+@dataclass(frozen=True, slots=True)
+class JoinAccepted:
+    value: JsonValue
+
+
+@dataclass(frozen=True, slots=True)
+class JoinRejected:
+    policy: JoinPolicy
+    failures: tuple[BranchFailed, ...]
+
+
+type BranchOutcome = BranchOk | BranchFailed
+type JoinPolicy = Literal["all", "any", "quorum", "first_success"]
+type JoinOutcome = JoinAccepted | JoinRejected
+type JoinRule = Callable[[Sequence[BranchOutcome], int], JoinOutcome]
+
+
+def accepted(outcomes: Sequence[BranchOutcome]) -> list[BranchOk]:
+    return [outcome for outcome in outcomes if isinstance(outcome, BranchOk)]
+
+
+def join_all(outcomes: Sequence[BranchOutcome], k: int) -> JoinOutcome:
+    ok = accepted(outcomes)
+    if len(ok) < len(outcomes):
+        return JoinRejected("all", failures(outcomes))
+    return JoinAccepted({branch.branch_key: branch.value for branch in ok})
+
+
+def join_any(outcomes: Sequence[BranchOutcome], k: int) -> JoinOutcome:
+    ok = accepted(outcomes)
+    if not ok:
+        return JoinRejected("any", failures(outcomes))
+    return JoinAccepted(ok[0].value)
+
+
+def join_quorum(outcomes: Sequence[BranchOutcome], k: int) -> JoinOutcome:
+    ok = accepted(outcomes)
+    if len(ok) < k:
+        return JoinRejected("quorum", failures(outcomes))
+    return JoinAccepted([branch.value for branch in ok])
+
+
+JOIN_RULES: Mapping[JoinPolicy, JoinRule] = {
+    "all": join_all,
+    "any": join_any,
+    "quorum": join_quorum,
+    "first_success": join_any,
+}
+
+
+def unwrap_join(node: CompiledNode, joined: JoinOutcome) -> JsonValue:
+    match joined:
+        case JoinAccepted(value=value):
+            return value
+        case JoinRejected():
+            raise JoinFailure(node.node_id, joined)
+        case _:
+            assert_never(joined)
+
+
+async def run_branch(run: RunContext, branch_key: str, node_id: NodeId, address: ExecutionAddress) -> BranchOutcome:
+    branch = address.model_copy(update={"node_id": node_id, "branch_key": branch_key})
+    try:
+        value = await run.interpret(node_id, branch)
+    except NodeFailure as failure:
+        return BranchFailed(branch_key, failure.error)
+    return BranchOk(branch_key, value)
+
+
+class BranchScheduler(Protocol):
+    async def run_branches(
+        self, run: RunContext, address: ExecutionAddress, branches: Mapping[str, NodeId]
+    ) -> list[BranchOutcome]: ...
+
+    async def run_items(
+        self, run: RunContext, address: ExecutionAddress, body: NodeId, items: Sequence[JsonValue]
+    ) -> list[ItemOutcome]: ...
+
+
+async def interpret_parallel(run: RunContext, node: CompiledNode, address: ExecutionAddress) -> JsonValue:
+    spec = spec_of(node, ParallelSpec)
+    outcomes = await run.scheduler.run_branches(run, address, spec.branches)
+    joined = JOIN_RULES[spec.join](outcomes, spec.quorum_k or len(spec.branches))
+    return unwrap_join(node, joined)
 ```
 
-Стоимость считается по **всем** веткам, включая отвергнутые кворумом: в провенанс шага сведения идут `usage` и цена каждой ветки, а не только принятых.
+Семантика политик — [03](03-core-language.md) §3.1: результаты в порядке объявления веток, а не завершения; `all` —
+запись по ключам веток, `any` — первая `ok` в порядке объявления, `quorum(k)` — список `ok`. `first_success` сводится
+как `any`, но стартует ветки одновременно и отменяет остальные после первой `ok` — механизм отмены открыт (вопрос 2).
+`on_branch_error: skip | default` применяется до сведения: `skip` убирает `BranchFailed`, `default` заменяет его на
+`BranchOk` со значением того же типа. `match` с `assert_never` держит исчерпываемость исхода сведения.
+
+`BranchScheduler` — Strategy транспорта веток. Кандидаты: `InWorkflowGather` — `asyncio.gather` интерпретаций веток,
+стартующих в порядке объявления в самой функции workflow; `ChildWorkflowPerBranch` — дочерний workflow на ветку с id
+`parent_run_id + "::" + address_key` через `DBOS.start_workflow_async`, как у веток с человеком. Дока DBOS велит
+запускать конкурентные последовательности дочерними workflow и допускает конкурентные шаги при детерминированном
+порядке старта ([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.5). Нумерация шагов, восстановление и
+форк внутри параллельной секции ни в одной форме не проверены — [ADR-0025](adr/0025-python-engine.md) ОВ 1, до спайка
+форма не выбирается. События дочерних workflow в run-канале родителя — [23](23-studio-api.md) ОВ 29.
+
+Стоимость считается по **всем** веткам, включая отвергнутые кворумом: `node_finished` каждой ветки несёт `cost_usd` и
+токены, в провенанс сведения идут все ветки, а не только принятые.
 
 ### 3.4. `map` с `on_item_error`
 
-`andForEach` сохраняет порядок результатов и умеет `concurrency`, но политики ошибки элемента у него нет. Элемент оборачивается в `Result`, политика применяется в шаге сведения.
+Элемент получает своё исполнение с `item_index` ([23](23-studio-api.md) §6.2), ошибка элемента — `ItemFailed`, политика
+применяется после завершения элементов. Имена политик — из IR ([04](04-ir-schema.md) §2.3): `fail | skip | collect`.
 
-```ts
-type ItemErrorPolicy = "fail_fast" | "skip" | "collect";
+```python
+type ItemErrorPolicy = Literal["fail", "skip", "collect"]
 
-const itemPolicies: Record<ItemErrorPolicy, (rs: readonly Result<unknown>[]) => MapOutcome> = {
-  fail_fast: (rs) => {
-    const failed = rs.findIndex((r) => !r.ok);
-    if (failed >= 0) throw new MapItemError(failed, (rs[failed] as { error: NodeError }).error);
-    return { items: rs.map(unwrap), failures: [] };
-  },
-  skip: (rs) => ({ items: rs.filter((r) => r.ok).map(unwrap), failures: failuresOf(rs) }),
-  collect: (rs) => ({ items: rs.map((r) => (r.ok ? r.value : null)), failures: failuresOf(rs) }),
-};
 
-const mapEmitter: StepEmitter<MapStep> = {
-  kind: "map",
-  emit: (chain, step, ctx) =>
-    chain
-      .andForEach({
-        id: `m:${step.nodeId}:each`,
-        items: ({ data }) => readItems(data, step.overPath, step.maxItems),
-        concurrency: resolveConcurrency(step),
-        step: {
-          id: `m:${step.nodeId}:item`,
-          execute: async (c) => toResult(() => runItem(step.body, c)),
-        },
-      })
-      .andThen({
-        id: `m:${step.nodeId}:collect`,
-        outputSchema: step.outputSchema,
-        execute: async ({ data }) => itemPolicies[step.onItemError](data as readonly Result<unknown>[]),
-      }),
-};
+@dataclass(frozen=True, slots=True)
+class ItemOk:
+    item_index: int
+    value: JsonValue
+
+
+@dataclass(frozen=True, slots=True)
+class ItemFailed:
+    item_index: int
+    error: NodeError
+
+    def as_json(self) -> JsonObject:
+        return {"item_index": self.item_index, **self.error.model_dump(mode="json")}
+
+
+type ItemOutcome = ItemOk | ItemFailed
+type ItemPolicy = Callable[[CompiledNode, Sequence[ItemOutcome]], JsonValue]
+
+
+def succeeded(outcomes: Sequence[ItemOutcome]) -> list[JsonValue]:
+    return [outcome.value for outcome in outcomes if isinstance(outcome, ItemOk)]
+
+
+def fail_on_error(node: CompiledNode, outcomes: Sequence[ItemOutcome]) -> JsonValue:
+    first = next((outcome for outcome in outcomes if isinstance(outcome, ItemFailed)), None)
+    if first is not None:
+        raise MapItemError(node.node_id, first)
+    return succeeded(outcomes)
+
+
+def skip_failed(node: CompiledNode, outcomes: Sequence[ItemOutcome]) -> JsonValue:
+    return succeeded(outcomes)
+
+
+def collect_failed(node: CompiledNode, outcomes: Sequence[ItemOutcome]) -> JsonValue:
+    failed: list[JsonValue] = [outcome.as_json() for outcome in outcomes if isinstance(outcome, ItemFailed)]
+    return {"ok": succeeded(outcomes), "failed": failed}
+
+
+ITEM_POLICIES: Mapping[ItemErrorPolicy, ItemPolicy] = {
+    "fail": fail_on_error,
+    "skip": skip_failed,
+    "collect": collect_failed,
+}
+
+
+async def interpret_map(run: RunContext, node: CompiledNode, address: ExecutionAddress) -> JsonValue:
+    spec = spec_of(node, MapSpec)
+    items = run.read_items(spec.over, address, spec.max_items)
+    outcomes = await run.scheduler.run_items(run, address, spec.body, items)
+    return ITEM_POLICIES[spec.on_item_error](node, outcomes)
 ```
 
-`fail_fast` бросает уже в шаге сведения, а не в элементе: иначе теряются результаты успевших элементов и их стоимость. `readItems` обрезает коллекцию по `maxItems` из IR и поднимает `FanOutTooLarge`, если вход больше порога, — веер на тысячи элементов идёт батчами (§9).
+`fail` бросает после завершения запущенных элементов, а не в элементе: иначе теряются выходы и стоимость успевших.
+`read_items` поднимает `FanOutTooLarge`, если коллекция больше `max_items` из IR, — до старта элементов; веер больше
+порога идёт батчами (§9.3). Порядок результатов — порядок элементов, а не завершения. Форма конкурентности
+(`BranchScheduler.run_items` на семафоре в функции workflow или `Queue` DBOS) — [ADR-0025](adr/0025-python-engine.md) ОВ 1.
 
 ## 4. Конвейер узла `llm`
 
-Один шаг `andThen` = один узел `llm` = одна транзакция гарантий. Внутри — семь стадий (спека §10), каждая со своим отказом. Ремонт стоит после валидации и только для одного из трёх исходов вызова.
+Одно исполнение узла `llm` = одна транзакция гарантий. Внутри — стадии спеки §10, у каждой свой отказ. Гарантии вызова
+стоят в цепочке `WrapperModel` ([ADR-0029](adr/0029-trust-and-quality-python.md) §1), ремонт применим только к исходу
+`ok` и стоит после валидации. В форме «один `DBOS.step` на узел» все стадии идут внутри шага `execute_node`, в форме
+`DBOSDurability` запросы модели — отдельные шаги `<имя агента>__model.request` ([ADR-0025](adr/0025-python-engine.md) ОВ 4).
 
 ```mermaid
 flowchart TB
-  A["1. Сборка промта<br/>liquidjs + метки происхождения"] --> B["2. Replay-кэш<br/>LanguageModelMiddleware"]
-  B -->|hit| G["7. Выход + спан"]
-  B -->|miss| C["3. Вызов модели<br/>Output.object / grammar"]
-  C --> D{"Исход вызова"}
-  D -->|refusal| R1["PolicyRefusal:<br/>ремонт запрещён"]
-  D -->|truncated| R2["RetryLarger:<br/>ремонт запрещён"]
-  D -->|ok| E["4. Парсинг:<br/>блок → JSON.parse → jsonrepair"]
-  E --> F["5. Валидация:<br/>Zod + межполевые + allowed-set"]
-  F -->|valid| G
-  F -->|Issue| H["6. Ремонт по политике узла"]
-  H -->|k попыток| C
-  H -->|исчерпано| I["фолбэк-профиль → консенсус → человек"]
-  R2 -->|бюджет позволяет| C
-  R1 --> J["Ошибка узла в провенансе"]
+  A["1. Сборка промта<br/>уровень 1–3, python-liquid, провенанс"] --> R["agent.run(output_type, model, instructions,<br/>usage, usage_limits, retries)"]
+  R --> OG["OutcomeGateModel → RedactingModel"]
+  OG --> B["2. CassetteModel"]
+  B -->|"hit"| RESP["ответ модели"]
+  B -->|"miss, replay_strict"| CM["CassetteMiss:<br/>прогон останавливается"]
+  B -->|"miss, record"| L["лимитер профиля → BackoffModel"]
+  L --> C["3. Модель провайдера<br/>SDK max_retries=0"]
+  C --> RESP
+  RESP --> D{"4. OutcomeGateModel:<br/>finish_reason"}
+  D -->|"content_filter"| R1["RefusedOutput:<br/>ремонт запрещён"]
+  D -->|"length"| R2["TruncatedOutput:<br/>ремонт запрещён"]
+  D -->|"прочее"| E["5. Разбор:<br/>ограждение → from_json(allow_partial=off)"]
+  E --> F["6. Валидация:<br/>модель Pydantic + output_validator"]
+  F -->|"valid"| G["8. Выход + событие + спан"]
+  F -->|"ошибки"| H["7. RetryPromptPart,<br/>лимит retries.output"]
+  H --> R
+  H -->|"исчерпано"| I["UnexpectedModelBehavior →<br/>фолбэк-профиль → консенсус → человек"]
+  R2 -->|"ступень max_tokens"| R
+  R1 --> J["ошибка узла в провенансе"]
   R2 --> J
   I --> J
 ```
@@ -393,370 +665,667 @@ flowchart TB
 
 | № | Стадия | Чем реализовано | Что при неуспехе |
 |---|---|---|---|
-| 1 | Сборка промта | `liquidjs` 10.29.0, скомпилированный шаблон из реестра; значения слотов приходят из `getStepResult(stepId)` / `getInitData()`; каждому значению приписывается `Provenance{ sourceStepId, trust, pii, renderedAt }` | нехватка слота или `untrusted`-значение в запрещённой позиции — `TemplateBindingError` до вызова модели |
-| 2 | Replay-кэш | наш `LanguageModelMiddleware` через `wrapLanguageModel`; ключ — sha256 по (`promptHash`, `modelRef`, `params`, `schemaHash`, `seed`, `toolsetHash`) | miss в режиме `replay_strict` — `CassetteMiss`, прогон останавливается; в режиме `record` — обычный вызов и запись кассеты |
-| 3 | Вызов модели | `agent.generateText(task, { output: Output.object({ schema }), abortSignal, temperature, maxOutputTokens, providerOptions })`; для vLLM/SGLang — грамматика через `providerOptions`; схема собрана под профиль провайдера (§09) | сетевая ошибка → наш backoff внутри `execute`; отмена → `isAbortError` → `NodeTimeout`/`Cancelled` |
-| 4 | Классификация исхода | `finish_reason`/`stop_reason` + поле `refusal` читаются **до** любого парсинга | ветвление, см. §4.2 |
-| 5 | Парсинг | снятие ```json-ограждения → первый сбалансированный объект → `JSON.parse` → при синтаксической ошибке **одна** попытка `jsonrepair` | не распарсилось — `Issue[]` с кодом `parse`, дальше стадия ремонта |
-| 6 | Валидация | `zod@4.6.2` `safeParse` + `superRefine` для межполевых правил + проверка динамических allowed-set и языка; ошибки нормализуются в наш `Issue[]` | `Issue[]` → стадия ремонта |
-| 7 | Ремонт по политике | ретрай с `Issue[]` в промте (не с сырым текстом ошибки), не больше `k` раз → фолбэк-профиль → консенсус или эскалация человеку | исчерпание политики — `NodeQualityFailure` с полным провенансом попыток |
-| 8 | Выход | `setWorkflowState` (ссылка + провенанс), спан со стадиями, `ctx.writer.write` для UI | — |
+| 1 | Сборка промта | уровень по содержимому `prompt` (Strategy, [ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §4): 1 — адаптер дописывает входы с описаниями, выходы и блок формата вывода; 2 — шаблон python-liquid 2.3.1 из реестра, `Environment(undefined=StrictUndefined, loader=RegistryLoader(...))`; 3 — функция проекта `pkg.mod:function`. Значения слотов — выходы исполнений по привязкам; каждому значению приписывается `Provenance{source_address, trust, pii, rendered_at}`. Медиазначения идут частями `user_prompt` (`BinaryContent`, `ImageUrl` и др.), в текст не рендерятся | нехватка слота (`UndefinedError`) или `untrusted`-значение в запрещённой позиции — `TemplateBindingError` до вызова модели |
+| 2 | Replay-кэш | `CassetteModel`, звено 3 цепочки; ключ `sha256("aqven.cassette.v1\0" + канонический JSON)` от нейтрального запроса: логическая ссылка модели из каталога, сообщения без меток времени и id, слитые настройки, `output_mode`, схемы выхода и тулов со `strict` | miss в `replay_strict` — `CassetteMiss`, прогон останавливается и никогда не деградирует в живой вызов; в `record` — вызов ниже по цепочке и запись отредактированного ответа |
+| 3 | Вызов модели | `agent.run(user_prompt, output_type=..., model=<цепочка из aqven_llm>, instructions=..., model_settings=..., usage=<журнал прогона>, usage_limits=..., retries={"output": k})`; `output_type` из `output_contract.mode`: `strict` → `ToolOutput(M, strict=True)` или `NativeOutput(M, strict=True)`, `json` → `PromptedOutput(M)` ([ADR-0029](adr/0029-trust-and-quality-python.md) §2, [ADR-0027](adr/0027-dynamic-io-shapes.md)); режим `grammar` для self-hosted профилей — [ADR-0027](adr/0027-dynamic-io-shapes.md) ОВ 4 | 429 и 5xx — `BackoffModel` (§9.2), исчерпание — `ModelHTTPError` → `ProviderFailure`; истёк таймаут узла — `NodeTimeout` (§10) |
+| 4 | Классификация исхода | `OutcomeGateModel`, звено 1: таблица `OUTCOME_GATES` по `finish_reason` и `provider_details` сразу после ответа, до разбора и до цикла `output`-ретраев | `length` → `TruncatedOutput`, `content_filter` → `RefusedOutput` (§4.2); `error` и `pause_turn` не классифицированы — [ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 23 |
+| 5 | Разбор | Pydantic AI: снятие markdown-ограждения, `pydantic_core.from_json(allow_partial="off")`; локального ремонта JSON нет | синтаксически битый полный ответ — ошибка `json_invalid`, дальше стадия 7 ценой вызова модели |
+| 6 | Валидация | модель выхода Pydantic (сгенерированная; для `Dynamic` — `create_model` с `extra="forbid"`, [ADR-0027](adr/0027-dynamic-io-shapes.md)) + `@agent.output_validator`: вхождение в allowed-set с подсказкой трёх ближайших кандидатов, подстановка кода в ID, межполевые правила, язык ответа; регистр нормализует `BeforeValidator` | ошибки валидации или `ModelRetry` → стадия 7 |
+| 7 | Ремонт по политике | `RetryPromptPart` со всеми ошибками валидации, не больше `retries["output"]` из IR; `ToolOutput(max_retries=...)` не задаётся | исчерпание — `UnexpectedModelBehavior` → `NodeQualityFailure` → фолбэк-профиль → консенсус или эскалация человеку; досрочный обрыв при повторе того же набора ошибок — [ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 8 |
+| 8 | Выход | выход шага — `model_dump(mode="json")`, провенанс, событие `node_finished` в `run_events`, атрибуты `aqven.*` на спане ([12](12-observability.md)) | — |
 
-`ajv` на этом пути не появляется: Zod — единственный источник истины по типам на горячем пути, `ajv` работает на границах (IR-документы, чужие JSON Schema из MCP, self-check компилятора).
+Проверка на горячем пути одна — Pydantic на каждой границе ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §7): Zod и
+ajv ушли вместе с TS-движком. Всё, что трансформер профиля унёс из wire-схемы в `description`, держит только эта
+проверка ([ADR-0029](adr/0029-trust-and-quality-python.md) §6).
 
 ### 4.2. Три исхода вызова
 
-```ts
-type CallOutcome =
-  | { kind: "ok"; text: string; usage: Usage }
-  | { kind: "refusal"; reason: string; usage: Usage }
-  | { kind: "truncated"; text: string; usage: Usage };
+Исход определяет `OutcomeGateModel` до разбора. Исполнитель узла переводит исключение в исход таблицей
+`FAILURE_BY_EXCEPTION` (Registry), которая просматривается по `type(error).__mro__` (Chain of Responsibility): подкласс
+(`IncompleteToolCall`, `ContentFilterError`) побеждает общий `UnexpectedModelBehavior`, исключение вне таблицы
+пробрасывается ([ADR-0029](adr/0029-trust-and-quality-python.md) §3).
 
-const outcomeHandlers: Record<CallOutcome["kind"], OutcomeHandler> = {
-  ok: parseThenValidate,
-  refusal: (o, node) => failNode(node, "policy_refusal", o.reason),
-  truncated: (o, node) => retryWithLargerLimit(node, o),
-};
+```python
+type FailureHandler = Callable[[LlmNodeRun, Exception], Awaitable[NodeResolution]]
+
+FAILURE_BY_EXCEPTION: Mapping[type[Exception], FailureHandler] = {
+    TruncatedOutput: retry_with_larger_limit,
+    RefusedOutput: fail_with_refusal,
+    IncompleteToolCall: retry_with_larger_limit,
+    ContentFilterError: fail_with_refusal,
+    UnexpectedModelBehavior: fail_quality,
+    UsageLimitExceeded: stop_on_budget,
+    CassetteMiss: stop_run,
+    ModelHTTPError: fall_back_provider,
+    ModelAPIError: fall_back_provider,
+}
+
+
+def handler_for(error: Exception) -> FailureHandler | None:
+    handlers = (FAILURE_BY_EXCEPTION.get(kind) for kind in type(error).__mro__)
+    return next((handler for handler in handlers if handler is not None), None)
+
+
+async def resolve_failure(run: LlmNodeRun, error: Exception) -> NodeResolution:
+    handler = handler_for(error)
+    if handler is None:
+        raise error
+    return await handler(run, error)
 ```
 
-`refusal` — отдельный канал API, а не нарушение схемы: ответ может вообще не следовать `response_format`. Ремонт запрещён, узел падает типизированной ошибкой политики.
+`refusal` — отдельный канал API, а не нарушение схемы: ответ может вообще не следовать схеме. Ремонт и повтор того же
+промта запрещены; маршрут — фолбэк-профиль или эскалация, причина — из `provider_details` (`refusal`,
+`refusal_category` у Anthropic).
 
-`truncated` (`finish_reason: "length"`) — запрет на ремонт **жёсткий**. `jsonrepair` на обрезанном JSON не бросает исключение: вход `{"id":"x","items":[{"a":1},{"a":` он молча превращает в `{"id":"x","items":[{"a":1},{"a":null}]}` — правдоподобный, но ложный объект, который пройдёт Zod и отравит провенанс. Обработка одна: повтор с бо́льшим `maxOutputTokens` (не более двух раз, каждый — против бюджета узла) либо декомпозиция ответа; при исчерпании — ошибка узла.
+`truncated` — запрет на ремонт **жёсткий**. Pydantic AI по умолчанию повторяет обрезанный tool call с тем же
+`max_tokens`, а полный JSON с `finish_reason=length` принимает как `ok`
+([research/py-quality-layer.md](research/py-quality-layer.md) §1.4, случаи A и B); гейт превращает оба в
+`TruncatedOutput` за один вызов. Маршрут: одна ступень увеличения `max_tokens` из IR (новый ключ кассеты), затем
+фолбэк-профиль с бо́льшим окном, затем эскалация; `model_context_window_exceeded` — сразу на фолбэк-профиль. Каждая
+ступень идёт против бюджета узла.
 
-Слияние `refusal` и `truncated` в «невалидный JSON» — дефект реализации, который ловится конформанс-тестом исполнителя.
+`IncompleteToolCall` и `ContentFilterError` появляются, только если гейт обойдён: маршрут тот же, а появление — дефект
+сборки цепочки, он пишется в трассу. Слияние `refusal` и `truncated` в «невалидный JSON» — дефект реализации; его ловят
+фикстуры случаев A–E [ADR-0029](adr/0029-trust-and-quality-python.md) «Проверка».
 
-### 4.3. Что уходит в провенанс шага
+### 4.3. Что уходит в провенанс исполнения
 
-Спан узла несёт: отрисованный промт (или его хэш в PII-режиме), метки происхождения каждого слота, `modelRef` и эффективные параметры, `cassetteKey` и `hit|miss`, исход вызова, число попыток ремонта с `Issue[]` каждой, сырой ответ, распарсенный выход, `usage`, расчётную стоимость и латентность по стадиям. Частичный объект из стриминга **никогда** не попадает в состояние как результат узла — только в канал UI.
+Спан узла и `ExecutionDetail` ([23](23-studio-api.md) §6.3) несут: уровень промта, отрисованный промт (или его хэш в
+PII-режиме, где спаны пишутся с `include_content=False`), метки происхождения каждого слота, `model` и `profile`,
+эффективные параметры, ключ кассеты и `hit|miss` (атрибуты `aqven.cassette.key`, `aqven.cassette.hit`), исход вызова,
+попытки с причиной и `schema_errors` каждой (`Attempt`), сырой ответ, разобранный выход, `usage`, расчётную стоимость и
+латентность. Как снимать отправленную wire-схему и фактический `strict` — [ADR-0027](adr/0027-dynamic-io-shapes.md) ОВ 5.
+Частичный объект из стриминга **никогда** не попадает в выход узла — только в канал UI (открытый вопрос 6).
 
-## 5. Где живут наши гарантии в терминах VoltAgent
+## 5. Где живут наши гарантии
 
-Три точки врезки, и они не взаимозаменяемы.
+Точки врезки разные и не взаимозаменяемы.
 
 | Гарантия | Точка врезки | Почему именно она |
 |---|---|---|
-| Кассеты record/replay | `LanguageModelMiddleware` в `wrapLanguageModel` | работает и для вызовов, которые делает сам VoltAgent мимо нашего фасада (агенты, сабагенты, тулы) |
-| Бюджет токенов и денег | тот же middleware (`wrapGenerate`/`wrapStream`) | видит запрос уже нормализованным и ответ уже разобранным, включая tool-calls |
-| Лимитер профиля (RPM/TPM/concurrency) | тот же middleware | единственное место, через которое физически проходят все вызовы модели |
-| Редакция PII в промте | `createPIIInputGuardrail` + наш `createInputGuardrail` для доменных типов | гардрейл возвращает `{ pass: true, action: "modify", modifiedInput }` — маскирование поддержано архитектурно |
-| Редакция PII в ответе | `createDefaultPIIGuardrails()` (output) и `streamHandler` для стрима | редакция по стриму без ожидания полного ответа |
-| Фильтр инъекций | `createPromptInjectionGuardrail({ phrases })` + наш классификатор | штатный гардрейл — список фраз, не классификатор; контракт и точка подключения берутся готовые |
-| Провенанс шага | хуки воркфлоу `onStepStart`/`onStepEnd`/`onSuspend`/`onError`/`onFinish` | `state.executionId`, `state.stepId`, `state.data` доступны без прокидывания через узлы |
-| Политики узла и гейты качества | `andGuardrail` для узла-гейта, наш код в `execute` для узловых порогов | гейтов на уровне узла у фреймворка нет |
-| Корреляция вложенности в UI | `ctx.writer.write({ type, metadata: { nodeId, parentNodeId, branchIndex } })` | в `WorkflowStreamEvent` нет `parentStepId`/`parallelIndex`, вложенность `andAll`/`andForEach` по стриму не восстанавливается |
-| Переопределение модели и инструкций на узле | динамические функции агента, читающие `context` по ключам `wf.model`, `wf.instructions`, `wf.toolset` | в `BaseGenerationOptions` нет `model` и нет `instructions`; sampling-параметры (`temperature`, `maxOutputTokens`, `providerOptions`) передаются прямо в опциях вызова |
+| Исход вызова `ok`/`refusal`/`truncated` | `OutcomeGateModel`, звено 1 | выше кассеты: исход выводится из записанного ответа на каждом реплее; выше цикла повторов: граф агента не получает обрезанный или отказной ответ как материал для повтора |
+| Редакция PII в запросе | `RedactingModel`, звено 2; в PII-режиме `InstrumentationSettings(include_content=False)` | ключ кассеты и провод не видят сырых PII; capability `Instrumentation` пишет сообщения до обёртки, поэтому спаны закрывает только `include_content=False` |
+| Редакция PII в ответе | тот же `RedactingModel`: в PII-режиме наверх и в кассету уходит отредактированная копия | запись и реплей дают одинаковый выход; плейсхолдеры в выходе узла — [ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 21 |
+| Кассеты record/replay | `CassetteModel`, звено 3 | через фабрику `aqven_llm` проходят все вызовы модели: узлы, судьи pydantic-evals, reflection GEPA |
+| Лимитер профиля (RPM/TPM/concurrency) | `ConcurrencyLimitedModel` и наш бакет, звено 4 (§9.2) | ниже кассеты: реплей не занимает слот и не тратит токены бакета |
+| Транспортный ретрай | `BackoffModel`, звено 5; SDK с `max_retries=0` | ниже кассеты: N попыток дают одну запись; единственный слой ретрая |
+| Бюджет токенов и денег | `UsageLimits` + общий `RunUsage`; оценка до вызова — исполнитель узла (§9.1) | не звено цепочки: счётчик запросов растёт и на реплее, стоимость реплея нулевая, поэтому отказ по `request_limit` одинаков в live и replay |
+| Фильтр инъекций | не выбран | открытый вопрос 8 |
+| Провенанс исполнения | события интерпретатора в `run_events` (Observer), спаны | адрес и выход доступны интерпретатору без прокидывания через узлы |
+| Политики узла и пороги качества | код исполнителя узла | гейтов на уровне узла у Pydantic AI нет |
+| Корреляция вложенности в UI | `address` в каждом событии ([23](23-studio-api.md) §11.2) | структура адреса несёт ветку, итерацию и элемент |
+| Модель и инструкции на узле | `Agent.run(model=..., instructions=...)` | переопределение на вызове есть, обход через динамические функции агента не нужен |
 
-```ts
-const modelMiddleware: LanguageModelMiddleware[] = [
-  cassetteMiddleware(cassetteStore),
-  budgetMiddleware(budgetLedger),
-  rateLimitMiddleware(profileLimiter),
-  piiRedactionMiddleware(piiPolicy),
-];
+Порядок звеньев снаружи внутрь фиксирован [ADR-0029](adr/0029-trust-and-quality-python.md) §1: capability
+`Instrumentation` (самый внешний спан) → `OutcomeGateModel` → `RedactingModel` → `CassetteModel` → лимитер →
+`BackoffModel` → модель провайдера. Цепочку собирает только фабрика `aqven_llm` (Builder), канонический код —
+`build_model` в ADR-0029 §1; порядок проверяется тестом с маркерами звеньев. Прежний порядок этого раздела («кассета →
+бюджет → лимитер → PII») снят: бюджет не звено, а редакция PII стоит выше кассеты, иначе ключ и файл кассеты видят
+сырые PII ([research/py-quality-layer.md](research/py-quality-layer.md) §1.6, §1.8).
 
-const model = wrapLanguageModel({ model: registry.languageModel(modelRef), middleware: modelMiddleware });
-```
+Уровень повтора каждого вида ровно один:
 
-Порядок middleware значим: кассета стоит первой, чтобы попадание не тратило бюджет и не занимало слот лимитера; редакция PII — последней перед провайдером, чтобы в кассету и в трассу попадал уже отредактированный запрос.
+| Вид повтора | Где | Что выключено |
+|---|---|---|
+| транспорт: 429, 5xx, `ModelAPIError` без статуса | `BackoffModel` | ретраи SDK (`max_retries=0`), `pydantic_ai.retries` (запрещён TID251) |
+| ремонт выхода | `retries={"output": k}` агента | `ToolOutput(max_retries=...)` |
+| шаг DBOS | — | `retries_allowed=False` у шагов с вызовом модели |
+| шаги модели под `DBOSDurability` | не выбрано | `model_step_config` с `retries_allowed` и `max_attempts` — [ADR-0025](adr/0025-python-engine.md) ОВ 3 |
+| ступени `truncated`, фолбэк-профиль | исполнитель узла (§4.2) | — |
 
-Уровни ретраев обязаны быть ровно один. Фреймворк предлагает три независимых — `retries` на шаге (total attempts = `retries + 1`), `maxRetries` агента (уровень модели), `maxMiddlewareRetries` (перезапуск всего attempt через `abort(reason, { retry: true })`). Наше соглашение: `retries: 0` на всех шагах, `maxRetries: 0` у агентов, ретраи модели — только в нашем middleware, ремонтные ретраи — только в исполнителе узла.
+Верхнюю оценку числа вызовов узла считает компилятор ([ADR-0029](adr/0029-trust-and-quality-python.md) §4):
+`calls(llm) = (1 + retries.output + ступени_обрезки) × (1 + |fallback_chain|)`; попытки `BackoffModel` в неё не
+входят, они держат один логический вызов.
 
 ## 6. Состояние прогона
 
-### 6.1. Два хранилища, разные роли
+### 6.1. Где лежит состояние
 
-`getStepData(stepId)` возвращает `{ input, output, status, error }` — вход и выход **каждого** шага, и переживает restart/resume (в чекпоинте есть поле `stepData`, оно там именно «required by `getStepData()` after restart»). Значит выходы узлов дублировать в `workflowState` не нужно. В `workflowState` идёт только то, чего в `stepData` нет.
+Отдельного объекта общего состояния прогона нет. Источник истины — записи DBOS; всё остальное интерпретатор выводит из
+них заново при восстановлении.
 
 | Что | Где лежит | Кто пишет |
 |---|---|---|
-| Вход и выход узла | `stepData` (`getStepData`/`getStepResult`) | VoltAgent |
-| Провенанс выхода (метки происхождения, trust, pii, cassetteKey) | `workflowState.prov[stepId]` | наш исполнитель |
-| Счётчики циклов, лучший кандидат (`stepId`, не тело) | `workflowState.loops[nodeId]` | шаг bookkeeping |
-| Остаток бюджета прогона | `workflowState.budget` | middleware бюджета через шаговый коммит |
-| Идентичность прогона: `tenantId`, `actorId`, `planHash`, `runMode` | `state.context` (Map) и `metadata` | сборщик при запуске |
-| Накопленный usage агентных шагов | `state.usage` | VoltAgent (**только** для `andAgent`) |
+| Вход прогона: `ir_hash`, вход воркфлоу | вход workflow в системной БД DBOS | запуск |
+| Выход исполнения узла с вводом-выводом | выход шага `execute_node` (`list_workflow_steps(load_output=True)`) | DBOS |
+| Выходы конструкций, значения привязок | локальное состояние интерпретатора; при восстановлении выводится из выходов шагов | интерпретатор |
+| Счётчики циклов, лучший кандидат (индекс итерации, не тело) | то же | интерпретатор |
+| Ответ человека и дедлайн | выходы шагов `DBOS.recv` и `DBOS.sleep` | DBOS |
+| Открытое ожидание | событие `human` (`set_event`); индекс ждущих — атрибуты workflow или своя таблица ([ADR-0025](adr/0025-python-engine.md) ОВ 21) | исполнитель `human` |
+| События прогона и провенанс | поток `run_events`; `ExecutionDetail` собирается из него и выходов шагов | интерпретатор |
+| Журнал usage и остаток бюджета | `RunUsage` в памяти процесса; итог узла — в `node_finished` | Pydantic AI, исполнитель |
+| Идентичность: `tenant_id`, `actor_id`, `run_mode`, `execution_id` | запись прогона в `app` ([16](16-data-model.md) §2.7), id workflow | API запуска |
+| Строки исполнений для отладчика | `app.run_nodes` ([16](16-data-model.md) §2.8); DDL не выражает адрес — [23](23-studio-api.md) ОВ 4 | наш код по событиям |
 
-Так как узлы `llm` компилируются в `andThen`, `state.usage` их не видит — usage дописывает наш middleware в `workflowState.budget`.
+`RunUsage` живёт в памяти: после падения процесса журнал надо собрать заново из записанного `usage`, иначе бюджет
+прогона «забывает» потраченное ([ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 2); одновременные `agent.run` на
+одном журнале при параллельных ветках не проверены (ADR-0029 ОВ 13).
 
-```ts
-interface RunState {
-  readonly prov: Record<StepId, NodeProvenance>;
-  readonly loops: Record<string, LoopCounter>;
-  readonly budget: BudgetSnapshot;
-  readonly blobs: Record<StepId, BlobRef>;
-}
-```
-
-Обновление — только функциональное: `setWorkflowState(prev => ({ ...prev, budget: next }))`. Замена состояния объектом целиком в параллельных ветках теряет чужие записи.
+Параллельные ветки не пишут в общее состояние: ветка возвращает значение, сведение делает интерпретатор (§3.3). Выходы
+неизменяемы, свёртка — над результатами в порядке объявления.
 
 ### 6.2. Ограничения сериализации (жёсткие)
 
-Все пути персиста идут через `safeStringify` — обычный `JSON.stringify` плюс защита от циклов. Обратного ревайвера нет.
+DBOS по умолчанию пишет входы и выходы шагов, сообщения и события через pickle (`DefaultSerializer`, `py_pickle`); есть
+`DBOSPortableJSONSerializer` (`portable_json`) и ключ `serializer` в `DBOSConfig`. Pickle привязывает записи к классам
+Python и нечитаем вне Python ([ADR-0025](adr/0025-python-engine.md) §4, ОВ 7). Поэтому при любом сериализаторе на
+границе шага, сообщения и события — только JSON-совместимые значения, а обратно их восстанавливает проверка Pydantic.
 
-| Тип в state / step data | Что уходит в БД | Что вернётся после resume/restart |
+| Значение | На границе шага, события, сообщения | Обратно |
 |---|---|---|
-| `Date` | ISO-строка | **строка**, не `Date` |
-| `Map` / `Set` | `{}` | пустой объект, данные потеряны молча |
-| `undefined` в объекте | ключ выброшен | ключа нет |
-| `undefined` в массиве | `null` | `null` |
-| `BigInt` | `JSON.stringify` бросает → строка `SAFE_STRINGIFY_ERROR: …` | порча значения, невалидный JSON в JSONB-колонке |
-| функция / `Symbol` | выброшено | отсутствует |
-| instance класса | plain object | методы потеряны |
-| `Error` | `{}` | пустой объект |
+| модель Pydantic | `model_dump(mode="json")` | проверка той же моделью |
+| `Date`, `DateTime` | ISO-строка | проверка модели |
+| стоимость | строка десятичной записи, как `cost_usd` в событиях ([23](23-studio-api.md) §11.2) | проверка модели |
+| медиа `Image`, `Audio`, `Video`, `Document` | `blob_id` вида `sha256-<hex>` ([23](23-studio-api.md) §7) | загрузка блоба |
+| класс из `create_model` | не пересекает границу: JSON-значение, `FieldSpec[]` и хеш схемы ([ADR-0027](adr/0027-dynamic-io-shapes.md)) | модель строится заново |
+| исключение | `{code, message, details}` | модель ошибки узла |
 
-Правила, которые проверяет компилятор, а не рантайм:
+Правила 1–3 проверяет компилятор, 4–5 — код исполнителя:
 
-1. Схемы узлов — строго JSON-сериализуемый подтип: без `z.date()` без `.transform(String)`, без `z.map()`/`z.set()`, без `bigint`.
+1. Модели входов и выходов узлов — JSON-сериализуемый подтип: без байтов inline, множеств и произвольных классов;
+   валидатор JSON-сериализуемости выходов работает при компиляции ([ADR-0025](adr/0025-python-engine.md), обязательство 7).
 2. Даты — ISO-строки на границе узла.
-3. Ошибки узлов сериализуем сами в `{ code, message, details }`; `Error` в состояние не кладём.
-4. Ключи `context` — только строки: symbol-ключи не переживают JSON.
-5. Наши ключи в `metadata` исполнения не пересекаются с зарезервированным `__voltagent_restart_checkpoint`, и `metadata` только мержится, никогда не перезаписывается целиком.
-6. Крупные артефакты в состояние не кладём: правило трёх зон из [16. Модель данных](16-data-model.md) — в `workflowState` идёт `BlobRef`, а тело в отдельную таблицу или объектное хранилище. Причина не в аккуратности: строка исполнения переписывается **целиком** (включая весь `events` JSONB) при каждом обновлении.
+3. Ошибки узлов сериализуются в `{code, message, details}`; исключение в выход шага и в событие не кладётся.
+4. Атрибуты workflow пишутся только полным набором: каждое обновление заменяет все атрибуты
+   ([ADR-0025](adr/0025-python-engine.md) ОВ 21).
+5. Крупные артефакты в выход шага не кладутся: правило трёх зон [16](16-data-model.md) — в выходе `BlobRef`, тело
+   отдельно. Причина не в аккуратности: выход каждого шага пишется в системную БД, а форк копирует все шаги до точки
+   форка ([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.5).
 
-## 7. Долговечность: чекпоинты, restart, time travel, replay-кэш
+Выбор сериализатора и проба `portable_json` на наших значениях (даты, стоимость, ссылки на медиа, конверт ответа,
+событие `human`, поток `run_events`) — [ADR-0025](adr/0025-python-engine.md) ОВ 7 и [23](23-studio-api.md) ОВ 26; итог
+записывается в этот раздел.
 
-### 7.1. Running-чекпоинты
+## 7. Долговечность: шаги, восстановление, форк, replay-кэш
 
-Чекпоинт пишется по ходу обычного `running`, а не только при suspend:
+### 7.1. Чекпоинт шага
 
-```
-if (disableCheckpointing) return;
-if ((lastCompletedStepIndex + 1) % checkpointInterval !== 0) return;
-```
+DBOS пишет в системную БД вход workflow и выход каждого шага по мере завершения. Интервала чекпоинтов нет:
+гранулярность задаёт число шагов, и каждый шаг — запись.
 
-`checkpointInterval` по умолчанию `1` — то есть после **каждого** завершённого шага, один `updateWorkflowState`. Задаётся и на воркфлоу (`WorkflowConfig`), и на прогон (`WorkflowRunOptions`); резолв — `options.checkpointInterval ?? workflowCheckpointInterval ?? 1`, нормализация `Math.max(1, Math.floor(...))`.
-
-Состав `WorkflowRestartCheckpoint`: `resumeStepIndex`, `lastCompletedStepIndex`, `stepExecutionState`, `completedStepsData[]`, `workflowState`, `stepData` (снимок по `stepId`), `usage`, `eventSequence`, `checkpointedAt`. Лежит в `metadata.__voltagent_restart_checkpoint`, то есть в колонке `metadata JSONB` таблицы `voltagent_memory_workflow_states`.
-
-Цена: каждый шаг — один `INSERT … ON CONFLICT DO UPDATE` всей строки исполнения. Наши значения:
-
-| Класс прогона | `checkpointInterval` | Обоснование |
+| Запись | Когда | Роль |
 |---|---|---|
-| Прод, есть узлы с внешними эффектами | 1 | повтор шага стоит дороже записи |
-| Прод, длинный цикл (десятки-сотни итераций) | 1 на узел вне цикла, тело цикла — один составной шаг | уменьшаем число шагов, а не частоту чекпоинтов |
-| Eval-прогон по датасету | 5 | идемпотентно, крах дешёвый |
-| Дешёвый идемпотентный прогон в песочнице | `disableCheckpointing: true` | crash-recovery не нужен |
+| вход workflow (`ir_hash`, вход воркфлоу) | старт | восстановление и форк берут тот же вход |
+| выход шага `execute_node` | завершение узла `llm`, `code`, `tool` | не повторяется после падения; `list_workflow_steps` |
+| шаги `DBOS.setEvent`, `DBOS.updateWorkflowAttributes`, `DBOS.recv`, `DBOS.sleep` | ожидание человека | событие, индекс, ответ и дедлайн переживают рестарт |
+| поток `run_events` | каждое событие интерпретатора | SSE с возобновлением по `seq` |
+| шаги `<имя агента>__model.request` | форма `DBOSDurability` | запрос модели не повторяется после падения ([ADR-0025](adr/0025-python-engine.md) ОВ 4) |
 
-Задирать `checkpointInterval` бесплатно нельзя: `timeTravel` берёт вход целевого шага каскадом `inputData ?? sourceTargetStepInput ?? previousStepOutput ?? (index === 0 ? sourceWorkflowInput : checkpointInputFallback)` и при промахе бросает `Cannot time travel from step '<stepId>': missing historical input data (provide inputData override)`. Чем реже чекпоинты, тем меньше шагов доступно для форка.
+Узлы с внешними эффектами получают шаг на исполнение: повтор эффекта дороже записи, а ключ идемпотентности всё равно
+обязателен (§7.2). Проходы длинного цикла — отдельные исполнения узла тела с `iteration`: отладчику они нужны по
+отдельности ([23](23-studio-api.md) §14, критерий 2), поэтому шаги проходов не склеиваются. Цена записей на объёме не
+измерена — открытый вопрос 3. Форк возможен с любого шага; ограничение —
+запись «адрес → `function_id`» (§2.2).
 
-### 7.2. Restart после падения процесса
+### 7.2. Восстановление после падения процесса
 
-```ts
-await workflow.restart(executionId);
-await workflow.restartAllActive();
-await WorkflowRegistry.getInstance().restartAllActiveWorkflowRuns({ workflowId });
+`DBOS.launch()` сам находит незавершённые прогоны своей `application_version` и продолжает их: завершённые шаги
+возвращают записанные выходы, прерванный шаг выполняется заново целиком (процесс убит внутри шага 2 → шаг 1 не
+повторялся, шаг 2 повторился, `recovery_attempts: 2`; [research/py-stack-runtime.md](research/py-stack-runtime.md) §5.1).
+Ждущие человека прогоны восстанавливаются с исходным дедлайном (§8.2).
+
+1. `DBOS.launch()` вызывают только `aqven dev` и `aqven serve` — один исполнитель на системную БД; остальные процессы
+   работают через `DBOSClient`: второй `launch` с тем же executor id перезапустил ждущие workflow (проверено).
+2. `application_version` — явная версия протокола исполнителя (§2.3).
+3. Шаги обязаны быть идемпотентны: внешний эффект мог произойти до падения. Узел с `effect: write | external` несёт
+   ключ идемпотентности, выведенный детерминированно из `(execution_id, address, attempt)`, — тот же ключ, что IR
+   требует у `tool` ([04](04-ir-schema.md) §2.5, спека §6.1). Эффект тула внутри агента выносится в `@DBOS.step`:
+   функции-тулы DBOS не оборачивает (§8.6).
+
+```python
+EXECUTOR_PROTOCOL_VERSION = "aqven-executor-1"
+
+
+def dev_config(system_database: Path) -> DBOSConfig:
+    return {
+        "name": "aqven",
+        "system_database_url": f"sqlite:///{system_database.resolve()}",
+        "application_version": EXECUTOR_PROTOCOL_VERSION,
+        "use_listen_notify": False,
+    }
+
+
+def idempotency_key(execution_id: ExecutionId, address: ExecutionAddress, attempt: int) -> str:
+    canonical = rfc8785.dumps(
+        {"execution_id": execution_id, "address": address.model_dump(mode="json"), "attempt": attempt}
+    )
+    return "sha256-" + hashlib.sha256(b"aqven.idempotency.v1\x00" + canonical).hexdigest()
 ```
 
-Восстанавливаются данные чекпоинта, `workflowState`, `context` и `usage`. Применимо к прогонам в статусе `running`. Гранулярность — граница шага, поэтому **шаги обязаны быть идемпотентны**: внешний эффект мог уже произойти до краха.
+Ключ — хеш канонического JSON с доменной сепарацией по той же схеме, что ключ кассеты: адрес не склеивается в строку.
 
-Наш инвариант: узел с классом эффекта `write` или `external` несёт ключ идемпотентности, детерминированно выведенный из `(executionId, stepId, iteration)`. Это тот же ключ, что требует IR у `tool` (спека §6.1), и тот же, что защищает от повторного входа после resume.
+Порядок bootstrap `aqven dev` и `aqven serve`: конфиг DBOS (`application_version`, `system_database_url`, на SQLite
+`use_listen_notify = False` до первого создания БД) → реестры, хранилище снимков планов и фабрика `aqven_llm` →
+`DBOS.launch()` (восстановление стартует, планы грузятся лениво по хешу) → приём HTTP и `/mcp/`. Реестры обязаны
+подняться до `launch`: восстановленный прогон сразу зовёт `plan_for` и фабрику моделей. Встраивание `launch` в
+lifespan FastAPI не проверено — открытый вопрос 7.
 
-Порядок bootstrap процесса: поднять реестры → `ensure(key)` для каждой версии с незавершёнными прогонами → `restartAllActiveWorkflowRuns({ workflowId })` по каждой → только потом открыть приём HTTP.
+### 7.3. Форк
 
-### 7.3. Time travel
+`DBOS.fork_workflow(workflow_id, start_step, *, application_version, queue_name, ...)` создаёт прогон с новым id,
+копирует вход и шаги с `function_id < start_step`, события, потоки и атрибуты исходного; форк встаёт во внутреннюю
+очередь (`ENQUEUED`, подхват до ~1 с); связь — `WorkflowStatus.forked_from`, фильтр `list_workflows(forked_from=...)`
+([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.1, §5.5). Отличие от восстановления: восстановление
+продолжает тот же workflow, форк создаёт новый прогон.
 
-```ts
-interface WorkflowTimeTravelOptions {
-  executionId: string;
-  stepId: string;
-  inputData?: unknown;
-  resumeData?: unknown;
-  workflowStateOverride?: Record<string, unknown>;
-  memory?: Memory;
-}
-```
+| Операция API | Как на DBOS | Что открыто |
+|---|---|---|
+| форк с узла (`run_fork`, [23](23-studio-api.md) §6.4) | `start_step` = `function_id` первого шага исполнения узла | запись «адрес → `function_id`» — [ADR-0025](adr/0025-python-engine.md) ОВ 8, [23](23-studio-api.md) ОВ 28; внутри `parallel`, `map` и дочернего workflow не проверено |
+| форк на узле `human` | `start_step` = первый шаг узла: новое событие, новый дедлайн, попытка 1 (§8.5) | — |
+| реплей узла с правкой входа, модели или промта (`run_replay_node`) | у `fork_workflow` нет параметра нового входа | [23](23-studio-api.md) ОВ 3 |
+| форк на рабочей копии (`at: working`) | вход форка — копия исходного, `ir_hash` не меняется | [23](23-studio-api.md) ОВ 3 |
+| форк с шага внутри ожидания (`DBOS.recv`) | API не принимает: скопировалось бы старое событие со старым дедлайном, а таймаут начался бы заново | — |
 
-Отличие от `restart` точное: `restart(executionId)` продолжает `running`-исполнение, `timeTravel({ executionId, stepId })` создаёт **новое** исполнение с новым `executionId` из исторического состояния и применимо к `completed | suspended | cancelled | error`. `timeTravelStream` — то же со стримом событий.
-
-Shared state форка берётся как `workflowStateOverride ?? sourceCheckpoint.workflowState ?? sourceState.workflowState ?? {}` — то есть из чекпоинта источника, а не из его финального состояния. Наш MCP-тул `run_replay_node` кладёт причину форка в `workflowStateOverride`. Опция `memory` позволяет читать источник из продовой памяти, а писать реплей в песочницу.
+Шаги до `start_step`, включая вызовы модели, не повторяются — они скопированы
+([research/py-stack-runtime.md](research/py-stack-runtime.md) §12, Q5). Где хранить причину форка и правки — §7.5.
 
 ### 7.4. Replay-кэш: детерминизм там, где его нет
 
-`timeTravel` переисполняет шаги, а значит и вызовы моделей. Детерминизм даёт наш кассетный middleware, а не фреймворк.
+Шаги после `start_step` исполняются заново, а с ними и вызовы моделей. Детерминизм даёт `CassetteModel`, а не DBOS.
 
-| Режим прогона | Поведение middleware | Когда используется |
+| Режим прогона | Поведение кассеты | Когда используется |
 |---|---|---|
-| `record` | вызов провайдера, запись ответа в content-addressed store | обычный прод-прогон |
-| `replay_strict` | только кассета; miss → `CassetteMiss`, прогон останавливается | воспроизведение инцидента, конформанс-тесты, экспорт |
-| `replay_lenient` | кассета, при промахе — живой вызов с пометкой `mixed` в провенансе | отладка форка с правкой промта |
+| `record` | вызов ниже по цепочке, запись отредактированного ответа | обычный прод-прогон |
+| `replay_strict` | только кассета; miss → `CassetteMiss`, прогон останавливается | воспроизведение инцидента, тесты и CI (`ALLOW_MODEL_REQUESTS = False`), eval на записях |
+| `replay_lenient` | кассета, при промахе — живой вызов и запись с пометкой `mixed` в провенансе | отладка форка с правкой промта |
 | `off` | вызов без записи | локальные эксперименты |
 
-Ключ кассеты — sha256 по канонизированному запросу (RFC 8785) с доменной сепарацией: `promptHash`, `modelRef`, эффективные параметры, `schemaHash`, `seed`, `toolsetHash`. Форк с правкой промта меняет `promptHash`, поэтому промахивается мимо кассеты сознательно — это ожидаемое поведение, а не деградация. Кассеты хранятся на уровне порта модели и тула, а не как HTTP-моки.
+Ключ кассеты — [ADR-0029](adr/0029-trust-and-quality-python.md) §1: канонический JSON нейтрального запроса по `rfc8785`,
+объекты `properties` — списком пар (ключ через `rfc8785` не запускался — ADR-0029 ОВ 10). Профиль схемы в ключ не
+входит: запись одного провайдера проигрывается на другом. Форк с правкой промта меняет сообщения и промахивается
+сознательно — это ожидаемое поведение, а не деградация. Реплей бесплатен: usage выданного ответа обнулён, записанный
+лежит в metadata; счётчик запросов растёт. Кассеты хранятся на уровне модели, а не как HTTP-моки. Запись и гейт на
+стриме — ADR-0029 ОВ 9.
 
 ### 7.5. Lineage форков
 
-Core при `timeTravel` пишет lineage и в типизированные поля `WorkflowStateEntry`, и в `metadata` (`replayedFromExecutionId`, `replayFromStepId`, `replayedAt`). Но `@voltagent/postgres@2.1.3` эти поля не знает: в DDL колонок нет, в `INSERT` их нет. Поэтому top-level `state.replayedFromExecutionId` после рестарта процесса вернёт `undefined`.
+DBOS хранит связь форка сам: `WorkflowStatus.forked_from`, фильтр `list_workflows(forked_from=...)`, у исходного
+`was_forked_from=True` ([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.1, §5.5). В `WorkflowStatus` нет
+номера шага, с которого сделан форк, причины, правок, `tenant_id` и адреса точки форка. Хватает ли `forked_from` или
+нужна своя таблица `app.run_lineage` ([16](16-data-model.md) §2.9) — [ADR-0025](adr/0025-python-engine.md) ОВ 8; до
+решения API строит `lineage{relation, parent_run_id}` из `forked_from` ([23](23-studio-api.md) §6.9), а причина и адрес
+форка не хранятся.
 
-Наше решение по [DECISIONS](DECISIONS.md): дерево форков живёт в **нашей** таблице `app.run_lineage` (`tenant_id`, `child_execution_id`, `parent_execution_id`, `from_step_id`, `reason`, `plan_hash`, `created_at`) — она источник истины для UI и MCP, потому что несёт причину форка и tenant, которых во фреймворке нет в принципе. Запись делает наш код в момент вызова `timeTravel`. `metadata.replayedFromExecutionId` при этом сохраняется адаптером и используется как сверяющий канал: расхождение нашей таблицы и `metadata` — повод для алерта, а не для молчания.
-
-Реплей наследует `metadata` источника (минус ключ чекпоинта), поэтому по цепочке форков тащатся устаревшие пользовательские ключи — наш код перед `timeTravel` чистит собственный префикс `wf.*` и проставляет его заново.
+Форк копирует атрибуты исходного прогона устаревшими: индекс ждущих не должен показывать скопированное ожидание, пока
+форк не опубликовал своё ([ADR-0025](adr/0025-python-engine.md) ОВ 21, [23](23-studio-api.md) ОВ 23).
 
 ## 8. Человек в цикле и таймауты
 
-### 8.1. Шаг `human`
+### 8.1. Узел `human`
 
-`suspendSchema` и `resumeSchema` задаются **на каждом human-шаге**, а не только на воркфлоу: шаговая схема перекрывает воркфлоу-уровневую, и только так задача и ответ типизированы под конкретный узел.
+Решение владельца от 2026-09-16 ([ADR-0025](adr/0025-python-engine.md) §9): узел `human` — наш исполнитель поверх
+`set_event`, `recv_async` и `sleep` DBOS, без внешнего планировщика. Ключи узла — [ADR-0026](adr/0026-yaml-spec-and-code-refs.md)
+§13: `form` (тип ответа; JSON Schema его модели — `form_schema`), `assignee`, `timeout_seconds`, `on_timeout` с
+дискриминатором `policy`, `in` (данные для человека — `suspend_data`). Пары схем задачи и ответа нет: payload резюма
+проверяется моделью типа `form`, выход узла — значение этого типа. Узел исполняется в функции workflow, а не в шаге:
+`DBOS.recv` внутри шага бросает `DBOSException` («recv() must be called from within a workflow»).
 
-```ts
-const humanEmitter: StepEmitter<HumanStep> = {
-  kind: "human",
-  emit: (chain, step) =>
-    chain.andThen({
-      id: `n:${step.nodeId}`,
-      suspendSchema: step.taskSchema,
-      resumeSchema: step.answerSchema,
-      outputSchema: step.outputSchema,
-      execute: async ({ data, state, resumeData, suspend, workflowState }) => {
-        if (resumeData) return finishHumanTask(step, resumeData, workflowState);
-        const task = buildHumanTask(step, data, state);
-        await enqueueDeadline(step, state.executionId, task);
-        return suspend(step.reason, task);
-      },
-    }),
-};
+Последовательность ожидания:
+
+1. Первый шаг узла фиксирует время; затем `DBOS.set_event("human", {address, form_schema, suspend_data, assignee,
+   waiting_since, deadline_at, attempt, on_timeout, topic})`, индекс в атрибутах workflow
+   (`update_workflow_attributes_async`) и `node_suspended` в `run_events`.
+2. `DBOS.recv_async(topic, timeout_seconds)` на топике `"human:" + address_key + ":" + attempt` пишет шаги `DBOS.recv`
+   (выход — конверт ответа или `None`) и `DBOS.sleep` (выход — абсолютный дедлайн).
+3. Конверт проверяется в workflow: `sent_at` позже `deadline_at` или payload не по модели формы — `node_answer_ignored`,
+   ожидание продолжается; принятый ответ публикует `resolved` и `node_resumed`.
+4. `None` — политика `on_timeout` из таблицы (§8.2).
+
+```python
+def judge_answer(spec: HumanSpec, wait: OpenWait, raw: object) -> AnswerVerdict:
+    try:
+        envelope = AnswerEnvelope.model_validate(raw)
+        payload = spec.form_model.model_validate(envelope.payload)
+    except ValidationError as error:
+        return AnswerIgnored(problems_of(error))
+    if envelope.sent_at > wait.deadline_at:
+        return AnswerIgnored((LATE_ANSWER,))
+    return AnswerAccepted(payload.model_dump(mode="json"), envelope.idempotency_key)
+
+
+async def await_answer(run: RunContext, spec: HumanSpec, wait: OpenWait) -> JsonValue:
+    while True:
+        remaining = wait.seconds_left(await run.now())
+        raw = await DBOS.recv_async(wait.topic, timeout_seconds=remaining)
+        if raw is None:
+            return await TIMEOUT_POLICIES[wait.policy](run, spec, wait)
+        verdict = judge_answer(spec, wait, raw)
+        if isinstance(verdict, AnswerAccepted):
+            return await resolve_wait(run, wait, verdict)
+        await emit_answer_ignored(run, wait, verdict)
 ```
 
-Порядок в `execute` обязателен: ранний возврат по `resumeData` первым. После резюма шаг исполняется **заново с начала**, поэтому всё, что до `suspend`, должно быть идемпотентно, а `enqueueDeadline` — иметь ключ `(executionId, stepId, attempt)`.
+`OpenWait` — открытое ожидание: адрес, попытка, топик, `deadline_at` и политика текущей попытки.
+`AnswerEnvelope{payload, idempotency_key, sent_at}` — модель [23](23-studio-api.md) §6.8; `raw` приходит из DBOS
+значением без типа, и это граница ввода-вывода. Повторного входа нет: публикация события, индекс, ожидание и дедлайн —
+записанные шаги, после восстановления они возвращают записанные выходы, а не публикуют заново. Остаток времени для
+следующего `recv` после отброшенного конверта считается от времени из шага (`run.now()`), поэтому дедлайн не сдвигается.
 
-`suspend(reason, suspendData)` возвращает `Promise<never>`: код после него не исполняется. Приостановка по умолчанию `graceful` (`suspensionMode: "immediate" | "graceful"` в run-опциях) — текущий шаг досчитывается.
+### 8.2. Дедлайн без планировщика
 
-### 8.2. Планировщик дедлайнов
-
-VoltAgent сам по таймауту не возобновляет. Дедлайн — задание `pg-boss` 12.x:
+Дедлайн — выход шага `DBOS.sleep` внутри `recv_async`: DBOS хранит `end_time` и после рестарта ждёт
+`max(0, end_time - now)` ([research/py-stack-runtime.md](research/py-stack-runtime.md) §5.5). После SIGKILL таймаут
+сработал через 0,028 с после исходного дедлайна; дедлайн, истёкший при лежащем исполнителе, сработал через 1,47 с после
+рестарта. Отложенного задания, сверяющего cron и `timeout_job_id` нет.
 
 | Механизм | Роль |
 |---|---|
-| `sendAfter(deadlineAt)` на очередь `human.deadline` | основной таймер, payload — `{ tenantId, workflowId, executionId, stepId, attempt, policy }` |
-| cron `*/1 * * * *` на сверку | подбирает просроченные задачи, потерянные при падении воркера или при сдвиге времени; источник — наша таблица `app.human_tasks`, а не только очередь |
-| `WorkflowRegistry.getInstance().getSuspendedWorkflows()` | сверка «наши записи против реальных приостановок» раз в N минут |
+| шаг `DBOS.sleep` внутри `recv_async` | таймер; переживает рестарт |
+| событие `human` + индекс ждущих | «что ждёт меня», `overdue=true` при лежащем исполнителе ([23](23-studio-api.md) §6.7); где живёт индекс — [ADR-0025](adr/0025-python-engine.md) ОВ 21 |
+| проверка срока в API до `send` и в workflow при получении | поздний ответ не принимается при восстановлении (§8.3) |
 
-Обработчик дедлайна применяет политику узла:
+Политика по истечении срока — таблица обработчиков (Strategy) внутри workflow:
 
-```ts
-const deadlinePolicies: Record<TimeoutPolicy, DeadlineHandler> = {
-  default_value: (t) => resume(t, { kind: "timeout", value: t.policy.value }),
-  escalate: (t) => reassignAndExtend(t),
-  fail: (t) => cancelRun(t, "human_timeout"),
-  continue_without: (t) => resume(t, { kind: "timeout", value: null }),
-};
+```python
+type TimeoutPolicyKind = Literal["fail", "default", "escalate"]
+type TimeoutHandler = Callable[[RunContext, HumanSpec, OpenWait], Awaitable[JsonValue]]
+
+TIMEOUT_POLICIES: Mapping[TimeoutPolicyKind, TimeoutHandler] = {
+    "fail": fail_on_timeout,
+    "default": resolve_with_default,
+    "escalate": escalate_once,
+}
 ```
 
-Резюм делается через `WorkflowRegistry.getInstance().resumeSuspendedWorkflow(workflowId, executionId, resumeData, resumeStepId)`, то есть тем же API, что и человеческий ответ. Payload таймаута валиден по `resumeSchema` шага — у таймаута обязан быть дискриминатор (`kind: "timeout"`), иначе узел не отличит его от настоящего ответа.
+| `policy` | Исход | События run-канала |
+|---|---|---|
+| `fail` | узел падает, прогон завершается ошибкой | `node_wait_timed_out{on_timeout: fail}` → `node_finished{status: failed}` → `run_finished{status: failed}` |
+| `default` | узел завершается значением `value` типа `form` (его проверил `aqven check`) | `node_wait_timed_out{on_timeout: default, default_ref}` → `node_finished` |
+| `escalate` | попытка 2 для нового `assignee` со своим `timeout_seconds` на новом топике; её истечение — `fail` | `node_wait_timed_out` → `node_wait_escalated{from_attempt: 1, attempt: 2}` → `node_suspended{attempt: 2}` |
+
+Таймаут не притворяется ответом: `recv` возвращает `None`, исход и `default_ref` пишутся событием, поэтому дискриминатор
+таймаута в модели формы не нужен. Дедлайн в днях запуском не проверялся: механизм тот же — абсолютное время в выходе
+шага ([ADR-0025](adr/0025-python-engine.md) ОВ 2).
 
 ### 8.3. Гонка «ответил на дедлайне»
 
-Ответ человека и срабатывание таймера могут прийти одновременно. Арбитраж — в БД, не в памяти процесса:
+Ответ человека и истечение срока могут прийти одновременно. Единственный потребитель сообщений — `recv` в workflow;
+арбитраж держат системная БД DBOS и проверки, а не память процесса API:
 
-1. Таблица `app.human_tasks` со статусом и колонкой `resolution` (`answered | timed_out | cancelled`) и уникальным индексом по `(execution_id, step_id, attempt)`.
-2. Обе стороны начинают с `UPDATE app.human_tasks SET resolution = $1, resolved_at = now() WHERE id = $2 AND resolution IS NULL RETURNING id`.
-3. Пустой `RETURNING` — значит гонку проиграли: сторона завершается без вызова `resume`.
-4. `resume` вызывается только победителем, внутри той же логической операции.
-5. Повторный `resume` по уже возобновлённому исполнению — идемпотентный no-op на нашей стороне: проверяем актуальный статус через `getSuspendedWorkflows()` перед вызовом.
-
-Отмена дедлайна при человеческом ответе — best-effort: `pg-boss` может уже взять задание в работу, поэтому корректность держится на шаге 2, а не на отмене задания.
+1. API до `send` проверяет цепочкой ([23](23-studio-api.md) §6.8): ожидание есть и в состоянии `waiting`, попытка
+   совпадает, часы API не позже `deadline_at`, payload проходит модель формы. Любой отказ — без `send`, прогон не тронут.
+2. `send` уходит с `idempotency_key` = `client_op_id`: DBOS хранит сообщение под `message_uuid = "<key>::<workflow_id>"`
+   с `ON CONFLICT DO NOTHING`, повтор того же ключа второго ответа не создаёт.
+3. Workflow отбрасывает конверт с `sent_at` позже `deadline_at` (`node_answer_ignored`, код `late_answer`): иначе ответ,
+   отправленный после дедлайна при лежащем исполнителе, при восстановлении был бы принят — `recv` находит
+   буферизованное сообщение раньше, чем сверяет остаток времени.
+4. Если `recv` истёк раньше, чем пришло сообщение, срабатывает политика; опоздавшее сообщение остаётся в таблице
+   уведомлений с `consumed = 0` ([ADR-0025](adr/0025-python-engine.md) ОВ 22) и не достаётся попытке 2: топик уникален
+   для адреса и попытки.
+5. Два резюма с разными ключами, прошедшие проверки одновременно: workflow забирает старшее сообщение, API сверяет
+   `resolved_by` события `human` со своим ключом и отвечает второму `ALREADY_RESUMED` (в пробе ровно один принят в 5 из 5
+   повторов).
 
 ### 8.4. Долгие ожидания
 
-`andSleep` / `andSleepUntil` держат ожидание в процессе — годятся только для секунд и минут. Ожидания часов и дней — всегда `suspend` + планировщик, иначе рестарт процесса съедает таймер.
+`DBOS.sleep_async` и таймаут `recv_async` долговечны: время ожидания записано выходом шага, поэтому ожидания часов и
+дней не держат процесс и переживают рестарт. `asyncio.sleep` и `asyncio.timeout` в функции workflow как ожидание прогона
+не используются: они не записываются и после восстановления начинаются заново. `gate` с `waits_for: human` исполняется
+как узел `human`; `gate` с `waits_for: event` — открытый вопрос 5.
+
+### 8.5. Параллельные ожидания, тестовый режим, форк на шаге человека
+
+| Сценарий | Механизм | Статус |
+|---|---|---|
+| Ожидания в параллельных ветках | ветка с человеком — дочерний workflow с id `parent_run_id + "::" + address_key`, свои событие `human`, атрибуты и топик; резюм в любом порядке; API переводит `run_id` и адрес в id дочернего workflow | проверено с SIGKILL (в пробе id строился из `node_id`); события детей в run-канале родителя — [23](23-studio-api.md) ОВ 29 |
+| Сценарные ответы (`human_answers`, [23](23-studio-api.md) §6.9) | после старта workflow исполнитель отправляет каждый ответ `send` в детерминированный топик с `idempotency_key` = `scripted:<i>`; ранний ответ DBOS буферизует, поздний `recv` его забирает | проверено для прогона без веток; засев ответа ветке — [23](23-studio-api.md) ОВ 29 |
+| Харнесс CI `ScriptedHuman` | pytest: одобрение, отказ, неверный payload, таймаут с `default`, таймаут с `fail`, эскалация, заранее положенный ответ, неверное сырое сообщение | 8 тестов прошли вне репозитория без сети; в CI — завести на исполнителе IR |
+| Форк на узле `human` | `start_step` = первый шаг узла: новое событие, новый дедлайн, попытка 1; форк после узла воспроизводит записанный ответ или `None` без нового ожидания | проверено; перевод адреса в `start_step` — [ADR-0025](adr/0025-python-engine.md) ОВ 8 |
+
+### 8.6. Одобрение вызова тула внутри `llm`
+
+Тул объявлен с `requires_approval=True`; `agent.run()` под capability `DBOSDurability` в функции workflow возвращает
+`DeferredToolRequests` (вызовы, ждущие решения, — в `approvals`). Исполнитель узла открывает ожидание с
+`wait_kind: tool_approval` по адресу узла `llm` тем же механизмом, что §8.1, а ответ превращает в
+`agent.run(..., message_history=..., deferred_tool_results=DeferredToolResults(approvals={...}))` (решение владельца от
+2026-09-16, [ADR-0025](adr/0025-python-engine.md) §9, H6). Форма «один `DBOS.step` на узел» такому узлу не подходит:
+`recv` внутри шага невозможен. Функции-тулы DBOS не оборачивает, поэтому побочный эффект одобренного тула выносится в
+`@DBOS.step`, иначе после восстановления он повторится.
+
+`suspend_data` — `calls[{tool_call_id, tool_name, args}]`. Модель формы одобрения ([23](23-studio-api.md) §6.10
+поручает её этому документу):
+
+```python
+class ApproveCall(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["approve"]
+    tool_call_id: str
+    override_args: dict[str, JsonValue] | None
+
+
+class DenyCall(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["deny"]
+    tool_call_id: str
+    message: str = Field(min_length=1, max_length=400)
+
+
+type CallDecision = Annotated[ApproveCall | DenyCall, Field(discriminator="decision")]
+
+
+class ToolApprovalForm(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decisions: list[CallDecision] = Field(min_length=1)
+
+
+def to_approval(decision: ApproveCall | DenyCall) -> ToolApproved | ToolDenied:
+    match decision:
+        case ApproveCall():
+            return ToolApproved(override_args=decision.override_args)
+        case DenyCall():
+            return ToolDenied(message=decision.message)
+        case _:
+            assert_never(decision)
+
+
+def to_deferred_results(form: ToolApprovalForm) -> DeferredToolResults:
+    return DeferredToolResults(approvals={decision.tool_call_id: to_approval(decision) for decision in form.decisions})
+```
+
+Решение — дискриминированный union по `decision`; перевод в `ToolApproved(override_args)` или `ToolDenied(message)` —
+Strategy, исчерпываемость держит `assert_never`. Поля обязательны, отсутствие значения — `null`, как в стиле схем IR.
+Модель прошла разбор на pydantic 2.13.5: `DenyCall` без `message` отклоняется с кодом `missing`, форма даёт
+`DeferredToolResults` pydantic-ai-slim 2.43.0 (проба при переписывании документа). Сверх модели API и workflow
+проверяют, что множество `tool_call_id` в `decisions` равно множеству ждущих вызовов из `suspend_data`: пропуск или
+лишний вызов — `INPUT_INVALID` в API и `node_answer_ignored` в workflow. Несколько вызовов в одном
+`DeferredToolRequests`, повторные раунды одобрения в одном исполнении и адрес форка с другим решением не проверены —
+[23](23-studio-api.md) ОВ 30.
 
 ## 9. Бюджеты и лимиты
 
 ### 9.1. Три измерения, два уровня
 
-Бюджет — токены, деньги и время, на узел и на прогон (спека §6.5). Переопределение прогона может бюджет только ужесточать (R-O7).
+Бюджет — токены, деньги и время, на узел и на прогон (спека §6.5). Переопределение прогона может бюджет только
+ужесточать (R-O7).
 
-```ts
-interface BudgetSpec {
-  readonly tokens: number | null;
-  readonly costUsd: number | null;
-  readonly wallClockMs: number | null;
-}
+```python
+@dataclass(frozen=True, slots=True)
+class BudgetSpec:
+    tokens: int | None
+    cost_usd: Decimal | None
+    wall_clock_ms: int | None
 
-interface BudgetSnapshot {
-  readonly remainingTokens: number;
-  readonly remainingCostUsd: number;
-  readonly remainingMs: number;
-  readonly deadlineAt: string;
-}
+
+@dataclass(frozen=True, slots=True)
+class BudgetSnapshot:
+    remaining_tokens: int | None
+    remaining_cost_usd: Decimal | None
+    deadline_at: datetime | None
+    now: datetime
+
+
+def tighter[T: (int, Decimal)](left: T | None, right: T | None) -> T | None:
+    known = [value for value in (left, right) if value is not None]
+    return min(known) if known else None
+
+
+def call_limits(ledger: RunUsage, node_left: BudgetSpec, run_left: BudgetSpec) -> UsageLimits:
+    tokens = tighter(node_left.tokens, run_left.tokens)
+    cost = tighter(node_left.cost_usd, run_left.cost_usd)
+    return UsageLimits(
+        total_tokens_limit=None if tokens is None else ledger.total_tokens + tokens,
+        cost_limit=None if cost is None else (ledger.cost or Decimal(0)) + cost,
+    )
 ```
 
-Учёт ведёт middleware бюджета: он видит `usage` каждого вызова модели (включая вызовы внутри агентного цикла и тулов) и вычитает из снимка прогона. Цена считается по профилю модели (`cost.in_per_mtok` / `out_per_mtok` из §7.2 спеки), оценка размера промта до вызова — `gpt-tokenizer` (o200k_base) с поправочным коэффициентом профиля.
+Учёт ведёт один `RunUsage` на прогон, переданный в каждый `agent.run(usage=...)`: журнал обновляется на месте и общий
+для всех агентов прогона ([research/py-quality-layer.md](research/py-quality-layer.md) §1.3). Лимиты вызова — сумма
+потраченного по журналу и меньшего из остатков узла и прогона (Strategy расчёта лимитов,
+[ADR-0029](adr/0029-trust-and-quality-python.md) §4). `request_limit` проверяется до запроса, токен-лимиты и `cost_limit` —
+после ответа: вызов уже оплачен, перерасход не больше одного вызова. Цена — по снимку genai-prices 0.1.7, запиненному
+на версию каталога через `set_custom_snapshot`; `update_in_background()` не вызывается. Оценка размера промта до вызова —
+наш код, токенизатор не выбран (ADR-0029 ОВ 4); `count_tokens_before_request` включается по профилю и только у
+провайдеров с count-эндпоинтом. Время (`wall_clock_ms`) — наш код: дедлайн узла и прогона сверяется со временем из шага.
 
 | Событие | Поведение |
 |---|---|
 | Оценка промта превышает остаток бюджета узла | вызов не делается, узел падает `BudgetExceeded(node)` до траты денег |
-| Фактический `usage` превысил бюджет узла | узел падает после ответа, ответ и его стоимость всё равно уходят в провенанс |
-| Остаток бюджета прогона ≤ 0 | прогон останавливается с сохранённым состоянием: `ctx.abort()` в текущем шаге, статус `error`, причина `budget_exhausted`; чекпоинт уже записан, форк с правкой бюджета возможен |
+| Фактический `usage` превысил лимит | `UsageLimitExceeded` после ответа → `BudgetExceeded`; ответ и его стоимость всё равно уходят в провенанс |
+| Остаток бюджета прогона ≤ 0 | прогон останавливается с записанными шагами: workflow завершается ошибкой с причиной `budget_exhausted` |
 | Дедлайн прогона истёк | то же, причина `deadline` |
 | Бюджет исчерпан внутри цикла | правило остановки `budget_exhausted` (§3.2) отдаёт лучший кандидат, а не роняет прогон |
+| Реплей из кассеты | стоимость 0, счётчик запросов растёт: `request_limit` срабатывает одинаково в live и replay |
 
-Остановка по бюджету — именно остановка с сохранением, а не отмена: состояние должно позволять поднять лимит и продолжить форком.
+Остановка по бюджету — именно остановка с сохранением, а не отмена: записанные шаги позволяют поднять лимит и продолжить
+форком. Бюджет — часть входа и плана, а у `fork_workflow` нет параметра нового входа, поэтому форк с поднятым бюджетом
+упирается в [23](23-studio-api.md) ОВ 3. Журнал после падения процесса и общий журнал параллельных веток —
+[ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 2 и ОВ 13.
 
 ### 9.2. Лимитер на профиль модели
 
-Лимиты объявлены на профиле (`limits: { rpm, tpm, concurrency }`), а не на узле: узлы ссылаются на роль, роль резолвится в профиль.
+Лимиты объявлены на профиле (`limits: { rpm, tpm, concurrency }`), а не на узле: узлы ссылаются на роль, роль
+резолвится в профиль.
 
-```ts
-interface ProfileLimiter {
-  acquire(profileId: ProfileId, estimatedTokens: number, signal: AbortSignal): Promise<Lease>;
-}
+```python
+@dataclass(frozen=True, slots=True)
+class LimiterKey:
+    tenant_id: TenantId
+    profile_id: ProfileId
+
+
+class ProfileBucket(Protocol):
+    def lease(self, key: LimiterKey, estimated_tokens: int) -> AbstractAsyncContextManager[None]: ...
+    def pause_until(self, key: LimiterKey, resume_at: datetime) -> None: ...
 ```
 
-Реализация — token bucket на RPM и на TPM плюс семафор на `concurrency`, ключ `(tenantId, profileId)`. Состояние лимитера процессное; общая на кластер квота — открытый вопрос 4. `acquire` уважает `AbortSignal` узла: истёкший таймаут узла снимает его из очереди, а не держит слот.
+Реализация — звено 4 цепочки: `ConcurrencyLimitedModel` (pydantic-ai-slim 2.43.0) для `concurrency` и наш token bucket
+на RPM и TPM с ключом `(tenant_id, profile_id)`; свой бакет запуском не проверен
+([research/py-quality-layer.md](research/py-quality-layer.md) §1.8). Состояние лимитера процессное; общая квота на
+кластер — открытый вопрос 4. `lease` обязан быть безопасным к отмене задачи asyncio: истёкший таймаут узла снимает
+ожидание слота, а не держит его.
 
-Поведение при 429 от провайдера: middleware читает `Retry-After`, сдвигает бакет профиля целиком (не только текущий вызов) и ретраит с экспонентой и полным джиттером, потолок — оставшееся время дедлайна узла. Исчерпание попыток — фолбэк-профиль по политике узла, затем ошибка узла.
+Поведение при 429: `BackoffModel` (tenacity 9.1.4) повторяет 429, 5xx и `ModelAPIError` без статуса с экспонентой и
+джиттером (`wait_exponential_jitter`), пауза — по `retry-after` из `ModelHTTPError.headers` (их заполняют модели OpenAI,
+Anthropic и Google), потолок — остаток дедлайна узла. Получив `retry-after`, `BackoffModel` вызывает
+`pause_until(key, now + retry_after)`: бакет не выдаёт новых лиз профиля до этого момента, поэтому ждут все вызовы
+профиля, а не только текущий. Ретрай держит слот лимитера и продолжает тот же логический вызов: RPM-бакет считает
+логические вызовы, а не HTTP-попытки. Исчерпание попыток — `ModelHTTPError` → `ProviderFailure` → `fallback_provider` →
+`fallback_profile` ([11](11-providers.md) §7.3). Проверка — 429 с `retry-after` даёт ожидаемое число попыток, одну запись
+кассеты, один слот лимитера и паузу бакета ([ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 11).
 
 ### 9.3. Backpressure на больших веерах
 
-`concurrency` у `andForEach` — это не защита от веера: он ограничивает одновременность, но весь массив уже материализован в памяти и весь уйдёт в чекпоинт.
+`concurrency` у `map` ограничивает одновременность, но не защищает от веера: коллекция уже материализована, выход
+каждого элемента пишется в системную БД и копируется форком.
 
 | Размер веера | Режим |
 |---|---|
-| ≤ `fanout.inlineMax` (порог из IR, по умолчанию 200) | обычный `andForEach` с `concurrency = min(spec, profile.concurrency)` |
-| больше порога | батчи: `andForEach` по батчам, элементы батча — внутренний веер; результаты батча сбрасываются в `BlobRef`, в состоянии остаётся ссылка |
-| больше `fanout.hardMax` | отказ `FanOutTooLarge` ещё на стадии `readItems` |
+| ≤ порога веера из IR (по умолчанию 200) | элементы через `BranchScheduler.run_items` с `concurrency = min(spec, profile.concurrency)` |
+| больше порога | батчи: элементы батча — внутренний веер; выходы батча сбрасываются в `BlobRef`, в выходе шага остаётся ссылка |
+| больше `max_items` | отказ `FanOutTooLarge` в `read_items`, до старта элементов |
 
-Эффективная конкурентность узла — минимум из трёх: `concurrency` узла, `concurrency` профиля, свободный остаток лимитера. Backpressure получается естественно: `acquire` не отдаёт лизу, элементы веера ждут, очередь не растёт бесконечно, потому что число одновременно живых элементов ограничено `andForEach`.
+Эффективная конкурентность узла — минимум из трёх: `concurrency` узла, `concurrency` профиля, свободный остаток
+лимитера. Backpressure получается естественно: бакет не отдаёт лизу, элементы ждут, а число одновременно живых
+элементов ограничено планировщиком веток.
 
 ## 10. Отмена
 
 Механизма два, у них разные источники и разная семантика. Путать их нельзя.
 
-| | Таймаут / отмена узла | Управляющая отмена прогона |
+| | Таймаут или отмена узла | Управляющая отмена прогона |
 |---|---|---|
-| Инструмент | `AbortController` + `setTimeout` в исполнителе узла | `createSuspendController()` |
-| Что отменяет | текущий вызов модели, тулы, сабагентов | всё исполнение воркфлоу |
-| Как передаётся | `abortSignal` в опциях `generateText`/`streamText`; в тулы — `context.abortController.signal` | `workflow.stream(input, { suspendController })`, `execution.cancel(reason)`, `controller.cancel(reason)` |
-| Распознавание | `isAbortError(error)`; в `fullStream` — `event.type === "error"` с `isAbortError(event.error)` и `event.context` | статус исполнения `cancelled` |
-| Результат | ошибка узла `NodeTimeout`, политика узла решает: фолбэк, ретрай, провал | прогон завершается, состояние сохранено |
-| REST | — | `POST /workflows/:id/executions/:executionId/cancel`, тело `{ "reason": "..." }` |
+| Инструмент | `asyncio.timeout` вокруг исполнения узла | `DBOS.cancel_workflow(workflow_id, *, cancel_children=False)`; из процесса API — `DBOSClient.cancel_workflow_async` |
+| Что отменяет | текущий вызов модели и тулы узла | весь прогон; дочерние workflow веток — с `cancel_children=True` |
+| Распознавание | `TimeoutError` → `NodeTimeout` | статус отмены DBOS → `cancelled` в API |
+| Результат | ошибка узла `NodeTimeout`, политика узла решает: фолбэк, ретрай, провал | прогон завершён, записанные шаги сохранены |
+| REST и MCP | — | `POST /api/runs/{run_id}/cancel` с `{reason}`, тул `run_cancel` ([23](23-studio-api.md) §6.4) |
+| Проверено | нет — открытый вопрос 2 | сигнатура dbos 2.31.1 и дока; запуском нет — открытый вопрос 2 |
 
-```ts
-async function withNodeTimeout<T>(ms: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(`node timeout after ${ms}ms`), ms);
-  try {
-    return await run(controller.signal);
-  } finally {
-    clearTimeout(timer);
-  }
-}
+```python
+async def with_node_timeout[T](node_id: NodeId, seconds: float, call: Callable[[], Awaitable[T]]) -> T:
+    try:
+        async with asyncio.timeout(seconds):
+            return await call()
+    except TimeoutError as error:
+        raise NodeTimeout(node_id, seconds) from error
 ```
 
-Параметр `signal` у агента депрекейтнут — передаём `abortController`. `ctx.state.signal` существует, но это сигнал приостановки («AbortSignal for checking suspension during step execution») и он опционален: как таймаут узла он не годится, а как признак «прогон просят остановить» — годится, и исполнитель обязан его проверять между стадиями конвейера §4.
+Где стоит таймер, зависит от формы узла `llm` ([ADR-0025](adr/0025-python-engine.md) ОВ 4). Внутри шага `execute_node` он
+ограничивает шаг, и истечение — исключение шага (как DBOS его записывает — ADR-0025 ОВ 3). В функции workflow
+`asyncio.timeout` не записывается и после восстановления начинается заново. У `DBOS.step` в 2.31.1 есть параметр
+`timeout_seconds`, у `Agent.run` — `cancellation_token`; их семантика не изучалась.
 
-Отмена проигравших в `race` — целиком наш код: `andRace` победителя объявляет, а проигравшие продолжают жечь токены. Эмиттер `race` создаёт общий `AbortController` на узел, прокидывает его сигнал в каждую ветку и вызывает `abort` в шаге сведения; стоимость всех веток при этом уходит в провенанс.
+Отмена проигравших в `race` и `first_success` — целиком наш код: результат проигравшей ветки игнорируется, но её вызовы
+продолжаются и тратят токены. Интерпретатор отменяет задачи проигравших веток после первой `ok` и учитывает стоимость
+всех веток; что происходит с отменённой задачей, ждущей DBOS-шаг, и с дочерним workflow ветки — открытый вопрос 2.
 
-Отменить любое живое исполнение по `executionId` можно без хранения контроллера: `WorkflowRegistry.getInstance().activeExecutions` — это `Map<string, WorkflowSuspendController>`. На этом строится MCP-тул `run_cancel` и кнопка в Studio. Так как реестр — глобальный синглтон, проверка принадлежности прогона тенанту делается нашим фасадом до обращения к карте.
+Отмена по `run_id` идёт через фасад API: принадлежность прогона тенанту проверяется по записи прогона в `app` до вызова
+`cancel_workflow` — идентификатор workflow тенанта не знает.
 
 ## Открытые вопросы
 
-1. **Строгий режим провайдера под `Output.object`.** Не подтверждено, использует ли `Output.object` из `ai@6` json_schema `strict: true` у OpenAI или tool-based выдачу, и какими ключами `providerOptions.openai` это переключается. Что сделать: прогнать узел `llm` против OpenAI и Anthropic с записью сырого запроса через middleware, зафиксировать ключи в [05. Система типов](05-type-system.md). До закрытия исполнитель обязан валидировать выход сам, не полагаясь на провайдерский strict.
-2. **Кэширование моделей внутри `timeTravel`.** Не проверено, переисполняются ли вызовы моделей для шагов **до** `stepId` при реплее. Что сделать: прогон с `replay_strict` и счётчиком вызовов в middleware; если шаги до точки не переисполняются, часть кассетной логики упрощается.
-3. **Стоимость чекпоинта на длинных прогонах.** Строка исполнения переписывается целиком, включая `events`. Не измерено, при каком числе шагов и объёме `events` это становится узким местом. Что сделать: нагрузочный прогон 500 шагов с телом узла ~50 КБ, замер размера строки и времени `UPDATE`; по результату зафиксировать `checkpointInterval` по классам прогонов и решить, выносить ли `events` в наш телеметрический канал.
-4. **Кластерный лимитер.** Token bucket процессный, при нескольких воркерах суммарный RPM/TPM превысит лимит профиля. Что сделать: выбрать между шардированием квоты по числу воркеров (просто, теряет точность) и общим счётчиком в Postgres/Redis (точно, добавляет зависимость); решение оформить ADR.
-5. **Противоречие по lineage форков.** DECISIONS требует собственную таблицу, потому что `@voltagent/postgres@2.1.3` не пишет типизированные lineage-поля; заметка `volt-durability.md` показывает, что core дублирует lineage в `metadata`, и делает вывод «собственная таблица не обязательна». В документе принята версия DECISIONS (таблица `app.run_lineage` как источник истины, `metadata` — сверяющий канал). Что сделать: ADR, фиксирующий, что таблица нужна не ради lineage, а ради `tenant_id`, причины форка и `plan_hash`.
-6. **GIN-индекс по `metadata`.** В `@voltagent/postgres` его нет, а запросы «все форки прогона» и наши фильтры по `metadata` без него идут полным перебором. Что сделать: добавить в наши миграции `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vm_ws_metadata ON voltagent_memory_workflow_states USING GIN (metadata jsonb_path_ops)` и проверить, что адаптер не конфликтует со своим `CREATE TABLE IF NOT EXISTS` на старте (схема `voltagent` — чужая территория).
-7. **Стриминг частичных объектов.** Точное имя экспорта для `partialObjectStream` в `ai@6.0.280` не подтверждено, а `agent.streamText` отдаёт `stream.partialOutputStream ?? []`. Что сделать: проверить экспорты в `node_modules/ai/dist/index.d.ts` и зафиксировать единственный путь для UI-канала; отдельный парсер частичного JSON не вводить.
-8. **Изоляция глобального реестра воркфлоу.** `WorkflowRegistry` — синглтон на `globalThis`, в нём нет понятия тенанта. Что сделать: определить, достаточно ли префикса `tenantId` в ключе воркфлоу и проверки в фасаде, или нужен воркер на тенанта; отдельно описать протокол `reset()` в тестах, чтобы параллельные vitest-воркеры не делили реестр.
-9. **Семантика `bail` в составных шагах.** Не проверено, как `ctx.bail(result)` ведёт себя внутри `andForEach`, `andAll` и тела `andDoUntil` — завершает ли он весь воркфлоу или только вложенное исполнение. Что сделать: прогон-проба на каждый из трёх случаев; до этого ранний выход из веера и цикла реализуем через `Result` и правило остановки, а не через `bail`.
+1. **Адрес вложенных конструкций и узлов компонента.** `ExecutionAddress{node_id, branch_key, iteration, item_index}`
+   ([23](23-studio-api.md) §6.2, [ADR-0028](adr/0028-studio-api-contract.md) §5) несёт одну ветку, одну итерацию и один
+   элемент. `map` внутри тела `loop`, `parallel` внутри ячейки `switch`, вложенные `map` и узлы тела компонента `call`
+   (один `node_id` в разных вызовах) дают исполнения, которые адрес не различает; прежний шаблон
+   `k:<componentId>@<version>:<innerStepId>` запрещён как строковая склейка. Что сделать: собрать примеры на библиотеке
+   [03](03-core-language.md) §6 (`judge_panel`, `verify_fix`); решить — расширить адрес структурным путём объемлющих
+   исполнений или ограничить вложенность правилом компилятора; изменение адреса — через ADR с правкой 23 §6.2 и
+   `app.run_nodes`.
+2. **Таймаут узла, отмена прогона и отмена проигравших на DBOS.** Не проверены: `asyncio.timeout` внутри шага
+   `execute_node` и в функции workflow (форма `DBOSDurability`); параметр `timeout_seconds` у `DBOS.step` и
+   `cancellation_token` у `Agent.run` (pydantic-ai-slim 2.43.0); останавливает ли `DBOS.cancel_workflow` выполняющийся
+   шаг или только следующий; `cancel_children` для дочерних workflow веток; судьба отменённой задачи asyncio, ждущей
+   DBOS-шаг, в `race` и `first_success`. Что сделать: спайк на SQLite — узел с `FunctionModel`, спящей дольше таймаута, в
+   обеих формах узла `llm`; отмена прогона посреди шага и посреди `parallel`; сверить `list_workflow_steps`, число вызовов
+   модели и статус прогона; итог — в §10.
+3. **Цена записи шагов на длинных прогонах.** Выход каждого шага пишется в системную БД, форк копирует все шаги до
+   точки форка, поток `run_events` растёт на каждое событие. Не измерено, при каком числе шагов и размере выхода это
+   становится узким местом на SQLite и PostgreSQL 18. Что сделать: нагрузочный прогон на 500 исполнений с выходом
+   ~50 КБ и цикл на 100 итераций; замер времени шага, размера системной БД и времени форка; по результату выбрать порог
+   вывода выхода шага в `BlobRef` (§6.2) — вместе со спайком [ADR-0025](adr/0025-python-engine.md) ОВ 9.
+4. **Кластерный лимитер.** Бакет RPM/TPM процессный: при нескольких процессах суммарный RPM/TPM превысит лимит профиля.
+   Кандидаты: шардирование квоты по числу процессов (просто, теряет точность); общий счётчик в Postgres (точно, своя
+   реализация); `Queue` DBOS с параметрами `limiter` и `global_concurrency` (есть в dbos 2.31.1,
+   [research/py-stack-runtime.md](research/py-stack-runtime.md) §5.3; применимость к вызовам модели внутри шага не
+   изучалась). Что сделать: тест — два процесса на одном профиле с RPM 60 и счётчиком HTTP-вызовов мока; выбор
+   оформить ADR.
+5. **`gate` с `waits_for: event` и смысл `gate`.** [03](03-core-language.md) §3.6 и [04](04-ir-schema.md) §2.5 описывают
+   `gate` как ожидание события или человека, прежняя редакция этого документа — как страж качества. Для
+   `waits_for: event` не спроектированы источник события, топик и отправитель (`send` из API, из другого прогона или из
+   расписания DBOS). Что сделать: при чистке 03 подтвердить смысл `gate`; для события — топик от того же кодировщика
+   адреса, операция отправки события в [23](23-studio-api.md) и проба `recv_async` с таймаутом.
+6. **Частичные объекты стрима в канале UI.** Частичный объект никогда не становится выходом узла (§4.3), но транспорт
+   до студии не определён: в run-канале [23](23-studio-api.md) §11.2 нет события частичного выхода, а запись фрагментов
+   в поток `run_events` — запись в системную БД на каждый фрагмент. Запись кассеты и гейт на стриме —
+   [ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 9. Что сделать: выбрать между отдельным недолговечным SSE-каналом
+   частичных выходов и прореженным событием в `run_events`; замерить цену записи на стриме; итог — в 23 §11.2 и §4.3.
+7. **Процесс с одним исполнителем DBOS: тенанты, тесты, bootstrap.** `DBOS.launch()` — один раз на системную БД
+   (§7.2). Не решено: одна системная БД на всех тенантов режима `hosted` с проверкой тенанта в фасаде или БД на тенанта;
+   как параллельные воркеры pytest получают изолированные системные БД (в пробе DBOS запускался один раз на сессию на
+   временном файле SQLite); встраивание `DBOS.launch()` в lifespan FastAPI рядом с `session_manager.run()` MCP. Что
+   сделать: решение по тенантам — ADR вместе с [ADR-0025](adr/0025-python-engine.md) ОВ 16 (Conductor); фикстура pytest с
+   SQLite на воркер и тест lifespan `aqven serve` с восстановлением прогона.
+8. **Фильтр инъекций и гардрейлы входа.** Гардрейлы PII и инъекций VoltAgent ушли вместе с TS-движком; аналоги в
+   Python-стеке не искали ([research/py-stack-runtime.md](research/py-stack-runtime.md) ОВ 7), модель и порог
+   классификатора инъекций R-S9 не определены ([99](99-open-questions.md) F-48). Редакция PII на вызове модели закрыта
+   `RedactingModel` (§5). Что сделать: изучить capabilities и hooks Pydantic AI 2.43.0 и живые библиотеки; выбрать точку
+   врезки — hook агента или звено цепочки с позицией в [ADR-0029](adr/0029-trust-and-quality-python.md) §1; решение —
+   ADR.
+9. **Вопросы ADR, итог которых записывается сюда.** Форма параллельных веток и `map` —
+   [ADR-0025](adr/0025-python-engine.md) ОВ 1 (§3.3, §3.4); исключения шагов и ретраи `DBOSDurability` — ОВ 3 (§5, §10);
+   узел `llm` одним шагом или под `DBOSDurability` — ОВ 4 (§3, §4, §8.6); горячая загрузка версий — ОВ 6 (§2.3);
+   сериализатор — ОВ 7 и [23](23-studio-api.md) ОВ 26 (§6.2); адрес → `start_step` и lineage — ОВ 8 и 23 ОВ 28 (§2.2,
+   §7.3, §7.5); восстановление `RunUsage` и цепочка под DBOS — [ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 2 и
+   ОВ 13 (§6.1, §9.1); одобрение тулов: несколько вызовов, раунды, адрес форка — 23 ОВ 30 (§8.6). Что сделать: по итогу
+   каждого спайка переписать указанный раздел и снять ссылку отсюда.

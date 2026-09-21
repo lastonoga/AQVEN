@@ -21,7 +21,7 @@ export default defineFlow({ flow, version, input, output, context, budget, polic
 ```
 
 **Узел IR = один элемент `nodes`**, поле IR = свойство литерала, `camelCase` ↔ `snake_case` механически; `uses` и хеши
-не пишутся — пины версий синтез берёт из `wf.lock.yaml`.
+не пишутся — пины версий синтез берёт из `aqven.lock.yaml`.
 
 | Источник `node_id` | Что даёт | Что ломается |
 |---|---|---|

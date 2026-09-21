@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "method": {
+      "const": "BCa",
+      "title": "Method",
+      "type": "string"
+    },
+    "resamples": {
+      "minimum": 1,
+      "title": "Resamples",
+      "type": "integer"
+    },
+    "seed": {
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "method",
+    "resamples",
+    "seed"
+  ],
+  "title": "BootstrapSpec",
+  "type": "object"
+}
