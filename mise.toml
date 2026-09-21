@@ -59,6 +59,18 @@ run = [
   "uv build --package aqven --out-dir dist",
 ]
 
+[tasks.version]
+description = "Print the one version of both distributions"
+run = "uv run --frozen python tools/set_version.py"
+
+[tasks."release:check"]
+description = "Everything the release workflow verifies, without uploading"
+depends = ["bundle"]
+run = [
+  "uv run --frozen python tools/set_version.py --check",
+  "uv run --frozen python tools/bundle_studio.py --check",
+]
+
 [tasks.dev]
 description = "Engine and studio against the lumen example"
 run = "node tools/dev.mjs"

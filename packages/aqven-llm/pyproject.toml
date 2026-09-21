@@ -1,6 +1,17 @@
 [project]
 name = "aqven-llm"
 version = "0.0.0"
+description = "Provider isolation for aqven: every model provider SDK import behind one factory."
+readme = "README.md"
+keywords = ["ai", "llm", "providers", "pydantic-ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "pydantic==2.13.5",
@@ -9,6 +20,12 @@ dependencies = [
     "openai==3.14.1",
     "tenacity==9.1.4",
 ]
+
+[project.urls]
+Homepage = "https://aqvenstudio.com"
+Documentation = "https://aqvenstudio.com"
+Repository = "https://github.com/lastonoga/AQVEN"
+Issues = "https://github.com/lastonoga/AQVEN/issues"
 
 [project.optional-dependencies]
 anthropic = ["pydantic-ai-slim[anthropic]==2.43.0"]
