@@ -3,6 +3,9 @@ name = "aqven-llm"
 version = "0.0.0"
 description = "Provider isolation for aqven: every model provider SDK import behind one factory."
 readme = "README.md"
+license = "LicenseRef-PolyForm-Shield-1.0.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Kirill Burkhanov" }]
 keywords = ["ai", "llm", "providers", "pydantic-ai"]
 classifiers = [
     "Development Status :: 3 - Alpha",

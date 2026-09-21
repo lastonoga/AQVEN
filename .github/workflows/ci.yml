@@ -28,6 +28,12 @@ jobs:
         run: uv run --frozen ruff check .
       - name: uv.lock consumers
         run: uv run --frozen python tools/check_uv_lock.py
+      - name: every distribution carries the same LICENSE
+        run: |
+          cmp LICENSE packages/aqven/LICENSE
+          cmp LICENSE packages/aqven-llm/LICENSE
+      - name: both distributions agree on one version
+        run: python tools/set_version.py --check
       - name: pytest aqven
         run: uv run --frozen pytest packages/aqven -q
       - name: pytest aqven-llm

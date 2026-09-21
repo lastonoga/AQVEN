@@ -222,3 +222,18 @@ AQVEN is an early-stage project exploring the engineering layer for production A
 The goal is simple:
 
 > **Turn probabilistic AI capabilities into software you can trust, test and continuously improve.**
+
+---
+
+## License
+
+AQVEN is **source-available**, not open source, under the
+[PolyForm Shield License 1.0.0](https://polyformproject.org/licenses/shield/1.0.0).
+
+You may use it for any purpose, including in production and in commercial products you build with it:
+the AI workflows you create with AQVEN are yours, and selling them is explicitly permitted.
+
+You may not use AQVEN — original or modified — to provide a product that competes with it.
+The right to sell AQVEN itself stays with the licensor.
+
+Copyright Kirill Burkhanov. Full terms: [LICENSE](LICENSE).

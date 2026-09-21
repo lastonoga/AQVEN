@@ -3,6 +3,9 @@ name = "aqven"
 version = "0.0.0"
 description = "Engineering layer for reliable AI workflows: files as the source of truth, a compiler, a checkpointed runtime and a local Studio."
 readme = "README.md"
+license = "LicenseRef-PolyForm-Shield-1.0.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Kirill Burkhanov" }]
 keywords = ["ai", "llm", "workflow", "agents", "evaluation", "pydantic-ai"]
 classifiers = [
     "Development Status :: 3 - Alpha",

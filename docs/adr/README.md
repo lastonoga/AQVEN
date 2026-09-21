@@ -46,6 +46,7 @@
 | [0036](0036-single-root-monorepo.md) | Один корень монорепозитория: `apps`, `packages`, `examples`, `tools`, `docs` | Каталоги `aqven-py` и `site` упразднены, корень репозитория — корень обоих workspace; появился CI |
 | [0037](0037-studio-inside-the-wheel.md) | Studio едет внутри wheel `aqven`: установка одной командой | Собранный бандл копируется в `aqven/server/static/` отдельным шагом до `uv build`; Node у пользователя не нужен |
 | [0038](0038-publishing-to-pypi.md) | Публикация на PyPI: одна версия на два дистрибутива, релиз по тегу, trusted publishing | `aqven` пинит `aqven-llm` точной версией; релиз по тегу `v*` через OIDC, без секретов в репозитории |
+| [0039](0039-polyform-shield-license.md) | Лицензия PolyForm Shield 1.0.0 | Продавать AQVEN, в том числе форк, может только владелец; строить на нём и продавать воркфлоу — все |
 
 ## Как добавлять новую запись
 
