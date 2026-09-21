@@ -120,8 +120,13 @@
     "slot": "{count, plural, one {# slot} other {# slots}}"
   },
   "chatPermissionMode": {
-    "default": "Ask",
-    "accept_edits": "Accept edits",
-    "plan": "Plan only"
+    "default": "Manual",
+    "defaultDetail": "The agent asks before it changes anything",
+    "accept_edits": "Edit automatically",
+    "accept_editsDetail": "The agent edits files without asking",
+    "plan": "Plan",
+    "planDetail": "The agent explores and proposes, without editing",
+    "trust": "Trust",
+    "trustDetail": "The agent runs everything without asking, including commands"
   }
 }

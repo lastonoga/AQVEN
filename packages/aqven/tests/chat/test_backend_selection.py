@@ -129,7 +129,8 @@ def test_claude_catalog_lists_documented_aliases_and_accepts_anything() -> None:
 
     catalog = claude_catalog()
     assert catalog.backend == "claude"
-    assert [model.id for model in catalog.models] == ["fable", "opus", "sonnet"]
+    assert [model.id for model in catalog.models] == ["opus", "fable", "sonnet"]
+    assert [model.id for model in catalog.models if model.is_default] == ["opus"]
     assert catalog.accepts_any_model is True
     assert catalog.detail is not None
     assert all(model.efforts for model in catalog.models)
@@ -141,7 +142,7 @@ def test_effort_maps_to_a_growing_thinking_budget() -> None:
     budgets = [thinking_budget(effort) for effort in EFFORT_ORDER]
     assert budgets == sorted(budgets)
     assert len(set(budgets)) == len(budgets)
-    assert thinking_budget(None) == thinking_budget("medium")
+    assert thinking_budget(None) == thinking_budget("high")
 
 
 def test_codex_model_entries_keep_only_efforts_the_port_knows() -> None:
@@ -164,4 +165,31 @@ def test_codex_model_entries_keep_only_efforts_the_port_knows() -> None:
     assert model.id == "gpt-5.6-sol"
     assert model.is_default is True
     assert [item.effort for item in model.efforts] == ["low", "high"]
+    assert model.default_effort == "low"
+
+
+def test_codex_efforts_survive_the_sdk_enum_not_only_plain_strings() -> None:
+    from enum import Enum
+
+    from aqven.chat.codex_backend import chat_model
+
+    class ReasoningEffort(Enum):
+        low = "low"
+        xhigh = "xhigh"
+
+    class Effort:
+        def __init__(self, value: ReasoningEffort) -> None:
+            self.reasoning_effort = value
+            self.description = "from the sdk"
+
+    class Entry:
+        id = "gpt-5.6-sol"
+        display_name = "GPT-5.6-Sol"
+        description = None
+        is_default = True
+        default_reasoning_effort = ReasoningEffort.low
+        supported_reasoning_efforts = (Effort(ReasoningEffort.low), Effort(ReasoningEffort.xhigh))
+
+    model = chat_model(Entry())
+    assert [item.effort for item in model.efforts] == ["low", "xhigh"]
     assert model.default_effort == "low"

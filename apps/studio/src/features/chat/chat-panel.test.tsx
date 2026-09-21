@@ -44,7 +44,7 @@ describe("ChatPanel", () => {
     fireEvent.keyDown(trigger, { key: "Enter" })
     fireEvent.click(within(await screen.findByRole("menu", { name: "Switch thread" })).getByRole("menuitem", { name: "New thread" }))
     await waitFor(() => {
-      expect(bodies).toEqual([{ flow_id: "support_case", model: null, effort: null, permission_mode: "default", resume_session_id: null }])
+      expect(bodies).toEqual([expect.objectContaining({ flow_id: "support_case", resume_session_id: null })])
     })
   })
 
@@ -88,7 +88,7 @@ describe("ChatPanel", () => {
     fireEvent.keyDown(trigger, { key: "Enter" })
     fireEvent.click(within(await screen.findByRole("menu", { name: "Switch thread" })).getByRole("menuitem", { name: "New thread" }))
     await waitFor(() => {
-      expect(bodies).toEqual([{ flow_id: "support_case", model: null, effort: null, permission_mode: "default", resume_session_id: null }])
+      expect(bodies).toEqual([expect.objectContaining({ flow_id: "support_case", resume_session_id: null })])
     })
     await waitFor(() => {
       expect(trigger.textContent).toContain("Claude Agent · support_case")

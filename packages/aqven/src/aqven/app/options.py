@@ -33,7 +33,7 @@ __all__ = [
 ]
 
 
-PERMISSION_MODES: Final[tuple[ChatPermissionMode, ...]] = ("default", "accept_edits", "plan")
+PERMISSION_MODES: Final[tuple[ChatPermissionMode, ...]] = ("default", "accept_edits", "plan", "trust")
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +48,6 @@ class ServerOptions:
     host: str = LOOPBACK_HOST
     require_auth: bool = False
     chat_allowed_tools: tuple[str, ...] = ()
-    chat_trust_project: bool = False
     chat_model: str | None = None
     chat_effort: ChatEffort | None = None
     chat_permission_mode: ChatPermissionMode = "default"
@@ -102,14 +101,6 @@ def add_server_arguments(parser: argparse.ArgumentParser) -> None:
         choices=PERMISSION_MODES,
         help="default approval mode for new chat sessions",
     )
-    parser.add_argument(
-        "--chat-trust-project",
-        action="store_true",
-        help=(
-            "run the chat agent without asking for approval at all; "
-            "it may still not read .env, but only a text check stands between the agent and it"
-        ),
-    )
 
 
 def _rules(value: object) -> tuple[str, ...]:
@@ -162,7 +153,6 @@ def server_options(
         host=settings.host if host is None else host,
         require_auth=bool(arguments.require_auth),
         chat_allowed_tools=_rules(arguments.chat_allow_tool),
-        chat_trust_project=bool(arguments.chat_trust_project),
         chat_model=_text(arguments.chat_model),
         chat_effort=_effort(arguments.chat_effort),
         chat_permission_mode=_permission_mode(arguments.chat_permission_mode),

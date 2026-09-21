@@ -118,7 +118,6 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
         SecretStr(launch.access.token),
         launch.settings,
         launch.chat_allowed_tools,
-        launch.chat_trust_project,
         ChatSessionDefaults(
             model=launch.chat_model,
             effort=launch.chat_effort,

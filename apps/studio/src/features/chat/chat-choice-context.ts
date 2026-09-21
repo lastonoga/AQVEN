@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react"
+import { createContext, useContext, type Dispatch, type SetStateAction } from "react"
 import type { ApiChatBackendKind, ApiChatModelCatalog } from "@/domain"
 import type { ChatChoice } from "./chat-choice"
 
@@ -6,7 +6,7 @@ export type ChatChoiceControl = {
   readonly backend: ApiChatBackendKind
   readonly choice: ChatChoice
   readonly disabled: boolean
-  readonly onChange: (choice: ChatChoice) => void
+  readonly onChange: Dispatch<SetStateAction<ChatChoice>>
   readonly loadModels: (backend: ApiChatBackendKind) => Promise<ApiChatModelCatalog>
 }
 

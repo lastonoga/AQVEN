@@ -151,16 +151,14 @@ def test_chat_allow_tool_collects_every_rule_and_trims_blanks(tmp_path: Path) ->
     assert parsed_options(argv, tmp_path).chat_allowed_tools == ("Read", "Bash(rg:*)")
 
 
-def test_chat_trust_project_is_off_by_default(tmp_path: Path) -> None:
+def test_chat_permission_mode_defaults_to_asking(tmp_path: Path) -> None:
     (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
-    assert parsed_options([], tmp_path).chat_trust_project is False
+    assert parsed_options([], tmp_path).chat_permission_mode == "default"
 
 
-def test_chat_trust_project_needs_no_other_rules(tmp_path: Path) -> None:
+def test_chat_permission_mode_accepts_trust(tmp_path: Path) -> None:
     (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
-    options = parsed_options(["--chat-trust-project"], tmp_path)
-    assert options.chat_trust_project is True
-    assert options.chat_allowed_tools == ()
+    assert parsed_options(["--chat-permission-mode", "trust"], tmp_path).chat_permission_mode == "trust"
 
 
 @pytest.mark.asyncio
@@ -178,7 +176,7 @@ async def test_trusted_chat_is_announced_so_it_cannot_start_quietly(tmp_path: Pa
         port=free_port(),
         data_dir=tmp_path / "data",
         headless=True,
-        chat_trust_project=True,
+        chat_permission_mode="trust",
     )
     task = asyncio.create_task(server.serve(options))
     try:

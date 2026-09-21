@@ -14,7 +14,7 @@ ChatToolCallId = NewType("ChatToolCallId", str)
 ChatApprovalId = NewType("ChatApprovalId", str)
 
 type AgentBackendKind = Literal["claude", "codex"]
-type ChatPermissionMode = Literal["default", "accept_edits", "plan"]
+type ChatPermissionMode = Literal["default", "accept_edits", "plan", "trust"]
 type ChatEffort = Literal["low", "medium", "high", "xhigh", "max"]
 type ChatState = Literal["idle", "thinking", "streaming", "running_tool", "waiting_approval", "interrupting"]
 type ChatToolStatus = Literal["ok", "error", "denied", "interrupted"]

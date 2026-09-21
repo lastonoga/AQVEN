@@ -63,11 +63,6 @@
   "settings": {
     "modelLabel": "Model",
     "modelDefault": "Default model",
-    "modelSearch": "Search models",
-    "modelSearchAny": "Search or type a model name",
-    "modelNone": "No models offered",
-    "modelTypeAny": "Not in the list. Any name the agent accepts will be used as typed.",
-    "modelIsDefault": "default",
     "modelsUnavailable": "Model list unavailable",
     "effortLabel": "Reasoning effort",
     "permissionLabel": "Approvals",
@@ -78,6 +73,7 @@
       "xhigh": "Very high",
       "max": "Max"
     },
-    "menuAria": "Model and agent settings"
+    "menuAria": "Model and agent settings",
+    "effortAuto": "Auto"
   }
 }

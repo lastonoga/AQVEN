@@ -15,9 +15,10 @@ EFFORT_DESCRIPTIONS: Final[dict[ChatEffort, str]] = {
     "xhigh": "Very long thinking budget",
     "max": "Largest thinking budget",
 }
+CLAUDE_DEFAULT_MODEL: Final = "opus"
 CLAUDE_ALIASES: Final[tuple[tuple[str, str, str], ...]] = (
-    ("fable", "Fable", "Alias for the latest Fable model"),
     ("opus", "Opus", "Alias for the latest Opus model"),
+    ("fable", "Fable", "Alias for the latest Fable model"),
     ("sonnet", "Sonnet", "Alias for the latest Sonnet model"),
 )
 THINKING_BUDGETS: Final[dict[ChatEffort, int]] = {
@@ -27,14 +28,14 @@ THINKING_BUDGETS: Final[dict[ChatEffort, int]] = {
     "xhigh": 32_000,
     "max": 64_000,
 }
-DEFAULT_EFFORT: Final[ChatEffort] = "medium"
+DEFAULT_EFFORT: Final[ChatEffort] = "high"
 CLAUDE_EFFORTS: Final[tuple[ChatModelEffort, ...]] = tuple(
     ChatModelEffort(effort=effort, description=EFFORT_DESCRIPTIONS[effort]) for effort in EFFORT_ORDER
 )
 
 
 def known_effort(value: object) -> ChatEffort | None:
-    text = str(value)
+    text = str(getattr(value, "value", value))
     return cast(ChatEffort, text) if text in KNOWN_EFFORTS else None
 
 
@@ -44,7 +45,7 @@ def claude_catalog() -> ChatModelCatalog:
             id=identifier,
             display_name=display_name,
             description=description,
-            is_default=False,
+            is_default=identifier == CLAUDE_DEFAULT_MODEL,
             efforts=CLAUDE_EFFORTS,
             default_effort=DEFAULT_EFFORT,
         )

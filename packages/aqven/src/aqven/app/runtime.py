@@ -43,7 +43,7 @@ STOP_SIGNALS: Final = (signal.SIGINT, signal.SIGTERM)
 
 
 TRUSTED_CHAT_WARNING: Final = (
-    "aqven: --chat-trust-project is on, so the chat agent runs every tool call without asking. "
+    "aqven: chat approvals default to trust, so the chat agent runs every tool call without asking. "
     "Provider keys in .env are held back by a text check on the command, which arbitrary code can walk past."
 )
 
@@ -60,7 +60,6 @@ class ApplicationLaunch:
     studio_dist: Path | None
     dev_origin: str | None
     chat_allowed_tools: tuple[str, ...] = ()
-    chat_trust_project: bool = False
     chat_model: str | None = None
     chat_effort: ChatEffort | None = None
     chat_permission_mode: ChatPermissionMode = "default"
@@ -236,7 +235,6 @@ class LocalServer:
                 studio_dist=options.studio_dist,
                 dev_origin=options.dev_origin,
                 chat_allowed_tools=options.chat_allowed_tools,
-                chat_trust_project=options.chat_trust_project,
                 chat_model=options.chat_model,
                 chat_effort=options.chat_effort,
                 chat_permission_mode=options.chat_permission_mode,
@@ -281,7 +279,7 @@ class LocalServer:
         self.readiness.mark_ready()
         address = record.url if options.headless else studio_browser_url(record, options)
         self.announcer.announce(f"aqven: {address} (MCP {record.mcp_url})")
-        if options.chat_trust_project:
+        if options.chat_permission_mode == "trust":
             self.announcer.announce(TRUSTED_CHAT_WARNING)
         await self._open_browser(record, options)
 

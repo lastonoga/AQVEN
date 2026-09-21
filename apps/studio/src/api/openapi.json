@@ -12389,7 +12389,8 @@
         "enum": [
           "default",
           "accept_edits",
-          "plan"
+          "plan",
+          "trust"
         ]
       },
       "ChatReasoningDelta": {

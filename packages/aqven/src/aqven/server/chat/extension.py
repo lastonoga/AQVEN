@@ -37,10 +37,9 @@ def studio_chat_parts(
     access_token: SecretStr,
     settings: BackendSettingValues,
     allowed_tools: tuple[str, ...] = (),
-    trust_project: bool = False,
     defaults: ChatSessionDefaults | None = None,
 ) -> ChatServerParts:
-    chat = create_claude_chat(project_root, access_token, allowed_tools, trust_project)
+    chat = create_claude_chat(project_root, access_token, allowed_tools)
     codex = CodexAgentBackend(chat.journal, project_root, mcp_url, access_token)
     registry = BackendRegistry({"claude": chat.backend, "codex": codex}, BackendSelection(settings))
     chosen = defaults or ChatSessionDefaults()

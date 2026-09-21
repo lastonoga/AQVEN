@@ -81,7 +81,7 @@ def test_session_options_isolate_claude_and_route_mcp_with_bearer_token(tmp_path
     assert options.strict_mcp_config is True
     assert options.include_partial_messages is True
     assert options.can_use_tool is not None
-    assert options.thinking == {"type": "enabled", "budget_tokens": 8000, "display": "summarized"}
+    assert options.thinking == {"type": "enabled", "budget_tokens": 16000, "display": "summarized"}
     assert json.loads(config_text) == {
         "mcpServers": {"aqven": {"type": "http", "url": MCP_URL, "headers": {"Authorization": f"Bearer {MCP_TOKEN}"}}}
     }

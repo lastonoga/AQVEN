@@ -24,6 +24,7 @@ PERMISSION_MODES: Final[Mapping[ChatPermissionMode, PermissionMode]] = {
     "default": "default",
     "accept_edits": "acceptEdits",
     "plan": "plan",
+    "trust": TRUSTED_MODE,
 }
 
 
@@ -36,7 +37,6 @@ class ClaudeChatSettings:
     client_app: str = DEFAULT_CLIENT_APP
     mcp_config_directory: Path | None = None
     allowed_tools: tuple[str, ...] = ()
-    trust_project: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,11 +69,6 @@ class ClaudeOptionsFactory:
     settings: ClaudeChatSettings
     guard: SecretFileGuard = field(default_factory=default_guard)
 
-    def permission_mode(self, chosen: ChatPermissionMode) -> PermissionMode:
-        if self.settings.trust_project:
-            return TRUSTED_MODE
-        return PERMISSION_MODES[chosen]
-
     def build(self, stored: StoredChatSession, can_use_tool: CanUseTool) -> ClaudeLaunch:
         project_root = Path(stored.session.project_root)
         server = aqven_mcp_server(stored.mcp_url, self.settings.mcp_token)
@@ -82,7 +77,7 @@ class ClaudeOptionsFactory:
             cwd=project_root,
             cli_path=self.settings.cli_path,
             model=stored.session.model,
-            permission_mode=self.permission_mode(stored.session.permission_mode),
+            permission_mode=PERMISSION_MODES[stored.session.permission_mode],
             system_prompt=claude_system_prompt(project_root),
             mcp_servers=config.path,
             strict_mcp_config=True,

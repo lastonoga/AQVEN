@@ -1769,7 +1769,7 @@ export interface components {
             description: string | null;
         };
         /** @enum {string} */
-        ChatPermissionMode: "default" | "accept_edits" | "plan";
+        ChatPermissionMode: "default" | "accept_edits" | "plan" | "trust";
         /** ChatReasoningDelta */
         ChatReasoningDelta: {
             /** Seq */
