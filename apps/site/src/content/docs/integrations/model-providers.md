@@ -29,8 +29,8 @@ names it shares that declaration.
   | Provider | Credential |
   | --- | --- |
   | `bedrock` | No API key at all. It resolves credentials through the standard AWS chain instead: `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`, `~/.aws/credentials`, an IAM role, or AWS SSO — whatever you already use for any other AWS SDK call. |
-  | `google` | Either `GOOGLE_API_KEY` or `GEMINI_API_KEY`. Whichever is set first wins. |
-  | `alibaba` | Either `ALIBABA_API_KEY` or `DASHSCOPE_API_KEY`. Whichever is set first wins. |
+  | `google` | Either `GOOGLE_API_KEY` or `GEMINI_API_KEY`. If both are set, `GOOGLE_API_KEY` wins. |
+  | `alibaba` | Either `ALIBABA_API_KEY` or `DASHSCOPE_API_KEY`. If both are set, `ALIBABA_API_KEY` wins. |
 
 - Eight providers also need a separate install before `aqven check` will accept a model on them:
   `anthropic`, `google`, `groq`, `mistral`, `cohere`, `bedrock`, `huggingface`, `xai`. Add the matching
