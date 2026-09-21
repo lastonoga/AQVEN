@@ -55,8 +55,8 @@ Before running anything, open Studio's setup screen: add `/setup` to the address
   for the showcase template. Clicking one opens its canvas — this is how you get to a flow Studio didn't
   land you on automatically.
 
-If a key is missing, open the project's `.env` file and set it there; the Providers tab reflects the
-change on its next check.
+If a key is missing, copy the project's `.env.example` to `.env` (if you haven't already) and set it
+there; the Providers tab reflects the change on its next check.
 
 ### Check
 
@@ -66,11 +66,8 @@ least one provider with a resolved key — `OPENROUTER_API_KEY` for the showcase
 ## 3. Open a flow's canvas
 
 If you want the flow Studio didn't land you on, go back to the Setup screen's Workflow tab and click it;
-otherwise you're already looking at one. Either way, you're now on a canvas: boxes for each step in the
-flow, arrows for what feeds what, and a panel that opens beside the graph when you click a node.
-
-That's as deep as this page goes into the canvas itself — the next page is where you actually learn to
-read it.
+otherwise you're already looking at one. Either way, you now have a flow's canvas open in your browser,
+with nothing left to install or type to get there.
 
 ## What's next
 
