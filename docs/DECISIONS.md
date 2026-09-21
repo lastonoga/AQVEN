@@ -177,7 +177,7 @@ Kitaru 0.26.0 (Apache-2.0) слоем надёжного исполнения н
 | Адаптер GEPA над шаблоном: `TemplateUnitsAdapter`, `AdmissibleReflection`, `PromptOptimizerPort` | GEPA не знает структуры Liquid-шаблона и правил R-T |
 
 **Цепочка гарантий вызова** ([ADR-0029](adr/0029-trust-and-quality-python.md) §1), снаружи внутрь: `OutcomeGateModel` →
-`RedactingModel` → `CassetteModel` → лимитер (`ConcurrencyLimitedModel` или RPM/TPM-бакет) → `BackoffModel` → модель
+`RedactingModel` → `CassetteModel` → `LimiterModel` (частота провайдера, [ADR-0044](adr/0044-provider-rate-limit-and-worker-pool.md)) → `BackoffModel` → модель
 провайдера (SDK с `max_retries=0` и `httpx2.AsyncClient`). Самый внешний спан — capability `Instrumentation`. Звенья —
 `WrapperModel` (Decorator), собирает их только фабрика `aqven_llm` (Builder); порядок проверяется тестом, новое звено —
 только правкой ADR-0029. Цепочка идёт внутри сегментного шага узла `llm`, каждое звено вызывает модель через
