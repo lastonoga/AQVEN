@@ -99,7 +99,8 @@ Both calls came back with `is_error: false` at the MCP envelope level. The only 
 between a clean project and a broken one is `ok` and `diagnostics` inside the result — nothing at the
 protocol level marks this call as having failed.
 
-`pyright_check` on the same project's own code, scoped to one file that's actually there:
+Calling `pyright_check` with `paths: ["my_project/code/support_case.py"]` — a real file already in the
+project, paths here relative to the folder one level above the project root:
 
 ```json
 {
@@ -118,8 +119,8 @@ protocol level marks this call as having failed.
 }
 ```
 
-Add a throwaway `code/_demo.py` with one bad assignment — `value: int = "not an int"` — and call it
-again:
+Add a throwaway `my_project/code/_demo.py` with one bad assignment — `value: int = "not an int"` — and
+call `pyright_check` again with `paths: ["my_project/code/_demo.py"]`:
 
 ```json
 {
