@@ -16,8 +16,9 @@ from aqven.engine.extensions import EngineExtensions
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry, PlanStore
 from aqven.engine.protocol import DBOS_LOG_LEVEL
-from aqven.engine.registry import CoreExecutors, build_executors
+from aqven.engine.registry import CoreExecutors, build_executors, throttled_executors
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, OverrideBook, ToolServices
+from aqven.engine.throttle import WorkerPool
 from aqven.ports.settings import SettingsStore
 
 type ExtensionsFactory = Callable[[ToolServices], EngineExtensions]
@@ -41,6 +42,7 @@ class EngineSetup:
     mcp: McpCaller = field(default_factory=ToolsetMcpCaller)
     log_level: str = DBOS_LOG_LEVEL
     state_dir: Path | None = None
+    max_parallel: int | None = None
 
 
 def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
@@ -53,10 +55,11 @@ def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
         environ=setup.environ,
     )
     extensions = setup.extensions(services)
+    pool = None if setup.max_parallel is None else WorkerPool(setup.max_parallel)
     return EngineRuntime(
         paths=paths,
         plans=PlanRegistry(PlanStore(paths.plans)),
-        executors=build_executors(CoreExecutors(services, setup.mcp), extensions),
+        executors=throttled_executors(build_executors(CoreExecutors(services, setup.mcp), extensions), pool),
         human_layer=extensions.human_layer,
         services=services,
     )

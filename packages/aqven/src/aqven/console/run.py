@@ -9,6 +9,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.settings_store import open_settings_store
+from aqven.app.workers import configured_workers
 from aqven.console.formats import EventFormat
 from aqven.console.llm_errors import cause_lines, error_lines
 from aqven.diagnostics import format_text
@@ -55,6 +56,7 @@ class FlowRunRequest:
     cassette_mode: CassetteMode = CassetteMode.REPLAY_STRICT
     event_format: EventFormat = EventFormat.TEXT
     data_dir: Path | None = None
+    max_parallel: int | None = None
 
 
 def address_label(event: NodeStarted | NodeFinished | NodeOutputDelta | NodeSuspended | NodeAttemptFailed) -> str:
@@ -230,7 +232,9 @@ async def run_flow(request: FlowRunRequest, out: TextIO = sys.stdout, err: TextI
     studio.ensure()
     state = ProjectState(project.root)
     state.ensure()
-    configure_local_engines(standard_engine_setup(settings=open_settings_store(state, studio)))
+    settings = open_settings_store(state, studio)
+    workers = request.max_parallel if request.max_parallel is not None else await configured_workers(settings)
+    configure_local_engines(standard_engine_setup(settings=settings, max_parallel=workers))
     try:
         run = await start_flow(flow, request)
         print(f"run {run.run_id}", file=err, flush=True)

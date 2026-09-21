@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from aqven.engine.executors import CallExecutor, CodeExecutor, NarrowExecutor, SwitchExecutor, ToolExecutor
 from aqven.engine.executors.tool import McpCaller, ToolsetMcpCaller
 from aqven.engine.extensions import EngineExtensions, MissingExecutor
 from aqven.engine.runtime import ToolServices
 from aqven.engine.steps import StepIsolated
+from aqven.engine.throttle import ThrottledExecutor, WorkerPool
 from aqven.ir import CompiledCodeNode, CompiledNarrowNode, CompiledToolNode
 from aqven.ports.execution import NodeExecutor, NodeExecutors
 from aqven.spec import NodeKind
@@ -41,4 +42,15 @@ def build_executors(core: CoreExecutors, extensions: EngineExtensions) -> NodeEx
         loop=_or_missing(extensions.loop, NodeKind.LOOP),
         call=CallExecutor(),
         narrow=core.narrow(),
+    )
+
+
+def throttled_executors(executors: NodeExecutors, pool: WorkerPool | None) -> NodeExecutors:
+    if pool is None:
+        return executors
+    return replace(
+        executors,
+        llm=ThrottledExecutor(executors.llm, pool),
+        code=ThrottledExecutor(executors.code, pool),
+        tool=ThrottledExecutor(executors.tool, pool),
     )

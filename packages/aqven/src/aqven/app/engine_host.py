@@ -3,6 +3,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol
 
+from aqven.app.workers import configured_workers
 from aqven.engine.assembly import standard_engine_setup
 from aqven.engine.facade import DbosEngineFacade, PlanSource
 from aqven.engine.lifecycle import EngineLifecycle, EngineSetup
@@ -31,7 +32,9 @@ class DbosEngineHost:
     lifecycle: EngineLifecycle | None = None
 
     async def start(self, launch: EngineLaunch) -> EngineFacade:
-        lifecycle = EngineLifecycle(root=launch.project_root, setup=replace(self.setup, settings=launch.settings))
+        workers = await configured_workers(launch.settings)
+        setup = replace(self.setup, settings=launch.settings, max_parallel=workers)
+        lifecycle = EngineLifecycle(root=launch.project_root, setup=setup)
         runtime = await asyncio.to_thread(lifecycle.launch)
         self.lifecycle = lifecycle
         plan_source = self.plan_source if self.plan_source is not None else ProjectPlanSource(launch.project_root)

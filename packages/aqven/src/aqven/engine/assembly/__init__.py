@@ -108,6 +108,7 @@ def standard_engine_setup(
     environ: Mapping[str, str] | None = None,
     state_dir: Path | None = None,
     factories: ModelFactories | None = None,
+    max_parallel: int | None = None,
 ) -> EngineSetup:
     extensions = StandardExtensions() if factories is None else StandardExtensions(factories)
     return EngineSetup(
@@ -115,6 +116,7 @@ def standard_engine_setup(
         environ=process_environment() if environ is None else environ,
         extensions=extensions,
         state_dir=state_dir,
+        max_parallel=max_parallel,
     )
 
 

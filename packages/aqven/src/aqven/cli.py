@@ -239,6 +239,13 @@ class RunCommand:
         )
         parser.add_argument("--format", choices=[item.value for item in EventFormat], default=EventFormat.TEXT.value)
         parser.add_argument("--data-dir", type=Path, default=None, help="Studio data directory")
+        parser.add_argument(
+            "--max-parallel",
+            type=int,
+            default=None,
+            metavar="N",
+            help="most nodes executed at once; the project setting runtime.max_parallel by default",
+        )
 
     def execute(self, arguments: argparse.Namespace) -> int:
         root = open_project(_optional_path(arguments.root) or Path.cwd(), OutputFormat.TEXT)
@@ -256,6 +263,7 @@ class RunCommand:
             cassette_mode=CassetteMode(str(arguments.cassette_mode)),
             event_format=EventFormat(str(arguments.format)),
             data_dir=_optional_path(arguments.data_dir),
+            max_parallel=arguments.max_parallel,
         )
         from aqven.console.run import run_flow
 
