@@ -28,4 +28,4 @@ The project MCP operations below are discovered from the AQVEN package source. E
 | `run_resume` |
 | `run_start` |
 
-Start the bridge with `uv run {{CLI_COMMAND}} mcp .`. [Project MCP Server](/engineering/project-mcp-server/) explains safe usage and verification.
+Start the bridge with `uv run {{CLI_COMMAND}} mcp .`. [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/) explains safe usage and verification.

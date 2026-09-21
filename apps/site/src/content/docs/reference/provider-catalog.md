@@ -38,4 +38,4 @@ These providers come from `{{LLM_PYTHON_MODULE}}.catalog.PROVIDERS`. The key col
 | `huggingface` | `pydantic_ai.models.huggingface.HuggingFaceModel` | `HF_TOKEN` | Yes | `huggingface` |
 | `xai` | `pydantic_ai.models.xai.XaiModel` | `XAI_API_KEY` | Yes | `xai` |
 
-Choose a model with `<provider>:<model-name>` in an Agent file. The [provider guide](/engineering/providers/) shows complete project declarations and custom factories.
+Choose a model with `<provider>:<model-name>` in an Agent file. The [provider guide](/integrations/model-providers/) shows complete project declarations and custom factories.
