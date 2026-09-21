@@ -70,6 +70,14 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 [JSON Schema](/reference/schemas/ProviderCapabilitiesSpec.json)
 
+## ProviderLimits
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `rpm` | `integer \| null` | No | `None` | — |
+
+[JSON Schema](/reference/schemas/ProviderLimits.json)
+
 ## ProviderSpec
 
 | YAML field | Type | Required | Default | Constraints |
@@ -83,6 +91,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `base_url` | `string \| null` | No | `None` | — |
 | `data_policy` | `DataPolicy` | Yes | `—` | — |
 | `routing` | `OpenRouterRouting \| null` | No | `None` | — |
+| `limits` | `ProviderLimits \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/ProviderSpec.json)
 
