@@ -1,3 +1,5 @@
+import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
 import mermaid from "astro-mermaid";
 import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
@@ -7,12 +9,14 @@ import { replaceDocsTokens } from "./docs.tokens.mjs";
 
 export default defineConfig({
   site: "https://aqvenstudio.com",
+  vite: { plugins: [tailwindcss()] },
   markdown: { processor: unified({ remarkPlugins: [replaceDocsTokens] }) },
   redirects: {
     "/": "/start/",
     "/engineering/reference": "/reference",
   },
   integrations: [
+    react(),
     mermaid({
       theme: "forest",
       autoTheme: true,
