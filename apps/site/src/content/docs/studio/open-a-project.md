@@ -12,9 +12,9 @@ closing your terminal, restarting your machine, or switching away to work on som
 
 ## Steps
 
-- From inside the project's folder, run `{{CLI_COMMAND}} studio` (its alias `{{CLI_COMMAND}} dev` does
-  the same thing). This is the same command whether the project is brand new or you've had it open a
-  dozen times before.
+- From inside the project's folder, run `{{CLI_COMMAND}} studio` (or `{{CLI_COMMAND}} dev` — same
+  command, two names). This is the same command whether the project is brand new or you've had it open
+  a dozen times before.
 - Studio doesn't show a landing page first. It opens straight on a flow's canvas: the flow you most
   recently ran, or, if you haven't run anything in this project yet, the one with the most nodes.
 - There's no in-app project picker or "recent projects" list — which project Studio serves is decided
