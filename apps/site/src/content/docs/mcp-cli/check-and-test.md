@@ -202,6 +202,14 @@ assertion — `4` becomes `5` — and run it again:
 Remove the throwaway file and the type typo when you're done — none of this belongs in a project you'd
 actually commit.
 
+## Under the hood
+
+`pyright_check` and `pytest_run` call the exact same pyright and pytest installed in the project's own
+environment — the ones a terminal command would call. AQVEN just reshapes their output into one
+consistent result: pyright's `--outputjson` becomes 1-based `line`/`column` diagnostics, and pytest's
+JUnit XML report becomes the `failures` list above, so an agent reads one predictable shape instead of
+two different tool output formats.
+
 ## See also
 
 - [How to check a project before committing](/engine/check/) — the same check, run as
