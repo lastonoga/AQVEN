@@ -131,9 +131,14 @@ dump of every field.
   Cover: the 11 real ops (not a "replace" or node-level "delete" — it's `set`/`remove_node`), the
   `expects[]`/CAS mechanism (three conflict codes: `FILE_EXISTS`, `FILE_VANISHED`, `STALE_FILE`), that
   `expects[]` must cover every file the ops end up touching (`_require_coverage`, with the `candidates`
-  hint on failure), `client_op_id` idempotent replay, and `dry_run`. Cross-reference
-  `/concepts/what-this-is-built-on/`'s "two ways to change a project" concept — this tool IS one of the
-  two ways (structural edits go through here, not direct file writes).
+  hint on failure), `client_op_id` idempotent replay, and `dry_run`.
+- [ ] **Correction (found while executing this task, 2026-09-22):** the design doc's Concepts list has
+  a page called "Два способа менять проект" (item 11) that would be the natural cross-reference here —
+  it does NOT exist yet (it's Wave 6 scope, not written). `/concepts/what-this-is-built-on/` (already
+  published) does NOT cover this — it's about third-party libraries, not the file-edit-vs-`flow_patch`
+  distinction. Don't link to `/concepts/what-this-is-built-on/` for this concept — either explain
+  direct-edit-vs-`flow_patch` inline in your own words (what Task 1.3 did), or, once Wave 6 publishes
+  the real page, add the link in a follow-up edit. Do not force a link to content that isn't there.
 - [ ] Run check, commit: `git commit -m "docs: add mcp-cli/edit-a-flow how-to"`.
 
 ### Task 1.4: `mcp-cli/read-project-structure.md` — how-to (the corrected page)
@@ -143,10 +148,13 @@ dump of every field.
 - [ ] Frontmatter: `title: How an agent reads a project's structure`, one-sentence `description`.
 - [ ] **This replaces the design doc's original, wrong "catalog" page** — there is no
   `catalog_list`/`catalog_get`/listing MCP tool. Say so plainly and explain the real, deliberate design:
-  a flow is files on disk (per `/concepts/what-this-is-built-on/`'s files-as-source-of-truth concept,
-  already published — link there), so an agent reads them with its own file tools (whatever it calls
+  a flow is files on disk, so an agent reads them with its own file tools (whatever it calls
   "Read"/"Grep"/"Glob") the same way it reads any other code in the project — no special MCP tool needed
-  for that. Cover the one real, structured alternative from the terminal: `{{CLI_COMMAND}} tree` and
+  for that. **Same correction as Task 1.3**: the natural cross-reference for "files are the source of
+  truth" would be design doc Concepts item 3 ("Файлы как источник правды") — it does NOT exist yet
+  either (Wave 6 scope). Don't link to `/concepts/what-this-is-built-on/` for this claim — explain it
+  inline instead, or add the link once Wave 6 publishes that page. Cover the one real, structured
+  alternative from the terminal: `{{CLI_COMMAND}} tree` and
   `{{CLI_COMMAND}} refs` (already documented on `/engine/inspect-project/` — link there, don't repeat).
   Also mention `flow_list`/`flow_get` exist as REST routes for Studio's own UI but are deliberately not
   exposed over MCP — so don't reach for them from an agent context.
@@ -213,10 +221,14 @@ corrected §4 "MCP и CLI" list, all 18 real tools distributed across them, none
 **Placeholders:** none. The corrected page 4 is not a gap — it's a deliberate, accurate description of
 what doesn't exist and why, replacing content that would have been actively wrong.
 
-**Consistency:** cross-references to `/concepts/what-this-is-built-on/`, `/concepts/engineering-loop/`,
-`/engine/check/`, `/engine/inspect-project/`, `/engine/prompts/`, `/engine/llm-node/`,
-`/studio/settings/`, `/studio/investigate-a-run/`, `/studio/evals/` all point at pages that already
-exist (Waves 1-3, merged).
+**Consistency:** cross-references to `/concepts/engineering-loop/`, `/engine/check/`,
+`/engine/inspect-project/`, `/engine/prompts/`, `/engine/llm-node/`, `/studio/settings/`,
+`/studio/investigate-a-run/`, `/studio/evals/` all point at pages that already exist (Waves 1-3,
+merged). **Correction found during execution:** `/concepts/what-this-is-built-on/` was originally
+planned as the cross-reference for "files as source of truth" and "two ways to change a project" —
+neither concept is actually on that page (it covers third-party libraries only); those are separate,
+unwritten Concepts pages (Wave 6, design doc items 3 and 11). Tasks 1.3/1.4 explain the concepts inline
+instead of linking to the wrong page — a follow-up pass after Wave 6 should add the real links.
 
 ## Next
 
