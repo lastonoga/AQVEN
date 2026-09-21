@@ -24,6 +24,7 @@ export default defineConfig({
     "/reference/http-api": "/engineering/runs-and-integration",
     "/reference/configuration": "/engineering/project-layout",
     "/reference/diagnostics": "/engineering/testing-and-evaluation",
+    "/engineering/reference": "/reference",
   },
   integrations: [
     mermaid({
