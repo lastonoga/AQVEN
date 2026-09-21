@@ -1,9 +1,20 @@
 [project]
 name = "aqven"
 version = "0.0.0"
+description = "Engineering layer for reliable AI workflows: files as the source of truth, a compiler, a checkpointed runtime and a local Studio."
+readme = "README.md"
+keywords = ["ai", "llm", "workflow", "agents", "evaluation", "pydantic-ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 requires-python = ">=3.14,<3.15"
 dependencies = [
-    "aqven-llm",
+    "aqven-llm==0.0.0",
     "pydantic==2.13.5",
     "ruamel.yaml==0.19.1",
     "python-liquid==2.3.1",
@@ -27,15 +38,21 @@ dependencies = [
     "python-dotenv==1.2.3",
 ]
 
+[project.urls]
+Homepage = "https://aqvenstudio.com"
+Documentation = "https://aqvenstudio.com"
+Repository = "https://github.com/lastonoga/AQVEN"
+Issues = "https://github.com/lastonoga/AQVEN/issues"
+
 [project.optional-dependencies]
-anthropic = ["aqven-llm[anthropic]"]
-bedrock = ["aqven-llm[bedrock]"]
-cohere = ["aqven-llm[cohere]"]
-google = ["aqven-llm[google]"]
-groq = ["aqven-llm[groq]"]
-huggingface = ["aqven-llm[huggingface]"]
-mistral = ["aqven-llm[mistral]"]
-xai = ["aqven-llm[xai]"]
+anthropic = ["aqven-llm[anthropic]==0.0.0"]
+bedrock = ["aqven-llm[bedrock]==0.0.0"]
+cohere = ["aqven-llm[cohere]==0.0.0"]
+google = ["aqven-llm[google]==0.0.0"]
+groq = ["aqven-llm[groq]==0.0.0"]
+huggingface = ["aqven-llm[huggingface]==0.0.0"]
+mistral = ["aqven-llm[mistral]==0.0.0"]
+xai = ["aqven-llm[xai]==0.0.0"]
 
 [project.scripts]
 aqven = "aqven.cli:run"
