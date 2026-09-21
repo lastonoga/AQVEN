@@ -17,10 +17,11 @@ files to match.
 
 ## Steps
 
-- `{{CLI_COMMAND}} generate <path>` reads every type file under `types/`, plus the input and output
-  shapes of every inference, tool, and `code` node, and writes one Pydantic model per shape into
-  `types.py` at the project root. It always overwrites the whole file and prints `types.py` — the
-  path it wrote, relative to the project root — whether or not anything actually changed.
+- `{{CLI_COMMAND}} generate <path>` reads every type file under `types/` and writes it into
+  `types.py` at the project root — a record becomes a Pydantic model, an enum or id type becomes a
+  plain type alias. It also writes a Pydantic model for the input and output shape of every inference,
+  tool, and `code` node. It always overwrites the whole file and prints `types.py` — the path it
+  wrote, relative to the project root — whether or not anything actually changed.
 - A field you add to a type shows up as a field on the matching class the next time you run `generate`.
   A type that can't be built at all — most often because one of its fields points at a type id that
   doesn't exist — is silently left out of `types.py` instead of stopping the command. `generate` still
