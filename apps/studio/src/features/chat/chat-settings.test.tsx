@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { IntlProvider } from "use-intl"
 import { describe, expect, it, vi } from "vitest"
-import type { ApiChatModelCatalog } from "@/domain"
+import type { ApiChatModelCatalog, ApiChatSession } from "@/domain"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { DEFAULT_CHAT_CHOICE, keptEffort, offeredEfforts, type ChatChoice } from "./chat-choice"
@@ -41,6 +41,7 @@ function mount(choice: ChatChoice, onChange: Dispatch<SetStateAction<ChatChoice>
       <TooltipProvider>
         <ChatSettings
           backend={catalog.backend}
+          session={null}
           choice={choice}
           disabled={false}
           onChange={onChange}
@@ -62,10 +63,10 @@ describe("chat settings", () => {
     expect(keptEffort(CATALOG, "gpt-5.6-sol", "low")).toBe("low")
   })
 
-  it("shows the default model on the composer trigger until one is chosen", async () => {
+  it("falls back to the agent default before anything is chosen", async () => {
     mount(DEFAULT_CHAT_CHOICE, vi.fn())
     await waitFor(() => {
-      expect(screen.getByRole("combobox", { name: "Model and agent settings" }).textContent).toContain("Default model")
+      expect(screen.getByRole("combobox", { name: "Model and agent settings" }).textContent).toContain("Agent default")
     })
   })
 
@@ -114,6 +115,7 @@ describe("chat settings", () => {
         <TooltipProvider>
           <ChatSettings
             backend="claude"
+            session={null}
             choice={DEFAULT_CHAT_CHOICE}
             disabled={false}
             onChange={vi.fn()}
@@ -126,5 +128,52 @@ describe("chat settings", () => {
     fireEvent.click(screen.getByRole("combobox", { name: "Model and agent settings" }))
     await waitFor(() => { expect(screen.getByText("Model list unavailable")).toBeDefined() })
     expect(screen.getByText("Manual")).toBeDefined()
+  })
+})
+
+describe("chat settings with a thread open", () => {
+  const SESSION: ApiChatSession = {
+    session_id: "01a0b15e-69af-71c7-a54d-213c4df2385e",
+    backend: "codex",
+    project_root: "/tmp/lumen",
+    flow_id: null,
+    model: null,
+    effort: null,
+    permission_mode: "default",
+    created_at: "2026-09-21T10:00:00Z",
+    last_seq: 0,
+  }
+
+  const mountWithSession = (session: ApiChatSession, choice: ChatChoice) =>
+    render(
+      <IntlProvider locale="en" messages={messages.en}>
+        <TooltipProvider>
+          <ChatSettings
+            backend="codex"
+            session={session}
+            choice={choice}
+            disabled={false}
+            onChange={vi.fn()}
+            loadModels={() => Promise.resolve(CATALOG)}
+          />
+        </TooltipProvider>
+      </IntlProvider>,
+    )
+
+  it("names what the open thread actually runs, not the pending choice", async () => {
+    mountWithSession(SESSION, { model: "gpt-5.6-thinker", effort: "max", permissionMode: "trust" })
+    await waitFor(() => {
+      const label = screen.getByRole("combobox", { name: "Model and agent settings" }).textContent
+      expect(label).toContain("Agent default")
+      expect(label).not.toContain("GPT-5.6-Thinker")
+      expect(label).not.toContain("Max")
+    })
+  })
+
+  it("says the menu applies to a new thread while one is open", async () => {
+    mountWithSession(SESSION, DEFAULT_CHAT_CHOICE)
+    await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model and agent settings" })).toBeDefined() })
+    fireEvent.click(screen.getByRole("combobox", { name: "Model and agent settings" }))
+    await waitFor(() => { expect(screen.getByText("For a new thread")).toBeDefined() })
   })
 })

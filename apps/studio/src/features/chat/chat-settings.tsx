@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react"
 import { Check, FileCode, Hand, Map as MapIcon, Zap } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiChatBackendKind, ApiChatModelCatalog } from "@/domain"
+import type { ApiChatBackendKind, ApiChatModelCatalog, ApiChatSession } from "@/domain"
 import { PickerCommand, PickerOption, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { CommandList } from "@/components/ui/command"
@@ -19,6 +19,7 @@ const MODE_ICONS = { default: Hand, accept_edits: FileCode, plan: MapIcon, trust
 
 export type ChatSettingsProps = {
   readonly backend: ApiChatBackendKind
+  readonly session: ApiChatSession | null
   readonly choice: ChatChoice
   readonly disabled: boolean
   readonly onChange: Dispatch<SetStateAction<ChatChoice>>
@@ -39,7 +40,7 @@ function Row({ selected, children, onSelect, value }: {
   )
 }
 
-export function ChatSettings({ backend, choice, disabled, onChange, loadModels }: ChatSettingsProps) {
+export function ChatSettings({ backend, session, choice, disabled, onChange, loadModels }: ChatSettingsProps) {
   const t = useTranslations("chat.settings")
   const modes = useTranslations("domain.chatPermissionMode")
   const [state, setState] = useState<CatalogState>({ kind: "loading" })
@@ -60,10 +61,14 @@ export function ChatSettings({ backend, choice, disabled, onChange, loadModels }
   const fresh = state.kind !== "loading" && state.backend === backend
   const catalog = fresh && state.kind === "ready" ? state.catalog : null
   const efforts = offeredEfforts(catalog, choice.model)
-  const chosen = selectedModel(catalog, choice.model)
-  const modelLabel = chosen?.display_name ?? choice.model ?? t("modelDefault")
+  const running = session === null ? null : { model: session.model, effort: session.effort ?? null }
+  const shownModel = running === null ? choice.model : running.model
+  const shownEffort = running === null ? choice.effort : running.effort
+  const chosen = selectedModel(catalog, shownModel)
+  const modelLabel = chosen?.display_name ?? shownModel ?? t("modelAgentDefault")
   const effortIndex = choice.effort === null ? -1 : efforts.indexOf(choice.effort)
   const effortLabel = choice.effort === null ? t("effortAuto") : t(`effort.${choice.effort}`)
+  const shownEffortLabel = shownEffort === null ? null : t(`effort.${shownEffort}`)
 
   const pickModel = (model: string | null): void => {
     onChange({ ...choice, model, effort: keptEffort(catalog, model, choice.effort) })
@@ -87,13 +92,15 @@ export function ChatSettings({ backend, choice, disabled, onChange, loadModels }
           className="min-w-0 max-w-64 gap-1.5 px-2"
         >
           <Text role="hint" truncate>{modelLabel}</Text>
-          {choice.effort === null ? null : <Text role="hint" tone="neutral" truncate>{effortLabel}</Text>}
+          {shownEffortLabel === null ? null : <Text role="hint" tone="neutral" truncate>{shownEffortLabel}</Text>}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="dark w-[21rem] max-w-[calc(100vw-2rem)] gap-0 p-1">
         <PickerCommand>
           <CommandList className="max-h-[26rem]">
-            <Text as="p" role="caption" tone="neutral" className="px-3 pt-2 pb-1">{t("modelLabel")}</Text>
+            <Text as="p" role="caption" tone="neutral" className="px-3 pt-2 pb-1">
+              {session === null ? t("modelLabel") : t("forNextThread")}
+            </Text>
             {(catalog?.models ?? []).map((entry) => (
               <Row key={entry.id} value={entry.id} selected={choice.model === entry.id} onSelect={() => { pickModel(entry.id) }}>
                 <span className="flex min-w-0 flex-col gap-0.5">
@@ -150,6 +157,7 @@ export function ComposerChatSettings() {
   return (
     <ChatSettings
       backend={control.backend}
+      session={control.session}
       choice={control.choice}
       disabled={control.disabled}
       onChange={control.onChange}

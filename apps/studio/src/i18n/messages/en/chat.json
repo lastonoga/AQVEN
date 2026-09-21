@@ -74,6 +74,8 @@
       "max": "Max"
     },
     "menuAria": "Model and agent settings",
-    "effortAuto": "Auto"
+    "effortAuto": "Auto",
+    "modelAgentDefault": "Agent default",
+    "forNextThread": "For a new thread"
   }
 }

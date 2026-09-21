@@ -169,7 +169,14 @@ export function ChatPanel({ header }: ChatPanelProps) {
   const visibleState: PanelState = state.kind === "loading" || backend === null || state.backend === backend ? state : { kind: "loading" }
   const control: ChatChoiceControl | null = backend === null
     ? null
-    : { backend, choice, disabled: creating || pending !== null, onChange: setChoice, loadModels: api.chat.models }
+    : {
+        backend,
+        session: visibleState.kind === "ready" ? visibleState.session : null,
+        choice,
+        disabled: creating || pending !== null,
+        onChange: setChoice,
+        loadModels: api.chat.models,
+      }
 
   return (
     <ChatChoiceContext value={control}>
