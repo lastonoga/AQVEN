@@ -92,7 +92,16 @@ export default defineConfig({
         },
         {
           label: "MCP & CLI",
-          items: [],
+          items: [
+            { slug: "mcp-cli" },
+            { slug: "mcp-cli/connect-an-agent" },
+            { slug: "mcp-cli/check-and-test" },
+            { slug: "mcp-cli/edit-a-flow" },
+            { slug: "mcp-cli/read-project-structure" },
+            { slug: "mcp-cli/runs" },
+            { slug: "mcp-cli/datasets-and-evals" },
+            { slug: "mcp-cli/preview-a-prompt" },
+          ],
         },
         {
           label: "Integrations",
