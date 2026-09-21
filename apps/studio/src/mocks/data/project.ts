@@ -1,7 +1,7 @@
 import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiType, ApiTypeDetail } from "@/domain"
 
 export const liveProject: ApiProject = {
-  "root": "/Users/kirunya/Projects/my/ai-workflows-automate/aqven-py/examples/lumen",
+  "root": "/Users/kirunya/Projects/my/ai-workflows-automate/examples/lumen",
   "package": "lumen",
   "engine_version": "0.0.0",
   "tree_hash": "sha256-51738bc48cb197f1fb49936cac7046b171fba364615557bc835fc8218aa74ad6",

@@ -531,7 +531,7 @@ Extras `[openai,anthropic,google]` в `uv.lock` не попали: `anthropic` �
 Агент `claude` стал `mistral`, `grok` удалён, узел эскалации перешёл на `deepseek`, tie-break — на `gpt`,
 `record__extract` — на `gemini` (mistral-nemo принимает только текст, а узлу нужны `Image?` и `Document?`).
 Места, где ветку пришлось задать кодом или входом, а не моделью, перечислены в
-[examples/DESIGN.md](../../aqven-py/examples/DESIGN.md) §6.2.
+[examples/DESIGN.md](../../examples/DESIGN.md) §6.2.
 
 ### A16. Живые расходы этой работы
 
@@ -542,10 +542,10 @@ Extras `[openai,anthropic,google]` в `uv.lock` не попали: `anthropic` �
 
 ### A17. Руководство по сборке потоков
 
-[aqven-py/docs/building-flows.md](../../aqven-py/docs/building-flows.md) — как строить flow внутри этой раскладки: цикл
+[docs/library/building-flows.md](../library/building-flows.md) — как строить flow внутри этой раскладки: цикл
 «правка → `aqven check` → `aqven prompt preview` → pytest», связывание данных, правила промтов, выбор модели и режима
 вывода, сценарные тесты с подстановкой выходов узлов и разбор диагностик. Раскладка файлов —
-[aqven-py/docs/project-structure.md](../../aqven-py/docs/project-structure.md).
+[docs/library/project-structure.md](../library/project-structure.md).
 
 ## Поправка 2026-09-18 по итогам интеграции со Studio
 

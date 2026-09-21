@@ -67,6 +67,7 @@
 | Версии, границы «берём/пишем» | docs/DECISIONS.md |
 | Имена MCP-тулов | docs/14-mcp-contract.md |
 | Таблицы и колонки БД | docs/16-data-model.md |
+| Раскладка монорепо, корни workspace, CI | docs/adr/0036-single-root-monorepo.md — пока docs/20-repo-and-tooling.md не переписан |
 | Состав пакетов монорепо | docs/adr/0025-python-engine.md §2, §6 — пока docs/20-repo-and-tooling.md не переписан |
 | Порты и адаптеры | docs/adr/0025-python-engine.md и docs/02-architecture.md; при расхождении прав ADR, пока 02 не вычищен |
 | Раскладка определений на диске, запись, CAS, история | docs/adr/0026-yaml-spec-and-code-refs.md §2, §4, §9 и docs/files-first/; при расхождении прав ADR-0026, пока files-first не вычищен |
