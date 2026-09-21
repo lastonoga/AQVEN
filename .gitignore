@@ -24,3 +24,5 @@ __pycache__/
 !.vscode/extensions.json
 
 /aqven-test-run/
+
+.worktrees/
