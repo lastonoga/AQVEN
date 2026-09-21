@@ -121,10 +121,22 @@ human-approval → параллельные черновики → panel/vote �
 1. **Подключить AQVEN как MCP-сервер к своему агенту** (tutorial) — `aqven mcp`/`aqven serve`
 2. **Проверка и сборка инструментами агента** (how-to) — `aqven_check`, `pyright_check`, `pytest_run`
 3. **Структурная правка через агента** (how-to) — `flow_patch`, что такое CAS и зачем он агенту
-4. **Просмотр каталога** (how-to) — `catalog_list/get`, `flow_list/get`
-5. **Прогоны через MCP** (how-to) — `run_start/get/list/events/resume/fork/cancel`
-6. **Датасеты и эвалы через MCP** (how-to) — `dataset_batch_*`, `eval_run_*`, `eval_gate`
+4. **Как агент читает структуру проекта** (how-to) — **исправлено 2026-09-22**: `catalog_list`/`catalog_get`
+   не существуют нигде в коде (проверено — 0 совпадений), это была ошибка более раннего плана, не
+   реальная возможность. `flow_list`/`flow_get` реальны, но REST-only, намеренно исключены из MCP —
+   дизайн простой: флоу — обычные файлы проекта, агент читает их своими файловыми инструментами
+   (Read/Grep/Glob), а не через листинг-тул; `aqven tree`/`aqven refs` — тот же путь из терминала
+   (уже в `/engine/inspect-project/`). Страница объясняет это намеренное отсутствие, а не выдумывает
+   несуществующий тул.
+5. **Прогоны через MCP** (how-to) — `run_start/get/list/get_node/events/resume/fork/cancel` (8 тулов,
+   не 7 — `run_get_node` пропущен в исходном списке)
+6. **Датасеты и эвалы через MCP** (how-to) — `dataset_batch_start/get`, `eval_run_start/get`, `eval_gate`
 7. **Превью промта через MCP** (how-to) — `prompt_preview`
+
+Реальных MCP-тулов всего 18 (не 22, как считала более ранняя инвентаризация) — 4 всегда включены
+(`aqven_check`, `pyright_check`, `pytest_run`, `prompt_preview`), 14 условны на конфигурации сервера
+(`flow_patch` — 1, run-тулы — 8, eval/dataset-тулы — 5). Полная проверенная инвентаризация —
+[docs/research/site-ia-mcp-cli-surface.md](../../research/site-ia-mcp-cli-surface.md).
 
 Под капотом: транспорт — официальный `mcp` Python SDK (протокол не наш), сервер смонтирован
 на том же FastAPI-процессе, что и HTTP API — один порт, один процесс, не два разных сервиса.
