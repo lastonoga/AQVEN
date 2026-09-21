@@ -406,6 +406,27 @@ directory-tree facts.
 pairwise. Cross-references between Task 1.8 (`loop-node`) and the two already-published Wave 1 pages
 that use the same `record` example are called out explicitly to avoid contradiction.
 
+## Follow-ups noted during execution (not yet done)
+
+- **`engine/code-node.md` example is too heavy.** The implementer used the showcase's real `prepare`
+  node verbatim, including its lookup-table constants (`SIGNAL_LABELS`, `CATEGORY_SIGNALS`,
+  `INTAKE_FIELDS`) — a wall of code that buries the actual point of the page (a plain function, typed
+  input in, typed record out). User feedback (2026-09-21): simplify to a genuinely small function that
+  still calls real generated types, not a trimmed-but-still-large excerpt of `prepare`. Needs either a
+  different, smaller real node from showcase (verify one exists before assuming) or a minimal
+  hand-written example — same "must actually be real/runnable, not pseudocode" bar as every other page
+  in this plan, just smaller in scope. Revisit after this wave's other pages land.
+
+- **Node-kind pages that group nested/sub-nodes should show the real directory structure, not just
+  YAML content.** User feedback (2026-09-21): for `parallel` (branch nodes grouped in a folder, e.g.
+  showcase's `drafts/` holding `gpt.node.yaml`/`gemini.node.yaml`/`mistral.node.yaml`), `map` (body
+  node), and any other kind where nesting maps to a folder on disk, add a short file-tree block (the
+  same style `start/quickstart.md` used for the project layout) alongside the YAML, so the reader sees
+  how the nesting looks in the filesystem, not only what's inside one file. Applies at minimum to
+  `engine/parallel-node.md` and `engine/map-node.md` (already published, need a follow-up pass) and to
+  `engine/switch-node.md`/`engine/loop-node.md`/`engine/call-node.md` if their examples also nest files
+  — verify per page rather than assuming all five need it.
+
 ## Next
 
 After this wave: Studio (9 pages), MCP & CLI (7 pages), Integrations (3 pages), the remaining 9
