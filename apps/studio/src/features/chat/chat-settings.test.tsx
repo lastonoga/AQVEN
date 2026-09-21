@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { IntlProvider } from "use-intl"
 import { describe, expect, it, vi } from "vitest"
 import type { ApiChatModelCatalog } from "@/domain"
@@ -61,14 +61,27 @@ describe("chat settings", () => {
     expect(keptEffort(CATALOG, "gpt-5.6-sol", "low")).toBe("low")
   })
 
-  it("shows the default model until one is chosen", async () => {
+  it("shows the default model on the composer trigger until one is chosen", async () => {
     mount(DEFAULT_CHAT_CHOICE, vi.fn())
-    await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model" }).textContent).toContain("Default model") })
+    await waitFor(() => {
+      expect(screen.getByRole("combobox", { name: "Model and agent settings" }).textContent).toContain("Default model")
+    })
   })
 
-  it("names the chosen model on the trigger", async () => {
+  it("names the chosen model on the composer trigger", async () => {
     mount({ ...DEFAULT_CHAT_CHOICE, model: "gpt-5.6-sol" }, vi.fn())
-    await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model" }).textContent).toContain("GPT-5.6-Sol") })
+    await waitFor(() => {
+      expect(screen.getByRole("combobox", { name: "Model and agent settings" }).textContent).toContain("GPT-5.6-Sol")
+    })
+  })
+
+  it("keeps effort and approvals inside the menu, not in the panel", async () => {
+    mount(DEFAULT_CHAT_CHOICE, vi.fn())
+    await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model and agent settings" })).toBeDefined() })
+    expect(screen.queryByRole("radiogroup", { name: "Approvals" })).toBeNull()
+    fireEvent.click(screen.getByRole("combobox", { name: "Model and agent settings" }))
+    await waitFor(() => { expect(screen.getByRole("radiogroup", { name: "Approvals" })).toBeDefined() })
+    expect(screen.getByRole("radiogroup", { name: "Reasoning effort" })).toBeDefined()
   })
 
   it("keeps approvals visible even when the catalog fails to load", async () => {
@@ -85,6 +98,8 @@ describe("chat settings", () => {
         </TooltipProvider>
       </IntlProvider>,
     )
+    await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model and agent settings" })).toBeDefined() })
+    fireEvent.click(screen.getByRole("combobox", { name: "Model and agent settings" }))
     await waitFor(() => { expect(screen.getByText("Model list unavailable")).toBeDefined() })
     expect(screen.getByRole("radiogroup", { name: "Approvals" })).toBeDefined()
   })

@@ -19,7 +19,7 @@ import { flowRouteApi } from "@/lib/routes"
 import { useChatBackend } from "@/features/chat-backend"
 import { ChatSession } from "./chat-session"
 import { DEFAULT_CHAT_CHOICE, type ChatChoice } from "./chat-choice"
-import { ChatSettings } from "./chat-settings"
+import { ChatChoiceContext, type ChatChoiceControl } from "./chat-choice-context"
 import { ChatThreadList } from "./chat-thread-list"
 import { chatTransport, type ChatTransport } from "./chat-transport"
 
@@ -167,8 +167,12 @@ export function ChatPanel({ header }: ChatPanelProps) {
   }
 
   const visibleState: PanelState = state.kind === "loading" || backend === null || state.backend === backend ? state : { kind: "loading" }
+  const control: ChatChoiceControl | null = backend === null
+    ? null
+    : { backend, choice, disabled: creating || pending !== null, onChange: setChoice, loadModels: api.chat.models }
 
   return (
+    <ChatChoiceContext value={control}>
     <Surface variant="plain" className="dark flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       {header}
       {backend === null && backendError !== null ? (
@@ -181,15 +185,6 @@ export function ChatPanel({ header }: ChatPanelProps) {
         </div>
       ) : (
         <>
-          {visibleState.kind === "ready" ? (
-            <ChatSettings
-              backend={visibleState.backend}
-              choice={choice}
-              disabled={creating || pending !== null}
-              onChange={setChoice}
-              loadModels={api.chat.models}
-            />
-          ) : null}
           {visibleState.kind === "ready" ? (
             <ChatThreadList
               sessions={visibleState.sessions}
@@ -205,5 +200,6 @@ export function ChatPanel({ header }: ChatPanelProps) {
         </>
       )}
     </Surface>
+    </ChatChoiceContext>
   )
 }
