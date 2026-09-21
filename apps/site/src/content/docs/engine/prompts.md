@@ -94,7 +94,7 @@ Business customer: when options are otherwise equal, pick the one that restores 
 {% endcase %}
 Customer id: {{ customer.customer_id }}.
 Order number: {{ order_id }}.
-Credit store credit against this customer id and order number.
+Issue store credit against this customer id and order number.
 {% case symptom %}
 {% when "no_power" %}
 Symptom: the device doesn't turn on.
