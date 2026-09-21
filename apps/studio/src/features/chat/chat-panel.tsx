@@ -4,6 +4,8 @@ import type {
   ApiChatApprovalReply,
   ApiChatMessageRequest,
   ApiChatSession,
+  ApiChatBackendKind,
+  ApiChatModelCatalog,
   ApiChatSessionCreate,
   ApiChatStatus,
   ChatSessionId,
@@ -16,6 +18,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { flowRouteApi } from "@/lib/routes"
 import { useChatBackend } from "@/features/chat-backend"
 import { ChatSession } from "./chat-session"
+import { DEFAULT_CHAT_CHOICE, type ChatChoice } from "./chat-choice"
+import { ChatSettings } from "./chat-settings"
 import { ChatThreadList } from "./chat-thread-list"
 import { chatTransport, type ChatTransport } from "./chat-transport"
 
@@ -23,6 +27,7 @@ export type ChatPanelProps = { readonly header: ReactNode }
 
 export type ChatApi = {
   readonly status: () => Promise<ApiChatStatus>
+  readonly models: (backend: ApiChatBackendKind) => Promise<ApiChatModelCatalog>
   readonly sessions: () => Promise<readonly ApiChatSession[]>
   readonly create: (body: ApiChatSessionCreate) => Promise<ApiChatSession>
   readonly send: (sessionId: ChatSessionId, body: ApiChatMessageRequest) => Promise<unknown>
@@ -35,10 +40,11 @@ type PanelState =
   | { readonly kind: "ready"; readonly backend: ApiChatSession["backend"]; readonly sessions: readonly ApiChatSession[]; readonly session: ApiChatSession | null }
   | { readonly kind: "offline"; readonly backend: ApiChatSession["backend"]; readonly detail: string }
 
-const newSession = (flowId: FlowId): ApiChatSessionCreate => ({
+const newSession = (flowId: FlowId, choice: ChatChoice): ApiChatSessionCreate => ({
   flow_id: flowId,
-  model: null,
-  permission_mode: "default",
+  model: choice.model,
+  effort: choice.effort,
+  permission_mode: choice.permissionMode,
   resume_session_id: null,
 })
 
@@ -108,6 +114,7 @@ export function ChatPanel({ header }: ChatPanelProps) {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
+  const [choice, setChoice] = useState<ChatChoice>(DEFAULT_CHAT_CHOICE)
 
   useEffect(() => {
     let live = true
@@ -142,7 +149,7 @@ export function ChatPanel({ header }: ChatPanelProps) {
         setCreateError(status.detail ?? status.state)
         return
       }
-      const session = await api.chat.create(newSession(flowId))
+      const session = await api.chat.create(newSession(flowId, choice))
       if (session.backend !== backend) {
         setCreateError(chat("selectedAgentChanged"))
         retry()
@@ -174,6 +181,15 @@ export function ChatPanel({ header }: ChatPanelProps) {
         </div>
       ) : (
         <>
+          {visibleState.kind === "ready" ? (
+            <ChatSettings
+              backend={visibleState.backend}
+              choice={choice}
+              disabled={creating || pending !== null}
+              onChange={setChoice}
+              loadModels={api.chat.models}
+            />
+          ) : null}
           {visibleState.kind === "ready" ? (
             <ChatThreadList
               sessions={visibleState.sessions}

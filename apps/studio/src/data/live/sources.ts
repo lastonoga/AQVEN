@@ -1,5 +1,6 @@
 import type {
   ApiChatApprovalReply,
+  ApiChatBackendKind,
   ApiChatBackendWrite,
   ApiChatMessageRequest,
   ApiChatSessionCreate,
@@ -231,6 +232,8 @@ const evals = {
 
 const chat = {
   status: async () => unwrap(await api.GET("/api/chat/status")),
+  models: async (backend: ApiChatBackendKind) =>
+    unwrap(await api.GET("/api/chat/models", { params: { query: { backend } } })),
   backend: async () => unwrap(await api.GET("/api/chat/backend")),
   selectBackend: async (body: ApiChatBackendWrite) => unwrap(await api.PUT("/api/chat/backend", { body })),
   sessions: async () => unwrap(await api.GET("/api/chat/sessions")).items,

@@ -624,6 +624,22 @@ export const handlers = [
   }),
 
   http.get(`${API_BASE}/chat/status`, () => served(liveChatStatus)),
+  http.get(`${API_BASE}/chat/models`, ({ request }) =>
+    served({
+      backend: new URL(request.url).searchParams.get("backend") === "codex" ? "codex" : "claude",
+      models: [
+        {
+          id: "sonnet",
+          display_name: "Sonnet",
+          description: "Alias for the latest Sonnet model",
+          is_default: false,
+          efforts: [{ effort: "low", description: "Short thinking budget" }, { effort: "high", description: "Long thinking budget" }],
+          default_effort: "medium",
+        },
+      ],
+      accepts_any_model: true,
+      detail: null,
+    })),
 
   http.get(`${API_BASE}/chat/backend`, () => served({ backend: liveChatStatus.backend })),
 

@@ -118,5 +118,10 @@
   "usage": {
     "node": "{count, plural, one {# node} other {# nodes}}",
     "slot": "{count, plural, one {# slot} other {# slots}}"
+  },
+  "chatPermissionMode": {
+    "default": "Ask",
+    "accept_edits": "Accept edits",
+    "plan": "Plan only"
   }
 }
