@@ -5,6 +5,7 @@ from typing import Final, Protocol
 
 from pydantic import SecretStr
 from pydantic_ai import ModelHTTPError
+from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse
 from pydantic_ai.models.fallback import FallbackModel
@@ -16,6 +17,7 @@ from aqven.engine.request import RunSpec
 from aqven.ir import AgentModel, CompiledAgent, CompiledProject
 from aqven.models import CallPolicy, DeclaredModel, cassette_policy, current_call_site, guard_model
 from aqven.models.providers import CUSTOM_KINDS, custom_options, key_variable
+from aqven.models.rate import ProviderLimiters
 from aqven.models.streams import StreamContext, StreamFirstModel
 from aqven.ports.execution import ExecutionScope
 from aqven.ports.models import ModelFactory, model_provider, provider_env_var
@@ -90,8 +92,12 @@ def provider_options(spec: ProviderSpec, route: ModelRoute | None) -> ProviderOp
     )
 
 
+def provider_spec(project: CompiledProject, provider: str) -> ProviderSpec | None:
+    return next((item for item in project.providers if str(item.id) == provider), None)
+
+
 def key_requirement(project: CompiledProject, provider: str) -> KeyRequirement:
-    spec = next((item for item in project.providers if str(item.id) == provider), None)
+    spec = provider_spec(project, provider)
     if spec is None or spec.kind not in CUSTOM_KINDS:
         return KeyRequirement(provider_env_var(ProviderName(provider)), required=True)
     return KeyRequirement(key_variable(spec.api_key), required=spec.api_key is not None)
@@ -168,6 +174,7 @@ def choice_faults(spec: RunSpec | None, choice: AgentModel) -> tuple[ProviderFau
 class EngineModelSource:
     factories: ModelFactories
     keys: ProviderKeys
+    limiters: ProviderLimiters | None = None
 
     async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
         spec = scope_run_spec(scope)
@@ -192,5 +199,10 @@ class EngineModelSource:
         provider_model = factory.build(actual, settings=None, api_key=api_key)
         secrets = () if api_key is None else (api_key,)
         cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=secrets)
-        guarded = guard_model(provider_model, model_ref=choice.model, policy=CallPolicy(cassettes=cassettes))
+        policy = CallPolicy(cassettes=cassettes, concurrency=self._limiter(scope.project, actual))
+        guarded = guard_model(provider_model, model_ref=choice.model, policy=policy)
         return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), choice.model)
+
+    def _limiter(self, project: CompiledProject, model: str) -> AbstractConcurrencyLimiter | None:
+        shared = self.limiters if self.limiters is not None else ProviderLimiters()
+        return shared.of(provider_spec(project, model_provider(model)))

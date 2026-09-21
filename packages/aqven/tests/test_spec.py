@@ -1208,3 +1208,27 @@ def test_openrouter_profiles_match_the_openrouter_models_api() -> None:
     assert Modality.DOCUMENT in fallback.input
     assert fallback.output == frozenset({Modality.TEXT, Modality.IMAGE})
     assert fallback.strict
+
+
+def test_a_provider_declares_its_requests_per_minute_and_rejects_a_rate_below_one() -> None:
+    def project_with(limits: dict[str, object] | None) -> dict[str, object]:
+        provider: dict[str, object] = {
+            "id": "openrouter",
+            "api_key": "ref:env/OPENROUTER_API_KEY",
+            "data_policy": {"allows_pii": True, "allows_sensitive": False, "retention": "zero"},
+        }
+        if limits is not None:
+            provider["limits"] = limits
+        return document("Project", package="lumen", providers=[provider])
+
+    model = SPEC_MODEL_BY_KIND[SpecKind.PROJECT]
+    limited = model.validate_python(project_with({"rpm": 200}))
+    unlimited = model.validate_python(project_with(None))
+
+    assert isinstance(limited, ProjectSpec) and isinstance(unlimited, ProjectSpec)
+    limits = limited.providers[0].limits
+    assert limits is not None and limits.rpm == 200
+    assert unlimited.providers[0].limits is None
+    assert ("greater_than_equal", ("providers", 0, "limits", "rpm")) in set(
+        validation_errors(model, project_with({"rpm": 0}))
+    )

@@ -39,6 +39,7 @@ from aqven.engine.llm.tools import LiveMcpServers
 from aqven.engine.policies import PolicyFactory
 from aqven.engine.runtime import ToolServices
 from aqven.models import AmbiguousReplay, CassetteMiss, RefusedOutput, TruncatedOutput
+from aqven.models.rate import ProviderLimiters
 from aqven.ports.settings import SettingsStore
 
 WAITS_DATABASE: Final = "aqven.sqlite"
@@ -55,6 +56,7 @@ ENGINE_FAILURES: Final[Mapping[type[BaseException], LlmFailureCode]] = {
 @dataclass(frozen=True, slots=True)
 class StandardExtensions:
     factories: ModelFactories = field(default_factory=ProjectModelFactories)
+    limiters: ProviderLimiters = field(default_factory=ProviderLimiters)
 
     def __call__(self, services: ToolServices) -> EngineExtensions:
         index = SqliteWaitIndex.open(services.paths.state / WAITS_DATABASE)
@@ -79,8 +81,9 @@ class StandardExtensions:
         return PolicyFactory(loader=LoaderCode(services.loader))
 
     def llm_dependencies(self, services: ToolServices, journal: DbosWaitJournal) -> LlmDependencies:
+        limiters = self.limiters
         return LlmDependencies(
-            models=EngineModelSource(self.factories, ProviderKeys(services.settings, services.environ)),
+            models=EngineModelSource(self.factories, ProviderKeys(services.settings, services.environ), limiters),
             inference_models=LoaderInferenceModels(services.loader, services.package),
             tool_contexts=EngineToolContexts(ToolContextFactory(services)),
             approvals=HumanApprovalGate(ToolApprovalGate(journal)),

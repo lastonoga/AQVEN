@@ -65,6 +65,10 @@ class ProviderCapabilitiesSpec(SpecModel):
     json_schema_output: bool | None = None
 
 
+class ProviderLimits(SpecModel):
+    rpm: int | None = Field(default=None, ge=1)
+
+
 class ProviderSpec(SpecModel):
     id: ProviderNameField
     kind: ProviderKind = "catalog"
@@ -75,6 +79,7 @@ class ProviderSpec(SpecModel):
     base_url: str | None = None
     data_policy: DataPolicy
     routing: OpenRouterRouting | None = None
+    limits: ProviderLimits | None = None
 
 
 class Rename(SpecModel):

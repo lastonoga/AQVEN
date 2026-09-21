@@ -16,7 +16,7 @@ from models_support import (
 )
 from pydantic import BaseModel, SecretStr
 from pydantic_ai import Agent, AgentStreamEvent, RunContext, ToolOutput
-from pydantic_ai.concurrency import ConcurrencyLimiter
+from pydantic_ai.concurrency import AbstractConcurrencyLimiter, ConcurrencyLimiter
 from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError, UsageLimitExceeded
 from pydantic_ai.messages import (
     FinalResultEvent,
@@ -63,6 +63,7 @@ from aqven.models import (
     request_key,
 )
 from aqven.models.cassette import CASSETTE_BEHAVIORS
+from aqven.models.rate import RateLimiter
 from aqven.ports.settings import provider_key_setting
 from aqven.runtime import CassetteConfig, CassetteMode, node_address
 from aqven.spec import ProviderName
@@ -90,7 +91,7 @@ def policy(
     usage_sink: UsageLog | None = None,
     budget: UsageBudget | None = None,
     redaction: RedactionPolicy = NO_REDACTION,
-    concurrency: ConcurrencyLimiter | None = None,
+    concurrency: AbstractConcurrencyLimiter | None = None,
 ) -> CallPolicy:
     return CallPolicy(
         cassettes=cassettes(MemoryCassetteStore() if store is None else store, mode),
@@ -379,6 +380,44 @@ def test_concurrency_limiter_serializes_requests() -> None:
         return opened_while_blocked, inner.opens
 
     assert asyncio.run(scenario()) == (1, 2)
+
+
+def test_rate_limiter_paces_requests_through_the_chain() -> None:
+    waits: list[float] = []
+
+    async def record(seconds: float) -> None:
+        waits.append(seconds)
+
+    gate = RateLimiter(rpm=60, clock=lambda: 0.0, sleep=record)
+    inner = ScriptedModel([text_script("a"), text_script("b"), text_script("c")])
+    model = guarded(inner, policy(concurrency=gate))
+
+    async def scenario() -> None:
+        for letter in ("a", "b", "c"):
+            await model.request(prompt(letter), None, ModelRequestParameters())
+
+    asyncio.run(scenario())
+
+    assert waits == [0.0, 1.0, 2.0]
+
+
+def test_a_cassette_hit_does_not_take_a_rate_slot() -> None:
+    waits: list[float] = []
+
+    async def record(seconds: float) -> None:
+        waits.append(seconds)
+
+    gate = RateLimiter(rpm=60, clock=lambda: 0.0, sleep=record)
+    store = MemoryCassetteStore()
+    recorder = guarded(ScriptedModel([text_script("hello")]), policy(store, CassetteMode.RECORD, concurrency=gate))
+    asyncio.run(recorder.request(prompt("hi"), None, ModelRequestParameters()))
+    taken_by_the_live_call = list(waits)
+    replayed = guarded(FailingModel(), policy(store, CassetteMode.REPLAY_STRICT, concurrency=gate))
+
+    asyncio.run(replayed.request(prompt("hi"), None, ModelRequestParameters()))
+
+    assert taken_by_the_live_call == [0.0]
+    assert waits == taken_by_the_live_call
 
 
 def test_backoff_retries_transient_errors_with_retry_after() -> None:
