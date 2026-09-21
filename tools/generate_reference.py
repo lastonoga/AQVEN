@@ -29,7 +29,7 @@ from aqven_llm import PROVIDERS
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SITE = REPO_ROOT / "apps/site"
-DOCS = SITE / "src/content/docs/engineering/reference"
+DOCS = SITE / "src/content/docs/reference"
 SCHEMAS = SITE / "public/reference/schemas"
 GROUPS = {
     "project": ("Project configuration", "aqven.spec.project"),

@@ -2,13 +2,23 @@
 import LucodeSidebarSublist from './LucodeSidebarSublist.astro';
 
 const { sidebar } = Astro.locals.starlightRoute;
-const isStudio = Astro.url.pathname.startsWith('/studio/');
-const isHome = Astro.url.pathname === '/' || Astro.url.pathname.startsWith('/home/');
-const manualLabel = isHome ? 'Documentation Home' : isStudio ? 'AQVEN Studio' : 'AQVEN Engineering';
+
+const AREA_BY_PREFIX = [
+  { prefix: '/start/', label: 'Start', id: 'start' },
+  { prefix: '/engine/', label: 'Engine', id: 'engine' },
+  { prefix: '/studio/', label: 'Studio', id: 'studio' },
+  { prefix: '/mcp-cli/', label: 'MCP & CLI', id: 'mcp-cli' },
+  { prefix: '/integrations/', label: 'Integrations', id: 'integrations' },
+  { prefix: '/reference/', label: 'Reference', id: 'reference' },
+  { prefix: '/concepts/', label: 'Concepts', id: 'concepts' },
+] as const;
+const currentArea =
+  AREA_BY_PREFIX.find((area) => Astro.url.pathname.startsWith(area.prefix)) ?? AREA_BY_PREFIX[0];
+const isHome = currentArea.id === 'start';
 const manual = sidebar.flatMap((entry) =>
-  entry.type === 'group' && entry.label === manualLabel ? entry.entries : [],
+  entry.type === 'group' && entry.label === currentArea.label ? entry.entries : [],
 );
-const manualId = isHome ? 'home' : isStudio ? 'studio' : 'engineering';
+const manualId = currentArea.id;
 ---
 
 <div class="sidebar">
@@ -19,7 +29,7 @@ const manualId = isHome ? 'home' : isStudio ? 'studio' : 'engineering';
     <div class="sidebar-entries">
       {isHome ? (
         <section class="home-sidebar-section" data-home-sidebar-section>
-          <h2 class="home-sidebar-title">Documentation Home</h2>
+          <h2 class="home-sidebar-title">Start</h2>
           <LucodeSidebarSublist sublist={manual} />
         </section>
       ) : (

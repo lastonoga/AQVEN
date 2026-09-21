@@ -46,19 +46,29 @@ function parsePage(path) {
 
 const pages = markdownFiles(docsRoot).map(parsePage).sort((a, b) => a.slug.localeCompare(b.slug));
 const expected = new Map(pages.map((page) => [join(markdownRoot, page.slug), page.markdown]));
-const startOrder = ["engineering/quickstart.md", "engineering/getting-started-with-ai.md", "engineering/index.md"];
-const starting = new Set(startOrder);
+const startOrder = ["start/index.md", "start/quickstart.md", "start/engineering-loop-walkthrough.md", "start/where-next.md"];
 const link = (page) => `- [${page.title}](${baseUrl}/llms/${page.slug}): ${page.description}`;
-const section = (name, selected) => `## ${name}\n\n${selected.map(link).join("\n")}\n`;
+const section = (name, selected) => (selected.length ? `## ${name}\n\n${selected.map(link).join("\n")}\n` : "");
+const AREAS = [
+  ["Start", (page) => startOrder.includes(page.slug), startOrder],
+  ["Engine", (page) => page.slug.startsWith("engine/")],
+  ["Studio", (page) => page.slug.startsWith("studio/")],
+  ["MCP & CLI", (page) => page.slug.startsWith("mcp-cli/")],
+  ["Integrations", (page) => page.slug.startsWith("integrations/")],
+  ["Reference", (page) => page.slug.startsWith("reference/")],
+  ["Concepts", (page) => page.slug.startsWith("concepts/")],
+];
 const index = [
   "# AQVEN Documentation",
   "",
   "> Developer guides for typed AI workflows and Studio. AQVEN uses Pydantic AI for model-facing agents and DBOS for durable execution. Read the linked Markdown pages for details.",
   "",
-  section("Start", startOrder.map((slug) => pages.find((page) => page.slug === slug))),
-  section("Engineering", pages.filter((page) => page.slug.startsWith("engineering/") && !page.slug.startsWith("engineering/reference/") && !starting.has(page.slug))),
-  section("Studio", pages.filter((page) => page.slug.startsWith("studio/"))),
-  section("Generated Python package reference", pages.filter((page) => page.slug.startsWith("engineering/reference/"))),
+  ...AREAS.map(([name, matches, order]) => {
+    const selected = order
+      ? order.map((slug) => pages.find((page) => page.slug === slug)).filter(Boolean)
+      : pages.filter(matches);
+    return section(name, selected);
+  }).filter(Boolean),
 ].join("\n");
 expected.set(join(publicRoot, "llms.txt"), index);
 
