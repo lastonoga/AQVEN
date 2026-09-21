@@ -44,6 +44,21 @@ run = [
   "pnpm --filter @aqven/studio check:api",
 ]
 
+[tasks.bundle]
+description = "Build Studio and copy it into the aqven package"
+run = [
+  "pnpm --filter @aqven/studio build",
+  "uv run --frozen python tools/bundle_studio.py",
+]
+
+[tasks.package]
+description = "Wheels with Studio inside, ready to install anywhere"
+depends = ["bundle"]
+run = [
+  "uv build --package aqven-llm --out-dir dist",
+  "uv build --package aqven --out-dir dist",
+]
+
 [tasks.dev]
 description = "Engine and studio against the lumen example"
 run = "node tools/dev.mjs"

@@ -2,7 +2,6 @@
 // The names below are visible placeholders until release.
 export const docsTokens = Object.freeze({
   PYTHON_PACKAGE: "AQVEN_PYTHON_PACKAGE",
-  STUDIO_PACKAGE: "AQVEN_STUDIO_PACKAGE",
   CLI_COMMAND: "aqven",
   PYTHON_MODULE: "aqven",
   LLM_PYTHON_MODULE: "aqven_llm",

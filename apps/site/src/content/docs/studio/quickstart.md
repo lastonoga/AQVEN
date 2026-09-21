@@ -17,6 +17,6 @@ If you are at the parent directory of a generated Python package, pass the modul
 uv run {{CLI_COMMAND}} dev my_workflow
 ```
 
-`{{CLI_COMMAND}} studio` is an alias of `dev`. `{{CLI_COMMAND}} serve` starts the same project server without opening a browser. The package name `{{STUDIO_PACKAGE}}` is a centrally configured placeholder until publication.
+`{{CLI_COMMAND}} studio` is an alias of `dev`. `{{CLI_COMMAND}} serve` starts the same project server without opening a browser. Studio itself needs no separate install: its built bundle ships inside `{{PYTHON_PACKAGE}}`.
 
 On the **Project** page, confirm the opened root and choose a flow. Then use [Canvas](/studio/canvas/) to read its structure and [Runs](/studio/runs/) to inspect an execution. [Walk through a workflow](/studio/workflow-tour/) gives a short route through the UI.
