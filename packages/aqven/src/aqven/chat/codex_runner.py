@@ -199,6 +199,8 @@ class CodexSessionRunner:
             options["developerInstructions"] = rules
         if self._session.model is not None:
             options["model"] = self._session.model
+        if self._session.effort is not None:
+            options["effort"] = self._session.effort
         if self._thread_id is not None:
             await asyncio.to_thread(client.thread_resume, self._thread_id, options)
             return self._thread_id

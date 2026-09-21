@@ -1072,6 +1072,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chat Model List */
+        get: operations["chat_model_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/chat/backend": {
         parameters: {
             query?: never;
@@ -1652,6 +1669,8 @@ export interface components {
             truncated: boolean;
         };
         /** @enum {string} */
+        ChatEffort: "low" | "medium" | "high" | "xhigh" | "max";
+        /** @enum {string} */
         ChatErrorCode: "auth_required" | "rate_limited" | "billing" | "backend_unavailable" | "invalid_request" | "internal";
         /** ChatErrorRaised */
         ChatErrorRaised: {
@@ -1713,6 +1732,42 @@ export interface components {
             /** Client Op Id */
             client_op_id: string;
         };
+        /** ChatModel */
+        ChatModel: {
+            /** Id */
+            id: string;
+            /** Display Name */
+            display_name: string;
+            /** Description */
+            description: string | null;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /**
+             * Efforts
+             * @default []
+             */
+            efforts: components["schemas"]["ChatModelEffort"][];
+            default_effort?: components["schemas"]["ChatEffort"] | null;
+        };
+        /** ChatModelCatalog */
+        ChatModelCatalog: {
+            backend: components["schemas"]["AgentBackendKind"];
+            /** Models */
+            models: components["schemas"]["ChatModel"][];
+            /** Accepts Any Model */
+            accepts_any_model: boolean;
+            /** Detail */
+            detail?: string | null;
+        };
+        /** ChatModelEffort */
+        ChatModelEffort: {
+            effort: components["schemas"]["ChatEffort"];
+            /** Description */
+            description: string | null;
+        };
         /** @enum {string} */
         ChatPermissionMode: "default" | "accept_edits" | "plan";
         /** ChatReasoningDelta */
@@ -1751,6 +1806,7 @@ export interface components {
             flow_id: string | null;
             /** Model */
             model: string | null;
+            effort?: components["schemas"]["ChatEffort"] | null;
             permission_mode: components["schemas"]["ChatPermissionMode"];
             /**
              * Created At
@@ -1766,8 +1822,8 @@ export interface components {
             flow_id?: string | null;
             /** Model */
             model?: string | null;
-            /** @default default */
-            permission_mode: components["schemas"]["ChatPermissionMode"];
+            effort?: components["schemas"]["ChatEffort"] | null;
+            permission_mode?: components["schemas"]["ChatPermissionMode"] | null;
             /** Resume Session Id */
             resume_session_id?: string | null;
         };
@@ -6597,12 +6653,16 @@ export type SchemaChatApprovalResolved = components['schemas']['ChatApprovalReso
 export type SchemaChatBackendChoice = components['schemas']['ChatBackendChoice'];
 export type SchemaChatBackendWrite = components['schemas']['ChatBackendWrite'];
 export type SchemaChatCommand = components['schemas']['ChatCommand'];
+export type SchemaChatEffort = components['schemas']['ChatEffort'];
 export type SchemaChatErrorCode = components['schemas']['ChatErrorCode'];
 export type SchemaChatErrorRaised = components['schemas']['ChatErrorRaised'];
 export type SchemaChatEvent = components['schemas']['ChatEvent'];
 export type SchemaChatFileChange = components['schemas']['ChatFileChange'];
 export type SchemaChatFileEdit = components['schemas']['ChatFileEdit'];
 export type SchemaChatMessageRequest = components['schemas']['ChatMessageRequest'];
+export type SchemaChatModel = components['schemas']['ChatModel'];
+export type SchemaChatModelCatalog = components['schemas']['ChatModelCatalog'];
+export type SchemaChatModelEffort = components['schemas']['ChatModelEffort'];
 export type SchemaChatPermissionMode = components['schemas']['ChatPermissionMode'];
 export type SchemaChatReasoningDelta = components['schemas']['ChatReasoningDelta'];
 export type SchemaChatSession = components['schemas']['ChatSession'];
@@ -14066,6 +14126,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoginStatus"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    chat_model_list: {
+        parameters: {
+            query?: {
+                backend?: components["schemas"]["AgentBackendKind"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatModelCatalog"];
                 };
             };
             /** @description Bad Request */

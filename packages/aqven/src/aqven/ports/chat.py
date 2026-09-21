@@ -15,6 +15,7 @@ ChatApprovalId = NewType("ChatApprovalId", str)
 
 type AgentBackendKind = Literal["claude", "codex"]
 type ChatPermissionMode = Literal["default", "accept_edits", "plan"]
+type ChatEffort = Literal["low", "medium", "high", "xhigh", "max"]
 type ChatState = Literal["idle", "thinking", "streaming", "running_tool", "waiting_approval", "interrupting"]
 type ChatToolStatus = Literal["ok", "error", "denied", "interrupted"]
 type ChatFileChange = Literal["added", "modified", "deleted"]
@@ -38,6 +39,7 @@ class ChatSessionOptions(RequestModel):
     mcp_url: Annotated[str, Field(min_length=1)]
     flow_id: FlowId | None = None
     model: str | None = None
+    effort: ChatEffort | None = None
     permission_mode: ChatPermissionMode = "default"
     resume_session_id: ChatSessionId | None = None
 
@@ -48,6 +50,7 @@ class ChatSession(ResourceModel):
     project_root: str
     flow_id: FlowId | None
     model: str | None
+    effort: ChatEffort | None = None
     permission_mode: ChatPermissionMode
     created_at: AwareDatetime
     last_seq: Annotated[int, Field(ge=0)]
@@ -70,6 +73,27 @@ class LoginStatus(ResourceModel):
     method: LoginMethod | None
     account: str | None
     detail: str | None
+
+
+class ChatModelEffort(ResourceModel):
+    effort: ChatEffort
+    description: str | None
+
+
+class ChatModel(ResourceModel):
+    id: Annotated[str, Field(min_length=1)]
+    display_name: str
+    description: str | None
+    is_default: bool = False
+    efforts: tuple[ChatModelEffort, ...] = ()
+    default_effort: ChatEffort | None = None
+
+
+class ChatModelCatalog(ResourceModel):
+    backend: AgentBackendKind
+    models: tuple[ChatModel, ...]
+    accepts_any_model: bool
+    detail: str | None = None
 
 
 class ChatUsage(ResourceModel):
@@ -238,6 +262,8 @@ class AgentBackend(Protocol):
     def kind(self) -> AgentBackendKind: ...
 
     async def login_status(self) -> LoginStatus: ...
+
+    async def models(self) -> ChatModelCatalog: ...
 
     async def start_session(self, options: ChatSessionOptions) -> ChatSession: ...
 

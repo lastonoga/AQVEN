@@ -236,6 +236,7 @@ def test_chat_operations_are_rest_only_in_openapi(tmp_path: Path) -> None:
 
     assert set(operations) == {
         "chat_login_status",
+        "chat_model_list",
         "chat_backend_get",
         "chat_backend_put",
         "chat_session_list",

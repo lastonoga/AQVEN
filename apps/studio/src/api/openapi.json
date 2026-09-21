@@ -9217,6 +9217,133 @@
         "x-aqven-rest-only": "studio chat agent"
       }
     },
+    "/api/chat/models": {
+      "get": {
+        "summary": "Chat Model List",
+        "operationId": "chat_model_list",
+        "parameters": [
+          {
+            "name": "backend",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AgentBackendKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Backend"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelCatalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "studio chat agent"
+      }
+    },
     "/api/chat/backend": {
       "get": {
         "summary": "Chat Backend Get",
@@ -11910,6 +12037,16 @@
         ],
         "title": "ChatCommand"
       },
+      "ChatEffort": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
       "ChatErrorCode": {
         "type": "string",
         "enum": [
@@ -12133,6 +12270,120 @@
         ],
         "title": "ChatMessageRequest"
       },
+      "ChatModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "default": false
+          },
+          "efforts": {
+            "items": {
+              "$ref": "#/components/schemas/ChatModelEffort"
+            },
+            "type": "array",
+            "title": "Efforts",
+            "default": []
+          },
+          "default_effort": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatEffort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "description"
+        ],
+        "title": "ChatModel"
+      },
+      "ChatModelCatalog": {
+        "properties": {
+          "backend": {
+            "$ref": "#/components/schemas/AgentBackendKind"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ChatModel"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "accepts_any_model": {
+            "type": "boolean",
+            "title": "Accepts Any Model"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "backend",
+          "models",
+          "accepts_any_model"
+        ],
+        "title": "ChatModelCatalog"
+      },
+      "ChatModelEffort": {
+        "properties": {
+          "effort": {
+            "$ref": "#/components/schemas/ChatEffort"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "effort",
+          "description"
+        ],
+        "title": "ChatModelEffort"
+      },
       "ChatPermissionMode": {
         "type": "string",
         "enum": [
@@ -12236,6 +12487,16 @@
             ],
             "title": "Model"
           },
+          "effort": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatEffort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "permission_mode": {
             "$ref": "#/components/schemas/ChatPermissionMode"
           },
@@ -12287,9 +12548,25 @@
             ],
             "title": "Model"
           },
+          "effort": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatEffort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "permission_mode": {
-            "$ref": "#/components/schemas/ChatPermissionMode",
-            "default": "default"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatPermissionMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "resume_session_id": {
             "anyOf": [

@@ -14,6 +14,7 @@ from aqven.ports.chat import (
     ApprovalAnswer,
     ChatEvent,
     ChatMessageRequest,
+    ChatModelCatalog,
     ChatSession,
     ChatSessionId,
     ChatSessionOptions,
@@ -50,6 +51,9 @@ class FakeBackend:
     @property
     def kind(self) -> AgentBackendKind:
         return self._kind
+
+    async def models(self) -> ChatModelCatalog:
+        return ChatModelCatalog(backend=self._kind, models=(), accepts_any_model=True, detail=None)
 
     async def login_status(self) -> LoginStatus:
         return LoginStatus(backend=self.kind, state="logged_in", method="subscription", account=None, detail=None)
@@ -118,3 +122,46 @@ def test_backend_registry_routes_existing_sessions_by_persisted_agent() -> None:
         assert registry.for_session(session) is claude
 
     asyncio.run(scenario())
+
+
+def test_claude_catalog_lists_documented_aliases_and_accepts_anything() -> None:
+    from aqven.chat.models import claude_catalog
+
+    catalog = claude_catalog()
+    assert catalog.backend == "claude"
+    assert [model.id for model in catalog.models] == ["fable", "opus", "sonnet"]
+    assert catalog.accepts_any_model is True
+    assert catalog.detail is not None
+    assert all(model.efforts for model in catalog.models)
+
+
+def test_effort_maps_to_a_growing_thinking_budget() -> None:
+    from aqven.chat.models import EFFORT_ORDER, thinking_budget
+
+    budgets = [thinking_budget(effort) for effort in EFFORT_ORDER]
+    assert budgets == sorted(budgets)
+    assert len(set(budgets)) == len(budgets)
+    assert thinking_budget(None) == thinking_budget("medium")
+
+
+def test_codex_model_entries_keep_only_efforts_the_port_knows() -> None:
+    from aqven.chat.codex_backend import chat_model
+
+    class Effort:
+        def __init__(self, value: str) -> None:
+            self.reasoning_effort = value
+            self.description = f"{value} effort"
+
+    class Entry:
+        id = "gpt-5.6-sol"
+        display_name = "GPT-5.6-Sol"
+        description = "Reliable agentic workhorse."
+        is_default = True
+        default_reasoning_effort = "low"
+        supported_reasoning_efforts = (Effort("low"), Effort("high"), Effort("nonsense"))
+
+    model = chat_model(Entry())
+    assert model.id == "gpt-5.6-sol"
+    assert model.is_default is True
+    assert [item.effort for item in model.efforts] == ["low", "high"]
+    assert model.default_effort == "low"

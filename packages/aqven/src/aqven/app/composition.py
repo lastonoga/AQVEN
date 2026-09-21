@@ -18,7 +18,7 @@ from aqven.engine.facade import PlanSource
 from aqven.ir import CompiledProject
 from aqven.server import ServerExtensions, ServerOptions, create_app
 from aqven.server.app import LifespanFactory
-from aqven.server.chat import studio_chat_parts
+from aqven.server.chat import ChatSessionDefaults, studio_chat_parts
 from aqven.server.mcp import (
     McpPorts,
     ProjectPaths,
@@ -119,6 +119,11 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
         launch.settings,
         launch.chat_allowed_tools,
         launch.chat_trust_project,
+        ChatSessionDefaults(
+            model=launch.chat_model,
+            effort=launch.chat_effort,
+            permission_mode=launch.chat_permission_mode,
+        ),
     )
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 

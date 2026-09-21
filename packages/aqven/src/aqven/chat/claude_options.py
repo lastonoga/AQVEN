@@ -11,6 +11,7 @@ from aqven.chat.approvals import DEFAULT_APPROVAL_TIMEOUT_SECONDS
 from aqven.chat.env_guard import SecretFileGuard, scrubbed_environment
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import MCP_CONFIG_PREFIX, McpConfigFile, write_mcp_config
+from aqven.chat.models import thinking_budget
 from aqven.chat.project_rules import project_rules
 from aqven.ports.chat import ChatPermissionMode
 
@@ -92,7 +93,7 @@ class ClaudeOptionsFactory:
             can_use_tool=can_use_tool,
             include_partial_messages=True,
             thinking=ThinkingConfigEnabled(
-                type="enabled", budget_tokens=self.settings.thinking_budget_tokens, display="summarized"
+                type="enabled", budget_tokens=thinking_budget(stored.session.effort), display="summarized"
             ),
             resume=stored.backend_session_id,
             env={**scrubbed_environment(project_root), CLIENT_APP_ENV: self.settings.client_app},

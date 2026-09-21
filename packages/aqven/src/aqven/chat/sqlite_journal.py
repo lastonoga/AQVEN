@@ -13,6 +13,7 @@ from aqven.chat.journal import Clock, StoredChatSession
 from aqven.ports.chat import (
     CHAT_EVENT_ADAPTER,
     AgentBackendKind,
+    ChatEffort,
     ChatEvent,
     ChatPermissionMode,
     ChatSession,
@@ -34,6 +35,7 @@ SCHEMA: Final[tuple[str, ...]] = (
         project_root TEXT NOT NULL,
         flow_id TEXT,
         model TEXT,
+        effort TEXT,
         permission_mode TEXT NOT NULL,
         created_at TEXT NOT NULL,
         last_seq INTEGER NOT NULL DEFAULT 0,
@@ -66,6 +68,7 @@ SESSION_COLUMNS: Final[tuple[str, ...]] = (
     "project_root",
     "flow_id",
     "model",
+    "effort",
     "permission_mode",
     "created_at",
     "last_seq",
@@ -75,7 +78,10 @@ SESSION_COLUMNS: Final[tuple[str, ...]] = (
 )
 SELECT_SESSIONS: Final[str] = f"SELECT {', '.join(SESSION_COLUMNS)} FROM chat_sessions"
 ORDER_SESSIONS: Final[str] = " ORDER BY created_at DESC, session_id DESC"
-ADDED_COLUMNS: Final[tuple[tuple[str, str, str], ...]] = (("chat_sessions", "flow_id", "TEXT"),)
+ADDED_COLUMNS: Final[tuple[tuple[str, str, str], ...]] = (
+    ("chat_sessions", "flow_id", "TEXT"),
+    ("chat_sessions", "effort", "TEXT"),
+)
 AGENT_EVENT_TYPES: Final[tuple[str, ...]] = ("chat_turn_started", "chat_turn_finished")
 LEGACY_AGENT: Final[JsonObject] = {"backend": "claude", "model": None}
 JSON_BODY: Final[TypeAdapter[JsonObject]] = TypeAdapter(JsonObject)
@@ -87,6 +93,7 @@ class _SessionRow(ResourceModel):
     project_root: str
     flow_id: FlowId | None
     model: str | None
+    effort: ChatEffort | None = None
     permission_mode: ChatPermissionMode
     created_at: AwareDatetime
     last_seq: int
@@ -101,6 +108,7 @@ class _SessionRow(ResourceModel):
             project_root=self.project_root,
             flow_id=self.flow_id,
             model=self.model,
+            effort=self.effort,
             permission_mode=self.permission_mode,
             created_at=self.created_at,
             last_seq=self.last_seq,
@@ -210,14 +218,15 @@ class SqliteChatJournal:
     def create_session(self, session: ChatSession, mcp_url: str) -> StoredChatSession:
         with self._lock, self._connection:
             self._connection.execute(
-                "INSERT INTO chat_sessions (session_id, backend, project_root, flow_id, model, permission_mode,"
-                " created_at, last_seq, mcp_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO chat_sessions (session_id, backend, project_root, flow_id, model, effort, permission_mode,"
+                " created_at, last_seq, mcp_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     session.session_id,
                     session.backend,
                     session.project_root,
                     session.flow_id,
                     session.model,
+                    session.effort,
                     session.permission_mode,
                     session.created_at.isoformat(),
                     session.last_seq,

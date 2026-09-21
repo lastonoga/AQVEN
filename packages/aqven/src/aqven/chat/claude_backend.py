@@ -14,12 +14,14 @@ from aqven.chat.env_guard import scrubbed_environment
 from aqven.chat.errors import ChatFailure
 from aqven.chat.feed import ChatSignals, follow_chat_events
 from aqven.chat.journal import StoredChatSession
+from aqven.chat.models import claude_catalog
 from aqven.chat.sqlite_journal import SqliteChatJournal, utc_now
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
     ChatEvent,
     ChatMessageRequest,
+    ChatModelCatalog,
     ChatSession,
     ChatSessionId,
     ChatSessionOptions,
@@ -36,6 +38,9 @@ class ClaudeAgentBackend:
     @property
     def kind(self) -> AgentBackendKind:
         return "claude"
+
+    async def models(self) -> ChatModelCatalog:
+        return claude_catalog()
 
     async def login_status(self) -> LoginStatus:
         return await self._runtime.login.status()

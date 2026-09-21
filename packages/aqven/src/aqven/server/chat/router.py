@@ -12,11 +12,14 @@ from aqven.chat.backend_selection import ChatBackendChoice, ChatBackendWrite
 from aqven.chat.errors import ChatFailure, ChatFailureCode
 from aqven.chat.journal import ChatSessionDirectory
 from aqven.ports.chat import (
+    AgentBackendKind,
     ApprovalAnswer,
     ApprovalDecision,
     ChatApprovalId,
+    ChatEffort,
     ChatEvent,
     ChatMessageRequest,
+    ChatModelCatalog,
     ChatPermissionMode,
     ChatSession,
     ChatSessionId,
@@ -62,12 +65,16 @@ class ChatRoute(APIRoute):
 class ChatRouteContext:
     project_root: Path
     mcp_url: str
+    default_model: str | None = None
+    default_effort: ChatEffort | None = None
+    default_permission_mode: ChatPermissionMode = "default"
 
 
 class ChatSessionCreate(RequestModel):
     flow_id: FlowId | None = None
     model: str | None = None
-    permission_mode: ChatPermissionMode = "default"
+    effort: ChatEffort | None = None
+    permission_mode: ChatPermissionMode | None = None
     resume_session_id: ChatSessionId | None = None
 
 
@@ -103,6 +110,11 @@ def build_chat_router(
     async def chat_login_status() -> LoginStatus:
         return await (await registry.selected()).login_status()
 
+    @router.get("/models", operation_id="chat_model_list", openapi_extra=rest_only(CHAT_REST_ONLY))
+    async def chat_model_list(backend: Annotated[AgentBackendKind | None, Query()] = None) -> ChatModelCatalog:
+        chosen = registry.for_kind(backend) if backend is not None else await registry.selected()
+        return await chosen.models()
+
     @router.get("/backend", operation_id="chat_backend_get", openapi_extra=rest_only(CHAT_REST_ONLY))
     async def chat_backend_get() -> ChatBackendChoice:
         return ChatBackendChoice(backend=await registry.selection.get())
@@ -127,8 +139,9 @@ def build_chat_router(
             project_root=str(context.project_root),
             mcp_url=context.mcp_url,
             flow_id=body.flow_id,
-            model=body.model,
-            permission_mode=body.permission_mode,
+            model=body.model or context.default_model,
+            effort=body.effort or context.default_effort,
+            permission_mode=body.permission_mode or context.default_permission_mode,
             resume_session_id=body.resume_session_id,
         )
         backend = (

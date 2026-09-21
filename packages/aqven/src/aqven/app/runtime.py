@@ -34,6 +34,7 @@ from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.options import ServerOptions
 from aqven.app.runtime_file import ServerRecord, remove_server_record, server_record, write_server_record
 from aqven.app.settings_store import LocalSettingsStore, open_settings_store
+from aqven.ports.chat import ChatEffort, ChatPermissionMode
 from aqven.ports.engine import EngineFacade
 
 GRACEFUL_SHUTDOWN_SECONDS: Final = 5
@@ -60,6 +61,9 @@ class ApplicationLaunch:
     dev_origin: str | None
     chat_allowed_tools: tuple[str, ...] = ()
     chat_trust_project: bool = False
+    chat_model: str | None = None
+    chat_effort: ChatEffort | None = None
+    chat_permission_mode: ChatPermissionMode = "default"
 
 
 class ApplicationFactory(Protocol):
@@ -233,6 +237,9 @@ class LocalServer:
                 dev_origin=options.dev_origin,
                 chat_allowed_tools=options.chat_allowed_tools,
                 chat_trust_project=options.chat_trust_project,
+                chat_model=options.chat_model,
+                chat_effort=options.chat_effort,
+                chat_permission_mode=options.chat_permission_mode,
             )
             application = self._guarded(self.application.build(launch), record, access, options)
             write_server_record(state, record)

@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import cast
 
 from openai_codex.generated.v2_all import ApiKeyAccount, ChatgptAccount
 from pydantic import SecretStr
@@ -12,12 +13,16 @@ from aqven.chat.codex_runtime import CodexChatRuntime, CodexClientFactory, sdk_c
 from aqven.chat.errors import ChatFailure
 from aqven.chat.feed import ChatSignals, follow_chat_events
 from aqven.chat.journal import ChatJournal, StoredChatSession
+from aqven.chat.models import known_effort
 from aqven.chat.sqlite_journal import utc_now
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
     ChatEvent,
     ChatMessageRequest,
+    ChatModel,
+    ChatModelCatalog,
+    ChatModelEffort,
     ChatSession,
     ChatSessionId,
     ChatSessionOptions,
@@ -29,6 +34,25 @@ from aqven.runtime.address import JsonObject
 
 def decline_request(method: str, params: JsonObject | None) -> JsonObject:
     return {"decision": "decline"}
+
+
+
+def chat_model(entry: object) -> ChatModel:
+    identifier = str(getattr(entry, "id", "") or getattr(entry, "model", ""))
+    supported = cast(tuple[object, ...], getattr(entry, "supported_reasoning_efforts", ()) or ())
+    efforts = tuple(
+        ChatModelEffort(effort=effort, description=cast(str | None, getattr(item, "description", None)))
+        for item in supported
+        if (effort := known_effort(getattr(item, "reasoning_effort", ""))) is not None
+    )
+    return ChatModel(
+        id=identifier,
+        display_name=str(getattr(entry, "display_name", "") or identifier),
+        description=cast(str | None, getattr(entry, "description", None)),
+        is_default=bool(getattr(entry, "is_default", False)),
+        efforts=efforts,
+        default_effort=known_effort(getattr(entry, "default_reasoning_effort", "")),
+    )
 
 
 class CodexAgentBackend:
@@ -55,6 +79,28 @@ class CodexAgentBackend:
     @property
     def kind(self) -> AgentBackendKind:
         return "codex"
+
+    async def models(self) -> ChatModelCatalog:
+        config = codex_config(
+            self._project_root, self._mcp_url, self._runtime.mcp_token.get_secret_value(), "default"
+        )
+
+        def probe() -> tuple[ChatModel, ...]:
+            client = self._runtime.client_factory(config, decline_request)
+            try:
+                client.start()
+                client.initialize()
+                response = client.model_list()
+            finally:
+                client.close()
+            return tuple(chat_model(entry) for entry in response.data if not entry.hidden)
+
+        try:
+            models = await asyncio.to_thread(probe)
+        except Exception as error:
+            detail = str(error).splitlines()[0] if str(error) else type(error).__name__
+            return ChatModelCatalog(backend=self.kind, models=(), accepts_any_model=True, detail=detail)
+        return ChatModelCatalog(backend=self.kind, models=models, accepts_any_model=True, detail=None)
 
     async def login_status(self) -> LoginStatus:
         config = codex_config(
@@ -114,6 +160,7 @@ class CodexAgentBackend:
             project_root=options.project_root,
             flow_id=options.flow_id,
             model=options.model,
+            effort=options.effort,
             permission_mode=options.permission_mode,
             created_at=self._runtime.clock(),
             last_seq=0,

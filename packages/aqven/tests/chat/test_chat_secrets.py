@@ -392,6 +392,7 @@ def test_trusted_project_stops_asking_but_keeps_the_env_guard(tmp_path: Path) ->
 
     assert launch.options.permission_mode == "bypassPermissions"
     assert any(rule.startswith("Read(") and ".env" in rule for rule in launch.options.disallowed_tools)
+    assert launch.options.hooks is not None
     assert "PreToolUse" in launch.options.hooks
     assert launch.options.setting_sources == []
 

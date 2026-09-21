@@ -14,7 +14,9 @@ from aqven.app.environment import (
     RuntimeSettings,
     runtime_settings,
 )
+from aqven.chat.models import EFFORT_ORDER
 from aqven.loader import find_project_root
+from aqven.ports.chat import ChatEffort, ChatPermissionMode
 
 STARTUP_TIMEOUT_SECONDS: Final = 30.0
 POLL_SECONDS: Final = 0.1
@@ -31,6 +33,9 @@ __all__ = [
 ]
 
 
+PERMISSION_MODES: Final[tuple[ChatPermissionMode, ...]] = ("default", "accept_edits", "plan")
+
+
 @dataclass(frozen=True, slots=True)
 class ServerOptions:
     root: Path
@@ -44,6 +49,9 @@ class ServerOptions:
     require_auth: bool = False
     chat_allowed_tools: tuple[str, ...] = ()
     chat_trust_project: bool = False
+    chat_model: str | None = None
+    chat_effort: ChatEffort | None = None
+    chat_permission_mode: ChatPermissionMode = "default"
     startup_timeout_seconds: float = STARTUP_TIMEOUT_SECONDS
     poll_seconds: float = POLL_SECONDS
 
@@ -81,6 +89,19 @@ def add_server_arguments(parser: argparse.ArgumentParser) -> None:
             "narrow rules only, for example Read or Grep or 'Bash(rg:*)'"
         ),
     )
+    parser.add_argument("--chat-model", default=None, metavar="NAME", help="default model for new chat sessions")
+    parser.add_argument(
+        "--chat-effort",
+        default=None,
+        choices=EFFORT_ORDER,
+        help="default reasoning effort for new chat sessions",
+    )
+    parser.add_argument(
+        "--chat-permission-mode",
+        default=None,
+        choices=PERMISSION_MODES,
+        help="default approval mode for new chat sessions",
+    )
     parser.add_argument(
         "--chat-trust-project",
         action="store_true",
@@ -96,6 +117,16 @@ def _rules(value: object) -> tuple[str, ...]:
         return ()
     items = cast(list[object], value)
     return tuple(rule for item in items if isinstance(item, str) and (rule := item.strip()))
+
+
+def _effort(value: object) -> ChatEffort | None:
+    return value if isinstance(value, str) and value in EFFORT_ORDER else None
+
+
+def _permission_mode(value: object) -> ChatPermissionMode:
+    if isinstance(value, str) and value in PERMISSION_MODES:
+        return value
+    return "default"
 
 
 def _path(value: object) -> Path | None:
@@ -132,6 +163,9 @@ def server_options(
         require_auth=bool(arguments.require_auth),
         chat_allowed_tools=_rules(arguments.chat_allow_tool),
         chat_trust_project=bool(arguments.chat_trust_project),
+        chat_model=_text(arguments.chat_model),
+        chat_effort=_effort(arguments.chat_effort),
+        chat_permission_mode=_permission_mode(arguments.chat_permission_mode),
     )
 
 
