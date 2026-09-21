@@ -12,16 +12,18 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from aqven.ports.engine import EngineFacade
 from aqven.server.mcp.catalog import ToolRegistration
 from aqven.server.mcp.check_tools import AqvenCheckTool, RunnerSettings
+from aqven.server.mcp.eval_tools import EvalTools
 from aqven.server.mcp.patch_tools import PatchFlow, PatchTools
 from aqven.server.mcp.paths import ProjectPaths
 from aqven.server.mcp.preview_tools import PreviewTools
 from aqven.server.mcp.processes import ProcessRunner, SubprocessRunner
-from aqven.server.mcp.project_tools import LoaderProjectSource, ProjectSource, ProjectTools
+from aqven.server.mcp.project_source import LoaderProjectSource, ProjectSource
 from aqven.server.mcp.pyright_tool import PyrightTool
 from aqven.server.mcp.pytest_tool import PytestTool
 from aqven.server.mcp.run_tools import RunTools
 from aqven.server.security import AccessPolicy, guard_request, reject
 from aqven.server.views.runs import RunStartService
+from aqven.server.views.services import StudioServices
 
 SERVER_NAME: Final = "aqven"
 MCP_MOUNT: Final = "/mcp"
@@ -29,11 +31,13 @@ STREAMABLE_HTTP_PATH: Final = "/"
 HTTP_SCOPE: Final = "http"
 UNAUTHORIZED_MESSAGE: Final = "MCP requires Authorization: Bearer <token from .aqven/server.json>"
 INSTRUCTIONS: Final = (
-    "AQVEN: flow definitions are project files. Edit prompt text and make point edits with your own Read/Edit/Write; "
-    "make structural and cross-file edits with flow_patch using expects from flow_get. After every edit call "
-    "aqven_check, and for code also pyright_check and pytest_run; after a prompt edit also prompt_preview. "
-    "Run: run_start, then run_get and run_events; "
-    "waits for a human answer: run_list(status=suspended), run_get_node, run_resume."
+    "AQVEN drives an open Studio project: flow definitions are files in the project, so read them with your own "
+    "Read/Grep/Glob and make prompt and point edits with your own Edit/Write. These tools are the actions the files "
+    "cannot do. Structural and cross-file edits: flow_patch. After every edit: aqven_check, for code also "
+    "pyright_check and pytest_run, after a prompt edit also prompt_preview. Runs: run_start, then run_get and "
+    "run_events; a run waiting for a human: run_list(status=suspended), run_get_node, run_resume; also run_fork and "
+    "run_cancel. Datasets and evals: dataset_batch_start with dataset_batch_get, eval_run_start with eval_run_get "
+    "and eval_gate."
 )
 
 
@@ -46,6 +50,7 @@ class McpPorts:
     engine: EngineFacade | None = None
     patch_flow: PatchFlow | None = None
     starting: RunStartService | None = None
+    services: StudioServices | None = None
 
 
 def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
@@ -53,14 +58,15 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
     settings = RunnerSettings(paths=ports.paths, runner=ports.runner, python=ports.python)
     runs = RunTools(ports.engine, ports.starting).operations() if ports.engine is not None else ()
     patch = PatchTools(ports.patch_flow).operations() if ports.patch_flow is not None else ()
+    evals = EvalTools(ports.services).operations() if ports.services is not None else ()
     return (
-        *ProjectTools(source).operations(),
         *PreviewTools(source).operations(),
         *AqvenCheckTool(settings).operations(),
         *PyrightTool(settings).operations(),
         *PytestTool(settings).operations(),
         *runs,
         *patch,
+        *evals,
     )
 
 

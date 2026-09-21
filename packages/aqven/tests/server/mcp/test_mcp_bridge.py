@@ -15,7 +15,7 @@ async def test_proxy_lists_and_calls_upstream_tools(tmp_path: Path) -> None:
     ):
         direct = await upstream.list_tools()
         proxied = await bridged.list_tools()
-        result = await bridged.call_tool("flow_get", {"flow_id": "intake"})
+        result = await bridged.call_tool("run_get", {"run_id": "run-1"})
     assert [tool.name for tool in proxied.tools] == [tool.name for tool in direct.tools]
     assert [tool.output_schema for tool in proxied.tools] == [tool.output_schema for tool in direct.tools]
     assert result.is_error is False
@@ -28,7 +28,7 @@ async def test_proxy_passes_domain_errors_through(tmp_path: Path) -> None:
         mcp_client(shop_copy(tmp_path)) as upstream,
         Client(build_bridge_server(upstream), cache=None) as bridged,
     ):
-        result = await bridged.call_tool("catalog_get", {"kind": "agent", "id": "ghost"})
+        result = await bridged.call_tool("prompt_preview", {"flow_id": "intake", "node_id": "clean"})
     assert result.is_error is True
     error = structured(result)
-    assert (error["op"], error["code"]) == ("catalog_get", "NOT_FOUND")
+    assert (error["op"], error["code"]) == ("prompt_preview", "NOT_FOUND")

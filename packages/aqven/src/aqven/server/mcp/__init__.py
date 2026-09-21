@@ -28,7 +28,7 @@ from aqven.server.mcp.patch_tools import FlowWriter, PatchFlow, PatchTools, Writ
 from aqven.server.mcp.paths import ProjectPaths
 from aqven.server.mcp.preview_tools import PreviewTools
 from aqven.server.mcp.processes import ProcessOutcome, ProcessRunner, SubprocessRunner
-from aqven.server.mcp.project_tools import LoaderProjectSource, ProjectSource, ProjectTools
+from aqven.server.mcp.project_source import LoaderProjectSource, ProjectSource
 from aqven.server.mcp.pyright_tool import PyrightInput, PyrightResult, PyrightTool
 from aqven.server.mcp.pytest_tool import PytestInput, PytestResult, PytestTool
 from aqven.server.mcp.run_tools import RunTools
@@ -52,7 +52,6 @@ __all__ = [
     "ProcessRunner",
     "ProjectPaths",
     "ProjectSource",
-    "ProjectTools",
     "PreviewTools",
     "PyrightInput",
     "PyrightResult",

@@ -16,7 +16,7 @@ from aqven.preview import (
 )
 from aqven.server.errors import ApiErrorCode, ApiFailure, diagnostic_problem
 from aqven.server.mcp.catalog import Operation, ToolHints, ToolRegistration
-from aqven.server.mcp.project_tools import ProjectSource
+from aqven.server.mcp.project_source import ProjectSource
 
 COMPILE_FAILED: Final = "the project does not compile: the prompt of a node cannot be built, run aqven_check"
 FALLBACK_CODE: Final[ApiErrorCode] = "NOT_RUNNABLE"

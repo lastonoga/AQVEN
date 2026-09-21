@@ -6,19 +6,12 @@ import httpx2
 import pytest
 from console_support import bridge_parameters, copy_fixture, server_record, stopping_background_server, structured
 from mcp.client import Client
-from pydantic import JsonValue
 
 from aqven.app.runtime_file import ServerRecord
 
 NOTE: Final = {"text": "note from the IDE"}
 RUN_SETTLE_SECONDS: Final = 30.0
 SPEC_EVENT_SECONDS: Final = 20.0
-
-
-def flow_ids(page: dict[str, JsonValue]) -> set[str]:
-    items = page.get("items")
-    listed = items if isinstance(items, list) else []
-    return {str(item.get("flow_id")) for item in listed if isinstance(item, dict)}
 
 
 async def settled_run(client: Client, run_id: str) -> dict[str, object]:
@@ -51,7 +44,6 @@ async def test_mcp_stdio_only_lists_checks_runs_and_sees_external_edits(tmp_path
     with stopping_background_server(root):
         async with Client(bridge_parameters(root, tmp_path / "data"), cache=None) as client:
             tools = {tool.name for tool in (await client.list_tools()).tools}
-            flows = structured(await client.call_tool("flow_list", {}))
             check = structured(await client.call_tool("aqven_check", {}))
             started = structured(
                 await client.call_tool("run_start", {"flow_id": "audit", "mode": "live", "input": NOTE})
@@ -60,8 +52,7 @@ async def test_mcp_stdio_only_lists_checks_runs_and_sees_external_edits(tmp_path
             record = server_record(root)
             assert record is not None
             event, data = await external_edit_event(record, prompt)
-    assert {"flow_list", "aqven_check", "run_start", "run_get", "flow_patch"} <= tools
-    assert "audit" in flow_ids(flows)
+    assert {"prompt_preview", "aqven_check", "run_start", "run_get", "flow_patch"} <= tools
     assert check["ok"] is True
     assert run["status"] == "completed"
     assert event == "files_changed"

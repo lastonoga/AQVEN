@@ -997,7 +997,7 @@ export interface paths {
         get: operations["eval_run_list"];
         put?: never;
         /** Start Eval Run */
-        post: operations["experiment_run"];
+        post: operations["eval_run_start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1046,7 +1046,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Eval Gate */
-        get: operations["experiment_compare"];
+        get: operations["eval_gate"];
         put?: never;
         post?: never;
         delete?: never;
@@ -13702,7 +13702,7 @@ export interface operations {
             };
         };
     };
-    experiment_run: {
+    eval_run_start: {
         parameters: {
             query?: never;
             header?: never;
@@ -14016,7 +14016,7 @@ export interface operations {
             };
         };
     };
-    experiment_compare: {
+    eval_gate: {
         parameters: {
             query?: never;
             header?: never;

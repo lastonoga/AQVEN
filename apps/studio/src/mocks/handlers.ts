@@ -619,8 +619,8 @@ export const handlers = [
 
   http.get(`${API_BASE}/eval-runs/:evalRunId/gate`, ({ params }) => {
     const gate = liveEvalGates[text(params, "evalRunId")]
-    if (gate === undefined) return notFound("experiment_compare", `eval run ${text(params, "evalRunId")} is unknown`)
-    return gate.report === null ? notFound("experiment_compare", gate.message) : served(gate.report)
+    if (gate === undefined) return notFound("eval_gate", `eval run ${text(params, "evalRunId")} is unknown`)
+    return gate.report === null ? notFound("eval_gate", gate.message) : served(gate.report)
   }),
 
   http.get(`${API_BASE}/chat/status`, () => served(liveChatStatus)),

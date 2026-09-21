@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Final
 
 from fastapi import APIRouter, Header, Query
 from fastapi.responses import JSONResponse, Response
@@ -114,10 +114,13 @@ async def last_run(context: ServerContext, flow_id: str) -> RunBrief | None:
     return RunBrief(run_id=latest.run_id, status=latest.status, started_at=latest.started_at)
 
 
+PROJECT_FILES: Final = "project files: the agent reads them directly"
+
+
 def build_flows_router(context: ServerContext) -> APIRouter:
     router = APIRouter(prefix="/api", responses=ERROR_RESPONSES)
 
-    @router.get("/flows", operation_id="flow_list", openapi_extra=operation("flow_list"))
+    @router.get("/flows", operation_id="flow_list", openapi_extra=rest_only(PROJECT_FILES))
     async def list_flows(
         compile_status: Annotated[CompileStatus | None, Query(alias="status")] = None,
         cursor: str | None = None,
@@ -133,12 +136,12 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         ]
         return page_of(rows, lambda row: row.flow_id, cursor, limit)
 
-    @router.get("/flows/{flow_id}", operation_id="flow_get", openapi_extra=operation("flow_get"))
+    @router.get("/flows/{flow_id}", operation_id="flow_get", openapi_extra=rest_only(PROJECT_FILES))
     async def get_flow(flow_id: str) -> FlowDetail:
         state = await context.workspace.state()
         return flow_detail(state, flow_id, await last_run(context, flow_id))
 
-    @router.get("/flows/{flow_id}/spec", operation_id="flow_spec", openapi_extra=operation("flow_get"))
+    @router.get("/flows/{flow_id}/spec", operation_id="flow_spec", openapi_extra=rest_only(PROJECT_FILES))
     async def get_flow_spec(flow_id: str) -> FlowSpecView:
         state = await context.workspace.state()
         return flow_spec_view(state, flow_id)
@@ -147,7 +150,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         "/flows/{flow_id}/ir",
         operation_id="flow_ir",
         response_model=FlowIr,
-        openapi_extra=operation("flow_get"),
+        openapi_extra=rest_only(PROJECT_FILES),
     )
     async def get_flow_ir(flow_id: str, if_none_match: Annotated[str | None, Header()] = None) -> Response:
         state = await context.workspace.state()
@@ -157,7 +160,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
             return Response(status_code=NOT_MODIFIED, headers={"ETag": tag})
         return JSONResponse(document.model_dump(mode="json", by_alias=True), headers={"ETag": tag})
 
-    @router.get("/flows/{flow_id}/schemas", operation_id="flow_schemas", openapi_extra=operation("catalog_get"))
+    @router.get("/flows/{flow_id}/schemas", operation_id="flow_schemas", openapi_extra=rest_only(PROJECT_FILES))
     async def get_flow_schemas(flow_id: str) -> FlowSchemas:
         state = await context.workspace.state()
         return flow_schemas(state, flow_id)
@@ -274,12 +277,12 @@ def build_flows_router(context: ServerContext) -> APIRouter:
                 ))
         return ManualRangePreview(order=flow.order, ranges=tuple(ranges))
 
-    @router.get("/flows/{flow_id}/nodes", operation_id="flow_nodes", openapi_extra=operation("flow_get"))
+    @router.get("/flows/{flow_id}/nodes", operation_id="flow_nodes", openapi_extra=rest_only(PROJECT_FILES))
     async def list_nodes(flow_id: str) -> tuple[NodeSummary, ...]:
         state = await context.workspace.state()
         return node_summaries(state, flow_id)
 
-    @router.get("/flows/{flow_id}/nodes/{node_id}", operation_id="flow_node", openapi_extra=operation("flow_get"))
+    @router.get("/flows/{flow_id}/nodes/{node_id}", operation_id="flow_node", openapi_extra=rest_only(PROJECT_FILES))
     async def get_node(flow_id: str, node_id: str) -> NodeDetail:
         state = await context.workspace.state()
         return node_detail(state, flow_id, node_id)
@@ -321,7 +324,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         state = await context.workspace.state()
         return prompt_summaries(state, flow_id, level, cursor, limit)
 
-    @router.get("/types", operation_id="type_list", openapi_extra=operation("catalog_list"))
+    @router.get("/types", operation_id="type_list", openapi_extra=rest_only(PROJECT_FILES))
     async def list_types(
         cursor: str | None = None,
         limit: Annotated[int, Query(ge=1, le=MAX_PAGE_LIMIT)] = DEFAULT_PAGE_LIMIT,
@@ -329,7 +332,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         state = await context.workspace.state()
         return type_summaries(state, cursor, limit)
 
-    @router.get("/types/{type_id}", operation_id="type_get", openapi_extra=operation("catalog_get"))
+    @router.get("/types/{type_id}", operation_id="type_get", openapi_extra=rest_only(PROJECT_FILES))
     async def get_type(type_id: str) -> TypeDetail:
         state = await context.workspace.state()
         return type_detail(state, type_id)

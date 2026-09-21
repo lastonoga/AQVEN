@@ -118,10 +118,10 @@ async def test_mcp_endpoint_requires_bearer_token(tmp_path: Path) -> None:
 async def test_http_client_with_token_calls_tools(tmp_path: Path) -> None:
     async with serving(shop_copy(tmp_path)) as runtime, open_upstream(runtime) as client:
         listed = await client.list_tools()
-        result = await client.call_tool("flow_list", {})
+        result = await client.call_tool("prompt_preview", {"flow_id": "intake", "node_id": "reply"})
     assert "aqven_check" in {tool.name for tool in listed.tools}
     assert result.is_error is False
-    assert structured(result)["items"]
+    assert structured(result)["messages"]
 
 
 @pytest.mark.asyncio
@@ -163,8 +163,8 @@ async def test_stdio_bridge_forwards_to_running_server(tmp_path: Path) -> None:
         parameters = StdioServerParameters(command=sys.executable, args=["-c", BRIDGE_SCRIPT, root.as_posix()])
         async with Client(parameters, cache=None) as client:
             listed = await client.list_tools()
-            result = await client.call_tool("flow_get", {"flow_id": "intake", "node_id": "clean"})
-    assert {"flow_get", "pytest_run", "pyright_check"} <= {tool.name for tool in listed.tools}
-    focus = structured(result)["focus"]
-    assert isinstance(focus, dict)
-    assert focus["node"] == "code"
+            result = await client.call_tool("prompt_preview", {"flow_id": "intake", "node_id": "reply"})
+    assert {"prompt_preview", "pytest_run", "pyright_check"} <= {tool.name for tool in listed.tools}
+    output = structured(result)["output"]
+    assert isinstance(output, dict)
+    assert output["mode"] == "tool"

@@ -29,6 +29,7 @@ from aqven.server.routes.settings import build_settings_router
 from aqven.server.security import QueryTokenScrubber
 from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, watch_project
 from aqven.server.static import StudioBundle, default_studio, mount_studio
+from aqven.server.views.services import StudioServices
 from aqven.server.workspace import ProjectCompiler, ProjectWorkspace
 
 API_TITLE: Final = "AQVEN Studio API"
@@ -118,7 +119,7 @@ def build_lifespan(
     return lifespan
 
 
-def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
+def core_routers(context: ServerContext, services: StudioServices | None = None) -> tuple[APIRouter, ...]:
     return (
         build_meta_router(context),
         build_project_router(context),
@@ -128,7 +129,7 @@ def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
         build_schemas_router(),
         build_blobs_router(context),
         build_settings_router(context),
-        build_evals_router(context),
+        build_evals_router(context, services),
     )
 
 
@@ -142,6 +143,7 @@ def create_app(
     extensions: ServerExtensions | None = None,
     blobs: BlobFiles | None = None,
     workspace: ProjectWorkspace | None = None,
+    services: StudioServices | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
@@ -166,7 +168,7 @@ def create_app(
     )
     setattr(app.state, CONTEXT_ATTRIBUTE, context)
     install_error_handlers(app)
-    included = (*core_routers(context), *extra_routers) if chosen.serve_api else tuple(extra_routers)
+    included = (*core_routers(context, services), *extra_routers) if chosen.serve_api else tuple(extra_routers)
     for router in included:
         app.include_router(router)
     app.include_router(build_fallback_router())

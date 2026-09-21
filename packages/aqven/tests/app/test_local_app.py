@@ -235,7 +235,7 @@ def test_mcp_server_factory_returns_the_mcp_server_object(project: Path) -> None
 async def test_mcp_server_factory_lists_the_project_tools(project: Path) -> None:
     tools = {tool.name for tool in await create_mcp_server(project).list_tools()}
 
-    assert {"aqven_check", "flow_list", "flow_patch"} <= tools
+    assert {"aqven_check", "prompt_preview", "flow_patch"} <= tools
 
 
 @pytest.mark.asyncio

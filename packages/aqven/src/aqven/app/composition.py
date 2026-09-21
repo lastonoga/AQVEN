@@ -30,6 +30,7 @@ from aqven.server.mcp import (
 )
 from aqven.server.security import AccessPolicy
 from aqven.server.views.runs import RunStartService
+from aqven.server.views.services import StudioServices
 from aqven.server.workspace import ProjectWorkspace
 from aqven.write import WriteService
 
@@ -89,7 +90,10 @@ type PartsBuilder = Callable[[ApplicationLaunch], ApplicationParts]
 
 
 def mcp_catalog(
-    launch: ApplicationLaunch, writer: WriteService, workspace: ProjectWorkspace | None = None
+    launch: ApplicationLaunch,
+    writer: WriteService,
+    workspace: ProjectWorkspace | None = None,
+    services: StudioServices | None = None,
 ) -> tuple[ToolRegistration, ...]:
     root = launch.project_root
     ports = McpPorts(
@@ -104,6 +108,7 @@ def mcp_catalog(
             workspace=workspace,
             environ=launch_environ(),
         ),
+        services=services,
     )
     return build_catalog(ports)
 
@@ -118,11 +123,14 @@ def write_recovery(writer: WriteService) -> LifespanFactory:
 
 
 def mcp_parts(
-    launch: ApplicationLaunch, bearer: bool = True, workspace: ProjectWorkspace | None = None
+    launch: ApplicationLaunch,
+    bearer: bool = True,
+    workspace: ProjectWorkspace | None = None,
+    services: StudioServices | None = None,
 ) -> ApplicationParts:
     writer = WriteService(launch.project_root)
     policy = AccessPolicy(token=launch.access.token) if bearer and launch.access.require_token else None
-    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer, workspace), policy)
+    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer, workspace, services), policy)
     return ApplicationParts(mounts=endpoint.mounts(), lifespans=(write_recovery(writer), endpoint.lifespan))
 
 
@@ -142,9 +150,11 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 
 
-def feature_builders(features: StudioFeatures, workspace: ProjectWorkspace) -> tuple[PartsBuilder, ...]:
+def feature_builders(
+    features: StudioFeatures, workspace: ProjectWorkspace, services: StudioServices
+) -> tuple[PartsBuilder, ...]:
     table: tuple[tuple[bool, PartsBuilder], ...] = (
-        (features.mcp, partial(mcp_parts, bearer=features.bearer, workspace=workspace)),
+        (features.mcp, partial(mcp_parts, bearer=features.bearer, workspace=workspace, services=services)),
         (features.chat, chat_parts),
     )
     return tuple(builder for enabled, builder in table if enabled)
@@ -153,8 +163,9 @@ def feature_builders(features: StudioFeatures, workspace: ProjectWorkspace) -> t
 def assemble_app(launch: ApplicationLaunch, features: StudioFeatures, extra: ApplicationParts) -> FastAPI:
     options = studio_server_options(launch, features)
     workspace = ProjectWorkspace(launch.project_root, compiler=options.compiler)
+    services = StudioServices()
     parts = extra
-    for builder in feature_builders(features, workspace):
+    for builder in feature_builders(features, workspace, services):
         parts = parts.plus(builder(launch))
     return create_app(
         launch.project_root,
@@ -164,6 +175,7 @@ def assemble_app(launch: ApplicationLaunch, features: StudioFeatures, extra: App
         options=options,
         extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),
         workspace=workspace,
+        services=services,
     )
 
 

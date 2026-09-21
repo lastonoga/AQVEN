@@ -40,9 +40,10 @@ class PatchTools:
                     "Atomically applies 1..50 operations to flow files: add_node, remove_node, rename_node, "
                     "move_node, set, unset, bind, unbind, rename_flow, rename_agent, delete_agent. expects[{path, "
                     "file_hash}] is a CAS on "
-                    "hashes from flow_get (null means the file must not exist); client_op_id is a ULID, a repeat "
-                    "returns the first result. Validates the tree before writing; dry_run does not touch the disk. "
-                    "On STALE_FILE, re-read the file and replay the intent."
+                    '"sha256-" + the sha256 of the current bytes of every file the operations touch (null means '
+                    "the file must not exist); client_op_id is a ULID, a repeat returns the first result. Validates "
+                    "the tree before writing; dry_run does not touch the disk. On STALE_FILE, re-read the file and "
+                    "replay the intent."
                 ),
                 input_model=FlowPatchRequest,
                 output_model=WriteResult,

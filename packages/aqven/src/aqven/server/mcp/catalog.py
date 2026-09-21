@@ -127,7 +127,7 @@ class ToolCall[I: BaseModel, O: BaseModel]:
     @property
     def __signature__(self) -> inspect.Signature:
         returns = Annotated[CallToolResult, self.operation.output_model]
-        parameters = []
+        parameters: list[inspect.Parameter] = []
         for parameter in inspect.signature(self.operation.input_model).parameters.values():
             field = self.operation.input_model.model_fields.get(parameter.name)
             if field is not None and field.default_factory is not None:

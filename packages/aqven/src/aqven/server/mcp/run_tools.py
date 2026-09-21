@@ -122,8 +122,8 @@ class RunTools:
                 description=(
                     "Starts a flow run from the working copy and returns run_id at once, without waiting for the end. "
                     "Pass exactly one of input and dataset_item_id; human_answers are scripted answers for human "
-                    "nodes; context carries the run context keys the flow reads through $run.context.* and "
-                    "flow_get lists them, a missing key is CONTEXT_MISSING with the key in problems[]. "
+                    "nodes; context carries the run context keys the flow reads through $run.context.*, "
+                    "a missing key is CONTEXT_MISSING with the key in problems[]. "
                     "Then call run_get and run_events."
                 ),
                 input_model=RunStartRequest,

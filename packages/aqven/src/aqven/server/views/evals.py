@@ -26,6 +26,7 @@ from aqven.evals import (
     build_eval_plan,
     run_eval,
 )
+from aqven.evals.gate import GateReport
 from aqven.evals.store import EvalStore
 from aqven.ir import CompiledProject
 from aqven.loader import LoadedProject
@@ -177,6 +178,18 @@ class EvalJobs:
         if self.store is None:
             self.store = project_store(self.context.workspace.root)
         return self.store
+
+    async def run(self, eval_run_id: EvalRunId) -> EvalRunRecord:
+        record = await self.opened().run(eval_run_id)
+        if record is None:
+            raise not_found(f"eval run {eval_run_id} is not in the project database")
+        return record
+
+    async def gate(self, eval_run_id: EvalRunId) -> GateReport:
+        record = await self.run(eval_run_id)
+        if record.gate is None:
+            raise not_found(f"eval run {eval_run_id} has no gate report: it ran without a baseline")
+        return record.gate
 
     async def start(self, request: EvalRunRequest) -> EvalRunRecord:
         state = await self.context.workspace.state()

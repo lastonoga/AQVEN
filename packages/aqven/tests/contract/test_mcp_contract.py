@@ -16,7 +16,9 @@ from pydantic import JsonValue, TypeAdapter
 STDIO_MAIN: Final = Path(__file__).with_name("mcp_stdio_main.py")
 JSON_OBJECT: Final = TypeAdapter(dict[str, JsonValue])
 TIMEOUT: Final = 60.0
-EXPECTED_TOOLS: Final = frozenset({"aqven_check", "flow_list", "flow_get", "run_start", "pyright_check", "pytest_run"})
+EXPECTED_TOOLS: Final = frozenset(
+    {"aqven_check", "prompt_preview", "flow_patch", "run_start", "pyright_check", "pytest_run"}
+)
 
 
 def structured(result: CallToolResult) -> dict[str, JsonValue]:

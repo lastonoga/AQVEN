@@ -7,7 +7,7 @@ from aqven.evals.gate import GateReport
 from aqven.evals.store import EvalRunQuery
 from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT
 from aqven.runtime.runs import Page
-from aqven.server.context import ServerContext, rest_only
+from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure, not_found
 from aqven.server.views.common import decode_cursor, encode_cursor, page_of
 from aqven.server.views.dataset_batches import (
@@ -36,6 +36,7 @@ from aqven.server.views.evals import (
     eval_summaries,
     eval_summary,
 )
+from aqven.server.views.services import StudioServices
 from aqven.spec import NAME_PATTERN, DatasetCase, DatasetFile, DatasetId, EvalId, FlowId
 
 ACCEPTED = 202
@@ -44,10 +45,11 @@ EVAL_RUNS = "eval run history in the project database"
 MCP_PENDING = "no MCP tool yet: docs/14-mcp-contract.md names it for a later phase"
 
 
-def build_evals_router(context: ServerContext) -> APIRouter:
+def build_evals_router(context: ServerContext, services: StudioServices | None = None) -> APIRouter:
     router = APIRouter(prefix="/api", responses=ERROR_RESPONSES)
-    jobs = EvalJobs(context)
-    batches = DatasetBatchJobs(context)
+    shared = services or StudioServices()
+    jobs = shared.evals = shared.evals or EvalJobs(context)
+    batches = shared.batches = shared.batches or DatasetBatchJobs(context)
 
     @router.get("/evals", operation_id="eval_list", openapi_extra=rest_only(EVAL_CATALOGUE))
     async def list_evals(
@@ -117,7 +119,7 @@ def build_evals_router(context: ServerContext) -> APIRouter:
         "/dataset-batches",
         status_code=202,
         operation_id="dataset_batch_start",
-        openapi_extra=rest_only("flow dataset batch runs"),
+        openapi_extra=operation("dataset_batch_start"),
     )
     async def start_dataset_batch(body: DatasetBatchStartRequest) -> DatasetBatchRecord:
         return await batches.start(body)
@@ -140,7 +142,7 @@ def build_evals_router(context: ServerContext) -> APIRouter:
     @router.get(
         "/dataset-batches/{batch_id}",
         operation_id="dataset_batch_get",
-        openapi_extra=rest_only("flow dataset batch progress"),
+        openapi_extra=operation("dataset_batch_get"),
     )
     async def get_dataset_batch(batch_id: str) -> DatasetBatchRecord:
         return await batches.get(batch_id)
@@ -237,8 +239,8 @@ def build_evals_router(context: ServerContext) -> APIRouter:
     @router.post(
         "/eval-runs",
         status_code=ACCEPTED,
-        operation_id="experiment_run",
-        openapi_extra=rest_only(MCP_PENDING),
+        operation_id="eval_run_start",
+        openapi_extra=operation("eval_run_start"),
     )
     async def start_eval_run(body: EvalRunRequest) -> EvalRunAccepted:
         return accepted(await jobs.start(body))
@@ -253,9 +255,9 @@ def build_evals_router(context: ServerContext) -> APIRouter:
         rows = await jobs.opened().search(EvalRunQuery(eval_id=eval_id, status=status, limit=MAX_PAGE_LIMIT))
         return page_of(rows, lambda row: row.eval_run_id, cursor, limit)
 
-    @router.get("/eval-runs/{eval_run_id}", operation_id="eval_run_get", openapi_extra=rest_only(EVAL_RUNS))
+    @router.get("/eval-runs/{eval_run_id}", operation_id="eval_run_get", openapi_extra=operation("eval_run_get"))
     async def get_eval_run(eval_run_id: str) -> EvalRunRecord:
-        return await _run(eval_run_id)
+        return await jobs.run(EvalRunId(eval_run_id))
 
     @router.get("/eval-runs/{eval_run_id}/cases", operation_id="eval_run_cases", openapi_extra=rest_only(EVAL_RUNS))
     async def list_eval_cases(
@@ -263,25 +265,16 @@ def build_evals_router(context: ServerContext) -> APIRouter:
         cursor: str | None = None,
         limit: Annotated[int, Query(ge=1, le=MAX_PAGE_LIMIT)] = DEFAULT_PAGE_LIMIT,
     ) -> Page[CaseRecord]:
-        await _run(eval_run_id)
+        await jobs.run(EvalRunId(eval_run_id))
         rows = await jobs.opened().cases(EvalRunId(eval_run_id))
         return page_of(rows, lambda row: f"{row.case_name}#{row.run_index}", cursor, limit)
 
     @router.get(
         "/eval-runs/{eval_run_id}/gate",
-        operation_id="experiment_compare",
-        openapi_extra=rest_only(MCP_PENDING),
+        operation_id="eval_gate",
+        openapi_extra=operation("eval_gate"),
     )
     async def get_eval_gate(eval_run_id: str) -> GateReport:
-        record = await _run(eval_run_id)
-        if record.gate is None:
-            raise not_found(f"eval run {eval_run_id} has no gate report: it ran without a baseline")
-        return record.gate
-
-    async def _run(eval_run_id: str) -> EvalRunRecord:
-        record = await jobs.opened().run(EvalRunId(eval_run_id))
-        if record is None:
-            raise not_found(f"eval run {eval_run_id} is not in the project database")
-        return record
+        return await jobs.gate(EvalRunId(eval_run_id))
 
     return router
