@@ -14,7 +14,7 @@ run before you trust a fix.
 
 ## Steps
 
-- Open a flow and click **Datasets** in its tab bar, next to Runs, Nodes, and Evals — it's a normal
+- Open a flow and click **Datasets** in its tab bar, alongside Runs, Nodes, and Evals — it's a normal
   tab, not a screen you have to find another way.
 - The picker at the top lists every dataset in the project, searchable by ID. It shows each dataset's
   case count and whether it belongs to this flow or is an inference-only dataset used by an eval.
