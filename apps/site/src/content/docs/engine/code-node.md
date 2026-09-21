@@ -40,8 +40,10 @@ before the flow ever calls a model. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its files live at `flows/support_case/nodes/prepare/`. `prepare.node.yaml` declares one input field,
-taken straight from the flow's whole input, and five output fields:
+Its files live at `flows/support_case/nodes/prepare/`. The showcase is written for a Russian-market
+storefront, so its descriptions and data are in Russian; both files below are translated to English
+for this page. `prepare.node.yaml` declares one input field, taken straight from the flow's whole
+input, and five output fields:
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -78,8 +80,7 @@ out:
 
 `prepare.py` defines the function `prepare`, matching the file's own stem, the `run` value, and the
 one `in` field name and order. It imports `SupportCasePrepareOut` — the record AQVEN generated from
-the `out` list above — as its return type. The source project stores the signal labels and field
-descriptions below in Russian, for a Russian-market storefront; they're translated to English here:
+the `out` list above — as its return type:
 
 ```python
 from collections.abc import Mapping
