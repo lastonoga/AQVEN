@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import shutil
 from pathlib import Path
@@ -13,7 +14,7 @@ from aqven.app.engine_host import DbosEngineHost, EngineLaunch
 from aqven.app.health import HEALTH_PATH, READY_PATH
 from aqven.app.instance import bind_loopback, bound_port
 from aqven.app.locations import ProjectState, StudioState
-from aqven.app.options import ServerOptions
+from aqven.app.options import ServerOptions, add_server_arguments, server_options
 from aqven.app.runtime import LocalServer, Started
 from aqven.app.runtime_file import read_server_record
 from aqven.app.settings_store import open_settings_store
@@ -131,3 +132,20 @@ async def test_dbos_engine_host_launches_sqlite_engine_and_stops(tmp_path: Path)
         await host.stop()
     assert host.lifecycle is None
     await host.stop()
+
+
+def parsed_options(argv: list[str], root: Path) -> ServerOptions:
+    parser = argparse.ArgumentParser(prog="chat-allow-tool")
+    add_server_arguments(parser)
+    return server_options(parser.parse_args([*argv, "--root", str(root)]), root)
+
+
+def test_chat_allow_tool_is_empty_by_default(tmp_path: Path) -> None:
+    (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
+    assert parsed_options([], tmp_path).chat_allowed_tools == ()
+
+
+def test_chat_allow_tool_collects_every_rule_and_trims_blanks(tmp_path: Path) -> None:
+    (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
+    argv = ["--chat-allow-tool", "Read", "--chat-allow-tool", " Bash(rg:*) ", "--chat-allow-tool", "  "]
+    assert parsed_options(argv, tmp_path).chat_allowed_tools == ("Read", "Bash(rg:*)")

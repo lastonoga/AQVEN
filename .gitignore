@@ -22,3 +22,5 @@ __pycache__/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+/aqven-test-run/

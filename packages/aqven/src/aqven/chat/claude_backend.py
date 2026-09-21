@@ -131,14 +131,18 @@ class ClaudeChat:
         self.journal.close()
 
 
-def create_claude_chat(project_root: Path, mcp_token: SecretStr) -> ClaudeChat:
+def create_claude_chat(
+    project_root: Path, mcp_token: SecretStr, allowed_tools: tuple[str, ...] = ()
+) -> ClaudeChat:
     cli = locate_claude_cli()
     journal = SqliteChatJournal.for_project(project_root)
     runtime = ClaudeChatRuntime(
         journal=journal,
         signals=ChatSignals(),
         approvals=ApprovalRegistry(),
-        options=ClaudeOptionsFactory(ClaudeChatSettings(mcp_token=mcp_token, cli_path=cli.path)),
+        options=ClaudeOptionsFactory(
+            ClaudeChatSettings(mcp_token=mcp_token, cli_path=cli.path, allowed_tools=allowed_tools)
+        ),
         login=ClaudeLoginProbe(cli, SubprocessCommandRunner(partial(scrubbed_environment, project_root))),
         clock=utc_now,
     )

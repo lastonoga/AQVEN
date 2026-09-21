@@ -52,6 +52,7 @@ class ApplicationLaunch:
     headless: bool
     studio_dist: Path | None
     dev_origin: str | None
+    chat_allowed_tools: tuple[str, ...] = ()
 
 
 class ApplicationFactory(Protocol):
@@ -223,6 +224,7 @@ class LocalServer:
                 headless=options.headless,
                 studio_dist=options.studio_dist,
                 dev_origin=options.dev_origin,
+                chat_allowed_tools=options.chat_allowed_tools,
             )
             application = self._guarded(self.application.build(launch), record, access, options)
             write_server_record(state, record)

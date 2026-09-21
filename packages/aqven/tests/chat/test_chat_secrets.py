@@ -111,6 +111,11 @@ def pre_tool_use(tool_name: str, tool_input: dict[str, JsonValue]) -> PreToolUse
         ("Bash", {"command": "grep KEY ./lumen/.env && echo done"}),
         ("Bash", {"command": "python -c \"print(open('.env').read())\""}),
         ("Bash", {"command": "source .env.production; env"}),
+        ("Bash", {"command": "cat .e''nv"}),
+        ("Bash", {"command": 'cat ".env"'}),
+        ("Bash", {"command": "cat .en\\v"}),
+        ("Bash", {"command": "cat `echo .env`"}),
+        ("Bash", {"command": "cat $(echo .env)"}),
         ("Read", {"file_path": f"/var/folders/T/{MCP_CONFIG_PREFIX}abc.json"}),
         ("Bash", {"command": f"cat $TMPDIR/{MCP_CONFIG_PREFIX}abc.json"}),
     ],
@@ -347,3 +352,30 @@ def test_login_probe_runner_blanks_dotenv_names(tmp_path: Path, monkeypatch: pyt
 
     assert scrubbed_environment(tmp_path) == {"ANTHROPIC_API_KEY": ""}
     assert (outcome.exit_code, outcome.stdout.decode().strip()) == (0, "''")
+
+
+def test_allowed_tools_reach_the_sdk_without_touching_settings_files(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    settings = ClaudeChatSettings(
+        mcp_token=SecretStr(MCP_TOKEN),
+        cli_path=None,
+        mcp_config_directory=tmp_path,
+        allowed_tools=("Read", "Grep", "Bash(rg:*)"),
+    )
+    launch = ClaudeOptionsFactory(settings).build(stored_session(project), allow_all)
+    launch.mcp_config.remove()
+
+    assert launch.options.allowed_tools == ["Read", "Grep", "Bash(rg:*)"]
+    assert launch.options.setting_sources == []
+    assert any(rule.startswith("Read(") and ".env" in rule for rule in launch.options.disallowed_tools)
+
+
+def test_allowed_tools_are_empty_unless_the_launcher_passes_them(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    settings = ClaudeChatSettings(mcp_token=SecretStr(MCP_TOKEN), cli_path=None, mcp_config_directory=tmp_path)
+    launch = ClaudeOptionsFactory(settings).build(stored_session(project), allow_all)
+    launch.mcp_config.remove()
+
+    assert launch.options.allowed_tools == []

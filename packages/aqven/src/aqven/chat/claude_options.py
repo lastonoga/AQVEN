@@ -33,6 +33,7 @@ class ClaudeChatSettings:
     thinking_budget_tokens: int = DEFAULT_THINKING_BUDGET_TOKENS
     client_app: str = DEFAULT_CLIENT_APP
     mcp_config_directory: Path | None = None
+    allowed_tools: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +79,7 @@ class ClaudeOptionsFactory:
             mcp_servers=config.path,
             strict_mcp_config=True,
             setting_sources=[],
+            allowed_tools=list(self.settings.allowed_tools),
             disallowed_tools=self.guard.permission_rules(config.locations()),
             hooks=self.guard.hooks(),
             can_use_tool=can_use_tool,

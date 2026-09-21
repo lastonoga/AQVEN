@@ -113,7 +113,11 @@ def mcp_parts(launch: ApplicationLaunch, bearer: bool = True) -> ApplicationPart
 
 def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
     chat = studio_chat_parts(
-        launch.project_root, launch.record.mcp_url, SecretStr(launch.access.token), launch.settings
+        launch.project_root,
+        launch.record.mcp_url,
+        SecretStr(launch.access.token),
+        launch.settings,
+        launch.chat_allowed_tools,
     )
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 

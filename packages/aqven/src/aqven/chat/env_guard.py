@@ -25,7 +25,8 @@ ENV_RULE_PATTERNS: Final = (f"**/{PROJECT_ENV_FILE}", f"**/{PROJECT_ENV_FILE}.*"
 RULE_ROOTS: Final = ("", "//")
 RULE_TOOLS: Final = ("Read", "Edit")
 WILDCARDS: Final = frozenset("*?[")
-TEXT_SEPARATORS: Final = re.compile(r"""[\s/\\'"`=;:,|&<>(){}\[\]$]+""")
+QUOTING: Final = str.maketrans("", "", "'\"\\")
+TEXT_SEPARATORS: Final = re.compile(r"""[\s/`=;:,|&<>(){}\[\]$]+""")
 PROCESS_ENV_NAME: Final = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 PRE_TOOL_USE: Final[HookEvent] = "PreToolUse"
 SECRET_FILE_REASON: Final = (
@@ -60,7 +61,14 @@ GUARDED_TOOLS: Final[Mapping[str, InputTexts]] = {
 GUARDED_TOOL_MATCHER: Final = "|".join(GUARDED_TOOLS)
 
 
-def names_env_file(segment: str) -> bool:
+def unquoted(segment: str) -> str:
+    return segment.translate(QUOTING)
+
+
+def names_env_file(raw_segment: str) -> bool:
+    segment = unquoted(raw_segment)
+    if not segment:
+        return False
     if WILDCARDS.isdisjoint(segment):
         return segment.startswith(ENV_VARIANT_PREFIX) or segment.endswith(ENV_SUFFIX)
     if not any(character.isalnum() for character in segment):

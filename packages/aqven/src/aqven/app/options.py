@@ -2,7 +2,7 @@ import argparse
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from aqven.app.environment import (
     AQVEN_HOST,
@@ -42,6 +42,7 @@ class ServerOptions:
     dev_origin: str | None = None
     host: str = LOOPBACK_HOST
     require_auth: bool = False
+    chat_allowed_tools: tuple[str, ...] = ()
     startup_timeout_seconds: float = STARTUP_TIMEOUT_SECONDS
     poll_seconds: float = POLL_SECONDS
 
@@ -69,6 +70,23 @@ def add_server_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--dev-origin", default=None, help="Vite dev server origin, for example http://localhost:5173")
     parser.add_argument("--host", default=None, help=f"bind address; {AQVEN_HOST} or {LOOPBACK_HOST} by default")
     parser.add_argument("--require-auth", action="store_true", help="require a launch token for local API and MCP")
+    parser.add_argument(
+        "--chat-allow-tool",
+        action="append",
+        default=None,
+        metavar="RULE",
+        help=(
+            "auto-approve a chat agent tool without asking in Studio, repeatable; "
+            "narrow rules only, for example Read or Grep or 'Bash(rg:*)'"
+        ),
+    )
+
+
+def _rules(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    items = cast(list[object], value)
+    return tuple(rule for item in items if isinstance(item, str) and (rule := item.strip()))
 
 
 def _path(value: object) -> Path | None:
@@ -103,6 +121,7 @@ def server_options(
         dev_origin=_text(arguments.dev_origin),
         host=settings.host if host is None else host,
         require_auth=bool(arguments.require_auth),
+        chat_allowed_tools=_rules(arguments.chat_allow_tool),
     )
 
 

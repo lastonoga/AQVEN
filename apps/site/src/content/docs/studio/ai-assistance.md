@@ -7,6 +7,26 @@ Studio's chat panel can connect to a configured coding-agent backend. It keeps s
 
 <img src="/images/studio/chat.png" alt="A new Studio chat thread ready to help orient an engineer in a workflow." width="360" height="240" style="height: 240px; object-fit: cover; object-position: top;" />
 
+## Why the agent asks before running a command
+
+The chat agent starts with no settings files loaded at all: not your global Claude configuration, not the
+project's `.claude/settings.json`. Nothing in the project can grant the agent permissions, so every tool call
+it cannot already run arrives in Studio as an approval.
+
+Shell commands stay behind that approval on purpose. A shell command is one opaque string, so the permission
+layer cannot tell reading a flow file from reading `.env`, where your provider keys live.
+
+If the prompts get in the way, auto-approve specific tools when you start the server:
+
+```bash
+{{CLI_COMMAND}} dev --chat-allow-tool Read --chat-allow-tool Grep --chat-allow-tool 'Bash(rg:*)'
+```
+
+The flag is repeatable and is read only at launch, so the agent cannot widen its own permissions by editing a
+file. Keep the rules narrow. `Bash(*)` would auto-approve every command, and shell quoting makes command
+prefixes a weak boundary; reading and searching tools take a real path instead of a shell string, so they are
+the safe ones to allow. Rules that would reach an `.env` file are refused whatever you allow.
+
 ## Give the agent an engineering task
 
 Give the agent a concrete task and a way to verify it. For example:
