@@ -20,7 +20,8 @@ consistent with each other.
 - Every `flow_patch` call names a `flow_id`, an `ops` list (1 to 50 operations, applied atomically — all
   of them land or none of them are written to disk), a `client_op_id` you generate, and `expects` — the
   compare-and-swap check described below. An optional `intent` string is a free-text label for the
-  change; it shows up in AQVEN's own change history.
+  change, useful for anything else watching the project (a person with Studio open, another agent) that
+  sees the files change and wants to know why.
 - **The 11 real operations**, by `op`: `add_node`, `remove_node`, `rename_node`, `move_node`, `set`,
   `unset`, `bind`, `unbind`, `rename_flow`, `rename_agent`, `delete_agent`. There's no `replace` —
   changing one field's value is `set`. There's no node-level `delete` — removing a node is `remove_node`.
