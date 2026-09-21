@@ -261,6 +261,26 @@
       ],
       "type": "string"
     },
+    "ProviderLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "rpm": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rpm"
+        }
+      },
+      "title": "ProviderLimits",
+      "type": "object"
+    },
     "ProviderNameField": {
       "pattern": "^[a-z][a-z0-9_-]{0,62}$",
       "type": "string"
@@ -312,6 +332,17 @@
         "kind": {
           "$ref": "#/$defs/ProviderKind",
           "default": "catalog"
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderLimits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "params": {
           "anyOf": [
