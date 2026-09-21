@@ -77,7 +77,18 @@ export default defineConfig({
         },
         {
           label: "Studio",
-          items: [],
+          items: [
+            { slug: "studio" },
+            { slug: "studio/first-workflow" },
+            { slug: "studio/understand-the-graph" },
+            { slug: "studio/investigate-a-run" },
+            { slug: "studio/respond-to-a-review" },
+            { slug: "studio/datasets" },
+            { slug: "studio/evals" },
+            { slug: "studio/chat" },
+            { slug: "studio/settings" },
+            { slug: "studio/open-a-project" },
+          ],
         },
         {
           label: "MCP & CLI",
