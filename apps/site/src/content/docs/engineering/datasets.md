@@ -211,7 +211,7 @@ inputs:
     name: "example.jpg"
 ```
 
-The `blob_id` must identify a real blob in the project; the text above is a shape example, not a runnable media case. Studio's CSV importer can fetch supported **public HTTP(S)** media URLs from media columns, validate their type and size, store the blob, and write the case value. It rejects private or credential-bearing URLs. Each imported media file is limited to 25 MiB and a dataset import to 500 MiB of media. Use a case with no attachment too, so the workflow's optional-media path is exercised. [Multimodal input](/engineering/multimodal-input/) explains the type and model-capability side.
+The `blob_id` must identify a real blob in the project; the text above is a shape example, not a runnable media case. Studio's CSV importer can fetch supported **public HTTP(S)** media URLs from media columns, validate their type and size, store the blob, and write the case value. It rejects private or credential-bearing URLs. Each imported media file is limited to 25 MiB and a dataset import to 500 MiB of media. Use a case with no attachment too, so the workflow's optional-media path is exercised. [Types and Structured Output](/engineering/types/#media-fields-images-audio-video-documents) explains the type and model-capability side.
 
 ## Run and inspect cases in Studio
 
