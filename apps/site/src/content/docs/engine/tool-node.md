@@ -22,9 +22,10 @@ for it to finish. A `code` node's function is always synchronous plain Python; t
   takes, each with a `name`, `type`, and `description` — and `out` — the fields it returns, at least
   one. A tool has no separate node-level contract; the node just binds values into the fields the tool
   already declares.
-- Write the function. Its first parameter is a tool context — an HTTP client, your declared secrets,
-  and, for a write or external tool, an idempotency key AQVEN derives for you — followed by one
-  parameter per `in` field, same names, same order. Return a record built from the `out` fields.
+- Write the function. Its first parameter is `ToolContext`, imported from `aqven.runtime` — an HTTP
+  client, your declared secrets, and, for a write or external tool, an idempotency key AQVEN derives
+  for you — followed by one parameter per `in` field, same names, same order. Return a record built
+  from the `out` fields.
 - If the call needs a credential, declare it under `secrets` — a name plus a reference to an
   environment variable — and read it back inside the function through the tool context instead of the
   process environment directly.
