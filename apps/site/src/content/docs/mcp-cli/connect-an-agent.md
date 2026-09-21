@@ -1,6 +1,6 @@
 ---
 title: How to connect AQVEN as an MCP server
-description: Give a coding agent AQVEN's own tools, the simple way through a stdio bridge or directly over HTTP for a client that speaks it.
+description: Connect a coding agent to AQVEN as an MCP server, either through the simple stdio bridge or directly over streamable HTTP.
 ---
 
 # How to connect AQVEN as an MCP server
