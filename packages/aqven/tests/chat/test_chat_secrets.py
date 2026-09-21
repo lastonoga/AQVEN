@@ -379,3 +379,31 @@ def test_allowed_tools_are_empty_unless_the_launcher_passes_them(tmp_path: Path)
     launch.mcp_config.remove()
 
     assert launch.options.allowed_tools == []
+
+
+def test_trusted_project_stops_asking_but_keeps_the_env_guard(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    settings = ClaudeChatSettings(
+        mcp_token=SecretStr(MCP_TOKEN), cli_path=None, mcp_config_directory=tmp_path, trust_project=True
+    )
+    launch = ClaudeOptionsFactory(settings).build(stored_session(project), allow_all)
+    launch.mcp_config.remove()
+
+    assert launch.options.permission_mode == "bypassPermissions"
+    assert any(rule.startswith("Read(") and ".env" in rule for rule in launch.options.disallowed_tools)
+    assert "PreToolUse" in launch.options.hooks
+    assert launch.options.setting_sources == []
+
+
+def test_trusted_project_overrides_the_mode_chosen_in_studio(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    trusted = ClaudeChatSettings(
+        mcp_token=SecretStr(MCP_TOKEN), cli_path=None, mcp_config_directory=tmp_path, trust_project=True
+    )
+    plain = ClaudeChatSettings(mcp_token=SecretStr(MCP_TOKEN), cli_path=None, mcp_config_directory=tmp_path)
+
+    assert ClaudeOptionsFactory(trusted).permission_mode("plan") == "bypassPermissions"
+    assert ClaudeOptionsFactory(plain).permission_mode("plan") == "plan"
+    assert ClaudeOptionsFactory(plain).permission_mode("accept_edits") == "acceptEdits"

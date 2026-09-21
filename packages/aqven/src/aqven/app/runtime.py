@@ -41,6 +41,12 @@ LOG_LEVEL: Final = "warning"
 STOP_SIGNALS: Final = (signal.SIGINT, signal.SIGTERM)
 
 
+TRUSTED_CHAT_WARNING: Final = (
+    "aqven: --chat-trust-project is on, so the chat agent runs every tool call without asking. "
+    "Provider keys in .env are held back by a text check on the command, which arbitrary code can walk past."
+)
+
+
 @dataclass(frozen=True, slots=True)
 class ApplicationLaunch:
     project_root: Path
@@ -53,6 +59,7 @@ class ApplicationLaunch:
     studio_dist: Path | None
     dev_origin: str | None
     chat_allowed_tools: tuple[str, ...] = ()
+    chat_trust_project: bool = False
 
 
 class ApplicationFactory(Protocol):
@@ -225,6 +232,7 @@ class LocalServer:
                 studio_dist=options.studio_dist,
                 dev_origin=options.dev_origin,
                 chat_allowed_tools=options.chat_allowed_tools,
+                chat_trust_project=options.chat_trust_project,
             )
             application = self._guarded(self.application.build(launch), record, access, options)
             write_server_record(state, record)
@@ -266,6 +274,8 @@ class LocalServer:
         self.readiness.mark_ready()
         address = record.url if options.headless else studio_browser_url(record, options)
         self.announcer.announce(f"aqven: {address} (MCP {record.mcp_url})")
+        if options.chat_trust_project:
+            self.announcer.announce(TRUSTED_CHAT_WARNING)
         await self._open_browser(record, options)
 
     async def _open_browser(self, record: ServerRecord, options: ServerOptions) -> None:

@@ -43,6 +43,7 @@ class ServerOptions:
     host: str = LOOPBACK_HOST
     require_auth: bool = False
     chat_allowed_tools: tuple[str, ...] = ()
+    chat_trust_project: bool = False
     startup_timeout_seconds: float = STARTUP_TIMEOUT_SECONDS
     poll_seconds: float = POLL_SECONDS
 
@@ -78,6 +79,14 @@ def add_server_arguments(parser: argparse.ArgumentParser) -> None:
         help=(
             "auto-approve a chat agent tool without asking in Studio, repeatable; "
             "narrow rules only, for example Read or Grep or 'Bash(rg:*)'"
+        ),
+    )
+    parser.add_argument(
+        "--chat-trust-project",
+        action="store_true",
+        help=(
+            "run the chat agent without asking for approval at all; "
+            "it may still not read .env, but only a text check stands between the agent and it"
         ),
     )
 
@@ -122,6 +131,7 @@ def server_options(
         host=settings.host if host is None else host,
         require_auth=bool(arguments.require_auth),
         chat_allowed_tools=_rules(arguments.chat_allow_tool),
+        chat_trust_project=bool(arguments.chat_trust_project),
     )
 
 

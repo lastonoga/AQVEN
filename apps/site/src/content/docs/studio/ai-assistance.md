@@ -27,6 +27,18 @@ file. Keep the rules narrow. `Bash(*)` would auto-approve every command, and she
 prefixes a weak boundary; reading and searching tools take a real path instead of a shell string, so they are
 the safe ones to allow. Rules that would reach an `.env` file are refused whatever you allow.
 
+To stop the questions entirely, run the server with `--chat-trust-project`:
+
+```bash
+{{CLI_COMMAND}} dev --chat-trust-project
+```
+
+The agent then runs every tool call without asking, and the server prints a warning on startup so the mode
+cannot begin quietly. The refusal to touch `.env` still stands, but it rests on a text check of the command,
+and code that builds the path instead of writing it down can walk past that check. Turn it on for a project
+whose `.env` you would not mind the agent reading, or when the keys come from the process environment rather
+than a file.
+
 ## Give the agent an engineering task
 
 Give the agent a concrete task and a way to verify it. For example:

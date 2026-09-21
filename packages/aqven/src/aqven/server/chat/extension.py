@@ -29,8 +29,9 @@ def studio_chat_parts(
     access_token: SecretStr,
     settings: BackendSettingValues,
     allowed_tools: tuple[str, ...] = (),
+    trust_project: bool = False,
 ) -> ChatServerParts:
-    chat = create_claude_chat(project_root, access_token, allowed_tools)
+    chat = create_claude_chat(project_root, access_token, allowed_tools, trust_project)
     codex = CodexAgentBackend(chat.journal, project_root, mcp_url, access_token)
     registry = BackendRegistry({"claude": chat.backend, "codex": codex}, BackendSelection(settings))
     router = build_chat_router(registry, chat.journal, ChatRouteContext(project_root, mcp_url))

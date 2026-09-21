@@ -15,7 +15,7 @@ from aqven.app.health import HEALTH_PATH, READY_PATH
 from aqven.app.instance import bind_loopback, bound_port
 from aqven.app.locations import ProjectState, StudioState
 from aqven.app.options import ServerOptions, add_server_arguments, server_options
-from aqven.app.runtime import LocalServer, Started
+from aqven.app.runtime import TRUSTED_CHAT_WARNING, LocalServer, Started
 from aqven.app.runtime_file import read_server_record
 from aqven.app.settings_store import open_settings_store
 from aqven.engine.facade import DbosEngineFacade
@@ -149,3 +149,43 @@ def test_chat_allow_tool_collects_every_rule_and_trims_blanks(tmp_path: Path) ->
     (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
     argv = ["--chat-allow-tool", "Read", "--chat-allow-tool", " Bash(rg:*) ", "--chat-allow-tool", "  "]
     assert parsed_options(argv, tmp_path).chat_allowed_tools == ("Read", "Bash(rg:*)")
+
+
+def test_chat_trust_project_is_off_by_default(tmp_path: Path) -> None:
+    (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
+    assert parsed_options([], tmp_path).chat_trust_project is False
+
+
+def test_chat_trust_project_needs_no_other_rules(tmp_path: Path) -> None:
+    (tmp_path / "aqven.yaml").write_text("apiVersion: aqven/v1\nkind: Project\n", encoding="utf-8")
+    options = parsed_options(["--chat-trust-project"], tmp_path)
+    assert options.chat_trust_project is True
+    assert options.chat_allowed_tools == ()
+
+
+@pytest.mark.asyncio
+async def test_trusted_chat_is_announced_so_it_cannot_start_quietly(tmp_path: Path) -> None:
+    root = copy_project("standard_shop", tmp_path)
+    announcer = RecordingAnnouncer()
+    server = LocalServer(
+        application=ServerApplicationFactory(StudioFeatures(watch=False, chat=False)),
+        engine=RecordingEngineHost(),
+        browser=RecordingBrowser(),
+        announcer=announcer,
+    )
+    options = ServerOptions(
+        root=root,
+        port=free_port(),
+        data_dir=tmp_path / "data",
+        headless=True,
+        chat_trust_project=True,
+    )
+    task = asyncio.create_task(server.serve(options))
+    try:
+        async with asyncio.timeout(WAIT_SECONDS):
+            while not server.readiness.ready and not task.done():
+                await asyncio.sleep(0.02)
+        assert any(message == TRUSTED_CHAT_WARNING for message in announcer.messages)
+    finally:
+        server.request_stop()
+        await task

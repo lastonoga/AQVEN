@@ -118,6 +118,7 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
         SecretStr(launch.access.token),
         launch.settings,
         launch.chat_allowed_tools,
+        launch.chat_trust_project,
     )
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 
