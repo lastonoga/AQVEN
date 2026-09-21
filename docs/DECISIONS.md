@@ -339,8 +339,8 @@ strict — [ADR-0027](adr/0027-dynamic-io-shapes.md) «Strict включаетс
 ## Библиотека и проект
 
 Решение — [ADR-0030](adr/0030-local-browser-backend.md) `A2`, `A9`; раскладка —
-[aqven-py/docs/project-structure.md](../aqven-py/docs/project-structure.md), как строить flow —
-[aqven-py/docs/building-flows.md](../aqven-py/docs/building-flows.md).
+[docs/library/project-structure.md](library/project-structure.md), как строить flow —
+[docs/library/building-flows.md](library/building-flows.md).
 
 - **AQVEN — библиотека, Studio — один её клиент.** Пять входов и один композиционный корень: прогон в процессе
   (`Project.load`, `flow_typed`, `flow.run`), монтируемое ASGI-приложение (`create_local_app` + `host.mount("/aqven")`)
