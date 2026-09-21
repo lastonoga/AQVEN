@@ -46,7 +46,11 @@ to bottom. Pick whichever matches how you're already looking at the problem.
 
 ### Example
 
-In the showcase project's `support_case` flow, the `triage` node is an `llm` step with one upstream node
+```bash
+{{CLI_COMMAND}} new my_project --template showcase
+```
+
+In the `support_case` flow this creates, the `triage` node is an `llm` step with one upstream node
 (`prepare`) and about a dozen downstream nodes that read its output. On the canvas, its card is tagged
 `llm`, subtitled `gemini · triage` — its agent and inference id. Click it and the inspector opens on
 `definition`, showing its description and that single upstream link to `prepare`; switch to `prompt` to
