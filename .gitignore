@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-ssr/
+packages/aqven/src/aqven/server/static/
 .astro/
 .tanstack/
 *.tsbuildinfo

@@ -72,6 +72,47 @@ jobs:
       - name: openapi types are current
         run: pnpm --filter @aqven/studio check:api
 
+  package:
+    name: Wheels with Studio inside
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          version: "0.12.15"
+          enable-cache: true
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: build Studio
+        run: pnpm --filter @aqven/studio build
+      - name: copy Studio into the aqven package
+        run: python tools/bundle_studio.py
+      - name: the package carries the current Studio
+        run: python tools/bundle_studio.py --check
+      - name: build wheels
+        run: |
+          uv build --package aqven-llm --out-dir dist
+          uv build --package aqven --out-dir dist
+      - name: the wheel really contains the Studio
+        run: |
+          python - <<'PY'
+          import glob, sys, zipfile
+          wheel = glob.glob("dist/aqven-*.whl")[0]
+          names = zipfile.ZipFile(wheel).namelist()
+          if "aqven/server/static/index.html" not in names:
+              sys.exit(f"{wheel} ships no Studio: aqven/server/static/index.html is missing")
+          assets = [name for name in names if name.startswith("aqven/server/static/") and not name.endswith("/")]
+          print(f"{wheel}: {len(assets)} Studio files")
+          PY
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: wheels
+          path: dist/*
+
   site:
     name: Documentation site
     runs-on: ubuntu-latest

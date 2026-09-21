@@ -14,11 +14,10 @@ description: Start a project yourself or with an AI coding agent.
 
 An agent can read the [machine-readable documentation index](/llms.txt). It links to Markdown copies of the guides and the generated API reference. The [AI bootstrap guide](/engineering/getting-started-with-ai/) is a reusable prompt and process; it is not a packaged agent skill.
 
-The packages are not published yet. The future install names are placeholders configured once in `site/docs.tokens.mjs`:
+The package is not published yet. The future install name is a placeholder configured once in `apps/site/docs.tokens.mjs`. Studio ships inside the same package, so there is nothing else to install:
 
 ```bash
-pip install {{PYTHON_PACKAGE}}
-# Studio package: {{STUDIO_PACKAGE}}
+uv tool install {{PYTHON_PACKAGE}}
 ```
 
 ## Create a project from this checkout
