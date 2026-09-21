@@ -63,10 +63,10 @@ To find every node that reads a value from `triage`, grep across the tree instea
 it:
 
 ```text
-Grep: "from: triage" in flows/support_case/nodes/**/*.yaml
-  flows/support_case/nodes/drafts/gemini.node.yaml
-  flows/support_case/nodes/intent/escalate.node.yaml
-  flows/support_case/nodes/panel/panel.node.yaml
+Grep: "\$triage\." in flows/support_case/nodes/**/*.yaml
+  flows/support_case/nodes/drafts/gemini.node.yaml:9:  from: "$triage.out.summary"
+  flows/support_case/nodes/intent/escalate.node.yaml:9:  from: "$triage.out.summary"
+  flows/support_case/nodes/panel/panel.node.yaml:8:  from: "$triage.out.summary"
   ...
 ```
 
