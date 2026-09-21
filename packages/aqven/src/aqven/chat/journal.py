@@ -5,7 +5,7 @@ from typing import Protocol
 from pydantic import AwareDatetime
 
 from aqven.chat.builders import ChatEventBuilder
-from aqven.ports.chat import ChatEvent, ChatSession, ChatSessionId, ChatTurnId
+from aqven.ports.chat import ChatEvent, ChatSession, ChatSessionId, ChatSessionSettings, ChatTurnId
 from aqven.runtime.address import ClientOpId, ResourceModel
 from aqven.spec import FlowId
 
@@ -40,6 +40,8 @@ class ChatJournal(ChatSessionDirectory, Protocol):
     def remember_backend_session(self, session_id: ChatSessionId, backend_session_id: str) -> None: ...
 
     def set_closed(self, session_id: ChatSessionId, closed_at: datetime | None) -> None: ...
+
+    def update_settings(self, session_id: ChatSessionId, settings: ChatSessionSettings) -> StoredChatSession: ...
 
     def append(self, session_id: ChatSessionId, turn_id: ChatTurnId | None, build: ChatEventBuilder) -> ChatEvent: ...
 

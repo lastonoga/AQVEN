@@ -1140,7 +1140,8 @@ export interface paths {
         delete: operations["chat_session_close"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Chat Session Settings */
+        patch: operations["chat_session_settings"];
         trace?: never;
     };
     "/api/chat/sessions/{session_id}/messages": {
@@ -1826,6 +1827,13 @@ export interface components {
             permission_mode?: components["schemas"]["ChatPermissionMode"] | null;
             /** Resume Session Id */
             resume_session_id?: string | null;
+        };
+        /** ChatSessionSettings */
+        ChatSessionSettings: {
+            /** Model */
+            model?: string | null;
+            effort?: components["schemas"]["ChatEffort"] | null;
+            permission_mode?: components["schemas"]["ChatPermissionMode"] | null;
         };
         /** @enum {string} */
         ChatState: "idle" | "thinking" | "streaming" | "running_tool" | "waiting_approval" | "interrupting";
@@ -6667,6 +6675,7 @@ export type SchemaChatPermissionMode = components['schemas']['ChatPermissionMode
 export type SchemaChatReasoningDelta = components['schemas']['ChatReasoningDelta'];
 export type SchemaChatSession = components['schemas']['ChatSession'];
 export type SchemaChatSessionCreate = components['schemas']['ChatSessionCreate'];
+export type SchemaChatSessionSettings = components['schemas']['ChatSessionSettings'];
 export type SchemaChatState = components['schemas']['ChatState'];
 export type SchemaChatStatus = components['schemas']['ChatStatus'];
 export type SchemaChatStopReason = components['schemas']['ChatStopReason'];
@@ -14841,6 +14850,113 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSession"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    chat_session_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatSessionSettings"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -86,6 +86,11 @@ class ClaudeAgentBackend:
             return
         await runner.interrupt()
 
+    async def apply_settings(self, session_id: ChatSessionId) -> None:
+        runner = self._runners.get(session_id)
+        if runner is not None:
+            await runner.reload_settings()
+
     async def close_session(self, session_id: ChatSessionId) -> None:
         self._require(session_id)
         runner = self._runners.pop(session_id, None)

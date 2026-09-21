@@ -42,6 +42,7 @@ function mount(choice: ChatChoice, onChange: Dispatch<SetStateAction<ChatChoice>
         <ChatSettings
           backend={catalog.backend}
           session={null}
+          applyToSession={vi.fn()}
           choice={choice}
           disabled={false}
           onChange={onChange}
@@ -116,6 +117,7 @@ describe("chat settings", () => {
           <ChatSettings
             backend="claude"
             session={null}
+            applyToSession={vi.fn()}
             choice={DEFAULT_CHAT_CHOICE}
             disabled={false}
             onChange={vi.fn()}
@@ -144,13 +146,14 @@ describe("chat settings with a thread open", () => {
     last_seq: 0,
   }
 
-  const mountWithSession = (session: ApiChatSession, choice: ChatChoice) =>
+  const mountWithSession = (session: ApiChatSession, choice: ChatChoice, applyToSession = vi.fn()) =>
     render(
       <IntlProvider locale="en" messages={messages.en}>
         <TooltipProvider>
           <ChatSettings
             backend="codex"
             session={session}
+            applyToSession={applyToSession}
             choice={choice}
             disabled={false}
             onChange={vi.fn()}
@@ -170,10 +173,29 @@ describe("chat settings with a thread open", () => {
     })
   })
 
-  it("says the menu applies to a new thread while one is open", async () => {
-    mountWithSession(SESSION, DEFAULT_CHAT_CHOICE)
+  it("writes a model change to the open thread instead of the pending choice", async () => {
+    const applyToSession = vi.fn()
+    const onChange = vi.fn()
+    render(
+      <IntlProvider locale="en" messages={messages.en}>
+        <TooltipProvider>
+          <ChatSettings
+            backend="codex"
+            session={SESSION}
+            applyToSession={applyToSession}
+            choice={DEFAULT_CHAT_CHOICE}
+            disabled={false}
+            onChange={onChange}
+            loadModels={() => Promise.resolve(CATALOG)}
+          />
+        </TooltipProvider>
+      </IntlProvider>,
+    )
     await waitFor(() => { expect(screen.getByRole("combobox", { name: "Model and agent settings" })).toBeDefined() })
     fireEvent.click(screen.getByRole("combobox", { name: "Model and agent settings" }))
-    await waitFor(() => { expect(screen.getByText("For a new thread")).toBeDefined() })
+    await waitFor(() => { expect(screen.getByText("GPT-5.6-Thinker")).toBeDefined() })
+    fireEvent.click(screen.getByText("GPT-5.6-Thinker"))
+    expect(applyToSession).toHaveBeenCalledWith({ model: "gpt-5.6-thinker", effort: null, permission_mode: "default" })
+    expect(onChange).not.toHaveBeenCalled()
   })
 })

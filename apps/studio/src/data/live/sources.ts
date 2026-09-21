@@ -4,6 +4,7 @@ import type {
   ApiChatBackendWrite,
   ApiChatMessageRequest,
   ApiChatSessionCreate,
+  ApiChatSessionSettings,
   ApiDatasetCreateRequest,
   ApiDatasetBatchStartRequest,
   ApiExecutionAddress,
@@ -240,6 +241,8 @@ const chat = {
   session: async (sessionId: ChatSessionId) =>
     unwrap(await api.GET("/api/chat/sessions/{session_id}", { params: { path: { session_id: sessionId } } })),
   create: async (body: ApiChatSessionCreate) => unwrap(await api.POST("/api/chat/sessions", { body })),
+  settings: async (sessionId: ChatSessionId, body: ApiChatSessionSettings) =>
+    unwrap(await api.PATCH("/api/chat/sessions/{session_id}", { params: { path: { session_id: sessionId } }, body })),
   drop: async (sessionId: ChatSessionId) =>
     unwrap(await api.DELETE("/api/chat/sessions/{session_id}", { params: { path: { session_id: sessionId } } })),
   send: async (sessionId: ChatSessionId, body: ApiChatMessageRequest) =>

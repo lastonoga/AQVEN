@@ -237,6 +237,7 @@ def test_chat_operations_are_rest_only_in_openapi(tmp_path: Path) -> None:
     assert set(operations) == {
         "chat_login_status",
         "chat_model_list",
+        "chat_session_settings",
         "chat_backend_get",
         "chat_backend_put",
         "chat_session_list",
@@ -295,6 +296,51 @@ def test_chat_parts_create_codex_session_when_project_selects_codex(tmp_path: Pa
             )
 
     assert asyncio.run(scenario()) == (201, "codex", "codex", ("claude", "codex"))
+    asyncio.run(parts.codex.aclose())
+    asyncio.run(parts.chat.aclose())
+
+
+def test_chat_session_settings_change_the_open_thread(tmp_path: Path) -> None:
+    settings = MemoryBackendSettings()
+    settings.value = "codex"
+    parts = studio_chat_parts(tmp_path, MCP_URL, SecretStr("launch-token"), settings)
+    app = FastAPI()
+    app.include_router(parts.router)
+
+    async def scenario() -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+        async with client_for(app) as client:
+            created = (await client.post("/api/chat/sessions", json={})).json()
+            session_id = created["session_id"]
+            patched = await client.patch(
+                f"/api/chat/sessions/{session_id}",
+                json={"model": "gpt-5.6-sol", "effort": "high", "permission_mode": "trust"},
+            )
+            fetched = await client.get(f"/api/chat/sessions/{session_id}")
+            return created, patched.json(), fetched.json()
+
+    created, patched, fetched = asyncio.run(scenario())
+    assert (created["model"], created["effort"]) == (None, None)
+    assert (patched["model"], patched["effort"], patched["permission_mode"]) == ("gpt-5.6-sol", "high", "trust")
+    assert (fetched["model"], fetched["effort"], fetched["permission_mode"]) == ("gpt-5.6-sol", "high", "trust")
+    asyncio.run(parts.codex.aclose())
+    asyncio.run(parts.chat.aclose())
+
+
+def test_chat_session_settings_leave_untouched_fields_alone(tmp_path: Path) -> None:
+    settings = MemoryBackendSettings()
+    settings.value = "codex"
+    parts = studio_chat_parts(tmp_path, MCP_URL, SecretStr("launch-token"), settings)
+    app = FastAPI()
+    app.include_router(parts.router)
+
+    async def scenario() -> dict[str, object]:
+        async with client_for(app) as client:
+            created = (await client.post("/api/chat/sessions", json={"model": "gpt-5.6-sol", "effort": "low"})).json()
+            await client.patch(f"/api/chat/sessions/{created['session_id']}", json={"permission_mode": "plan"})
+            return (await client.get(f"/api/chat/sessions/{created['session_id']}")).json()
+
+    fetched = asyncio.run(scenario())
+    assert (fetched["model"], fetched["effort"], fetched["permission_mode"]) == ("gpt-5.6-sol", "low", "plan")
     asyncio.run(parts.codex.aclose())
     asyncio.run(parts.chat.aclose())
 

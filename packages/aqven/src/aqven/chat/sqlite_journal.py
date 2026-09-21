@@ -18,6 +18,7 @@ from aqven.ports.chat import (
     ChatPermissionMode,
     ChatSession,
     ChatSessionId,
+    ChatSessionSettings,
     ChatTurnId,
     ChatTurnStarted,
 )
@@ -263,6 +264,20 @@ class SqliteChatJournal:
             self._connection.execute(
                 "UPDATE chat_sessions SET closed_at = ? WHERE session_id = ?", (_iso(closed_at), session_id)
             )
+
+    def update_settings(self, session_id: ChatSessionId, settings: ChatSessionSettings) -> StoredChatSession:
+        assignments = settings.model_dump(exclude_none=True)
+        if assignments:
+            columns = ", ".join(f"{name} = ?" for name in assignments)
+            with self._lock, self._connection:
+                self._connection.execute(
+                    f"UPDATE chat_sessions SET {columns} WHERE session_id = ?",
+                    (*assignments.values(), session_id),
+                )
+        stored = self.get_session(session_id)
+        if stored is None:
+            raise ChatFailure("NOT_FOUND", f"chat session {session_id} is unknown")
+        return stored
 
     def append(self, session_id: ChatSessionId, turn_id: ChatTurnId | None, build: ChatEventBuilder) -> ChatEvent:
         with self._lock, self._connection:

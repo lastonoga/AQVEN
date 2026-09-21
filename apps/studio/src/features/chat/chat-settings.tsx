@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react"
 import { Check, FileCode, Hand, Map as MapIcon, Zap } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiChatBackendKind, ApiChatModelCatalog, ApiChatSession } from "@/domain"
+import type { ApiChatBackendKind, ApiChatModelCatalog, ApiChatSession, ApiChatSessionSettings } from "@/domain"
 import { PickerCommand, PickerOption, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { CommandList } from "@/components/ui/command"
@@ -20,6 +20,7 @@ const MODE_ICONS = { default: Hand, accept_edits: FileCode, plan: MapIcon, trust
 export type ChatSettingsProps = {
   readonly backend: ApiChatBackendKind
   readonly session: ApiChatSession | null
+  readonly applyToSession: (settings: ApiChatSessionSettings) => void
   readonly choice: ChatChoice
   readonly disabled: boolean
   readonly onChange: Dispatch<SetStateAction<ChatChoice>>
@@ -40,7 +41,7 @@ function Row({ selected, children, onSelect, value }: {
   )
 }
 
-export function ChatSettings({ backend, session, choice, disabled, onChange, loadModels }: ChatSettingsProps) {
+export function ChatSettings({ backend, session, applyToSession, choice, disabled, onChange, loadModels }: ChatSettingsProps) {
   const t = useTranslations("chat.settings")
   const modes = useTranslations("domain.chatPermissionMode")
   const [state, setState] = useState<CatalogState>({ kind: "loading" })
@@ -52,31 +53,40 @@ export function ChatSettings({ backend, session, choice, disabled, onChange, loa
       .then((catalog) => {
         if (!live) return
         setState({ kind: "ready", backend, catalog })
-        onChange((previous) => catalogDefault(catalog, previous) ?? previous)
+        if (session === null) onChange((previous) => catalogDefault(catalog, previous) ?? previous)
       })
       .catch(() => { if (live) setState({ kind: "failed", backend }) })
     return () => { live = false }
-  }, [backend, loadModels, onChange])
+  }, [backend, loadModels, onChange, session])
 
   const fresh = state.kind !== "loading" && state.backend === backend
+  const current: ChatChoice = session === null
+    ? choice
+    : { model: session.model, effort: session.effort ?? null, permissionMode: session.permission_mode }
   const catalog = fresh && state.kind === "ready" ? state.catalog : null
-  const efforts = offeredEfforts(catalog, choice.model)
-  const running = session === null ? null : { model: session.model, effort: session.effort ?? null }
-  const shownModel = running === null ? choice.model : running.model
-  const shownEffort = running === null ? choice.effort : running.effort
+  const efforts = offeredEfforts(catalog, current.model)
+  const shownModel = current.model
+  const shownEffort = current.effort
   const chosen = selectedModel(catalog, shownModel)
   const modelLabel = chosen?.display_name ?? shownModel ?? t("modelAgentDefault")
-  const effortIndex = choice.effort === null ? -1 : efforts.indexOf(choice.effort)
-  const effortLabel = choice.effort === null ? t("effortAuto") : t(`effort.${choice.effort}`)
+  const effortIndex = current.effort === null ? -1 : efforts.indexOf(current.effort)
   const shownEffortLabel = shownEffort === null ? null : t(`effort.${shownEffort}`)
 
+  const settle = (next: ChatChoice): void => {
+    if (session === null) {
+      onChange(next)
+      return
+    }
+    applyToSession({ model: next.model, effort: next.effort, permission_mode: next.permissionMode })
+  }
+
   const pickModel = (model: string | null): void => {
-    onChange({ ...choice, model, effort: keptEffort(catalog, model, choice.effort) })
+    settle({ ...current, model, effort: keptEffort(catalog, model, current.effort) })
   }
 
   const slide = (position: number): void => {
     const next = efforts[position]
-    if (next !== undefined) onChange({ ...choice, effort: next })
+    if (next !== undefined) settle({ ...current, effort: next })
   }
 
   return (
@@ -99,10 +109,10 @@ export function ChatSettings({ backend, session, choice, disabled, onChange, loa
         <PickerCommand>
           <CommandList className="max-h-[26rem]">
             <Text as="p" role="caption" tone="neutral" className="px-3 pt-2 pb-1">
-              {session === null ? t("modelLabel") : t("forNextThread")}
+              {t("modelLabel")}
             </Text>
             {(catalog?.models ?? []).map((entry) => (
-              <Row key={entry.id} value={entry.id} selected={choice.model === entry.id} onSelect={() => { pickModel(entry.id) }}>
+              <Row key={entry.id} value={entry.id} selected={current.model === entry.id} onSelect={() => { pickModel(entry.id) }}>
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <Text role="meta" weight="semibold">{entry.display_name}</Text>
                   {entry.description === null ? null : <Text role="hint" tone="neutral">{entry.description}</Text>}
@@ -114,7 +124,7 @@ export function ChatSettings({ backend, session, choice, disabled, onChange, loa
             {PERMISSION_MODES.map((mode) => {
               const Icon = MODE_ICONS[mode]
               return (
-                <Row key={mode} value={mode} selected={choice.permissionMode === mode} onSelect={() => { onChange({ ...choice, permissionMode: mode }) }}>
+                <Row key={mode} value={mode} selected={current.permissionMode === mode} onSelect={() => { settle({ ...current, permissionMode: mode }) }}>
                   <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <Text role="meta" weight="semibold">{modes(mode)}</Text>
@@ -130,7 +140,7 @@ export function ChatSettings({ backend, session, choice, disabled, onChange, loa
           <div className="flex flex-col gap-2 border-t border-border px-3 py-2.5">
             <span className="flex items-baseline gap-2">
               <Text role="meta" weight="semibold">{t("effortLabel")}</Text>
-              <Text role="hint" tone="neutral" truncate>{effortLabel}</Text>
+              <Text role="hint" tone="neutral" truncate>{shownEffortLabel ?? t("effortAuto")}</Text>
             </span>
             <Slider
               aria-label={t("effortLabel")}
@@ -158,6 +168,7 @@ export function ComposerChatSettings() {
     <ChatSettings
       backend={control.backend}
       session={control.session}
+      applyToSession={control.applyToSession}
       choice={control.choice}
       disabled={control.disabled}
       onChange={control.onChange}

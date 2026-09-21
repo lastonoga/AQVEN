@@ -200,6 +200,9 @@ class ClaudeSessionRunner:
         self._emitter.emit((*prefix, *self._normalizer.finished(stop_reason, duration_ms, None)))
         self._emitter.turn_id = None
 
+    async def reload_settings(self) -> None:
+        await self._drop_client()
+
     async def _drop_client(self) -> None:
         client, reader = self._client, self._reader
         self._client = None

@@ -10,7 +10,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from aqven.chat.backend_registry import BackendRegistry
 from aqven.chat.backend_selection import ChatBackendChoice, ChatBackendWrite
 from aqven.chat.errors import ChatFailure, ChatFailureCode
-from aqven.chat.journal import ChatSessionDirectory
+from aqven.chat.journal import ChatJournal
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
@@ -24,6 +24,7 @@ from aqven.ports.chat import (
     ChatSession,
     ChatSessionId,
     ChatSessionOptions,
+    ChatSessionSettings,
     ChatTurnId,
     LoginStatus,
 )
@@ -93,7 +94,7 @@ def chat_frame(event: ChatEvent) -> ServerSentEvent:
 
 
 def build_chat_router(
-    registry: BackendRegistry, sessions: ChatSessionDirectory, context: ChatRouteContext
+    registry: BackendRegistry, sessions: ChatJournal, context: ChatRouteContext
 ) -> APIRouter:
     router = APIRouter(prefix=CHAT_PREFIX, responses=ERROR_RESPONSES, route_class=ChatRoute)
 
@@ -154,6 +155,18 @@ def build_chat_router(
     @router.get("/sessions/{session_id}", operation_id="chat_session_get", openapi_extra=rest_only(CHAT_REST_ONLY))
     async def chat_session_get(session: Annotated[ChatSession, Depends(existing_session)]) -> ChatSession:
         return session
+
+    @router.patch(
+        "/sessions/{session_id}",
+        operation_id="chat_session_settings",
+        openapi_extra=rest_only(CHAT_REST_ONLY),
+    )
+    async def chat_session_settings(
+        session: Annotated[ChatSession, Depends(existing_session)], body: ChatSessionSettings
+    ) -> ChatSession:
+        updated = sessions.update_settings(session.session_id, body)
+        await registry.for_session(updated.session).apply_settings(session.session_id)
+        return updated.session
 
     @router.delete("/sessions/{session_id}", operation_id="chat_session_close", openapi_extra=rest_only(CHAT_REST_ONLY))
     async def chat_session_close(session: Annotated[ChatSession, Depends(existing_session)]) -> ChatSession:

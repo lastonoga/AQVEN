@@ -56,6 +56,12 @@ class ChatSession(ResourceModel):
     last_seq: Annotated[int, Field(ge=0)]
 
 
+class ChatSessionSettings(RequestModel):
+    model: str | None = None
+    effort: ChatEffort | None = None
+    permission_mode: ChatPermissionMode | None = None
+
+
 class ChatMessageRequest(RequestModel):
     text: Annotated[str, Field(min_length=1)]
     client_op_id: ClientOpId
@@ -276,3 +282,5 @@ class AgentBackend(Protocol):
     async def interrupt(self, session_id: ChatSessionId) -> None: ...
 
     async def close_session(self, session_id: ChatSessionId) -> None: ...
+
+    async def apply_settings(self, session_id: ChatSessionId) -> None: ...

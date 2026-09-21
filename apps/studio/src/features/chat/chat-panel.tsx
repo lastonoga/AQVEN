@@ -7,10 +7,12 @@ import type {
   ApiChatBackendKind,
   ApiChatModelCatalog,
   ApiChatSessionCreate,
+  ApiChatSessionSettings,
   ApiChatStatus,
   ChatSessionId,
   FlowId,
 } from "@/domain"
+import { chatSessionId } from "@/data/ids"
 import { Surface, Text } from "@/components/studio"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -30,6 +32,7 @@ export type ChatApi = {
   readonly models: (backend: ApiChatBackendKind) => Promise<ApiChatModelCatalog>
   readonly sessions: () => Promise<readonly ApiChatSession[]>
   readonly create: (body: ApiChatSessionCreate) => Promise<ApiChatSession>
+  readonly settings: (sessionId: ChatSessionId, body: ApiChatSessionSettings) => Promise<ApiChatSession>
   readonly send: (sessionId: ChatSessionId, body: ApiChatMessageRequest) => Promise<unknown>
   readonly approve: (sessionId: ChatSessionId, approvalId: string, body: ApiChatApprovalReply) => Promise<unknown>
   readonly interrupt: (sessionId: ChatSessionId) => Promise<unknown>
@@ -166,6 +169,23 @@ export function ChatPanel({ header }: ChatPanelProps) {
     }
   }
 
+  const applySettings = async (body: ApiChatSessionSettings): Promise<void> => {
+    const open = state.kind === "ready" ? state.session : null
+    if (open === null) return
+    try {
+      const updated = await api.chat.settings(chatSessionId(open.session_id), body)
+      setState((current) => current.kind === "ready"
+        ? {
+            ...current,
+            session: updated,
+            sessions: current.sessions.map((item) => (item.session_id === updated.session_id ? updated : item)),
+          }
+        : current)
+    } catch (error) {
+      setCreateError(String(error))
+    }
+  }
+
   const visibleState: PanelState = state.kind === "loading" || backend === null || state.backend === backend ? state : { kind: "loading" }
   const control: ChatChoiceControl | null = backend === null
     ? null
@@ -176,6 +196,7 @@ export function ChatPanel({ header }: ChatPanelProps) {
         disabled: creating || pending !== null,
         onChange: setChoice,
         loadModels: api.chat.models,
+        applyToSession: (body) => { void applySettings(body) },
       }
 
   return (

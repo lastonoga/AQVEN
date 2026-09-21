@@ -193,14 +193,15 @@ class CodexSessionRunner:
             await asyncio.to_thread(client.close)
 
     async def _open_thread(self, client: CodexClient) -> str:
-        options: JsonObject = {"cwd": self._session.project_root, "approvalPolicy": "on-request"}
-        rules = project_rules(Path(self._session.project_root))
+        session = self._stored().session
+        options: JsonObject = {"cwd": session.project_root, "approvalPolicy": "on-request"}
+        rules = project_rules(Path(session.project_root))
         if rules:
             options["developerInstructions"] = rules
-        if self._session.model is not None:
-            options["model"] = self._session.model
-        if self._session.effort is not None:
-            options["effort"] = self._session.effort
+        if session.model is not None:
+            options["model"] = session.model
+        if session.effort is not None:
+            options["effort"] = session.effort
         if self._thread_id is not None:
             await asyncio.to_thread(client.thread_resume, self._thread_id, options)
             return self._thread_id
