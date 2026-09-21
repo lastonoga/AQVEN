@@ -26,9 +26,7 @@ from aqven.runtime.runs import (
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES
-from aqven.server.run_inputs import check_start
-from aqven.server.views.datasets import resolve_dataset_run
-from aqven.server.views.secrets import missing_secret_warnings
+from aqven.server.views.runs import run_start_service
 
 ACCEPTED: Final = 202
 UNCONFIRMED_OUTCOME: Final = "sent"
@@ -75,14 +73,11 @@ def build_runs_router(context: ServerContext) -> APIRouter:
     facade = context.facade
     existing_run = run_guard(facade)
 
+    starting = run_start_service(context)
+
     @router.post("/runs", status_code=201, operation_id="run_start", openapi_extra=operation("run_start"))
     async def start_run(request: RunStartRequest) -> RunStarted:
-        state = await context.workspace.state()
-        resolved = resolve_dataset_run(state, request)
-        check_start(state, resolved)
-        warnings = await missing_secret_warnings(context.settings, context.environ, state)
-        started = await facade.start_run(resolved, dataset_item_id=request.dataset_item_id)
-        return started.model_copy(update={"warnings": warnings})
+        return await starting.start(request)
 
     @router.get("/runs", operation_id="run_list", openapi_extra=operation("run_list"))
     async def list_runs(query: Annotated[RunListQuery, Query()]) -> Page[RunSummary]:

@@ -23,6 +23,7 @@ from aqven.runtime.runs import (
 )
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.mcp.catalog import Operation, ToolHints, ToolRegistration
+from aqven.server.views.runs import RunStartService
 
 RUN_EVENTS_PAGE: Final = Page[RunEvent]
 RUN_SUMMARY_PAGE: Final = Page[RunSummary]
@@ -74,9 +75,12 @@ def resume_request(request: RunResumeInput) -> ResumeRequest:
 @dataclass(frozen=True, slots=True)
 class RunTools:
     engine: EngineFacade
+    starting: RunStartService | None = None
 
     async def start(self, request: RunStartRequest) -> RunStarted:
-        return await self.engine.start_run(request)
+        if self.starting is None:
+            return await self.engine.start_run(request)
+        return await self.starting.start(request)
 
     async def get(self, request: RunGetInput) -> RunSnapshot:
         return await self.engine.get_run(request.run_id)

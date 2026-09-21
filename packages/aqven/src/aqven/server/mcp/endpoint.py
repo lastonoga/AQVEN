@@ -21,6 +21,7 @@ from aqven.server.mcp.pyright_tool import PyrightTool
 from aqven.server.mcp.pytest_tool import PytestTool
 from aqven.server.mcp.run_tools import RunTools
 from aqven.server.security import AccessPolicy, guard_request, reject
+from aqven.server.views.runs import RunStartService
 
 SERVER_NAME: Final = "aqven"
 MCP_MOUNT: Final = "/mcp"
@@ -44,12 +45,13 @@ class McpPorts:
     project: ProjectSource | None = None
     engine: EngineFacade | None = None
     patch_flow: PatchFlow | None = None
+    starting: RunStartService | None = None
 
 
 def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
     source = ports.project if ports.project is not None else LoaderProjectSource(ports.paths.module)
     settings = RunnerSettings(paths=ports.paths, runner=ports.runner, python=ports.python)
-    runs = RunTools(ports.engine).operations() if ports.engine is not None else ()
+    runs = RunTools(ports.engine, ports.starting).operations() if ports.engine is not None else ()
     patch = PatchTools(ports.patch_flow).operations() if ports.patch_flow is not None else ()
     return (
         *ProjectTools(source).operations(),

@@ -141,15 +141,16 @@ def create_app(
     options: ServerOptions | None = None,
     extensions: ServerExtensions | None = None,
     blobs: BlobFiles | None = None,
+    workspace: ProjectWorkspace | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
-    workspace = ProjectWorkspace(root, compiler=chosen.compiler)
+    shared = workspace or ProjectWorkspace(root, compiler=chosen.compiler)
     context = ServerContext(
         facade=facade,
         settings=settings,
-        workspace=workspace,
-        hub=SpecEventHub(workspace),
+        workspace=shared,
+        hub=SpecEventHub(shared),
         blobs=blobs or DirectoryBlobStore(chosen.blob_directory or root / BLOB_FOLDER),
         environ=chosen.environ,
         engine_version=engine_version(),

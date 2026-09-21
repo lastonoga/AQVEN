@@ -18,6 +18,7 @@ from aqven.engine.facade import PlanSource
 from aqven.ir import CompiledProject
 from aqven.server import ServerExtensions, ServerOptions, create_app
 from aqven.server.app import LifespanFactory
+from aqven.server.app import process_environment as launch_environ
 from aqven.server.chat import ChatSessionDefaults, studio_chat_parts
 from aqven.server.mcp import (
     McpPorts,
@@ -28,6 +29,8 @@ from aqven.server.mcp import (
     build_mcp_endpoint,
 )
 from aqven.server.security import AccessPolicy
+from aqven.server.views.runs import RunStartService
+from aqven.server.workspace import ProjectWorkspace
 from aqven.write import WriteService
 
 WORKSPACE_MARKER: Final = "pyproject.toml"
@@ -85,12 +88,22 @@ class ApplicationParts:
 type PartsBuilder = Callable[[ApplicationLaunch], ApplicationParts]
 
 
-def mcp_catalog(launch: ApplicationLaunch, writer: WriteService) -> tuple[ToolRegistration, ...]:
+def mcp_catalog(
+    launch: ApplicationLaunch, writer: WriteService, workspace: ProjectWorkspace | None = None
+) -> tuple[ToolRegistration, ...]:
     root = launch.project_root
     ports = McpPorts(
         paths=ProjectPaths.of(project_workspace(root), root),
         engine=launch.engine,
         patch_flow=WriterPatchFlow(writer),
+        starting=None
+        if workspace is None
+        else RunStartService(
+            facade=launch.engine,
+            settings=launch.settings,
+            workspace=workspace,
+            environ=launch_environ(),
+        ),
     )
     return build_catalog(ports)
 
@@ -104,10 +117,12 @@ def write_recovery(writer: WriteService) -> LifespanFactory:
     return lifespan
 
 
-def mcp_parts(launch: ApplicationLaunch, bearer: bool = True) -> ApplicationParts:
+def mcp_parts(
+    launch: ApplicationLaunch, bearer: bool = True, workspace: ProjectWorkspace | None = None
+) -> ApplicationParts:
     writer = WriteService(launch.project_root)
     policy = AccessPolicy(token=launch.access.token) if bearer and launch.access.require_token else None
-    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer), policy)
+    endpoint = build_mcp_endpoint(mcp_catalog(launch, writer, workspace), policy)
     return ApplicationParts(mounts=endpoint.mounts(), lifespans=(write_recovery(writer), endpoint.lifespan))
 
 
@@ -127,25 +142,28 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 
 
-def feature_builders(features: StudioFeatures) -> tuple[PartsBuilder, ...]:
+def feature_builders(features: StudioFeatures, workspace: ProjectWorkspace) -> tuple[PartsBuilder, ...]:
     table: tuple[tuple[bool, PartsBuilder], ...] = (
-        (features.mcp, partial(mcp_parts, bearer=features.bearer)),
+        (features.mcp, partial(mcp_parts, bearer=features.bearer, workspace=workspace)),
         (features.chat, chat_parts),
     )
     return tuple(builder for enabled, builder in table if enabled)
 
 
 def assemble_app(launch: ApplicationLaunch, features: StudioFeatures, extra: ApplicationParts) -> FastAPI:
+    options = studio_server_options(launch, features)
+    workspace = ProjectWorkspace(launch.project_root, compiler=options.compiler)
     parts = extra
-    for builder in feature_builders(features):
+    for builder in feature_builders(features, workspace):
         parts = parts.plus(builder(launch))
     return create_app(
         launch.project_root,
         launch.engine,
         launch.settings,
         parts.routers,
-        options=studio_server_options(launch, features),
+        options=options,
         extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),
+        workspace=workspace,
     )
 
 
