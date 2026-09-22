@@ -1,6 +1,13 @@
 import pytest
 
-from aqven.console.new_wizard import PROVIDER_SHORTLIST, WizardAnswers, ask_provider, should_run_wizard
+from aqven.console.new_wizard import (
+    PROVIDER_SHORTLIST,
+    WizardAnswers,
+    ask_budget_usd_micros,
+    ask_pii,
+    ask_provider,
+    should_run_wizard,
+)
 
 
 def test_should_run_wizard_requires_a_real_tty(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -46,3 +53,23 @@ def test_ask_provider_other_takes_a_typed_catalog_id(monkeypatch: pytest.MonkeyP
     provider_id, env_var, _ = ask_provider()
     assert provider_id == "cerebras"
     assert env_var == "CEREBRAS_API_KEY"
+
+
+def test_ask_pii_yes(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "y")
+    assert ask_pii() is True
+
+
+def test_ask_pii_default_is_no(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "")
+    assert ask_pii() is False
+
+
+def test_ask_budget_skip_means_no_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "")
+    assert ask_budget_usd_micros() is None
+
+
+def test_ask_budget_converts_dollars_to_micros(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "2.50")
+    assert ask_budget_usd_micros() == 2_500_000

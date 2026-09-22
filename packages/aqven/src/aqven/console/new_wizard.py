@@ -48,3 +48,22 @@ def ask_provider() -> tuple[str, str, str | None]:
         return provider_id, "", None
     key = input(f"Paste the {env_var} value now, or press Enter to add it later: ").strip()
     return provider_id, env_var, key or None
+
+
+def ask_pii() -> bool:
+    answer = (
+        input(
+            "Will this project ever handle personal or sensitive data "
+            "(names, emails, health or financial info)? [y/N] "
+        )
+        .strip()
+        .lower()
+    )
+    return answer in ("y", "yes")
+
+
+def ask_budget_usd_micros() -> int | None:
+    answer = input("Budget per run, in USD (press Enter for no limit): ").strip()
+    if not answer:
+        return None
+    return round(float(answer) * 1_000_000)
