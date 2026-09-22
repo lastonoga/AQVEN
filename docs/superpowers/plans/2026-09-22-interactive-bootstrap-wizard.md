@@ -23,7 +23,7 @@ Read [docs/adr/0046-interactive-bootstrap-wizard.md](../../adr/0046-interactive-
 |---|---|
 | `packages/aqven/src/aqven/console/new_wizard.py` (new) | All interactive I/O: TTY gate, the three questions, the `os.cpu_count()` worker default. Returns `WizardAnswers`. No file writes. |
 | `packages/aqven/src/aqven/console/new.py` (modify) | Decide whether to run the wizard, then apply its answers: patch `aqven.yaml`, `.env`/`.env.example`, persist `max_parallel`. |
-| `packages/aqven/src/aqven/templates/hello/**` (new, ~15 files) | The placeholder template: one `code` node, no agents, no tools. |
+| `packages/aqven/src/aqven/templates/hello/**` (new, 17 files) | The placeholder template: one `code` node, no agents, no tools. |
 | `packages/aqven/tests/console/test_new_wizard.py` (new) | Unit tests for `new_wizard.py` — TTY gating, each question's parsing, the computed default — with stdin faked, no real terminal needed. |
 | `packages/aqven/tests/console/test_new_project.py` (modify) | Add cases: wizard is skipped when stdin isn't a TTY (already true today, this pins it) and when `--provider` is passed explicitly. |
 | `packages/aqven/tests/console/test_hello_template.py` (new) | Mirrors `test_showcase_template.py`'s shape: scaffold the `hello` template, assert `aqven check` and `aqven run` succeed with **no** `.env` values set at all. |
@@ -481,7 +481,10 @@ def greet(name: Annotated[str, StringConstraints(max_length=200)]) -> HelloGreet
 - [ ] **Step 9: Confirm the file count matches**
 
 Run: `find packages/aqven/src/aqven/templates/hello -type f | wc -l`
-Expected: `13`
+Expected: `17` (AGENTS.md, CLAUDE.md, pyproject.toml, dot-gitignore, dot-mcp.json, __init__.py, __main__.py,
+app.py, aqven.yaml, .env.example, flow.yaml, greet.node.yaml, greet.py, greeting.yaml, greeted.yaml,
+aqven_check.py, settings.json — this plan's earlier "13" was a pre-build estimate, corrected here after
+actually creating the files)
 
 - [ ] **Step 10: Commit**
 
