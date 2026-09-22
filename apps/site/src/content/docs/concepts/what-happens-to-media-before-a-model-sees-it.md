@@ -64,11 +64,21 @@ you can see and test it: a `code` node between where the attachment enters the f
 that reads it, doing the same downscale or trim the provider would do anyway, on your terms instead of
 theirs.
 
-- **Resize images before the call, not after a bad answer.** If the model downscales to roughly 1568px
-  on the long edge anyway, sending 1568px costs the same tokens as sending 4K and skips the guesswork
-  about which crop or region survives the provider's own resize. The showcase's own sample case hides
-  this, because its photo is already reasonably sized — test with a real, oversized phone photo before
-  you trust the flow.
+- **Resize images before the call, not after a bad answer** — but resizing is not the only move, and
+  picking between it and the alternative is a judgment about the task, not a default. A single downscale
+  to the model's working resolution is the cheap fix, and it's the right one when the task only needs
+  the image's general content: is there a scratch, what room is this, what does the label say if the
+  text is already large. It's the wrong one when the answer depends on detail spread across the whole
+  image at a resolution the downscale throws away — reading dense small print on a page, finding a small
+  defect that could be anywhere in a large product photo. There, the move is to split the image into
+  several crops, each already inside the model's real resolution ceiling, and send them as separate
+  image blocks in one request instead of one oversized block: providers support several images per
+  call precisely for this (Anthropic's own guidance treats a multi-page document the same way — several
+  image blocks, one per page, each labeled so the model can refer back to a specific one). More crops
+  means more tokens and a `code` node that knows how to tile and label them, so it's a real cost, not a
+  free upgrade — worth paying only when the task actually needs full-resolution detail everywhere, not
+  as a reflex. The showcase's own sample case hides this, because its photo is already reasonably sized
+  — test with a real, oversized phone photo before you trust the flow either way.
 - **Trim video and audio to the moment that matters**, rather than relying on a provider's sampling to
   find it. A model sampling three hours of video at low resolution to answer a question about ten
   seconds of it is both slower and less accurate than a `code` node that clips first.
