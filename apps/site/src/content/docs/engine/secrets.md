@@ -83,23 +83,13 @@ export LUMEN_KB_TOKEN=a-demo-lumen-token-value-123456
 ```
 
 ```text
-secret                variable                    declared by               source        value
-api_key               OPENROUTER_API_KEY          provider openrouter       unset
-orders_token          LUMEN_ORDERS_TOKEN          tool issue_store_credit   unset
-orders_token          LUMEN_ORDERS_TOKEN          tool lookup_order         unset
-together_api_key      TOGETHER_API_KEY            tool render_clip          unset
 kb_token              LUMEN_KB_TOKEN              tool search_kb            environment   ••••3456
-openai_api_key        OPENAI_API_KEY              tool synthesize_voice     unset
-Authorization         LUMEN_HELPDESK_TOKEN        mcp_server helpdesk       unset
 ```
 
-`--format json` on that same state gives the same report as one object instead of a table — `ok` is
-`false` and `missing` lists every environment variable that's still unset, `kb_token` carries
-`"source": "environment"`, and the masked value is the same four trailing characters the table showed:
-
-```bash
-{{CLI_COMMAND}} secrets . --format json
-```
+`--format json` reports the same fact as one object per row instead of a table. Here are two of the
+real seven — the report has one entry per row above, in the same order: the provider's row, still
+`unset`, and `search_kb`'s row, now `"source": "environment"` with the same masked tail the table
+showed:
 
 ```json
 {
@@ -125,39 +115,6 @@ Authorization         LUMEN_HELPDESK_TOKEN        mcp_server helpdesk       unse
       "set": false
     },
     {
-      "name": "orders_token",
-      "env_var": "LUMEN_ORDERS_TOKEN",
-      "declared_by": "issue_store_credit",
-      "scope": "tool",
-      "declared_in": "tools/issue_store_credit.yaml",
-      "setting_key": "secrets.lumen_orders_token",
-      "source": null,
-      "masked": null,
-      "set": false
-    },
-    {
-      "name": "orders_token",
-      "env_var": "LUMEN_ORDERS_TOKEN",
-      "declared_by": "lookup_order",
-      "scope": "tool",
-      "declared_in": "tools/lookup_order.yaml",
-      "setting_key": "secrets.lumen_orders_token",
-      "source": null,
-      "masked": null,
-      "set": false
-    },
-    {
-      "name": "together_api_key",
-      "env_var": "TOGETHER_API_KEY",
-      "declared_by": "render_clip",
-      "scope": "tool",
-      "declared_in": "tools/render_clip.yaml",
-      "setting_key": "providers.together.api_key",
-      "source": null,
-      "masked": null,
-      "set": false
-    },
-    {
       "name": "kb_token",
       "env_var": "LUMEN_KB_TOKEN",
       "declared_by": "search_kb",
@@ -167,28 +124,6 @@ Authorization         LUMEN_HELPDESK_TOKEN        mcp_server helpdesk       unse
       "source": "environment",
       "masked": "••••3456",
       "set": true
-    },
-    {
-      "name": "openai_api_key",
-      "env_var": "OPENAI_API_KEY",
-      "declared_by": "synthesize_voice",
-      "scope": "tool",
-      "declared_in": "tools/synthesize_voice.yaml",
-      "setting_key": "providers.openai.api_key",
-      "source": null,
-      "masked": null,
-      "set": false
-    },
-    {
-      "name": "Authorization",
-      "env_var": "LUMEN_HELPDESK_TOKEN",
-      "declared_by": "helpdesk",
-      "scope": "mcp_server",
-      "declared_in": "mcp/helpdesk.yaml",
-      "setting_key": "secrets.lumen_helpdesk_token",
-      "source": null,
-      "masked": null,
-      "set": false
     }
   ]
 }
