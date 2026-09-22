@@ -74,62 +74,32 @@ buys you.
 
 **Liquid template.** `flows/support_case/nodes/route/resolve.prompt.md` decides a warranty case. It
 uses `{{ }}`, `{% if %}`/`{% else %}`, `{% case %}`/`{% when %}`, and `{% for %}`, so AQVEN renders it as
-a template instead of dumping the inputs (translated to English for this page):
+a template instead of dumping the inputs. Two excerpts from that file — its `{% if %}`/`{% else %}`
+block:
 
 ```
-{% message system %}
-You resolve a warranty case for a smart-lighting brand's defective product. Base the decision only on
-the policies in the input, and name the policy it's based on. If no policy fits, pick advice with no
-compensation.
-{% include "fragments/untrusted_input" %}
-{% endmessage %}
-{% message user %}
-{% case customer.tier %}
-{% when "standard" %}
-Customer is on standard service: base warranty terms apply.
-{% when "plus" %}
-Customer is a subscriber with extended warranty: apply the extended terms from the policies.
-{% when "business" %}
-Business customer: when options are otherwise equal, pick the one that restores lighting fastest.
-{% endcase %}
-Customer id: {{ customer.customer_id }}.
-Order number: {{ order_id }}.
-Issue store credit against this customer id and order number.
-{% case symptom %}
-{% when "no_power" %}
-Symptom: the device doesn't turn on.
-{% when "flicker" %}
-Symptom: the light flickers.
-{% when "dead_segment" %}
-Symptom: part of the strip or fixture doesn't light up.
-{% when "overheating" %}
-Symptom: the device overheats.
-{% when "app_offline" %}
-Symptom: the device won't connect to the app.
-{% when "physical_damage" %}
-Symptom: the housing or diffuser is physically damaged.
-{% endcase %}
 {% if purchased_on %}
 Purchase date: {{ purchased_on }}. Check it against the warranty terms in the policies.
 {% else %}
 No purchase date on the intake form: take it from the order data.
 {% endif %}
-{% if safety_risk %}
-{% include "fragments/safety_escalation" %}
-{% endif %}
-Marketplace intake fields (empty if the marketplace doesn't require any):
-{{ intake_extra }}
+```
+
+and, further down the same message, its `{% for %}` loop:
+
+```
 Store policies:
 {% for policy in policies %}
 - {{ policy.title }}: {{ policy.text }}
 {% endfor %}
-{{ output_format }}
-{% endmessage %}
 ```
 
-`{% include %}` pulls in a shared fragment file the same way `{% if %}` and `{% for %}` work — real
-Liquid, not a custom mini-language. `{{ intake_extra }}` and `{{ output_format }}` sit exactly where the
-author put them: nothing is appended automatically once a file reaches this level.
+(excerpted from support_case's real `resolve.prompt.md`; full file in the showcase project, translated
+to English for this page). The file also branches with `{% case %}`/`{% when %}` the same way `{% if %}`
+does — once per symptom, once per customer tier — and pulls in shared fragment text with
+`{% include %}`, real Liquid, not a custom mini-language. Nothing is appended automatically once a file
+reaches this level: `{{ output_format }}` only appears because the author placed it, at the very end of
+the message.
 
 **Python function.** `flows/support_case/nodes/illustrate/illustrate.inference.yaml` sets its `prompt`
 field to a bare function name:
@@ -139,7 +109,8 @@ prompt: "illustrate_prompt"
 ```
 
 AQVEN resolves that to `illustrate_prompt` in `illustrate.py`, the Python file with the same stem as the
-node, in the same folder (translated to English for this page):
+node, in the same folder (translated to English for this page). `ILLUSTRATION_SCENES` has five entries
+in the real file, one per `ProductCategory`; two are enough to show the pattern:
 
 ```python
 from collections.abc import Mapping
@@ -159,10 +130,7 @@ ILLUSTRATION_RULES: Final = (
 
 ILLUSTRATION_SCENES: Final[Mapping[ProductCategory, str]] = {
     "desk_lamp": "Scene: a desk lamp on a work desk, the switch and shade mount shown up close.",
-    "floor_lamp": "Scene: a floor lamp shown full-length in a room, the base and switch shown up close.",
     "smart_bulb": "Scene: a smart bulb in its socket in close-up, a phone with the app next to it.",
-    "light_strip": "Scene: an LED strip along furniture, the controller and connection point shown up close.",
-    "accessory": "Scene: a lighting accessory on a plain background, its connectors and buttons shown up close.",
 }
 
 
