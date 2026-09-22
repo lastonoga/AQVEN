@@ -51,26 +51,9 @@ from: "$record.out.record"
 to: "CaseRecord"
 ```
 
-`$record.out.record` is `record`, the `loop` node just before this one, whose own `record` output is
-declared `Dynamic` with a `value_type` hint of `CaseRecord` — a hint, not a guarantee: nothing stops a
-model-filled value from missing a field or getting a type wrong. `narrow`'s `to: "CaseRecord"` is what
-actually checks the value against `CaseRecord`'s three variants and fails the node if it doesn't fit.
-
-Everything after `to_record` reads `$to_record.out` as a plain `CaseRecord`. The `switch` node right
-after it, `route`, sets `on: "$to_record.out"` and has exactly one case per `CaseRecord` variant —
-`defect`, `delivery`, `question` — the full file is in
-[How to route by a value](/engine/switch-node/). And the flow's last node reads the same narrowed
-value as a typed input field, same as any other:
-
-```yaml
-in:
-- name: "record"
-  type: "CaseRecord"
-  description: "The case record"
-  from: "$to_record.out"
-```
-
-Neither of those would type-check against a `Dynamic` value — `to_record` is what makes them possible.
+Narrowing turns `$record.out.record` — an untyped `Dynamic` reference — into a plain `CaseRecord`
+value: everywhere downstream, `$to_record.out` reads as an ordinary typed field, the same as if it had
+never been `Dynamic` at all.
 
 ## See also
 
