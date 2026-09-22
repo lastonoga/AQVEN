@@ -1,1 +1,1 @@
-export { ChatPanel, type ChatPanelProps } from "./chat-panel"
+export { ChatPanel } from "./chat-panel"

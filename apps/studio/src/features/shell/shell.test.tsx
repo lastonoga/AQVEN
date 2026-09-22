@@ -1,4 +1,3 @@
-import type { ReactNode } from "react"
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it, vi } from "vitest"
@@ -7,7 +6,7 @@ import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
 
 vi.mock("@/features/chat", () => ({
-  ChatPanel: ({ header }: { readonly header: ReactNode }) => header,
+  ChatPanel: () => null,
   useChatThread: () => [],
   useChatScope: () => "flow",
 }))

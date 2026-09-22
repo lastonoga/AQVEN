@@ -4,7 +4,6 @@ import { SplitPane, Surface, type SplitPanel } from "@/components/studio"
 import { ChatPanel } from "@/features/chat"
 import { SettingsDialog } from "@/features/setup"
 import { flowRouteApi } from "@/lib/routes"
-import { FlowPicker } from "./flow-picker"
 import { FlowFrame } from "./flow-frame"
 
 const CHAT_PANEL: Omit<SplitPanel, "content"> = { id: "chat", defaultSize: 352, minSize: 280, maxSize: 680, fixed: true }
@@ -15,8 +14,8 @@ export function Shell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const t = useTranslations("shell")
   const panels: readonly SplitPanel[] = [
-    { ...CHAT_PANEL, content: <ChatPanel header={<FlowPicker project={project} flows={flows} flow={flow} onOpenSettings={() => { setSettingsOpen(true) }} />} /> },
-    { ...WORKSPACE_PANEL, content: <FlowFrame flow={flow} /> },
+    { ...CHAT_PANEL, content: <ChatPanel /> },
+    { ...WORKSPACE_PANEL, content: <FlowFrame project={project} flows={flows} flow={flow} onOpenSettings={() => { setSettingsOpen(true) }} /> },
   ]
   return (
     <div className="relative h-full min-w-[1180px] overflow-hidden">

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 import { useTranslations } from "use-intl"
 import type {
   ApiChatApprovalReply,
@@ -24,8 +24,6 @@ import { DEFAULT_CHAT_CHOICE, type ChatChoice } from "./chat-choice"
 import { ChatChoiceContext, type ChatChoiceControl } from "./chat-choice-context"
 import { ChatThreadList } from "./chat-thread-list"
 import { chatTransport, type ChatTransport } from "./chat-transport"
-
-export type ChatPanelProps = { readonly header: ReactNode }
 
 export type ChatApi = {
   readonly status: () => Promise<ApiChatStatus>
@@ -105,7 +103,7 @@ function ChatBody({ state, transport, onRetry }: { readonly state: PanelState; r
   return <ChatSession key={state.session.session_id} session={state.session} transport={transport} />
 }
 
-export function ChatPanel({ header }: ChatPanelProps) {
+export function ChatPanel() {
   const common = useTranslations("common")
   const chat = useTranslations("chat.session")
   const { api } = flowRouteApi.useRouteContext()
@@ -201,8 +199,7 @@ export function ChatPanel({ header }: ChatPanelProps) {
 
   return (
     <ChatChoiceContext value={control}>
-    <Surface variant="plain" className="dark flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-      {header}
+    <Surface variant="plain" className="dark flex h-full min-h-0 min-w-0 flex-col overflow-hidden pt-2">
       {backend === null && backendError !== null ? (
         <div className="flex flex-1 items-center px-4">
           <Alert variant="destructive">
