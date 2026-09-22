@@ -120,6 +120,45 @@ describe("buildGraph", () => {
   })
 })
 
+describe("buildGraph wraps a row without stranding its cross-row edges", () => {
+  const step = (id: string, downstream: readonly string[]): ApiNode => ({
+    node_id: id,
+    local_id: id,
+    parent: null,
+    kind: "code",
+    path: "",
+    file_hash: "",
+    agent: null,
+    inference: null,
+    prompt_level: null,
+    code_ref: null,
+    problems_count: 0,
+    upstream: [],
+    downstream: [...downstream],
+  })
+
+  const nodes: readonly ApiNode[] = [
+    step("n1", ["n2"]),
+    step("n2", ["n3"]),
+    step("n3", ["n4", "n6"]),
+    step("n4", ["n5", "n6"]),
+    step("n5", ["n6"]),
+    step("n6", ["n7"]),
+    step("n7", []),
+  ]
+  const graph = buildGraph(nodes, ["n1", "n2", "n3", "n4", "n5", "n6", "n7"])
+  const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
+
+  it("actually wraps this fixture into two rows", () => {
+    expect(boxOf("n5").y).not.toBe(boxOf("n6").y)
+  })
+
+  it("keeps a cross-row edge's endpoints close instead of spanning the whole canvas", () => {
+    const gap = Math.abs(boxOf("n5").x - boxOf("n6").x)
+    expect(gap).toBeLessThan(graph.extent.width / 2)
+  })
+})
+
 describe("buildGraph on judge_panel", () => {
   const graph = graphOf("judge_panel")
 
