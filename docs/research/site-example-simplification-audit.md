@@ -14,6 +14,41 @@ into a published page. See apps/site/CONVENTIONS.md.
 
 ---
 
+## Status: all 23 flagged pages fixed and merged
+
+Executed 2026-09-22 in worktree `docs/aqven-example-simplification`, merged into
+`codex/codex-cli-studio-chat` at commit `8c49739`. Dispatched as 7 sequential batches of 3-4
+pages each (one implementer subagent per batch, git commits kept sequential to avoid
+worktree races). Net effect: 25 files changed, 530 insertions / 1186 deletions.
+
+**This closes design doc §7 and the directory-structure-for-nested-nodes follow-up from
+Wave 2's plan file (the latter addressed as part of the `files-as-source-of-truth` and
+`parallel`/`loop`/`map`-node fixes below).** All content waves and the cross-wave cleanup
+pass are now complete.
+
+Several batches found that the audit's own suggested fix didn't hold up under live
+re-verification and used judgment for a better real alternative instead of forcing a stale
+suggestion through — notably:
+- `engine/generate-types.md`: the audit's suggested narrow-blast-radius type
+  (`CriterionScore`) turned out to have a wider blast radius than predicted when actually
+  broken and checked live; `IntentBallot`'s `intent` field was used instead, verified to
+  produce the intended 2-line error.
+- `engine/map-node.md`: the suggested test-fixture pattern had test-only artifacts that
+  didn't match the docs' style; a new small flow was hand-built in the site's own voice and
+  actually verified with a real `aqven check` run before being written into the page.
+- `engine/run-locally.md`: the suggested pointer to `/engine/parallel-node/` for
+  `E_JOIN_FAILED` was reworded after confirming that page doesn't actually name that error
+  code, to avoid introducing a new false claim while fixing an old coupling problem.
+- `mcp-cli/preview-a-prompt.md` and `mcp-cli/runs.md`: each implementer's own self-review
+  caught and fixed an internal inconsistency (a wrong claim about a default value; a stale
+  `total_estimate` field) in their first draft before committing.
+
+Every fix was re-verified against live code or an actual command/API run before publishing —
+not copied verbatim from the audit's suggestion text. `pnpm --filter @aqven/site check` and
+`build` (81 pages) were clean throughout; `llms.txt --check` clean.
+
+---
+
 ## Pages that needed no change
 
 - `apps/site/src/content/docs/concepts/engineering-loop.md`
