@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "Fixture project for eval runs and the release gate"
+package: "eval_shop"
+providers:
+- id: "openai"
+  api_key: "ref:env/OPENAI_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "zero"

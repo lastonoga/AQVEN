@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "tool"
+description: "Renders a short clip from the instruction image as a long-running job with a wait"
+tool: "render_clip"
+in:
+- name: "image"
+  from: "$illustrate.out.image"
+- name: "text"
+  from: "$polish.out.reply.text"
+- name: "seconds"
+  value: 6

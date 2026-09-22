@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "parallel"
+description: "Three judges from different families score the drafts independently"
+body:
+  deepseek: "deepseek"
+  qwen: "qwen"
+  llama: "llama"
+join:
+  run: "agreeing_verdicts"
+  with:
+    min_agree: 2
+out:
+- name: "verdicts"
+  type: "JudgeVerdict[]"
+  description: "Judge verdicts that finished successfully"
+  maxItems: 3
+  from: "$ok"

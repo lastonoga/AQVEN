@@ -1,7 +1,16 @@
 # ADR-0012. Langfuse — хранилище трасс и evals, отладчик — свой
 
-> Статус: принято
+> Статус: **частично изменено [ADR-0025](0025-python-engine.md)** (2026-09-16)
 > Дата: 2026-09-11
+>
+> Изменено инструментирование трасс (ADR-0025 §8): спаны вызовов пишет `InstrumentationSettings` Pydantic AI
+> (формат 5) на нашем `TracerProvider`, экспорт — OTLP/HTTP protobuf на `<base>/api/public/otel/v1/traces` с Basic
+> auth и заголовком `x-langfuse-ingestion-version: 4`; `VoltAgentObservability` и SDK `@langfuse/*` уходят. Python
+> SDK langfuse 4.15.3 не берём: он требует `httpx<1.0` и пишет атрибуты в спан, общий для всех процессоров, что
+> нарушает обязанность 8; Logfire как платформу не берём. Остаются верными и действуют: Langfuse OSS — хранилище
+> трасс, датасетов и оценок, отладчик — свой; граница данных (горячий путь — только Postgres и blob store, score,
+> влияющий на гейт, зеркалится в Postgres); порты `TraceSink` и `EvalStore`; своя таблица цен; маскирование PII до
+> записи атрибута.
 > Контекст-документы: [12. Наблюдаемость](../12-observability.md), [13. Evals и гейты](../13-evals-and-gates.md), [15. Studio: фронтенд](../15-studio-frontend.md), [16. Модель данных](../16-data-model.md), [18. Экспорт и конформанс](../18-export-and-conformance.md), [ADR-0011](0011-two-schemas-and-tenancy.md)
 
 ## Контекст
@@ -42,7 +51,7 @@
 | Node-level метрики для гейтов | Postgres `node_metric` | да |
 | Бюджет рана (лимит, потрачено, остаток) | Postgres `run_budget` | да, снапшот |
 | Сработавшие правила и гварды | Postgres `rule_firing` | да |
-| Версия воркфлоу, граф, определения узлов | Postgres | ссылкой (`wf.version`) |
+| Версия воркфлоу, граф, определения узлов | Postgres | ссылкой (`aqven.version`) |
 | Артефакты экспорта | Postgres + blob | нет |
 | Ключи идемпотентности, очередь задач | Postgres | нет |
 | Прайсинг моделей и расчёт стоимости | Postgres | да, `costDetails` |
@@ -56,9 +65,9 @@
 
 ### Порт и изоляция
 
-Архитектурное правило (DIP, Port/Adapter): **в домене нет ни одного `import` из `@langfuse/*`**. Есть порт `TraceSink` и порт `EvalStore`, есть адаптер `LangfuseTraceSink`. Импорт `@langfuse/*` и `@opentelemetry/*` разрешён единственному пакету `@wf/observability`. Это буквально плоскость замены бэкенда.
+Архитектурное правило (DIP, Port/Adapter): **в домене нет ни одного `import` из `@langfuse/*`**. Есть порт `TraceSink` и порт `EvalStore`, есть адаптер `LangfuseTraceSink`. Импорт `@langfuse/*` и `@opentelemetry/*` разрешён единственному пакету `@aqven/observability`. Это буквально плоскость замены бэкенда.
 
-Связывание в обе стороны без своей мапы id: каждая наша строка несёт `trace_id` (32 hex) и `span_id` (16 hex) того же OTel-спана (`getActiveTraceId()`/`getActiveSpanId()` из `@langfuse/tracing`); обратно — `langfuse.observation.metadata` несёт `wf.run_id`/`wf.node_id`, чтобы из UI Langfuse вернуться в нашу Studio.
+Связывание в обе стороны без своей мапы id: каждая наша строка несёт `trace_id` (32 hex) и `span_id` (16 hex) того же OTel-спана (`getActiveTraceId()`/`getActiveSpanId()` из `@langfuse/tracing`); обратно — `langfuse.observation.metadata` несёт `aqven.run_id`/`aqven.node_id`, чтобы из UI Langfuse вернуться в нашу Studio.
 
 ### Большие payload
 
@@ -68,7 +77,7 @@
 
 **Arize Phoenix (Apache-2.0)** — OTel-native, self-host заметно легче (одно приложение + Postgres, без ClickHouse/Redis/S3 в базовом варианте). Слабее по prompt management и annotation-контуру, evals-loop менее продуктовый — поэтому запасной, а не основной. Скореры берём отдельно от платформы: `autoevals` (MIT) и/или `@voltagent/scorers` — они ни к чему не привязаны.
 
-**Цена миграции by design.** Мы пишем спаны в ванильный OTel, Langfuse — один процессор среди нескольких. Смена бэкенда = замена одного процессора, дни. Наши `wf.*`-атрибуты и наш Postgres от бэкенда не зависят вообще: гейты, кассеты, провенанс и экспорт продолжают работать при полностью отключённом Langfuse. Реально теряется только история dataset runs / экспериментов / annotation, накопленная в Langfuse; митигация — REST `langfuse.api.*` для выгрузки датасетов и скоров плюс правило «определения датасетов и наборы кассет — источник истины в нашем Postgres, Langfuse — зеркало».
+**Цена миграции by design.** Мы пишем спаны в ванильный OTel, Langfuse — один процессор среди нескольких. Смена бэкенда = замена одного процессора, дни. Наши `aqven.*`-атрибуты и наш Postgres от бэкенда не зависят вообще: гейты, кассеты, провенанс и экспорт продолжают работать при полностью отключённом Langfuse. Реально теряется только история dataset runs / экспериментов / annotation, накопленная в Langfuse; митигация — REST `langfuse.api.*` для выгрузки датасетов и скоров плюс правило «определения датасетов и наборы кассет — источник истины в нашем Postgres, Langfuse — зеркало».
 
 ## Альтернативы
 
@@ -99,16 +108,16 @@
 - Мэппинг спанов в Langfuse-модель — наш код, значит наша ответственность за его соответствие версиям SDK.
 
 **Обязаны делать.**
-1. Ни одного `import` из `@langfuse/*` и `@opentelemetry/*` вне `@wf/observability`. Домен знает только `TraceSink` и `EvalStore`.
+1. Ни одного `import` из `@langfuse/*` и `@opentelemetry/*` вне `@aqven/observability`. Домен знает только `TraceSink` и `EvalStore`.
 2. Ни один гейт, retry, реплей или экспорт не читает Langfuse. Горячий путь — только Postgres и blob store.
-3. Каждая наша строка несёт `trace_id`/`span_id`; `langfuse.observation.metadata` несёт `wf.run_id`/`wf.node_id`.
+3. Каждая наша строка несёт `trace_id`/`span_id`; `langfuse.observation.metadata` несёт `aqven.run_id`/`aqven.node_id`.
 4. Определения датасетов и наборы кассет — источник истины у нас, в Langfuse синхронизируются.
 5. Любой score, влияющий на гейт, зеркалится в Postgres до того, как гейт его читает.
 6. Прайсинг моделей и расчёт стоимости — наша таблица. Биллинг не зависит от чужой таблицы цен.
 7. Маскирование PII делается **до** `setAttribute`, а не только через `mask`: `mask` не защищает наш процессор.
 8. Никогда не мутировать `span.attributes` внутри процессора — оба процессора получают один и тот же `ReadableSpan`, и порядок доставки не гарантирован.
 9. `shouldExportSpan` задавать только как `isDefaultExportSpan(span) || ourPredicate(span)`: свой предикат полностью перекрывает дефолтный фильтр и молча выключает `gen_ai.*`-спаны.
-10. Атрибуты формирует единственная фабрика `buildNodeSpanAttributes(ctx): Attributes` (SRP), никаких `setAttribute` россыпью. Ключи — snake_case, ASCII, стабильные навсегда; удаление ключа = bump `wf.schema_version`. Держаться в пределах 128 атрибутов на спан.
+10. Атрибуты формирует единственная фабрика `buildNodeSpanAttributes(ctx): Attributes` (SRP), никаких `setAttribute` россыпью. Ключи — snake_case, ASCII, стабильные навсегда; удаление ключа = bump `aqven.schema_version`. Держаться в пределах 128 атрибутов на спан.
 11. `spanLimits.attributeValueLengthLimit = 8192` выставлен глобально как предохранитель.
 
 ## Проверка
@@ -116,10 +125,10 @@
 | Что проверяем | Как |
 |---|---|
 | Продукт не зависит от Langfuse | Интеграционный прогон с отключённым `LangfuseSpanProcessor` и недоступным хостом: воркфлоу, гейты, реплей по кассете и экспорт проходят полностью. Падает только просмотр |
-| Изоляция зависимости | Правило линтера `no-restricted-imports` на `@langfuse/*` и `@opentelemetry/*` везде, кроме `@wf/observability` |
+| Изоляция зависимости | Правило линтера `no-restricted-imports` на `@langfuse/*` и `@opentelemetry/*` везде, кроме `@aqven/observability` |
 | Связывание работает | Тест: у каждой строки `run_nodes`/`node_checkpoint` непустые `trace_id` (32 hex) и `span_id` (16 hex), и спан с этим id доехал до тестового экспортёра |
 | Большие payload не ломают экспорт | Тест: узел с промтом на 200 КБ → в атрибутах `preview` ≤ 8192, `truncated = true`, `sha256` совпадает с содержимым блоба, полное тело лежит в blob store |
-| Схема атрибутов не дрейфует | CI сверяет список ключей `wf.*` со снапшотом: изменение без bump `wf.schema_version` — красная сборка |
+| Схема атрибутов не дрейфует | CI сверяет список ключей `aqven.*` со снапшотом: изменение без bump `aqven.schema_version` — красная сборка |
 | Гейты не ходят наружу | Тест с сетевым мок-барьером: во время исполнения гейта нет ни одного исходящего запроса к хосту Langfuse |
 | Лицензионная граница | До релиза подтвердить статус `blobStorageIntegrations` (batch export в blob storage): в закрытом EE-списке его нет, но явного подтверждения «OSS» в документации фич тоже нет. До подтверждения на эту функцию не опираемся |
 | **Kill-критерий** | Если хоть одна функция evals-контура, на которую мы опираемся (датасеты, dataset runs, annotation queues, scores, LLM-as-judge, prompt management), потребует EE-ключа — решение «берём OSS готовым» пересматривается целиком, а не латается |

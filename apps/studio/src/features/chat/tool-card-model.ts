@@ -1,60 +1,49 @@
-import type { Inline, Tone } from "@/components/studio"
-import type { ToolContext } from "./tool-context"
-import type { ToolAction, ToolView } from "./tool-views"
+import type { Tone } from "@/components/studio"
+import type { Translator } from "@/i18n/translator"
+import type { ChatToolStatus, ToolFacet, ToolSnapshot } from "./chat-events"
 
-type ToolCardFields = {
-  readonly hidden: object
-  readonly progress: { readonly label: Inline }
-  readonly card: {
-    readonly tone: Tone
-    readonly title: Inline
-    readonly lines: readonly Inline[]
-    readonly actions: readonly ToolAction[]
-  }
+export type ToolCardModel = { readonly tone: Tone; readonly title: string; readonly lines: readonly string[]; readonly truncated: boolean }
+
+type FacetKind = ToolFacet["kind"]
+type FacetOf<K extends FacetKind> = Extract<ToolFacet, { readonly kind: K }>
+type FacetCard = { readonly title: string; readonly lines: readonly string[] }
+
+const FAILED: readonly ChatToolStatus[] = ["error", "denied", "interrupted"]
+
+const nonEmpty = (lines: readonly (string | null)[]): readonly string[] => lines.filter((line): line is string => line !== null && line.length > 0)
+
+const exitLine = (facet: FacetOf<"command">, t: Translator<"chat">): string | null =>
+  facet.exitCode === null ? null : t("tool.exitCode", { code: String(facet.exitCode) })
+
+const FACET_CARD: { readonly [K in FacetKind]: (facet: FacetOf<K>, part: ToolSnapshot, t: Translator<"chat">) => FacetCard } = {
+  command: (facet, _part, t) => ({
+    title: facet.command,
+    lines: nonEmpty([facet.description, exitLine(facet, t), facet.preview]),
+  }),
+  fileEdit: (facet, _part, t) => ({
+    title: facet.path,
+    lines: nonEmpty([t(`tool.fileChange.${facet.change}`), facet.diff]),
+  }),
+  result: (facet, part, t) => ({
+    title: part.mcpServer === null ? part.toolName : t("tool.mcp", { server: part.mcpServer, tool: part.toolName }),
+    lines: nonEmpty([part.argsText, facet.preview]),
+  }),
 }
 
-export type ToolCardKind = keyof ToolCardFields
-
-export type ToolCardModel<K extends ToolCardKind = ToolCardKind> = {
-  [P in K]: { readonly kind: P } & Readonly<ToolCardFields[P]>
-}[K]
-
-export type ToolCallSnapshot = {
-  readonly toolName: string
-  readonly args: unknown
-  readonly result: unknown
-  readonly artifact: unknown
-  readonly isError: boolean
-  readonly statusType: string
+const facetCard = <K extends FacetKind>(facet: FacetOf<K>, part: ToolSnapshot, t: Translator<"chat">): FacetCard => {
+  const build: (facet: FacetOf<K>, part: ToolSnapshot, t: Translator<"chat">) => FacetCard = FACET_CARD[facet.kind]
+  return build(facet, part, t)
 }
 
-const HIDDEN: ToolCardModel<"hidden"> = { kind: "hidden" }
-
-const errorCard = (part: ToolCallSnapshot, { t }: ToolContext): ToolCardModel<"card"> => ({
-  kind: "card",
-  tone: "destructive",
+const pendingCard = (part: ToolSnapshot, t: Translator<"chat">): FacetCard => ({
   title: part.toolName,
-  lines: [t("tool.error")],
-  actions: [],
+  lines: nonEmpty([part.argsText, t("tool.running")]),
 })
 
-const isFailed = (part: ToolCallSnapshot): boolean => part.isError || part.statusType === "incomplete"
+const statusTone = (status: ChatToolStatus | null): Tone => (status !== null && FAILED.includes(status) ? "destructive" : "tool")
 
-const pendingModel = <A, R, P>(args: A, artifact: unknown, view: ToolView<A, R, P>, ctx: ToolContext): ToolCardModel => {
-  if (!view.guards.progress(artifact)) return HIDDEN
-  return { kind: "progress", label: view.progress(args, artifact, ctx) }
-}
-
-export const presentToolCall = <A, R, P>(part: ToolCallSnapshot, view: ToolView<A, R, P>, ctx: ToolContext): ToolCardModel => {
-  const { args, result, artifact } = part
-  if (!view.guards.args(args) || isFailed(part)) return errorCard(part, ctx)
-  if (result === undefined) return pendingModel(args, artifact, view, ctx)
-  if (!view.guards.result(result)) return errorCard(part, ctx)
-  return {
-    kind: "card",
-    tone: "llm",
-    title: view.title(args, result, ctx),
-    lines: view.lines(result, ctx),
-    actions: view.actions(args, result, ctx),
-  }
+export const presentToolCall = (part: ToolSnapshot, t: Translator<"chat">): ToolCardModel => {
+  const card = part.facet === null ? pendingCard(part, t) : facetCard(part.facet, part, t)
+  const truncated = part.facet?.kind === "command" || part.facet?.kind === "result" ? part.facet.truncated : false
+  return { tone: statusTone(part.status), truncated, ...card }
 }

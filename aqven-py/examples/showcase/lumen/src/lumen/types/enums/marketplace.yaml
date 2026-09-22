@@ -1,9 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Type"
-type: "enum"
-description: "Маркетплейс, на котором оформлен заказ"
-values:
-- value: "amazon"
-  description: "Amazon"
-- value: "ozon"
-  description: "Ozon"

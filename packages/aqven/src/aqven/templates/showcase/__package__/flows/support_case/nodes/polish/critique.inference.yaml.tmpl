@@ -1,0 +1,34 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Critique of the customer reply: grounding in the knowledge-base chunks, agreement with the decision and completeness; a score and blocking remarks"
+in:
+- name: "summary"
+  type: "Text"
+  description: "Case summary after parsing"
+  maxLength: 600
+- name: "resolution"
+  type: "Resolution"
+  description: "The decision the reply has to match"
+- name: "chunks"
+  type: "KbChunk[]"
+  description: "Knowledge base chunks the reply must rely on"
+  maxItems: 80
+- name: "reply"
+  type: "ReplyDraft"
+  description: "The reply under review, with its citations"
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the score, written before the score"
+  maxLength: 600
+- name: "score"
+  type: "Score"
+  description: "Final score of the reply: grounding in the knowledge base, agreement with the decision, completeness"
+- name: "blocking"
+  type: "Text[]"
+  description: "Blocking remarks that must be fixed before the reply can be sent"
+  maxLength: 200
+  maxItems: 5
+checks:
+- run: "critique_consistent"
+  on_fail: "flag"

@@ -1,0 +1,33 @@
+We need answer as judge. Need score candidates blind. Need reason per criterion, then best candidate scores and index. Need inspect data.
+
+Case: customer asks about Lumen Glow E27 smart bulb compatibility with 5 GHz Wi-Fi and bedroom suitability.
+
+Candidates:
+0: says sorry, KB does not contain info about Wi-Fi compatibility or bedroom suitability for Lumen Glow E27. No citations.
+1: claims Lumen Glow E27 designed to work on 2.4 GHz, not compatible with 5 GHz; bedroom suitability warm white/dimming; troubleshooting reset/re-pair; cites chunks about Flow strip flicker and controller heat — irrelevant to bulb/Wi-Fi.
+
+Chunks: only two chunks about Flow strip flicker and controller heat. No info about Lumen Glow E27, Wi-Fi, bedroom.
+
+Need score against grounded, helpful, tone. Candidate 0 is grounded (doesn't claim unconfirmed info; accurately says KB lacks info). Helpful? It tells customer KB doesn't contain info; maybe minimally helpful, honest. Tone: polite apology, professional.
+
+Candidate 1: grounded? Claims specific facts not in chunks: 2.4 GHz, not 5 GHz, warm white/dimming, reset/re-pair steps. Citations irrelevant. So unconfirmed claims. Grounded low. Helpful? It gives plausible answer but unsupported; could mislead. Tone? Helpful and friendly, but maybe overpromising. Need decide best index. Likely candidate 0 is best because grounded. Need score best candidate only? The instruction: "First write the reasoning for every criterion, then give the best candidate its scores and name its index." So scores for best candidate. Need maybe mention candidate 1 issues.
+
+Need be careful: "A claim the chunks do not confirm counts as unconfirmed, however plausible it sounds; length on its own is not a merit." Candidate 1's claims are unconfirmed. Candidate 0's statement "knowledge base does not contain information" is confirmed by chunks (only two chunks unrelated). So grounded high.
+
+Helpful: Candidate 0 doesn't answer the question, but given KB lacks info, honest limitation is appropriate; could suggest contacting support? It doesn't. Still useful in setting expectations. Candidate 1 gives direct answer but unsupported; usefulness undermined by unverified info. Best candidate 0.
+
+Tone: Candidate 0 apologetic, professional. Candidate 1 also friendly but maybe "I'm sorry" absent; tone fine. But best overall 0.
+
+Need output final_result with rationale max 600 chars, scores max 3 items, best_index. Need include reasoning for every criterion. Let's craft concise.
+
+Scores: grounded 5? Candidate 0 makes no unsupported claims; accurately reflects KB. Helpful maybe 3? It doesn't resolve but honest. Tone 4 or 5. Let's decide. Rubric 1-5. Candidate 0: grounded 5, helpful 2 or 3, tone 4. Hmm.
+
+Need "best candidate its scores" — score candidate 0. Let's reason.
+
+Grounded: 5 (fully grounded; only statement is that KB lacks info, which is true).
+Helpful: 2? It tells customer no info, but doesn't offer next steps. However given constraints, it's the best possible. Usefulness to customer: low because doesn't answer. But honesty is useful. I'd give 3.
+Tone: 4 (apologetic and professional; could be warmer/more actionable).
+
+Need maybe mention candidate 1's citations are irrelevant and claims unconfirmed. Good.
+
+Let's write rationale within 600 chars.

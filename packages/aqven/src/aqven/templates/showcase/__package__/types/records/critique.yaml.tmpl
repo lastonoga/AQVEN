@@ -1,0 +1,17 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Critique of the customer reply"
+fields:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the score, written before the score"
+  maxLength: 600
+- name: "score"
+  type: "Score"
+  description: "Final score of the reply"
+- name: "blocking"
+  type: "Text[]"
+  description: "Blocking remarks that have to be fixed"
+  maxLength: 200
+  maxItems: 5

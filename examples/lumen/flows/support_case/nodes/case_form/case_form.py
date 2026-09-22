@@ -1,0 +1,35 @@
+from collections.abc import Mapping
+from typing import Final
+
+from aqven.spec import FieldSpec
+from lumen.types import CaseIntent, SupportCaseCaseFormOut
+
+ORDER_ID_FIELD: Final = FieldSpec(name="order_id", type="OrderId", description="Lumen order number")
+
+INTENT_FIELDS: Final[Mapping[CaseIntent, tuple[FieldSpec, ...]]] = {
+    "defect": (
+        ORDER_ID_FIELD,
+        FieldSpec(name="symptom", type="DefectSymptom", description="Main symptom of the defect"),
+        FieldSpec(name="purchased_on", type="Date?", description="Purchase date from the invoice; null when absent"),
+        FieldSpec(name="safety_risk", type="Bool", description="Safety risk: overheating, burning smell, sparks"),
+    ),
+    "delivery": (
+        ORDER_ID_FIELD,
+        FieldSpec(name="damage", type="DeliveryDamage", description="What happened to the order in delivery"),
+        FieldSpec(
+            name="carrier_ref",
+            type="Text?",
+            description="Carrier tracking number; null when there is none",
+            maxLength=40,
+        ),
+    ),
+    "question": (
+        FieldSpec(name="topic", type="Text", description="Subject of the customer question", maxLength=200),
+        FieldSpec(name="order_id", type="OrderId?", description="Lumen order number; null when not about an order"),
+    ),
+}
+
+
+def case_form(intent: CaseIntent) -> SupportCaseCaseFormOut:
+    kind = FieldSpec(name="kind", type="Text", description="Kind of the case", enum=[intent])
+    return SupportCaseCaseFormOut(fields=[kind, *INTENT_FIELDS[intent]])

@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A money amount in the smallest units of its currency"
+fields:
+- name: "amount_minor"
+  type: "Int"
+  description: "The amount in cents, pence or other smallest units"
+  minimum: 0
+  maximum: 1000000000
+- name: "currency"
+  type: "CurrencyCode"
+  description: "Currency of the amount"

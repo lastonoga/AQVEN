@@ -1,0 +1,28 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "human"
+description: "The support lead approves, edits or rejects the reply"
+form: "ReplyApproval"
+assignee: "support_lead"
+timeout_seconds: 14400
+on_timeout:
+  policy: "escalate"
+  assignee: "support_manager"
+  timeout_seconds: 7200
+in:
+- name: "reply"
+  type: "ReplyDraft"
+  description: "The reply after polishing"
+  from: "$polish.out.reply"
+- name: "resolution"
+  type: "Resolution"
+  description: "Decision on the case"
+  from: "$route.out.resolution"
+- name: "score"
+  type: "Score"
+  description: "The critic's score for the reply"
+  from: "$polish.out.score"
+- name: "iterations"
+  type: "Int"
+  description: "How many revision passes the reply went through"
+  from: "$polish.out.iterations"

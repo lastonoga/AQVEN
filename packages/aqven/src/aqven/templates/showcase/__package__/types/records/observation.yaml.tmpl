@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A parsing observation: which signal was found and how it showed"
+fields:
+- name: "key"
+  type: "SignalKey"
+  description: "Signal key from the category list"
+- name: "value"
+  type: "Text"
+  description: "What exactly was noticed in the text or the attachments"
+  maxLength: 200

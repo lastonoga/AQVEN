@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "The cascade stage that settled the intent"
+values:
+- value: "cheap"
+  description: "Cheap model: the ballots agree"
+- value: "strong"
+  description: "Stronger model: the ballots diverged"

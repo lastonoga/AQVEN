@@ -1,0 +1,80 @@
+{% section title: "Revision dossier" %}
+  {% card title: "Customer and case", description: "Who is asking and what happened" %}
+    {% badge path: "/customer/tier", tone: "positive" %}
+    {% field label: "Customer", path: "/customer/display_name" %}
+    {% field label: "Customer ID", path: "/customer/customer_id" %}
+    {% field label: "Email", path: "/customer/email" %}
+    {% field label: "Customer locale", path: "/customer/locale" %}
+    {% field label: "Reply locale", path: "/locale" %}
+    {% field label: "Channel", path: "/channel" %}
+    {% text path: "/summary" %}
+  {% endcard %}
+
+  {% if value.product %}
+    {% card title: "Product", description: "Recorded product details" %}
+      {% field label: "Name", path: "/product/name" %}
+      {% field label: "SKU", path: "/product/sku" %}
+      {% field label: "Category", path: "/product/category" %}
+      {% field label: "Lamp kind", path: "/product/lamp_kind" %}
+    {% endcard %}
+  {% endif %}
+
+  {% card title: "Decision", description: "The answer must stay within this resolution", tone: "positive" %}
+    {% badge path: "/resolution/action", tone: "positive" %}
+    {% text path: "/resolution/summary" %}
+    {% field label: "Policy", path: "/resolution/policy" %}
+    {% if value.resolution.credit %}
+      {% field label: "Credit (minor units)", path: "/resolution/credit/amount_minor" %}
+      {% field label: "Currency", path: "/resolution/credit/currency" %}
+    {% endif %}
+  {% endcard %}
+
+  {% card title: "Knowledge evidence", description: "Full retrieved passages and their identifiers" %}
+    {% list title: "Sources" %}
+      {% for chunk in value.chunks %}
+        {% assign chunk_id_path = "/chunks/" | append: forloop.index0 | append: "/chunk_id" %}
+        {% assign chunk_title_path = "/chunks/" | append: forloop.index0 | append: "/title" %}
+        {% assign chunk_text_path = "/chunks/" | append: forloop.index0 | append: "/text" %}
+        {% section title: chunk.title %}
+          {% field label: "Source ID", path: chunk_id_path %}
+          {% field label: "Title", path: chunk_title_path %}
+          {% text path: chunk_text_path %}
+        {% endsection %}
+      {% endfor %}
+    {% endlist %}
+  {% endcard %}
+
+  {% if value.previous %}
+    {% card title: "Previous draft", description: "The full answer before this revision" %}
+      {% text path: "/previous/text" %}
+      {% if value.previous.citations %}
+        {% list title: "Previous citations" %}
+          {% for citation in value.previous.citations %}
+            {% assign citation_title = "Citation " | append: forloop.index %}
+            {% assign citation_id_path = "/previous/citations/" | append: forloop.index0 | append: "/chunk_id" %}
+            {% assign citation_quote_path = "/previous/citations/" | append: forloop.index0 | append: "/quote" %}
+            {% section title: citation_title %}
+              {% field label: "Source ID", path: citation_id_path %}
+              {% text path: citation_quote_path %}
+            {% endsection %}
+          {% endfor %}
+        {% endlist %}
+      {% endif %}
+    {% endcard %}
+  {% endif %}
+
+  {% if value.critique %}
+    {% card title: "Review notes", description: "Reasons for the revision", tone: "warning" %}
+      {% field label: "Score", path: "/critique/score" %}
+      {% text path: "/critique/rationale" %}
+      {% if value.critique.blocking %}
+        {% list title: "Blocking issues" %}
+          {% for issue in value.critique.blocking %}
+            {% assign issue_path = "/critique/blocking/" | append: forloop.index0 %}
+            {% text path: issue_path, tone: "critical" %}
+          {% endfor %}
+        {% endlist %}
+      {% endif %}
+    {% endcard %}
+  {% endif %}
+{% endsection %}

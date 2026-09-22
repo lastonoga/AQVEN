@@ -43,8 +43,11 @@
   `pydantic` 2.13.5, `dbos` 2.31.1, `httpx2` 2.13.0, `fastapi` 0.141.1 без extras, `mcp` 2.2.0; инструменты —
   uv 0.12.15, ruff 0.16.7, pyright 1.1.414; пины `==`, один `uv.lock`. `typescript@6.0.3` — только `apps/studio`.
   Полная ось и причины — в [ADR-0025](docs/adr/0025-python-engine.md) §1–§2.
-- **Никаких комментариев в коде.** Имена объясняют сами себя, пояснения — в документации.
-  Docstring считается комментарием ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §8).
+- **Никаких комментариев в коде.** Имена объясняют сами себя, пояснения — в документации. `E_DOCSTRING`
+  ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §8) запрещает docstring у функций шагов и `Signature`
+  builder-а **проекта на aqven** — движка это не касается. Единственное исключение по всему репозиторию —
+  публичная поверхность пакетов `aqven` и `aqven-llm`: там docstring обязателен и служит источником
+  API-референса сайта документации ([ADR-0031](docs/adr/0031-public-api-docstrings.md)).
 - **Плоский код.** Ранние возвраты, guard clauses, таблицы обработчиков и Strategy вместо
   вложенных if/else и лестниц switch.
 - **SOLID и именованные паттерны.** Применил паттерн — назови его в описании изменения.
@@ -64,6 +67,8 @@
 | Версии, границы «берём/пишем» | docs/DECISIONS.md |
 | Имена MCP-тулов | docs/14-mcp-contract.md |
 | Таблицы и колонки БД | docs/16-data-model.md |
+| Раскладка монорепо, корни workspace, CI | docs/adr/0036-single-root-monorepo.md — пока docs/20-repo-and-tooling.md не переписан |
+| Упаковка Studio в дистрибутив, установка одной командой | docs/adr/0037-studio-inside-the-wheel.md |
 | Состав пакетов монорепо | docs/adr/0025-python-engine.md §2, §6 — пока docs/20-repo-and-tooling.md не переписан |
 | Порты и адаптеры | docs/adr/0025-python-engine.md и docs/02-architecture.md; при расхождении прав ADR, пока 02 не вычищен |
 | Раскладка определений на диске, запись, CAS, история | docs/adr/0026-yaml-spec-and-code-refs.md §2, §4, §9 и docs/files-first/; при расхождении прав ADR-0026, пока files-first не вычищен |

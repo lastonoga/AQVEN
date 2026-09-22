@@ -1,7 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Type"
-type: "id"
-description: "Ключ сигнала дефекта из справочника категории товара"
-pattern: "^[a-z][a-z0-9_]{0,39}$"
-allowed_set: "dynamic"
-code_format: "identity"

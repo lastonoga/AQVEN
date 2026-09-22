@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "The judge panel result: the winning draft and the verdict"
+fields:
+- name: "winner"
+  type: "ReplyDraft"
+  description: "The best draft by the panel's verdict"
+- name: "verdict"
+  type: "PanelVerdict"
+  description: "Panel verdict with the tie-break flag and the score spread"

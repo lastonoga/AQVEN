@@ -1,0 +1,75 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Parsing of the case and every attachment: the summary, the product category, observations against the category signals, the safety risk and the marketplace intake fields"
+in:
+- name: "message"
+  type: "Text"
+  description: "Customer case text after whitespace normalization"
+  maxLength: 4000
+- name: "channel"
+  type: "Channel"
+  description: "Channel the case arrived through"
+- name: "customer"
+  type: "Customer"
+  description: "The customer who wrote the case"
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked in the case; null when no product was given"
+- name: "signals"
+  type: "SignalDef[]"
+  description: "Category signals the observations are allowed to mark"
+  maxItems: 20
+- name: "intake_fields"
+  type: "FieldSpec[]"
+  description: "Marketplace intake fields filled from the case; an empty list means there are none"
+  maxItems: 10
+- name: "photo"
+  type: "Image?"
+  description: "Photo of the product or the defect; null when no photo was attached"
+- name: "voice_note"
+  type: "Audio?"
+  description: "The customer's voice message; null when there is none"
+- name: "video"
+  type: "Video?"
+  description: "Video showing the defect; null when no video was attached"
+- name: "invoice"
+  type: "Document?"
+  description: "Invoice or purchase receipt; null when no document was attached"
+out:
+- name: "summary"
+  type: "Text"
+  description: "Case summary from the text and the attachments together"
+  maxLength: 600
+- name: "category"
+  type: "ProductCategory"
+  description: "Category of the product in question"
+- name: "observations"
+  type: "Observation[]"
+  description: "Observations against the category signals, at most one per signal"
+  maxItems: 12
+- name: "safety_risk"
+  type: "Bool"
+  description: "Whether the case or its attachments show signs of a safety hazard"
+- name: "intake_extra"
+  type: "Dynamic"
+  description: "Values of the marketplace intake fields, against the form from the input"
+  schema_from: "$in.intake_fields"
+  limits:
+    max_fields: 10
+    max_depth: 1
+    max_text_length: 200
+    max_items: 5
+allowed_sets:
+- type: "SignalKey"
+  from: "$in.signals[*].key"
+  labels_from: "$in.signals[*].label"
+checks:
+- use: "unique_items"
+  with:
+    field: "$out.observations"
+    key: "key"
+  on_fail: "retry"
+- use: "not_empty"
+  with:
+    field: "$out.summary"
+  on_fail: "retry"

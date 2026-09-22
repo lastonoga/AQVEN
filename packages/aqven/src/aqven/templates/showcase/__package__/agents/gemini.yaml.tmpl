@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Multimodal case parsing, the attachment form and a Google-family reply draft"
+model: "openrouter:google/gemini-2.5-flash-lite"
+settings:
+  temperature: 0.2
+  max_tokens: 4000
+output:
+  strict: false
+  retries: 2

@@ -1,0 +1,23 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "locale": {
+      "$ref": "#/$defs/RefPath"
+    }
+  },
+  "required": [
+    "field",
+    "locale"
+  ],
+  "title": "LanguageParams",
+  "type": "object"
+}

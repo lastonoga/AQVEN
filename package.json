@@ -8,9 +8,11 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "dev": "pnpm --filter @aqven/studio dev",
+    "dev": "node tools/dev.mjs",
     "build": "pnpm --filter @aqven/studio build",
     "test": "pnpm --filter @aqven/studio test",
-    "lint": "pnpm --filter @aqven/studio lint"
+    "lint": "pnpm --filter @aqven/studio lint",
+    "docs:dev": "pnpm --filter @aqven/site dev",
+    "docs:build": "pnpm --filter @aqven/site build"
   }
 }

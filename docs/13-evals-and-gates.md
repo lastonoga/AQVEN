@@ -72,12 +72,12 @@ Runs**, не связываются с датасетами. Цикл «прод
 
 | Пакет | Ответственность | Зависимости |
 |---|---|---|
-| `@wf/stats` | чистая статистика: бутстрап BCa, McNemar, Holm, BH, power/MDE, ICC, kappa, alpha, tau-b | ноль зависимостей от VoltAgent, Langfuse и БД |
-| `@wf/datasets` | модель датасета, сплиты, версии, дедуп, покрытие, PII-маскирование | `canonicalize`, `@noble/hashes`, drizzle |
-| `@wf/scorers` | реестр скореров, адаптеры к `@voltagent/scorers`, панель судей, калибровка | `@voltagent/scorers`, `autoevals` |
-| `@wf/evals` | эксперимент, node-level агрегация, гейт, отчёты | `@voltagent/evals`, `@wf/stats`, `@wf/datasets` |
-| `@wf/model-matrix` | адаптер promptfoo, отдельный процесс, Node ≥ 22.22.0 | `promptfoo` |
-| `@wf/blame` | single-node patch, ddmin, ранжирование вклада | `graphology-dag`, `graphology-traversal` |
+| `@aqven/stats` | чистая статистика: бутстрап BCa, McNemar, Holm, BH, power/MDE, ICC, kappa, alpha, tau-b | ноль зависимостей от VoltAgent, Langfuse и БД |
+| `@aqven/datasets` | модель датасета, сплиты, версии, дедуп, покрытие, PII-маскирование | `canonicalize`, `@noble/hashes`, drizzle |
+| `@aqven/scorers` | реестр скореров, адаптеры к `@voltagent/scorers`, панель судей, калибровка | `@voltagent/scorers`, `autoevals` |
+| `@aqven/evals` | эксперимент, node-level агрегация, гейт, отчёты | `@voltagent/evals`, `@aqven/stats`, `@aqven/datasets` |
+| `@aqven/model-matrix` | адаптер promptfoo, отдельный процесс, Node ≥ 22.22.0 | `promptfoo` |
+| `@aqven/blame` | single-node patch, ddmin, ранжирование вклада | `graphology-dag`, `graphology-traversal` |
 
 Паттерны: `ScorerPort`/`DatasetStore`/`EvalStore` — Port/Adapter (домен не импортирует
 `@langfuse/*` и `promptfoo`); реестр скореров — Registry; выбор теста по `kind` — Strategy через
@@ -91,7 +91,7 @@ Runs**, не связываются с датасетами. Цикл «прод
 `@anthropic-ai/sdk`, `ai`), ~490 пакетов в дереве, собственная SQLite в `~/.promptfoo`,
 `engines: { node: ">=22.22.0" }`.
 
-1. Отдельный пакет `@wf/model-matrix`, отдельный процесс-воркер, отдельный образ. В рантайм-образ
+1. Отдельный пакет `@aqven/model-matrix`, отдельный процесс-воркер, отдельный образ. В рантайм-образ
    воркфлоу `promptfoo` не попадает.
 2. Класс `Eval`, который возвращает `evaluate`, — внутренний контракт. Завязываемся только на
    `EvaluateSummaryV3` / `EvaluateResult` / `GradingResult`, за фасадом `ModelMatrixRunner`.
@@ -254,7 +254,7 @@ dataset_add_from_run({
 
 Комбинаторика значений — **pairwise (IPOG), не декартово произведение**. Для 8 параметров по 4
 значения декарт даёт 65 536 кейсов, all-pairs — 20–30 при 100% покрытии всех пар. Живых TS-библиотек
-IPOG нет, алгоритм пишем сами (~150 строк) в `@wf/datasets`.
+IPOG нет, алгоритм пишем сами (~150 строк) в `@aqven/datasets`.
 
 Тул: `dataset_generate({ dataset, strategy, targets?, count?, seed })`. Генерирует Claude,
 платформа контролирует покрытие и качество: результат генерации проходит те же фильтры §3.5, что и
@@ -274,8 +274,8 @@ IPOG нет, алгоритм пишем сами (~150 строк) в `@wf/data
 | контекст | `context:<node_id>:<hit\|miss\|stale>` | результат поиска соответствует |
 
 Первый класс проверяется статически по элементу, остальные четыре — **только по фактическому
-прогону**: источник истины — наши спан-атрибуты `wf.node_id`, `wf.node_type`, плюс
-`wf.loop.exit_reason` и `wf.context.result` в том же неймспейсе. Поэтому отчёт покрытия обновляется
+прогону**: источник истины — наши спан-атрибуты `aqven.node_id`, `aqven.node_type`, плюс
+`aqven.loop.exit_reason` и `aqven.context.result` в том же неймспейсе. Поэтому отчёт покрытия обновляется
 после прогона датасета, а не после генерации.
 
 ```ts
@@ -474,7 +474,7 @@ relevance 0.547). Это был SOTA, и это всего лишь умерен
 
 Живых npm-пакетов нет ни для одной (`@stdlib/stats-kappa-cohen`, `cohens-kappa`, `ckappa`,
 `krippendorff-alpha`, `inter-rater-agreement`, `kendall-correlation` — все E404). Пишем в
-`@wf/stats`.
+`@aqven/stats`.
 
 | Метрика | Формула | Когда применяем | Почему именно она |
 |---|---|---|---|
@@ -515,7 +515,7 @@ type JudgeVersion = {
 };
 
 const judgeVersionHash = (v: Omit<JudgeVersion, 'hash'>): JudgeVersionHash =>
-  sha256Hex('wf.judge.v1|' + canonicalize(v));
+  sha256Hex('aqven.judge.v1|' + canonicalize(v));
 ```
 
 ```sql
@@ -1250,7 +1250,7 @@ experiment_run({
 
 ```ts
 const nodeProvider = (model: ModelRef): ApiProvider => ({
-  id: () => `wf:${nodeId}:${model.id}`,
+  id: () => `aqven:${nodeId}:${model.id}`,
   callApi: async (prompt, ctx) => {
     const result = await runtime.executeNode(nodeId, ctx.vars, { model, runMode: 'eval' });
     return { output: result.output, tokenUsage: result.usage, cost: result.costUsd, cached: result.cached };
@@ -1385,7 +1385,7 @@ al.), прямой родственник causal tracing / activation patching (
 - `gold[v]` валидируется Zod-схемой выхода узла `v` перед подстановкой; невалидный эталон → отказ,
   иначе blame недостоверен;
 - узел `v` помечается `mode: 'pinned'`; рантайм не вызывает модель, а возвращает `gold[v]` и пишет
-  спан с `wf.node.pinned = true`;
+  спан с `aqven.node.pinned = true`;
 - **upstream не переигрывается вообще** — выходы узлов до `v` берутся из исходного прогона;
 - переигрывается строго `downstream(v)` — все узлы, достижимые из `v`; для графов с циклами и
   ретраями downstream берётся по развёрнутому графу исполнения, а не по статическому определению.
@@ -1492,7 +1492,7 @@ scorers } })`), но их результаты пишутся в OTLP-спаны
 
 ```mermaid
 flowchart TD
-  RUN[Прогон в проде] -->|OTel-спаны wf.* и eval.scorer.*| SINK[SpanProcessor -> app.scores]
+  RUN[Прогон в проде] -->|OTel-спаны aqven.* и eval.scorer.*| SINK[SpanProcessor -> app.scores]
   SINK --> POLICY{Триггер семплирования}
   POLICY -->|нет| DROP[Только агрегаты метрик]
   POLICY -->|да| MASK[Маскирование PII: regex + детерминированные псевдонимы]
@@ -1537,7 +1537,7 @@ flowchart TD
    README пакета 0.123.0 и закрепить переменную в манифесте воркера до первого прогона.
 3. **Версия Node в монорепе.** `promptfoo@0.123.0` требует `engines: node >= 22.22.0`, в сквозных
    решениях версия Node не зафиксирована. Что сделать: закрепить Node 22.x для всей монорепы либо
-   собирать `@wf/model-matrix` отдельным образом со своей версией; решение оформить ADR.
+   собирать `@aqven/model-matrix` отдельным образом со своей версией; решение оформить ADR.
 4. **Две версии autoevals в дереве.** `@voltagent/scorers@2.1.0` тянет `autoevals ^0.0.131`
    транзитивно; явная установка `autoevals@0.3.0` ради `LLMClassifierFromSpec`, `ModelGradedSpec` и
    `Battle` даст дубликат. Что сделать: проверить, есть ли эти сущности в реэкспорте VoltAgent; если
@@ -1546,7 +1546,7 @@ flowchart TD
    OpenAI-клиенту (`init({ client })`). Что сделать: прогнать `Factuality` через наш провайдерный
    слой на Anthropic-модели и зафиксировать результат.
 6. **Производительность BCa**: 60 тестов × 10 000 реплик × n = 500 на Node не замерены. Что сделать:
-   бенчмарк в `@wf/stats`; при времени больше 30 с — выносить в воркер с прогрессом и кешировать
+   бенчмарк в `@aqven/stats`; при времени больше 30 с — выносить в воркер с прогрессом и кешировать
    jackknife между тестами одного узла.
 7. **Порог согласия судьи 0.70 назначен по аналогии** (Landis & Koch), на наших данных не
    проверялся; в заметках по статистике он фигурирует как плоская Cohen's kappa, в сквозных решениях
@@ -1574,11 +1574,11 @@ flowchart TD
     проверить, что пустые поля не ломают агрегаты `ExperimentSummary`, и при необходимости заполнять
     их своими идентификаторами.
 13. **Тип middleware в ai@6** для кассет (`wrapLanguageModel`) назван в заметках предположительно
-    (`LanguageModelV3Middleware`). Что сделать: свериться с документом по слою `@wf/llm` и
+    (`LanguageModelV3Middleware`). Что сделать: свериться с документом по слою `@aqven/llm` и
     зафиксировать точное имя типа в одном месте.
 14. **Prior art по автоматическому blame**: не проверено, появилась ли минимизация множества подмен
     в свежих версиях LangSmith или Braintrust. Что сделать: разовая проверка перед реализацией
-    `@wf/blame`, чтобы не писать то, что уже есть.
+    `@aqven/blame`, чтобы не писать то, что уже есть.
 15. **Бюджет живых судей в проде** (доля прогонов под live-скорерами, потолок расходов) в спеке и
     заметках не задан. Что сделать: определить вместе с моделью бюджетов воркфлоу и вынести в
     политику тенанта.

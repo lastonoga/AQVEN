@@ -1,109 +1,67 @@
 import { describe, expect, it } from "vitest"
-import { isoDateTime, reviewId } from "@/data/ids"
 import {
-  SLA,
-  decisionHint,
-  decisionLabel,
+  addressLabel,
+  deadlineDotLabel,
+  deadlineDuration,
+  deadlineState,
   detailMeta,
-  nextItemId,
-  queueReason,
-  runTitle,
-  slaDotLabel,
-  slaDuration,
-  slaState,
-  slaSummary,
-  stageNode,
-  triggerBadge,
+  entryKey,
+  entryReason,
+  entryTitle,
+  nextEntry,
+  timeoutSummary,
+  waitBadge,
+  type ReviewEntry,
 } from "./presenters"
-import { NOW, copy, pitchQueue, queueItem, reviewDetail } from "./test-support"
+import { approvalEntry, approvalWait, copy, formEntry, formWait, NOW } from "./test-support"
 
-const { t } = copy
-
-describe("slaState", () => {
-  it("counts the minutes left before the due time", () => {
-    expect(slaState(queueItem(0).sla, NOW)).toEqual({ kind: "onTrack", remainingMinutes: 192 })
+describe("deadlineState", () => {
+  it("counts the minutes left before the deadline", () => {
+    expect(deadlineState(formWait, NOW)).toEqual({ kind: "onTrack", minutes: 212 })
+    expect(deadlineDuration(deadlineState(formWait, NOW), copy.t)).toBe("3 h 32 m left")
+    expect(deadlineDotLabel(deadlineState(formWait, NOW), copy.t)).toEqual({})
   })
 
-  it("turns into overdue once the due time has passed", () => {
-    expect(slaState(queueItem(2).sla, NOW)).toEqual({ kind: "overdue", overdueMinutes: 65 })
+  it("counts the minutes past a missed deadline", () => {
+    expect(deadlineState(approvalWait, NOW)).toEqual({ kind: "overdue", minutes: 79 })
+    expect(deadlineDuration(deadlineState(approvalWait, NOW), copy.t)).toBe("overdue 1 h 19 m")
+    expect(deadlineDotLabel(deadlineState(approvalWait, NOW), copy.t)).toEqual({ label: "past the deadline" })
   })
 
-  it("stays on track exactly at the due time", () => {
-    expect(slaState({ budgetMinutes: 60, dueAt: isoDateTime(NOW.toISOString()) }, NOW)).toEqual({ kind: "onTrack", remainingMinutes: 0 })
-  })
-})
-
-describe("SLA tones", () => {
-  it("keeps the queue text muted while on track and destructive when overdue", () => {
-    expect(SLA.onTrack).toEqual({ dot: "warning", queue: "neutral", detail: "warning" })
-    expect(SLA.overdue).toEqual({ dot: "destructive", queue: "destructive", detail: "destructive" })
+  it("treats the deadline itself as on track", () => {
+    expect(deadlineState(formWait, new Date(formWait.deadline_at))).toEqual({ kind: "onTrack", minutes: 0 })
   })
 })
 
-describe("slaDotLabel", () => {
-  it("names only the overdue dot for screen readers", () => {
-    expect(slaDotLabel(slaState(queueItem(0).sla, NOW), t)).toEqual({})
-    expect(slaDotLabel(slaState(queueItem(2).sla, NOW), t)).toEqual({ label: "overdue" })
+describe("queue copy", () => {
+  it("names the address with its branch", () => {
+    expect(addressLabel(approvalWait.address)).toBe("route__resolve · defect")
+    expect(addressLabel({ node_id: "record__extract", branch_key: null, iteration: 2, item_index: 3 })).toBe("record__extract · #2 · [3]")
+  })
+
+  it("titles an entry by its run and explains why it waits", () => {
+    expect(entryTitle(formEntry, copy.t)).toBe("run #234778")
+    expect(entryReason(formEntry, copy)).toBe("form · assigned to support_lead")
+    expect(entryReason(approvalEntry, copy)).toBe("tool approval · assigned to support_lead")
+    expect(waitBadge(approvalWait, copy.domain)).toBe("tool approval")
+  })
+
+  it("summarises the attempt and the timeout policy", () => {
+    expect(detailMeta(approvalEntry, copy.t)).toBe("run #b56d92 · attempt 3 · ToolApprovalAnswer")
+    expect(timeoutSummary(formWait, deadlineState(formWait, NOW), copy)).toBe("3 h 32 m left · on timeout: escalate")
   })
 })
 
-describe("decisionLabel", () => {
-  it.each([
-    ["approve", "Approve · resume run"],
-    ["changes", "Request changes"],
-    ["reject", "Reject branch"],
-  ] as const)("labels the %s decision", (decision, label) => {
-    expect(decisionLabel(decision, t)).toBe(label)
-  })
-})
+describe("queue order", () => {
+  const queue: readonly ReviewEntry[] = [approvalEntry, formEntry]
 
-describe("queue card lines", () => {
-  it.each([
-    [0, "run #8247", "3 h 12 m left", "stage 7 · decide_pitch", "needs_human · verdict ≠ approved"],
-    [1, "run #8244", "8 h 40 m left", "stage 4 · pitch_gen_d", "human input · brief addition"],
-    [2, "run #8236", "overdue 1 h 05 m", "stage 7 · decide_pitch", "escalated · SLA breached"],
-  ])("renders item %i from the mock backend", (index, title, sla, stage, reason) => {
-    const item = queueItem(index)
-    expect(runTitle(item, t)).toBe(title)
-    expect(slaDuration(slaState(item.sla, NOW), t)).toBe(sla)
-    expect(stageNode(item, t)).toBe(stage)
-    expect(queueReason(item, t)).toBe(reason)
-  })
-})
-
-describe("detail header", () => {
-  it("renders the designed header of run #8247", () => {
-    const item = queueItem(0)
-    expect(triggerBadge(item, t)).toBe("NEEDS HUMAN")
-    expect(detailMeta(item, reviewDetail(item), t)).toBe("run #8247 · stage 7 · row #07 · branch b")
-    expect(slaSummary(item.sla, slaState(item.sla, NOW), copy)).toBe("SLA 4 h · 3 h 12 m left · then escalate")
-    expect(decisionHint(item, t)).toBe("approve resumes stage 7 with this branch · request changes replays the loop with your note")
+  it("keys an entry by run and address", () => {
+    expect(entryKey(approvalEntry)).toBe("01a0b104-4658-70aa-b49b-7c2586b56d92|route__resolve · defect")
   })
 
-  it("drops the budget when the step has none", () => {
-    const item = queueItem(1)
-    expect(triggerBadge(item, t)).toBe("NEEDS INPUT")
-    expect(slaSummary(item.sla, slaState(item.sla, NOW), copy)).toBe("8 h 40 m left · then escalate")
-  })
-
-  it("says the step has escalated once overdue", () => {
-    const item = queueItem(2)
-    expect(slaSummary(item.sla, slaState(item.sla, NOW), copy)).toBe("SLA 4 h · overdue 1 h 05 m · escalated")
-  })
-
-  it("keeps minutes in a budget that is not a whole number of hours", () => {
-    const sla = { budgetMinutes: 90, dueAt: isoDateTime("2026-09-16T12:30:00Z") }
-    expect(slaSummary(sla, slaState(sla, NOW), copy)).toBe("SLA 1 h 30 m · 0 h 30 m left · then escalate")
-  })
-})
-
-describe("nextItemId", () => {
-  it("selects the following queue item", () => {
-    expect(nextItemId(pitchQueue, queueItem(0).id)).toBe(queueItem(1).id)
-  })
-
-  it("has no next item after the last one or for an unknown id", () => {
-    expect(nextItemId(pitchQueue, queueItem(2).id)).toBeNull()
-    expect(nextItemId(pitchQueue, reviewId("unknown"))).toBeNull()
+  it("finds the entry after the answered one", () => {
+    expect(nextEntry(queue, entryKey(approvalEntry))).toBe(formEntry)
+    expect(nextEntry(queue, entryKey(formEntry))).toBeNull()
+    expect(nextEntry(queue, "missing")).toBeNull()
   })
 })

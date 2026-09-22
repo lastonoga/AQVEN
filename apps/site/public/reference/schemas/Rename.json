@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "RenameKind": {
+      "enum": [
+        "flow",
+        "node",
+        "type",
+        "prompt",
+        "dataset",
+        "eval",
+        "field",
+        "inference",
+        "agent",
+        "tool",
+        "mcp_server"
+      ],
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "format": "date-time",
+      "title": "At",
+      "type": "string"
+    },
+    "from": {
+      "title": "From",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/RenameKind"
+    },
+    "to": {
+      "title": "To",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind",
+    "from",
+    "to",
+    "at"
+  ],
+  "title": "Rename",
+  "type": "object"
+}

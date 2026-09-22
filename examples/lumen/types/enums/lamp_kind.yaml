@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Lamp kind by power and control: it decides the troubleshooting steps and the advice in the reply"
+values:
+- value: "mains"
+  description: "A mains lamp with a switch or a dimmer, with no app"
+- value: "rechargeable"
+  description: "A cordless lamp with a built-in battery"
+- value: "smart_wifi"
+  description: "A smart Wi-Fi lamp, controlled from the Lumen app"
+- value: "smart_zigbee"
+  description: "A smart Zigbee lamp, controlled through the Lumen hub"

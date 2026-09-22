@@ -1,0 +1,31 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Routes the case by the form kind: an agent decides a warranty case, delivery and question cases get a fixed decision"
+on: "$to_record.out"
+cases:
+  defect:
+    node: "resolve"
+    bind:
+    - name: "resolution"
+      from: "$resolve.out.resolution"
+  delivery:
+    bind:
+    - name: "resolution"
+      value:
+        action: "reship"
+        summary: "The order is shipped again at the store's expense"
+        credit: null
+        policy: null
+  question:
+    bind:
+    - name: "resolution"
+      value:
+        action: "advice"
+        summary: "A knowledge base answer with no compensation"
+        credit: null
+        policy: null
+out:
+- name: "resolution"
+  type: "Resolution"
+  description: "Decision on the case"

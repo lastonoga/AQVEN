@@ -1,0 +1,33 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A typed check problem, used as feedback between passes"
+fields:
+- name: "path"
+  type: "Text[]"
+  description: "Path to the field with the problem, segment by segment"
+  maxLength: 64
+  maxItems: 8
+- name: "code"
+  type: "Text"
+  description: "Machine-readable code of the problem"
+  maxLength: 64
+- name: "message"
+  type: "Text"
+  description: "What is wrong, in plain words"
+  maxLength: 400
+- name: "severity"
+  type: "IssueSeverity"
+  description: "Severity of the problem"
+- name: "expected"
+  type: "Text?"
+  description: "What was expected; null when the expectation is not a value"
+  maxLength: 200
+- name: "observed"
+  type: "Text?"
+  description: "What was received; null when there was no value"
+  maxLength: 400
+- name: "repair_hint"
+  type: "Text?"
+  description: "A hint on how to fix it; null when there is none"
+  maxLength: 300

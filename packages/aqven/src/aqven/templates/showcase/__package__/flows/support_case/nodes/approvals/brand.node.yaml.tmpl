@@ -1,0 +1,31 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "human"
+description: "The brand editor picks which media go out with the reply"
+form: "MediaApproval"
+assignee: "brand_editor"
+timeout_seconds: 86400
+on_timeout:
+  policy: "default"
+  value:
+    use_image: false
+    use_voice: true
+    use_clip: false
+in:
+- name: "text"
+  type: "Text"
+  description: "Reply text"
+  maxLength: 1500
+  from: "$polish.out.reply.text"
+- name: "image"
+  type: "Image"
+  description: "Instruction image"
+  from: "$illustrate.out.image"
+- name: "voice"
+  type: "Audio"
+  description: "Voice version of the reply"
+  from: "$voice.out.voice"
+- name: "clip"
+  type: "Video"
+  description: "Short clip built from the image"
+  from: "$clip.out.clip"

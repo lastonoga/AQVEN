@@ -1,7 +1,16 @@
 # ADR-0003. Гарантии структурированного вывода живут в middleware уровня модели
 
-> Статус: принято
+> Статус: **заменено [ADR-0029](0029-trust-and-quality-python.md)** (2026-09-16)
 > Дата: 2026-09-11
+>
+> Заменено целиком: `LanguageModelMiddleware`, `wrapLanguageModel` и путь `generateText` + `Output.object` уходят
+> вместе с TS-движком. Гарантии каждого вызова — обёртки `WrapperModel` Pydantic AI, которые единственная фабрика
+> моделей собирает в цепочку снаружи внутрь: Instrumentation (самый внешний спан) → OutcomeGate → Redaction →
+> Cassette → Limiter → BackoffModel → модель провайдера с `max_retries=0`; отдельное звено нормализации запроса не
+> нужно (ADR-0029 §1). Остаются верными и действуют: гарантии живут на уровне модели, а не в обёртке метода агента;
+> инварианты порядка — редакция выше кассеты, кассета выше лимитера и транспортного ретрая, телеметрия снаружи
+> всего; коллизия ключа кассеты — `AMBIGUOUS_REPLAY`; перезапись кассет только явной командой; порядок звеньев
+> проверяется тестом.
 > Контекст-документы: [11. Провайдеры](../11-providers.md), [12. Наблюдаемость](../12-observability.md), [18. Экспорт и conformance](../18-export-and-conformance.md), [19. Безопасность и политики](../19-security-and-policies.md), [Сквозные решения](../DECISIONS.md); research/ai-sdk-decision.md, research/volt-agents.md, research/determinism-export.md; [ADR-0001](0001-execution-core-on-voltagent.md), [ADR-0002](0002-ai-sdk-v6-axis.md), [ADR-0004](0004-schema-profiles.md), [ADR-0005](0005-three-call-outcomes.md)
 
 ## Контекст
@@ -19,7 +28,7 @@
 ## Решение
 
 Все кросс-вызовные гарантии реализуются как `LanguageModelMiddleware` и навешиваются **один раз**
-в `@wf/llm/model-factory.ts` через `wrapLanguageModel`. Узлы, компилятор и агенты VoltAgent о них
+в `@aqven/llm/model-factory.ts` через `wrapLanguageModel`. Узлы, компилятор и агенты VoltAgent о них
 не знают: гарантия действует на любой вызов модели, включая вызовы внутри агентного цикла.
 
 Структурированный вывод — единственный путь: `generateText` + `Output.object` из `ai`.
@@ -49,7 +58,7 @@ Middleware — это уровень **модели**: он не знает сх
 
 | Ответственность | Где живёт |
 |---|---|
-| Кассеты, бюджет, PII-редакция, телеметрия вызова, backoff | `middleware/` в `@wf/llm` |
+| Кассеты, бюджет, PII-редакция, телеметрия вызова, backoff | `middleware/` в `@aqven/llm` |
 | `Output.object`, валидация результата, три исхода `ok` / `refusal` / `truncated` и ремонт только для `ok` ([ADR-0005](0005-three-call-outcomes.md)) | `structured.ts` |
 | Гейты качества узла, политики узла, `PolicyViolation` | Обёртка шага в нашем исполнителе узла |
 | Guardrails на строках и сообщениях шага (`createPIIInputGuardrail`, `createPromptInjectionGuardrail`) | `andGuardrail` VoltAgent — **дополняет**, а не заменяет `pii-redaction` |

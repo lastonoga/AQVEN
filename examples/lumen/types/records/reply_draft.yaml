@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A customer reply with knowledge base citations"
+fields:
+- name: "text"
+  type: "Text"
+  description: "Text of the customer reply"
+  maxLength: 1500
+- name: "citations"
+  type: "Citation[]"
+  description: "The quotes the reply relies on"
+  maxItems: 6

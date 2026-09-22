@@ -27,8 +27,8 @@ const restrictedImports = (...patterns) => [
 export default defineConfig([
   globalIgnores([
     'dist',
-    'public/mockServiceWorker.js',
     'src/routeTree.gen.ts',
+    'src/api/schema.d.ts',
   ]),
   {
     files: ['**/*.{ts,tsx}'],
@@ -67,7 +67,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/data/ids.ts', 'src/data/http/client.ts'],
+    files: ['src/data/ids.ts', 'src/data/http/client.ts', 'src/api/client.ts', 'src/api/ready.ts'],
     rules: {
       '@typescript-eslint/consistent-type-assertions': 'off',
     },

@@ -1,0 +1,34 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Blind scoring of customer reply candidates against the rubric and picking the best; with panel verdicts, resolving the disagreement"
+in:
+- name: "summary"
+  type: "Text"
+  description: "Case summary after parsing"
+  maxLength: 600
+- name: "candidates"
+  type: "ReplyDraft[]"
+  description: "Reply candidates without their author, numbered from zero"
+  maxItems: 3
+- name: "chunks"
+  type: "KbChunk[]"
+  description: "Knowledge base chunks the candidates must rely on"
+  maxItems: 80
+- name: "panel"
+  type: "JudgeVerdict[]?"
+  description: "The panel judges' conflicting verdicts; null means scoring without a dispute"
+  maxItems: 3
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning against the rubric criteria, written before the scores"
+  maxLength: 600
+- name: "scores"
+  type: "CriterionScore[]"
+  description: "Scores of the best candidate, one per rubric criterion"
+  maxItems: 3
+- name: "best_index"
+  type: "Int"
+  description: "Index of the best candidate in the list, counting from zero"
+  minimum: 0
+  maximum: 2

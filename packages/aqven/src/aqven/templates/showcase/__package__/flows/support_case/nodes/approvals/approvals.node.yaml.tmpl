@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "parallel"
+description: "Parallel approval of the reply by the support lead and of the media by the brand editor"
+body:
+  lead: "lead"
+  brand: "brand"
+join:
+  use: "all"
+out:
+- name: "lead"
+  type: "ReplyApproval"
+  description: "The support lead's decision on the reply"
+  from: "$branch.lead"
+- name: "media"
+  type: "MediaApproval"
+  description: "The brand editor's decision on the reply media"
+  from: "$branch.brand"

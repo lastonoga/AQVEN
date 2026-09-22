@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Builds the case form from the intent: its fields match the matching CaseRecord variant"
+run: "case_form"
+in:
+- name: "intent"
+  type: "CaseIntent"
+  description: "Case intent"
+  from: "$intent.out.intent"
+out:
+- name: "fields"
+  type: "FieldSpec[]"
+  description: "Fields of the case form"
+  maxItems: 30

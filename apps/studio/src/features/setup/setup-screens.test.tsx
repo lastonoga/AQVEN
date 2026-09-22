@@ -1,107 +1,135 @@
-import { fireEvent, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
-import { MOCK_SCENARIO_KEY } from "@/mocks/data/setup"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { http, HttpResponse } from "msw"
+import { describe, expect, it } from "vitest"
+import { liveChatStatus } from "@/mocks/data/chat"
+import { liveFlows, liveProject, liveProviders, liveSecrets } from "@/mocks/data/project"
 import { renderRoute } from "@/test/render-route"
+import { API_BASE } from "@/api/client"
+import { server } from "@/mocks/node"
 
-const hrefOf = (element: HTMLElement): URL => new URL(element.getAttribute("href") ?? "", "http://studio.test")
+const unresolvedProviders = liveProviders.filter((provider) => provider.source === null)
 
-const firstRun = (): void => {
-  localStorage.setItem(MOCK_SCENARIO_KEY, "first-run")
-}
-
-afterEach(() => {
-  localStorage.removeItem(MOCK_SCENARIO_KEY)
-})
+const hrefs = (container: HTMLElement): readonly (string | null)[] =>
+  within(container)
+    .getAllByRole("link")
+    .map((link) => link.getAttribute("href"))
 
 describe("Landing", () => {
-  it("opens the first workflow of the launched project", async () => {
+  it("opens the most recently run workflow of the launched project", async () => {
     const router = await renderRoute("/")
-    expect(router.state.location.pathname).toBe("/en/hotel_pitch/pitch_pipeline/schema")
+    expect(router.state.location.pathname).toBe("/flows/support_case/canvas")
   })
 
-  it("starts setup when the project has no workflows", async () => {
-    firstRun()
-    const router = await renderRoute("/")
-    expect(router.state.location.pathname).toBe("/en/setup")
+  it("redirects an old English URL while preserving its query", async () => {
+    const router = await renderRoute("/en/setup?step=providers")
+    expect(router.state.location.pathname).toBe("/setup")
+    expect(router.state.location.search).toEqual({ step: "providers" })
   })
 })
 
 describe("Onboarding", () => {
-  it("names the launched project and shows a single agent without a default-agent choice", async () => {
-    await renderRoute("/en/setup")
-    expect(await screen.findByRole("heading", { name: "Set up hotel-pitch" })).toBeTruthy()
-    expect(screen.getByText("READY")).toBeTruthy()
-    expect(screen.queryByText("Default agent")).toBeNull()
-    expect(screen.queryByText("Codex")).toBeNull()
+  it("names the launched project and reports the sign-in of the chat agent", async () => {
+    await renderRoute("/setup")
+    expect(await screen.findByRole("heading", { name: `Set up ${liveProject.package ?? ""}` })).toBeTruthy()
+    expect(await screen.findByText("SIGNED IN")).toBeTruthy()
+    expect(screen.getByText(liveChatStatus.account ?? "")).toBeTruthy()
+    expect(screen.getByText("subscription")).toBeTruthy()
+    expect(screen.queryByRole("radiogroup", { name: "Chat backend" })).toBeNull()
   })
 
-  it("tells how to sign in to Claude when it is signed out", async () => {
-    firstRun()
-    await renderRoute("/en/setup?step=agent")
-    expect(await screen.findByText("SIGN IN")).toBeTruthy()
-    expect(screen.getByText("Run this in Terminal, type /login, then check again")).toBeTruthy()
-    expect(screen.getByText("claude")).toBeTruthy()
+  it("offers a retry when the selected agent cannot be loaded during setup", async () => {
+    server.use(http.get(`${API_BASE}/chat/backend`, () => HttpResponse.error()))
+    await renderRoute("/setup")
+    expect((await screen.findByRole("alert")).textContent).toContain("Could not load the selected agent")
+    server.use(http.get(`${API_BASE}/chat/backend`, () => HttpResponse.json({ backend: "claude" })))
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    expect(await screen.findByText("SIGNED IN")).toBeTruthy()
   })
 
-  it("lists model keys with where each one comes from", async () => {
-    await renderRoute("/en/setup?step=providers")
-    expect(await screen.findByText("OpenRouter")).toBeTruthy()
-    expect(screen.getByText("PROJECT")).toBeTruthy()
-    expect(screen.getByText("••••f3Qa · from ANTHROPIC_API_KEY")).toBeTruthy()
-    expect(screen.getAllByText("NOT SET")).toHaveLength(3)
+  it("lists every model key the engine declares with where it resolves from", async () => {
+    await renderRoute("/setup?step=providers")
+    expect(await screen.findByText("openrouter")).toBeTruthy()
+    expect(screen.getAllByText("NOT SET")).toHaveLength(unresolvedProviders.length)
+    expect(screen.getByText("••••0860 · OPENROUTER_API_KEY")).toBeTruthy()
+    expect(screen.getByText("not set · OPENAI_API_KEY")).toBeTruthy()
+    expect(screen.getByText("declared by this project")).toBeTruthy()
   })
 
-  it("warns when no model key resolves", async () => {
-    firstRun()
-    await renderRoute("/en/setup?step=providers")
-    expect(await screen.findByText("Workflows that call models need at least one key. You can add keys later in Settings.")).toBeTruthy()
+  it("keeps the warning away while the openrouter key of the project resolves", async () => {
+    await renderRoute("/setup?step=providers")
+    expect(await screen.findByText(".ENV FILE")).toBeTruthy()
+    expect(
+      screen.queryByText("No model key resolves yet. Export the environment variable, or add it to the .env file of this project."),
+    ).toBeNull()
   })
 
-  it("offers three ways to start in a project without workflows", async () => {
-    firstRun()
-    await renderRoute("/en/setup?step=workflow")
-    expect(await screen.findByText("Start your first workflow")).toBeTruthy()
-    expect(screen.getByText("Describe it to the agent")).toBeTruthy()
-    expect(screen.getByText("Start from an example")).toBeTruthy()
-    expect(screen.getByText("Empty workflow")).toBeTruthy()
-  })
-
-  it("links existing workflows into Studio", async () => {
-    await renderRoute("/en/setup?step=workflow")
-    const list = await screen.findByRole("navigation", { name: "Workflows in hotel-pitch" })
-    expect(within(list).getAllByRole("link").map((link) => hrefOf(link).pathname)).toEqual([
-      "/en/hotel_pitch/pitch_pipeline/schema",
-      "/en/hotel_pitch/seo_brief_writer/schema",
-      "/en/hotel_pitch/review_summarizer/schema",
-      "/en/hotel_pitch/support_triage/schema",
-    ])
+  it("links the workflows of the project into the canvas", async () => {
+    await renderRoute("/setup?step=workflow")
+    const list = await screen.findByRole("navigation", { name: "Workflows of the project" })
+    expect(hrefs(list)).toEqual(liveFlows.map((flow) => `/flows/${flow.flow_id}/canvas`))
+    expect(within(list).getByText("8 nodes")).toBeTruthy()
   })
 })
 
 describe("Settings", () => {
   it("shows the launched project read-only with the command for another project", async () => {
-    await renderRoute("/en/settings")
+    await renderRoute("/settings")
     const nav = await screen.findByRole("navigation", { name: "Settings sections" })
-    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Project", "Chat agent", "Model keys", "MCP connections", "Updates"])
-    expect(screen.getByText("/Users/you/Projects/hotel-pitch")).toBeTruthy()
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Project",
+      "Chat agent",
+      "Model keys",
+      "MCP connections",
+      "Updates",
+    ])
+    expect(screen.getByText(liveProject.root)).toBeTruthy()
     expect(screen.getByText("aqven studio")).toBeTruthy()
   })
 
-  it("configures the Claude agent and rebuilds effort when the model changes", async () => {
-    await renderRoute("/en/settings?section=agents")
-    const model = await screen.findByRole("radiogroup", { name: "Claude Agent Model" })
-    expect(within(model).getByRole("radio", { name: "Sonnet" }).getAttribute("aria-checked")).toBe("true")
-    expect(within(screen.getByRole("radiogroup", { name: "Claude Agent Permissions" })).getByRole("radio", { name: "default" }).getAttribute("aria-checked")).toBe("true")
-    expect(screen.getByRole("spinbutton", { name: "Claude Agent Spend limit per request, $" })).toHaveProperty("value", "2")
-    fireEvent.click(within(model).getByRole("radio", { name: "Haiku" }))
-    expect(screen.getByText("Haiku has no effort setting")).toBeTruthy()
-    expect(screen.queryByRole("radiogroup", { name: /^Codex/ })).toBeNull()
+  it("lists every secret the project declares with the variable, the source and who declares it", async () => {
+    await renderRoute("/settings?section=providers")
+    expect(await screen.findByText("Project secrets")).toBeTruthy()
+    const kbToken = liveSecrets.find((secret) => secret.env_var === "LUMEN_KB_TOKEN")
+    expect(kbToken).toBeDefined()
+    expect(screen.getAllByText("LUMEN_KB_TOKEN")).toHaveLength(1)
+    expect(screen.getByText("kb_token · tool search_kb")).toBeTruthy()
+    expect(screen.getByText("tools/search_kb.yaml")).toBeTruthy()
+    expect(screen.getByText("Authorization · MCP server helpdesk")).toBeTruthy()
+    expect(screen.getAllByText("NOT SET")).toHaveLength(unresolvedProviders.length + liveSecrets.filter((secret) => !secret.set).length)
+  })
+
+  it("reports the chat agent sign-in", async () => {
+    await renderRoute("/settings?section=agents")
+    expect(await screen.findByText("SIGNED IN")).toBeTruthy()
+    expect(screen.getByText(liveChatStatus.detail ?? "")).toBeTruthy()
+  })
+
+  it("saves the project chat backend and refreshes its sign-in status", async () => {
+    const writes: unknown[] = []
+    let selected = false
+    server.use(
+      http.put(`${API_BASE}/chat/backend`, async ({ request }) => {
+        writes.push(await request.json())
+        selected = true
+        return HttpResponse.json({ backend: "codex" })
+      }),
+      http.get(`${API_BASE}/chat/status`, () => HttpResponse.json(selected
+        ? { backend: "codex", state: "logged_out", method: null, account: null, detail: "Sign in with codex login" }
+        : liveChatStatus)),
+    )
+    await renderRoute("/settings?section=agents")
+    const codex = within(await screen.findByRole("radiogroup", { name: "Chat backend" })).getByRole("radio", { name: "Codex" })
+    await waitFor(() => { expect(codex.hasAttribute("disabled")).toBe(false) })
+    fireEvent.click(codex)
+    await waitFor(() => { expect(writes).toEqual([{ backend: "codex" }]) })
+    expect(await screen.findByText("Sign in with codex login")).toBeTruthy()
   })
 
   it("connects external agents through aqven mcp and upgrades through the package manager", async () => {
-    await renderRoute("/en/settings?section=mcp")
-    expect(await screen.findByText("claude mcp add --scope project aqven -- uv run aqven mcp")).toBeTruthy()
-    await renderRoute("/en/settings?section=updates")
+    await renderRoute("/settings?section=mcp")
+    expect(await screen.findByText(liveProject.mcp_url ?? "")).toBeTruthy()
+    expect(screen.getByText("claude mcp add --scope project aqven -- uv run aqven mcp")).toBeTruthy()
+    await renderRoute("/settings?section=updates")
     expect(await screen.findByText("uv lock --upgrade-package aqven && uv sync")).toBeTruthy()
   })
 })

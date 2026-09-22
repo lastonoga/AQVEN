@@ -1,0 +1,324 @@
+{
+  "$defs": {
+    "ContractPredicate": {
+      "discriminator": {
+        "mapping": {
+          "families_distinct": "#/$defs/FamiliesDistinct",
+          "family_disjoint_from_input": "#/$defs/FamilyDisjointFromInput",
+          "field_before": "#/$defs/FieldBefore"
+        },
+        "propertyName": "rule"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FamiliesDistinct"
+        },
+        {
+          "$ref": "#/$defs/FamilyDisjointFromInput"
+        },
+        {
+          "$ref": "#/$defs/FieldBefore"
+        }
+      ]
+    },
+    "FamiliesDistinct": {
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "minimum": 1,
+          "title": "Min",
+          "type": "integer"
+        },
+        "nodes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "rule": {
+          "const": "families_distinct",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "nodes",
+        "min"
+      ],
+      "title": "FamiliesDistinct",
+      "type": "object"
+    },
+    "FamilyDisjointFromInput": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "title": "Input",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "rule": {
+          "const": "family_disjoint_from_input",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "nodes",
+        "input"
+      ],
+      "title": "FamilyDisjointFromInput",
+      "type": "object"
+    },
+    "FieldBefore": {
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "title": "First",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "rule": {
+          "const": "field_before",
+          "title": "Rule",
+          "type": "string"
+        },
+        "second": {
+          "title": "Second",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "nodes",
+        "first",
+        "second"
+      ],
+      "title": "FieldBefore",
+      "type": "object"
+    },
+    "FieldBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "FieldBinding",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requests"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tokens"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        },
+        "usd_micros": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Micros"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    },
+    "RunContextKey": {
+      "enum": [
+        "date",
+        "time_zone",
+        "locale",
+        "tenant_id"
+      ],
+      "title": "RunContextKey",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "context": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/RunContextKey"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Context"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "input": {
+      "title": "Input",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Flow",
+      "title": "Kind",
+      "type": "string"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Limits"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "order": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Order",
+      "type": "array"
+    },
+    "output": {
+      "title": "Output",
+      "type": "string"
+    },
+    "requires": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ContractPredicate"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Requires"
+    },
+    "returns": {
+      "items": {
+        "$ref": "#/$defs/FieldBinding"
+      },
+      "title": "Returns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "input",
+    "output",
+    "returns",
+    "order"
+  ],
+  "title": "FlowSpec",
+  "type": "object"
+}

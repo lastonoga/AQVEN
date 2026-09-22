@@ -1,0 +1,33 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "A short clip from the instruction image: a long-running video job on Together"
+run: "@root.tools.functions:start_clip"
+effect: "external"
+idempotency_key:
+- "image"
+- "text"
+- "seconds"
+secrets:
+- name: "together_api_key"
+  ref: "ref:env/TOGETHER_API_KEY"
+wait:
+  poll: "@root.tools.functions:poll_clip"
+  interval_seconds: 20
+  timeout_seconds: 1800
+in:
+- name: "image"
+  type: "Image"
+  description: "The instruction image, the first frame of the clip"
+- name: "text"
+  type: "Text"
+  description: "The reply text, the script of the clip"
+  maxLength: 1500
+- name: "seconds"
+  type: "Int"
+  description: "Length of the clip in seconds"
+  minimum: 4
+  maximum: 8
+out:
+- name: "clip"
+  type: "Video"
+  description: "The finished clip as MP4"

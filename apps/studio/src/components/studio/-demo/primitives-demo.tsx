@@ -1,13 +1,11 @@
 import type { ReactNode } from "react"
 import { codeLines, diffLines, templateLines } from "@/lib/text"
 import { noop } from "@/lib/noop"
-import type { TextLine, TextMark } from "@/domain"
+
 import {
   Dot,
   Empty,
-  GATEWAY,
   PROVENANCE,
-  STAGE_KIND,
   TONES,
   Expander,
   Heading,
@@ -36,10 +34,23 @@ import {
   type TagProps,
   type TagSize,
   type TextProps,
+  type TextLine,
+  type TextMark,
   type TextRole,
 } from "@/components/studio"
 
 type DemoEntry = { readonly id: string; readonly title: string; readonly content: ReactNode }
+
+const DEMO_MARKER = {
+  seq: { tone: "neutral", glyph: "1" },
+  map: { tone: "tool", glyph: "+" },
+  diverge: { tone: "llm", glyph: "+" },
+  parallel: { tone: "llm", glyph: "3" },
+  loop: { tone: "loop", glyph: "\u27f3" },
+  switch: { tone: "warning", glyph: "\u00d7" },
+  gatewayAll: { tone: "llm", glyph: "+" },
+  gatewayOne: { tone: "warning", glyph: "\u00d7" },
+} as const
 
 const TAG_FILLS: readonly TagFill[] = ["soft", "tint", "outline", "stroke", "solid", "ground"]
 const TAG_SIZES: readonly TagSize[] = ["micro", "xs", "sm", "md", "lg", "canvas", "edge", "ref"]
@@ -93,16 +104,16 @@ const DOTS: readonly (DotProps & { readonly id: string })[] = [
 ]
 
 const MARKERS: readonly (MarkerProps & { readonly id: string })[] = [
-  { id: "seq", shape: "circle", tone: STAGE_KIND.seq.tone, children: "1" },
-  { id: "map", shape: "diamond", tone: STAGE_KIND.map.tone, children: STAGE_KIND.map.glyph },
-  { id: "diverge", shape: "diamond", tone: STAGE_KIND.diverge.tone, children: STAGE_KIND.diverge.glyph },
-  { id: "parallel", shape: "circle", tone: STAGE_KIND.parallel.tone, children: "3" },
-  { id: "loop", shape: "diamond", tone: STAGE_KIND.loop.tone, children: STAGE_KIND.loop.glyph },
-  { id: "switch", shape: "diamond", tone: STAGE_KIND.switch.tone, children: STAGE_KIND.switch.glyph },
+  { id: "seq", shape: "circle", tone: DEMO_MARKER.seq.tone, children: DEMO_MARKER.seq.glyph },
+  { id: "map", shape: "diamond", tone: DEMO_MARKER.map.tone, children: DEMO_MARKER.map.glyph },
+  { id: "diverge", shape: "diamond", tone: DEMO_MARKER.diverge.tone, children: DEMO_MARKER.diverge.glyph },
+  { id: "parallel", shape: "circle", tone: DEMO_MARKER.parallel.tone, children: DEMO_MARKER.parallel.glyph },
+  { id: "loop", shape: "diamond", tone: DEMO_MARKER.loop.tone, children: DEMO_MARKER.loop.glyph },
+  { id: "switch", shape: "diamond", tone: DEMO_MARKER.switch.tone, children: DEMO_MARKER.switch.glyph },
   { id: "end", shape: "end", tone: "neutral", label: "end" },
   { id: "canvas-circle", shape: "circle", tone: "llm", size: "canvas", children: "7" },
-  { id: "canvas-all", shape: "diamond", tone: GATEWAY.all.tone, size: "canvas", children: GATEWAY.all.glyph },
-  { id: "canvas-one", shape: "diamond", tone: GATEWAY.one.tone, size: "canvas", children: GATEWAY.one.glyph },
+  { id: "canvas-all", shape: "diamond", tone: DEMO_MARKER.gatewayAll.tone, size: "canvas", children: DEMO_MARKER.gatewayAll.glyph },
+  { id: "canvas-one", shape: "diamond", tone: DEMO_MARKER.gatewayOne.tone, size: "canvas", children: DEMO_MARKER.gatewayOne.glyph },
   { id: "canvas-end", shape: "end", tone: "neutral", size: "canvas" },
 ]
 
@@ -221,6 +232,7 @@ const PROPERTY_ROWS: readonly PropertyRow[] = [
   { key: { glyph: PROVENANCE.static.glyph, text: "city" }, value: "Lisbon" },
   { key: "tokens", value: [{ text: "2,104" }, { text: " / " }, { text: "684", strong: true }] },
   { key: "verdict", value: "FAIL", tone: "destructive" },
+  { key: "variables", value: "channel, chunk, chunks, citation, critique, customer, item, locale, output_format, previous, product, resolution, summary, variants" },
 ]
 
 const SECTIONS: readonly SectionSpec[] = [
@@ -268,7 +280,7 @@ function TagDemo() {
             </Tag>
           ))}
           <Marker shape="diamond" tone="loop">
-            {STAGE_KIND.loop.glyph}
+            {DEMO_MARKER.loop.glyph}
           </Marker>
           <Text role="prose" tone="neutral">
             dark scope

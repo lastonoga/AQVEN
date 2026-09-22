@@ -1,45 +1,64 @@
 # 14. MCP-контракт для агентов
 
-> Статус: draft
-> Зависит от: [07. Компилятор](07-compiler.md), [07. Компилятор](07-compiler.md), [12. Наблюдаемость и отладка](12-observability.md), [02. Архитектура системы](02-architecture.md)
-> Источники: research/mcp-server.md, research/api-layer.md, research/00-verified-by-lead.md, спека §13.1–§13.4
+> Статус: draft; §2 и §5 описывают реализованную поверхность, остальные разделы — проект
+> Зависит от: [07. Компилятор](07-compiler.md), [12. Наблюдаемость и отладка](12-observability.md), [02. Архитектура системы](02-architecture.md), [23. API локальной студии](23-studio-api.md), [ADR-0008](adr/0008-mcp-tool-naming-and-phasing.md), [ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0025](adr/0025-python-engine.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md), [ADR-0028](adr/0028-studio-api-contract.md), [ADR-0029](adr/0029-trust-and-quality-python.md), [ADR-0042](adr/0042-mcp-is-the-action-surface.md)
+> Источники: research/mcp-server.md, research/api-layer.md, research/00-verified-by-lead.md, [research/py-stack-runtime.md](research/py-stack-runtime.md) §5.5, §7, [research/studio-api-inventory.md](research/studio-api-inventory.md) §2.3–§2.4, §3, спека §13.1–§13.4
 
 ## Зачем этот слой
 
-Определения лежат файлами в репозитории проекта ([ADR-0017](adr/0017-files-as-source-of-truth.md)),
-и Claude Code правит их нативными инструментами. MCP-слой стоит не вместо файлов, а поверх них: он
-закрывает проблему «агент не видит последствий своего действия» из §8 — доменная операция
-валидируется до записи на всём дереве проекта, пишется транзакцией по набору файлов и возвращает
-локальный контекст, машиночитаемые проблемы и готовые к применению кандидаты исправления. Второй
-закрываемый риск — бюджет контекста: полный реестр (82 тула) стоит 20–49k токенов определений
-до первого действия, поэтому поверхность раскрывается по фазам цикла.
+Определения лежат файлами в репозитории проекта ([ADR-0017](adr/0017-files-as-source-of-truth.md),
+[ADR-0026](adr/0026-yaml-spec-and-code-refs.md)), и Claude Code правит их нативными инструментами. MCP-слой
+стоит не вместо файлов, а поверх них: он закрывает проблему «агент не видит последствий своего действия» из
+§8 — доменная операция валидируется до записи на всём дереве проекта, пишется транзакцией по набору файлов и
+возвращает локальный контекст, машиночитаемые проблемы и готовые к применению кандидаты исправления. Второй
+закрываемый риск — бюджет контекста, и закрыт он размером поверхности, а не механизмом: реестр
+проектировался на 78 тулов и стоил бы 20–47k токенов определений до первого действия, а реализованная
+поверхность — 18 тулов действий, около 3k ([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Читающих
+тулов нет: файлы агент читает своими средствами.
+
+**Что здесь реализовано, а что спроектировано.** §2 — поверхность как она есть, §5 — отменённое фазовое
+раскрытие. Разделы §3, §4, §6–§10 описывают замысел: конверт ответа, права, скилл цикла и протокол §13.3
+реализованы частично или не реализованы, и ссылаются на тулы из §2.6, которых на поверхности нет.
 
 ## Решения
 
 | Решение | Что берём | Версия | Лицензия | Почему |
 |---|---|---|---|---|
-| SDK сервера | `@modelcontextprotocol/sdk` | 1.30.0 | MIT | `registerTool` с `inputSchema` + `outputSchema`, `RegisteredTool.enable/disable`, оба транспорта в одном пакете |
-| Схемы входа/выхода | zod | 4.6.2 | MIT | SDK принимает zod v4 raw shape (`zod-compat.ts`); один источник правды с `@wf/contracts` |
-| Локальный транспорт | `StdioServerTransport` (`sdk/server/stdio.js`) | 1.30.0 | MIT | Claude Code, `claude mcp add --transport stdio` |
-| Удалённый транспорт | `WebStandardStreamableHTTPServerTransport` (`sdk/server/webStandardStreamableHttp.js`) | 1.30.0 | MIT | Request/Response — работает и в Hono, и в Next Route Handler; node-обёртка не нужна |
-| Авторизация | `requireBearerAuth` + `mcpAuthMetadataRouter` (`sdk/server/auth/*`) | 1.30.0 | MIT | мы Resource Server, AS внешний (better-auth 1.7.4) |
-| Токен агента | better-auth `plugins/jwt` + `plugins/bearer` | 1.7.4 | MIT | JWT RS256 + JWKS, тот же `verifyToken`, что у REST |
-| Формат ошибки | `ApiError` из `@wf/contracts` | — | — | один транслятор `DomainError → ApiError` на HTTP и MCP |
-| Конкурентность | CAS по sha256 байтов файла, `.wf/lock`, история в git | — | — | глобального счётчика ревизий нет; CRDT (yjs 13.6.32 / loro-crdt 1.16.1) не решает задачу инвариантов графа |
+| SDK сервера | `mcp`, `mcp.server.MCPServer("aqven")` | 2.2.0 | MIT | тул регистрируется из каталога операций через `ToolCall` и `add_tool(..., structured_output=True)`: `inputSchema` и `outputSchema` из моделей Pydantic ([ADR-0028](adr/0028-studio-api-contract.md) §2) |
+| Схемы входа и выхода | `pydantic` | 2.13.5 | MIT | одна модель на тул, маршрут FastAPI и типы студии; модели входа `extra="forbid"` |
+| Транспорт | streamable HTTP: `MCPServer.streamable_http_app(streamable_http_path="/")`, маунт `/mcp` в `fastapi` без extras под `uvicorn` | 2.2.0 / 0.141.1 / 0.53.0 | MIT / MIT / BSD-3-Clause | REST, SSE и MCP одним процессом на `127.0.0.1`; lifespan FastAPI входит в `session_manager.run()` (проверено запуском, [research/py-stack-runtime.md](research/py-stack-runtime.md) §7) |
+| Локальный stdio-вход | `MCPServer.run(transport="stdio")` | 2.2.0 | MIT | в SDK есть; нужен ли при HTTP-входе `aqven dev` — открытый вопрос 17 |
+| Защита от DNS rebinding | `TrustedHostMiddleware` на всём приложении, у `/mcp/` — `TransportSecuritySettings` | starlette 1.6.0 / mcp 2.2.0 | BSD-3-Clause / MIT | чужой `Host` → 400; MCP по умолчанию принимает только localhost, иначе 421 ([23](23-studio-api.md) «Решения») |
+| Авторизация | на loopback нет ([23](23-studio-api.md) §1.1); для `aqven serve` вне loopback не выбрана | — | — | у `MCPServer` 2.2.0 есть `token_verifier` и `auth: AuthSettings`, поведение не проверено — открытый вопрос 6 |
+| Формат ошибки | `ApiError` — модель Pydantic движка | — | — | один транслятор `DomainError → ApiError` на REST и MCP; в MCP — `CallToolResult(is_error=True)` с `ApiError` в `structuredContent` ([ADR-0028](adr/0028-studio-api-contract.md) §2, правило 5) |
+| Конкурентность | CAS `expects[{path, file_hash}]` + `client_op_id`, `.aqven/lock`, история в git через `dulwich` за `GitPort` | dulwich 1.2.15 | Apache-2.0 (из Apache-2.0 OR GPL-2.0-or-later) | глобального счётчика ревизий нет; CRDT не решает задачу инвариантов графа (§9.6) |
 | Скилл цикла | Agent Skills, Project-уровень `.claude/skills/` | — | — | версионируется вместе со спекой воркфлоу в том же репозитории |
 
 Не берём: MCP sampling (Claude Code не поддерживает), MCP resources и prompts как обязательный канал
 (не заявлены в доках Claude Code), CRDT для структуры графа, legacy HTTP+SSE транспорт (протокол
-2024-11-05).
+2024-11-05), `@modelcontextprotocol/sdk` и zod на движке (движок на Python, [ADR-0025](adr/0025-python-engine.md)
+§8), тул с одним параметром-моделью и подмену схемы тула через приватный `MCPServer._tool_manager`
+([ADR-0028](adr/0028-studio-api-contract.md) «Альтернативы»).
+
+Пробы. Фрагменты §3.1, §3.4, §4.3, §5.4, §6.2 и §9.2 проверены вне репозитория 2026-09-16 на CPython 3.14.7:
+pyright 1.1.414 strict и `ruff check` 0.16.7 (`E`, `F`) без замечаний (имена из других пакетов — `ProblemCode`, `Op`, `Operation`, `ApiError`,
+`DomainError`, `unauthorized`, `forbidden` — заглушками, `Operation` и `ToolCall` — в форме
+[ADR-0028](adr/0028-studio-api-contract.md) §2); pydantic 2.13.5 принял конверты §3.2 и §3.3 (с полными хешами
+вместо сокращённых) и `apply.arguments` кандидата как вход `flow_patch`, а вход с `idempotency_key` отклонил
+(`extra_forbidden`); `MCPServer` 2.2.0 с записью каталога §3.4 отдал в `tools/list` тул `flow_patch` с
+`outputSchema`, обязательными `spec_id`, `expects`, `ops`, `client_op_id` и без `additionalProperties` во
+`inputSchema`; вызов тула после `remove_tool` вернул `is_error: true` с текстом `Unknown tool: <имя>` и без
+`structuredContent` (`mcp.Client` в процессе).
 
 ## 1. Принципы контракта
 
 **П1. Два уровня на одних байтах.** Истина — байты файлов, и агент правит их нативными инструментами.
 Доменная единица записи остаётся прежней: операция над графом (`add_node`, `bind`, `set`, `remove`)
-в `flow_patch` вместе с `base{commit, files[]}`. Сервер сверяет хеши, применяет операции к дереву
-в памяти, прогоняет валидатор инвариантов (типы портов, DAG, обязательные биндинги, межфайловые
-ссылки) и только потом сериализует. Через доменный уровень невалидное состояние записать нельзя;
-через файловый — можно, и его держат хук `flow_check` и гейт релиза (§2.8).
+в `flow_patch` вместе с `expects[{path, file_hash}]` и `client_op_id`. Сервер сверяет хеши, применяет
+операции к дереву в памяти, прогоняет валидатор инвариантов (типы портов, DAG, обязательные биндинги,
+межфайловые ссылки) и только потом пишет файлы каноническим писателем YAML
+([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §1). Через доменный уровень невалидное состояние записать
+нельзя; через файловый — можно, и его держат хук `flow_check` и гейт релиза (§2.8).
 
 **П2. Почему ответ тула не содержит всего проекта.** Три причины, каждая измеримая:
 - цена контекста: полный IR среднего воркфлоу + каталоги + трейсы не помещаются в бюджет, который
@@ -64,12 +83,14 @@
 
 **П5. Отрицательный результат так же информативен, как положительный.** `ok:false` обязан нести
 непустой `problems[]`; пустой `candidates[]` при `ok:false` допустим только для кодов
-`unauthorized`, `forbidden`, `provider_error`, `internal`. Ни один ответ не содержит стектрейса.
+`UNAUTHORIZED`, `FORBIDDEN`, `PROVIDER_ERROR`, `INTERNAL` (регистр — как в [23](23-studio-api.md) §12.5).
+Ни один ответ не содержит стектрейса.
 
 **П6. `ui_url` в каждом ответе.** Не декорация: это (а) ссылка, по которой человек видит ровно то же
-состояние, что агент, с подсвеченным узлом и выбранной проблемой; (б) аргумент для
-`elicitInput({ mode: 'url' })`, когда нужен аппрув человека (URL-elicitation поддерживается Claude
-Code). Формат: `https://studio.<host>/w/<spec_id>/run/<run_id>?node=<node_id>&problem=<index>`.
+состояние, что агент, с подсвеченным узлом и выбранной проблемой; (б) адрес URL-elicitation, когда нужен
+аппрув человека (URL-elicitation поддерживается Claude Code; метод `mcp` 2.2.0 — открытый вопрос 21).
+Формат: `http://127.0.0.1:<port>/w/<spec_id>/run/<run_id>?node=<node_id>&problem=<index>`, порт `aqven dev`
+по умолчанию 5180 ([23](23-studio-api.md) §1.1).
 
 **П7. Наружу — читаемые имена, не UUID.** Агент оперирует slug-ами (`extract_line_items`), потому что
 разрешение UUID в семантические имена измеримо повышает точность выбора. Внутренние идентификаторы
@@ -77,139 +98,126 @@ Code). Формат: `https://studio.<host>/w/<spec_id>/run/<run_id>?node=<node_
 
 **П8. Доменные ошибки — не ошибки протокола.** JSON-RPC error используется только для нарушений
 самого MCP (неизвестный тул, битый JSON). Всё доменное возвращается как обычный результат с
-`isError: true` и полным конвертом — иначе агент не сможет это починить.
+`isError: true` и полным конвертом — иначе агент не сможет это починить. Исключение пока одно: ошибку
+проверки аргументов по модели входа `mcp` 2.2.0 отдаёт текстом SDK с `isError`, без конверта
+([ADR-0028](adr/0028-studio-api-contract.md) ОВ 2).
 
-## 2. Полный реестр тулов
+## 2. Реестр тулов
 
-Имя сервера — `volt` (короткое намеренно: Claude Code префиксует тулы как
-`mcp__<server>__<tool>`, а имя в Messages API ограничено по длине и по алфавиту — точка не входит).
-Имена только `snake_case`, точки из §13.1 спеки переименованы. Самое длинное имя —
-`mcp__volt__component_propose_to_library`, 41 символ.
+Имя сервера — `aqven` ([ADR-0025](adr/0025-python-engine.md) §8). Короткое намеренно: Claude Code префиксует
+тулы как `mcp__<server>__<tool>`, а имя в Messages API ограничено по длине и по алфавиту — точка не входит.
+Имена только `snake_case`, точки из §13.1 спеки переименованы; проверка длины — `len("mcp__aqven__") + len(name) <= 128`.
 
-Колонка «фаза» — когда тул включён: `core` = всегда, остальное включается `mode_set`.
-Столбцы «вход»/«выход» дают состав аргументов и полезной нагрузки; общий конверт (§3) не повторяется.
+**MCP — поверхность действий, а не чтения** ([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Определения
+лежат файлами ([ADR-0017](adr/0017-files-as-source-of-truth.md), [ADR-0026](adr/0026-yaml-spec-and-code-refs.md)),
+и агент читает их своими Read, Grep и Glob. Тул попадает на поверхность, только если делает то, чего файлами
+не сделать: запускает, проверяет, пишет транзакционно. Поэтому читающих тулов нет и фазового раскрытия нет:
+18 определений стоят порядка 3k токенов.
 
-### 2.1 Служебные (группа `core`)
+Тул и маршрут студии зовут один use-case из `server/views/` — не «одинаковый», а тот же самый объект
+([ADR-0042](adr/0042-mcp-is-the-action-surface.md) §3). REST-двойник каждого тула — [23](23-studio-api.md) §13.2;
+разметку держит `operation("<имя>")` на маршруте, у маршрутов без тула — `rest_only("<причина>")`.
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `mode_set` | core | Переключает фазу цикла, включая/выключая группы тулов | `phase`, `reason` | `enabled_tools[]`, `disabled_tools[]` | core |
-| `help_contract` | core | Возвращает реестр кодов проблем, семантику фаз, список тулов текущей фазы | `topic?`, `code?` | `codes[]`, `phases[]`, `tools[]` | core |
-| `studio_open` | core | Строит `ui_url` на конкретный объект и, при необходимости, просит человека подтвердить через URL-elicitation | `target{kind,id}`, `elicit?` | `ui_url`, `elicited?` | core |
+### 2.1 Проверки (группа `check`)
 
-### 2.2 Каталог, бриф, журнал, архитектуры
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `aqven_check` | Полная проверка дерева тем же компилятором, что и сервер | `paths?`, `include_warnings?`, `static?`, `limit?`, `timeout_seconds?` | `AqvenCheckResult`: `ok`, `errors`, `warnings`, `problems[]` |
+| `pyright_check` | pyright strict по коду шагов проекта | `paths?`, `limit?`, `timeout_seconds?` | `PyrightResult` |
+| `pytest_run` | pytest по тестам проекта | `paths?`, `keyword?`, `max_failures?`, `limit?`, `timeout_seconds?` | `PytestResult` |
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `catalog_list` | catalog | Перечисляет архетипы, типы, профили моделей, тулы, паттерны | `kind`, `filter?`, `limit=20`, `cursor?` | `items[]`, `next_cursor`, `total_estimate` | core |
-| `catalog_get` | catalog | Схема одного элемента каталога | `kind`, `id`, `view='summary'` | `schema`, `examples[]` | core |
-| `brief_submit` | brief | Записывает бриф, возвращает пробелы, меняющие структуру воркфлоу | `brief`, `base?` | `gaps[]` (как `problems[]`), `version` | discover |
-| `brief_get` | brief | Текущий бриф и незакрытые пробелы | `view='summary'` | `brief`, `gaps[]` | discover |
-| `journal_read` | journal | История решений с обоснованиями | `since?`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | core |
-| `journal_append` | journal | Дописывает решение с обоснованием в `journal/*.md`; коммитится вместе с правкой | `decision`, `rationale`, `evidence[]` | `path`, `version` | core |
-| `architecture_search` | architecture | Кандидаты паттернов по требуемым свойствам | `features[]`, `limit=5` | `items[]` с `cost_estimate`, `typical_failures[]` | discover |
-| `architecture_get` | architecture | Описание паттерна, его узлы, стоимость, типовые сбои | `id`, `view` | `pattern`, `failures[]` | discover |
-| `architecture_instantiate` | architecture | Разворачивает паттерн в подворкфлоу внутри спеки | `id`, `params`, `spec_id`, `base` | `version`, `focus`, `problems[]`, `paths[]` | discover, author |
+Обязательны после правки: `aqven_check` всегда, `pyright_check` и `pytest_run` — после правки кода.
 
-### 2.3 Спека и компиляция
+### 2.2 Промт (группа `prompt`)
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `flow_create` | flow | Создаёт каталог воркфлоу по раскладке ([files-first/layout.md](files-first/layout.md)) из архетипа или пустой | `name`, `archetype?` | `spec_id`, `paths[]`, `version` | author |
-| `flow_get` | flow | Читает спеку целиком или окрестность узла | `spec_id`, `node_id?`, `at?: commit\|'working'`, `view='summary'`, `depth=1` | `focus`, `refs[]`, `version{commit, files[{path,sha256}]}`, `dirty`, `layout_rev` | core |
-| `flow_import` | flow | Импортирует `agent_workflow_spec` (§12) или бандл в файлы рабочего дерева | `source{kind,payload}` | `spec_id`, `paths[]`, `problems[]` (незакрытые вопросы §13.4) | author |
-| **`flow_patch`** | flow | **Консолидирует `flow.add_node`, `flow.bind`, `flow.set`, `flow.remove`**: атомарный массив операций над набором файлов с CAS по содержимому | `spec_id`, `base{commit, files[{path, sha256}]}`, `ops[1..50]`, `idempotency_key?`, `dry_run=false` | `version{commit, files[{path,sha256}]}`, `changed_paths[]`, `focus`, `problems[]`, `candidates[]`, `conflict?` | author |
-| `flow_commit` | flow | Фиксирует эпизод правки: коммит на набор путей, автор в трейлерах | `paths[]`, `message`, `intent?` | `commit`, `files[{path,sha256,status}]`, `compile{ok, problems[]}` | author, ship |
-| `flow_history` | flow | История правок поверх git с актором и намерением | `path?`, `spec_id?`, `since?`, `until?`, `actor_kind?`, `limit=20`, `cursor?`, `view='summary'` | `items[]`, `next_cursor` | core |
-| `flow_diff` | flow | Семантический (по умолчанию) или текстовый дифф двух состояний | `from`, `to`, `path?`, `scope='semantic'\|'text'`, `view` | `deltas[]`, `layout_changed`, `problems[]` | author, debug, ship |
-| `flow_revert` | flow | Откат движением вперёд: новый коммит, не переписывание истории | `to: commit`, `paths?`, `message`, `base{commit}`, `dry_run=false` | `commit`, `reverted[]`, `compile{ok,...}`, `conflicts[]` | author, ship |
-| `flow_lock` | flow | Advisory-lock спеки на время работы агента: lockfile в дереве, перехватываемый человеком | `spec_id`, `ttl_s=300`, `reason?`, `release=false` | `lock{holder, holder_kind, expires_at, takeover_allowed}` | author |
-| `flow_compile` | flow | Компилирует спеку: ошибки, предупреждения, статический отчёт | `spec_id`, `at?: commit\|'working'` (по умолчанию рабочая копия), `view='summary'` | `report`, `problems[]`, `candidates[]` | author, run, ship |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `prompt_preview` | Что узел `llm` реально отправит модели: инструкции, сообщения с фрагментами и выбранными вариантами, вложения, тулы, разрешённый `output.mode` | `flow_id`, `node_id`, `input?`, `variants?` | `PromptPreview` |
 
-Консолидация: шесть тонких тулов §13.1 (`add_node`, `bind`, `set`, `remove` + два скрытых в
-«правке») схлопнуты в один `flow_patch` с дискриминированным union операций. Это одновременно
-(а) сокращает поверхность, (б) делает правку атомарной, (в) даёт единственную точку оптимистичной
-блокировки. `dry_run: true` заменяет отдельный `flow_validate`.
+Тул нужен потому, что собранного промта на диске нет: он — результат работы компилятора над файлами.
 
-### 2.4 Контекст и провайдеры
+### 2.3 Правка (группа `flow`)
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `context_plan` | context | Потребности в контексте для каждого решения в графе | `spec_id`, `node_id?` | `needs[]`, `problems[]` (R-C) | author |
-| `context_bind` | context | Привязывает источники к потребностям | `spec_id`, `base`, `bindings[]` | `version`, `problems[]` (R-C) | author |
-| `context_graph` | context | Граф «решение → источник → индекс» с нарушениями R-C | `spec_id`, `view='summary'` | `graph`, `problems[]` | author |
-| `kb_indexes` | context | Состояние индексов базы знаний | `filter?`, `limit=20` | `items[]`, `next_cursor` | author |
-| `provider_models` | provider | Каталог моделей с ценами и проверенными возможностями | `filter{capability,price_max,ctx_min}`, `limit=20` | `items[]`, `next_cursor` | author, evaluate |
-| `provider_probe` | provider | Проверяет реальные возможности модели (strict-схемы, тулы, длина ответа) | `model`, `checks[]` | `capabilities`, `problems[]` | author, evaluate |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `flow_patch` | Атомарно применяет 1..50 операций к файлам воркфлоу: `add_node`, `remove_node`, `rename_node`, `move_node`, `set`, `unset`, `bind`, `unbind`, `rename_flow`, `rename_agent`, `delete_agent` | `flow_id`, `expects[{path, file_hash\|null}]`, `ops[1..50]`, `client_op_id`, `intent?`, `expect_lock?`, `exclusive?`, `dry_run?` | `WriteResult` |
 
-### 2.5 Прогон и отладка
+`file_hash` агент считает сам: `"sha256-"` плюс sha256 байтов файла. Источника хешей на поверхности нет
+намеренно — файл у агента и так открыт. `dry_run: true` заменяет отдельный `flow_validate`; на `STALE_FILE`
+файл перечитывается и намерение переигрывается, перезаписывать силой запрещено.
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `run_start` | run | Материализует план в снимок и запускает прогон в режиме live или replay | `spec_id`, `at?: commit\|'working'`, `mode`, `input?`, `dataset_id?` | `run_id`, `status`, `content_hash`, `ui_url` | run |
-| `run_get` | run | Статус прогона и сводка по стадиям | `run_id`, `view='summary'` | `status`, `stages[]`, `cost` | core |
-| `run_get_node` | run | По узлу: промт, провенанс, ответ, проверки, стоимость; на приостановленном узле — форма ввода | `run_id`, `node_id`, `include_payloads='truncated'` | `focus`, `prompt`, `provenance`, `checks[]`, `cost`, `form_schema?`, `suspend_data?` | core |
-| `run_list` | run | Листинг прогонов; «что ждёт меня» — фильтр, а не отдельный инбокс | `status?`, `assignee?`, `spec_id?`, `overdue?`, `limit=20`, `cursor?` | `items[{run_id, spec_id, node_id, status, assignee, waiting_since, deadline_at, title}]`, `next_cursor` | core |
-| `run_resume` | run | Возобновляет приостановленный прогон ответом человека | `run_id`, `node_id`, `payload`, `idempotency_key?` | `status`, `next_node_id?`, `problems[]` | run |
-| `run_cancel` | run | Отменяет прогон | `run_id`, `reason` | `status='cancelled'` | run |
-| `run_get_trace` | run | Трейс прогона по узлам с проблемами и кандидатами | `run_id`, `node_id?`, `view='summary'`, `limit=20`, `cursor?` | `items[]`, `problems[]`, `candidates[]`, `next_cursor` | core |
-| `run_replay_node` | run | Переисполняет один узел на зафиксированном входе (через replay-кэш) | `run_id`, `node_id`, `overrides?` | `run_id` (форк), `diff`, `problems[]` | debug |
-| `run_fork` | run | Форк прогона с точки шага | `run_id`, `from_node_id`, `overrides?` | `run_id`, `lineage_parent` | debug |
-| `run_diff` | run | Семантический дифф двух прогонов по узлам | `run_id_a`, `run_id_b`, `view='summary'` | `deltas[]` | debug |
-| `run_stages` | run | Поэтапные результаты прогона на датасете | `run_id`, `limit=20`, `cursor?` | `stages[]`, `next_cursor` | debug, evaluate |
-| `run_lineage` | run | Дерево происхождения прогона (форки, реплеи) | `run_id`, `depth=3` | `tree` | debug |
-| `run_blame` | run | Виновный узел: какой узел объясняет падение метрики | `run_id`, `metric`, `baseline_run_id?` | `culprits[]` с `confidence`, `candidates[]` | debug |
+Консолидация: шесть тонких тулов §13.1 (`add_node`, `bind`, `set`, `remove` и два скрытых в «правке»)
+схлопнуты в один `flow_patch` с дискриминированным union операций. Это одновременно (а) сокращает
+поверхность, (б) делает правку атомарной, (в) даёт единственную точку оптимистичной блокировки. Вход
+совпадает с телом `PATCH /api/flows/{flow_id}` ([23](23-studio-api.md) §12.1).
+
+### 2.4 Прогон и отладка (группа `run`)
+
+Адрес исполнения узла — структура `address{node_id, branch_key, iteration, item_index}`, строковая склейка
+запрещена ([ADR-0028](adr/0028-studio-api-contract.md) §5, [23](23-studio-api.md) §6.2).
+
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `run_start` | Запускает прогон из рабочей копии и возвращает `run_id` сразу, не дожидаясь конца | `flow_id`, `mode`, ровно одно из `input`/`dataset_item_id`, `at?`, `context?`, `selected_nodes?`, `start_node?`, `end_node?`, `node_outputs?`, `cassette_id?`, `human_answers?` | `RunStarted`: `run_id`, `status`, `content_hash`, `ui_url`, `warnings[]` |
+| `run_get` | Статус, стоимость, исполнения узлов, открытые ожидания человека, `last_seq` | `run_id` | `RunSnapshot` |
+| `run_list` | Листинг прогонов; «что ждёт меня» — фильтр, а не отдельный инбокс | `flow_id?`, `status?`, `mode?`, `assignee?`, `parent_run_id?`, `deadline_before?`, `overdue?`, `since?`, `until?`, `sort?`, `cursor?`, `limit?` | `Page<RunSummary>` |
+| `run_get_node` | Одно исполнение по адресу: промт, провенанс, ответ, проверки, стоимость; у ждущего узла — форма ожидания | `run_id`, `node_id`, `branch_key?`, `iteration?`, `item_index?`, `include_payloads?` | `ExecutionDetail` |
+| `run_events` | Страница журнала событий прогона после `after_seq` | `run_id`, `after_seq?`, `limit?` | `Page<RunEvent>` |
+| `run_resume` | Возобновляет приостановленный прогон ответом человека | `run_id`, `address`, `attempt`, `payload`, `client_op_id` | `ResumeResult` |
+| `run_fork` | Форк прогона с точки шага | `run_id`, `address`, `overrides?`, `at?` | `RunForked` |
+| `run_cancel` | Отменяет прогон | `run_id`, `reason` | `CancelResult` |
 
 Подсистемы задач нет: шесть операций `human_task_list/get/answer/reassign/escalate/cancel`
-**отменены**. Приостановленный прогон — это статус, «что ждёт меня» — `run_list({status: 'suspended',
-assignee: 'me'})`, просроченные — `overdue: true` с сортировкой по `deadline_at`. Форма ввода приходит
-из `run_get_node` как `form_schema` (JSON Schema, развёрнутая из `form: TypeRef` по файлу типа) вместе
-с `suspend_data`; отдельного справочника `form_kind` нет — kind это id типа. `payload` проверяется
-против `resumeSchema` шага: ошибка — конверт с `problems[]`, прогон остаётся `suspended`. Таймаут —
-не операция: объявлен в узле, исполняется планировщиком, по срабатыванию применяется `on_timeout`
-(`fail | default(value) | escalate(role)`).
+**отменены**. Ожидание человека — узел `human` на примитивах DBOS ([ADR-0025](adr/0025-python-engine.md) §9,
+[23](23-studio-api.md) §6.6); агент работает с ним теми же use-case'ами, что студия ([23](23-studio-api.md) §13.4).
 
-### 2.6 Evals, компоненты, агенты
+| Что | Тул | Правило |
+|---|---|---|
+| «Что ждёт меня» | `run_list({status: 'suspended', assignee: 'me', sort: 'deadline_at'})` | прогон попадает в страницу, если подходит хотя бы одно открытое ожидание из `waits[]`; просроченные — `overdue: true`; фильтры — [23](23-studio-api.md) §6.7 |
+| Форма | `run_get_node` по адресу из `waits[].address` | `human.form_schema` — JSON Schema модели Pydantic типа `form` узла, `human.suspend_data` — значения `in` узла ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §13); справочника `form_kind` нет, тип формы — `form_type_id` |
+| Ответ | `run_resume` | `payload` проверяется моделью формы до `DBOS.send`: ошибка — `ApiError` с `INPUT_INVALID` и `problems[{path, code, message}]`, прогон остаётся `suspended`; `attempt` обязателен, ответ для прежней попытки после эскалации — `WAIT_ATTEMPT_STALE`; нет открытого ожидания — `NOT_WAITING`; ответ другим ключом — `ALREADY_RESUMED`; срок истёк — `RUN_TIMED_OUT`; `client_op_id` уходит в DBOS как `idempotency_key` у `send`, повтор с тем же ключом даёт `outcome: replayed`; цепочка проверок — [23](23-studio-api.md) §6.8 |
+| Одобрение тула внутри `llm` | те же `run_list`, `run_get_node`, `run_resume` | ожидание с `wait_kind: tool_approval`, `suspend_data` — вызовы, ждущие решения ([23](23-studio-api.md) §6.10) |
+| Тест и повторный вопрос | `run_start` с `human_answers[{address, attempt, payload}]`, `run_fork` с `address` на узле `human` | сценарные ответы кладутся в топики ожидания заранее; форк на узле `human` спрашивает заново ([23](23-studio-api.md) §6.9) |
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| `dataset_add_from_run` | eval | Кладёт элементы прогона в датасет | `run_id`, `dataset_id`, `filter?` | `added`, `dataset_id` | evaluate |
-| `dataset_get` | eval | Датасет и его метаданные | `dataset_id`, `view='summary'`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | evaluate |
-| `dataset_generate` | eval | Генерирует датасет под цели покрытия | `spec_id`, `coverage_goals[]`, `size` | `dataset_id`, `coverage` | evaluate |
-| `dataset_coverage` | eval | Покрытие датасета по осям решений | `dataset_id`, `spec_id` | `coverage`, `problems[]` | evaluate |
-| `scorer_create` | eval | Создаёт скорер (детерминированный или судья) | `kind`, `config` | `scorer_id`, `problems[]` | evaluate |
-| `experiment_run` | eval | Запускает эксперимент на узле или воркфлоу | `spec_id`, `dataset_id`, `scorers[]`, `scope` | `experiment_id`, `status` | evaluate |
-| `experiment_compare` | eval | Сравнение экспериментов с дельтами по узлам и статистикой | `experiment_id_a`, `experiment_id_b`, `view='summary'` | `deltas[]`, `stats`, `verdict` | evaluate |
-| `experiment_model_matrix` | eval | Матрица моделей, граница Парето «качество × цена × латентность» | `spec_id`, `node_id`, `models[]`, `dataset_id` | `pareto[]`, `items[]` | evaluate |
-| `feedback_list` | eval | Разметка и обратная связь по прогонам | `filter?`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | evaluate |
-| `component_list` | component | Компоненты ядра, общей библиотеки и локальные | `scope`, `limit=20`, `cursor?` | `items[]`, `next_cursor` | author |
-| `component_get` | component | Сигнатура и контракт компонента | `id`, `view` | `signature`, `contract` | author |
-| `component_expand` | component | Раскрывает компонент до примитивов | `id`, `depth=1` | `graph` | author, debug |
-| `component_propose_to_library` | component | Заявка на добавление компонента в общую библиотеку | `id`, `evidence[]` | `proposal_id`, `status='pending_approval'` | ship |
-| `agent_get` | agent | Определение агента | `id` | `agent` | author |
-| `agent_effective_config` | agent | Итоговая конфигурация вызова на узле с происхождением каждого поля | `spec_id`, `node_id` | `config`, `provenance[]` | author, debug |
+Таймаут — не операция и не задача планировщика: узел объявляет `timeout_seconds` и `on_timeout`
+(`fail | default | escalate`), срок исполняет сам DBOS-workflow — `recv` с таймаутом, дедлайн — выход шага
+`DBOS.sleep`, который переживает перезапуск процесса. Следующий узел после резюма приходит событиями
+run-канала ([23](23-studio-api.md) §11.2), поля `next_node_id` нет.
 
-### 2.7 Реестры, версии, экспорт
+### 2.5 Датасеты и эвалы (группа `eval`)
 
-| Имя | Группа | Что делает | Вход | Выход | Фаза |
-|---|---|---|---|---|---|
-| **`registry_propose`** | registry | **Консолидирует `registry.propose_type`, `.propose_profile`, `.propose_agent`**: заявка на аппрув | `kind: 'type'\|'profile'\|'agent'`, `payload`, `rationale` | `proposal_id`, `status='pending_approval'`, `ui_url` | author, ship |
-| `version_propose` | version | Заявка на выпуск версии с доказательствами; грязное дерево → `DIRTY_WORKTREE` | `spec_id`, `commit`, `evidence[]` | `proposal_id`, `gate{verdict}`, `status='pending_approval'` | ship |
-| `version_status` | version | Статус заявки и результат гейта | `proposal_id` | `status`, `gate`, `blockers[]` | ship |
-| `project_export` | export | Бандл или экспорт в целевой рантайм; требует чистого дерева | `spec_id`, `commit`, `target` | `bundle_ref`, `losses[]` | ship |
-| `project_import` | export | Импорт бандла в файлы рабочего дерева | `bundle_ref` | `spec_id`, `paths[]`, `problems[]` | ship |
-| `project_conformance` | export | Прогон конформанс-набора против воссозданной реализации | `spec_id`, `endpoint`, `dataset_id` | `report`, `failures[]` | ship |
-| `project_verify_migration` | export | Отчёт потерь при миграции в целевой рантайм | `spec_id`, `target` | `losses[]`, `verdict` | ship |
+| Имя | Что делает | Вход | Выход |
+|---|---|---|---|
+| `dataset_batch_start` | Прогоняет названные кейсы датасета воркфлоу и возвращает батч сразу, не дожидаясь конца; `selected_nodes`, `start_node` и `end_node` сужают прогон так же, как у `run_start` | `flow_id`, `dataset_id`, `case_names[1..N]`, `selected_nodes?`, `start_node?`, `end_node?`, `mode?` | `DatasetBatchRecord` |
+| `dataset_batch_get` | Прогресс батча: статус, счётчики, прогон каждого кейса | `batch_id` | `DatasetBatchRecord` |
+| `eval_run_start` | Прогоняет эвал по его датасету и возвращает запись сразу; `baseline_run_id` сравнивает с прежним прогоном и заполняет гейт, `repeats` повторяет каждый кейс | `eval_id`, `dataset_id?`, `baseline_run_id?`, `repeats?` | `EvalRunRecord` |
+| `eval_run_get` | Статус, оценки по каждому скореру, отчёт гейта, если был baseline | `eval_run_id` | `EvalRunRecord` |
+| `eval_gate` | Отчёт гейта против baseline: какие метрики сдвинулись, насколько, проходит ли гейт. Без baseline — ошибка | `eval_run_id` | `GateReport` |
 
-Итого 63 тула в 15 группах (`core`, `catalog`, `brief`, `journal`, `architecture`, `flow`, `context`,
-`provider`, `run`, `eval`, `component`, `agent`, `registry`, `version`, `export`): было 57, отменён
-`component_define` (локальный компонент — это файл), добавлены семь операций файловой модели
-(`flow_commit`, `flow_history`, `flow_diff`, `flow_revert`, `run_list`, `run_resume`, `run_cancel`).
-Ещё 19 недостающих операций (`repo_status`, `index_rebuild`, `external_changes_list`, поиск и влияние,
-аппрувы, раскладка) в реестр не внесены: итоговая поверхность — **82 тула**
-([files-first/contract.md](files-first/contract.md) §6). Одновременно включено не более 25 (§5).
+Создание датасетов тулом **не делается**: датасет — файл `datasets/<id>.yaml`, агент пишет его сам
+([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §2). Импорт CSV и черновики схем остаются маршрутами
+студии: это операции её редактора, а не агента.
 
-### 2.8 Два уровня редактирования
+### 2.6 Что спроектировано и не реализовано
+
+Реестр этого документа проектировался на 78 тулов в 14 группах; поверхность — 18
+([ADR-0042](adr/0042-mcp-is-the-action-surface.md)). Ниже — что осталось замыслом, чтобы это не приходилось
+выяснять по отсутствию.
+
+| Группа | Тулы | Почему не на поверхности |
+|---|---|---|
+| Чтение проекта | `flow_list`, `flow_get`, `catalog_list`, `catalog_get` | **убраны**: агент читает файлы своими средствами, тул дал бы второй формат тех же данных |
+| Служебные | `mode_set`, `help_contract`, `studio_open` | фазовое раскрытие отменено (§5), `ui_url` приходит в `RunStarted` |
+| Бриф, журнал, архитектуры | `brief_*`, `journal_*`, `architecture_*` | не реализовано |
+| История и релиз | `flow_create`, `flow_import`, `flow_commit`, `flow_history`, `flow_diff`, `flow_revert`, `flow_lock`, `flow_compile` | не реализовано; `flow_compile` покрывает `aqven_check`, история — git у агента |
+| Контекст и провайдеры | `context_*`, `kb_indexes`, `provider_models`, `provider_probe` | не реализовано |
+| Отладка прогонов | `run_get_trace`, `run_replay_node`, `run_diff`, `run_stages`, `run_lineage`, `run_blame` | не реализовано; `run_events` и `run_get_node` покрывают трассу |
+| Эвалы сверх пяти | `dataset_add_from_run`, `dataset_get`, `dataset_generate`, `dataset_coverage`, `scorer_create`, `experiment_model_matrix`, `feedback_list` | не реализовано; `experiment_run` и `experiment_compare` переименованы в `eval_run_start` и `eval_gate` |
+| Компоненты и агенты | `component_*`, `agent_get`, `agent_effective_config` | не реализовано |
+| Реестры и версии | `registry_propose`, `version_propose`, `version_status` | не реализовано |
+| Экспорт | `project_import`, `project_conformance`, `project_verify_migration`, `project_export` | группа отменена решением владельца 2026-09-16 ([ADR-0025](adr/0025-python-engine.md) §7); `project_export` в `agent_workflow_spec` — открытый вопрос 16 |
+
+### 2.7 Два уровня редактирования
 
 Файловых операций `file_read`/`file_write` в MCP **не заводим**: у Claude Code уже есть Read, Edit,
 Write и git, а дублирующий тул записи означал бы вторую схему CAS и второй способ обойти валидатор.
@@ -217,7 +225,7 @@ Write и git, а дублирующий тул записи означал бы 
 | | Файловый уровень | Доменный уровень |
 |---|---|---|
 | Кто | нативные тулы агента, редактор, git | `flow_patch` и его родня по MCP/REST |
-| Единица и CAS | файл, байты; конфликт ловит git | набор файлов атомарно, `base{commit, files[]}` |
+| Единица и CAS | файл, байты; конфликт ловит git | набор файлов атомарно, `expects[{path, file_hash}]` + `client_op_id` |
 | Валидация | **после** записи: хук `flow_check` на `PostToolUse`, файл остаётся на диске | **до** записи: невалидное не пишется, `problems[]` + `candidates[]` |
 | Охват | один файл: текст промта, правка поля, грепы | кросс-файловое: переименование типа в 40 файлах одним вызовом |
 
@@ -225,93 +233,143 @@ Write и git, а дублирующий тул записи означал бы 
 |---|---|
 | Приоритет | структурную правку делаем `flow_patch`; прямая запись законна, но её отчёт приходит постфактум |
 | Граница коммита | невалидное дерево коммитить можно, релизить — нет: `version_propose` требует `flow_compile(ok)` |
-| Индекс | оба уровня переиндексируются одинаково, watcher на дереве, а не хук внутри `flow_patch` |
+| Индекс | оба уровня переиндексируются одинаково: наблюдатель на дереве (`watchfiles` 1.2.0, [23](23-studio-api.md) «Решения»), а не хук внутри `flow_patch` |
 
-CLI-поверхность рядом с MCP — тот же компилятор, другой вход (пакет `@wf/cli`):
+CLI-поверхность рядом с MCP — тот же компилятор, другой вход (команда `aqven` Python-движка,
+[ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §10; имя дистрибутива — ADR-0026 ОВ 1):
 
 | Команда | Что делает |
 |---|---|
-| `wf check [пути] --format json` | полная проверка тем же компилятором, что и сервер; `problems[]` в формате конверта §3, ненулевой код возврата. Стоит хуком `PostToolUse`, в pre-commit и в CI |
-| `wf fmt` / `wf fmt --check` | канонический вид YAML (порядок ключей, отступы, разрешённые конструкции); убивает класс конфликтов «стиль и порядок» |
-| `wf lock` | пересобирает `wf.lock.yaml` — пины версий фрагментов и компонентов; расхождение лока с содержимым даёт `E_LOCK_STALE` и отказ релиза |
+| `aqven check [пути] --format json` | полная проверка тем же компилятором, что и сервер; `problems[]` в формате конверта §3, ненулевой код возврата. Стоит хуком `PostToolUse`, в pre-commit и в CI |
+| `aqven fmt` / `aqven fmt --check` | канонический YAML ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §1): блочный стиль, ключи в порядке полей модели описания, `apiVersion` и `kind` первыми, пользовательские отображения и списки — в порядке автора; конвертация в версию хранения формата; убивает класс конфликтов «стиль и порядок» |
+| `aqven lock` | пересобирает `aqven.lock.yaml` — пины версий фрагментов и компонентов; расхождение лока с содержимым даёт `E_LOCK_STALE` и отказ релиза |
 
 ## 3. Единый конверт ответа
 
-Каждый тул объявляет `outputSchema`, поэтому `McpServer` сам валидирует `structuredContent` на выходе
-и `inputSchema` на входе. Ответ дублируется в `content[0].text` — требование обратной совместимости
-spec 2025-06-18: клиент, не понимающий `structuredContent`, иначе увидит пустой ответ.
+Каждый тул объявляет `outputSchema`: `ToolCall` публикует модель выхода операции аннотацией
+`Annotated[CallToolResult, O]` ([ADR-0028](adr/0028-studio-api-contract.md) §2). `MCPServer` 2.2.0 сверяет
+`structuredContent` со схемой выхода, кроме ответов с `is_error` (`FuncMetadata.convert_result`), а аргументы —
+моделью входа; лишний аргумент при этом тихо отбрасывается, ошибка проверки приходит текстом SDK
+([ADR-0028](adr/0028-studio-api-contract.md) ОВ 2). Ответ дублируется в `content[0].text` — требование обратной
+совместимости spec 2025-06-18: клиент, не понимающий `structuredContent`, иначе увидит пустой ответ.
+
+Где конверт: ответ записи в файлы проекта в обоих каналах — `Envelope`
+([ADR-0028](adr/0028-studio-api-contract.md) §2, правило 4; [23](23-studio-api.md) §1.2). Чтение по REST отдаёт
+модель без конверта; где у тула чтения лежит результат при конверте и нужен ли конверт у записи вне файлов
+(запуск, резюм, форк) — открытый вопрос 15.
 
 ### 3.1 Схема
 
-```ts
-import { z } from 'zod';
+```python
+from typing import Annotated, Literal, NewType
 
-const Version = z.object({
-  spec_id: z.string(),
-  commit: z.string(),
-  files: z.array(z.object({ path: z.string(), sha256: z.string() })),
-  dirty: z.boolean()
-});
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
-const Problem = z.object({
-  code: ProblemCode,
-  severity: z.enum(['error', 'warning', 'info']),
-  at: z.object({ node_id: z.string().nullable(), path: z.string().nullable(), line: z.number().int().nullable() }),
-  message: z.string(),
-  evidence: z.record(z.string(), z.unknown()).nullable()
-});
+NodeId = NewType("NodeId", str)
+ClientOpId = NewType("ClientOpId", str)
+FileHash = Annotated[str, Field(pattern=r"^sha256-[0-9a-f]{64}$")]
 
-const Candidate = z.object({
-  id: z.string(),
-  title: z.string(),
-  confidence: z.number().min(0).max(1),
-  rationale: z.string(),
-  risk: z.enum(['low', 'medium', 'high']),
-  affects: z.array(z.string()),
-  apply: z.object({ tool: z.string(), arguments: z.record(z.string(), z.unknown()) })
-});
 
-const Envelope = z.object({
-  ok: z.boolean(),
-  op: z.string(),
-  version: Version.nullable(),
-  focus: z.object({
-    node_id: z.string(),
-    node_kind: z.string(),
-    excerpt: z.string(),
-    upstream: z.array(z.string()),
-    downstream: z.array(z.string())
-  }).nullable(),
-  problems: z.array(Problem).default([]),
-  candidates: z.array(Candidate).default([]),
-  next: z.array(z.object({
-    tool: z.string(),
-    arguments: z.record(z.string(), z.unknown()),
-    why: z.string()
-  })).default([]),
-  refs: z.array(z.object({
-    type: z.literal('resource_link'),
-    uri: z.string(),
-    name: z.string(),
-    mimeType: z.string(),
-    description: z.string()
-  })).default([]),
-  ui_url: z.string().url(),
-  truncated: z.object({
-    fields: z.array(z.string()),
-    hint: z.string()
-  }).nullable()
-});
+class ContractModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class FileVersion(ContractModel):
+    path: str
+    file_hash: FileHash
+
+
+class Actor(ContractModel):
+    kind: Literal["human", "agent", "fs", "git", "system"]
+    id: str
+
+
+class Version(ContractModel):
+    files: list[FileVersion]
+    dirty: bool
+    actor: Actor | None
+    client_op_id: ClientOpId | None
+
+
+class ProblemAt(ContractModel):
+    node_id: NodeId | None
+    path: str | None
+    line: Annotated[int, Field(ge=1)] | None
+
+
+class Problem(ContractModel):
+    code: ProblemCode
+    severity: Literal["error", "warning", "info"]
+    at: ProblemAt
+    message: str
+    evidence: dict[str, JsonValue] | None
+
+
+class ToolInvocation(ContractModel):
+    tool: str
+    arguments: dict[str, JsonValue]
+
+
+class Candidate(ContractModel):
+    id: str
+    title: str
+    confidence: Annotated[float, Field(ge=0, le=1)]
+    rationale: str
+    risk: Literal["low", "medium", "high"]
+    affects: list[NodeId]
+    apply: ToolInvocation
+
+
+class NextStep(ContractModel):
+    tool: str
+    arguments: dict[str, JsonValue]
+    why: str
+
+
+class Focus(ContractModel):
+    node_id: NodeId
+    node_kind: str
+    excerpt: str
+    upstream: list[NodeId]
+    downstream: list[NodeId]
+
+
+class ResourceLink(ContractModel):
+    type: Literal["resource_link"]
+    uri: str
+    name: str
+    mimeType: str
+    description: str
+
+
+class Truncation(ContractModel):
+    fields: list[str]
+    hint: str
+
+
+class Envelope(ContractModel):
+    ok: bool
+    op: str
+    version: Version | None
+    focus: Focus | None
+    problems: list[Problem]
+    candidates: list[Candidate]
+    next: list[NextStep]
+    refs: list[ResourceLink]
+    ui_url: str
+    truncated: Truncation | None
 ```
 
-`ProblemCode` — стабильный enum, единый с `ErrorCode`/`ErrorDetail.rule` из
+`ProblemCode` — `StrEnum` пакета компилятора, стабильный и единый с `ErrorCode`/`ErrorDetail.rule` из
 [07. Компилятор](07-compiler.md): агент маршрутизирует по коду, не парся текст. Полный список
 кодов доступен агенту без чтения документации через `help_contract({ topic: 'codes' })` и продублирован
 в `reference.md` скилла.
 
-Стиль схем — тот же, что у IR (DECISIONS, «Структурированный вывод»): все поля обязательны,
-опциональность через `null`, `additionalProperties: false`, без рекурсии, порядок полей — как в
-объявлении.
+Стиль схем — тот же, что у IR (DECISIONS, «Структурированный вывод — опровержения спеки»): все поля
+обязательны, опциональность через `null` (`T | None` без значения по умолчанию), `additionalProperties: false`
+(`extra="forbid"` у `ContractModel`), без рекурсии, порядок полей — как в объявлении. Хеш — строка
+`sha256-<64 hex>` ([23](23-studio-api.md) §1.2), `actor` — как в spec-канале ([23](23-studio-api.md) §11.1).
+`mimeType` у `refs[]` повторяет форму `resource_link` MCP, поэтому не в `snake_case`.
 
 ### 3.2 Успешный ответ
 
@@ -319,11 +377,16 @@ const Envelope = z.object({
 {
   "ok": true,
   "op": "flow_patch",
-  "version": { "spec_id": "wf_invoice", "commit": "a17c9f1", "files": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "sha256": "9f1c2b…" }], "dirty": true },
+  "version": {
+    "files": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "file_hash": "sha256-9f1c2b…" }],
+    "dirty": true,
+    "actor": { "kind": "agent", "id": "claude-code" },
+    "client_op_id": "01JB8Q3XK2M4N6P8R0S2T4V6W8"
+  },
   "focus": {
     "node_id": "extract_line_items",
-    "node_kind": "llm.structured",
-    "excerpt": "extract_line_items: llm.structured\n  model_profile: extract_cheap\n  output.items[].qty: number\n  consumers: validate_totals",
+    "node_kind": "llm",
+    "excerpt": "extract_line_items: llm\n  model_role: extractor\n  out.total: Float\n  consumers: validate_totals",
     "upstream": ["parse_pdf"],
     "downstream": ["validate_totals"]
   },
@@ -331,62 +394,69 @@ const Envelope = z.object({
   "candidates": [],
   "next": [
     { "tool": "flow_compile", "arguments": { "spec_id": "wf_invoice" }, "why": "Проверить, что тип разошёлся только здесь" },
-    { "tool": "run_replay_node", "arguments": { "run_id": "run_8812", "node_id": "extract_line_items" }, "why": "Проверить фикс без полного прогона" }
+    { "tool": "run_replay_node", "arguments": { "run_id": "0199a3f2-7c1e-7d4a-9b2e-5f8c1a2d3e4f", "address": { "node_id": "extract_line_items", "branch_key": null, "iteration": null, "item_index": null } }, "why": "Проверить фикс без полного прогона" }
   ],
   "refs": [],
-  "ui_url": "https://studio.example.com/w/wf_invoice?node=extract_line_items&at=a17c9f1",
+  "ui_url": "http://127.0.0.1:5180/w/wf_invoice?node=extract_line_items&at=working",
   "truncated": null
 }
 ```
 
 ### 3.3 Неуспешный ответ
 
-Возвращается как обычный результат тула с `isError: true`, не как JSON-RPC error.
+Возвращается как обычный результат тула с `isError: true`, не как JSON-RPC error. Форма отказа расходится с
+`ApiError` из [ADR-0028](adr/0028-studio-api-contract.md) §2 и [23](23-studio-api.md) §12.4 — открытый вопрос 14.
 
 ```jsonc
 {
   "ok": false,
   "op": "flow_patch",
-  "version": { "spec_id": "wf_invoice", "commit": "a17c9f1", "files": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "sha256": "7b40de…" }], "dirty": true },
+  "version": {
+    "files": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "file_hash": "sha256-7b40de…" }],
+    "dirty": true,
+    "actor": null,
+    "client_op_id": null
+  },
   "focus": {
     "node_id": "extract_line_items",
-    "node_kind": "llm.structured",
-    "excerpt": "output.items[].qty: string\n  consumers: validate_totals (ожидает number)",
+    "node_kind": "llm",
+    "excerpt": "out.total: Text\n  consumers: validate_totals (ожидает Float)",
     "upstream": ["parse_pdf"],
     "downstream": ["validate_totals"]
   },
   "problems": [{
     "code": "TYPE_MISMATCH",
     "severity": "error",
-    "at": { "node_id": "extract_line_items", "path": "output.items[].qty", "line": 118 },
-    "message": "Узел отдаёт string, потребитель validate_totals ждёт number.",
-    "evidence": { "observed": "\"12\"", "expected_type": "number", "run_id": "run_8812", "sample_span": "span_31" }
+    "at": { "node_id": "extract_line_items", "path": "out.total", "line": 21 },
+    "message": "Узел отдаёт Text, потребитель validate_totals ждёт Float.",
+    "evidence": { "observed": "\"1240.50\"", "expected_type": "Float", "run_id": "0199a3f2-7c1e-7d4a-9b2e-5f8c1a2d3e4f", "sample_span": "span_31" }
   }],
   "candidates": [{
     "id": "cand_1",
-    "title": "Привести qty к number в схеме узла",
+    "title": "Объявить total как Float в выходе узла",
     "confidence": 0.82,
-    "rationale": "В 47/50 прогонов модель отдаёт число строкой; схема ниже по потоку уже строгая.",
+    "rationale": "В 47/50 прогонов модель отдаёт число строкой; вход validate_totals уже строгий.",
     "risk": "low",
     "affects": ["validate_totals"],
     "apply": {
       "tool": "flow_patch",
       "arguments": {
         "spec_id": "wf_invoice",
-        "base": { "commit": "a17c9f1", "files": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "sha256": "7b40de…" }] },
-        "ops": [{ "op": "set", "path": "/nodes/extract_line_items/output/items/qty/type", "value": "number" }]
+        "expects": [{ "path": "flows/wf_invoice/nodes/extract_line_items.yaml", "file_hash": "sha256-7b40de…" }],
+        "ops": [{ "op": "set", "path": "/nodes/extract_line_items/out/total/type", "value": "Float" }],
+        "client_op_id": "01JB8Q4A7C9E1G3J5K7M9P1R3T"
       }
     }
   }],
   "next": [],
   "refs": [{
     "type": "resource_link",
-    "uri": "volt://run/run_8812/trace?node=extract_line_items",
+    "uri": "aqven://run/0199a3f2-7c1e-7d4a-9b2e-5f8c1a2d3e4f/trace?node=extract_line_items",
     "name": "trace: extract_line_items",
     "mimeType": "application/json",
     "description": "Полный трейс узла, 34 KB"
   }],
-  "ui_url": "https://studio.example.com/w/wf_invoice/run/run_8812?node=extract_line_items&problem=0",
+  "ui_url": "http://127.0.0.1:5180/w/wf_invoice/run/0199a3f2-7c1e-7d4a-9b2e-5f8c1a2d3e4f?node=extract_line_items&problem=0",
   "truncated": { "fields": ["focus.excerpt"], "hint": "Полный текст: flow_get({spec_id:'wf_invoice',node_id:'extract_line_items',view:'raw'})" }
 }
 ```
@@ -395,32 +465,49 @@ const Envelope = z.object({
 провалидировать инварианты, при ошибке не сериализовать» гарантирует, что `problems[]` описывают
 состояние, которое **было бы**, а не записанное.
 
-### 3.4 Как это возвращается из хендлера
+### 3.4 Как это возвращается из тула
 
-```ts
-server.registerTool('flow_patch', {
-  title: 'Правка спеки',
-  description: 'Атомарно применяет операции к файлам воркфлоу. Требует base с хешами затрагиваемых файлов. ' +
-               'При конфликте возвращает текущий хеш и предложение ребейза, а не голый отказ.',
-  inputSchema: FlowPatchInput,
-  outputSchema: EnvelopeShape,
-  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false }
-}, async (args, extra) => {
-  extra.signal.throwIfAborted();
-  const envelope = await applyPatch(args, requireScopes(extra.authInfo, ['workflows:write']));
-  return {
-    structuredContent: envelope,
-    content: [{ type: 'text', text: renderEnvelopeForAgent(envelope) }],
-    isError: !envelope.ok
-  };
-});
+```python
+from typing import Protocol
+
+
+class PatchFlow(Protocol):
+    async def __call__(self, request: FlowPatchInput) -> Envelope: ...
+
+
+def flow_patch_operation(patch_flow: PatchFlow) -> Operation[FlowPatchInput, Envelope]:
+    return Operation(
+        name="flow_patch",
+        description=(
+            "Атомарно применяет операции к файлам воркфлоу. "
+            "Требует expects с хешами затрагиваемых файлов и client_op_id. "
+            "При конфликте возвращает текущий хеш и предложение ребейза, "
+            "а не голый отказ."
+        ),
+        input_model=FlowPatchInput,
+        output_model=Envelope,
+        surface="rest_and_mcp",
+        use_case=patch_flow,
+    )
 ```
 
-`renderEnvelopeForAgent` — единственное место, где конверт превращается в текст (компактно: фокус,
-до трёх проблем, до трёх кандидатов). Правило: агент читает текст, действует по `structuredContent`.
-`annotations` заполняем у всех тулов — Claude Code показывает их человеку и оценивает риск; при этом
-помним предупреждение спецификации, что клиент считает их недоверенными, поэтому реальное принуждение
-прав — в §6, а не в аннотациях.
+Своего хендлера у тула нет. `Operation`, `ToolCall` и `tool_result` — [ADR-0028](adr/0028-studio-api-contract.md)
+§2, `Envelope` — §3.1, `FlowPatchInput` — §9.2, `PatchFlow` — порт use-case'а, реализацию получает фабрика
+(внедрение через параметр). `Operation.register_tool` оборачивает запись в `ToolCall` (Adapter) и регистрирует её
+в `MCPServer`, маршрут `PATCH /api/flows/{flow_id}` вызывает тот же `invoke`. Выход use-case'а уходит с
+`is_error=False`, `DomainError` — с `is_error=True` и моделью ошибки в `structuredContent`; поэтому отказ
+§3.3 получается только через `DomainError`, а какая модель лежит в `structuredContent` — открытый вопрос 14.
+
+Текст в `content[0].text` строит одно место — `tool_result`. Цель — компактный рендер для агента (фокус, до
+трёх проблем, до трёх кандидатов); в пробе ADR-0028 это полный `model_dump_json()` — открытый вопрос 3.
+Правило: агент читает текст, действует по `structuredContent`.
+
+`title` и `annotations` заполняем у всех тулов, у `flow_patch` —
+`ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False)`: Claude
+Code показывает их человеку и оценивает риск. В сигнатуре `MCPServer.add_tool` 2.2.0 параметры `title`,
+`annotations` и `meta` есть, а в записи `Operation` полей для них нет — открытый вопрос 19. Спецификация MCP
+предупреждает, что клиент считает аннотации недоверенными, поэтому реальное принуждение прав — в §6, а не в
+аннотациях.
 
 ## 4. Бюджет ответа
 
@@ -429,7 +516,7 @@ server.registerTool('flow_patch', {
 | Лимит | Значение | Источник | Что делаем |
 |---|---|---|---|
 | `MAX_MCP_OUTPUT_TOKENS` | 25 000 токенов на ответ тула по умолчанию, предупреждение на 10 000 | Claude Code | целимся в 2–4k, «толстым» тулам поднимаем потолок |
-| `_meta['anthropic/maxResultSizeChars']` | до 500 000 символов, пер-тул | `tools/list` | ставим `200_000` только на `run_get_trace`, `flow_compile`, `experiment_compare` |
+| `_meta['anthropic/maxResultSizeChars']` | до 500 000 символов, пер-тул | `tools/list` | ставим `200_000` только на `run_get_trace`, `flow_compile`, `experiment_compare` через `meta` тула (открытый вопрос 19) |
 | `MCP_TOOL_TIMEOUT` | дефолт ~28 часов, пер-сервер `timeout` (мс, мин. 1000) | Claude Code | ставим `timeout: 120000` в `.mcp.json`; всё длиннее — асинхронный `run_id` + `run_get`, а не удержание вызова |
 | Idle timeout | 5 мин (http/sse/ws), 30 мин (stdio) | Claude Code | долгие прогоны не держат стрим: `run_start` возвращает `run_id` сразу |
 | Системный промт тулов | +286 токенов (`tool_choice: auto`) / +406 (`any\|tool`) для Opus 5 | platform.claude.com | учитываем в оценке, повлиять не можем |
@@ -455,20 +542,23 @@ Anthropic, где `concise` даёт примерно треть токенов 
 
 Единая для всех листингов, без исключений:
 
-```ts
-const Page = z.object({
-  items: z.array(Item),
-  next_cursor: z.string().nullable(),
-  total_estimate: z.number().int()
-});
+```python
+from pydantic import BaseModel, ConfigDict
+
+
+class Page[T: BaseModel](BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    items: list[T]
+    next_cursor: str | None
+    total_estimate: int
 ```
 
 Дефолтный `limit` — 20, максимум — 200. Курсор непрозрачный (base64 от `(sort_key, id)`), не offset:
 история и трейсы дописываются во время листинга. `total_estimate` — именно оценка, точный `count` на
 партиционированных `run_nodes` не считаем.
 
-`tools/list` тоже пагинируется (`params.cursor` → `result.nextCursor`) — при 82 тулах это нужно,
-если клиент запросит полный список без фазового фильтра.
+`tools/list` тоже пагинируется (`params.cursor` → `result.nextCursor`) — на поверхности из 18 тулов
+это не нужно, но остаётся верным, если поверхность вырастет.
 
 ### 4.4 Что делаем при усечении
 
@@ -493,125 +583,42 @@ const Page = z.object({
 | 6 | — | `ok:false`, `RESPONSE_BUDGET_EXCEEDED` |
 
 5. Всё, что вырезано, остаётся достижимым по `refs[]` — `resource_link` с `uri` вида
-   `volt://run/<run_id>/trace?node=<node_id>` и честным размером в `description`. Ссылка не
+   `aqven://run/<run_id>/trace?node=<node_id>` и честным размером в `description`. Ссылка не
    обязывает клиента поддерживать MCP resources: тот же объект достаётся тулом, указанным в
    `truncated.hint`.
 
-## 5. Фазовое раскрытие тулов
+## 5. Фазовое раскрытие тулов — отменено
 
-### 5.1 Почему без этого нельзя
+**Отменено [ADR-0042](adr/0042-mcp-is-the-action-surface.md).** Раскрытие проектировалось под 78–79 тулов:
+при 250–600 токенах на определение со сложной схемой это 20–47k токенов **до первого сообщения
+пользователя**, и цель была держать одновременно активными ≤ 20–25. Поверхность — 18 тулов действий (§2),
+их определения стоят порядка 3k токенов, то есть дешевле, чем `mode_set` и `help_contract`, которыми
+раскрытие управлялось бы.
 
-82 тула × 250–600 токенов на определение с нетривиальной схемой = 20–49k токенов **до первого
-сообщения пользователя**. Это бюджет, который нужен на трейсы. Anthropic измеряла тот же эффект: у
-крупных наборов загрузка всех определений съедала порядка 150k токенов, и ленивое раскрытие снижало
-это на ~98,7%. Цель: одновременно активны ≤ 20–25 тулов.
+Механизм и не был доступен: у `MCPServer` 2.2.0 нет `RegisteredTool.enable()/disable()`
+([ADR-0025](adr/0025-python-engine.md) §8, открытый вопрос 18), а подменять каталог через приватный
+`_tool_manager` запрещено ([ADR-0028](adr/0028-studio-api-contract.md) «Альтернативы»).
 
-### 5.2 Ядро (всегда включено, 13 тулов)
+Что остаётся вместо раскрытия:
 
-`mode_set`, `help_contract`, `studio_open`, `catalog_list`, `catalog_get`, `journal_read`,
-`journal_append`, `flow_get`, `flow_history`, `run_get`, `run_list`, `run_get_node`, `run_get_trace`.
+| Было в плане | Стало |
+|---|---|
+| `mode_set` переключает фазу и включает группы | фазы нет, поверхность одна |
+| `help_contract` объясняет контракт и текущую фазу | `instructions` сервера MCP: порядок работы в одном абзаце, его видит клиент при `initialize` |
+| Ядро из 13 тулов, из которых достижимы остальные | все 18 доступны всегда |
+| `studio_open` строит `ui_url` | `ui_url` приходит полем в `RunStarted` |
 
-Критерий попадания в ядро: тул нужен в любой фазе **или** нужен для выхода из тупика (переключить
-фазу, узнать контракт, посмотреть, что происходит). Ядро самодостаточно: из него всегда достижим
-`mode_set`, а значит любая другая группа.
-
-### 5.3 Фазы и группы
-
-| Фаза | Дополнительно включается | Всего активно |
-|---|---|---|
-| `discover` | `brief_*`, `architecture_*` | 16 |
-| `author` | `flow_*`, `context_*`, `kb_indexes`, `component_*` (кроме `propose_to_library`), `agent_*`, `provider_*`, `registry_propose` | 25 |
-| `run` | `run_start`, `flow_compile` | 13 |
-| `debug` | `run_replay_node`, `run_fork`, `run_diff`, `run_stages`, `run_lineage`, `run_blame`, `agent_effective_config`, `component_expand` | 19 |
-| `evaluate` | `dataset_*`, `scorer_create`, `experiment_*`, `feedback_list`, `provider_*`, `run_stages` | 23 |
-| `ship` | `version_*`, `project_*`, `component_propose_to_library`, `registry_propose`, `flow_compile` | 20 |
-
-Колонка «всего активно» считалась для реестра из 57 тулов и требует пересборки целиком под 82:
-состав фаз пересматривается вместе с распределением операций файловой модели по группам.
-
-Переход делается либо явно (`mode_set({ phase: 'debug', reason: '...' })`), либо автоматически по
-контексту: `run_get` с `status: 'failed'` включает группу `debug` и говорит об этом в `next[]`.
-Автопереход всегда отражается в ответе полем `phase_changed`, чтобы агент знал о смене поверхности,
-даже не перечитывая `tools/list`.
-
-### 5.4 Механизм
-
-Штатный, без самописных костылей: `RegisteredTool.enable()` / `disable()` из
-`@modelcontextprotocol/sdk@1.30.0`. Они сами шлют `notifications/tools/list_changed`, поэтому
-сервер объявляет capability `{ tools: { listChanged: true } }`.
-
-```ts
-type Phase = 'discover' | 'author' | 'run' | 'debug' | 'evaluate' | 'ship';
-
-const PHASE_GROUPS: Record<Phase, readonly string[]> = {
-  discover: ['brief', 'architecture'],
-  author: ['flow', 'context', 'component', 'agent', 'provider', 'registry'],
-  run: ['run_exec'],
-  debug: ['run_debug', 'agent', 'component'],
-  evaluate: ['eval', 'provider', 'run_debug'],
-  ship: ['version', 'export', 'registry', 'library']
-};
-
-class ToolSurface {
-  constructor(
-    private readonly byGroup: Map<string, RegisteredTool[]>,
-    private readonly core: readonly string[]
-  ) {}
-
-  setPhase(phase: Phase): SurfaceDelta {
-    const active = new Set(PHASE_GROUPS[phase]);
-    const delta: SurfaceDelta = { enabled: [], disabled: [] };
-    for (const [group, tools] of this.byGroup) {
-      const shouldBeOn = active.has(group);
-      for (const tool of tools) {
-        if (tool.enabled === shouldBeOn) continue;
-        shouldBeOn ? tool.enable() : tool.disable();
-        (shouldBeOn ? delta.enabled : delta.disabled).push(tool.title ?? group);
-      }
-    }
-    return delta;
-  }
-}
-```
-
-Это Registry поверх группы + плоская таблица `PHASE_GROUPS` вместо лестницы условий. Ядро в
-`byGroup` не входит вообще, поэтому выключить его нельзя структурно.
-
-### 5.5 Риск и страховка
-
-**Риск:** не все MCP-клиенты перечитывают `tools/list` после `notifications/tools/list_changed`.
-Поведение Claude Code при смене списка в середине сессии не проверено на живом сервере. Если клиент
-не перечитал список, агент вызовет тул, который сервер считает выключенным.
-
-Страховка — четыре независимых механизма:
-
-1. **Ядро самодостаточно.** Даже при полностью «залипшем» списке из ядра достижимо всё: посмотреть
-   состояние, прочитать контракт, переключить фазу.
-2. **Выключенный тул отвечает по-человечески, а не «unknown tool».** Хендлер остаётся
-   зарегистрированным; `disable()` убирает тул из листинга, но вызов перехватывается общей обёрткой,
-   которая возвращает конверт с `code: 'TOOL_PHASE_DISABLED'` и кандидатом
-   `apply: { tool: 'mode_set', arguments: { phase: <нужная фаза> } }`. Агент делает ровно один
-   восстановительный шаг.
-3. **Автовключение по требованию.** Если вызванный тул принадлежит группе, разрешённой текущей ролью,
-   сервер включает фазу сам, выполняет вызов и сообщает `phase_changed` в ответе. Отказ — только
-   если группа запрещена правами (§6), и это уже не про фазы.
-4. **Аварийный выключатель.** `mode_set({ phase: 'all' })` включает всю поверхность. Нужен для
-   клиентов без `listChanged` и для отладки; в ответе помечается `surface: 'full'`, чтобы это было
-   видно в журнале.
-
-Следствие для тестов: контрактный тест на каждый тул — «вызов в чужой фазе возвращает
-`TOOL_PHASE_DISABLED` с валидным кандидатом», а не исключение.
-
-### 5.6 Чего не делаем
-
-Tool Search Tool (platform.claude.com) — официальный ответ Anthropic на большие наборы, но это фича
-**Messages API**, а не MCP-сервера: как сервер мы её не включаем. Она остаётся релевантной, если наш
-собственный раннер пойдёт в Messages API напрямую, минуя Claude Code — тогда 82 тула перестают быть
-проблемой и фазы можно оставить только как организующий приём.
+Возврат к раскрытию — когда поверхность перевалит за 40 тулов; до тех пор цена механизма выше цены
+определений.
 
 ## 6. Права агента
 
 ### 6.1 Матрица (§13.2 в терминах тулов и скоупов)
+
+Матрица — целевая модель для актора с токеном. На loopback `aqven dev` аутентификации нет
+([23](23-studio-api.md) §1.1): пользователь процесса один, скоупы не проверяются; механизм токена для
+`aqven serve` вне loopback не выбран — открытый вопрос 6. Уровень 4 (§6.2) действует в обоих режимах:
+аппрув заявок и перехват лока в MCP-поверхности отсутствуют ([23](23-studio-api.md) §13.3).
 
 | Действие | Может | Тулы | Скоуп |
 |---|---|---|---|
@@ -634,48 +641,62 @@ Tool Search Tool (platform.claude.com) — официальный ответ Ant
 `destructiveHint`) в этот список **не входят**: спецификация MCP прямо говорит, что клиент считает их
 недоверенными, это подсказка человеку, а не контроль.
 
-**Уровень 1 — токен.** Агент получает собственный credential, привязанный к тройке
+**Уровень 1 — токен.** В `aqven serve` агент получает собственный credential, привязанный к тройке
 (user, tenant, scopes), и никогда — сессионную cookie человека (иначе теряется аудит «кто сделал»).
 Скоупа `versions:release`, `library:write`, `registry:write`, `secrets:read` в токене агента нет
 физически, поэтому эскалация внутри MCP невозможна.
 
-**Уровень 2 — эндпоинт.** `requireBearerAuth({ verifier, requiredScopes })` из
-`@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js` проверяет токен до вызова тула и
-кладёт `AuthInfo` в `extra.authInfo`. `requiredScopes` действует на весь эндпоинт, поэтому там стоит
-минимальный общий набор (`mcp:use`).
+**Уровень 2 — эндпоинт.** Токен проверяется до вызова тула на всём эндпоинте `/mcp/`, поэтому там стоит
+минимальный общий набор (`mcp:use`). В `mcp` 2.2.0 для этого есть `MCPServer(token_verifier=...,
+auth=AuthSettings(...))`; поведение и доступ обёртки тула к токену не проверены — открытый вопрос 6.
 
-**Уровень 3 — тул.** Гранулярность на группу проверяется внутри хендлера, потому что `requiredScopes`
-не умеет пер-тульной проверки. Одна guard-функция, общая обёртка, никакой логики в самих тулах:
+**Уровень 3 — тул.** Гранулярность на группу проверяется в общей обёртке вызова (Decorator над use-case),
+никакой логики в самих тулах:
 
-```ts
-const TOOL_SCOPES: Record<string, readonly string[]> = {
-  flow_patch: ['workflows:write'],
-  run_start: ['runs:execute'],
-  version_propose: ['versions:propose'],
-  registry_propose: ['registry:propose'],
-  component_propose_to_library: ['library:propose']
-};
+```python
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Literal
 
-function requireScopes(auth: AuthInfo | undefined, tool: string): Actor {
-  const needed = TOOL_SCOPES[tool] ?? [];
-  const granted = new Set(auth?.scopes ?? []);
-  const missing = needed.filter((scope) => !granted.has(scope));
-  if (!auth) throw new DomainError('unauthorized', { tool });
-  if (missing.length > 0) throw new DomainError('forbidden', { tool, missing });
-  return toActor(auth);
+
+@dataclass(frozen=True, slots=True)
+class Actor:
+    kind: Literal["human", "agent"]
+    id: str
+    scopes: frozenset[str]
+
+
+TOOL_SCOPES: Mapping[ToolName, frozenset[str]] = {
+    ToolName("flow_patch"): frozenset({"workflows:write"}),
+    ToolName("run_start"): frozenset({"runs:execute"}),
+    ToolName("version_propose"): frozenset({"versions:propose"}),
+    ToolName("registry_propose"): frozenset({"registry:propose"}),
+    ToolName("component_propose_to_library"): frozenset({"library:propose"}),
 }
+
+
+def require_scopes(actor: Actor | None, tool: ToolName) -> Actor:
+    if actor is None:
+        raise DomainError(unauthorized(tool))
+    missing = TOOL_SCOPES.get(tool, frozenset()) - actor.scopes
+    if missing:
+        raise DomainError(forbidden(tool, missing))
+    return actor
 ```
 
-`DomainError` транслируется в конверт с `ok: false` и `problems[].code = 'FORBIDDEN'` через тот же
-`map-error`, что и HTTP (§9). Кандидатов такой ответ не несёт — предлагать агенту обход прав нельзя;
-вместо этого `next[]` содержит `studio_open` с `elicit: true`, то есть отправляет решение человеку.
+`ToolName` — из §5.4, `DomainError` — [ADR-0028](adr/0028-studio-api-contract.md) §2, `unauthorized` и
+`forbidden` — фабричные функции `ApiError`. `DomainError` транслируется в `ApiError` с
+`code: 'FORBIDDEN'` тем же транслятором, что и REST ([ADR-0028](adr/0028-studio-api-contract.md) §2, правило 5;
+403 в [23](23-studio-api.md) §12.5). Кандидатов такой ответ не несёт — предлагать агенту обход прав нельзя;
+вместо этого `next[]` содержит `studio_open` с `elicit: true`, то есть отправляет решение человеку (поля
+`next[]` в `ApiError` нет — открытый вопрос 14). Откуда обёртка берёт `Actor` в `mcp` 2.2.0 — открытый вопрос 6.
 
 **Уровень 4 — домен.** То, что нельзя выразить скоупом:
 - **Заявка вместо записи.** `registry_propose`, `version_propose`, `component_propose_to_library`
   пишут в таблицу заявок со статусом `pending_approval` и возвращают `ui_url` на экран аппрува. Тула,
   переводящего заявку в `approved`, в MCP-поверхности не существует — этот переход есть только в
-  REST под человеческой сессией. Разделение принуждается тем, что MCP и Studio ходят в разные
-  use-case'ы, а не разными правами на один.
+  REST под человеческой сессией ([23](23-studio-api.md) §13.3). Разделение принуждается тем, что MCP и Studio
+  ходят в разные use-case'ы, а не разными правами на один.
 - **Секреты.** В реестре нет группы `secret_*`. Ключи провайдеров никогда не попадают в IR: узел
   ссылается на профиль модели, профиль — на ссылку `secret_ref`, разрешение ссылки происходит
   в исполнителе узла на сервере. В `run_get_node` и `run_get_trace` поля с `secret_ref`
@@ -688,115 +709,79 @@ function requireScopes(auth: AuthInfo | undefined, tool: string): Actor {
 ### 6.3 Аудит
 
 Актор пишется трейлерами коммита (`actor_kind`, `actor_id`, `session_id` MCP), `git author` различает
-человека и агента. `journal_append` агент вызывает сам, но журнал решений — не источник истины
-об изменениях: истина — git-история, в которую агент пишет только через `flow_commit`, и рабочее
-дерево, за которым следит watcher.
+человека и агента; коммит пишет dulwich 1.2.15 за `GitPort` ([ADR-0025](adr/0025-python-engine.md) §8).
+`journal_append` агент вызывает сам, но журнал решений — не источник истины об изменениях: истина —
+git-история, в которую агент пишет только через `flow_commit`, и рабочее дерево, за которым следит наблюдатель.
 
 ## 7. Транспорт и авторизация
 
-### 7.1 Два входа, одна поверхность тулов
+### 7.1 Входы и одна поверхность тулов
 
-| Сценарий | Транспорт | Класс SDK | Авторизация |
+| Сценарий | Транспорт | Механизм | Авторизация |
 |---|---|---|---|
-| Локальный Claude Code рядом с репозиторием | stdio | `StdioServerTransport` | credential из окружения процесса, `.mcp.json` с `${VAR}` |
-| Удалённый агент, CI, другой клиент | Streamable HTTP | `WebStandardStreamableHTTPServerTransport` | `Authorization: Bearer` на каждом запросе |
+| Локальный Claude Code рядом с проектом, `aqven dev` | streamable HTTP, `http://127.0.0.1:5180/mcp/` | `MCPServer("aqven").streamable_http_app(streamable_http_path="/")`, маунт `/mcp` в FastAPI | нет: loopback, `TrustedHostMiddleware`, `TransportSecuritySettings` ([23](23-studio-api.md) §1.1) |
+| Модуль как сервис: `aqven serve`, удалённый агент, CI | streamable HTTP | тот же маунт, подмножество каталога ([23](23-studio-api.md) ОВ 14) | не выбрана — открытый вопрос 6 |
+| Локальный запуск без HTTP | stdio | `MCPServer.run(transport="stdio")` | окружение процесса; нужен ли этот вход — открытый вопрос 17 |
 
-Legacy HTTP+SSE (протокол 2024-11-05, `sdk/server/sse.js`) не поддерживаем. `ws` из Claude Code не
-используем: он доступен только через `claude mcp add-json` и ничего не добавляет поверх Streamable
-HTTP.
+Legacy HTTP+SSE (протокол 2024-11-05) не поддерживаем. `ws` из Claude Code не используем: он доступен
+только через `claude mcp add-json` и ничего не добавляет поверх Streamable HTTP.
 
-Web-вариант транспорта выбран вместо node-обёртки намеренно: он работает на Request/Response, то есть
-одинаково монтируется в Hono control plane и в Next Route Handler, без `@hono/node-server`.
+MCP живёт на порту FastAPI ([ADR-0028](adr/0028-studio-api-contract.md) §3): lifespan приложения входит в
+`session_manager.run()`, потому что у смонтированного подприложения свой lifespan не выполняется; путь — `/mcp/`
+со слешем (без слеша каждый запрос стоит редиректа 307); в OpenAPI маунт не попадает; статика студии отдаёт
+`index.html` только на пути вне `/api` и `/mcp/`. Каркас `create_app` — [23](23-studio-api.md) §2.
 
-Регистрация у клиента:
+Регистрация у клиента ([23](23-studio-api.md) §13.1):
 
 ```bash
-claude mcp add --transport stdio volt -- npx -y @wf/mcp-server
-claude mcp add --transport http  volt https://api.example.com/mcp --header "Authorization: Bearer ${VOLT_TOKEN}"
+claude mcp add --transport http aqven http://127.0.0.1:5180/mcp/
 ```
 
-В репозиторий воркфлоу коммитится `.mcp.json` (project-скоуп) с подстановкой `${VOLT_TOKEN}` и
-`${CLAUDE_PROJECT_DIR}`; отсутствующая переменная даёт предупреждение, а не падение, поэтому
-`help_contract` обязан уметь отвечать «токен не подставлен» вместо 401 без объяснения.
+В репозиторий воркфлоу коммитится `.mcp.json` (project-скоуп) с тем же адресом; порт задаёт
+`aqven dev --port` ([23](23-studio-api.md) §1.1). Подстановка `${VAR}` (`${CLAUDE_PROJECT_DIR}`, токен
+`aqven serve`) при отсутствующей переменной даёт предупреждение, а не падение, поэтому `help_contract`
+обязан уметь отвечать «токен не подставлен» вместо 401 без объяснения.
 
 ### 7.2 Сессии Streamable HTTP
 
-```ts
-const transport = new WebStandardStreamableHTTPServerTransport({
-  sessionIdGenerator: () => randomUUID(),
-  onsessioninitialized: (id) => sessions.attach(id),
-  onsessionclosed: (id) => sessions.release(id),
-  enableJsonResponse: false,
-  eventStore: new PgEventStore(pool),
-  keepAliveMs: 15_000,
-  retryInterval: 3_000
-});
-```
+`streamable_http_app` по умолчанию stateful (`stateless_http=False`, [research/py-stack-runtime.md](research/py-stack-runtime.md)
+§7) — этот режим нужен фазовой поверхности: она привязана к сессии. Состояние сессии SDK держит в памяти
+процесса, поэтому при нескольких репликах `aqven serve` нужен sticky-routing по `Mcp-Session-Id` либо общее
+хранилище событий; возобновление по `Last-Event-ID`, хранилище событий и ответ на неизвестный
+`Mcp-Session-Id` в `mcp` 2.2.0 не проверены — открытый вопрос 18. `aqven dev` — один процесс, его вопрос не
+блокирует.
 
-Stateful-режим выбран ради `flow_lock` и фазовой поверхности: и то и другое привязано к сессии.
-Состояние сессии транспорт держит **в памяти**, поэтому при нескольких репликах обязателен либо
-sticky-routing по `Mcp-Session-Id`, либо общий `eventStore` (наша реализация на Postgres — она же
-даёт resumability по `Last-Event-ID`). Неизвестный session ID → 404, не-initialize запрос без session
-ID → 400.
+Долгие операции не держат вызов тула: `run_start` сразу возвращает `run_id`, дальше — `run_get` или
+run-канал SSE ([23](23-studio-api.md) §11.2); idle-таймаут клиента в 5 минут (§4.1) не срабатывает.
 
-`closeSSEStream(requestId)` используем для длинных прогонов: обрываем стрим принудительно, клиент
-переходит в polling через `run_get`, idle-таймаут в 5 минут не срабатывает.
-
-CORS SDK не делает, это наша middleware. Обязательный минимум:
-`Access-Control-Expose-Headers: Mcp-Session-Id` (иначе браузерный клиент не увидит сессию), разрешённые
-заголовки `Content-Type, Authorization, Mcp-Session-Id, Mcp-Protocol-Version, Last-Event-ID`, методы
-`GET, POST, DELETE, OPTIONS`. Защита от DNS-rebinding — через
-`sdk/server/middleware/hostHeaderValidation.js`, а не через deprecated-опции транспорта
-(`allowedHosts`, `allowedOrigins`, `enableDnsRebindingProtection`).
+CORS не включается ([23](23-studio-api.md) §1.1): один origin, браузерного MCP-клиента нет, студия ходит в
+REST. Защита от DNS rebinding — `TrustedHostMiddleware` на всём приложении (чужой `Host` → 400) и
+`TransportSecuritySettings` у `/mcp/` (по умолчанию только localhost, иначе 421).
 
 ### 7.3 Мы Resource Server, а не Authorization Server
 
-SDK умеет и то и другое; `mcpAuthRouter` (полноценный AS) не берём — своя выдача токенов означала бы
-свою реализацию OAuth 2.1 при живом better-auth.
+Принцип остаётся: свою выдачу токенов (OAuth 2.1 Authorization Server) не пишем — токен выдаёт внешний IdP,
+сервер его проверяет. Прежний механизм (`mcpAuthMetadataRouter` и `requireBearerAuth` TS SDK поверх
+better-auth) ушёл вместе с TS-стеком ([ADR-0028](adr/0028-studio-api-contract.md) «Документы, которые
+становятся неверными»). На loopback `aqven dev` авторизации нет. Для `aqven serve` вне loopback у `MCPServer`
+2.2.0 есть `token_verifier` и `auth: AuthSettings`; публикация метаданных защищённого ресурса, ответ 401 с
+`WWW-Authenticate` для браузерного OAuth-флоу Claude Code и выбор IdP не проверены — открытый вопрос 6
+([ADR-0028](adr/0028-studio-api-contract.md) ОВ 7, [23](23-studio-api.md) ОВ 14).
 
-```ts
-app.route('/', mcpAuthMetadataRouter({
-  oauthMetadata,
-  resourceServerUrl: new URL('https://api.example.com/mcp'),
-  scopesSupported: [
-    'mcp:use',
-    'workflows:read', 'workflows:write',
-    'runs:execute',
-    'evals:write',
-    'versions:propose', 'registry:propose', 'library:propose'
-  ],
-  resourceName: 'volt'
-}));
+Целевой набор скоупов: `mcp:use`, `workflows:read`, `workflows:write`, `runs:execute`, `evals:write`,
+`versions:propose`, `registry:propose`, `library:propose`.
 
-app.use('/mcp', requireBearerAuth({
-  verifier: betterAuthVerifier,
-  requiredScopes: ['mcp:use'],
-  resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(new URL('https://api.example.com/mcp'))
-}));
-```
-
-`mcpAuthMetadataRouter` монтируется **в корне приложения** (требование SDK), иначе
-`/.well-known/oauth-protected-resource/mcp` окажется не по тому пути и клиент не найдёт метаданные.
-На 401 `requireBearerAuth` сам добавляет `WWW-Authenticate` со ссылкой на эти метаданные — это то, по
-чему Claude Code запускает браузерный OAuth-флоу (`claude mcp login volt`, Dynamic Client Registration
-поддерживается).
-
-Authorization Server — better-auth 1.7.4 с плагинами `jwt` (RS256 + JWKS) и `bearer`;
-`betterAuthVerifier` — тот же `verifyToken`, что используется на REST-границе, то есть один
-`AuthProvider` (Strategy) на оба входа. Смена IdP на Clerk/WorkOS = замена верификатора, контракт
-тулов не меняется.
-
-**Скоупы — на группу тулов, не на тул.** `requiredScopes` в `requireBearerAuth` действует на весь
-эндпоинт, поэтому там только `mcp:use`; пер-тульная проверка — `requireScopes(extra.authInfo, name)`
-внутри общей обёртки хендлера (§6.2). Разделение намеренное: эндпоинт отвечает на вопрос «этот токен
-вообще наш», тул — на вопрос «этому актору можно это действие».
+**Скоупы — на группу тулов, не на тул.** Проверка на эндпоинте отвечает на вопрос «этот токен вообще наш» и
+требует только `mcp:use`; пер-тульная проверка — `require_scopes(actor, tool)` в общей обёртке вызова (§6.2).
+Верификатор токена — Strategy: смена IdP означает замену верификатора, контракт тулов не меняется; тот же
+верификатор стоит на REST `aqven serve`, поэтому агент и студия видят одного `Actor`.
 
 ### 7.4 Что не строим на клиентских возможностях
 
 | Возможность MCP | Claude Code | Наше решение |
 |---|---|---|
 | tools | поддерживается полностью | **весь контракт живёт здесь** |
-| elicitation (form и URL) | поддерживается | используем URL-форму для аппрувов через `studio_open` |
+| elicitation (form и URL) | поддерживается | используем URL-форму для аппрувов через `studio_open`; метод `mcp` 2.2.0 — открытый вопрос 21 |
 | resources | в доках не заявлена | только `refs[]` как ссылки; ни одна обязательная информация не доступна **только** через resource |
 | prompts как slash-команды | в доках не заявлена | не используем; протокол цикла — скилл (§8) |
 | sampling | не поддерживается | не используем вообще |
@@ -807,14 +792,14 @@ Authorization Server — better-auth 1.7.4 с плагинами `jwt` (RS256 + 
 
 ### 8.1 Где лежит и как версионируется
 
-Скилл `volt-workflow-loop` едет **Project-скоупом** в репозитории воркфлоу:
-`<repo>/.claude/skills/volt-workflow-loop/SKILL.md`, коммитится в git. Это единственный уровень, на
+Скилл `aqven-workflow-loop` едет **Project-скоупом** в репозитории воркфлоу:
+`<repo>/.claude/skills/aqven-workflow-loop/SKILL.md`, коммитится в git. Это единственный уровень, на
 котором скилл версионируется вместе со спекой: Enterprise и Personal живут вне репозитория и имеют
 более высокий приоритет при совпадении имён (Enterprise > Personal > Project), поэтому имя намеренно
 специфичное — перебить его случайным одноимённым Personal-скиллом нельзя.
 
-Генератор проекта кладёт рядом короткий `AGENTS.md`/`CLAUDE.md`: как поднять MCP-сервер (`.mcp.json`),
-какая фаза цикла текущая, ссылка на скилл. Контракт тулов туда **не** дублируется — он в
+Генератор проекта кладёт рядом короткий `AGENTS.md`/`CLAUDE.md`: как подключить MCP-сервер `aqven dev`
+(`.mcp.json`), какая фаза цикла текущая, ссылка на скилл. Контракт тулов туда **не** дублируется — он в
 `tools/list` и в `help_contract`.
 
 Версия скилла привязана к мажору контракта: `metadata.contract_version: "1"`. Несовпадение с тем, что
@@ -823,7 +808,7 @@ Authorization Server — better-auth 1.7.4 с плагинами `jwt` (RS256 + 
 ### 8.2 Структура бандла
 
 ```
-.claude/skills/volt-workflow-loop/
+.claude/skills/aqven-workflow-loop/
   SKILL.md            обзор + инвариант цикла + навигация, < 500 строк
   reference.md        коды проблем, семантика фаз, полный реестр тулов с аргументами
   examples.md         разобранные эпизоды: STALE_FILE, TYPE_MISMATCH, срыв гейта
@@ -864,7 +849,8 @@ Authorization Server — better-auth 1.7.4 с плагинами `jwt` (RS256 + 
 4. **Правило действия по `candidates[]`** — если ответ содержит кандидата с `confidence ≥ 0.7` и
    `risk: 'low'`, следующий шаг — его `apply`, а не собственная конструкция патча.
 5. **Правило конфликта** — `STALE_FILE`: не перечитывать проект целиком, а перечитать пути из
-   `conflict` и применить `conflict.rebased_ops`, если сервер их вернул.
+   `conflict` и применить `conflict.rebased_ops`, если сервер их вернул; иначе переиграть намерение на
+   свежих хешах — перезапись силой запрещена.
 6. **Навигация** — «коды проблем → reference.md», «разобранные случаи → examples.md», «состояние →
    scripts/check_loop_state.sh».
 
@@ -906,51 +892,72 @@ Authorization Server — better-auth 1.7.4 с плагинами `jwt` (RS256 + 
 
 ### 9.2 Единица записи — `flow_patch`
 
-```ts
-const FlowPatchInput = z.object({
-  spec_id: z.string(),
-  base: z.object({
-    commit: z.string(),
-    files: z.array(z.object({ path: z.string(), sha256: z.string().nullable() })).min(1)
-  }),
-  ops: z.array(Op).min(1).max(50),
-  idempotency_key: z.string().nullable(),
-  dry_run: z.boolean().default(false)
-});
+```python
+from typing import Annotated, NewType
+
+from pydantic import BaseModel, ConfigDict, Field
+
+FlowId = NewType("FlowId", str)
+Ulid = Annotated[ClientOpId, Field(pattern=r"^[0-9A-HJKMNP-TV-Z]{26}$")]
+
+
+class ExpectedFile(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    path: str
+    file_hash: FileHash | None
+
+
+class FlowPatchInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    spec_id: FlowId
+    expects: Annotated[list[ExpectedFile], Field(min_length=1)]
+    ops: Annotated[list[Op], Field(min_length=1, max_length=50)]
+    client_op_id: Ulid
+    intent: str | None = None
+    expect_lock: bool = False
+    exclusive: bool = False
+    dry_run: bool = False
 ```
 
-`base.files[]` — compare-and-swap по sha256 байтов каждого затрагиваемого файла; `sha256: null`
-означает «файла быть не должно» (создание). `idempotency_key` — защита от ретраев MCP-клиента (повтор
-с тем же ключом возвращает результат первой попытки, а не применяет операции дважды). `dry_run`
-заменяет отдельный тул валидации.
+`ClientOpId` и `FileHash` — из §3.1; `Op` — дискриминированный union операций `add_node`, `bind`, `set`,
+`remove` по полю `op` (состав — [31](31-canvas-editing.md) §Жесты). Модель — вход и тула, и тела
+`PATCH /api/flows/{flow_id}` ([23](23-studio-api.md) §12.1).
+
+`expects[]` — compare-and-swap по sha256 байтов каждого затрагиваемого файла; `file_hash: null` означает
+«файла быть не должно» (создание). Переименование узла дописывает журнал `renames` в `aqven.yaml`, поэтому
+`aqven.yaml` входит в `expects`. `client_op_id` — ULID, обязателен: повтор с тем же значением возвращает
+результат первой попытки (`app.write_intents`, [16](16-data-model.md) §2.3), а не применяет операции дважды;
+по нему же студия отличает свой патч от чужого в spec-канале. `dry_run` заменяет отдельный тул валидации;
+`intent` уходит в ленту и трейлер коммита, `expect_lock` и `exclusive` — как в [23](23-studio-api.md) §12.1.
 
 Алгоритм сервера:
 
-1. Захват межпроцессной блокировки `.wf/lock` (`O_EXCL`, pid + ttl + heartbeat); занята — `LOCK_BUSY`.
-2. Пересчёт хешей всех путей из `base.files[]`. Расхождение → конверт с `ok: false`, кодом
-   `STALE_FILE`, `FILE_VANISHED` или `FILE_EXISTS` и блоком
+1. Захват межпроцессной блокировки `.aqven/lock` (`O_EXCL`, pid + ttl + heartbeat); занята — `LOCK_BUSY` (423).
+2. Пересчёт хешей всех путей из `expects[]`. Расхождение → отказ с кодом `STALE_FILE`, `FILE_VANISHED` или
+   `FILE_EXISTS` (412) и блоком
    `conflict { path, your_hash, current_hash, ops_since[], rebase: 'auto' | 'manual', rebased_ops[] }`.
    Ответ не голый отказ: правки в разные файлы и разные узлы ребейзятся автоматически. Ручное
    разрешение нужно при пересечении путей, и тогда `rebase: 'manual'`, а `candidates[]` содержит
-   варианты «взять моё» / «взять их».
+   варианты «взять моё» / «взять их». Силовой перезаписи нет: клиент перечитывает файл и переигрывает намерение.
 3. Применить `ops` к дереву проекта **в памяти** → валидатор (типы портов, DAG, обязательные
    биндинги, межфайловые ссылки, границы разрешённых компонентов) → `blocking`-диагностика: ничего
-   не сериализуется, конверт с `problems[]` + `candidates[]`.
-4. Транзакция записи: staging `.wf/txn/<ulid>` с полными новыми версиями файлов, `intent.json` как
-   точка невозврата, серия атомарных `rename(2)`, снятие лока
-   ([files-first/write-model.md](files-first/write-model.md)).
-5. Ответ несёт `version { commit, files[{path, sha256}], dirty }` и `changed_paths[]`. Коммита здесь
-   нет: дерево остаётся грязным до явного `flow_commit` (§9.3).
+   не сериализуется, отказ `BLOCKING_PROBLEMS` с `problems[]` + `candidates[]`.
+4. Транзакция записи: staging `.aqven/txn/<ulid>` с полными новыми версиями файлов в каноническом YAML,
+   `intent.json` как точка невозврата, серия атомарных `rename(2)`, снятие лока
+   ([files-first/write-model.md](files-first/write-model.md)), переиндексация и событие spec-канала.
+5. Ответ несёт `version{files[{path, file_hash}], dirty, actor, client_op_id}`, `changed_paths[]` и
+   `applied_ops[]`. Коммита здесь нет: дерево остаётся грязным до явного `flow_commit` (§9.3).
 
 ### 9.3 История и коммит поверх git
 
 Таблица `app.spec_ops` перестаёт быть источником истины: историю ведёт git — коммит на эпизод правки,
-актор в трейлерах, откат только вперёд ([files-first/history.md](files-first/history.md)). В схеме
+актор в трейлерах, откат только вперёд ([files-first/history.md](files-first/history.md)); коммиты пишет
+dulwich 1.2.15 за `GitPort` без бинарника git ([ADR-0025](adr/0025-python-engine.md) §8). В схеме
 `idx` op-log остаётся кэшем-проекцией, на котором стоят `version_propose(evidence)` и `run_lineage`.
 
 ```
 flow_commit({ paths[], message, intent? })
-  -> { commit, files: [{path, sha256, status}], compile: {ok, problems[]} }
+  -> { commit, files: [{path, file_hash, status}], compile: {ok, problems[]} }
 
 flow_history({ path?, spec_id?, since?, until?, actor_kind?, limit=20, cursor?, view='summary' })
   -> { items: [{commit, parent, actor_kind, actor_id, at, message, intent,
@@ -963,36 +970,44 @@ flow_revert({ to: commit, paths?, message, base: {commit}, dry_run=false })
   -> { commit, reverted: [{commit, files[]}], compile: {ok, problems[], candidates[]}, conflicts[] }
 ```
 
-`flow_diff` по умолчанию семантический: сравниваются нормализованные IR, `scope: 'text'` даёт обычный
-git-дифф для промтов и markdown. `flow_revert` создаёт новый коммит (`git revert`, не `reset`) и
-прогоняет валидатор: ломающий компиляцию откат отдаёт `compile.ok=false`. Агент откатывает свои
-коммиты (по трейлеру `actor_id`), чужие — `FORBIDDEN` + `next[] = studio_open(elicit)`.
-`spec_ops_read` и `version_diff` отменяются: первый — это `flow_history`, второй — `flow_diff`.
+`flow_diff` по умолчанию семантический: сравниваются нормализованные IR, причём IR ревизии строится из
+YAML-файлов этой ревизии — в git он не коммитится ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §9);
+`scope: 'text'` даёт обычный git-дифф для YAML, промтов и markdown. `flow_revert` создаёт новый коммит с
+обратными изменениями (как `git revert`, не `reset`) и прогоняет валидатор: ломающий компиляцию откат отдаёт
+`compile.ok=false`. Агент откатывает свои коммиты (по трейлеру `actor_id`), чужие — `FORBIDDEN` +
+`next[] = studio_open(elicit)`. `spec_ops_read` и `version_diff` отменяются: первый — это `flow_history`,
+второй — `flow_diff`.
 
-### 9.4 ETag/If-Match — тот же механизм на HTTP
+### 9.4 Тот же CAS на HTTP
 
-`GET /api/specs/:id` → сильный `ETag: "<sha256 файла>"`; `PATCH` с `If-Match`; расхождение → `412
-Precondition Failed` с телом `ApiError` и тем же `conflict`-блоком. Ось версий одна в обоих каналах:
-`base.files[].sha256` у MCP и `If-Match` у REST — это один и тот же хеш байтов, а не две независимые
-схемы.
+`PATCH /api/flows/{flow_id}` принимает то же тело, что `flow_patch`, и вызывает тот же use-case
+([23](23-studio-api.md) §12.1); расхождение хеша → `412` с `ApiError` и тем же блоком `conflict`
+([23](23-studio-api.md) §12.4–§12.5). `If-Match` для многофайловой правки не используется: условие CAS одно на
+набор путей и живёт в теле ([ADR-0028](adr/0028-studio-api-contract.md) §6). `ETag` по хешам входящих файлов и
+`If-None-Match` → 304 остаются только для кэша чтения ([23](23-studio-api.md) §1.3). Ось версий одна в обоих
+каналах: `expects[].file_hash` у MCP и REST — один и тот же хеш байтов, а не две независимые схемы.
 
-Живые обновления UI: watcher на дереве → broadcast по SSE → Studio перечитывает изменившиеся пути,
-кэш TanStack Query инвалидируется по паре `path` + `sha256`. Никакого клиентского слияния — «сервер
-сказал, что файл стал таким, вот дельта».
+Живые обновления UI: наблюдатель `watchfiles` на дереве → spec-канал SSE `GET /api/events/spec` с событием
+`files_changed{changes[{path, change, file_hash_before, file_hash_after}], actor, client_op_id}` и
+`Last-Event-ID` = `seq` ([23](23-studio-api.md) §11.1) → Studio перечитывает изменившиеся пути, кэш TanStack
+Query инвалидируется по паре `path` + `file_hash`. Никакого клиентского слияния — «сервер сказал, что файл
+стал таким, вот дельта».
 
 ### 9.5 Advisory-lock
 
 `flow_lock({ spec_id, ttl_s: 300 })` — мягкая блокировка на время работы агента: lockfile в дереве
 проекта, видимый в `git status` и переживающий рестарт сервера. Studio показывает «Claude
-редактирует», человек может перехватить принудительно. Это организационное устранение большинства
-конфликтов, которое дешевле, чем их разруливание. Лок не обязателен и не отменяет CAS: истёкший
-по TTL лок не даёт права записать поверх изменившегося файла. Межпроцессный `.wf/lock` (§9.2) —
-другая сущность: он держится на время одной транзакции записи, а не сессии редактирования.
+редактирует», человек может перехватить принудительно — только по REST, в MCP перехвата нет
+([23](23-studio-api.md) §12.3). Это организационное устранение большинства конфликтов, которое дешевле,
+чем их разруливание. Лок не обязателен и не отменяет CAS: истёкший по TTL лок не даёт права записать
+поверх изменившегося файла. Межпроцессный `.aqven/lock` (§9.2) — другая сущность: он держится на время
+одной транзакции записи, а не сессии редактирования.
 
 ### 9.6 Почему не CRDT
 
-`yjs@13.6.32` и `loro-crdt@1.16.1` — живые библиотеки (MIT), и правило «не изобретать велосипед»
-обычно требует взять готовое. Здесь оно работает в обратную сторону: CRDT решает **не нашу задачу**.
+`yjs@13.6.32` и `loro-crdt@1.16.1` — живые библиотеки (MIT, npm; рассматривались при TS-стеке), и правило
+«не изобретать велосипед» обычно требует взять готовое. Здесь оно работает в обратную сторону: CRDT решает
+**не нашу задачу**.
 
 1. **CRDT гарантирует сходимость, но не валидность.** Агент удалил узел, человек в это же время
    привязал к нему порт — слияние даст структурно целое, но семантически битое состояние. Инварианты
@@ -1013,32 +1028,34 @@ Precondition Failed` с телом `ApiError` и тем же `conflict`-блок
 Если у пользователя есть только сырое описание процесса, шаг 2 протокола (§8.5) уходит в скилл
 `agentic-process-spec`: он ведёт человека по девяти вопросам на каждый шаг процесса и порождает
 документ `agent_workflow_spec` (раздел 12 спеки). Дальше `flow_import({ source: { kind:
-'agent_workflow_spec', payload } })` превращает его в **черновик IR**. Импорт — не «как-нибудь
-разберём текст»: девять вопросов отображаются в обязательные поля IR один к одному.
+'agent_workflow_spec', payload }, client_op_id })` превращает его в **черновик воркфлоу**: YAML-файлы
+`flows/<flow_id>/flow.yaml` и `nodes/*.yaml` в рабочем дереве ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md)
+§1–§2), IR из них строит компилятор. Импорт — не «как-нибудь разберём текст»: девять вопросов отображаются в
+обязательные ключи узла один к одному.
 
-### 10.2 Таблица «вопрос скилла → поле IR»
+### 10.2 Таблица «вопрос скилла → ключ узла»
 
-| Вопрос скилла | Поле IR | Тип | Что значит «не отвечен» |
+| Вопрос скилла | Ключ файла узла (YAML → IR) | Тип | Что значит «не отвечен» |
 |---|---|---|---|
-| Цель шага | `node.description` | `string` (непустая) | пусто или плейсхолдер |
-| Кто исполняет | `node.kind` + `node.role` | enum архетипа + `string` | `kind` не из каталога архетипов |
-| Входные сущности | `node.inputs[]` (слоты) | массив слотов с типами | пустой массив при `kind`, требующем вход |
-| Выходные сущности | `node.output.type` | ссылка на тип реестра | `null` или тип не зарегистрирован |
-| Какое решение принимается | `node.switch` по enum | enum + ветки | ветки не покрывают enum |
-| Блокирующий ли шаг | `node.gate` или `node.kind = 'human'` | дискриминированный union | ни `gate`, ни `human`, ни явное `blocking: false` |
-| Можно ли параллелить | конструкция (`parallel`/`foreach`) + `join` | enum конструкции + политика join | `parallel` без `join` |
-| Какие проверки | `node.validators[]` + `node.scorers[]` | массивы ссылок | оба пусты при `kind`, требующем проверки |
-| Что при сбое | `node.on_error` + `node.timeout_ms` + политика повторов | union политик | `on_error` отсутствует |
+| Цель шага | `description` | `Text` (непустая) | пусто или плейсхолдер |
+| Кто исполняет | `node` + `archetype` + `model_role` (у `llm`) или `assignee` (у `human`) | вид узла из закрытого набора ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §1) + id архетипа + `Text` | `archetype` не из каталога архетипов или роль не задана |
+| Входные сущности | `in[]` — поля `{name, type, description, from}` | список полей с TypeId | пустой список при виде, требующем вход |
+| Выходные сущности | `out[]`; у `human` — `form` | список полей с TypeId; TypeId записи реестра | пусто или тип не зарегистрирован |
+| Какое решение принимается | узел `switch` с `cases` по enum | enum + ветки | ветки не покрывают enum |
+| Блокирующий ли шаг | узел `gate` или `node: human` | дискриминированный union по `node` | ни `gate`, ни `human`, ни явное `blocking: false` |
+| Можно ли параллелить | узел `parallel` или `map` + политика сведения | вид конструкции + политика join | `parallel` без `join` |
+| Какие проверки | `validators[]` + `scorers[]` | массивы ссылок | оба пусты при виде, требующем проверки |
+| Что при сбое | `on_error` + `timeout_ms` + политика повторов; у `human` — `timeout_seconds` и `on_timeout` ([ADR-0026](adr/0026-yaml-spec-and-code-refs.md) §13) | union политик | `on_error` (у `human` — `on_timeout`) отсутствует |
 
 ### 10.3 Неотвеченный вопрос — ошибка компиляции
 
 Это главное следствие §13.4 и то, что делает метод машинно проверяемым. Механика:
 
 - каждая строка таблицы 10.2 порождает правило компилятора семейства `R-Q1..R-Q9`;
-- `flow_import` не отклоняет неполный документ — он создаёт черновик и возвращает `problems[]` с этими
-  кодами, чтобы агент видел, чего не хватает, и мог достроить;
-- `flow_compile` на том же черновике возвращает те же коды с `severity: 'error'`, то есть спека с
-  неотвеченным вопросом **не компилируется** и не может дойти до `version_propose`;
+- `flow_import` не отклоняет неполный документ — он пишет черновик в файлы и возвращает `problems[]` с
+  этими кодами, чтобы агент видел, чего не хватает, и мог достроить;
+- `flow_compile` и `aqven check` на том же черновике возвращают те же коды с `severity: 'error'`, то есть
+  спека с неотвеченным вопросом **не компилируется** и не может дойти до `version_propose`;
 - каждая проблема несёт `candidates[]` там, где ответ выводим: недостающий `join` при `parallel`,
   недостающая ветка `switch` для непокрытого значения enum, дефолтный `on_error` из архетипа. Там,
   где ответ не выводим (цель шага, роль исполнителя), кандидатов нет и `next[]` содержит
@@ -1050,17 +1067,16 @@ Precondition Failed` с телом `ApiError` и тем же `conflict`-блок
 
 ### 10.4 Обратное направление
 
-`project_export` с целью `agent_workflow_spec` восстанавливает документ скилла из IR. Это не
-декоративная функция: несовпадение «импорт → экспорт → импорт» ловится конформанс-набором
-(`project_conformance`) и означает потерю данных при отображении таблицы 10.2.
+Восстановление документа скилла из воркфлоу (`project_export` с целью `agent_workflow_spec`) после отмены
+экспорта не решено — открытый вопрос 16. Прежняя сверка «импорт → экспорт → импорт» конформанс-набором
+`project_conformance` отменена вместе с группой `export` решением владельца от 2026-09-16
+([ADR-0025](adr/0025-python-engine.md) §7).
 
 ## Открытые вопросы
 
-1. **Поведение Claude Code при `notifications/tools/list_changed` в середине сессии не проверено.**
-   Вся стратегия фазового раскрытия (§5) держится на том, что клиент перечитывает `tools/list`.
-   *Что сделать:* поднять живой сервер `volt`, подключить Claude Code по stdio, вызвать `mode_set` и
-   зафиксировать, видит ли клиент новый список без перезапуска сессии. До подтверждения страховка §5.5
-   обязательна, а не желательна.
+1. ~~**Поведение Claude Code при `notifications/tools/list_changed` в середине сессии не проверено.**~~
+   Закрыт отменой фазового раскрытия ([ADR-0042](adr/0042-mcp-is-the-action-surface.md), §5): поверхность
+   не меняется в течение сессии, и перечитывание `tools/list` ни на что не влияет.
 
 2. **Точная регулярка имени тула в Messages API не подтверждена.** Известно, что точка в именах —
    гарантированный источник проблем, и решение переименовать §13.1 в `snake_case` принято, но точный
@@ -1068,27 +1084,31 @@ Precondition Failed` с телом `ApiError` и тем же `conflict`-блок
    *Что сделать:* проверить `platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools` и
    зафиксировать в CI линтер имён тулов.
 
-3. **Дублирует ли SDK 1.30.0 `structuredContent` в `content[0].text` автоматически.** В ранних версиях
-   дублировал сам сервер. Сейчас мы дублируем вручную в каждом хендлере; если SDK делает это сам,
-   ответ уходит удвоенным и бюджет §4 съедается вдвое. *Что сделать:* проверить
-   `setToolRequestHandlers` в `dist/esm/server/mcp.js`, при подтверждении убрать ручное дублирование
-   из общей обёртки (одно место).
+3. **Текст ответа тула и бюджет.** `tool_result` ([ADR-0028](adr/0028-studio-api-contract.md) §2) кладёт в
+   `content[0].text` полный `model_dump_json()` рядом со `structuredContent`, а §3.4 требует компактный рендер
+   (фокус, до трёх проблем и кандидатов). Если Claude Code кладёт в контекст оба канала, бюджет §4 съедается
+   вдвое. *Что сделать:* на живом Claude Code с `mcp` 2.2.0 сравнить расход контекста на ответ с полным JSON в
+   тексте и с компактным рендером; итог закрепить в `tool_result` (одно место).
 
 4. **Формальная таблица коммутативности операций для автоматического ребейза (§9.2, шаг 2) не
    составлена.** Сейчас «большинство конфликтов ребейзятся автоматически» — утверждение без
    доказательства. *Что сделать:* спроектировать матрицу пар `op × op` («независимы / конфликтуют /
    требуют ручного разрешения») вместе с компилятором ([07. Компилятор](07-compiler.md)) и покрыть
-   property-тестами на fast-check.
+   property-тестами; инструмент property-based тестирования для Python не выбран — выбрать при чистке
+   [20](20-repo-and-tooling.md).
 
 5. **Доступен ли Tool Search Tool внутри Claude Code для MCP-тулов.** Если да, фазовое раскрытие можно
    упростить до организующего приёма. *Что сделать:* проверить на живой сессии; решение §5.6 до тех
    пор не меняется.
 
-6. **Наличие OAuth-provider-плагина у better-auth 1.7.4 не подтверждено.** В экспортах 1.7.4 нет
-   `plugins/api-key`, `plugins/mcp`, `plugins/oidc-provider`. Мы закладываемся на `jwt` + `bearer`
-   (§7.3), но если Claude Code потребует полноценный OAuth AS с DCR, понадобится либо внешний IdP,
-   либо свой `agent_keys`. *Что сделать:* проверить актуальные экспорты и наличие отдельных пакетов
-   перед тем, как фиксировать способ выдачи токена агенту.
+6. **Авторизация `aqven serve` вне loopback.** На loopback `aqven dev` аутентификации нет
+   ([23](23-studio-api.md) §1.1). Для `aqven serve` у `MCPServer` 2.2.0 есть `token_verifier` и
+   `auth: AuthSettings`, но их поведение, публикация метаданных защищённого ресурса, ответ 401 с
+   `WWW-Authenticate` для OAuth-флоу Claude Code (Dynamic Client Registration) и то, как общая обёртка §6.2
+   получает `Actor`, не проверены; IdP не выбран, прежняя опора на better-auth ушла вместе с TS-стеком. В
+   реестре — [ADR-0028](adr/0028-studio-api-contract.md) ОВ 7, [23](23-studio-api.md) ОВ 14. *Что сделать:*
+   решить в ADR, который требует ADR-0028 ОВ 7: подмножество каталога, механизм токена для REST и `/mcp/`, IdP;
+   пробой проверить `token_verifier` с двумя токенами разных скоупов и отказ `FORBIDDEN` из `require_scopes`.
 
 7. **Расхождение префикса группы между исследованием и решениями.** В `research/mcp-server.md` §3.3
    предложен префикс `workflow_*` (`workflow_patch`, `workflow_get`), в DECISIONS закреплён `flow_*`
@@ -1102,18 +1122,88 @@ Precondition Failed` с телом `ApiError` и тем же `conflict`-блок
    флаге и при отдельном туле.
 
 9. **Порог «≤ 20–25 активных тулов» взят из оценки стоимости контекста, а не измерен.** Оценка
-   250–600 токенов на определение — расчётная. *Что сделать:* посчитать реальные размеры
-   `tools/list` по фазам через `/skill-doctor` и токенизатор `gpt-tokenizer`, при превышении
-   пересобрать состав фаз из §5.3.
+   250–600 токенов на определение — расчётная. *Что сделать:* посчитать реальные размеры `tools/list` по
+   фазам через `/skill-doctor` и токенизатор оценки ([ADR-0029](adr/0029-trust-and-quality-python.md) ОВ 4:
+   кандидат tiktoken 0.14.0, работа без сети не проверена), при превышении пересобрать состав фаз из §5.3.
 
-10. **Имена полей CAS расходятся.** ADR-0017 пишет `expects[{path, file_hash}]`, контракт операций
-    и этот документ — `base{commit, files[{path, sha256}]}`. *Что сделать:* зафиксировать одно имя
-    в `@wf/contracts` до первой реализации `flow_patch`.
+10. **Имена полей CAS.** Закрыт [ADR-0028](adr/0028-studio-api-contract.md) §6: `expects[{path, file_hash | null}]`
+    и обязательный `client_op_id`; `base{commit, files[{path, sha256}]}` и `idempotency_key` сняты в §2.3,
+    §2.5 и §9.2.
 
-11. **Состав фаз §5.3 собран под 57 тулов**, реестр стал 63, цель — 82. *Что сделать:* пересобрать
-    `PHASE_GROUPS` после того, как 19 оставшихся операций получат группы.
+11. **Состав фаз §5.3 собран под 57 тулов**, реестр стал 63, после отмены группы `export` — 59, цель — 78–79.
+    По колонке «Фаза» §2 фаза `author` уже сейчас включает 20 тулов поверх 13 тулов ядра — 33 при пределе 25.
+    *Что сделать:* пересобрать `PHASE_GROUPS` после того, как 19 оставшихся операций получат группы;
+    контрактный тест при этом строит сервер из полного каталога ([ADR-0028](adr/0028-studio-api-contract.md) §2,
+    правило 8).
 
 12. **AGENTS.md как конвенция не проверен.** Известно, что Claude Code читает `CLAUDE.md`; поддержка
     `AGENTS.md` как импорта/алиаса не подтверждена в этот заход. Практический вывод (класть в корень
     генерируемого проекта короткий файл с точкой входа) не зависит от ответа, но имя файла зависит.
     *Что сделать:* проверить и зафиксировать в генераторе проекта.
+
+13. **Фазирование на `mcp` 2.2.0.** Поштучного `enable()/disable()` нет. Кандидаты адаптера `ToolSwitch`
+    (§5.4) — `MCPServer.add_tool`/`remove_tool(name)` и `ServerSession.send_tool_list_changed()`. По исходнику
+    `remove_tool` удаляет тул из словаря `ToolManager`, одного на сервер, а вызов снятого тула приходит
+    текстом `Unknown tool` без конверта (проба, «Решения»): такой адаптер, судя по всему, переключает
+    поверхность всем сессиям сразу и не даёт `TOOL_PHASE_DISABLED` (§5.5 п. 2); на двух сессиях не
+    запускалось. В реестре — [ADR-0025](adr/0025-python-engine.md) ОВ 18, [23](23-studio-api.md) ОВ 12.
+    *Что сделать:* спайк с двумя клиентами `mcp.Client` на streamable HTTP — открыть фазу одному и сравнить
+    `list_tools` у обоих; проверить вариант с полным набором зарегистрированных тулов и фильтрацией
+    `tools/list` на сессию; выбрать адаптер и записать в §5.4.
+
+14. **Форма отказа тула.** §3.3 отдаёт отказ `Envelope` с `ok: false`, `focus`, `refs[]`, `next[]`, `ui_url`,
+    `truncated`; [ADR-0028](adr/0028-studio-api-contract.md) §2 правило 5 и [23](23-studio-api.md) §12.4 — `ApiError`
+    (`ok`, `op`, `code`, `message`, `problems[]`, `candidates[]`, `conflict`, `retry_after_ms`), в котором этих
+    полей нет. При этом П6 требует `ui_url` в каждом ответе, а `FORBIDDEN` (§6.2, [23](23-studio-api.md) §12.5)
+    обещает `next[]` со `studio_open`. *Что сделать:* решить, расширяется ли `ApiError` полями `focus`, `next[]`,
+    `refs[]`, `ui_url`, `truncated` или отказ `flow_patch` (`BLOCKING_PROBLEMS`) идёт `Envelope` в
+    `structuredContent` при `is_error`; пробой на `mcp` 2.2.0 проверить, что выбранная модель доходит до
+    клиента; итог — в §3.1, §3.3 и [23](23-studio-api.md) §12.4.
+
+15. **Конверт у тулов чтения и у записи вне файлов.** §3 требует конверт у каждого тула, но поля результата
+    чтения в `Envelope` нет, а [23](23-studio-api.md) §1.2 отдаёт у запуска, отмены, резюма, реплея и форка
+    свой ресурс. В реестре — [ADR-0028](adr/0028-studio-api-contract.md) ОВ 1, [23](23-studio-api.md) ОВ 22.
+    *Что сделать:* прототип `Envelope[T]` на `mcp` 2.2.0 и FastAPI 0.141.1 (схема в `tools/list` и OpenAPI);
+    выбрать между `Envelope[T]` у всех ответов записи и правилом 4 только для записи в файлы; итог — в §3.1.
+
+16. **`project_export` с целью `agent_workflow_spec`.** Остальные тулы группы `export` отменены
+    ([ADR-0025](adr/0025-python-engine.md) §7). Этот тул восстанавливает документ скилла `agentic-process-spec`
+    из воркфлоу (§10.4) и к воссозданию в чужом фреймворке не относится, но его проверка обратимости
+    опиралась на отменённый `project_conformance`. В реестре — ADR-0025 ОВ 19, [23](23-studio-api.md) ОВ 13.
+    *Что сделать:* вопрос владельцу; если тул остаётся — вернуть строку в §2.7, выбрать проверку обратимости
+    «импорт → экспорт → импорт» без конформанс-набора (например, тестом компилятора на равенство IR) и добавить
+    ресурс в [23](23-studio-api.md) §4.1 и §13.2; иначе отметить тул отменённым.
+
+17. **stdio-вход для Claude Code.** `MCPServer.run(transport="stdio")` есть; совместимость с `DBOS.launch` и
+    наблюдателем файлов в том же процессе не проверена, а `DBOS.launch` вызывают только `aqven dev` и
+    `aqven serve` — один исполнитель на системную БД ([ADR-0025](adr/0025-python-engine.md) §9, H2). В реестре —
+    [ADR-0028](adr/0028-studio-api-contract.md) ОВ 8. *Что сделать:* решить, нужен ли stdio при HTTP-входе
+    `aqven dev`; если нужен — выбрать между stdio-процессом на `DBOSClient` и прокси к работающему `aqven dev` и
+    проверить команду `claude mcp add --transport stdio aqven -- <команда>`.
+
+18. **Сессии streamable HTTP на `mcp` 2.2.0.** Stateful-режим по умолчанию держит состояние сессии в памяти
+    процесса. Не проверены: возобновление потока по `Last-Event-ID` и хранилище событий для него (в сигнатуре
+    `streamable_http_app` есть `event_store` и `retry_interval`), ответ на неизвестный `Mcp-Session-Id`, работа
+    за несколькими репликами `aqven serve`. *Что сделать:* пробой с `mcp.Client` оборвать поток посреди долгого
+    вызова и переподключиться, отправить запрос с чужим `Mcp-Session-Id`; решить, нужны ли `aqven serve`
+    реплики, и если да — sticky-routing или своё хранилище событий.
+
+19. **`title`, `annotations` и `meta` тула из каталога.** §3.4 и §4.1 требуют у каждого тула `ToolAnnotations`, у
+    «толстых» — `_meta['anthropic/maxResultSizeChars']`. В сигнатуре `MCPServer.add_tool` 2.2.0 параметры
+    `title`, `annotations`, `meta` есть, но в записи `Operation` ([ADR-0028](adr/0028-studio-api-contract.md) §2)
+    полей для них нет, и что они доходят до `tools/list` через `ToolCall`, не проверено. *Что сделать:* добавить
+    поля в `Operation` и передать их в `register_tool`; проверить снапшотом `tools/list` через `mcp.Client`;
+    итог записать в §3.4 и в каталог операций ADR-0028.
+
+20. **Сигнатуры реестра §2 против моделей [23](23-studio-api.md).** Реестр выровнен по 23 только в записи файлов
+    (§2.3, §9.2) и в человеке в цикле (§2.5, 23 §13.4). Остались: аргумент `spec_id` против `flow_id` в раскладке
+    и CLAUDE.md (23 ОВ 8); `dataset_id?` у `run_start` против `dataset_item_id` в 23 §6.4; `base{commit}` у
+    `flow_revert` — CAS на HEAD, связь с `expects` не описана; путь `/w/...` в `ui_url` (П6) не сверен с
+    маршрутами студии в [15](15-studio-frontend.md). *Что сделать:* при пересборке реестра пройти таблицу 23 §13.2
+    тул за тулом и свести входы и выходы к моделям Pydantic каталога; расхождения, меняющие поведение, — в ADR.
+
+21. **URL-elicitation на `mcp` 2.2.0.** П6 и `studio_open` отправляют человека в студию через URL-elicitation. В
+    исходнике `mcp` 2.2.0 есть `Context.elicit_url(message, url, elicitation_id)` и
+    `ServerSession.send_elicit_complete`; с Claude Code не запускалось, и не решено, как `ToolCall` передаёт
+    `Context` в use-case, когда сигнатура тула — модель входа операции. *Что сделать:* проба `studio_open` с
+    `elicit: true` на живом Claude Code; решить, как адаптер отдаёт `Context` без логики в адаптере.

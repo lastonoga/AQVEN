@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A signal the case parsing looks for in the text and the attachments"
+fields:
+- name: "key"
+  type: "SignalKey"
+  description: "Signal key"
+- name: "label"
+  type: "Text"
+  description: "Name of the signal, for the model and the agent"
+  maxLength: 80

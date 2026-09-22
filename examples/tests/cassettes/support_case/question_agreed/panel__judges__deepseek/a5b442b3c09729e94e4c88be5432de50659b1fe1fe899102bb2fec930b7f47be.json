@@ -1,0 +1,765 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-a5b442b3c09729e94e4c88be5432de50659b1fe1fe899102bb2fec930b7f47be",
+  "request_key": "sha256-d8c8d7134274176f84e62aa5ea1a349c9b7778ce53bcf12ec7e67f418b36c314",
+  "model_ref": "openrouter:deepseek/deepseek-v4-flash-0731",
+  "site": {
+    "address": {
+      "node_id": "panel__judges__deepseek",
+      "branch_key": "deepseek",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "Need",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shorten rationale to <=",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "600 chars. Let's count",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ". Need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " rewrite concise",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "Need shorten rationale to <=600 chars. Let's count. Need rewrite concise.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"rationale\": \"Grounded: Candidate 0",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " only says",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the KB lacks Wi-Fi/b",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "edroom info",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", which matches the chunks (",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "5/5). Candidate",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 1 asserts",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 2.4 GHz-only",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", no 5 GHz,",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " warm whi",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "te/dimming, and reset steps",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " th",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "at no chunk supports;",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " its citations concern",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Flow",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " strip flicker and",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " controller heat, so thos",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "e claims are unconfirmed",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ". Helpful: Candidate",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 0 honestly sets",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " expectations but gives",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " no next s",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "tep, so",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " moderately",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " helpful;",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate 1 seems",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " helpful",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " but risks misleading with",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " unsupported facts. Tone:",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate 0 is polite and",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " professional; Candidate 1 is",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " friendly but overstates certainty",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ". Best:",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate 0.\"",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"scores\": [{",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"criterion\": \"grounded\"",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 5}",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", {\"criterion\": \"hel",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "pful\"",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 3}, {",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"criterion\": \"tone\"",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 4}]",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"best_index\": 0}",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"rationale\": \"Grounded: Candidate 0 only says the KB lacks Wi-Fi/bedroom info, which matches the chunks (5/5). Candidate 1 asserts 2.4 GHz-only, no 5 GHz, warm white/dimming, and reset steps that no chunk supports; its citations concern Flow strip flicker and controller heat, so those claims are unconfirmed. Helpful: Candidate 0 honestly sets expectations but gives no next step, so moderately helpful; Candidate 1 seems helpful but risks misleading with unsupported facts. Tone: Candidate 0 is polite and professional; Candidate 1 is friendly but overstates certainty. Best: Candidate 0.\", \"scores\": [{\"criterion\": \"grounded\", \"score\": 5}, {\"criterion\": \"helpful\", \"score\": 3}, {\"criterion\": \"tone\", \"score\": 4}], \"best_index\": 0}",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "Need shorten rationale to <=600 chars. Let's count. Need rewrite concise.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"rationale\": \"Grounded: Candidate 0 only says the KB lacks Wi-Fi/bedroom info, which matches the chunks (5/5). Candidate 1 asserts 2.4 GHz-only, no 5 GHz, warm white/dimming, and reset steps that no chunk supports; its citations concern Flow strip flicker and controller heat, so those claims are unconfirmed. Helpful: Candidate 0 honestly sets expectations but gives no next step, so moderately helpful; Candidate 1 seems helpful but risks misleading with unsupported facts. Tone: Candidate 0 is polite and professional; Candidate 1 is friendly but overstates certainty. Best: Candidate 0.\", \"scores\": [{\"criterion\": \"grounded\", \"score\": 5}, {\"criterion\": \"helpful\", \"score\": 3}, {\"criterion\": \"tone\", \"score\": 4}], \"best_index\": 0}",
+        "tool_call_id": "call_cf4ce328cb8a4dfeb6ed8128",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 2552,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 268,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 19,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 19
+    },
+    "model_name": "deepseek/deepseek-v4-flash-0731",
+    "timestamp": "2026-09-22T08:12:46.054100Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-22T08:12:43Z",
+      "downstream_provider": "Relace",
+      "finish_reason": "tool_calls",
+      "cost": 0.0002736,
+      "upstream_inference_cost": 0.0002736,
+      "upstream_inference_prompt_cost": 0.00010208,
+      "upstream_inference_completions_cost": 0.00017152,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790064763-IiTbyKDDMAK3MA9Zmws6",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -2,51 +2,34 @@ import type { JSX, ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { Locale, SetupOverview, SetupStep, WorkflowTemplate } from "@/domain"
+import type { ApiFlow, ApiProviderKey, SetupStep } from "@/domain"
 import { SETUP_STEPS } from "@/domain"
-import { ChoiceLink, ChoiceList, Heading, Page, Text, TitledPanel, Toolbar } from "@/components/studio"
+import { ChoiceLink, ChoiceList, Empty, Heading, Page, Surface, Tag, Text, TitledPanel, Toolbar } from "@/components/studio"
 import { Button } from "@/components/ui/button"
+import { flowId as toFlowId } from "@/data/ids"
+import { landingFlow } from "@/lib/landing"
 import { ROUTE_PATH, setupRouteApi } from "@/lib/routes"
-import { landingOf } from "@/lib/setup"
-import { AgentCard } from "./agent-card"
-import { DefaultAgent } from "./default-agent"
-import { chosenAgent, hasProviderKey, neighboursOf } from "./presenters"
+import { ChatStatusPanel } from "./chat-status"
+import { hasProviderKey, neighboursOf } from "./presenters"
 import { ProviderKeys } from "./provider-keys"
-import { WorkflowStart } from "./workflow-start"
 
 type StepProps = {
-  readonly locale: Locale
-  readonly overview: SetupOverview
-  readonly templates: readonly WorkflowTemplate[]
+  readonly providers: readonly ApiProviderKey[]
+  readonly flows: readonly ApiFlow[]
 }
 
-function AgentStep({ overview }: StepProps) {
-  const t = useTranslations("setup.agent")
-  const selected = chosenAgent(overview.defaultAgent, overview.agents)
-  return (
-    <>
-      <Heading size="section" title={t("title")} below={[t("description")]} />
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(360px,1fr))] items-start gap-3">
-        {overview.agents.map(({ probe }) => (
-          <AgentCard key={probe.kind} probe={probe} selected={overview.agents.length > 1 && probe.kind === selected} />
-        ))}
-      </div>
-      <Text role="hint" tone="neutral">
-        {t("signInNote")}
-      </Text>
-      <DefaultAgent agents={overview.agents} preferred={overview.defaultAgent} />
-    </>
-  )
+function AgentStep() {
+  return <ChatStatusPanel />
 }
 
-function ProvidersStep({ overview }: StepProps) {
+function ProvidersStep({ providers }: StepProps) {
   const t = useTranslations("setup.providers")
   return (
     <>
       <TitledPanel size="section" title={t("title")} below={[t("description")]}>
-        <ProviderKeys providers={overview.providers} />
+        <ProviderKeys providers={providers} />
       </TitledPanel>
-      {hasProviderKey(overview.providers) ? null : (
+      {hasProviderKey(providers) ? null : (
         <Text role="hint" tone="warning">
           {t("missingNote")}
         </Text>
@@ -55,14 +38,28 @@ function ProvidersStep({ overview }: StepProps) {
   )
 }
 
-function WorkflowStep({ locale, overview, templates }: StepProps) {
+function FlowLink({ flow }: { readonly flow: ApiFlow }) {
+  const t = useTranslations("setup.workflow")
   return (
-    <WorkflowStart
-      locale={locale}
-      project={overview.project}
-      templates={templates}
-      agent={chosenAgent(overview.defaultAgent, overview.agents)}
-    />
+    <Surface variant="panel" padding="sm" interactive asChild>
+      <Link to={ROUTE_PATH.canvas} params={{ flowId: toFlowId(flow.flow_id) }}>
+        <Heading size="block" title={flow.flow_id} trailing={<Tag size="xs">{t("nodes", { count: flow.node_count })}</Tag>} />
+      </Link>
+    </Surface>
+  )
+}
+
+function WorkflowStep({ flows }: StepProps) {
+  const t = useTranslations("setup.workflow")
+  if (flows.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
+  return (
+    <TitledPanel size="section" title={t("title")} below={[t("description")]}>
+      <nav aria-label={t("navAria")} className="flex flex-col gap-1.5 p-1.5">
+        {flows.map((flow) => (
+          <FlowLink key={flow.flow_id} flow={flow} />
+        ))}
+      </nav>
+    </TitledPanel>
   )
 }
 
@@ -72,13 +69,14 @@ const STEP_BODY: Readonly<Record<SetupStep, (props: StepProps) => ReactNode>> = 
   workflow: WorkflowStep,
 }
 
-function SkipLink({ locale, overview }: { readonly locale: Locale; readonly overview: SetupOverview }) {
+function SkipLink() {
   const t = useTranslations("setup.onboarding")
-  const landing = landingOf(overview)
-  if (landing.kind === "setup") return null
+  const { flows } = setupRouteApi.useLoaderData()
+  const landing = landingFlow(flows)
+  if (landing.kind === "project") return null
   return (
     <Button variant="ghost" size="sm" asChild>
-      <Link to={ROUTE_PATH.schema} params={{ locale, workspaceId: landing.workspaceId, workflowId: landing.workflowId }}>
+      <Link to={ROUTE_PATH.canvas} params={{ flowId: landing.flowId }}>
         {t("skip")}
       </Link>
     </Button>
@@ -128,10 +126,10 @@ function StepFooter({ step }: { readonly step: SetupStep }) {
   )
 }
 
-function BrandLine({ locale, overview }: { readonly locale: Locale; readonly overview: SetupOverview }) {
+function BrandLine() {
   const t = useTranslations("setup.onboarding")
   return (
-    <Toolbar end={<SkipLink locale={locale} overview={overview} />} className="justify-between">
+    <Toolbar end={<SkipLink />} className="justify-between">
       <Text role="item" weight="semibold">
         {t("brand")}
       </Text>
@@ -140,22 +138,16 @@ function BrandLine({ locale, overview }: { readonly locale: Locale; readonly ove
 }
 
 export function OnboardingScreen(): JSX.Element {
-  const { overview, templates, step } = setupRouteApi.useLoaderData()
-  const { locale } = setupRouteApi.useParams()
+  const { project, providers, flows, step } = setupRouteApi.useLoaderData()
   const t = useTranslations("setup.onboarding")
   const Body = STEP_BODY[step]
-  const { project, server } = overview
   return (
     <Page width="md">
       <div className="mx-auto flex max-w-[960px] flex-col gap-4">
-        <BrandLine locale={locale} overview={overview} />
-        <Heading
-          size="page"
-          title={t("title", { project: project.name })}
-          below={[`${project.root} · ${server.url}`, t("lead")]}
-        />
+        <BrandLine />
+        <Heading size="page" title={t("title", { project: project.package ?? project.root })} below={[project.root, t("lead")]} />
         <StepNav step={step} />
-        <Body locale={locale} overview={overview} templates={templates} />
+        <Body providers={providers} flows={flows} />
         <StepFooter step={step} />
       </div>
     </Page>

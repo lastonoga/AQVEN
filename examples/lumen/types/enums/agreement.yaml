@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Agreement among the ballots or the judges"
+values:
+- value: "agreed"
+  description: "The majority agrees"
+- value: "split"
+  description: "The opinions diverged"

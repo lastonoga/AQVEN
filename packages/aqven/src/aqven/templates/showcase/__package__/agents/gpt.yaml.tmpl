@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break"
+model: "openrouter:openai/gpt-oss-20b"
+settings:
+  temperature: 0.3
+  max_tokens: 4000
+output:
+  strict: false
+  retries: 4

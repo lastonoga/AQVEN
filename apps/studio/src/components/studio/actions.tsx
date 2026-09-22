@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { noop } from "@/lib/noop"
 
 type ButtonProps = ComponentProps<typeof Button>
@@ -12,6 +13,7 @@ export type ActionSpec = {
   readonly icon?: LucideIcon
   readonly filledIcon?: boolean
   readonly disabled?: boolean
+  readonly pending?: boolean
   readonly onClick?: () => void
 }
 
@@ -28,10 +30,11 @@ export function Actions({ actions, size = "sm" }: ActionsProps) {
       key={action.id}
       variant={action.variant ?? "outline"}
       size={size}
-      disabled={action.disabled ?? false}
+      disabled={action.disabled === true || action.pending === true}
+      aria-busy={action.pending === true}
       onClick={action.onClick ?? noop}
     >
-      <ActionIcon icon={action.icon} filled={action.filledIcon ?? false} />
+      {action.pending === true ? <Spinner aria-hidden="true" /> : <ActionIcon icon={action.icon} filled={action.filledIcon ?? false} />}
       {action.label}
     </Button>
   ))

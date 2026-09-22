@@ -1,0 +1,186 @@
+# Rules for coding agents
+
+`__package__` is an aqven project: AI workflows are YAML files next to the Python code they use. The aqven module is
+`__package__/`; its `aqven.yaml` marks the project root, and every aqven command takes that folder as its path.
+
+Documentation for this engine is at https://aqvenstudio.com — `https://aqvenstudio.com/llms.txt` is the index of
+every page in Markdown. Read it when a node kind, a policy or a command is unfamiliar, and prefer it over guessing.
+
+## Layout
+
+```
+__package__/
+  aqven.yaml                           project: model providers, data policies
+  .env.example                         names of the API keys; copy it to .env next to it
+  types.py                             generated models: never edit, never commit
+  app.py                               the ASGI app, the in-process run helper and the mounting example
+  __main__.py                          the runner: python -m __package__ starts the server
+  agents/<agent>.yaml                  model "provider:model", settings, tools
+  tools/<tool>.yaml                    tool contract; functions live in tools/functions.py
+  types/{enums,ids,records,unions,values}/<type>.yaml
+  fragments/<fragment>.md              prompt text shared by several prompts
+  code/<module>.py                     Python used from several places
+  datasets/<dataset>.yaml              cases of a flow or an inference: input and expected result
+  evals/<flow>/<eval>.yaml             scorers and the gate over a dataset
+  flows/<flow>/flow.yaml               flow input, output, returns and node order
+  flows/<flow>/nodes/<node>/
+    <node>.node.yaml                   step: code, llm, tool, human, switch, parallel, map, loop, call, narrow
+    <node>.inference.yaml              contract of an llm step
+    <node>.prompt.md                   prompt of that inference
+    <node>.py                          code of the step, referenced as run: "<function>"
+    <child>.node.yaml                  nested steps sit flat in the folder of their top-level step
+  samples/                             sample flow input and human answers
+tests/                                 offline tests of the example, at the project root
+```
+
+- The file path is the identity: an id is the file name up to the first dot, a flow id is its folder name. There is no
+  `id:` key.
+- Prompts are Markdown files, never strings inside YAML.
+- Declare every shape once in YAML. Import models from `__package__.types` and never write a `BaseModel` that repeats a
+  declared type.
+
+## Rules
+
+1. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
+   folder it is the whole safety net: it checks the files statically and then simulates every flow with generated
+   values, without a network and without spending tokens. Fix every error before you finish; do not ask a model to try
+   the flow instead.
+2. Never edit `__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
+   the YAML instead. Never create `__package__/types/__init__.py`: it hides the generated models.
+3. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
+   flow, node, agent, tool or type, adding or removing a node. It updates references and the rename journal. Edit by
+   hand only inside one file: prompt text, descriptions, settings, one node. If `flow_patch` answers `STALE_FILE`,
+   read the file again and repeat the change; never overwrite a file by force.
+4. **After editing a prompt, a fragment, a variant or an inference, run
+   `aqven prompt preview <flow>.<node> --project __package__`** and read
+   what the model will actually receive: the instructions, every message and the output contract. Wrong data wiring
+   shows up there as an empty or literal placeholder in the message.
+5. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
+   what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
+   want.
+6. API keys live only in `__package__/.env`, which is gitignored; variables of the process environment take
+   precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or commits.
+7. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
+8. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
+   Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
+   a flow takes: `tests/test_support_case.py` replays recorded runs of five scenarios and forces every branch
+   with node output overrides and scripted human answers.
+9. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
+
+   ```python
+   from aqven.testing import node_output, offline_options
+
+   options = offline_options(cassettes=cassette_config, outputs=[node_output("classify", {"category": "refund"})])
+   ```
+
+   `node_failure("charge", "card declined")` forces the failure path; `branch_key`, `iteration` and `item_index` pick
+   one branch of a `parallel`, `loop` or `map`.
+
+## Building a flow from an idea
+
+When the request is an idea rather than a change — "a workflow that triages support mail", an empty project — do
+not start writing files. Ask first. A wrong guess here costs a rewrite of every node below it.
+
+Settle these for the whole flow, then for each step. Ask them in one message, not one at a time, and ask only what
+the request has not already answered.
+
+| For the flow | What you need |
+|---|---|
+| Purpose | one sentence: what comes in, what goes out, who reads the result |
+| Input | the fields of the request and their types |
+| Output | the fields the caller gets back; a workflow with no declared output is not finishable |
+| Done | how a person tells a good result from a bad one — this becomes the dataset and the eval |
+
+| For each step | What you need |
+|---|---|
+| What it does | one sentence; it becomes `description` |
+| Who does it | `code` for deterministic work, `llm` for judgement, `tool` for an external call, `human` for a person |
+| In and out | field names and types; every type is declared once under `types/` |
+| Decisions | a value that routes the flow means a `switch` over an enum, and every case must be covered |
+| Blocking | does a person have to approve before the flow continues — that is a `human` node with a deadline |
+| Together | independent steps that can run at once are `parallel` branches; the same step over a list is `map` |
+| Checks | what makes this step's output wrong, and what to do then |
+| Failure | retry, default value, or stop — a step without an answer here fails in production, not in `aqven check` |
+
+Write the files only when you have the answers. Order: types first, then agents and tools, then the nodes, then
+`flow.yaml`. Run `aqven check` after each file, not once at the end — one wrong type reference is cheaper to fix
+before ten nodes reference it.
+
+Then write the dataset: three or four real cases with the input and the expected result, under `datasets/`. A flow
+without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
+
+## The development loop
+
+"Make it good" is not a stopping condition. Fix what good means **before** you start changing things, or you will
+edit until you run out of patience instead of until the flow works.
+
+**1. Write the target.** A dataset of real cases, then the scorers that say whether a case passed. Both are files.
+
+| What you want to measure | How |
+|---|---|
+| The whole flow on real cases | a dataset with `flow: <flow_id>`, then `dataset_batch_start` and `dataset_batch_get` |
+| One `llm` step, with numbers | a dataset without `flow:`, an `evals/<flow>/<eval>.yaml` over it, then `eval_run_start`, `eval_run_get`, `eval_gate` |
+
+An eval always scores **one inference**, not a whole flow: `inference` and `agent` are required in it. So a batch
+tells you what the flow produced, and an eval tells you how good one step is. You usually need both.
+
+Scorers, cheapest first: built-in — `not_empty`, `max_words`, `language`, `no_pii`, `regex`, `unique_items`,
+`ids_in_allowed_set`, `citations_in_sources`, `cost_usd`, `latency_ms`; your own function with `run:`; and only
+when nothing else fits, a model as judge with `inference:` and `agent:`. A judge costs tokens on every case and
+has its own error — do not reach for it to check something `regex` can check.
+
+**2. Then the loop.**
+
+1. `aqven check` first, every time. It is free and finds broken wiring before a single token is spent.
+2. Change **one** thing. Two changes at once and you cannot tell which one moved the number.
+3. Measure with the same dataset as last time. A new dataset means a new number, not a better flow.
+4. Read the cases that failed, not the average. The average hides the one input that breaks everything.
+5. For a wrong `llm` output, run `prompt_preview` before touching the prompt. An empty or literal placeholder in the
+   message means the data wiring is wrong, and no rewording fixes that.
+6. Repeat from 2.
+
+**3. Stop when the scorers say so**, not when the output looks nice to you. Pass `baseline_run_id` to
+`eval_run_start` to compare against the previous run and get `eval_gate` to judge the move: it reports which metrics
+went up, which went down, and whether the change is an improvement at all. A gate with `min_dataset` will not judge a
+dataset smaller than that — a four-case dataset is for finding bugs, not for deciding a release.
+
+**4. Lock the fix.** A bug you fixed without a case for it comes back. Add the failing input to the dataset, and, in
+a project with `tests/`, a scenario test that pins the branch with `node_output` so the fix survives the next edit.
+
+## How to read `aqven check`
+
+Every diagnostic has a code, a file with a path inside it, a message and often a hint that names the exact fix.
+
+| Code starts with | Meaning | What to do |
+|---|---|---|
+| `E_` | error: the project is not runnable | fix it; `aqven check` exits with code 1 while any error is left |
+| `W_` | warning: the project runs, something is unclear | read the hint; pin what it asks you to pin |
+| `E_SIM_` | a simulated run of a flow failed | the hint carries the flow input the simulation used; reproduce it with `aqven run` |
+| `W_SIM_NODE_UNREACHED` | no simulated input reaches this node | check the switch cases and conditions above it, or delete the node |
+
+Examples: `E_REF_MISSING` (a binding points at something that does not exist), `E_BINDING_TYPE` (the bound value does
+not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `E_PROMPT_MISSING`,
+`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`, `W_GENERATED_STALE`.
+
+The hooks in `.claude/settings.json` run `aqven check --static` after every file edit and the full `aqven check` when
+you stop, so a broken tree comes back to you instead of reaching a commit.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `corepack pnpm dev` from the repository root | shared development stack: backend Python reload, Lumen file watching, Studio Vite reload; reuse an already running stack |
+| `uv run aqven dev __package__` | standalone aqven server for isolated CLI work; do not start beside the shared development stack |
+| `uv run aqven check __package__` | static check plus a simulated run of every flow |
+| `uv run aqven check --static __package__` | static check only, without the simulated runs |
+| `uv run aqven prompt preview support_case.polish__revise --project __package__` | the exact messages that llm node sends to the model |
+| `... --input __package__/samples/case_request.json --variant tone=warm` | the same preview with your own input and a forced prompt variant |
+| `uv run aqven models check --project __package__` | output modes of every agent model; `--live` sends one tiny request per mode |
+| `uv run aqven generate __package__` | writes `__package__/types.py` |
+| `uv run aqven tree __package__` | entities by kind with their files |
+| `uv run aqven run support_case --root __package__ --input __package__/samples/case_request.json` | runs a flow without a server |
+| `uv run aqven eval __package__ --eval reply_quality` | scores every case of the eval dataset; `--baseline <run>` feeds the gate |
+| `uv run aqven mcp __package__` | MCP over stdio, registered in `.mcp.json` |
+| `uv run python -m __package__` | the same server from the project's own entry point |
+| `uv run pytest` | offline tests |
+| `uv run ruff check . && uv run ruff format --check .` | lint and formatting |

@@ -1,9 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Type"
-type: "enum"
-description: "Итог обращения"
-values:
-- value: "sent"
-  description: "Ответ отправлен покупателю"
-- value: "rejected"
-  description: "Ответ отклонён руководителем поддержки"

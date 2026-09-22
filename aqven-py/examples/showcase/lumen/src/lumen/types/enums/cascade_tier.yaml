@@ -1,9 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Type"
-type: "enum"
-description: "Ступень каскада, на которой определено намерение"
-values:
-- value: "cheap"
-  description: "Дешёвая модель: голоса согласны"
-- value: "strong"
-  description: "Сильная модель: голоса разошлись"

@@ -1,0 +1,545 @@
+{
+  "$defs": {
+    "DataPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allows_pii": {
+          "title": "Allows Pii",
+          "type": "boolean"
+        },
+        "allows_sensitive": {
+          "title": "Allows Sensitive",
+          "type": "boolean"
+        },
+        "retention": {
+          "$ref": "#/$defs/Retention"
+        }
+      },
+      "required": [
+        "allows_pii",
+        "allows_sensitive",
+        "retention"
+      ],
+      "title": "DataPolicy",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requests"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tokens"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        },
+        "usd_micros": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Micros"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    },
+    "Modality": {
+      "enum": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "document"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "OpenRouterRouting": {
+      "additionalProperties": false,
+      "properties": {
+        "data_collection": {
+          "enum": [
+            "allow",
+            "deny"
+          ],
+          "title": "Data Collection",
+          "type": "string"
+        },
+        "zdr": {
+          "title": "Zdr",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "data_collection",
+        "zdr"
+      ],
+      "title": "OpenRouterRouting",
+      "type": "object"
+    },
+    "PiiDetector": {
+      "enum": [
+        "email",
+        "phone",
+        "card_number",
+        "iban",
+        "ip_address"
+      ],
+      "title": "PiiDetector",
+      "type": "string"
+    },
+    "PiiPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "mask_in_traces": {
+          "title": "Mask In Traces",
+          "type": "boolean"
+        },
+        "redact": {
+          "items": {
+            "$ref": "#/$defs/PiiDetector"
+          },
+          "title": "Redact",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mask_in_traces",
+        "redact"
+      ],
+      "title": "PiiPolicy",
+      "type": "object"
+    },
+    "ProjectPolicies": {
+      "additionalProperties": false,
+      "properties": {
+        "pii": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PiiPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trust": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TrustPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ProjectPolicies",
+      "type": "object"
+    },
+    "ProviderCapabilitiesSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Modality"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input"
+        },
+        "json_schema_output": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Json Schema Output"
+        },
+        "output": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Modality"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output"
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tools"
+        }
+      },
+      "title": "ProviderCapabilitiesSpec",
+      "type": "object"
+    },
+    "ProviderKind": {
+      "enum": [
+        "catalog",
+        "code",
+        "openai_compatible"
+      ],
+      "type": "string"
+    },
+    "ProviderLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "rpm": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rpm"
+        }
+      },
+      "title": "ProviderLimits",
+      "type": "object"
+    },
+    "ProviderNameField": {
+      "pattern": "^[a-z][a-z0-9_-]{0,62}$",
+      "type": "string"
+    },
+    "ProviderSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Api Key"
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base Url"
+        },
+        "capabilities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderCapabilitiesSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "data_policy": {
+          "$ref": "#/$defs/DataPolicy"
+        },
+        "id": {
+          "$ref": "#/$defs/ProviderNameField"
+        },
+        "kind": {
+          "$ref": "#/$defs/ProviderKind",
+          "default": "catalog"
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderLimits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "params": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Params"
+        },
+        "routing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpenRouterRouting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "run": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run"
+        }
+      },
+      "required": [
+        "id",
+        "data_policy"
+      ],
+      "title": "ProviderSpec",
+      "type": "object"
+    },
+    "Rename": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RenameKind"
+        },
+        "to": {
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "from",
+        "to",
+        "at"
+      ],
+      "title": "Rename",
+      "type": "object"
+    },
+    "RenameKind": {
+      "enum": [
+        "flow",
+        "node",
+        "type",
+        "prompt",
+        "dataset",
+        "eval",
+        "field",
+        "inference",
+        "agent",
+        "tool",
+        "mcp_server"
+      ],
+      "type": "string"
+    },
+    "Retention": {
+      "enum": [
+        "zero",
+        "logged",
+        "unknown"
+      ],
+      "title": "Retention",
+      "type": "string"
+    },
+    "TrustLevel": {
+      "enum": [
+        "trusted",
+        "untrusted"
+      ],
+      "title": "TrustLevel",
+      "type": "string"
+    },
+    "TrustPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "default_in": {
+          "$ref": "#/$defs/TrustLevel"
+        }
+      },
+      "required": [
+        "default_in"
+      ],
+      "title": "TrustPolicy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Project",
+      "title": "Kind",
+      "type": "string"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Limits"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "package": {
+      "title": "Package",
+      "type": "string"
+    },
+    "policies": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProjectPolicies"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "providers": {
+      "items": {
+        "$ref": "#/$defs/ProviderSpec"
+      },
+      "minItems": 1,
+      "title": "Providers",
+      "type": "array"
+    },
+    "renames": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Rename"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Renames"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "package",
+    "providers"
+  ],
+  "title": "ProjectSpec",
+  "type": "object"
+}

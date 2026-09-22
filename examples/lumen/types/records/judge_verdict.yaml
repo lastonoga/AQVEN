@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A judge's verdict on the reply candidates"
+fields:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning, written before the scores"
+  maxLength: 600
+- name: "scores"
+  type: "CriterionScore[]"
+  description: "Scores of the best candidate, by criterion"
+  maxItems: 3
+- name: "best_index"
+  type: "Int"
+  description: "Index of the best candidate, from zero"
+  minimum: 0
+  maximum: 2

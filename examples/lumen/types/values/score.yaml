@@ -1,0 +1,7 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "value"
+description: "A normalized quality score from 0 to 1"
+base: "Float"
+minimum: 0
+maximum: 1

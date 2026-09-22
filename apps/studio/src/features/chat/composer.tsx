@@ -6,6 +6,7 @@ import { useTranslations } from "use-intl"
 import { Surface, textVariants } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { noop } from "@/lib/noop"
+import { ComposerChatSettings } from "./chat-settings"
 import { Hint } from "./hint"
 
 type ComposerLabel = "sendAria" | "cancelAria" | "dictateAria" | "stopDictationAria"
@@ -67,6 +68,7 @@ export function Composer() {
                 <Plus aria-hidden className={ICON} />
               </Button>
             </Hint>
+            <ComposerChatSettings />
             <ComposerActions actions={DICTATION_ACTIONS} />
             <div className="flex-1" />
             <ComposerActions actions={SUBMIT_ACTIONS} />

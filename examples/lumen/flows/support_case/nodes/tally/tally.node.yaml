@@ -1,0 +1,21 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Merges the ballots: agreement when a majority votes with enough confidence, otherwise disagreement and the intent of the most confident ballot"
+run: "tally"
+in:
+- name: "ballots"
+  type: "IntentBallot[]"
+  description: "Intent ballots"
+  maxItems: 3
+  from: "$vote.out.ballots"
+out:
+- name: "intent"
+  type: "CaseIntent"
+  description: "The intent of the majority, or of the most confident ballot"
+- name: "agreement"
+  type: "Agreement"
+  description: "Whether the ballots agree with each other"
+- name: "confidence"
+  type: "Score"
+  description: "Confidence in the intent"

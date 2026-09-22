@@ -1,7 +1,16 @@
 # ADR-0007. Один контракт операций: REST + OpenAPI 3.1, из него и MCP, и клиент UI
 
-> Статус: принято
+> Статус: **заменено [ADR-0028](0028-studio-api-contract.md)** (2026-09-16)
 > Дата: 2026-09-11
+>
+> Заменено целиком: источник контракта — модели Pydantic в движке; FastAPI 0.141.1 публикует маршруты в OpenAPI
+> 3.1, `MCPServer("aqven")` из mcp 2.2.0 на том же порту строит тулы из тех же моделей, openapi-typescript 7.13.0
+> даёт типы `apps/studio`. Zod `@aqven/contracts`, `@hono/zod-openapi`, правило «`operationId` = имя тула» и
+> префикс `/v1` уходят (ADR-0028 §7); п. 5 «Решения» ещё раньше заменён [ADR-0024](0024-studio-on-vite.md).
+> Остаются верными и действуют: один контракт на REST, MCP и клиент UI без второй реализации операции;
+> аддитивность изменений внутри мажора; единый `ApiError` с одним транслятором и `structuredContent` при
+> `isError`; коммит `openapi.json` и `schema.d.ts`, дрейф — красный билд; отказ от tRPC и GraphQL; kill-критерий
+> «операция не выражается в OpenAPI 3.1 без потери нужного тулу».
 > Контекст-документы: [02. Архитектура системы](../02-architecture.md), [14. MCP-контракт для агентов](../14-mcp-contract.md), [15. Studio: фронтенд](../15-studio-frontend.md), [20. Репозиторий, сборка, тесты, CI](../20-repo-and-tooling.md)
 
 ## Контекст
@@ -26,14 +35,14 @@ control plane или поставить рядом второй».
 
 ## Решение
 
-Источником правды объявляется пакет `@wf/contracts`: только zod-схемы домена и выведенные типы,
+Источником правды объявляется пакет `@aqven/contracts`: только zod-схемы домена и выведенные типы,
 без рантайм-зависимостей на Hono, Next и VoltAgent. Из одной и той же схемы порождаются три
 артефакта — HTTP-роут, MCP-тул и типизированный клиент UI. Второй реализации операции не
 существует нигде: MCP-тул и HTTP-хендлер вызывают один и тот же use-case (паттерн Adapter поверх
 одного порта, зависимость обеих сторон от схемы — Dependency Inversion).
 
 ```
-@wf/contracts (zod 4.6.2)
+@aqven/contracts (zod 4.6.2)
   ├─ createRoute(...) -> OpenAPIHono -> GET /openapi.json (3.1, app.doc31)
   ├─ z.toJSONSchema(S, { target: "draft-2020-12", io: "input" }) -> MCP inputSchema/outputSchema
   └─ openapi-typescript 7.13.0 (CI) -> packages/api-types/schema.d.ts -> openapi-fetch createClient<paths>()
@@ -63,7 +72,7 @@ control plane или поставить рядом второй».
 5. Граница применимости: Next Server Actions допустимы только для UI-состояния, не входящего в
    MCP-контракт (layout канвы, переименование вкладки). Всё, что обязан уметь агент, — только
    типизированный HTTP.
-6. Единый формат ошибки `ApiError` из `@wf/contracts`: HTTP отдаёт его телом, MCP-адаптер кладёт
+6. Единый формат ошибки `ApiError` из `@aqven/contracts`: HTTP отдаёт его телом, MCP-адаптер кладёт
    его же в `structuredContent` при `isError: true`. Транслятор `DomainError -> ApiError` — один
    модуль `map-error.ts`, используемый и `app.onError`, и MCP-адаптером.
 
@@ -80,7 +89,7 @@ control plane или поставить рядом второй».
 ## Последствия
 
 Положительные:
-- Добавление операции — одно место: схема в `@wf/contracts`. HTTP, MCP и типы клиента едут следом.
+- Добавление операции — одно место: схема в `@aqven/contracts`. HTTP, MCP и типы клиента едут следом.
 - Дрейф контракта ловится автоматически: `schema.d.ts` и `openapi.json` в репозитории, расхождение — красный билд.
 - Агент и человек нарываются на одну и ту же валидацию и один и тот же формат ошибки, значит
   `candidates[].patch` из ошибки применим и кнопкой в Studio, и вызовом тула.
@@ -93,7 +102,7 @@ control plane или поставить рядом второй».
 - Swagger UI в проде по умолчанию выключен, публикация `/openapi.json` наружу требует отдельного вызова `getEnhancedOpenApiDoc`/`app.doc31`.
 
 Обязаны делать:
-1. `@wf/contracts` не импортирует ничего из `hono`, `next`, `@voltagent/*` — запрет правилом no-restricted-imports.
+1. `@aqven/contracts` не импортирует ничего из `hono`, `next`, `@voltagent/*` — запрет правилом no-restricted-imports.
 2. Свои роуты держать в отдельном `new OpenAPIHono()` из явной зависимости `@hono/zod-openapi@1.6.3` и монтировать через `app.route("/v1", api)` в `configureApp`, а не строить их на вендорном инстансе.
 3. Постпроцессор JSON Schema для MCP: снять шумные `maximum`, инлайнить `$defs`, выставить `io: "input"`.
 4. Каждый `createRoute` объявляет `422 contract_violation` и остальные ответы схемой `ApiError`, иначе `openapi-fetch` отдаст нетипизированную ошибку.
@@ -107,7 +116,7 @@ control plane или поставить рядом второй».
 | Нет ломающих изменений внутри `/v1` | Diff-гейт по коммитнутому `openapi.json` в CI; падение на сужении enum, смене типа, удалении поля, новом required |
 | Нет дрейфа MCP-контракта | Снапшот-тест: для каждого `operationId` фиксируется `z.toJSONSchema(input, { io: "input" })`; любой дрейф виден в diff |
 | Нет дрейфа клиента | Регенерация `schema.d.ts` в CI и `git diff --exit-code` |
-| Изоляция пакета схем | Правило линтера no-restricted-imports в `@wf/contracts` |
+| Изоляция пакета схем | Правило линтера no-restricted-imports в `@aqven/contracts` |
 | Совместимость zod 4 с вендорным слоем | Мини-проект `server-hono` + zod 4.6.2 + наши роуты, прогон `tsc --noEmit` в CI. До зелёного прогона решение считается непроверенным в этой точке |
 | Kill-критерий | Появилась операция, которую нельзя выразить в OpenAPI 3.1 без потери информации, нужной MCP-тулу, — решение пересматривается, а не обходится руками |
 

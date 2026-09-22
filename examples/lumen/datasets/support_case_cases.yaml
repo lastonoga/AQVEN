@@ -1,0 +1,129 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+flow: "support_case"
+cases:
+- name: "strip_flicker_credit"
+  inputs:
+    customer:
+      customer_id: "cus_7k2m9p4q1x8z"
+      display_name: "Anna Smirnova"
+      email: "anna.smirnova@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "marketplace"
+      marketplace: "amazon"
+      order_ref: "113-4829175-6630201"
+    message: "Hello! The Lumen Flow 5 m strip arrived in a dented box. Since I connected it exactly as the manual says, it has been flickering near the controller for three days, and after half an hour the controller is hot to the touch. I am afraid to leave it switched on. The strip is faulty and I would like it resolved under warranty. I am attaching a photo of the controller and the invoice; the order was placed on 3 September 2027."
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    - "hot_controller"
+    urgent: true
+    photo:
+      $media: "image/jpeg"
+      blob_id: "sha256-0606035923b6e819a36fc2581f0d9bdb78ccfabe8bb6f44a98ac3b2cbd65e3b6"
+      size_bytes: 1865
+      name: "flow_strip_controller.jpg"
+    voice_note: null
+    video: null
+    invoice:
+      $media: "application/pdf"
+      blob_id: "sha256-73c299df4819d9854d92954932dc86a16fe13c603013316637ad0385d308e712"
+      size_bytes: 633
+      name: "invoice_LUM-20260903.pdf"
+  context:
+    date: "2026-09-18"
+    tenant_id: "lumen"
+  metadata:
+    split: "train"
+- name: "bulb_app_offline_advice"
+  inputs:
+    customer:
+      customer_id: "cus_3n8b5v2c6x1a"
+      display_name: "Dmitry Orlov"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "support"
+    message: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
+    order_id: null
+    product:
+      sku: "SKU-GL27E1"
+      name: "Lumen Glow E27"
+      category: "smart_bulb"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "app_offline"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  node_outputs:
+    prepare:
+      message: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "app_offline"
+        label: "Does not respond in the app"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+  context:
+    date: "2026-09-18"
+    tenant_id: "lumen"
+  metadata:
+    split: "dev"
+- name: "lamp_crushed_box_reship"
+  inputs:
+    customer:
+      customer_id: "cus_9d4f6h1j3k5m"
+      display_name: "Olga Kuznetsova"
+      email: "olga.kuznetsova@example.com"
+      tier: "business"
+      locale: "en-GB"
+    origin:
+      kind: "marketplace"
+      marketplace: "ozon"
+      order_ref: "CASE-3"
+    message: "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; the customer attached a photo of the packaging."
+    order_id: null
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "shipping_damage"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "lumen"
+  metadata:
+    split: "test"

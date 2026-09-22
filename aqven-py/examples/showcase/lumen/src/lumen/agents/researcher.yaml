@@ -1,8 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Agent"
-description: "Субагент: исследует политики и прецеденты через MCP-сервер хелпдеска"
-model: "openrouter:mistralai/mistral-nemo"
-output:
-  strict: false
-mcp_servers:
-- "helpdesk"

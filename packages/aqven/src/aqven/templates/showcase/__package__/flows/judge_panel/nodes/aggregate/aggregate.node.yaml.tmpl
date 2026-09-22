@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Merges the verdicts: the majority's best candidate, median scores, the spread among the majority judges and whether the judges agree"
+run: "aggregate"
+in:
+- name: "verdicts"
+  type: "JudgeVerdict[]"
+  description: "Judge verdicts"
+  maxItems: 3
+  from: "$judges.out.verdicts"
+out:
+- name: "consensus"
+  type: "JudgeVerdict"
+  description: "Merged panel verdict"
+- name: "level"
+  type: "Agreement"
+  description: "Whether the judges agree with each other"
+- name: "spread"
+  type: "Float"
+  description: "Largest score spread on a single criterion among the judges who picked the majority candidate"
+  minimum: 0
+  maximum: 4

@@ -1,0 +1,1 @@
+The lamp is smart and runs on a Zigbee network through the Lumen hub. First ask them to check that the hub is online and sees the lamp in the app, then give the reset and re-adding steps through the hub, if the chunks describe them.

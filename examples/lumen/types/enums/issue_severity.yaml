@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Severity of the problem the check found"
+values:
+- value: "assert"
+  description: "A violation that goes back as feedback to the next attempt"
+- value: "check"
+  description: "A remark kept for provenance; it does not spend an attempt"

@@ -1,7 +1,15 @@
-# ADR-0002. Ось AI SDK v6 и изоляция провайдеров в пакете @wf/llm
+# ADR-0002. Ось AI SDK v6 и изоляция провайдеров в пакете @aqven/llm
 
-> Статус: принято
+> Статус: **заменено [ADR-0025](0025-python-engine.md)** (2026-09-16)
 > Дата: 2026-09-11
+>
+> Заменено целиком: оси `ai@6` в движке нет, peer-связки с рантаймом тоже. Вызовы моделей идут через
+> pydantic-ai-slim 2.43.0, версии закреплены точными пинами в одном `uv.lock` (ADR-0025 §1); `overrides`, пакет
+> `@aqven/llm`, `createProviderRegistry` и middleware `ai@6` уходят. Остаётся принцип изоляции провайдеров в
+> Python-форме: импорт `openai`, `anthropic`, `google.genai`, `pydantic_ai.providers` и провайдерских модулей
+> `pydantic_ai.models` разрешён только дистрибутиву `aqven-llm`, остальной код получает `Model` из его фабрики и
+> берёт из Pydantic AI только нейтральное, запрет держит ruff TID251 (ADR-0025 §6). Правило «в `apps/studio` нет
+> импортов `ai`, `@ai-sdk/*`, `@openrouter/*`» действует ([ADR-0024](0024-studio-on-vite.md)).
 > Контекст-документы: [11. Провайдеры](../11-providers.md), [20. Репозиторий и инструменты](../20-repo-and-tooling.md), [02. Архитектура](../02-architecture.md), [Сквозные решения](../DECISIONS.md); research/ai-sdk-decision.md, research/00-verified-by-lead.md; [ADR-0001](0001-execution-core-on-voltagent.md)
 
 ## Контекст
@@ -53,11 +61,11 @@ peer-зависимости на `ai`** — их единственный peer �
 }
 ```
 
-Явные зависимости `@wf/llm` (не транзитивный хойстинг): `@ai-sdk/openai ^3.0.112`,
+Явные зависимости `@aqven/llm` (не транзитивный хойстинг): `@ai-sdk/openai ^3.0.112`,
 `@ai-sdk/anthropic ^3.0.117`, `@ai-sdk/google ^3.0.122`, `@ai-sdk/openai-compatible ^2.0.75`,
 `@ai-sdk/togetherai ^2.0.81`, `@openrouter/ai-sdk-provider ^2.10.0`, `zod ^4.6.2`.
 
-**Изоляция.** Единственный пакет, импортирующий `ai`, `@ai-sdk/*`, `@openrouter/*`, — `@wf/llm`.
+**Изоляция.** Единственный пакет, импортирующий `ai`, `@ai-sdk/*`, `@openrouter/*`, — `@aqven/llm`.
 Наружу торчат только наши типы (Dependency Inversion):
 
 ```

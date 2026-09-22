@@ -104,7 +104,7 @@
 ```mermaid
 flowchart LR
   fixture[фикстура + типы из OpenAPI] --> shell[шелл, навигация, палитра]
-  fixture --> graphview["@wf/graph-view (канвас, контекст, карта промтов)"]
+  fixture --> graphview["@aqven/graph-view (канвас, контекст, карта промтов)"]
   fixture --> msw[MSW + SSE-мок]
   shell --> canvas[5.1 канвас]
   graphview --> canvas

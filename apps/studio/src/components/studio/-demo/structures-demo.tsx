@@ -3,7 +3,6 @@ import { Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { noop } from "@/lib/noop"
 import { templateLines } from "@/lib/text"
-import type { ContentPart, Outcome } from "@/domain"
 import {
   ChoiceGroup,
   ChoiceLink,
@@ -14,21 +13,21 @@ import {
   Matrix,
   MatrixCell,
   MediaPart,
-  OUTCOME_TONE,
   PanelLayout,
   RowLink,
   SectionStack,
   SidePanel,
   SplitPane,
-  STAGE_KIND,
   Stat,
   Surface,
   Tag,
   Text,
   Timeline,
   type CellBlock,
+  type ContentPart,
   type CellPaint,
   type ChoiceItem,
+  type MarkerShape,
   type MatrixField,
   type MatrixSpanField,
   type SectionSpec,
@@ -38,21 +37,36 @@ import {
 
 type DemoEntry = { readonly id: string; readonly title: string; readonly content: ReactNode }
 
+const DEMO_OUTCOME_TONE = {
+  ok: "success",
+  degraded: "warning",
+  failed: "destructive",
+  cached: "neutral",
+} as const satisfies Readonly<Record<string, Tone>>
+
+type DemoOutcome = keyof typeof DEMO_OUTCOME_TONE
+
+const DEMO_STAGE = {
+  seq: { code: "SEQ", tone: "neutral", marker: "circle", glyph: "1" },
+  map: { code: "MAP", tone: "tool", marker: "diamond", glyph: "+" },
+  loop: { code: "LOOP", tone: "loop", marker: "diamond", glyph: "\u27f3" },
+} as const satisfies Readonly<Record<string, { readonly code: string; readonly tone: Tone; readonly marker: MarkerShape; readonly glyph: string }>>
+
 type DemoRun = {
   readonly id: string
-  readonly status: Outcome
+  readonly status: DemoOutcome
   readonly pass: string
   readonly cost: string
   readonly when: string
   readonly current: boolean
 }
 
-type DemoTest = { readonly id: string; readonly scope: string; readonly dataset: string; readonly pass: string; readonly health: Outcome }
+type DemoTest = { readonly id: string; readonly scope: string; readonly dataset: string; readonly pass: string; readonly health: DemoOutcome }
 
 type DemoColumn = {
   readonly id: string
   readonly name: string
-  readonly status: Outcome
+  readonly status: DemoOutcome
   readonly family: Tone
   readonly model: string
   readonly output: string
@@ -146,7 +160,7 @@ const runFields: readonly MatrixField<DemoRun>[] = [
     label: "Status",
     track: "108px",
     render: (run) => (
-      <Tag size="xs" tone={OUTCOME_TONE[run.status]}>
+      <Tag size="xs" tone={DEMO_OUTCOME_TONE[run.status]}>
         {run.status}
       </Tag>
     ),
@@ -162,7 +176,7 @@ const testFields: readonly MatrixField<DemoTest>[] = [
     label: "Test · scope",
     track: "minmax(0,1.4fr)",
     render: (test) => (
-      <Heading size="cell" leading={<Dot tone={OUTCOME_TONE[test.health]} />} title={test.id} below={[<Text key="scope" role="meta" truncate>{test.scope}</Text>]} />
+      <Heading size="cell" leading={<Dot tone={DEMO_OUTCOME_TONE[test.health]} />} title={test.id} below={[<Text key="scope" role="meta" truncate>{test.scope}</Text>]} />
     ),
   },
   { id: "dataset", label: "Dataset", track: "minmax(0,1.2fr)", render: (test) => <Text role="small" tone="neutral">{test.dataset}</Text> },
@@ -221,7 +235,7 @@ const callFields = (openColumn: string | null, onToggle: (id: string) => void): 
           kind: "heading",
           size: "cell",
           title: column.name,
-          dots: [OUTCOME_TONE[column.status]],
+          dots: [DEMO_OUTCOME_TONE[column.status]],
           tags: column.best ? [{ tone: "success", children: "BEST" }] : [],
           menu: true,
         },
@@ -284,7 +298,7 @@ const callFields = (openColumn: string | null, onToggle: (id: string) => void): 
     label: "Output",
     emphasis: true,
     render: (column) => cells([{ kind: "text", variant: "output", lines: column.output.split("\n").map((line) => [line]), clamp: true }]),
-    paint: (column): CellPaint => ({ accent: OUTCOME_TONE[column.status] }),
+    paint: (column): CellPaint => ({ accent: DEMO_OUTCOME_TONE[column.status] }),
     onActivate: noop,
   },
   {
@@ -319,14 +333,14 @@ const partFields: readonly MatrixField<ContentPart>[] = [
 const TIMELINE: readonly TimelineItem[] = [
   {
     id: "demo-stage-1",
-    marker: <Marker shape={STAGE_KIND.seq.marker} tone={STAGE_KIND.seq.tone}>1</Marker>,
-    content: <Heading size="block" title="Data load" tags={[{ tone: STAGE_KIND.seq.tone, children: STAGE_KIND.seq.code }]} description="1 tool call" />,
+    marker: <Marker shape={DEMO_STAGE.seq.marker} tone={DEMO_STAGE.seq.tone}>{DEMO_STAGE.seq.glyph}</Marker>,
+    content: <Heading size="block" title="Data load" tags={[{ tone: DEMO_STAGE.seq.tone, children: DEMO_STAGE.seq.code }]} description="1 tool call" />,
   },
   {
     id: "demo-stage-2",
-    marker: <Marker shape={STAGE_KIND.map.marker} tone={STAGE_KIND.map.tone}>{STAGE_KIND.map.glyph}</Marker>,
+    marker: <Marker shape={DEMO_STAGE.map.marker} tone={DEMO_STAGE.map.tone}>{DEMO_STAGE.map.glyph}</Marker>,
     content: (
-      <Heading size="block" title="Hotel scoring" tags={[{ tone: STAGE_KIND.map.tone, children: "MAP ×10" }]} description="parallel · concurrency 8">
+      <Heading size="block" title="Hotel scoring" tags={[{ tone: DEMO_STAGE.map.tone, children: "MAP ×10" }]} description="parallel · concurrency 8">
         <Surface variant="panel" padding="sm">
           <Text role="cell">stage content grows the connector</Text>
         </Surface>
@@ -335,8 +349,8 @@ const TIMELINE: readonly TimelineItem[] = [
   },
   {
     id: "demo-stage-5",
-    marker: <Marker shape={STAGE_KIND.loop.marker} tone={STAGE_KIND.loop.tone}>{STAGE_KIND.loop.glyph}</Marker>,
-    content: <Heading size="block" title="Critic loop" tags={[{ tone: STAGE_KIND.loop.tone, children: "LOOP ×4" }]} description="stops at 0.90" />,
+    marker: <Marker shape={DEMO_STAGE.loop.marker} tone={DEMO_STAGE.loop.tone}>{DEMO_STAGE.loop.glyph}</Marker>,
+    content: <Heading size="block" title="Critic loop" tags={[{ tone: DEMO_STAGE.loop.tone, children: "LOOP ×4" }]} description="stops at 0.90" />,
   },
 ]
 
@@ -448,7 +462,7 @@ function ChoiceDemo() {
       <ChoiceList appearance="card" label="Runs">
         {RUNS.map((run) => (
           <ChoiceLink key={run.id} appearance="card" to="." hash={`chip-${run.id}`} selected={run.id === "8247"} resetScroll={false}>
-            <Dot tone={OUTCOME_TONE[run.status]} />
+            <Dot tone={DEMO_OUTCOME_TONE[run.status]} />
             <Text role="cell" weight="semibold">
               #{run.id}
             </Text>

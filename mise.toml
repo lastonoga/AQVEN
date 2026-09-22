@@ -1,0 +1,80 @@
+[tools]
+python = "3.14"
+node = "24.21.0"
+uv = "0.12.15"
+pnpm = "10.33.0"
+
+[tasks.install]
+description = "Install both workspaces"
+run = [
+  "uv sync --all-packages --frozen",
+  "pnpm install --frozen-lockfile",
+]
+
+[tasks.lint]
+description = "ruff over the engine, eslint over the studio"
+run = [
+  "uv run --frozen ruff check .",
+  "pnpm --filter @aqven/studio lint",
+]
+
+[tasks.types]
+description = "pyright over the engine, tsc over the studio"
+run = [
+  "uv run --frozen pyright",
+  "pnpm --filter @aqven/studio typecheck",
+]
+
+[tasks.test]
+description = "Every suite in the repository"
+run = [
+  "uv run --frozen pytest packages/aqven -q",
+  "uv run --frozen pytest packages/aqven-llm -q",
+  "uv run --frozen pytest tools -q",
+  "uv run --frozen pytest examples -q",
+  "pnpm --filter @aqven/studio test",
+]
+
+[tasks.check]
+description = "What CI gates on"
+depends = ["lint", "test"]
+run = [
+  "uv run --frozen python tools/check_uv_lock.py",
+  "uv run --frozen aqven check examples/lumen",
+  "pnpm --filter @aqven/studio check:api",
+]
+
+[tasks.bundle]
+description = "Build Studio and copy it into the aqven package"
+run = [
+  "pnpm --filter @aqven/studio build",
+  "uv run --frozen python tools/bundle_studio.py",
+]
+
+[tasks.package]
+description = "Wheels with Studio inside, ready to install anywhere"
+depends = ["bundle"]
+run = [
+  "uv build --package aqven-llm --out-dir dist",
+  "uv build --package aqven --out-dir dist",
+]
+
+[tasks.version]
+description = "Print the one version of both distributions"
+run = "uv run --frozen python tools/set_version.py"
+
+[tasks."release:check"]
+description = "Everything the release workflow verifies, without uploading"
+depends = ["bundle"]
+run = [
+  "uv run --frozen python tools/set_version.py --check",
+  "uv run --frozen python tools/bundle_studio.py --check",
+]
+
+[tasks.dev]
+description = "Engine and studio against the lumen example"
+run = "node tools/dev.mjs"
+
+[tasks.docs]
+description = "Documentation site in watch mode"
+run = "pnpm --filter @aqven/site dev"

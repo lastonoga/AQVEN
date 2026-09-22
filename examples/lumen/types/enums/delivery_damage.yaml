@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "What happened to the order in delivery"
+values:
+- value: "crushed_box"
+  description: "A crushed box"
+- value: "broken_item"
+  description: "The product is broken or shattered"
+- value: "missing_item"
+  description: "The product, or part of it, never arrived"

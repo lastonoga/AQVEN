@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "max": {
+      "minimum": 1,
+      "title": "Max",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "field",
+    "max"
+  ],
+  "title": "MaxWordsParams",
+  "type": "object"
+}

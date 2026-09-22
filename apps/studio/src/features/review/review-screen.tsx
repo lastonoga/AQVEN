@@ -1,39 +1,59 @@
 import { useTranslations } from "use-intl"
-import { Actions, Heading, Page, Toolbar } from "@/components/studio"
-import { reviewRouteApi } from "@/lib/routes"
+import { ChoiceLink, ChoiceList, Heading, Page, Toolbar } from "@/components/studio"
+import { ROUTE_PATH, reviewRouteApi } from "@/lib/routes"
+import { entryKey } from "./presenters"
 import { ReviewDetailSlot } from "./review-detail"
 import { ReviewQueue } from "./review-queue"
-import { useNoteDrafts } from "./use-note-drafts"
 
 const QUEUE_WIDTH = 320
 
+const QUEUE_FILTERS = ["all", "overdue"] as const
+
+type QueueFilter = (typeof QUEUE_FILTERS)[number]
+
+const FILTER_SEARCH: Readonly<Record<QueueFilter, { readonly overdue?: true }>> = { all: {}, overdue: { overdue: true } }
+
+function QueueFilters() {
+  const t = useTranslations("review")
+  const { overdue } = reviewRouteApi.useSearch()
+  const current: QueueFilter = overdue === true ? "overdue" : "all"
+  return (
+    <ChoiceList appearance="segmented" label={t("filter.labelAria")}>
+      {QUEUE_FILTERS.map((filter) => (
+        <ChoiceLink
+          key={filter}
+          appearance="segmented"
+          size="sm"
+          from={ROUTE_PATH.review}
+          to="."
+          search={FILTER_SEARCH[filter]}
+          selected={filter === current}
+        >
+          {t(`filter.${filter}`)}
+        </ChoiceLink>
+      ))}
+    </ChoiceList>
+  )
+}
+
 function ReviewHeader() {
   const t = useTranslations("review")
-  const actions = (
-    <Actions
-      actions={[
-        { id: "assign", label: t("actions.assignToMe") },
-        { id: "rules", label: t("actions.reviewRules") },
-      ]}
-    />
-  )
   return (
-    <Toolbar wrap end={actions} className="-mb-1 items-start gap-2.5">
+    <Toolbar wrap className="-mb-1 items-start gap-2.5" end={<QueueFilters />}>
       <Heading size="page" title={t("title")} below={[t("subtitle")]} />
     </Toolbar>
   )
 }
 
 export function ReviewScreen() {
-  const { queue, itemId, detail } = reviewRouteApi.useLoaderData()
-  const drafts = useNoteDrafts()
+  const { queue, selected, detail, schema, blobText } = reviewRouteApi.useLoaderData()
   return (
     <Page
       width="md"
       header={<ReviewHeader />}
-      aside={{ content: <ReviewQueue queue={queue} itemId={itemId} />, width: QUEUE_WIDTH }}
+      aside={{ content: <ReviewQueue queue={queue} selectedKey={selected === null ? null : entryKey(selected)} />, width: QUEUE_WIDTH }}
     >
-      <ReviewDetailSlot queue={queue} itemId={itemId} detail={detail} drafts={drafts} />
+      <ReviewDetailSlot entry={selected} detail={detail} schema={schema} blobText={blobText} />
     </Page>
   )
 }

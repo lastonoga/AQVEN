@@ -102,7 +102,7 @@ Event sourcing в чистом виде это не отменяет, но и н
 
 | Элемент git | Что у нас есть | Источник |
 |---|---|---|
-| blob | канонический JSON версии спеки + `sha256-...` с доменной сепарацией (`hashOf('wf/flow-spec/v1', …)`) | 04-ir-schema §4.2–4.3 |
+| blob | канонический JSON версии спеки + `sha256-...` с доменной сепарацией (`hashOf('aqven/flow-spec/v1', …)`) | 04-ir-schema §4.2–4.3 |
 | tree | `manifest.files[]` с хешом каждого файла и **Merkle-корнем** бандла | 18-export §manifest.json |
 | commit | `spec_versions` (`content_hash`, `author`, `created_at`, `parent_id`) | 16-data-model §2.2 |
 | parent / lineage | `parent_id uuid REFERENCES spec_versions(id)` | там же |

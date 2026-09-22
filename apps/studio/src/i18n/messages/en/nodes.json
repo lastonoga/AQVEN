@@ -1,48 +1,136 @@
 {
   "title": "Nodes",
-  "lead": "A node is the configurable unit: a <b>signature</b> (typed inputs → output + instructions), a <b>model profile</b> that executes it, <b>bindings</b> that resolve every input from a source, and <b>checks</b> on the output. Bindings are the dependencies — Dataflow draws its edges from them.",
-  "apply": "Apply to workflow",
+  "lead": "Inspect what each step does, where its inputs come from, and what it returns.",
   "list": {
-    "title": "Nodes in this workflow",
-    "new": "New node"
+    "title": "Nodes in this flow",
+    "problems": "has problems"
   },
-  "stage": "stage {stage}",
+  "empty": {
+    "title": "No node selected",
+    "hint": "Pick a node on the left to read its definition, prompt and schemas."
+  },
   "detail": {
-    "resolve": "{resolved} / {total} inputs resolve"
+    "bound": "{bound} / {total} inputs bound"
   },
-  "signature": {
-    "title": "Signature",
-    "hint": "typed declaration — what the node must do",
-    "none": "No signature — this node takes typed arguments from its bindings"
+  "tabs": {
+    "aria": "Node views",
+    "definition": "Definition",
+    "prompt": "Prompt",
+    "schemas": "Schemas",
+    "problems": "Problems"
   },
-  "profile": {
-    "title": "Model profile",
-    "hint": "who executes it — swappable, signature unchanged",
-    "none": "No model profile — this node runs without a model"
+  "sections": {
+    "facts": "Definition",
+    "inputs": "Inputs",
+    "outputs": "Outputs",
+    "children": "Child nodes",
+    "graph": "Graph",
+    "files": "Files"
+  },
+  "facts": {
+    "agent": "Agent",
+    "inference": "Inference",
+    "run": "Function",
+    "tool": "Tool",
+    "assignee": "Assignee",
+    "form": "Form type",
+    "timeout": "Timeout, s",
+    "onTimeout": "On timeout",
+    "branches": "Branches",
+    "join": "Join",
+    "over": "Over",
+    "body": "Body",
+    "concurrency": "Concurrency",
+    "onItemError": "On item error",
+    "maxIter": "Max iterations",
+    "stop": "Stop",
+    "select": "Select",
+    "on": "On",
+    "cases": "Cases",
+    "flow": "Flow",
+    "from": "From",
+    "to": "To"
   },
   "bindings": {
-    "title": "Bindings",
-    "hint": "each input resolved from a source — this is the dependency declaration",
-    "add": "Bind input",
-    "rewireHint": "changing a binding rewires the graph: node-output sources add an edge, knowledge and state sources do not",
+    "title": "Inputs",
     "column": {
-      "input": "Input",
+      "slot": "Slot",
       "type": "Type",
-      "source": "Source",
-      "resolver": "Resolver",
-      "lastRun": "Last run"
+      "origin": "Origin",
+      "source": "Source"
     }
   },
-  "writes": {
-    "title": "Writes & checks",
-    "hint": "what the node returns into run state, and what validates it"
+  "origin": {
+    "input": "input",
+    "node": "node",
+    "run": "run",
+    "iter": "iteration",
+    "branch": "branch",
+    "literal": "literal",
+    "unbound": "unbound"
   },
-  "code": {
-    "title": "Generated code",
-    "hint": "what the agent writes when you change anything above — the workflow is this file"
+  "outputs": {
+    "title": "Outputs",
+    "dynamic": "DYNAMIC",
+    "column": {
+      "name": "Field",
+      "type": "Type",
+      "description": "Description"
+    }
   },
-  "registry": {
-    "title": "Registry",
-    "hint": "entities are reused across nodes and workflows"
+  "graph": {
+    "upstream": "Upstream",
+    "downstream": "Downstream"
+  },
+  "files": {
+    "path": "Node file",
+    "hash": "File hash",
+    "code": "Code",
+    "prompt": "Prompt"
+  },
+  "prompt": {
+    "none": "This node has no prompt.",
+    "facts": "Prompt",
+    "inference": "Inference",
+    "level": "Level",
+    "file": "File",
+    "builder": "Built by",
+    "draft": "Draft",
+    "draftFresh": "draft on disk",
+    "draftStale": "draft is stale",
+    "source": "Template",
+    "slots": "Slots",
+    "used": "used",
+    "unused": "unused",
+    "variables": "Variables",
+    "globals": "Globals",
+    "filters": "Filters",
+    "tags": "Tags",
+    "analysis": "Template analysis",
+    "variants": "Variant files",
+    "column": {
+      "name": "Slot",
+      "type": "Type",
+      "used": "Used"
+    }
+  },
+  "schemas": {
+    "empty": "This node declares no schemas",
+    "in": "Input schema",
+    "out": "Output schema",
+    "form": "Form schema",
+    "required": "required",
+    "column": {
+      "field": "Field",
+      "type": "Type",
+      "required": "Required",
+      "description": "Description"
+    }
+  },
+  "promptFiles": {
+    "title": "Prompt files",
+    "hint": "one file can serve several nodes",
+    "level": "level {level}",
+    "usage": "{count, plural, one {# node} other {# nodes}}"
   }
 }

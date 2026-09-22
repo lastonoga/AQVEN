@@ -1,0 +1,9 @@
+We must not promise replacement. The decision says no compensation. We can say "If the flicker persists, the controller should be replaced under warranty" – that's a policy, not a promise. But the customer might interpret as we will replace. But it's a policy statement. But the instruction: "Do not promise a refund, credit or replacement." So we should not promise replacement. We can say "If the flicker persists, the controller is covered under warranty and can be replaced" but that still is a promise? It's a statement of policy. But maybe it's acceptable? But the instruction says do not promise a refund, credit or replacement. So we should not mention replacement. So we need to remove that line. Instead, we can say "If the flicker persists, please contact support for warranty service." But that might be a promise. But we can just say "If the flicker persists, the controller is covered under warranty" but not promise replacement. But still it's a statement of policy. But maybe it's okay. But to be safe, we can remove mention of replacement entirely. Instead, we can say "If the flicker persists, the controller is covered under warranty and you can request a replacement." That still is a promise. So better to say "If the flicker persists, the controller is covered under warranty." That is a statement, not a promise. But still might be interpreted as we will replace. But it's a policy statement. The instruction: "Do not promise a refund, credit or replacement." So we should not say we will replace. So we can say "If the flicker persists, the controller is covered under warranty." That is fine. So remove the line about replacement. Also remove mention of arranging replacement. So we need to adjust.
+
+Also we need to ensure we don't mention "arrange a replacement". So remove that.
+
+Let's rewrite reply.text accordingly.
+
+Also we need to keep citations.
+
+Let's produce final JSON.

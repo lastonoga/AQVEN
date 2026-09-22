@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-e0077f16e2fc7d37fbc8bd6a929a69ca0572aae393d05561142331309c884b9d",
+  "request_key": "sha256-5d87f480f91644d88324e3cc7e4a2fe2dbaa4e26d3f5188e494e4ce426b0c166",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "triage",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_l3VyfrjVJfvzlD53ORlX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_l3VyfrjVJfvzlD53ORlX",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi and if it can be placed in the bedroom.\"}],\"intake_extra\":{},\"category\":\"smart_bulb\",\"summary\":\"The customer is asking about the compatibility of the Lumen Glow E27 smart bulb with 5 GHz Wi-Fi networks and its suitability for use in a bedroom.\",\"safety_risk\":false}",
+        "tool_call_id": "tool_final_result_l3VyfrjVJfvzlD53ORlX",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi and if it can be placed in the bedroom.\"}],\"intake_extra\":{},\"category\":\"smart_bulb\",\"summary\":\"The customer is asking about the compatibility of the Lumen Glow E27 smart bulb with 5 GHz Wi-Fi networks and its suitability for use in a bedroom.\",\"safety_risk\":false}",
+        "tool_call_id": "tool_final_result_l3VyfrjVJfvzlD53ORlX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi and if it can be placed in the bedroom.\"}],\"intake_extra\":{},\"category\":\"smart_bulb\",\"summary\":\"The customer is asking about the compatibility of the Lumen Glow E27 smart bulb with 5 GHz Wi-Fi networks and its suitability for use in a bedroom.\",\"safety_risk\":false}",
+        "tool_call_id": "tool_final_result_l3VyfrjVJfvzlD53ORlX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 759,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 84,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-22T08:11:41.677951Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-22T08:11:40Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0001095,
+      "upstream_inference_cost": 0.0001095,
+      "upstream_inference_prompt_cost": 7.59e-05,
+      "upstream_inference_completions_cost": 3.36e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790064700-vEcjEvdIfDm80oGFKgi6",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

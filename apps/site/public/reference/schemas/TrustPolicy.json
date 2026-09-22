@@ -1,0 +1,23 @@
+{
+  "$defs": {
+    "TrustLevel": {
+      "enum": [
+        "trusted",
+        "untrusted"
+      ],
+      "title": "TrustLevel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "default_in": {
+      "$ref": "#/$defs/TrustLevel"
+    }
+  },
+  "required": [
+    "default_in"
+  ],
+  "title": "TrustPolicy",
+  "type": "object"
+}

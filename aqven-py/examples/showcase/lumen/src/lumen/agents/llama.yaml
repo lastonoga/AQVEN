@@ -1,9 +1,0 @@
-apiVersion: "aqven/v1"
-kind: "Agent"
-description: "Дешёвая открытая модель: голоса за намерение и судья панели семейства Meta"
-model: "openrouter:meta-llama/llama-3.1-8b-instruct"
-settings:
-  temperature: 0.2
-  max_tokens: 800
-output:
-  strict: false
