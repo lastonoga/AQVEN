@@ -92,15 +92,15 @@ types.py
 +    note: Annotated[str, StringConstraints(max_length=50)] | None
 ```
 
-Now break the same field's type on purpose — `CurrencyCode` becomes `CurrencyCodeTypo` — and run
-`generate` again:
+Now break a type on purpose, somewhere else in the project: `types/records/intent_ballot.yaml`'s
+`intent` field points at `CaseIntent`; typo it to `CaseIntentTypo` and run `generate` again:
 
 ```text
 types.py
 ```
 
-Same output, exit code `0`. But `Money` is gone from `types.py` entirely — nothing referencing an
-unresolved type can be built, so `generate` drops it rather than failing. `check` is what tells you
+Same output, exit code `0`. But `IntentBallot` is gone from `types.py` entirely — nothing referencing
+an unresolved type can be built, so `generate` drops it rather than failing. `check` is what tells you
 why:
 
 ```bash
@@ -108,23 +108,14 @@ why:
 ```
 
 ```text
-evals/support_case/reply_quality.yaml:23:3: error E_CODE_REF_UNRESOLVED scorers[2].run: reference @root.code.support_case:promises_match_resolution → my_project.code.support_case:promises_match_resolution does not resolve: ImportError: cannot import name 'Resolution' from 'my_project.types'
-flows/support_case/nodes/finalize/finalize.node.yaml:5:1: error E_CODE_REF_UNRESOLVED run: reference finalize → @root/flows/support_case/nodes/finalize/finalize.py:finalize does not resolve: ImportError: cannot import name 'CaseOutcome' from 'my_project.types'
-flows/support_case/nodes/polish/critique.inference.yaml:33:3: error E_CODE_REF_UNRESOLVED checks[0].run: reference critique_consistent → @root/flows/support_case/nodes/polish/critique.py:critique_consistent does not resolve: ImportError: cannot import name 'CritiqueIn' from 'my_project.types'
-flows/support_case/nodes/polish/revise.inference.yaml:84:3: error E_CODE_REF_UNRESOLVED checks[4].run: reference @root.code.support_case:promises_match_resolution → my_project.code.support_case:promises_match_resolution does not resolve: ImportError: cannot import name 'Resolution' from 'my_project.types'
-tools/issue_store_credit.yaml:4:1: error E_CODE_REF_UNRESOLVED run: reference @root.tools.functions:issue_store_credit → my_project.tools.functions:issue_store_credit does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-tools/lookup_order.yaml:4:1: error E_CODE_REF_UNRESOLVED run: reference @root.tools.functions:lookup_order → my_project.tools.functions:lookup_order does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-tools/render_clip.yaml:4:1: error E_CODE_REF_UNRESOLVED run: reference @root.tools.functions:start_clip → my_project.tools.functions:start_clip does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-tools/render_clip.yaml:14:3: error E_CODE_REF_UNRESOLVED wait.poll: reference @root.tools.functions:poll_clip → my_project.tools.functions:poll_clip does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-tools/search_kb.yaml:4:1: error E_CODE_REF_UNRESOLVED run: reference @root.tools.functions:search_kb → my_project.tools.functions:search_kb does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-tools/synthesize_voice.yaml:4:1: error E_CODE_REF_UNRESOLVED run: reference @root.tools.functions:synthesize_voice → my_project.tools.functions:synthesize_voice does not resolve: ImportError: cannot import name 'IssueStoreCreditOut' from 'my_project.types'
-types/records/money.yaml:12:3: error E_TYPE_UNKNOWN fields[1].type: type CurrencyCodeTypo is neither built in nor declared in the project
-errors: 11, warnings: 0
+flows/support_case/nodes/tally/tally.node.yaml:5:1: error E_CODE_REF_UNRESOLVED run: reference tally → @root/flows/support_case/nodes/tally/tally.py:tally does not resolve: ImportError: cannot import name 'IntentBallot' from 'my_project.types'
+types/records/intent_ballot.yaml:11:3: error E_TYPE_UNKNOWN fields[1].type: type CaseIntentTypo is neither built in nor declared in the project
+errors: 2, warnings: 0
 ```
 
-The real error, `E_TYPE_UNKNOWN`, is on the last line; every line above it is a class that failed to
-import because it — or something it depends on, like `Money` inside `CaseOutcome` — never made it into
-`types.py`. Fix the typo back to `CurrencyCode` and both commands go back to reporting a clean project.
+The real error, `E_TYPE_UNKNOWN`, is on the last line; the line above it is `tally`, the one node whose
+Python code imports `IntentBallot` by name and can no longer find it in `types.py`. Fix the typo back to
+`CaseIntent` and both commands go back to reporting a clean project.
 
 `{{CLI_COMMAND}} schema` writes the editor schema files, listing each one it wrote:
 
@@ -145,7 +136,7 @@ import because it — or something it depends on, like `Money` inside `CaseOutco
 .aqven/schema/mcpserver.schema.json
 ```
 
-This still works even with the `CurrencyCodeTypo` mistake from above still in place — `schema` doesn't
+This still works even with the `CaseIntentTypo` mistake from above still in place — `schema` doesn't
 read your project's types, so it has nothing to fail on.
 
 ## See also
