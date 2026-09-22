@@ -28,7 +28,7 @@ const requiredMarkers = [
   "Not a tracing tool. Not a drag-and-drop builder.",
   "Keep your models. Keep your code.",
   "Source available.",
-  "Start with a workflow you already have.",
+  "Know what your workflow does before it runs.",
   "uv tool install aqven",
 ];
 
@@ -52,10 +52,23 @@ for (const marker of requiredScreenshots) {
   );
 }
 
-const forbiddenMarkers = ["uv run aqven", "aqven check ."];
+const forbiddenMarkers = [
+  { marker: "uv run aqven", reason: "is a command that only works inside an existing project" },
+  { marker: "aqven check .", reason: "is a command that only works inside an existing project" },
+  {
+    marker: "Nothing to rewrite",
+    reason:
+      "claims AQVEN adopts a workflow you already run. The only way to create a project is `aqven new`, and every flow, node and prompt is authored as a file",
+  },
+  {
+    marker: "Point AQVEN at your project",
+    reason:
+      "claims AQVEN adopts a workflow you already run. The only way to create a project is `aqven new`, and every flow, node and prompt is authored as a file",
+  },
+];
 
-for (const marker of forbiddenMarkers) {
-  assert.ok(!page.includes(marker), `The landing page must not show commands: ${marker}`);
+for (const { marker, reason } of forbiddenMarkers) {
+  assert.ok(!page.includes(marker), `The landing page must not say "${marker}": it ${reason}.`);
 }
 
 // Zero em-dashes anywhere visible on the page - a deliberate design-taste rule (headlines, body
