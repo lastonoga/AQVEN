@@ -26,6 +26,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  CheckBeforeItRunsSchematic,
+  MiniAgentReadSchematic,
+  MiniCheckPassedSchematic,
+  MiniRunsSchematic,
+  MiniTypeMismatchSchematic,
+  MiniWorkflowSchematic,
+  ReviewLikeCodeSchematic,
+  ScatteredFilesSchematic,
+} from "@/components/landing/schematics";
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
@@ -91,17 +101,6 @@ const STUDIO_VIEWS: StudioView[] = [
   },
 ];
 
-const GUARDS = [
-  {
-    heading: "Check it before it runs.",
-    body: "Broken connections between steps, inputs that don't match, a prompt pointing at something that isn't there. Caught before a customer finds it.",
-  },
-  {
-    heading: "Review a change like code.",
-    body: "A prompt edit shows up in your diff. Your teammate reviews the logic in a pull request, the same as everything else you ship.",
-  },
-];
-
 const COMPARE = [
   { row: "Where the logic lives", tracing: "Your code, scattered", builders: "Their platform", aqven: "Files in your repo" },
   { row: "Check before it runs", tracing: "No", builders: "No", aqven: "Yes" },
@@ -141,6 +140,9 @@ export const Problem = () => (
         A month in, nobody on the team can say what actually happens, and it&rsquo;s not a demo. It
         runs thousands of times before anyone notices something drifted.
       </p>
+    </div>
+    <div className="mx-auto mt-14 max-w-3xl">
+      <ScatteredFilesSchematic />
     </div>
     <div className="mx-auto mt-14 grid max-w-4xl gap-x-12 gap-y-7 sm:grid-cols-2">
       {QUOTES.map((quote) => (
@@ -209,16 +211,30 @@ export const StudioEvidence = () => (
       ))}
     </Tabs>
     <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
-      {GUARDS.map((guard) => (
-        <Card key={guard.heading}>
-          <CardHeader>
-            <CardTitle className="text-xl">{guard.heading}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{guard.body}</p>
-          </CardContent>
-        </Card>
-      ))}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Check it before it runs.</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <CheckBeforeItRunsSchematic />
+          <p className="text-muted-foreground">
+            Broken connections between steps, inputs that don&rsquo;t match, a prompt pointing at
+            something that isn&rsquo;t there. Caught before a customer finds it.
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Review a change like code.</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <ReviewLikeCodeSchematic />
+          <p className="text-muted-foreground">
+            A prompt edit shows up in your diff. Your teammate reviews the logic in a pull
+            request, the same as everything else you ship.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   </Section>
 );
@@ -300,11 +316,13 @@ export const AGENT_FEATURES = [
     icon: <Lock className="size-5" />,
     title: "It can't wire two steps together wrong.",
     description: "Types don't match, the check fails before production does.",
+    visual: <MiniTypeMismatchSchematic />,
   },
   {
     icon: <Shield className="size-5" />,
     title: "It has to pass a check before it can say it's done.",
     description: "A change that doesn't hold together never reaches you.",
+    visual: <MiniCheckPassedSchematic />,
   },
   {
     icon: <Sparkles className="size-5" />,
@@ -320,6 +338,7 @@ export const INSIDE_FEATURES = [
     description: "Steps, order, and what connects to what.",
     href: "/concepts/files-as-source-of-truth/",
     wide: true,
+    visual: <MiniWorkflowSchematic />,
   },
   {
     icon: <Blocks className="size-5" />,
@@ -357,6 +376,7 @@ export const INSIDE_FEATURES = [
     description: "Every execution, recorded and inspectable.",
     href: "/studio/investigate-a-run/",
     wide: true,
+    visual: <MiniRunsSchematic />,
   },
   {
     icon: <Database className="size-5" />,
@@ -388,6 +408,7 @@ export const INSIDE_FEATURES = [
     description: "Project context an agent can read.",
     href: "/mcp-cli/connect-an-agent/",
     wide: true,
+    visual: <MiniAgentReadSchematic />,
   },
 ];
 
@@ -430,6 +451,7 @@ export const WhatsInside = () => (
               </a>
             </span>
             <span className="text-sm text-muted-foreground">{item.description}</span>
+            {item.visual && <div className="mt-1">{item.visual}</div>}
           </CardContent>
         </Card>
       ))}
