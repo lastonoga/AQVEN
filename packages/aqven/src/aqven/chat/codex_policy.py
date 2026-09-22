@@ -9,6 +9,7 @@ from aqven.ports.chat import ChatPermissionMode
 
 MCP_TOKEN_NAME: Final[str] = "AQVEN_MCP_TOKEN"
 PROFILE_NAME: Final[str] = "aqven-studio"
+WEB_SEARCH_MODE: Final[str] = "live"
 SAFE_PROCESS_ENV: Final[frozenset[str]] = frozenset(
     {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL", "TERM", "CODEX_HOME"}
 )
@@ -40,6 +41,7 @@ def codex_config(project_root: Path, mcp_url: str, mcp_token: str, mode: ChatPer
         f'permissions.{PROFILE_NAME}.extends="{parent}"',
         f"permissions.{PROFILE_NAME}.filesystem={filesystem_profile(mode)}",
         'shell_environment_policy.inherit="none"',
+        f'web_search="{WEB_SEARCH_MODE}"',
         f"mcp_servers.aqven.url={json.dumps(mcp_url)}",
         "mcp_servers.aqven.required=true",
         f'mcp_servers.aqven.bearer_token_env_var="{MCP_TOKEN_NAME}"',

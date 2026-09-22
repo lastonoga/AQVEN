@@ -3,6 +3,9 @@
 `__package__` is an aqven project: AI workflows are YAML files next to the Python code they use. The aqven module is
 `__package__/`; its `aqven.yaml` marks the project root, and every aqven command takes that folder as its path.
 
+Documentation for this engine is at https://aqvenstudio.com — `https://aqvenstudio.com/llms.txt` is the index of
+every page in Markdown. Read it when a node kind, a policy or a command is unfamiliar, and prefer it over guessing.
+
 ## Layout
 
 ```
@@ -17,6 +20,8 @@ __package__/
   types/{enums,ids,records,unions,values}/<type>.yaml
   fragments/<fragment>.md              prompt text shared by several prompts
   code/<module>.py                     Python used from several places
+  datasets/<dataset>.yaml              cases of a flow or an inference: input and expected result
+  evals/<flow>/<eval>.yaml             scorers and the gate over a dataset
   flows/<flow>/flow.yaml               flow input, output, returns and node order
   flows/<flow>/nodes/<node>/
     <node>.node.yaml                   step: code, llm, tool, human, switch, parallel, map, loop, call, narrow
@@ -70,6 +75,39 @@ tests/                                 offline tests of the example, at the proj
 
    `node_failure("charge", "card declined")` forces the failure path; `branch_key`, `iteration` and `item_index` pick
    one branch of a `parallel`, `loop` or `map`.
+
+## Building a flow from an idea
+
+When the request is an idea rather than a change — "a workflow that triages support mail", an empty project — do
+not start writing files. Ask first. A wrong guess here costs a rewrite of every node below it.
+
+Settle these for the whole flow, then for each step. Ask them in one message, not one at a time, and ask only what
+the request has not already answered.
+
+| For the flow | What you need |
+|---|---|
+| Purpose | one sentence: what comes in, what goes out, who reads the result |
+| Input | the fields of the request and their types |
+| Output | the fields the caller gets back; a workflow with no declared output is not finishable |
+| Done | how a person tells a good result from a bad one — this becomes the dataset and the eval |
+
+| For each step | What you need |
+|---|---|
+| What it does | one sentence; it becomes `description` |
+| Who does it | `code` for deterministic work, `llm` for judgement, `tool` for an external call, `human` for a person |
+| In and out | field names and types; every type is declared once under `types/` |
+| Decisions | a value that routes the flow means a `switch` over an enum, and every case must be covered |
+| Blocking | does a person have to approve before the flow continues — that is a `human` node with a deadline |
+| Together | independent steps that can run at once are `parallel` branches; the same step over a list is `map` |
+| Checks | what makes this step's output wrong, and what to do then |
+| Failure | retry, default value, or stop — a step without an answer here fails in production, not in `aqven check` |
+
+Write the files only when you have the answers. Order: types first, then agents and tools, then the nodes, then
+`flow.yaml`. Run `aqven check` after each file, not once at the end — one wrong type reference is cheaper to fix
+before ten nodes reference it.
+
+Then write the dataset: three or four real cases with the input and the expected result, under `datasets/`. A flow
+without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
 
 ## How to read `aqven check`
 
