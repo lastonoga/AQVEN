@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import cast
 
 import pytest
@@ -42,8 +42,8 @@ def nowhere() -> ExecutionScope:
     return cast(ExecutionScope, None)
 
 
-async def run(executor: NodeExecutor[object]) -> NodeOutcome:
-    return await executor.execute(None, nowhere())
+async def run[N](executor: NodeExecutor[N]) -> NodeOutcome:
+    return await executor.execute(cast(N, None), nowhere())
 
 
 def test_without_a_pool_the_executors_are_left_alone() -> None:
@@ -106,14 +106,10 @@ async def test_a_leaf_that_fails_gives_its_slot_back() -> None:
 
     fakes = Fakes()
     executors = fakes.executors()
-    throttled = throttled_executors(NodeExecutors(**{**_fields(executors), "llm": Failing()}), WorkerPool(1))
+    throttled = throttled_executors(replace(executors, llm=Failing()), WorkerPool(1))
 
     with pytest.raises(RuntimeError):
         await run(throttled.llm)
     await run(throttled.code)
 
     assert "stop:code" in fakes.log
-
-
-def _fields(executors: NodeExecutors) -> dict[str, object]:
-    return {kind: getattr(executors, kind) for kind in NodeExecutors.__dataclass_fields__}

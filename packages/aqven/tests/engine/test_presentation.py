@@ -31,11 +31,14 @@ from aqven.ir import CompiledDisplayFormatter, CompiledInferenceDisplay, Compile
 from aqven.runtime.address import ExecutionAddress, RunId, node_address
 from aqven.runtime.human import HumanWaitDetail
 from aqven.runtime.presentation import (
+    DisplayBadge,
     DisplayDocument,
     DisplayField,
+    DisplayList,
     DisplayMedia,
     DisplaySection,
     DisplaySide,
+    DisplayText,
     PresentationContext,
     PresentationRequest,
     PresentationTarget,
@@ -84,7 +87,7 @@ def template_context() -> PresentationContext:
 
 
 def test_typed_liquid_template_builds_nested_document_with_conditions_loops_and_partials() -> None:
-    source = '''{% section title: "Result" %}
+    source = """{% section title: "Result" %}
 {% field label: "Answer", path: "/text" %}
 {% if variables.show_citations %}{% list title: "Citations" %}
 {% for citation in value.citations %}
@@ -92,7 +95,7 @@ def test_typed_liquid_template_builds_nested_document_with_conditions_loops_and_
 {% text path: citation_path %}
 {% endfor %}{% endlist %}{% endif %}
 {% render "badge", value: variants.tone %}
-{% endsection %}'''
+{% endsection %}"""
     result = render_presentation_template(
         source,
         template_context(),
@@ -101,18 +104,23 @@ def test_typed_liquid_template_builds_nested_document_with_conditions_loops_and_
     assert result.root.title == "Result"
     assert [child.kind for child in result.root.children] == ["field", "list", "badge"]
     citations = result.root.children[1]
-    assert citations.kind == "list"
-    assert [child.path for child in citations.children] == ["/citations/0/quote", "/citations/1/quote"]
-    assert result.root.children[2].value == "calm"
+    assert isinstance(citations, DisplayList)
+    first_citation, second_citation = citations.children
+    assert isinstance(first_citation, DisplayText)
+    assert isinstance(second_citation, DisplayText)
+    assert (first_citation.path, second_citation.path) == ("/citations/0/quote", "/citations/1/quote")
+    badge = result.root.children[2]
+    assert isinstance(badge, DisplayBadge)
+    assert badge.value == "calm"
 
 
 def test_typed_liquid_card_contains_nested_elements() -> None:
-    source = '''{% section title: "Review" %}
+    source = """{% section title: "Review" %}
 {% card title: "Customer", description: "Details", tone: "warning" %}
 {% field label: "Answer", path: "/text" %}
 {% list title: "Evidence" %}{% text path: "/citations/0/quote" %}{% endlist %}
 {% endcard %}
-{% endsection %}'''
+{% endsection %}"""
     result = render_presentation_template(source, template_context())
     card = result.root.children[0]
     assert card.kind == "card"
@@ -120,13 +128,17 @@ def test_typed_liquid_card_contains_nested_elements() -> None:
     assert card.description == "Details"
     assert card.tone == "warning"
     assert [child.kind for child in card.children] == ["field", "list"]
-    assert card.children[1].children[0].path == "/citations/0/quote"
+    evidence = card.children[1]
+    assert isinstance(evidence, DisplayList)
+    citation = evidence.children[0]
+    assert isinstance(citation, DisplayText)
+    assert citation.path == "/citations/0/quote"
 
 
 def test_typed_liquid_card_validates_nested_pointers() -> None:
-    source = '''{% section %}
+    source = """{% section %}
 {% card title: "Customer" %}{% list %}{% field label: "Missing", path: "/missing" %}{% endlist %}{% endcard %}
-{% endsection %}'''
+{% endsection %}"""
     with pytest.raises(KeyError, match="/missing"):
         render_presentation_template(source, template_context())
 
@@ -189,8 +201,15 @@ def test_batch_formats_current_template_and_tracks_partial_changes(tmp_path: Pat
         plan, FlowId("intake"), {}, fold, request_for(address, "output"), load_document, empty_blob, loader.load
     )
     assert first.results[0].status == second.results[0].status == "formatted"
-    assert first.results[0].document.root.children[0].label == "First"
-    assert second.results[0].document.root.children[0].label == "Second"
+    first_document = first.results[0].document
+    second_document = second.results[0].document
+    assert first_document is not None
+    assert second_document is not None
+    first_label = first_document.root.children[0]
+    second_label = second_document.root.children[0]
+    assert isinstance(first_label, DisplayField)
+    assert isinstance(second_label, DisplayField)
+    assert (first_label.label, second_label.label) == ("First", "Second")
     assert first.results[0].formatter_version != second.results[0].formatter_version
 
 
@@ -446,9 +465,12 @@ def test_execution_none_payloads_suppresses_recorded_input(monkeypatch: pytest.M
     async def human_detail(self: DbosEngineFacade, run_id: RunId, selected: ExecutionAddress) -> HumanWaitDetail | None:
         return None
 
+    def find_plan(ir_hash: IrHash) -> CompiledProject | None:
+        return None
+
     monkeypatch.setattr(DbosEngineFacade, "_view", view)
     monkeypatch.setattr(DbosEngineFacade, "_human_detail", human_detail)
-    facade = DbosEngineFacade(runtime=cast(EngineRuntime, SimpleNamespace(plans=SimpleNamespace(find=lambda _: None))))
+    facade = DbosEngineFacade(runtime=cast(EngineRuntime, SimpleNamespace(plans=SimpleNamespace(find=find_plan))))
     detail = asyncio.run(facade.get_execution(RunId("run-1"), address, "none"))
     assert detail.input_ref is None
     assert detail.output_ref is None
@@ -468,6 +490,7 @@ def test_execution_uses_current_schema_when_run_plan_is_missing(monkeypatch: pyt
 
     monkeypatch.setattr(DbosEngineFacade, "_view", view)
     monkeypatch.setattr(DbosEngineFacade, "_human_detail", human_detail)
+
     def missing_plan(ir_hash: IrHash) -> None:
         return None
 
