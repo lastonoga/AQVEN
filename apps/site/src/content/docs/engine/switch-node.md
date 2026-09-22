@@ -42,7 +42,7 @@ resolved based on what kind of case it is. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real file, translated to English:
+Here's the real file:
 
 ```yaml
 apiVersion: "aqven/v1"

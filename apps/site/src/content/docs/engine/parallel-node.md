@@ -50,7 +50,7 @@ person](/engine/human-node/)). Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real example, translated to English. It runs three `llm` nodes side by side — one call each to an OpenAI-family, a
+Here's the real example. It runs three `llm` nodes side by side — one call each to an OpenAI-family, a
 Mistral-family, and a Google-family model — and only needs two of the three to come back:
 
 ```yaml

@@ -54,7 +54,7 @@ flows/
       ...
 ```
 
-Here's the real `panel.node.yaml`, translated to English:
+Here's the real `panel.node.yaml`:
 
 ```yaml
 apiVersion: "aqven/v1"

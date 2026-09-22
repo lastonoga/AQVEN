@@ -53,7 +53,7 @@ Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real node file, translated to English. It carries no contract of its own, only a `tool` reference and
+Here's the real node file. It carries no contract of its own, only a `tool` reference and
 bindings:
 
 ```yaml

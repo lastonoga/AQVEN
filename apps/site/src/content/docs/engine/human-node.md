@@ -40,7 +40,7 @@ node in its `support_case` flow. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real file, translated to English:
+Here's the real file:
 
 ```yaml
 apiVersion: "aqven/v1"

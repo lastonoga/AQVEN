@@ -27,7 +27,7 @@ the project uses.
 
 The [showcase](/start/quickstart/) project's `triage` node is a real case of this escalation. Its inputs include four optional
 attachments — a photo, a voice note, a video, an invoice — and the prompt only mentions each one when it's
-actually there (translated to English for this page):
+actually there:
 
 ```liquid
 {% if photo %}

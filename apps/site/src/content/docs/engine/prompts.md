@@ -50,7 +50,7 @@ with:
 ```
 
 **Plain instruction.** `flows/judge_panel/nodes/decide/tie_break.prompt.md` is the whole prompt for the
-`tie_break` node — no `{{ }}`, no `{% %}` anywhere in it (translated to English for this page):
+`tie_break` node — no `{{ }}`, no `{% %}` anywhere in it:
 
 ```
 You are a judge of smart-lighting support replies, scoring candidates blind: you don't know who wrote
@@ -110,7 +110,7 @@ prompt: "illustrate_prompt"
 ```
 
 AQVEN resolves that to `illustrate_prompt` in `illustrate.py`, the Python file with the same stem as the
-node, in the same folder (translated to English for this page). `ILLUSTRATION_SCENES` has five entries
+node, in the same folder. `ILLUSTRATION_SCENES` has five entries
 in the real file, one per `ProductCategory`; two are enough to show the pattern:
 
 ```python

@@ -36,7 +36,7 @@ kind of case it turns out to be — down to `CaseRecord`, a discriminated union 
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real file, translated to English:
+Here's the real file:
 
 ```yaml
 apiVersion: "aqven/v1"

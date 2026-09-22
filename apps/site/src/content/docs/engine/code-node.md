@@ -39,7 +39,7 @@ with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real example, translated to English. `tally.node.yaml` declares one input field, taken from the map node right before it, and three
+Here's the real example. `tally.node.yaml` declares one input field, taken from the map node right before it, and three
 output fields:
 
 ```yaml

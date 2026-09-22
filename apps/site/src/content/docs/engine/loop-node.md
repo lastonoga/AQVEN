@@ -52,12 +52,12 @@ with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-It sits next to its two body nodes, `revise.node.yaml` and `critique.node.yaml`, translated to English
-below. AQVEN qualifies each body node's own id with the loop's —
+It sits next to its two body nodes, `revise.node.yaml` and `critique.node.yaml`, shown below. AQVEN
+qualifies each body node's own id with the loop's —
 `polish__revise`, `polish__critique` — so they stay distinct from any other `revise` or `critique`
 elsewhere in the project, the same way any nested node's id is qualified by its container.
 
-The showcase's own file descriptions are translated to English for this page:
+Here's the real file:
 
 ```yaml
 apiVersion: "aqven/v1"

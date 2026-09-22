@@ -47,7 +47,7 @@ plain question — before the record itself gets filled in. Create it yourself w
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Here's the real example, translated to English. `case_form.node.yaml` is an ordinary `code` node: one `CaseIntent` input, one `FieldSpec[]`
+Here's the real example. `case_form.node.yaml` is an ordinary `code` node: one `CaseIntent` input, one `FieldSpec[]`
 output:
 
 ```yaml
