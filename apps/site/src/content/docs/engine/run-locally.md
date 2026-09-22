@@ -123,53 +123,17 @@ pretty-printed here for readability, is the same failure quickstart shows in tex
 That command exits `1` — check with `echo $?` right after it. Run the same command without `--context`
 and it exits `1` too, but for the `CONTEXT_MISSING` reason above instead of a run that actually started.
 
-The showcase project defines a second flow, `judge_panel`, and targeting it is just naming it instead.
-Its input has nothing to do with `support_case`'s — save this as `panel_request.json`, shaped like its
-own `PanelRequest` type:
-
-```json
-{
-  "summary": "Customer's light strip controller overheats after ten minutes of use.",
-  "candidates": [
-    { "text": "Please unplug the controller and check for a firmware update before reconnecting.", "citations": [] },
-    { "text": "We are sorry about the overheating. This unit qualifies for a warranty replacement.", "citations": [] }
-  ],
-  "chunks": [
-    {
-      "chunk_id": "kb_0000000001",
-      "title": "Controller overheating troubleshooting",
-      "text": "If the controller overheats, check for firmware updates and confirm the strip length matches the controller rating."
-    }
-  ]
-}
-```
+The showcase project defines a second flow, `judge_panel`, and targeting a different flow is just
+naming it:
 
 ```bash
-{{CLI_COMMAND}} run judge_panel --input panel_request.json
+{{CLI_COMMAND}} run judge_panel --input FILE
 ```
 
-```text
-run 01a0c58c-dfc6-71d9-a83b-a9080805b2f3
-· run_started
-▶ judges
-▶ judges__deepseek[branch=deepseek]
-· inference_input_captured
-■ judges__deepseek[branch=deepseek] failed 1 ms provider_key_missing: no API key for provider openrouter (openrouter:deepseek/deepseek-v4-flash-0731): set OPENROUTER_API_KEY in the project .env or the environment
-▶ judges__qwen[branch=qwen]
-· inference_input_captured
-■ judges__qwen[branch=qwen] failed 7 ms provider_key_missing: no API key for provider openrouter (openrouter:qwen/qwen3-30b-a3b-instruct-2507): set OPENROUTER_API_KEY in the project .env or the environment
-▶ judges__llama[branch=llama]
-· inference_input_captured
-■ judges__llama[branch=llama] failed 4 ms provider_key_missing: no API key for provider openrouter (openrouter:meta-llama/llama-3.1-8b-instruct): set OPENROUTER_API_KEY in the project .env or the environment
-■ judges failed 90 ms E_JOIN_FAILED: ответили судей: 0, а для решения нужно 2
-● run failed E_JOIN_FAILED: ответили судей: 0, а для решения нужно 2 cost $0 tokens 0/0
-```
+What its `judges` node does with three parallel branches, and what makes that kind of node fail, is
+covered on [How to branch into parallel steps](/engine/parallel-node/).
 
-`judges` is a [`parallel`](/engine/parallel-node/) node with three branches, and every event's address
-now carries `[branch=deepseek]` and the rest — the same address shape shows `iteration=` inside a loop
-and `item=` inside a map. `judges` needs two of its three branches to succeed and none did, so it fails
-with `E_JOIN_FAILED` once all three have reported in — the showcase's own descriptions are in Russian,
-same as its `human` node forms. Naming a flow that doesn't exist at all fails before any of this starts:
+Naming a flow that doesn't exist at all fails before any of this starts:
 
 ```bash
 {{CLI_COMMAND}} run no_such_flow --input case.json
@@ -234,8 +198,8 @@ aqven run: error: argument --context: expected KEY=VALUE, got notkeyvalue
   row, the source of the keys `--context` needs for a given flow.
 - [How to pause for a person](/engine/human-node/) — the `form` shape a `--human-answers` payload has to
   match, and why a suspended run stays alive without holding the CLI open.
-- [How to branch into parallel steps](/engine/parallel-node/) — the join policy behind `judge_panel`'s
-  `E_JOIN_FAILED`, and the `branch=` address `run` prints for it.
+- [How to branch into parallel steps](/engine/parallel-node/) — what `judge_panel`'s `judges` node is
+  and how a `parallel` node's join policy decides success or failure.
 - [Project MCP Tool Reference](/reference/project-mcp-tools/) — `run_resume`, for answering a run that
   suspended.
 - [CLI commands](/reference/cli/) — every other command, including `check` and `generate`.
