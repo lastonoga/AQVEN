@@ -9,6 +9,7 @@ description = "Install both workspaces"
 run = [
   "uv sync --all-packages --frozen",
   "pnpm install --frozen-lockfile",
+  "git config core.hooksPath .githooks",
 ]
 
 [tasks.lint]
@@ -40,6 +41,7 @@ description = "What CI gates on"
 depends = ["lint", "test"]
 run = [
   "uv run --frozen python tools/check_uv_lock.py",
+  "uv run --frozen python tools/generate_reference.py --check",
   "uv run --frozen aqven check examples/lumen",
   "pnpm --filter @aqven/studio check:api",
 ]
