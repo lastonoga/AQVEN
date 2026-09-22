@@ -24,7 +24,9 @@ or a hard cap is reached, then hands back whichever pass's results a second poli
   shape used everywhere else in AQVEN. Two built-ins ship: `threshold` stops once a numeric path crosses
   a `gte` or `lte` bound, and `stagnation` stops once a numeric path stops improving by at least
   `min_delta` over a `window` of passes. The first policy in the list that says stop, stops the loop.
-  Leave `stop` unset and the loop always runs to `max_iter`.
+  Leave `stop` unset and the loop always runs to `max_iter` every time, even on a pass that already
+  stopped improving — worth setting explicitly whenever you have a real signal to stop on, the way
+  `polish` below does with two.
 - `select` picks which pass's results the node actually returns, once the loop has stopped for any
   reason. Same shape as `stop`. Two built-ins ship: `last` always picks the most recent pass, and
   `best`, given a `path`, picks the pass with the highest value there.
@@ -123,6 +125,8 @@ redraft and lists any blocking issues.
   actually are.
 - [How to run a step over a collection](/engine/map-node/) — the other node kind whose body has its own
   reference form, `$item` and `$index` instead of `$acc`.
+- [Designing reliable workflows](/concepts/designing-reliable-workflows/) — when a `loop` critic like
+  `critique`/`revise` here actually earns its cost, and why it needs a real `stop` policy.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) — tracing a real wrong

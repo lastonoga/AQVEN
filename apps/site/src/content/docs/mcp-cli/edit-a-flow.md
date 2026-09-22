@@ -181,3 +181,5 @@ and send the whole request again.
   first place.
 - [How to check and test a project as an agent](/mcp-cli/check-and-test/) — run `aqven_check` after a
   patch to confirm the result the same way a human would before committing.
+- [Two ways to change a project](/concepts/two-ways-to-change-a-project/) — why `flow_patch`'s
+  before-the-write check exists, and when a direct file edit is the better choice instead.

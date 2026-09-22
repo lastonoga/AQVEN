@@ -7,16 +7,21 @@ Studio is the GUI side of the same project the [Engine](/engine/) pages cover. I
 copy of your workflow — it's the file-based project on disk, opened in a browser instead of a text
 editor and a terminal. Open it from your project with `{{CLI_COMMAND}} studio` (already covered on the
 [quickstart](/start/quickstart/) and the [engineering-loop walkthrough](/start/engineering-loop-walkthrough/)
-— this area goes deeper on each screen than those two pages do).
+— this area goes deeper on each screen than those two pages do, and
+[the engineering loop](/concepts/engineering-loop/) explains why the screens are shaped the way they are).
 
 Start with [your first workflow in Studio](/studio/first-workflow/) if you haven't opened Studio
-before. From there:
+before, or [how to open an existing project](/studio/open-a-project/) if you're coming back to one.
 
-- [How to read a workflow's graph](/studio/understand-the-graph/) — the canvas and the node list.
-- [How to investigate a run](/studio/investigate-a-run/) — the run debugger, the single most useful
-  screen when a result isn't what you expected.
-- [How to respond to a human-review request](/studio/respond-to-a-review/)
-- [How to work with datasets](/studio/datasets/) and [how to read an eval and its gate](/studio/evals/)
-- [How to use the AI chat in Studio](/studio/chat/)
-- [How to check Studio's settings](/studio/settings/)
-- [How to open an existing project](/studio/open-a-project/)
+**Read & respond** covers the screens for understanding and reacting to what a run produced:
+[how to read a workflow's graph](/studio/understand-the-graph/) (the canvas and the node list),
+[how to investigate a run](/studio/investigate-a-run/) (the run debugger — the single most useful
+screen when a result isn't what you expected), and
+[how to respond to a human-review request](/studio/respond-to-a-review/) (the one screen here where you
+submit something, not just read).
+
+**Test** covers proving a fix actually helped: [how to work with datasets](/studio/datasets/) and
+[how to read an eval and its gate](/studio/evals/).
+
+**Chat & settings** covers the rest of the app: [how to use the AI chat in Studio](/studio/chat/) and
+[how to check Studio's settings](/studio/settings/).

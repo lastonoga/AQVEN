@@ -141,6 +141,13 @@ async def search_kb(
 The showcase's other two `tool` nodes, `clip` and `voice`, call tools that return media instead of
 text, and `clip`'s tool also declares `wait`, because rendering a video takes longer than one request.
 
+## Under the hood
+
+An `mcp`-sourced tool runs through [Pydantic AI](/concepts/what-this-is-built-on/)'s own tool-calling
+machinery, layered on the official MCP SDK that page describes — the same client AQVEN uses to speak to
+any [external MCP server](/integrations/external-mcp-servers/). A `code`- or `run:`-backed tool never
+touches that path at all; it's a plain function call.
+
 ## See also
 
 - [How to write a step in Python](/engine/code-node/) — the node kind for deterministic logic that

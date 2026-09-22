@@ -101,5 +101,5 @@ function that quietly ignores an input or returns nonsense is your own bug to ca
   prompts included.
 - [What happens when a model is called](/concepts/what-happens-when-a-model-is-called/) — the guarantees
   around the call itself, once the prompt has rendered.
-- [Five dynamic shape cases](/concepts/five-dynamic-shape-cases/) — what an input or output field looks
+- [Five cases of dynamic input and output shape](/concepts/five-dynamic-shape-cases/) — what an input or output field looks
   like when its shape isn't fixed at design time.

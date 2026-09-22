@@ -1,7 +1,11 @@
 ---
-title: AQVEN
+title: Start
 description: Build AI workflows you can trust — understand, reproduce, and fix them before a bad result reaches a customer.
 ---
+
+AQVEN is a platform for building multi-step AI workflows as typed, checkable files — flows made of
+nodes, each one a model call, a piece of code, a tool, or a pause for a human — that you can run, trace,
+and fix step by step instead of treating as one opaque prompt.
 
 ## The pain this solves
 

@@ -101,6 +101,8 @@ behind all three returns one field, `reply: ReplyDraft`, which is exactly what `
 - [How to pause for a person](/engine/human-node/) — the showcase's other `parallel` node,
   `approvals`, joining with `all` instead of `quorum`.
 - [How to call a model](/engine/llm-node/) — what each of `drafts`' three branches actually is.
+- [Designing reliable workflows](/concepts/designing-reliable-workflows/) — when running branches in
+  parallel like this actually earns its cost, and when it doesn't.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `ParallelNodeSpec`, generated from the

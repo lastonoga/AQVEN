@@ -24,6 +24,6 @@ whether a step should be split, diverge, or get a critic loop in the first place
 - [Five cases of dynamic input and output shape](/concepts/five-dynamic-shape-cases/)
 - [What happens when a model is called](/concepts/what-happens-when-a-model-is-called/)
 - [The engineering loop: from incident to verified fix](/concepts/engineering-loop/)
-- [How to find the node where a workflow went wrong](/concepts/finding-the-node-that-went-wrong/)
+- [Finding the node where a workflow went wrong](/concepts/finding-the-node-that-went-wrong/)
 - [Two ways to change a project](/concepts/two-ways-to-change-a-project/)
 - [Designing reliable workflows](/concepts/designing-reliable-workflows/)

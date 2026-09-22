@@ -1,5 +1,5 @@
 ---
-title: How an agent reads a project's structure
+title: How to read a project's structure as an agent
 description: There's no MCP tool that lists or fetches a project's structure — an agent reads the flow files directly, the same way it reads any other code.
 ---
 
@@ -80,3 +80,5 @@ node:triage .` from a terminal — see how to read that output on
   to change.
 - [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/) — getting an agent connected in the
   first place.
+- [Files as source of truth](/concepts/files-as-source-of-truth/) — why the files themselves, not a
+  database, are what you're reading here.

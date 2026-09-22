@@ -106,6 +106,8 @@ that's minutes away or days.
 
 - [How to branch into parallel steps](/engine/parallel-node/) — running `lead` and `brand` side by
   side, the way the showcase's `approvals` node does.
+- [A run survives a process crash](/concepts/run-survives-a-crash/) — why a wait here can outlast the
+  server, and what a hard crash does and doesn't lose.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `HumanNodeSpec`, generated from the code.

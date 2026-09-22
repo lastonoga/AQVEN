@@ -134,7 +134,7 @@ direct edit.
   the full compare-and-swap breakdown, and real request/response JSON.
 - [How to check a project before committing](/engine/check/) — what `{{CLI_COMMAND}} check` actually
   validates.
-- [How an agent reads a project's structure](/mcp-cli/read-project-structure/) — reading files
+- [How to read a project's structure as an agent](/mcp-cli/read-project-structure/) — reading files
   directly before you decide which of these two paths to take.
 - [Files as source of truth](/concepts/files-as-source-of-truth/) — what a project looks like on disk,
   and the `renames:` list this page builds on.

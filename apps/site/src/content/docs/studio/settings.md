@@ -67,6 +67,10 @@ you.
 - [How to manage secrets](/engine/secrets/) — the CLI's own read-only report on the same provider keys
   and secrets, down to the same masking rule. Neither this screen nor that command lets you set a key;
   that's done by exporting it or adding it to the project's `.env` file.
+- [How to set a secret for a provider, tool, or MCP server](/integrations/secrets-and-environment/) —
+  actually setting the value this screen only reports on.
+- [How to connect a model provider](/integrations/model-providers/) — declaring a provider in the
+  first place, before it can show up in this screen's Model keys panel.
 - [How to use the AI chat in Studio](/studio/chat/) — the panel whose dropdown opens this dialog, and
   where the backend you pick in Chat agent actually gets used.
 - [How to check a project before committing](/engine/check/) — the errors, warnings, and info counts

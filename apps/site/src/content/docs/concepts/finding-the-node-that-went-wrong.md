@@ -1,5 +1,5 @@
 ---
-title: How to find the node where a workflow went wrong
+title: Finding the node where a workflow went wrong
 description: Every step execution has a 4-field address, not just a node name, because the same node can run more than once inside one run.
 ---
 

@@ -75,6 +75,8 @@ loop's footer names which pass it kept.
 
 - [The engineering loop](/concepts/engineering-loop/) — why every execution needs its own address, and
   how investigating fits between understanding a flow and testing a fix.
+- [Finding the node where a workflow went wrong](/concepts/finding-the-node-that-went-wrong/) — the
+  four-field address behind every cell in this screen's matrix, spelled out.
 - [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) — the same screen, walked
   through by hand on one real case.
 - [How to read a workflow's graph](/studio/understand-the-graph/) — the node inspector this screen's
