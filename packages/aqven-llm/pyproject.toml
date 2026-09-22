@@ -1,6 +1,6 @@
 [project]
 name = "aqven-llm"
-version = "0.0.1"
+version = "0.0.2"
 description = "Provider isolation for aqven: every model provider SDK import behind one factory."
 readme = "README.md"
 license = "LicenseRef-AQVEN-1.0.0"

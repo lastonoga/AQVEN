@@ -1,6 +1,6 @@
 [project]
 name = "aqven"
-version = "0.0.1"
+version = "0.0.2"
 description = "Engineering layer for reliable AI workflows: files as the source of truth, a compiler, a checkpointed runtime and a local Studio."
 readme = "README.md"
 license = "LicenseRef-AQVEN-1.0.0"
