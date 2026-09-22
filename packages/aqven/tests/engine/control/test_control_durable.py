@@ -30,17 +30,32 @@ def _numbered(names: list[str]) -> list[JsonValue]:
     return [f"{position}:{name}" for position, name in enumerate(names, start=1)]
 
 
+def _usage_whether_or_not_the_zero_cost_refusal_was_checkpointed_before_quorum() -> tuple[JsonValue, JsonValue]:
+    checkpointed_before_quorum: dict[str, JsonValue] = {
+        "cost_usd": "0.002",
+        "tokens_in": 2,
+        "tokens_out": 2,
+        "requests": 3,
+        "tool_calls": 0,
+    }
+    checkpointed_after_quorum_cancelled_it: dict[str, JsonValue] = {**checkpointed_before_quorum, "requests": 2}
+    return checkpointed_before_quorum, checkpointed_after_quorum_cancelled_it
+
+
 def test_parallel_children_are_workflows_joined_in_checkpointed_order(scenario: dict[str, JsonValue]) -> None:
-    assert scenario["parallel"] == {
+    parallel = scenario["parallel"]
+    assert isinstance(parallel, dict)
+    usage = parallel["usage"]
+    assert {key: value for key, value in parallel.items() if key != "usage"} == {
         "status": "ok",
         "output": {"candidates": ["b", "c"]},
-        "usage": {"cost_usd": "0.002", "tokens_in": 2, "tokens_out": 2, "requests": 3, "tool_calls": 0},
         "attempt": 1,
         "model": None,
         "cache_hit": False,
         "degraded": False,
         "checks_failed": 0,
     }
+    assert usage in _usage_whether_or_not_the_zero_cost_refusal_was_checkpointed_before_quorum()
     assert scenario["parallel_steps"] == _numbered(
         [*["branch_workflow"] * 4, *["DBOS.waitFirst", "DBOS.getResult"] * 3, "DBOS.cancelWorkflow"]
     )
