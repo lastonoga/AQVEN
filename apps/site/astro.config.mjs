@@ -191,6 +191,7 @@ export default defineConfig({
                 { slug: "concepts/engineering-loop" },
                 { slug: "concepts/finding-the-node-that-went-wrong" },
                 { slug: "concepts/two-ways-to-change-a-project" },
+                { slug: "concepts/designing-reliable-workflows" },
               ],
             },
           ],
