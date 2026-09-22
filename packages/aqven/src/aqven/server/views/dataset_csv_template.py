@@ -61,7 +61,7 @@ def _alternatives(schema: dict[str, object], definitions: Mapping[str, object]) 
         if isinstance(options, list):
             return [
                 resolved
-                for option in options
+                for option in cast(list[object], options)
                 if (resolved := _resolve(_mapping(option), definitions)).get("type") != "null"
             ]
     return []
@@ -95,9 +95,8 @@ def _input_fields(schema: dict[str, object]) -> list[tuple[str, dict[str, object
         if options:
             nullable = _nullable(resolved, definitions)
             if len(options) > 1 and all(_mapping(option.get("properties")) for option in options):
-                common = set.intersection(
-                    *(set(cast(list[str], option.get("required", []))) for option in options)
-                )
+                required_sets = [set(cast(list[str], option.get("required", []))) for option in options]
+                common = required_sets[0].intersection(*required_sets[1:])
                 for option in options:
                     for name, child in _mapping(option.get("properties")).items():
                         child_path = f"{path}.{name}" if path else name
@@ -124,7 +123,9 @@ def _field_type(schema: dict[str, object], *, media: bool) -> str:
     if media:
         declared = _mapping(schema.get("properties")).get("$media")
         enum = _mapping(declared).get("enum")
-        return " / ".join(str(value) for value in enum) if isinstance(enum, list) and enum else "media URL"
+        if isinstance(enum, list) and enum:
+            return " / ".join(str(value) for value in cast(list[object], enum))
+        return "media URL"
     if isinstance(schema.get("enum"), list):
         return "enum"
     value = schema.get("type")
@@ -207,10 +208,10 @@ def _example(schema: dict[str, object], value: object) -> str:
 
 def _references(value: object) -> Iterator[str]:
     if isinstance(value, list):
-        for item in value:
+        for item in cast(list[object], value):
             yield from _references(item)
     elif isinstance(value, dict):
-        for key, item in value.items():
+        for key, item in cast(dict[object, object], value).items():
             if key in REFERENCE_FIELDS and isinstance(item, str) and item.startswith("$"):
                 yield item
             else:
@@ -249,7 +250,10 @@ def csv_template(state: WorkspaceState, flow_id: FlowId) -> CsvTemplate:
         media = column in media_fields
         fields.append(
             CsvTemplateField(
-                column=column, kind="input", type=_field_type(schema, media=media), required=required,
+                column=column,
+                kind="input",
+                type=_field_type(schema, media=media),
+                required=required,
                 description=cast(str | None, schema.get("description")),
                 example="" if media else _example(schema, _sample_at(sample, column)),
             )
@@ -273,7 +277,12 @@ def csv_template(state: WorkspaceState, flow_id: FlowId) -> CsvTemplate:
                 contexts.add(ref.key)
                 if ref.key not in context_keys:
                     context_keys.append(ref.key)
-            elif ref.root is RefRoot.NODE and ref.node_id in compiled.order and ref.node_id != node_id:
+            elif (
+                ref.root is RefRoot.NODE
+                and ref.node_id is not None
+                and ref.node_id in compiled.order
+                and ref.node_id != node_id
+            ):
                 column = _fixture_column(ref.node_id, ref.steps)
                 outputs.add(column)
                 fixtures.add(column)
@@ -298,13 +307,13 @@ def csv_template(state: WorkspaceState, flow_id: FlowId) -> CsvTemplate:
     # A root fixture and its child fields cannot coexist as CSV headers.
     roots = {column for column in fixtures if column.count(".") == 1}
     fixture_columns = tuple(
-        column for node_id in compiled.order for column in sorted(fixtures)
-        if column.startswith(f"node_outputs.{node_id}")
-        and not any(column.startswith(root + ".") for root in roots)
+        column
+        for node_id in compiled.order
+        for column in sorted(fixtures)
+        if column.startswith(f"node_outputs.{node_id}") and not any(column.startswith(root + ".") for root in roots)
     )
     fields.extend(
-        CsvTemplateField(column=column, kind="node_outputs", type="JSON", required=False)
-        for column in fixture_columns
+        CsvTemplateField(column=column, kind="node_outputs", type="JSON", required=False) for column in fixture_columns
     )
 
     def fixture_target(column: str) -> str:

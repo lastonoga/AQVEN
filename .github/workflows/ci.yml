@@ -55,7 +55,7 @@ jobs:
         with:
           version: "0.12.15"
           enable-cache: true
-      - run: uv sync --all-packages --frozen
+      - run: uv sync --all-packages --all-extras --frozen
       - run: uv run --frozen aqven generate examples/lumen
       - run: uv run --frozen pyright
 
