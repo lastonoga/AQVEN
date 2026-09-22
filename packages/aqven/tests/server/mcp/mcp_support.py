@@ -16,6 +16,7 @@ from aqven.runtime.address import ExecutionAddress, RunId, node_address
 from aqven.runtime.events import NodeStarted, RunEvent, RunStartedEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution
 from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse, PresentationResult
 from aqven.runtime.runs import (
     CancelRequest,
     CancelResult,
@@ -177,7 +178,7 @@ class FakeEngine:
     )
     resume_error: EngineError | None = None
 
-    async def start_run(self, request: RunStartRequest) -> RunStarted:
+    async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         self.starts.append(request)
         return RunStarted(
             run_id=RUN_ID,
@@ -215,6 +216,14 @@ class FakeEngine:
     ) -> ExecutionDetail:
         self.addresses.append((address, include_payloads))
         return execution(address)
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
+        return PresentationResponse(
+            results=tuple(
+                PresentationResult(target=target, status="unavailable", error="no formatter declared")
+                for target in request.targets
+            )
+        )
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:
         self.resumes.append((run_id, request))
