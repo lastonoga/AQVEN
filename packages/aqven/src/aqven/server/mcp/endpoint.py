@@ -71,7 +71,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
 
 
 def build_mcp_server(catalog: Iterable[ToolRegistration]) -> MCPServer:
-    server = MCPServer(SERVER_NAME, instructions=INSTRUCTIONS)
+    server = MCPServer(SERVER_NAME, instructions=INSTRUCTIONS, log_level="WARNING")
     for registration in catalog:
         registration.register_tool(server)
     return server

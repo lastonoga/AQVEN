@@ -19,3 +19,9 @@ export const NODE_HANDLES: readonly HandleSpec[] = [
   { id: "out", type: "source", position: Position.Right, style: ALONG_Y },
   { id: "bottom", type: "source", position: Position.Bottom, style: ALONG_X },
 ]
+
+export const NODE_HANDLES_REVERSED: readonly HandleSpec[] = [
+  { id: "in", type: "target", position: Position.Right, style: ALONG_Y },
+  { id: "out", type: "source", position: Position.Left, style: ALONG_Y },
+  { id: "bottom", type: "source", position: Position.Bottom, style: ALONG_X },
+]

@@ -392,6 +392,7 @@ def test_trust_mode_stops_asking_but_keeps_the_env_guard(tmp_path: Path) -> None
     assert launch.options.hooks is not None
     assert "PreToolUse" in launch.options.hooks
     assert launch.options.setting_sources == []
+    assert launch.options.can_use_tool is None
 
 
 def test_every_studio_mode_maps_to_an_sdk_mode(tmp_path: Path) -> None:

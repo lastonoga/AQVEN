@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 from server_fakes import copy_fixture
 from sse_frames import parse_frames
 
-from aqven.server import ProjectWorkspace, SpecEventHub, server_context
+from aqven.server import ProjectWorkspace, ServerOptions, SpecEventHub, server_context
+from aqven.server.app import spec_watcher
 from aqven.server.spec_channel import DiagnosticsChanged, FilesChanged, SpecResync, watch_project
 
 
@@ -124,6 +125,30 @@ def test_watcher_picks_up_external_edit(tmp_path: Path) -> None:
         await asyncio.wait_for(watcher, 10)
         assert isinstance(first, FilesChanged)
         assert [change.path for change in first.changes] == ["flows/intake/nodes/reply/reply.prompt.md"]
+
+    asyncio.run(scenario())
+
+
+def test_spec_watcher_closes_the_hub_as_soon_as_the_shutdown_signal_fires(tmp_path: Path) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+
+    async def scenario() -> None:
+        hub = SpecEventHub(ProjectWorkspace(root))
+        shutdown_signal = asyncio.Event()
+        options = ServerOptions(shutdown_signal=shutdown_signal)
+        received: list[int] = []
+
+        async def reader() -> None:
+            async for event in hub.follow(0):
+                received.append(event.seq)
+
+        async with spec_watcher(hub, root, options):
+            task = asyncio.create_task(reader())
+            await asyncio.sleep(0.05)
+            assert not task.done()
+            shutdown_signal.set()
+            await asyncio.wait_for(task, 1)
+        assert received == []
 
     asyncio.run(scenario())
 

@@ -1,6 +1,7 @@
+import asyncio
 import uuid
 from collections.abc import AsyncIterator, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient, Message
@@ -45,3 +46,4 @@ class ClaudeChatRuntime:
     clock: Clock
     client_factory: ClaudeClientFactory = sdk_client
     ids: IdFactory = new_chat_id
+    shutdown: asyncio.Event = field(default_factory=asyncio.Event)

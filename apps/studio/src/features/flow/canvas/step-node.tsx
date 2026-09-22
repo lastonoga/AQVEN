@@ -3,7 +3,7 @@ import type { NodeProps } from "@xyflow/react"
 import { cn } from "cn"
 import { useTranslations } from "use-intl"
 import { Dot, NODE_KIND, Surface, Tag, Text } from "@/components/studio"
-import { NODE_HANDLES } from "./handles"
+import { NODE_HANDLES, NODE_HANDLES_REVERSED } from "./handles"
 import { NodeHandles } from "./node-handles"
 import { SelectedNodeContext } from "./selection"
 import type { CanvasSize } from "../layout"
@@ -64,7 +64,7 @@ export function StepNode({ id, data }: NodeProps<StepFlowNode>) {
           {t("outputs", { count: data.outputs })}
         </Text>
       </div>
-      <NodeHandles specs={NODE_HANDLES} />
+      <NodeHandles specs={data.reversed ? NODE_HANDLES_REVERSED : NODE_HANDLES} />
     </Surface>
   )
 }

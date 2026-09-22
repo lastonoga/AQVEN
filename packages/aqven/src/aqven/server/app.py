@@ -60,6 +60,7 @@ class ServerOptions:
     mcp_url: str | None = None
     compiler: ProjectCompiler | None = None
     environ: Mapping[str, str] = field(default_factory=process_environment)
+    shutdown_signal: asyncio.Event | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +85,11 @@ def server_context(app: FastAPI) -> ServerContext:
     return context
 
 
+async def _close_hub_on_signal(signal: asyncio.Event, hub: SpecEventHub) -> None:
+    await signal.wait()
+    await hub.close()
+
+
 @asynccontextmanager
 async def spec_watcher(hub: SpecEventHub, root: Path, options: ServerOptions) -> AsyncGenerator[None]:
     await hub.prime()
@@ -93,9 +99,13 @@ async def spec_watcher(hub: SpecEventHub, root: Path, options: ServerOptions) ->
         return
     stop = asyncio.Event()
     task = asyncio.create_task(watch_project(hub, root, stop, options.watch_debounce_ms))
+    signal = options.shutdown_signal
+    early_close = None if signal is None else asyncio.create_task(_close_hub_on_signal(signal, hub))
     try:
         yield
     finally:
+        if early_close is not None:
+            early_close.cancel()
         stop.set()
         await hub.close()
         with suppress(asyncio.CancelledError, TimeoutError):
