@@ -5,6 +5,7 @@ import signal
 import socket
 import sys
 import threading
+import time
 import webbrowser
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import AsyncExitStack
@@ -34,12 +35,17 @@ from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.options import ServerOptions
 from aqven.app.runtime_file import ServerRecord, remove_server_record, server_record, write_server_record
 from aqven.app.settings_store import LocalSettingsStore, open_settings_store
+from aqven.console.secrets import SecretRow, build_report
+from aqven.console.style import bold, cyan, dim, green, red
 from aqven.ports.chat import ChatEffort, ChatPermissionMode
 from aqven.ports.engine import EngineFacade
+from aqven.server.context import engine_version
 
 GRACEFUL_SHUTDOWN_SECONDS: Final = 5
 LOG_LEVEL: Final = "warning"
 STOP_SIGNALS: Final = (signal.SIGINT, signal.SIGTERM)
+DOCS_URL: Final = "https://aqvenstudio.com"
+LABEL_WIDTH: Final = 10
 
 
 TRUSTED_CHAT_WARNING: Final = (
@@ -63,6 +69,7 @@ class ApplicationLaunch:
     chat_model: str | None = None
     chat_effort: ChatEffort | None = None
     chat_permission_mode: ChatPermissionMode = "default"
+    shutdown_signal: asyncio.Event = field(default_factory=asyncio.Event)
 
 
 class ApplicationFactory(Protocol):
@@ -127,10 +134,12 @@ class LocalUvicorn(uvicorn.Server):
 class StopSwitch:
     requested: bool = False
     server: uvicorn.Server | None = None
+    shutting_down: asyncio.Event = field(default_factory=asyncio.Event)
 
     def request(self) -> None:
         repeated = self.requested
         self.requested = True
+        self.shutting_down.set()
         server = self.server
         if server is None:
             return
@@ -174,6 +183,7 @@ class LocalServer:
         self.switch.request()
 
     async def serve(self, options: ServerOptions) -> ServeOutcome:
+        started_at = time.monotonic()
         state = ProjectState(options.root.resolve())
         existing = await live_server(state, self.probe)
         if existing is not None:
@@ -183,7 +193,7 @@ class LocalServer:
         if not lock.acquire():
             return await self._reuse(await self._started_elsewhere(state, options), options)
         with lock:
-            return await self._serve_locked(state, options)
+            return await self._serve_locked(state, options, started_at)
 
     async def _started_elsewhere(self, state: ProjectState, options: ServerOptions) -> ServerRecord:
         record = await await_live_server(
@@ -202,7 +212,7 @@ class LocalServer:
             await asyncio.to_thread(self.browser.open, record.browser_url(options.dev_origin))
         return Reused(record)
 
-    async def _serve_locked(self, state: ProjectState, options: ServerOptions) -> ServeOutcome:
+    async def _serve_locked(self, state: ProjectState, options: ServerOptions, started_at: float) -> ServeOutcome:
         studio = StudioState(studio_data_dir(options.data_dir))
         studio.ensure()
         settings = open_settings_store(state, studio)
@@ -238,12 +248,13 @@ class LocalServer:
                 chat_model=options.chat_model,
                 chat_effort=options.chat_effort,
                 chat_permission_mode=options.chat_permission_mode,
+                shutdown_signal=self.switch.shutting_down,
             )
             application = self._guarded(self.application.build(launch), record, access, options)
             write_server_record(state, record)
             stack.callback(remove_server_record, state, record.pid)
             stack.callback(self.readiness.mark_stopping)
-            await self._run(application, listener, record, options)
+            await self._run(application, listener, record, options, started_at)
         return Started(record)
 
     def _guarded(
@@ -258,6 +269,7 @@ class LocalServer:
         listener: socket.socket,
         record: ServerRecord,
         options: ServerOptions,
+        started_at: float,
     ) -> None:
         config = uvicorn.Config(
             application,
@@ -268,17 +280,19 @@ class LocalServer:
             lifespan="auto",
             timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_SECONDS,
         )
-        server = LocalUvicorn(config, on_started=partial(self._on_started, record, options))
+        server = LocalUvicorn(config, on_started=partial(self._on_started, record, options, started_at))
         self.switch.attach(server)
         try:
             await server.serve(sockets=[listener])
         except SystemExit as failure:
             raise ServerStartupFailed(record.project_root) from failure
 
-    async def _on_started(self, record: ServerRecord, options: ServerOptions) -> None:
+    async def _on_started(self, record: ServerRecord, options: ServerOptions, started_at: float) -> None:
         self.readiness.mark_ready()
         address = record.url if options.headless else studio_browser_url(record, options)
-        self.announcer.announce(f"aqven: {address} (MCP {record.mcp_url})")
+        label = "server" if options.headless else "studio"
+        elapsed_ms = round((time.monotonic() - started_at) * 1000)
+        self.announcer.announce(startup_message(label, address, record.mcp_url, Path(record.project_root), elapsed_ms))
         if options.chat_permission_mode == "trust":
             self.announcer.announce(TRUSTED_CHAT_WARNING)
         await self._open_browser(record, options)
@@ -293,3 +307,33 @@ def studio_browser_url(record: ServerRecord, options: ServerOptions) -> str:
     if options.require_auth:
         return record.browser_url(options.dev_origin)
     return f"{(options.dev_origin or record.url).rstrip('/')}/"
+
+
+def startup_message(label: str, address: str, mcp_url: str, project_root: Path, elapsed_ms: int) -> str:
+    lines = [
+        f"  {bold('aqven')} {dim(f'v{engine_version()}')}",
+        "",
+        _item(label, cyan(address)),
+        _item("mcp", cyan(mcp_url)),
+        _item("docs", dim(DOCS_URL)),
+        *provider_status_lines(project_root),
+        "",
+        f"  {green('✓')} ready in {elapsed_ms}ms",
+    ]
+    return "\n".join(lines)
+
+
+def _item(label: str, value: str) -> str:
+    return f"  - {label.ljust(LABEL_WIDTH)}{value}"
+
+
+def provider_status_lines(project_root: Path) -> tuple[str, ...]:
+    report = build_report(project_root, os.environ)
+    if report is None:
+        return ()
+    return tuple(_provider_line(row) for row in report.secrets if row.scope == "provider")
+
+
+def _provider_line(row: SecretRow) -> str:
+    status = green("key set") if row.set else f"{red('key missing')} — run `aqven secrets`"
+    return _item("provider", f"{row.declared_by}  {status}")

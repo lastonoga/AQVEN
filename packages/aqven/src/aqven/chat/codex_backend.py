@@ -63,6 +63,7 @@ class CodexAgentBackend:
         mcp_url: str,
         mcp_token: SecretStr,
         client_factory: CodexClientFactory = sdk_client,
+        shutdown_signal: asyncio.Event | None = None,
     ) -> None:
         self._runtime = CodexChatRuntime(
             journal=journal,
@@ -71,6 +72,7 @@ class CodexAgentBackend:
             mcp_token=mcp_token,
             clock=utc_now,
             client_factory=client_factory,
+            shutdown=shutdown_signal or asyncio.Event(),
         )
         self._project_root = project_root
         self._mcp_url = mcp_url
@@ -179,7 +181,9 @@ class CodexAgentBackend:
 
     def events(self, session_id: ChatSessionId, after_seq: int = 0) -> AsyncIterator[ChatEvent]:
         self._require(session_id)
-        return follow_chat_events(self._runtime.journal, self._runtime.signals, session_id, after_seq)
+        return follow_chat_events(
+            self._runtime.journal, self._runtime.signals, session_id, after_seq, shutdown=self._runtime.shutdown
+        )
 
     async def answer_approval(self, session_id: ChatSessionId, answer: ApprovalAnswer) -> None:
         self._require_open(session_id)

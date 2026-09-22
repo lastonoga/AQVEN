@@ -23,7 +23,9 @@ const rowsOf = (nodes: readonly CanvasNode[]): readonly (readonly CanvasNode[])[
     current.push(node)
     bottom = Math.max(bottom, node.box.y + node.box.height)
   })
-  return rows.map((row) => [...row].sort((left, right) => left.box.x - right.box.x))
+  return rows.map((row, index) =>
+    [...row].sort((left, right) => (index % 2 === 0 ? left.box.x - right.box.x : right.box.x - left.box.x)),
+  )
 }
 
 const readingOrder = (nodes: readonly CanvasNode[]): readonly string[] => rowsOf(nodes).flatMap((row) => row.map((node) => node.id))
@@ -153,9 +155,49 @@ describe("buildGraph wraps a row without stranding its cross-row edges", () => {
     expect(boxOf("n5").y).not.toBe(boxOf("n6").y)
   })
 
-  it("keeps a cross-row edge's endpoints close instead of spanning the whole canvas", () => {
+  it("aligns a cross-row edge's endpoints instead of spanning the whole canvas", () => {
     const gap = Math.abs(boxOf("n5").x - boxOf("n6").x)
-    expect(gap).toBeLessThan(graph.extent.width / 2)
+    expect(gap).toBeLessThan(300)
+  })
+
+  it("reverses only the wrapped row, keeping every dependency forward in reading order", () => {
+    const reversed = new Set(graph.nodes.filter((node) => node.reversed).map((node) => node.id))
+    expect(reversed).toEqual(new Set(["n6", "n7"]))
+    expect(readingOrder(graph.nodes)).toEqual(["n1", "n2", "n3", "n4", "n5", "n6", "n7"])
+  })
+})
+
+describe("buildGraph reorders a rank to reduce edge crossings", () => {
+  const step = (id: string, downstream: readonly string[]): ApiNode => ({
+    node_id: id,
+    local_id: id,
+    parent: null,
+    kind: "code",
+    path: "",
+    file_hash: "",
+    agent: null,
+    inference: null,
+    prompt_level: null,
+    code_ref: null,
+    problems_count: 0,
+    upstream: [],
+    downstream: [...downstream],
+  })
+
+  it("swaps a crossed pair to match their predecessors' order", () => {
+    const nodes: readonly ApiNode[] = [step("a1", ["b2"]), step("a2", ["b1"]), step("b1", []), step("b2", [])]
+    const graph = buildGraph(nodes, ["a1", "a2", "b1", "b2"])
+    const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
+
+    expect(boxOf("b2").y).toBeLessThan(boxOf("b1").y)
+  })
+
+  it("leaves an untied rank in its declared order", () => {
+    const nodes: readonly ApiNode[] = [step("a1", ["b1", "b2"]), step("b1", []), step("b2", [])]
+    const graph = buildGraph(nodes, ["a1", "b1", "b2"])
+    const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
+
+    expect(boxOf("b1").y).toBeLessThan(boxOf("b2").y)
   })
 })
 
