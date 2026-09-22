@@ -100,6 +100,13 @@ out:
     maximum: 2
 ```
 
+Notice the order of those `out` fields: `rationale` comes first, then `scores`, then `best_index`. That's
+deliberate, not cosmetic. A model writes its response one field at a time, in the order you declare them,
+so a field can't lean on the value of a field that comes after it. Declare the reasoning field before the
+answer field and the reasoning happens before the model commits; declare it after, and it's just a
+justification for a choice already made. `tie_break.inference.yaml` gets this right: the judge writes its
+reasoning before it writes the score and picks a winner.
+
 `tie_break.prompt.md` reads those same `in` field names, also in full — six lines, no branching:
 
 ```
@@ -132,6 +139,19 @@ output:
   strict: false
   retries: 4
 ```
+
+## Shaping the out fields
+
+Keep `out` flat and keep the field count small. A deeply nested output object, or a large number of
+fields, makes it harder for a model to fill in every value correctly — values land at the wrong level, or
+whole nested objects get skipped. Prefer a flatter shape with a few well-named fields over one that
+mirrors an internal data model; if a result genuinely needs real nesting or many fields, that's often a
+sign it should be two inferences instead of one.
+
+When a `T[]` output field can legitimately come back empty — no matches, nothing applicable — say so in
+its `description`. Left to guess, a model asked for a list tends to invent a plausible-looking item rather
+than honestly return `[]`; this shows up across providers, not just one. Stating directly that an empty
+list is a valid answer is the fix.
 
 ## Under the hood
 
