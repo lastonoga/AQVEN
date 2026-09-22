@@ -33,6 +33,9 @@ export default defineConfig({
             { label: "Engine", link: "/engine/" },
             { label: "Studio", link: "/studio/" },
             { label: "MCP & CLI", link: "/mcp-cli/" },
+            { label: "Integrations", link: "/integrations/" },
+            { label: "Concepts", link: "/concepts/what-this-is-built-on/" },
+            { label: "Reference", link: "/reference/" },
           ],
         }),
       ],
@@ -55,24 +58,39 @@ export default defineConfig({
           label: "Engine",
           items: [
             { slug: "engine" },
-            { slug: "engine/llm-node" },
-            { slug: "engine/code-node" },
-            { slug: "engine/tool-node" },
-            { slug: "engine/human-node" },
-            { slug: "engine/parallel-node" },
-            { slug: "engine/map-node" },
-            { slug: "engine/switch-node" },
-            { slug: "engine/loop-node" },
-            { slug: "engine/call-node" },
-            { slug: "engine/narrow-node" },
-            { slug: "engine/prompts" },
-            { slug: "engine/dynamic-shape" },
-            { slug: "engine/check" },
-            { slug: "engine/generate-types" },
-            { slug: "engine/inspect-project" },
-            { slug: "engine/run-locally" },
-            { slug: "engine/secrets" },
-            { slug: "engine/check-providers" },
+            {
+              label: "Node kinds",
+              items: [
+                { slug: "engine/llm-node" },
+                { slug: "engine/code-node" },
+                { slug: "engine/tool-node" },
+                { slug: "engine/human-node" },
+                { slug: "engine/parallel-node" },
+                { slug: "engine/map-node" },
+                { slug: "engine/switch-node" },
+                { slug: "engine/loop-node" },
+                { slug: "engine/call-node" },
+                { slug: "engine/narrow-node" },
+              ],
+            },
+            {
+              label: "Prompts & data shape",
+              items: [
+                { slug: "engine/prompts" },
+                { slug: "engine/dynamic-shape" },
+              ],
+            },
+            {
+              label: "Check, run & connect",
+              items: [
+                { slug: "engine/check" },
+                { slug: "engine/generate-types" },
+                { slug: "engine/inspect-project" },
+                { slug: "engine/run-locally" },
+                { slug: "engine/secrets" },
+                { slug: "engine/check-providers" },
+              ],
+            },
           ],
         },
         {
@@ -80,14 +98,29 @@ export default defineConfig({
           items: [
             { slug: "studio" },
             { slug: "studio/first-workflow" },
-            { slug: "studio/understand-the-graph" },
-            { slug: "studio/investigate-a-run" },
-            { slug: "studio/respond-to-a-review" },
-            { slug: "studio/datasets" },
-            { slug: "studio/evals" },
-            { slug: "studio/chat" },
-            { slug: "studio/settings" },
-            { slug: "studio/open-a-project" },
+            {
+              label: "Understand & investigate",
+              items: [
+                { slug: "studio/understand-the-graph" },
+                { slug: "studio/investigate-a-run" },
+                { slug: "studio/respond-to-a-review" },
+              ],
+            },
+            {
+              label: "Test",
+              items: [
+                { slug: "studio/datasets" },
+                { slug: "studio/evals" },
+              ],
+            },
+            {
+              label: "Workspace",
+              items: [
+                { slug: "studio/chat" },
+                { slug: "studio/settings" },
+                { slug: "studio/open-a-project" },
+              ],
+            },
           ],
         },
         {
@@ -95,12 +128,22 @@ export default defineConfig({
           items: [
             { slug: "mcp-cli" },
             { slug: "mcp-cli/connect-an-agent" },
-            { slug: "mcp-cli/check-and-test" },
-            { slug: "mcp-cli/edit-a-flow" },
-            { slug: "mcp-cli/read-project-structure" },
-            { slug: "mcp-cli/runs" },
-            { slug: "mcp-cli/datasets-and-evals" },
-            { slug: "mcp-cli/preview-a-prompt" },
+            {
+              label: "Read & edit a project",
+              items: [
+                { slug: "mcp-cli/read-project-structure" },
+                { slug: "mcp-cli/edit-a-flow" },
+                { slug: "mcp-cli/preview-a-prompt" },
+              ],
+            },
+            {
+              label: "Check, run & test",
+              items: [
+                { slug: "mcp-cli/check-and-test" },
+                { slug: "mcp-cli/runs" },
+                { slug: "mcp-cli/datasets-and-evals" },
+              ],
+            },
           ],
         },
         {
@@ -119,17 +162,32 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
-            { slug: "concepts/what-this-is-built-on" },
-            { slug: "concepts/run-survives-a-crash" },
-            { slug: "concepts/files-as-source-of-truth" },
-            { slug: "concepts/agent-inference-and-the-llm-node" },
-            { slug: "concepts/ten-kinds-of-nodes" },
-            { slug: "concepts/three-prompt-levels" },
-            { slug: "concepts/five-dynamic-shape-cases" },
-            { slug: "concepts/what-happens-when-a-model-is-called" },
-            { slug: "concepts/engineering-loop" },
-            { slug: "concepts/finding-the-node-that-went-wrong" },
-            { slug: "concepts/two-ways-to-change-a-project" },
+            {
+              label: "Foundations",
+              items: [
+                { slug: "concepts/what-this-is-built-on" },
+                { slug: "concepts/files-as-source-of-truth" },
+                { slug: "concepts/run-survives-a-crash" },
+              ],
+            },
+            {
+              label: "The engine",
+              items: [
+                { slug: "concepts/agent-inference-and-the-llm-node" },
+                { slug: "concepts/ten-kinds-of-nodes" },
+                { slug: "concepts/three-prompt-levels" },
+                { slug: "concepts/five-dynamic-shape-cases" },
+                { slug: "concepts/what-happens-when-a-model-is-called" },
+              ],
+            },
+            {
+              label: "Working with a project",
+              items: [
+                { slug: "concepts/engineering-loop" },
+                { slug: "concepts/finding-the-node-that-went-wrong" },
+                { slug: "concepts/two-ways-to-change-a-project" },
+              ],
+            },
           ],
         },
       ],
