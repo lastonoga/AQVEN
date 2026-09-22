@@ -42,31 +42,36 @@ tests/                                 offline tests, created only by aqven new 
 
 ## Rules
 
-1. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
+1. **Ask when something is genuinely unclear and the answer would change what you build.** An ambiguous
+   field type, an underspecified check, which node kind actually fits, whether an idea is even fully
+   specified — not only which provider someone has a key for. A wrong assumption costs a rewrite; a
+   question costs one reply. This applies everywhere in this file, not only when brainstorming a new flow
+   from an idea.
+2. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
    folder it is the whole safety net: it checks the files statically and then simulates every flow with generated
    values, without a network and without spending tokens. Fix every error before you finish; do not ask a model to try
    the flow instead.
-2. Never edit `__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
+3. Never edit `__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
    the YAML instead. Never create `__package__/types/__init__.py`: it hides the generated models.
-3. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
+4. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
    flow, node, agent, tool or type, adding or removing a node. It updates references and the rename journal. Edit by
    hand only inside one file: prompt text, descriptions, settings, one node. If `flow_patch` answers `STALE_FILE`,
    read the file again and repeat the change; never overwrite a file by force.
-4. **After editing a prompt, a fragment, a variant or an inference, run
+5. **After editing a prompt, a fragment, a variant or an inference, run
    `aqven prompt preview <flow>.<node> --project __package__`** and read
    what the model will actually receive: the instructions, every message and the output contract. Wrong data wiring
    shows up there as an empty or literal placeholder in the message.
-5. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
+6. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
    what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
    want.
-6. API keys live in `__package__/.env`, which is gitignored; variables of the process environment take
+7. API keys live in `__package__/.env`, which is gitignored; variables of the process environment take
    precedence. You can read and edit `.env` directly. Before adding or changing a key, check the
    provider's own documentation for its exact variable name and format instead of guessing one. Never put
    a real key into YAML, code, tests, logs or commits — printing one into this conversation counts too,
    since it ends up stored outside `.env` either way. `aqven secrets __package__` gives a quick masked
    summary of what's configured without opening the file; `aqven models check --project __package__` does
    the same for what a model actually supports.
-7. **Before wiring a `model` at a new agent, check what's actually configured** with
+8. **Before wiring a `model` at a new agent, check what's actually configured** with
    `aqven secrets __package__` rather than assuming the project's existing default carries over. If the
    user asked for a specific provider, use it and add its key slot even if it's still empty — say so
    plainly as the first thing in your reply, not buried in a summary table after the files are already
@@ -76,11 +81,11 @@ tests/                                 offline tests, created only by aqven new 
    first and surface the gap afterward — the answer decides which provider the files reference, so it
    comes first. Once you know, write the key into `.env`, and fetch `llms.txt` to find the provider
    catalog reference page for the real environment variable name and model id format, never guess either.
-8. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
-9. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
-   Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
-   a flow takes. A project created without `--with-tests` has no `tests/` folder; `aqven check` is its gate.
-10. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
+9. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
+10. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
+    Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
+    a flow takes. A project created without `--with-tests` has no `tests/` folder; `aqven check` is its gate.
+11. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
 
    ```python
    from aqven.testing import node_output, offline_options
