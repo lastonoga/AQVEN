@@ -1,0 +1,3287 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-e8c9c443ea9898cb7470b5edb42685815bf7e3aea23a5c28dada289dac439083",
+  "request_key": "sha256-63529107dc2104183208e090f8ed7cd0886d9e4c97f97d7f6c6351747fe7aa1f",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "record__extract",
+      "branch_key": null,
+      "iteration": 2,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_BGda51LqpnlwCr0W9YsI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_BGda51LqpnlwCr0W9YsI",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_BGda51LqpnlwCr0W9YsI",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_BGda51LqpnlwCr0W9YsI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_DMVnjjrLueFAV3lv99iv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_DMVnjjrLueFAV3lv99iv",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_DMVnjjrLueFAV3lv99iv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 2,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_0hDhPbqn8bEXMBi4Ijj4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 2,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_0hDhPbqn8bEXMBi4Ijj4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 2,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_0hDhPbqn8bEXMBi4Ijj4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 3,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_LrbqBfoltGfaT1Wb8dLw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 3,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_LrbqBfoltGfaT1Wb8dLw",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 3,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_LrbqBfoltGfaT1Wb8dLw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 4,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_oXLBA8QQilBAKkXUTKT9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 4,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_oXLBA8QQilBAKkXUTKT9",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 4,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_oXLBA8QQilBAKkXUTKT9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 5,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_IOrUcLKKUd2SfEHevAh0",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 5,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_IOrUcLKKUd2SfEHevAh0",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 5,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_IOrUcLKKUd2SfEHevAh0",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 6,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_GLLTcZQIk4wKxkkRtMgL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 6,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_GLLTcZQIk4wKxkkRtMgL",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 6,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_GLLTcZQIk4wKxkkRtMgL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 7,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_G8QGh6aEVDDRUWPFyFAF",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 7,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_G8QGh6aEVDDRUWPFyFAF",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 7,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_G8QGh6aEVDDRUWPFyFAF",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 8,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_4eHTUPF6gERAILN75lNv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 8,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_4eHTUPF6gERAILN75lNv",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 8,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_4eHTUPF6gERAILN75lNv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 9,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_4q0itcJ7OVBli7Jhol7w",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 9,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_4q0itcJ7OVBli7Jhol7w",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 9,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_4q0itcJ7OVBli7Jhol7w",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 10,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_WMmbaSa60J8L9nsDxCXS",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 10,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_WMmbaSa60J8L9nsDxCXS",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 10,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_WMmbaSa60J8L9nsDxCXS",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 11,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_TudtJLPhFbKWomDopoyj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 11,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_TudtJLPhFbKWomDopoyj",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 11,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_TudtJLPhFbKWomDopoyj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 12,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_ikyo9gy07eaj4EgtIfJw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 12,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_ikyo9gy07eaj4EgtIfJw",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 12,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_ikyo9gy07eaj4EgtIfJw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 13,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_poyiuFm6FZFGOvLEjxe2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 13,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_poyiuFm6FZFGOvLEjxe2",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 13,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_poyiuFm6FZFGOvLEjxe2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 14,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_1qF3bpH2FzRIHE1Clq8Z",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 14,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_1qF3bpH2FzRIHE1Clq8Z",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 14,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_1qF3bpH2FzRIHE1Clq8Z",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 15,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_HPPC3zPLFsyJxz4N2HUr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 15,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_HPPC3zPLFsyJxz4N2HUr",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 15,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_HPPC3zPLFsyJxz4N2HUr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 16,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_iEQpHf99lmNv7VClBACj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 16,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_iEQpHf99lmNv7VClBACj",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 16,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_iEQpHf99lmNv7VClBACj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 17,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_93XOYG2eqKyEopVRwBei",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 17,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_93XOYG2eqKyEopVRwBei",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 17,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_93XOYG2eqKyEopVRwBei",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 18,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_wmFF3Cd04G8rdR6zNUay",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 18,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wmFF3Cd04G8rdR6zNUay",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 18,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wmFF3Cd04G8rdR6zNUay",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 19,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_wwwifQEnHtqcqck7E3hr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 19,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wwwifQEnHtqcqck7E3hr",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 19,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wwwifQEnHtqcqck7E3hr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 20,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_Y7w6pm8CdX1MzltK05Y2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 20,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Y7w6pm8CdX1MzltK05Y2",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 20,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Y7w6pm8CdX1MzltK05Y2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 21,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_9dJtlzqInYOAB7JleV66",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 21,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_9dJtlzqInYOAB7JleV66",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 21,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_9dJtlzqInYOAB7JleV66",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 22,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_vOQds5foYo4xBgSJtf0L",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 22,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_vOQds5foYo4xBgSJtf0L",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 22,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_vOQds5foYo4xBgSJtf0L",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 23,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_QjA50ZOggi2g1Jalqxqd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 23,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_QjA50ZOggi2g1Jalqxqd",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 23,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_QjA50ZOggi2g1Jalqxqd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 24,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_sOIoVujlUxEiZYpwkVnn",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 24,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_sOIoVujlUxEiZYpwkVnn",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 24,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_sOIoVujlUxEiZYpwkVnn",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 25,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_zWknMHtjtyPdyq4fq6pa",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 25,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_zWknMHtjtyPdyq4fq6pa",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 25,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_zWknMHtjtyPdyq4fq6pa",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 26,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_JLhiIlwCHbqXoAArKYSK",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 26,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_JLhiIlwCHbqXoAArKYSK",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 26,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_JLhiIlwCHbqXoAArKYSK",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 27,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_kP411EedkSXI1YM3TkeM",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 27,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_kP411EedkSXI1YM3TkeM",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 27,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_kP411EedkSXI1YM3TkeM",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 28,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_peWiIW1IJTeOGZZiVBg7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 28,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_peWiIW1IJTeOGZZiVBg7",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 28,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_peWiIW1IJTeOGZZiVBg7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 29,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_ptjQNo8YNLZCogUTNMx6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 29,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_ptjQNo8YNLZCogUTNMx6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 29,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_ptjQNo8YNLZCogUTNMx6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 30,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_09t6rt2F0G476dXWar1c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 30,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_09t6rt2F0G476dXWar1c",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 30,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_09t6rt2F0G476dXWar1c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 31,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_EqemeLDGdQM5gtzNEx31",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 31,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_EqemeLDGdQM5gtzNEx31",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 31,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_EqemeLDGdQM5gtzNEx31",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 32,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_MPhD74tDfwp9icEGAG4s",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 32,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_MPhD74tDfwp9icEGAG4s",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 32,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_MPhD74tDfwp9icEGAG4s",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 33,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_fsCDV4juBgUOxdiw8YLV",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 33,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_fsCDV4juBgUOxdiw8YLV",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 33,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_fsCDV4juBgUOxdiw8YLV",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 34,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_fFT2bKK2xK7F21pZsFlW",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 34,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_fFT2bKK2xK7F21pZsFlW",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 34,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_fFT2bKK2xK7F21pZsFlW",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 35,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_f9vs4LTuKu5czuPYmpob",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 35,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_f9vs4LTuKu5czuPYmpob",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 35,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_f9vs4LTuKu5czuPYmpob",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 36,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_cc5uTtO5YWNZNLasWtF9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 36,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_cc5uTtO5YWNZNLasWtF9",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 36,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_cc5uTtO5YWNZNLasWtF9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 37,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_6ZQIWb7u4fjBGRLaK65u",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 37,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6ZQIWb7u4fjBGRLaK65u",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 37,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6ZQIWb7u4fjBGRLaK65u",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 38,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_nXl1Gq5dgluXt9xAi5Jg",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 38,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_nXl1Gq5dgluXt9xAi5Jg",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 38,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_nXl1Gq5dgluXt9xAi5Jg",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 39,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_J2MnPA5FYPeNtxqG43AP",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 39,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_J2MnPA5FYPeNtxqG43AP",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 39,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_J2MnPA5FYPeNtxqG43AP",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 40,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_rdHlaMLOcWNGr6uGwCgE",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 40,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_rdHlaMLOcWNGr6uGwCgE",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 40,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_rdHlaMLOcWNGr6uGwCgE",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 41,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_4I8crGA74Wi1yHREKICR",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 41,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_4I8crGA74Wi1yHREKICR",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 41,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_4I8crGA74Wi1yHREKICR",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 42,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_Eyay3rWULC9Amt7YCVKH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 42,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_Eyay3rWULC9Amt7YCVKH",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 42,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_Eyay3rWULC9Amt7YCVKH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 43,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_JPyQwNiBrqTPrC64gCCr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 43,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_JPyQwNiBrqTPrC64gCCr",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 43,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_JPyQwNiBrqTPrC64gCCr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 44,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_elz5dCx4agfERXgYf09M",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 44,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_elz5dCx4agfERXgYf09M",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 44,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_elz5dCx4agfERXgYf09M",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 45,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_FI1y4zNoktyqdeps98jo",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 45,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_FI1y4zNoktyqdeps98jo",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 45,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_FI1y4zNoktyqdeps98jo",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 46,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_4e8Okvku9FBf2XH7KQX6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 46,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_4e8Okvku9FBf2XH7KQX6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 46,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_4e8Okvku9FBf2XH7KQX6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 47,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_A8waW15EEp37Mo3Xy7oC",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 47,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_A8waW15EEp37Mo3Xy7oC",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 47,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_A8waW15EEp37Mo3Xy7oC",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 48,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_WLwRtHHIA0VerdgdMFK7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 48,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_WLwRtHHIA0VerdgdMFK7",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 48,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_WLwRtHHIA0VerdgdMFK7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 49,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_6r2V98yeP3I7tBY47zQN",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 49,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6r2V98yeP3I7tBY47zQN",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 49,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6r2V98yeP3I7tBY47zQN",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 50,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_Va4irHIxSfe3kOaYVk9K",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 50,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Va4irHIxSfe3kOaYVk9K",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 50,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Va4irHIxSfe3kOaYVk9K",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 51,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_CnkA1R0jclaMlWzKEply",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 51,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_CnkA1R0jclaMlWzKEply",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 51,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_CnkA1R0jclaMlWzKEply",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 52,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_0dyfgZX2ihM9Yc4sD7sL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 52,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_0dyfgZX2ihM9Yc4sD7sL",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 52,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_0dyfgZX2ihM9Yc4sD7sL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 53,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_VIfjFPP2X34d5a6GfYw4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 53,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_VIfjFPP2X34d5a6GfYw4",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 53,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_VIfjFPP2X34d5a6GfYw4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 54,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_U8rSm65jbwxybtVnzAOT",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 54,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_U8rSm65jbwxybtVnzAOT",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 54,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_U8rSm65jbwxybtVnzAOT",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 55,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_o4T8Sq6qwxnLk8Sj4swX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 55,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"purchased_on\":null,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_o4T8Sq6qwxnLk8Sj4swX",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 55,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_o4T8Sq6qwxnLk8Sj4swX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 56,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_6Qj3g96XlvF1CWzot3P8",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 56,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_6Qj3g96XlvF1CWzot3P8",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 56,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_6Qj3g96XlvF1CWzot3P8",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 57,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_XiBJCwzRnrr1saXC15dk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 57,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_XiBJCwzRnrr1saXC15dk",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 57,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_XiBJCwzRnrr1saXC15dk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 58,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_KhFrc91etTR9oVcBCOUL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 58,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_KhFrc91etTR9oVcBCOUL",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 58,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_KhFrc91etTR9oVcBCOUL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 59,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_Ylsg7sbDocPI5roHatxU",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 59,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Ylsg7sbDocPI5roHatxU",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 59,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Ylsg7sbDocPI5roHatxU",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 60,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_nyRsfUwRTgQ3fE7ytxhe",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 60,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_nyRsfUwRTgQ3fE7ytxhe",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 60,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_nyRsfUwRTgQ3fE7ytxhe",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 61,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_hTF6VavokT85crV87YJI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "tool-call",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 61,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_hTF6VavokT85crV87YJI",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 61,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_hTF6VavokT85crV87YJI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_BGda51LqpnlwCr0W9YsI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_DMVnjjrLueFAV3lv99iv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_0hDhPbqn8bEXMBi4Ijj4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_LrbqBfoltGfaT1Wb8dLw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_oXLBA8QQilBAKkXUTKT9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_IOrUcLKKUd2SfEHevAh0",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_GLLTcZQIk4wKxkkRtMgL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_G8QGh6aEVDDRUWPFyFAF",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_4eHTUPF6gERAILN75lNv",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_4q0itcJ7OVBli7Jhol7w",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_WMmbaSa60J8L9nsDxCXS",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_TudtJLPhFbKWomDopoyj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\",\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_ikyo9gy07eaj4EgtIfJw",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_poyiuFm6FZFGOvLEjxe2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_1qF3bpH2FzRIHE1Clq8Z",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_HPPC3zPLFsyJxz4N2HUr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_iEQpHf99lmNv7VClBACj",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_93XOYG2eqKyEopVRwBei",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wmFF3Cd04G8rdR6zNUay",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_wwwifQEnHtqcqck7E3hr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Y7w6pm8CdX1MzltK05Y2",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_9dJtlzqInYOAB7JleV66",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_vOQds5foYo4xBgSJtf0L",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_QjA50ZOggi2g1Jalqxqd",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_sOIoVujlUxEiZYpwkVnn",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_zWknMHtjtyPdyq4fq6pa",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_JLhiIlwCHbqXoAArKYSK",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_kP411EedkSXI1YM3TkeM",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_peWiIW1IJTeOGZZiVBg7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_ptjQNo8YNLZCogUTNMx6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_09t6rt2F0G476dXWar1c",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_EqemeLDGdQM5gtzNEx31",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_MPhD74tDfwp9icEGAG4s",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_fsCDV4juBgUOxdiw8YLV",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_fFT2bKK2xK7F21pZsFlW",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_f9vs4LTuKu5czuPYmpob",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_cc5uTtO5YWNZNLasWtF9",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6ZQIWb7u4fjBGRLaK65u",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_nXl1Gq5dgluXt9xAi5Jg",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"symptom\":\"overheating\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_J2MnPA5FYPeNtxqG43AP",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_rdHlaMLOcWNGr6uGwCgE",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_4I8crGA74Wi1yHREKICR",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_Eyay3rWULC9Amt7YCVKH",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_JPyQwNiBrqTPrC64gCCr",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"kind\":\"defect\",\"symptom\":\"flicker\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_elz5dCx4agfERXgYf09M",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"flicker\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_FI1y4zNoktyqdeps98jo",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":\"2027-09-03\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true,\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_4e8Okvku9FBf2XH7KQX6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_A8waW15EEp37Mo3Xy7oC",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_WLwRtHHIA0VerdgdMFK7",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"purchased_on\":null}}",
+        "tool_call_id": "tool_final_result_6r2V98yeP3I7tBY47zQN",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"symptom\":\"overheating\",\"purchased_on\":\"2027-09-03\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Va4irHIxSfe3kOaYVk9K",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":null,\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_CnkA1R0jclaMlWzKEply",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"symptom\":\"flicker\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_0dyfgZX2ihM9Yc4sD7sL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"safety_risk\":true,\"symptom\":\"flicker\",\"kind\":\"defect\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_VIfjFPP2X34d5a6GfYw4",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\",\"safety_risk\":true}}",
+        "tool_call_id": "tool_final_result_U8rSm65jbwxybtVnzAOT",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"purchased_on\":null,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_o4T8Sq6qwxnLk8Sj4swX",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"purchased_on\":\"2027-09-03\"}}",
+        "tool_call_id": "tool_final_result_6Qj3g96XlvF1CWzot3P8",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"purchased_on\":null,\"symptom\":\"flicker\",\"safety_risk\":true,\"kind\":\"defect\"}}",
+        "tool_call_id": "tool_final_result_XiBJCwzRnrr1saXC15dk",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"purchased_on\":\"2027-09-03\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\",\"symptom\":\"overheating\"}}",
+        "tool_call_id": "tool_final_result_KhFrc91etTR9oVcBCOUL",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":null,\"symptom\":\"overheating\",\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_Ylsg7sbDocPI5roHatxU",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"order_id\":\"LUM-20260903\",\"kind\":\"defect\",\"safety_risk\":true,\"purchased_on\":\"2027-09-03\",\"symptom\":\"flicker\"}}",
+        "tool_call_id": "tool_final_result_nyRsfUwRTgQ3fE7ytxhe",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"symptom\":\"flicker\",\"purchased_on\":null,\"kind\":\"defect\",\"safety_risk\":true,\"order_id\":\"LUM-20260903\"}}",
+        "tool_call_id": "tool_final_result_hTF6VavokT85crV87YJI",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 0,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 0,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-22T08:17:45.619090Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-22T08:17:44Z",
+      "downstream_provider": "Google",
+      "finish_reason": "MALFORMED_FUNCTION_CALL",
+      "upstream_inference_cost": 0.0,
+      "upstream_inference_prompt_cost": 0.0,
+      "upstream_inference_completions_cost": 0.0,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790065064-q5AH6KfBBSuzhQzBfRmd",
+    "finish_reason": "error",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

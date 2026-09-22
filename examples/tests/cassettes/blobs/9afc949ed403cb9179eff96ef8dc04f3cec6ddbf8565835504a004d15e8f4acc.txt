@@ -1,0 +1,38 @@
+We need to produce reply: friendly, precise, short. Must mention store credit amount €15. Must not mention store website or contact outside marketplace. Must not mention customer's name, email, personal data. Must mention subscription benefits only if chunks carry them (none). Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot provide steps. We should say knowledge base has no answer. Also mention network requirements only from chunks; none. So we cannot give network requirements. So we should say we don't have instructions.
+
+We must cite chunks: kb_strip0flck for flicker and controller heat. Provide citations.
+
+We must not promise what is not in input. So we cannot give steps.
+
+We must mention that the customer should stop using the device until further instructions. That is allowed.
+
+We must mention store credit amount: 1500 in smallest units of currency (cents). So 1500 eur? Actually 1500 eur in smallest units: 1500? Wait 1 eur = 100 cents. So 1500 eur in smallest units is 150000 cents. But the instruction says "Credit amount in the smallest units of the currency: 1500 eur." That seems contradictory. They say "Credit amount in the smallest units of the currency: 1500 eur." That means 1500 eur? Actually they say "Credit amount in the smallest units of the currency: 1500 eur." That is ambiguous. But we should output 1500 eur? Wait the instruction: "Credit amount in the smallest units of the currency: 1500 eur." So we should output 1500 eur as the amount. But they earlier said "Issue €15 store credit". So 15 eur. In smallest units: 1500 cents. But they say 1500 eur. That is contradictory. But we must follow the instruction: "Credit amount in the smallest units of the currency: 1500 eur." So we output 1500 eur. Possibly they mean 1500 cents. But we will output 1500 eur as per instruction.
+
+We need to produce JSON with reply.text and reply.citations. Must be <=1500 characters. Citations up to 6 items. Provide chunk_id and quote.
+
+We need to reference kb_strip0flck for flicker and controller heat. Provide quotes.
+
+Let's craft reply:
+
+"Thank you for contacting us. We apologise for the inconvenience. We have issued a store credit of €15 (1500 eur in the smallest units) to your account. Please stop using the device until further instructions. The flickering near the controller and the heat issue are covered under warranty. If you need further assistance, let us know."
+
+We must not mention store website or contact outside marketplace.
+
+We need to cite kb_strip0flck for flicker and controller heat. Provide quotes: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." And "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We can include both quotes.
+
+We need to mention that we cannot provide app steps because not in chunks.
+
+We should mention that we cannot provide network requirements.
+
+We should mention that we cannot provide steps.
+
+We should mention that we have issued store credit.
+
+We should mention that the customer should stop using the device.
+
+Ok.
+
+Now produce JSON.
+

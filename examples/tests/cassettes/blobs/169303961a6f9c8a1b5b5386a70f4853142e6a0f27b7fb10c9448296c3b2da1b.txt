@@ -1,0 +1,23 @@
+Let me analyze the candidates against the rubric criteria.
+
+Case: Customer received Lumen Flow Strip 5m in dented box. Strip flickering near controller for 3 days, controller hot to touch after half hour. Concerned about safety, unsure if wired correctly or damaged during delivery. Safety matter.
+
+Chunks:
+1. kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+2. kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+Candidate 0: Recommends first cut power and check controller plug. If flickering continues, controller replaced under warranty. If controller hot, unplug immediately and don't turn back on until inspected. These steps in line with safety guidelines. Offers further assistance.
+
+Candidate 1: Apologizes, gives steps: 1. Unplug strip immediately to prevent overheating. 2. Check controller plug for damage. 3. If flickering persists, turn off power at socket and wait 10 minutes. 4. Replug and check. If not, follow app's troubleshooting guide or contact. Rest assured safety priority. Has garbled characters at end (�����).
+
+Grounding: Both cite the same two chunks. Candidate 0's claims map directly to chunks: cut power/check plug, warranty replacement, unplug if hot, don't switch on until checked. All grounded. Candidate 1: unplug immediately (grounded), check plug (grounded), but "turn off power at the socket and wait for 10 minutes" and "replug the strip and check if the issue is resolved" — these are NOT in the chunks. The chunk says if hot, do not switch on until checked. Candidate 1's step 4 says replug and check if resolved, which contradicts the safety guidance (do not switch on until checked). Also "follow our app's troubleshooting guide" is unconfirmed. So candidate 1 has ungrounded/contradictory content. Candidate 0 is better grounded.
+
+Helpfulness: Candidate 0 directly addresses both issues (flicker and heat) with clear safety-first instructions and warranty info, plus offers further assistance. Candidate 1 also addresses both but includes a step that contradicts safety guidance (replugging and switching on after 10 min without inspection), which is less helpful/safe. Candidate 0 is more helpful.
+
+Tone: Both are polite. Candidate 1 is warmer (apology, "rest assured, your safety is our priority") but has garbled characters (�����) which is a defect. Candidate 0 is professional and clear. Candidate 0 has better tone due to no corruption.
+
+Best index: 0.
+
+Scores for candidate 0: grounded 5, helpful 5, tone 4 or 5. Candidate 0 is fully grounded, helpful, professional tone. I'd give grounded 5, helpful 5, tone 4 (professional but slightly less warm; still fine). Actually tone is fine, maybe 5. Let me give grounded 5, helpful 5, tone 4.
+
+Rationale must be concise (max 600 chars).

@@ -93,8 +93,9 @@ structured output · human-in-the-loop · MCP server · durable execution · Pyd
 
 ## License
 
-[PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) — source-available.
-Use it for any purpose, including in production and in commercial products you build with it.
-You may not use it to provide a product that competes with AQVEN.
+AQVEN License 1.0.0, based on [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) —
+source-available. Use it for any purpose, including in production and in commercial products you build with it.
+You may not use it to provide a product that competes with AQVEN, and you may redistribute AQVEN itself
+only free of charge and for a non-commercial purpose.
 
 Copyright Kirill Burkhanov.

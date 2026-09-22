@@ -1,11 +1,13 @@
-# PolyForm Shield License 1.0.0
+# AQVEN License 1.0.0
+
+Based on the PolyForm Shield License 1.0.0 <https://polyformproject.org/licenses/shield/1.0.0>,
+modified to additionally restrict commercial distribution (see [Distribution License](#distribution-license)).
+This is not the unmodified PolyForm Shield License; do not cite it as such.
 
 Required Notice: Copyright Kirill Burkhanov (https://aqvenstudio.com)
 
 Licensor Line of Business: AQVEN, a platform for building, running and evaluating
 AI workflows (https://aqvenstudio.com)
-
-<https://polyformproject.org/licenses/shield/1.0.0>
 
 ## Acceptance
 
@@ -17,7 +19,7 @@ The licensor grants you a copyright license for the software to do everything yo
 
 ## Distribution License
 
-The licensor grants you an additional copyright license to distribute copies of the software.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#changes-and-new-works-license).
+The licensor grants you an additional copyright license to distribute copies of the software, but only if you do so free of charge and for a non-commercial purpose.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#changes-and-new-works-license).
 
 ## Notices
 

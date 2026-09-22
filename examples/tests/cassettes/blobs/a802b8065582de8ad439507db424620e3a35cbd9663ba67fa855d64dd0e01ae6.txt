@@ -1,0 +1,36 @@
+We need to output JSON with fields reply.text and reply.citations. So produce:
+
+{
+  "reply": {
+    "text": "...",
+    "citations": [...]
+  }
+}
+
+But the output format: Output fields: reply: The reply text and the chunk quotes it relies on. So reply is an object with text and citations. Let's do that.
+
+We need to include citations array with up to 6 items. Each item has chunk_id and quote.
+
+We need to keep reply.text <=1500 characters. We'll keep it short.
+
+Let's produce:
+
+{
+  "reply": {
+    "text": "Thank you for contacting us. We apologise for the inconvenience caused by the flickering and heat issues. We have issued a store credit of €15 (1500 eur in the smallest units) to your account. Please stop using the device until we provide further instructions. The flickering near the controller and the heat problem are covered under warranty. If you need additional help, let us know.",
+    "citations": [
+      {
+        "chunk_id": "kb_strip0flck",
+        "quote": "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+      },
+      {
+        "chunk_id": "kb_strip0flck",
+        "quote": "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+      }
+    ]
+  }
+}
+
+Check length: about 300 characters. Good.
+
+Return that.

@@ -1,7 +1,0 @@
-We need to produce a reply following guidelines. Must not mention external site or contacts outside marketplace. Must not mention personal data. Must mention subscription Lumen Plus only if there are benefits in fragments. No such fragment. So skip. Must give steps in app, then reset and re-pair if described in fragments. But fragments only talk about flickering and heating. No app steps. So we cannot give app steps. We must say that no info in KB. But we can give instructions from fragments: flickering: disconnect, check plug, if persists replace controller. Heating: disconnect immediately. Also mention contact support for further actions. But cannot give contact info. Just say "свяжитесь с отделом поддержки". That's allowed. Must include citations. Use up to 6 citations. Provide reply text up to 1500 chars. Citations: from kb_strip0flck and kb_ctrlheat01. Provide quotes. Let's craft.
-
-We should not mention external site. We can say "свяжитесь с отделом поддержки Lumen" which is internal. Good.
-
-We must not mention personal data. Ok.
-
-Let's produce reply.

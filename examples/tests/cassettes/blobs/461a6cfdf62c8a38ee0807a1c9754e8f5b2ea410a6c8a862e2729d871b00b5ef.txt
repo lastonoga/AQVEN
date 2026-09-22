@@ -1,0 +1,31 @@
+We need to ensure the quotes exactly match the chunk content. Let's check the chunk content:
+
+- Flow strip flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+- Controller heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+So quotes match. But maybe the system expects the exact chunk text. We need to ensure no trailing spaces or punctuation differences. Let's copy exactly.
+
+First quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+Second quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We used same. But maybe the system expects the quotes to be exactly as in chunk. Let's double-check: The chunk content might have line breaks? But we can't see. Let's assume it's exactly as we wrote.
+
+But the system says quotes not found. Maybe the quotes need to be trimmed? Or maybe the chunk id is wrong? The chunk id is "kb_strip0flck". That is correct.
+
+Maybe the system expects the quote to be a substring of the chunk. We provided the full chunk. That should be fine.
+
+But the system says quotes not found. Maybe the chunk content includes trailing spaces or different punctuation. Let's try to provide shorter quotes that are definitely present: e.g., "If a Flow strip flickers near the controller" and "If the controller body is hot to the touch". But the system might require the full quote. Let's try to provide the exact chunk text but maybe the system expects the quotes to be in the same case. We used same case. Let's double-check: The chunk text: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." That matches.
+
+Second: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." That matches.
+
+Maybe the system expects the quotes to be exactly as in the chunk but with no trailing period? But we included period. The chunk ends with period. So fine.
+
+Maybe the system expects the quotes to be exactly the chunk content but we need to escape quotes? But we are providing JSON. The quotes inside the JSON string are escaped. That is fine.
+
+Maybe the system expects the quotes to be exactly the chunk content but we need to include the entire chunk including line breaks? But we don't have line breaks.
+
+Let's try to shorten the quotes to a unique phrase that definitely appears: e.g., "If a Flow strip flickers near the controller" and "If the controller body is hot to the touch". That might be accepted.
+
+Let's try that.

@@ -1,0 +1,13 @@
+We need to produce a reply following the instructions. We must not mention store website or contact outside marketplace. We must not mention customer's name, email, personal data. Language en-GB. The reply must be short, friendly, precise. We must cite chunks. We have two chunks: kb_strip0flck and kb_ctrlheat01. We must use quotes from them. We must not promise compensation. We must give steps: first in app? But the chunks don't mention app steps. The instructions say: "Advice for this lamp kind: The lamp is smart, connected over Wi-Fi and controlled from the Lumen app. Give the steps in the app first, then the reset and re-pairing, if the chunks describe them. State network requirements only from the chunks." But the chunks do not describe app steps or network requirements. So we cannot mention them. We must not add facts not in chunks. So we should not mention app steps or network requirements. So we just give safety steps: cut power, check plug, replace controller if flicker persists, unplug if hot, do not turn on until inspected. We must cite the chunks. We should not mention compensation. We should apologize at most once. Maybe we can say "We apologise for the inconvenience." That's one apology. We must not exceed 1500 characters. Citations up to 6 items. We need to include chunk_id and quote. We can include two citations: one for flicker, one for heat. We need to quote up to 300 characters each. Let's craft reply:
+
+"Hi, thank you for contacting us. We apologise for the issue. Please follow these safety steps: 1. Cut the power to the strip and inspect the controller plug. If the flicker continues, the controller should be replaced under warranty. 2. If the controller feels hot, unplug the strip immediately and do not switch it on until it has been inspected. These steps are in line with our safety guidelines for the Flow Strip 5 m. If you need further assistance, let us know."
+
+We need to cite chunks. For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to format reply.citations as array of objects with chunk_id and quote. Provide at most 6. We'll give two.
+
+Ensure no mention of store website or contact outside marketplace. We mention "If you need further assistance, let us know." That's fine. No personal data. No mention of subscription benefits because chunks don't mention them. So we don't mention. Good.
+
+We must not mention app steps. So we skip that. Good.
+
+Now produce JSON with reply.text and reply.citations.

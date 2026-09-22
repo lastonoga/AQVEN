@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { AssistantRuntimeProvider, useExternalStoreRuntime, type AppendMessage, type ThreadMessageLike } from "@assistant-ui/react"
 import type { ApiChatEvent, ApiChatSession } from "@/domain"
 import { chatSessionId, clientOpId } from "@/data/ids"
-import { browserDictation } from "./backend"
 import { applyChatEvent, EMPTY_TRANSCRIPT, isRunning, threadMessages, type ChatTranscript } from "./chat-events"
 import type { ChatTransport } from "./chat-transport"
 import { Thread } from "./thread"
@@ -41,7 +40,6 @@ export function ChatSession({ session, transport }: ChatSessionProps) {
     onRespondToToolApproval: async ({ approvalId, approved, text }) => {
       await transport.respond(id, approvalId, approved ? "allow" : "deny", text ?? null)
     },
-    adapters: { dictation: browserDictation() },
   })
 
   return (
