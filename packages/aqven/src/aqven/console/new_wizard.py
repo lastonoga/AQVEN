@@ -61,17 +61,31 @@ def ask_provider() -> tuple[str, str, str | None]:
         print(f"  {index}. {provider_id}")
     other_index = len(PROVIDER_SHORTLIST) + 1
     print(f"  {other_index}. something else")
-    choice = input("> ").strip()
-    if choice == str(other_index):
-        provider_id = input("Provider id from the catalog (e.g. cerebras): ").strip()
-    else:
-        provider_id = PROVIDER_SHORTLIST[int(choice) - 1]
+    provider_id = ask_provider_id(other_index)
     entry = PROVIDERS[provider_id]
     env_var = entry.key.primary
     if env_var is None:
         return provider_id, "", None
     key = input(f"Paste the {env_var} value now, or press Enter to add it later: ").strip()
     return provider_id, env_var, key or None
+
+
+def ask_provider_id(other_index: int) -> str:
+    while True:
+        choice = input("> ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= other_index - 1:
+            return PROVIDER_SHORTLIST[int(choice) - 1]
+        if choice == str(other_index):
+            return ask_catalog_provider_id()
+        print(f"Enter a number from 1 to {other_index}.")
+
+
+def ask_catalog_provider_id() -> str:
+    while True:
+        provider_id = input("Provider id from the catalog (e.g. cerebras): ").strip()
+        if provider_id in PROVIDERS:
+            return provider_id
+        print(f"Unknown provider {provider_id!r}; try again.")
 
 
 def ask_pii() -> bool:
@@ -86,10 +100,21 @@ def ask_pii() -> bool:
 
 
 def ask_budget_usd_micros() -> int | None:
-    answer = input("Budget per run, in USD (press Enter for no limit): ").strip()
-    if not answer:
+    while True:
+        answer = input("Budget per run, in USD (press Enter for no limit): ").strip()
+        if not answer:
+            return None
+        dollars = parse_dollars(answer)
+        if dollars is not None:
+            return round(dollars * 1_000_000)
+        print("Enter a number, or press Enter for no limit.")
+
+
+def parse_dollars(answer: str) -> float | None:
+    try:
+        return float(answer)
+    except ValueError:
         return None
-    return round(float(answer) * 1_000_000)
 
 
 def computed_max_parallel() -> int:

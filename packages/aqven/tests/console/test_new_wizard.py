@@ -56,6 +56,34 @@ def test_ask_provider_other_takes_a_typed_catalog_id(monkeypatch: pytest.MonkeyP
     assert env_var == "CEREBRAS_API_KEY"
 
 
+def test_ask_provider_reprompts_on_empty_input(monkeypatch: pytest.MonkeyPatch) -> None:
+    answers = iter(["", "1", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    provider_id, _, _ = ask_provider()
+    assert provider_id == PROVIDER_SHORTLIST[0]
+
+
+def test_ask_provider_reprompts_on_out_of_range_number(monkeypatch: pytest.MonkeyPatch) -> None:
+    answers = iter(["0", "99", "2", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    provider_id, _, _ = ask_provider()
+    assert provider_id == PROVIDER_SHORTLIST[1]
+
+
+def test_ask_provider_other_reprompts_on_unknown_catalog_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    other = str(len(PROVIDER_SHORTLIST) + 1)
+    answers = iter([other, "not-a-real-provider", "cerebras", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    provider_id, _, _ = ask_provider()
+    assert provider_id == "cerebras"
+
+
+def test_ask_budget_reprompts_on_non_numeric_input(monkeypatch: pytest.MonkeyPatch) -> None:
+    answers = iter(["not a number", "2.50"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    assert ask_budget_usd_micros() == 2_500_000
+
+
 def test_ask_pii_yes(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("builtins.input", lambda _prompt="": "y")
     assert ask_pii() is True
