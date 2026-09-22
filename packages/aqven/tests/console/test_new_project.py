@@ -303,3 +303,26 @@ def test_tests_are_created_only_when_asked(tmp_path: Path) -> None:
 
     assert not (without / "tests").exists()
     assert (with_tests / "tests" / "test_answer_question.py").is_file()
+
+
+def test_provider_flag_writes_the_real_key_variable_and_skips_the_wizard(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    workspace = tmp_path_factory.mktemp("flagged")
+    completed = run_python(
+        workspace, "-m", "aqven", "new", "flagged-project", "--provider", "anthropic",
+        "--aqven-path", str(AQVEN_PACKAGE), "--no-sync",
+    )
+    assert completed.returncode == 0, completed.stderr
+    manifest = (workspace / "flagged-project" / "flagged_project" / "aqven.yaml").read_text()
+    assert 'id: "anthropic"' in manifest
+    env_example = (workspace / "flagged-project" / "flagged_project" / ".env.example").read_text()
+    assert "ANTHROPIC_API_KEY=" in env_example
+    assert "OPENROUTER_API_KEY=" not in env_example
+
+
+def test_unknown_provider_flag_fails_cleanly(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    code = main(["new", str(tmp_path / "shop"), "--provider", "not-a-real-provider", "--no-sync"])
+
+    assert code == 2
+    assert "unknown provider 'not-a-real-provider'" in capsys.readouterr().err

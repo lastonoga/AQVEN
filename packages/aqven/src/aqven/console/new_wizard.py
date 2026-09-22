@@ -30,10 +30,30 @@ PROVIDER_SHORTLIST: Final[tuple[str, ...]] = (
 )
 
 
+class UnknownProvider(ValueError):
+    def __init__(self, provider_id: str) -> None:
+        available = ", ".join(sorted(PROVIDERS))
+        super().__init__(f"unknown provider {provider_id!r}; available providers: {available}")
+
+
 def should_run_wizard(explicit_provider: str | None) -> bool:
     if explicit_provider is not None:
         return False
     return sys.stdin.isatty()
+
+
+def wizard_from_provider(provider_id: str) -> WizardAnswers:
+    entry = PROVIDERS.get(provider_id)
+    if entry is None:
+        raise UnknownProvider(provider_id)
+    return WizardAnswers(
+        provider_id=provider_id,
+        provider_env_var=entry.key.primary or "",
+        api_key=None,
+        allows_pii=False,
+        budget_usd_micros=None,
+        max_parallel=computed_max_parallel(),
+    )
 
 
 def ask_provider() -> tuple[str, str, str | None]:
