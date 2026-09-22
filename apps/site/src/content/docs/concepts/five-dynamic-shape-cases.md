@@ -68,24 +68,34 @@ is how much of the node's output actually needs to give up the guarantees above.
 
 ## Case 4 in the showcase: triage's intake_extra
 
-The showcase project's `support_case` flow has a real case 4. Its `triage` inference reads the
-customer's message and attachments and always produces the same four fields: a summary, a product
-category, a safety-risk flag, and a list of observations. Every one of those is ordinarily typed —
-checked, bindable, referenceable by name, same as any other field in the project.
+The showcase project's `support_case` flow has a real case 4. Its `triage` inference's `out:` block ends
+like this — two of its four static fields shown, the rest collapsed:
 
-Alongside those four, `triage` has exactly one more output field, `intake_extra`, declared `Dynamic`.
-Its schema is built from `intake_fields`, one of `triage`'s own inputs — a list of field descriptions
-computed earlier in the flow by `prepare`. That's what makes it genuinely data-driven rather than merely
-unpredictable: `prepare` looks at which marketplace channel the request arrived on and returns a
-different field list per channel — nothing extra for the store's own storefront, a return reason and a
-product identifier for one marketplace, a shipment number and a claim type for another. `intake_extra`'s
-real shape on any given run is whichever of those field lists actually applies.
+```yaml
+out:
+- name: "summary"
+  type: "Text"
+- name: "safety_risk"
+  type: "Bool"
+- name: "intake_extra"
+  type: "Dynamic"
+  schema_from: "$in.intake_fields"
+  limits:
+    max_fields: 10
+    max_depth: 1
+    max_text_length: 200
+    max_items: 5
+```
 
-Nothing downstream ever narrows `intake_extra` to a fixed type — no `narrow` node in the flow touches
-it. The next node that reads it, an agent resolving the case, takes it in as `Dynamic` too and drops the
-whole value into one slot of its own prompt, unread field by field. That's the shape of case 4: four
-fields keep every static guarantee a normal field gets, and the one field that can't get those
-guarantees is exactly as open-ended as it needs to be, no more.
+`summary` and `safety_risk` stand in for `triage`'s four ordinarily typed output fields — checked,
+bindable, referenceable by name, same as any other field in the project. `intake_extra` is the one
+exception: its schema is built from `intake_fields`, one of `triage`'s own inputs — a list of field
+descriptions computed earlier in the flow from context the flow doesn't have until run time. `limits`
+bounds how big that shape is allowed to get, whatever it turns out to be.
+
+Nothing downstream ever narrows `intake_extra` to a fixed type — later nodes take it in as `Dynamic`
+too and use it whole. That's the shape of case 4: the fields that can stay static do, and the one field
+that can't get those guarantees is exactly as open-ended as it needs to be, no more.
 
 Case 5 looks different in one important way: there, the *entire* output is unknown ahead of time, not
 one field alongside several fixed ones, and a later `narrow` node is what turns the whole thing back
