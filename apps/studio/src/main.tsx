@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { RouterProvider } from "@tanstack/react-router"
 import "@fontsource-variable/geist"
 import "@fontsource-variable/geist-mono"
+import { subscribeToSpecEvents } from "./features/shell/spec-live-refresh"
 import { router } from "./router"
 import "./styles/app.css"
 
@@ -31,3 +32,6 @@ const unregisterLegacyMockWorker = async (): Promise<void> => {
 
 void unregisterLegacyMockWorker().catch(console.error)
 mount()
+subscribeToSpecEvents(() => {
+  void router.invalidate()
+})
