@@ -33,154 +33,83 @@ service or do anything asynchronous, that's a `tool` node instead — a `code` n
 
 ### Example
 
-This is the showcase project's `prepare` node, the first step in its `support_case` flow — it runs
-before the flow ever calls a model. Create it yourself with:
+This is the showcase project's `tally` node, the step right after the `vote` map node in its
+`support_case` flow — it tallies the votes `vote` produced into a single intent. Create it yourself
+with:
 
 ```bash
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its files live at `flows/support_case/nodes/prepare/`. The showcase is written for a Russian-market
-storefront, so its descriptions and data are in Russian; both files below are translated to English
-for this page. `prepare.node.yaml` declares one input field, taken straight from the flow's whole
-input, and five output fields:
+Its files live at `flows/support_case/nodes/tally/`. The showcase is written for a Russian-market
+storefront, so its descriptions are in Russian; both files below are translated to English for this
+page. `tally.node.yaml` declares one input field, taken from the map node right before it, and three
+output fields:
 
 ```yaml
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Normalizes the request text and derives the channel, the category's observation signals, the marketplace's intake fields, and the voting perspectives"
-run: "prepare"
+description: "Tallies the votes: agreement when a majority votes together with enough confidence, otherwise a split and the most confident vote's intent"
+run: "tally"
 in:
-  - name: "request"
-    type: "CaseRequest"
-    description: "The customer's request as a whole"
-    from: "$input"
-out:
-  - name: "message"
-    type: "Text"
-    description: "The request text with whitespace normalized"
-    maxLength: 4000
-  - name: "channel"
-    type: "Channel"
-    description: "The channel the request came in on"
-  - name: "signals"
-    type: "SignalDef[]"
-    description: "The observation signals allowed for the product's category"
-    maxItems: 20
-  - name: "intake_fields"
-    type: "FieldSpec[]"
-    description: "The intake fields the marketplace requires"
-    maxItems: 10
-  - name: "perspectives"
-    type: "VotePerspective[]"
-    description: "The independent voting perspectives for intent"
+  - name: "ballots"
+    type: "IntentBallot[]"
+    description: "The votes for intent"
     maxItems: 3
+    from: "$vote.out.ballots"
+out:
+  - name: "intent"
+    type: "CaseIntent"
+    description: "The majority's intent, or the most confident vote's intent"
+  - name: "agreement"
+    type: "Agreement"
+    description: "Whether the votes agree with each other"
+  - name: "confidence"
+    type: "Score"
+    description: "Confidence in the intent"
 ```
 
-`prepare.py` defines the function `prepare`, matching the file's own stem, the `run` value, and the
-one `in` field name and order. It imports `SupportCasePrepareOut` — the record AQVEN generated from
-the `out` list above — as its return type:
+`tally.py` defines the function `tally`, matching the file's own stem, the `run` value, and the one
+`in` field name and order. It imports `SupportCaseTallyOut` — the record AQVEN generated from the `out`
+list above — as its return type:
 
 ```python
-from collections.abc import Mapping
-from typing import Final
+from collections import Counter
+from statistics import mean
+from typing import Annotated, Final
 
-from aqven.spec import FieldSpec
-from __package__.types import (
-    CaseOriginMarketplace,
-    CaseRequest,
-    Channel,
-    ProductCategory,
-    SignalDef,
-    SignalKey,
-    SupportCasePrepareOut,
-    VotePerspective,
-)
+from pydantic import Field
 
-MESSAGE_LIMIT: Final = 4000
-PERSPECTIVES: Final[tuple[VotePerspective, ...]] = ("words", "evidence", "risk")
+from lumen.types import CaseIntent, IntentBallot, SupportCaseTallyOut
 
-SIGNAL_LABELS: Final[Mapping[str, str]] = {
-    "no_power": "Won't turn on",
-    "flicker": "Flickers",
-    "dead_segment": "A section of the strip is dark",
-    "overheating": "Overheats",
-    "burning_smell": "Smells like it's burning",
-    "app_offline": "Not responding in the app",
-    "cracked_shade": "Shade is cracked",
-    "package_damaged": "Packaging is damaged",
-    "missing_part": "A part is missing",
-    "usage_question": "Question about using it",
-}
-
-LAMP_SIGNALS: Final = frozenset(SIGNAL_LABELS) - {"dead_segment", "app_offline"}
-
-CATEGORY_SIGNALS: Final[Mapping[ProductCategory, frozenset[str]]] = {
-    "desk_lamp": LAMP_SIGNALS,
-    "floor_lamp": LAMP_SIGNALS,
-    "smart_bulb": frozenset(
-        {"no_power", "flicker", "overheating", "burning_smell", "app_offline", "package_damaged", "usage_question"}
-    ),
-    "light_strip": frozenset(SIGNAL_LABELS) - {"cracked_shade"},
-    "accessory": frozenset({"no_power", "package_damaged", "missing_part", "usage_question"}),
-}
-
-INTAKE_FIELDS: Final[Mapping[Channel, tuple[FieldSpec, ...]]] = {
-    "storefront": (),
-    "amazon": (
-        FieldSpec(
-            name="return_reason",
-            type="Text",
-            description="The return reason the customer picked on Amazon",
-            maxLength=20,
-            enum=["defective", "damaged", "not_as_described"],
-        ),
-        FieldSpec(
-            name="asin",
-            type="Text?",
-            description="The product's ASIN on Amazon; null if the request doesn't have one",
-            maxLength=10,
-            pattern=r"^B0[A-Z0-9]{8}$",
-        ),
-    ),
-    "ozon": (
-        FieldSpec(name="posting_number", type="Text", description="The Ozon shipment number", maxLength=40),
-        FieldSpec(
-            name="claim_type",
-            type="Text",
-            description="The claim type the customer picked on Ozon",
-            maxLength=10,
-            enum=["defect", "damage", "missing"],
-        ),
-    ),
-}
+MIN_BALLOTS: Final = 2
+AGREEMENT_CONFIDENCE: Final = 0.6
 
 
-def prepare(request: CaseRequest) -> SupportCasePrepareOut:
-    origin = request.origin
-    channel: Channel = origin.marketplace if isinstance(origin, CaseOriginMarketplace) else "storefront"
-    keys = CATEGORY_SIGNALS[request.product.category] if request.product is not None else frozenset(SIGNAL_LABELS)
-    return SupportCasePrepareOut(
-        message=" ".join(request.message.split())[:MESSAGE_LIMIT],
-        channel=channel,
-        signals=[SignalDef(key=SignalKey(key), label=label) for key, label in SIGNAL_LABELS.items() if key in keys],
-        intake_fields=list(INTAKE_FIELDS[channel]),
-        perspectives=list(PERSPECTIVES),
-    )
+def tally(ballots: Annotated[list[IntentBallot], Field(max_length=3)]) -> SupportCaseTallyOut:
+    if not ballots:
+        return SupportCaseTallyOut(intent="question", agreement="split", confidence=0)
+    counts: Counter[CaseIntent] = Counter(ballot.intent for ballot in ballots)
+    intent, votes = counts.most_common(1)[0]
+    confidence = mean(ballot.confidence for ballot in ballots if ballot.intent == intent)
+    majority = votes * 2 > len(ballots) and len(ballots) >= MIN_BALLOTS
+    if majority and confidence >= AGREEMENT_CONFIDENCE:
+        return SupportCaseTallyOut(intent=intent, agreement="agreed", confidence=confidence)
+    strongest = max(ballots, key=lambda ballot: ballot.confidence)
+    return SupportCaseTallyOut(intent=strongest.intent, agreement="split", confidence=strongest.confidence)
 ```
 
-The lookup tables above (`SIGNAL_LABELS`, `CATEGORY_SIGNALS`, `INTAKE_FIELDS`, `PERSPECTIVES`) are
-plain Python, nothing AQVEN-specific. What matters for the node's contract is the signature: one
-parameter, `request`, typed `CaseRequest`, matching the single `in` field by name; one return value,
-typed `SupportCasePrepareOut`, built from all five `out` fields at once. If the node had declared more
-`in` fields, `prepare` would take more parameters — one per field, same names, same order — instead of
-one bundled input record; only the output side is bundled into a single typed record.
+What matters for the node's contract is the signature: one parameter, `ballots`, typed
+`list[IntentBallot]`, matching the single `in` field by name; one return value, typed
+`SupportCaseTallyOut`, built from all three `out` fields at once. If the node had declared more `in`
+fields, `tally` would take more parameters — one per field, same names, same order — instead of one
+bundled input; only the output side is bundled into a single typed record.
 
 ## See also
 
-- [How to call a model](/engine/llm-node/) — the node kind for the step right after this one, once
-  the request is normalized.
+- [How to call a model](/engine/llm-node/) — often the next node kind in a flow, once a `code` node
+  has shaped the data for it.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `CodeNodeSpec`, generated from the code.
