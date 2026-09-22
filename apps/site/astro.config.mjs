@@ -12,7 +12,6 @@ export default defineConfig({
   vite: { plugins: [tailwindcss()] },
   markdown: { processor: unified({ remarkPlugins: [replaceDocsTokens] }) },
   redirects: {
-    "/": "/start/",
     "/engineering/reference": "/reference",
   },
   integrations: [
