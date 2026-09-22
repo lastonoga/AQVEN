@@ -3,6 +3,8 @@ import { useTranslations } from "use-intl"
 import { Surface, Toolbar } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { toolSnapshot } from "./chat-events"
+import { QuestionCard } from "./question-card"
+import { QUESTION_TOOL, parseQuestions, type Question } from "./question-model"
 import { presentToolCall } from "./tool-card-model"
 import { ToolCardFrame } from "./tool-card-frame"
 
@@ -32,10 +34,16 @@ function ApprovalBar({ approval, respond }: ApprovalProps) {
   )
 }
 
+const askedQuestions = (toolName: string, argsText: string): readonly Question[] | null =>
+  toolName === QUESTION_TOOL ? parseQuestions(argsText) : null
+
 export function ToolCard(part: ToolPartProps) {
   const t = useTranslations("chat")
   const snapshot = toolSnapshot(part.artifact) ?? { toolName: part.toolName, mcpServer: null, argsText: part.argsText, facet: null, status: null }
   const approval = part.approval
+  const questions = askedQuestions(snapshot.toolName, snapshot.argsText)
+  if (questions !== null && approval !== undefined)
+    return <QuestionCard questions={questions} approvalId={approval.id} decided={approval.approved !== undefined} />
   const footer = approval === undefined ? null : <ApprovalBar approval={approval} respond={part.respondToApproval} />
   return <ToolCardFrame {...presentToolCall(snapshot, t)} footer={footer} />
 }

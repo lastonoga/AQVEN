@@ -71,6 +71,7 @@ class ApprovalAnswer(RequestModel):
     approval_id: ChatApprovalId
     decision: ApprovalDecision
     message: str | None = None
+    answers: dict[str, str] | None = None
 
 
 class LoginStatus(ResourceModel):
@@ -106,6 +107,7 @@ class ChatUsage(ResourceModel):
     model: str | None
     tokens_in: Annotated[int, Field(ge=0)]
     tokens_out: Annotated[int, Field(ge=0)]
+    thinking_tokens: Annotated[int, Field(ge=0)] = 0
     cache_read_tokens: Annotated[int, Field(ge=0)]
     cache_write_tokens: Annotated[int, Field(ge=0)]
     cost_usd: Decimal | None
@@ -204,6 +206,7 @@ class ChatStatus(ChatEventBase):
 
 class ChatUsageReported(ChatEventBase):
     type: Literal["chat_usage"] = "chat_usage"
+    message_id: ChatMessageId | None = None
     usage: ChatUsage
 
 

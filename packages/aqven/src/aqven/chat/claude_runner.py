@@ -27,6 +27,7 @@ from aqven.chat.feed import ChatEmitter
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import McpConfigFile
 from aqven.chat.normalizer import UNKNOWN_ERROR, ClaudeEventNormalizer, ErrorClass, backend_session_id
+from aqven.chat.questions import answered_input
 from aqven.chat.routes import first_match
 from aqven.chat.tool_names import claude_tool_identity
 from aqven.ports.chat import (
@@ -38,7 +39,7 @@ from aqven.ports.chat import (
     ChatTurnFinished,
     ChatTurnId,
 )
-from aqven.runtime.address import ClientOpId
+from aqven.runtime.address import ClientOpId, JsonObject
 
 REDACTED: Final[str] = "***"
 THINKING: Final[ChatState] = "thinking"
@@ -69,9 +70,9 @@ def describe_failure(error: Exception) -> str:
     return f"{type(error).__name__}: {detail[0]}" if detail else type(error).__name__
 
 
-def permission_result(verdict: ApprovalVerdict) -> PermissionResult:
+def permission_result(verdict: ApprovalVerdict, updated_input: JsonObject | None) -> PermissionResult:
     if verdict.decision == "allow":
-        return PermissionResultAllow()
+        return PermissionResultAllow(updated_input=updated_input)
     message = verdict.message or DENY_MESSAGES[verdict.resolved_by]
     return PermissionResultDeny(message=message, interrupt=verdict.resolved_by != "user")
 
@@ -252,7 +253,7 @@ class ClaudeSessionRunner:
             raise
         approvals.discard(approval_id)
         self._settle(approval_id, tool_call_id, verdict)
-        return permission_result(verdict)
+        return permission_result(verdict, answered_input(tool_name, tool_input, verdict.answers))
 
     def _settle(self, approval_id: ChatApprovalId, tool_call_id: ChatToolCallId, verdict: ApprovalVerdict) -> None:
         if verdict.decision == "deny":

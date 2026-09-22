@@ -57,7 +57,19 @@ tests/                                 offline tests of the example, at the proj
    shows up there as an empty or literal placeholder in the message.
 5. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
    what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
-   want.
+   want. A schema mismatch that gets retried and then succeeds in a run's events is AQVEN's own repair retry working,
+   not a bug report — only a node whose *last* attempt still failed after `output.retries` ran out is worth
+   investigating. `--live` also proves whether `output.strict: true` would hold for a model: every mode it probes runs
+   with strict enforcement forced on, so a mode it reports `ok` for has already worked strict against the real
+   provider. `aqven check` still refuses `output.strict: true` unless every model the agent can reach — `model` and
+   each of `fallback_models` — is one AQVEN already trusts for it (`E_STRICT_UNSUPPORTED`); an unverified model needs
+   `capabilities.strict: true` on the agent first, and that trust applies to every model in the list, not just the
+   one you probed. Neither check tells you how deep a model's structured output actually nests correctly — before
+   trusting a model with a real schema that nests objects, carries an array of objects, or leans on a large enum,
+   run `aqven models shapes <agent> --live`: it finds the model's real nesting depth, list length and enum size by
+   asking it to place literal tokens at each position and checking they came back exactly where asked, not what the
+   provider's docs claim. It never stops on a transient provider hiccup — only a genuine wrong-shape answer counts
+   as the limit — but every call is still billed and it needs `--live`, there is no free mode. Both commands also take `--provider-options '<json>'`, merged into the request body — run the same target with and without it to find out whether a provider-level setting like OpenRouter's `{"provider": {"require_parameters": true}}` actually changes what a model can do, instead of assuming it does.
 6. API keys live only in `lumen/.env`, which is gitignored; variables of the process environment take
    precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or commits.
 7. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
@@ -160,7 +172,8 @@ Every diagnostic has a code, a file with a path inside it, a message and often a
 
 Examples: `E_REF_MISSING` (a binding points at something that does not exist), `E_BINDING_TYPE` (the bound value does
 not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `E_PROMPT_MISSING`,
-`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`, `W_GENERATED_STALE`.
+`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `E_STRICT_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`,
+`W_GENERATED_STALE`.
 
 The hooks in `.claude/settings.json` run `aqven check --static` after every file edit and the full `aqven check` when
 you stop, so a broken tree comes back to you instead of reaching a commit.
@@ -176,6 +189,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven prompt preview support_case.polish__revise --project lumen` | the exact messages that llm node sends to the model |
 | `... --input lumen/samples/case_request.json --variant tone=warm` | the same preview with your own input and a forced prompt variant |
 | `uv run aqven models check --project lumen` | output modes of every agent model; `--live` sends one tiny request per mode |
+| `uv run aqven models shapes <agent> --project lumen --live` | the agent model's real nesting depth, list length and enum size; billed, requires `--live` |
 | `uv run aqven generate lumen` | writes `lumen/types.py` |
 | `uv run aqven tree lumen` | entities by kind with their files |
 | `uv run aqven run support_case --root lumen --input lumen/samples/case_request.json` | runs a flow without a server |

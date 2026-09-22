@@ -73,7 +73,7 @@ def test_streamed_answer_emits_deltas_once_and_finishes_turn() -> None:
     assert {delta.message_id for delta in texts} == {"msg_answer"}
     assert {delta.part_index for delta in texts} == {1}
     assert [status.state for status in of_type(events, ChatStatus)] == ["thinking", "streaming", "idle"]
-    usage = of_type(events, ChatUsageReported)[0].usage
+    usage = of_type(events, ChatUsageReported)[-1].usage
     assert usage.model == "claude-haiku-4-5"
     assert (usage.tokens_in, usage.tokens_out, usage.cache_read_tokens, usage.cache_write_tokens) == (120, 48, 900, 30)
     assert usage.cost_usd == Decimal("0.0044")

@@ -87,6 +87,7 @@ class ChatTurnAccepted(ResourceModel):
 class ChatApprovalReply(RequestModel):
     decision: ApprovalDecision
     message: str | None = None
+    answers: dict[str, str] | None = None
 
 
 def chat_frame(event: ChatEvent) -> ServerSentEvent:
@@ -205,7 +206,12 @@ def build_chat_router(
     async def chat_approval_answer(
         session: Annotated[ChatSession, Depends(existing_session)], approval_id: str, body: ChatApprovalReply
     ) -> ChatSession:
-        answer = ApprovalAnswer(approval_id=ChatApprovalId(approval_id), decision=body.decision, message=body.message)
+        answer = ApprovalAnswer(
+            approval_id=ChatApprovalId(approval_id),
+            decision=body.decision,
+            message=body.message,
+            answers=body.answers,
+        )
         await registry.for_session(session).answer_approval(session.session_id, answer)
         return session_view(session.session_id)
 

@@ -41,6 +41,16 @@
   "approval": {
     "prompt": "This tool call needs your decision."
   },
+  "question": {
+    "multiHint": "choose one or more",
+    "other": "Other…",
+    "otherAria": "Your own answer for {header}",
+    "otherPlaceholder": "Write your own answer",
+    "submit": "Send answers",
+    "skip": "Skip",
+    "progress": "{answered} of {total} answered",
+    "refused": "The answers did not reach the agent. Try again."
+  },
   "error": {
     "auth_required": "The agent backend needs you to sign in again.",
     "rate_limited": "The agent backend is rate limited. Try again shortly.",
@@ -52,12 +62,14 @@
   "thread": {
     "scrollToBottomAria": "Scroll to latest message"
   },
-  "state": {
-    "thinking": "Thinking…",
-    "streaming": "Writing the answer…",
-    "running_tool": "Running a tool…",
-    "waiting_approval": "Waiting for your decision…",
-    "interrupting": "Stopping…",
+  "thinking": {
+    "running": "Thinking… {seconds}s",
+    "done": "Thought for {seconds}s",
+    "toggleAria": "Toggle the thinking",
+    "tokens": "· {tokens} thinking tokens"
+  },
+  "loader": {
+    "working": "Working…",
     "aria": "Agent status"
   },
   "settings": {

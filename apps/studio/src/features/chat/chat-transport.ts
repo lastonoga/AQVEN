@@ -1,21 +1,17 @@
-import type { ApiChatEvent, ApprovalDecision, ChatSessionId } from "@/domain"
+import type { ApiChatApprovalReply, ApiChatEvent, ChatSessionId } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { CHAT_EVENT_TYPES } from "./chat-events"
 
 export type ChatTransport = {
   readonly subscribe: (sessionId: ChatSessionId, afterSeq: number, onEvent: (event: ApiChatEvent) => void) => () => void
   readonly send: (sessionId: ChatSessionId, text: string, clientOpId: string) => Promise<void>
-  readonly respond: (sessionId: ChatSessionId, approvalId: string, decision: ApprovalDecision, message: string | null) => Promise<void>
+  readonly respond: (sessionId: ChatSessionId, approvalId: string, reply: ApiChatApprovalReply) => Promise<void>
   readonly interrupt: (sessionId: ChatSessionId) => Promise<void>
 }
 
 export type ChatCalls = {
   readonly send: (sessionId: ChatSessionId, body: { readonly text: string; readonly client_op_id: string }) => Promise<unknown>
-  readonly approve: (
-    sessionId: ChatSessionId,
-    approvalId: string,
-    body: { readonly decision: ApprovalDecision; readonly message: string | null },
-  ) => Promise<unknown>
+  readonly approve: (sessionId: ChatSessionId, approvalId: string, body: ApiChatApprovalReply) => Promise<unknown>
   readonly interrupt: (sessionId: ChatSessionId) => Promise<unknown>
 }
 
@@ -62,8 +58,8 @@ export const chatTransport = (calls: ChatCalls): ChatTransport => ({
   send: async (sessionId, text, clientOpId) => {
     await calls.send(sessionId, { text, client_op_id: clientOpId })
   },
-  respond: async (sessionId, approvalId, decision, message) => {
-    await calls.approve(sessionId, approvalId, { decision, message })
+  respond: async (sessionId, approvalId, reply) => {
+    await calls.approve(sessionId, approvalId, reply)
   },
   interrupt: async (sessionId) => {
     await calls.interrupt(sessionId)

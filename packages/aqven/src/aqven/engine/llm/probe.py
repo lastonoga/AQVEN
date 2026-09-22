@@ -4,7 +4,7 @@ from types import NoneType
 from typing import Annotated, Final
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-from pydantic_ai import Agent, RunContext, capture_run_messages
+from pydantic_ai import Agent, ModelSettings, RunContext, capture_run_messages
 from pydantic_ai.messages import AgentStreamEvent, ModelMessage
 from pydantic_ai.models import Model
 
@@ -72,6 +72,7 @@ async def drain(ctx: RunContext[None], events: AsyncIterable[AgentStreamEvent]) 
 @dataclass(frozen=True, slots=True)
 class ModeProber:
     build: ModelBuilder
+    model_settings: ModelSettings | None = None
 
     async def probe(self, model: str, modes: Sequence[StructuredMode] = MODE_PREFERENCE) -> ModelProbe:
         resolved = model_modes(model)
@@ -89,6 +90,7 @@ class ModeProber:
             instructions=join_instructions((output_limits(ProbeAnswer.model_json_schema()), instruction)),
             name=PROBE_AGENT,
             retries={"output": PROBE_RETRIES},
+            model_settings=self.model_settings,
         )
         context = FailureContext(
             agent_id=PROBE_AGENT,

@@ -11914,6 +11914,20 @@
               }
             ],
             "title": "Message"
+          },
+          "answers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answers"
           }
         },
         "additionalProperties": false,
@@ -13293,6 +13307,11 @@
               }
             ],
             "title": "Cost Usd"
+          },
+          "thinking_tokens": {
+            "minimum": 0,
+            "title": "Thinking Tokens",
+            "type": "integer"
           }
         },
         "type": "object",
@@ -13338,6 +13357,17 @@
             "const": "chat_usage",
             "title": "Type",
             "default": "chat_usage"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
           },
           "usage": {
             "$ref": "#/components/schemas/ChatUsage"

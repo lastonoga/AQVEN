@@ -1578,6 +1578,10 @@ export interface components {
             decision: components["schemas"]["ApprovalDecision"];
             /** Message */
             message?: string | null;
+            /** Answers */
+            answers?: {
+                [key: string]: string;
+            } | null;
         };
         /** ChatApprovalRequested */
         ChatApprovalRequested: {
@@ -2038,6 +2042,8 @@ export interface components {
             cache_write_tokens: number;
             /** Cost Usd */
             cost_usd: string | null;
+            /** Thinking Tokens */
+            thinking_tokens?: number;
         };
         /** ChatUsageReported */
         ChatUsageReported: {
@@ -2057,6 +2063,8 @@ export interface components {
              * @enum {string}
              */
             type: "chat_usage";
+            /** Message Id */
+            message_id?: string | null;
             usage: components["schemas"]["ChatUsage"];
         };
         /** CheckOutcome */

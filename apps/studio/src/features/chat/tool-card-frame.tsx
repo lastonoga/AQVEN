@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { useTranslations } from "use-intl"
-import { DisclosureChevron, StructuredValue, Surface, Tag, Text, parseValueText } from "@/components/studio"
+import { DisclosureChevron, Surface, Tag, Text } from "@/components/studio"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { ToolCardModel } from "./tool-card-model"
 
@@ -8,11 +8,19 @@ const TILE_GLYPH = "◆"
 
 export type ToolCardFrameProps = ToolCardModel & { readonly footer?: ReactNode }
 
-const structuredLine = (line: string): { readonly value: unknown } | null => {
+const JSON_INDENT = 2
+
+const wrapped = (text: string): boolean =>
+  (text.startsWith("{") && text.endsWith("}")) || (text.startsWith("[") && text.endsWith("]"))
+
+const readable = (line: string): string => {
   const trimmed = line.trim()
-  if (!(trimmed.startsWith("{") && trimmed.endsWith("}")) && !(trimmed.startsWith("[") && trimmed.endsWith("]"))) return null
-  const parsed = parseValueText(trimmed)
-  return typeof parsed === "string" ? null : { value: parsed }
+  if (!wrapped(trimmed)) return line
+  try {
+    return JSON.stringify(JSON.parse(trimmed), null, JSON_INDENT)
+  } catch {
+    return line
+  }
 }
 
 export function ToolCardFrame({ tone, title, lines, truncated, footer }: ToolCardFrameProps) {
@@ -34,12 +42,9 @@ export function ToolCardFrame({ tone, title, lines, truncated, footer }: ToolCar
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-2.5 pb-2.25">
-            {lines.map((line, index) => {
-              const value = structuredLine(line)
-              return value === null ? (
-                <Text key={index} as="div" role="data" tone="neutral" className="whitespace-pre-wrap">{line}</Text>
-              ) : <StructuredValue key={index} value={value.value} compact />
-            })}
+            {lines.map((line, index) => (
+              <Text key={index} as="div" role="data" tone="neutral" className="whitespace-pre-wrap">{readable(line)}</Text>
+            ))}
             {truncated ? <Text as="div" role="hint" tone="warning">{common("previewOnly")}</Text> : null}
           </div>
         </CollapsibleContent>

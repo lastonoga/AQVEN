@@ -330,11 +330,8 @@ def test_usage_reports_cost_of_each_turn_not_the_session_total(tmp_path: Path) -
 
     seen = asyncio.run(scenario())
 
-    assert [event.usage.cost_usd for event in of_type(seen, ChatUsageReported)] == [
-        Decimal("0.0044"),
-        Decimal("0.0057"),
-        Decimal("0.0020"),
-    ]
+    priced = [event.usage.cost_usd for event in of_type(seen, ChatUsageReported) if event.usage.cost_usd is not None]
+    assert priced == [Decimal("0.0044"), Decimal("0.0057"), Decimal("0.0020")]
     assert [event.usage.cost_usd for event in of_type(seen, ChatTurnFinished) if event.usage is not None] == [
         Decimal("0.0044"),
         Decimal("0.0057"),
@@ -408,6 +405,3 @@ def test_every_studio_mode_maps_to_an_sdk_mode(tmp_path: Path) -> None:
         launch = ClaudeOptionsFactory(settings).build(stored.model_copy(update={"session": session}), allow_all)
         launch.mcp_config.remove()
         assert launch.options.permission_mode == sdk
-
-
-

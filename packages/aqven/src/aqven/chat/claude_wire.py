@@ -10,8 +10,25 @@ class WireModel(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, validate_by_alias=True, validate_by_name=True)
 
 
+class OutputDetailsWire(WireModel):
+    thinking_tokens: int = 0
+
+
+class UsageWire(WireModel):
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_input_tokens: int | None = None
+    cache_creation_input_tokens: int | None = None
+    output_tokens_details: OutputDetailsWire | None = None
+
+    @property
+    def thinking_tokens(self) -> int:
+        return 0 if self.output_tokens_details is None else self.output_tokens_details.thinking_tokens
+
+
 class StreamMessageWire(WireModel):
     id: str
+    usage: UsageWire | None = None
 
 
 class BlockOpenWire(WireModel):
@@ -21,7 +38,7 @@ class BlockOpenWire(WireModel):
 
 
 class BlockDeltaWire(WireModel):
-    type: str
+    type: str = ""
     text: str | None = None
     thinking: str | None = None
     partial_json: str | None = None
@@ -33,13 +50,7 @@ class StreamEventWire(WireModel):
     message: StreamMessageWire | None = None
     content_block: BlockOpenWire | None = None
     delta: BlockDeltaWire | None = None
-
-
-class UsageWire(WireModel):
-    input_tokens: int = 0
-    output_tokens: int = 0
-    cache_read_input_tokens: int | None = None
-    cache_creation_input_tokens: int | None = None
+    usage: UsageWire | None = None
 
 
 class ContentItemWire(WireModel):

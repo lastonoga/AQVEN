@@ -33,6 +33,11 @@ return the structured output AQVEN expects, not only whether a request to them w
   one, it fails immediately with the same error a real run hits when a provider's key is missing.
 - An agent with more than one model — a primary `model` plus `fallback_models` — gets one block per
   model, so you can compare what each one supports before deciding whether they actually agree.
+- Add `--provider-options '<json object>'` alongside `--live` to merge that object into every probe's
+  request body — the same place an agent's own `settings.provider_options` lands. Run the same target
+  with and without it to find out whether a provider-level setting changes what a model can do; see
+  [How to find a model's real structural limits](/engine/check-shapes/) for OpenRouter's
+  `require_parameters` specifically.
 - `--json` prints the same report as one JSON object instead of text: one entry per target with its
   resolved mode, and a `modes` list per model carrying `profile_supports` and, with `--live`, `live`,
   `code`, and `message` for anything that failed.
@@ -40,6 +45,33 @@ return the structured output AQVEN expects, not only whether a request to them w
   when it actually worked — and `1` otherwise: a resolved mode the model doesn't support, a target
   that's neither an agent id nor a `provider:model` string, a live probe that failed, or a project that
   doesn't load at all.
+
+## Strict mode
+
+The mode a model resolves to is one axis; whether the provider is asked to *guarantee* the schema at
+generation time is a separate one — an agent's `output.strict`. When it's `false`, the default every
+`aqven new` template ships with, AQVEN validates the response itself after the call lands and, on a
+mismatch, re-prompts the model with the validation error, up to `output.retries` times (see
+[What happens when a model is called](/concepts/what-happens-when-a-model-is-called/)). Seeing that
+repair retry fire in a run's events is that safety net working as designed, not proof `strict` needs
+turning on — only a node whose *last* attempt still failed after retries ran out is worth chasing.
+
+Turning `output.strict: true` on asks the provider to constrain generation to the schema instead of
+leaning on the retry. Not every provider honors that request the same way: OpenRouter's own docs say
+enforcement "varies by provider — some guarantee schema-conforming output, while others translate your
+schema into their own structured-output format or treat it as a strong hint," so exact compliance isn't
+guaranteed on every endpoint it routes to. AQVEN reflects that by only letting `output.strict: true`
+compile when every model the agent can reach — its `model` and each of its `fallback_models` — is one
+AQVEN already trusts for strict output; an agent with even one untrusted model in that list fails
+`aqven check` with `E_STRICT_UNSUPPORTED` instead of shipping a silent best-effort guess.
+
+`--live` is how you extend that trust to a model AQVEN doesn't already know: every mode it probes runs
+with strict enforcement forced on, so a mode reported `ok` under `--live` has already worked strict
+against the real provider, not just against what AQVEN assumes. To act on that, add `capabilities:
+{strict: true}` to the agent — it overrides AQVEN's own guess for *every* model in that agent's list at
+once, `model` and every `fallback_models` entry alike, so probe each one you're trusting, not only the
+first that happens to answer; setting it on the strength of one model's `--live` pass silently extends
+the same trust to a fallback you never actually tested.
 
 ### Example
 
@@ -141,6 +173,10 @@ aqven models check: nope is neither an agent of the project nor a provider:model
 
 ## See also
 
+- [What happens when a model is called](/concepts/what-happens-when-a-model-is-called/) — the repair
+  retry `output.strict: false` leans on, and the three outcomes decided before it ever runs.
+- [How to find a model's real structural limits](/engine/check-shapes/) — the companion question this
+  page doesn't answer: how deep a supported, strict-capable mode actually nests correctly.
 - [How to call a model](/engine/llm-node/) — where an agent's `model`, `fallback_models`, and
   `output.mode` are set.
 - [How to run a flow without a server](/engine/run-locally/) — the `provider_key_missing` failure a real

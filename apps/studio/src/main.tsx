@@ -32,6 +32,14 @@ const unregisterLegacyMockWorker = async (): Promise<void> => {
 
 void unregisterLegacyMockWorker().catch(console.error)
 mount()
+
+const INVALIDATE_DEBOUNCE_MS = 300
+let invalidateTimer: ReturnType<typeof setTimeout> | null = null
+
 subscribeToSpecEvents(() => {
-  void router.invalidate()
+  if (invalidateTimer !== null) clearTimeout(invalidateTimer)
+  invalidateTimer = setTimeout(() => {
+    invalidateTimer = null
+    void router.invalidate()
+  }, INVALIDATE_DEBOUNCE_MS)
 })
