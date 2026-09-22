@@ -86,6 +86,16 @@ tests/                                 offline tests, created only by aqven new 
 When the request is an idea rather than a change — "a workflow that triages support mail", an empty project — do
 not start writing files. Ask first. A wrong guess here costs a rewrite of every node below it.
 
+Before proposing a shape, use what the docs already worked out, not first instinct: fetch `llms.txt` and read
+*Ten kinds of nodes* for the node-kind map itself, *Designing reliable workflows* for when splitting a step,
+branching into `parallel`, looping on a critic, or building a judge panel actually earns its cost — none of
+them buy reliability just by existing, and reaching for one without a real boundary is a documented
+anti-pattern, not a safe default — and, whenever an attachment or a generated image, audio or video sits
+anywhere in the flow, *Media has real limits on both sides of a model call*, since a provider's cap can
+decide the whole flow's shape before a node is written, not just one step's. This is the same research the
+top of this file already tells you to fetch before answering an unfamiliar question; use it here too, before
+the flow exists, not only after something breaks.
+
 Settle these for the whole flow, then for each step. Ask them in one message, not one at a time, and ask only what
 the request has not already answered.
 

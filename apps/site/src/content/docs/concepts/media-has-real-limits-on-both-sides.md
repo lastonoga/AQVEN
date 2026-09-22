@@ -114,14 +114,24 @@ terms instead of theirs.
 **For generation**, a limit below what the task needs cannot be absorbed by a `code` node at all, because
 there's no oversized thing to shrink — the shortfall is on the output side, and the only fix is asking
 for the output in pieces. If a case genuinely needs a five-minute video from a model capped at fifteen or
-thirty seconds per call, the flow is not one `llm` or `tool` node anymore; it's several, structured the
-way a [`loop` node](/engine/loop-node/) already is: `init` seeds the first segment, `body` generates one
-segment per pass — each one a `tool` node call that, like Veo's own `extend`, conditions on the previous
-segment's last frame so the cut doesn't jump — `stop` ends the loop once the accumulated duration reaches
-the target instead of running to an arbitrary cap, and a final `code` node concatenates the segments a
-loop's `select` can't hand back on its own. That's a materially different flow than the one-node version
-someone reaches for first, and the redesign is the whole point: the provider's cap decided the shape of
-the pipeline before a single node was written.
+thirty seconds per call, the flow is not one `llm` or `tool` node anymore; it's several — but which node
+kind ties them together depends on how the segments relate to each other, not on a fixed recipe:
+
+- **A later segment depends on an earlier one's actual result** — continuing from the last frame the way
+  Veo's own `extend` does, so the cut doesn't jump, and you don't know in advance how many segments the
+  target duration will take. That's what a [`loop` node](/engine/loop-node/) is for: `init` seeds the
+  first segment, `body` generates one segment per pass conditioned on the last, `stop` ends the loop once
+  the accumulated duration reaches the target instead of running to an arbitrary cap.
+- **The segments can be planned and generated independently** — a known shot list, a fixed number of
+  scenes that don't need to flow from one to the next. That's [`parallel` or `map`](/engine/map-node/)
+  instead: generate every segment at once rather than one pass at a time, and it's usually faster for the
+  same result.
+
+Either way, a final `code` node concatenates the pieces — that part's the same regardless of which node
+generated them. What's not the same is the shape above it: that's a materially different flow than the
+one-node version someone reaches for first, and the redesign is the whole point — the provider's cap
+decided that a pipeline was needed before a single node was written, but it doesn't decide which one; the
+dependency between segments does.
 
 - **Concurrency has the same shape as size.** [`parallel` and `map` nodes](/engine/map-node/) multiply
   how many attachments or generation requests reach a provider inside one flow run — the same "the
@@ -142,7 +152,8 @@ the pipeline before a single node was written.
 - [The `code` node](/engine/code-node/) — where a resize, trim or transcode step belongs
 - [How to give an agent a tool](/engine/tool-node/) — where generation past what `llm` supports directly
   lives, `wait` included
-- [How to repeat a step with a limit](/engine/loop-node/) — the mechanism behind chaining several capped
-  generations into one longer result
-- [The `map` node](/engine/map-node/) — concurrency and provider rate limits
+- [How to repeat a step with a limit](/engine/loop-node/) — for chaining capped generations that depend
+  on each other, one pass at a time
+- [The `map` node](/engine/map-node/) — concurrency, provider rate limits, and for chaining capped
+  generations that don't depend on each other
 - [What happens when a model is called](/concepts/what-happens-when-a-model-is-called/)
