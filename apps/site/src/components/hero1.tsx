@@ -28,6 +28,7 @@ interface HeroBasicProps {
   badge?: Badge;
   heading: string;
   description: string;
+  command?: string;
   buttons?: Buttons;
   image: Image;
   className?: string;
@@ -62,7 +63,7 @@ const defaultProps: Hero1Props = {
 };
 
 const Hero1 = (props: Props) => {
-  const { badge, heading, description, buttons, image, className } = {
+  const { badge, heading, description, command, buttons, image, className } = {
     ...defaultProps,
     ...props,
   };
@@ -104,6 +105,11 @@ const Hero1 = (props: Props) => {
                 </Button>
               )}
             </div>
+            {command && (
+              <code className="w-full max-w-md rounded-md border border-border bg-card px-4 py-3 text-left font-mono text-sm text-card-foreground">
+                {command}
+              </code>
+            )}
           </div>
           {image.srcDark ? (
             <>

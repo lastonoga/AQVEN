@@ -10,14 +10,14 @@ import {
   Comparison,
   Problem,
   Stack,
-  Stakes,
-  TeamReads,
+  StudioEvidence,
   WhatsInside,
   TrustStrip,
 } from "@/components/landing/sections";
 
 const repo = "https://github.com/lastonoga/AQVEN";
 const docs = "/start/";
+const quickstart = "/start/quickstart/";
 
 const logo = {
   url: "/",
@@ -60,18 +60,19 @@ const menu = [
       logo={logo}
       menu={menu}
       auth={{
-        login: { title: "Documentation", url: docs },
-        signup: { title: "GitHub", url: repo },
+        login: { title: "GitHub", url: repo },
+        signup: { title: "Get started", url: quickstart },
       }}
     />
 
     <main>
       <Hero1
         badge={{ text: "Source available · Runs on your machine" }}
-        heading="The source-available workbench for AI workflows."
-        description="Built for humans and coding agents. Build your workflow, check it before it runs, and see exactly what it did."
+        heading="Build AI workflows you can trust to run the business."
+        description="AQVEN helps engineers build, inspect, test, and improve AI agents, automations, and business processes — before unreliable behavior reaches customers."
+        command="uv tool install aqven"
         buttons={{
-          primary: { text: "Read the docs", url: docs },
+          primary: { text: "Get started", url: quickstart },
           secondary: { text: "GitHub", url: repo },
         }}
         image={{
@@ -82,8 +83,8 @@ const menu = [
 
       <TrustStrip />
       <Problem />
-      <Stakes />
-      <TeamReads />
+      <StudioEvidence client:visible />
+      <WhatsInside />
 
       <Feature15
         label="For coding agents"
@@ -93,15 +94,13 @@ const menu = [
       />
 
       <Comparison />
-
-      <WhatsInside />
       <Stack />
 
       <Cta10
         heading="Start with a workflow you already have."
         description="Point AQVEN at your project. Nothing to rewrite, no account, runs on your machine."
         buttons={{
-          primary: { text: "Read the docs", url: docs },
+          primary: { text: "Get started", url: quickstart },
           secondary: { text: "GitHub", url: repo },
         }}
       />
@@ -117,16 +116,16 @@ const menu = [
             { name: "Overview", href: docs },
             { name: "Engine", href: "/engine/" },
             { name: "Studio", href: "/studio/" },
-            { name: "Reference", href: "/reference/" },
+            { name: "Concepts", href: "/concepts/" },
           ],
         },
         {
           title: "Build",
           links: [
-            { name: "Workflows", href: "/reference/flows/" },
+            { name: "Workflows", href: "/concepts/files-as-source-of-truth/" },
             { name: "Nodes", href: "/concepts/ten-kinds-of-nodes/" },
             { name: "Prompts", href: "/engine/prompts/" },
-            { name: "Types", href: "/reference/types/" },
+            { name: "Tools", href: "/engine/tool-node/" },
           ],
         },
         {
