@@ -36,7 +36,7 @@ def test_provider_shortlist_are_all_real_catalog_entries() -> None:
 def test_ask_provider_picks_shortlist_entry_by_number(monkeypatch: pytest.MonkeyPatch) -> None:
     answers = iter(["1", ""])
     monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
-    provider_id, env_var, api_key = ask_provider()
+    provider_id, _, api_key = ask_provider()
     assert provider_id == PROVIDER_SHORTLIST[0]
     assert api_key is None
 
