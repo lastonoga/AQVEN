@@ -1,0 +1,31 @@
+We need to produce a reply. Must be friendly, precise, short. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them; none mention subscription benefits. Must not put customer's name, email, personal data. Must be en-GB. Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we can't provide them. Must state network requirements only from chunks; none mention network requirements. So we can't mention network requirements. Must mention that the customer should stop using device until further instructions. Must issue €15 store credit. Must name only amount. Must give credit amount in smallest units: 1500 eur. Must cite chunks. Must not promise anything not in input. Must apologize at most once. Must not use exclamation marks or advertising superlatives. Must not mention store website or contact outside marketplace. Must not mention subscription benefits. Must not mention personal data.
+
+We need to produce reply text and citations. Citations: we need up to 6 items. We have two chunks: kb_strip0flck and kb_ctrlheat01. We can cite both. The reply must be at most 1500 characters. We should keep it short.
+
+We need to mention that the customer should stop using device until further instructions. Provide steps: "Unplug the strip immediately due to controller heat" (from kb_ctrlheat01). "If flicker continues, controller replaced under warranty" (from kb_strip0flck). Provide store credit info: "We will issue €15 store credit (1500 eur)". Provide that the credit is within allowed limit. Provide that the customer should stop using device until further instructions.
+
+We must not mention the store website or contact outside marketplace. So we can say "Please keep the defective item until we confirm further instructions." That is fine.
+
+We need to mention that the customer should stop using device until further instructions. That is included.
+
+We need to mention that the credit is within allowed €20 limit and respects order total. That is fine.
+
+We need to mention that the customer should stop using device until further instructions. Yes.
+
+We need to mention that the credit amount in smallest units: 1500 eur. So we can say "We will issue a store credit of €15 (1500 eur)". That is fine.
+
+We need to cite the chunks. We can provide two citations: one for controller heat, one for flicker. Provide quotes.
+
+We need to keep reply text short. Let's draft:
+
+"Unplug the strip immediately as the controller is hot to the touch. If the flicker continues, the controller will be replaced under warranty. We will issue a store credit of €15 (1500 eur) for the defective Lumen Flow Strip 5 m. Please stop using the device until we give further instructions. The credit is within the allowed €20 limit and respects the order total."
+
+We need to cite kb_ctrlheat01 for unplugging. And kb_strip0flck for flicker and replacement. Provide quotes.
+
+Let's produce JSON with reply text and citations array.
+
+We need to ensure no exclamation marks. Use period. No exclamation. No advertising superlatives. No mention of store website. No mention of subscription benefits. Good.
+
+Check for personal data: no. Good.
+
+Now produce final.

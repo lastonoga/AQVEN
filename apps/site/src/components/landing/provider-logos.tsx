@@ -20,7 +20,11 @@ export const Providers = () => (
   <div className="border-y border-border bg-background-subtle py-10">
     <div className="container mx-auto px-6">
       <p className="mb-6 text-center text-sm text-muted-foreground">
-        Bring your own key. Works with the models you already pay for.
+        Bring your own key. Works with the models you already pay for, and everything else in the{" "}
+        <a href="/reference/provider-catalog/" className="underline underline-offset-4">
+          provider catalog
+        </a>
+        .
       </p>
       <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
         {PROVIDER_LOGOS.map((logo) => (
@@ -41,14 +45,6 @@ export const Providers = () => (
           </span>
         ))}
       </div>
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Plus 20 more providers, including Groq, Together AI, Cohere, and xAI.
-        The full list is in the{" "}
-        <a href="/reference/provider-catalog/" className="underline underline-offset-4">
-          provider catalog
-        </a>
-        .
-      </p>
     </div>
   </div>
 );

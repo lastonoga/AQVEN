@@ -1,0 +1,50 @@
+Let me analyze the case and candidates.
+
+Case: Customer reports Lumen Flow Strip 5m arrived in dented box, strip flickering near controller for three days, controller gets hot after half an hour. Concerned about safety, wants warranty resolution. Order placed 3 Sep 2027.
+
+Chunks:
+- kb_strip0flck: If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.
+- kb_ctrlheat01: If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.
+
+Candidate 0: Says sorry, proceed under Lumen Plus warranty policy: 1. Unplug immediately due to controller heat. 2. Contact within 7 days. 3. We'll issue €15 store credit for replacement. Keep defective item until further instructions. References kb_strip0flck, kb_ctrlheat01.
+
+Candidate 1: Says "We have issued €15 store credit" (already issued). Stop using device. If strip flickers near controller, cut power and check plug. If flicker comes back, controller replaced under warranty. If controller hot, unplug at once and don't switch on until checked.
+
+Now evaluate grounding. The chunks confirm: flicker near controller → cut power, check plug, if flicker comes back controller replaced under warranty. Controller hot → unplug at once, don't switch on until checked.
+
+Neither chunk mentions €15 store credit, warranty policy "Lumen Plus", 7-day contact window, or "keep the defective item". So both candidates include unconfirmed claims about €15 store credit. Candidate 0 also adds "Lumen Plus warranty policy", "contact within 7 days", "keep defective item" — all unconfirmed. Candidate 1 states "We have issued €15 store credit" — also unconfirmed, and it's stated as a fact (already issued) which is worse. Candidate 1's safety instructions are grounded in chunks. Candidate 0's safety instruction (unplug immediately) is grounded in the heat chunk.
+
+Both have ungrounded €15 credit claim. Candidate 0 has more ungrounded claims (7 days, keep item, Lumen Plus). Candidate 1 states credit as already issued — a factual claim not in chunks. Both are roughly similar in grounding issues; candidate 1's core instructions are chunk-grounded, candidate 0's also.
+
+Usefulness: Customer wants warranty resolution and safety concern. Candidate 0 gives a clear step-by-step process (unplug, contact within 7 days, credit, keep item) — actionable but includes unconfirmed policy details. Candidate 1 gives safety instructions and states credit issued, but doesn't tell the customer how to contact or what to do next beyond stopping use. Candidate 0 is more helpful in guiding next steps, though with unconfirmed specifics. Candidate 1 is more concise but less complete (no contact info, no process). Actually candidate 1 says "stop using the device until further instructions" — but doesn't say how to get further instructions. Candidate 0 says contact us within 7 days. So candidate 0 is more useful for resolution.
+
+Tone: Both are professional. Candidate 0 opens with empathy ("We're sorry to hear..."). Candidate 1 is more abrupt, states credit issued. Candidate 0 has better tone.
+
+Best candidate: Candidate 0. It addresses safety, gives a clear path, empathetic tone. Grounding: both have unconfirmed credit claim; candidate 0 has more unconfirmed details but they're framed as policy steps. Hmm, grounding-wise candidate 1 is arguably more grounded in the actual chunk text (it quotes the chunk instructions nearly verbatim). But candidate 1 asserts "We have issued €15 store credit" as a fact, which is unconfirmed and potentially misleading. Candidate 0 says "We'll issue €15 store credit" — also unconfirmed. Both equally ungrounded on credit. Candidate 0 adds 7-day window and keep-item instruction — unconfirmed. So candidate 1 is slightly more grounded overall? Let me weigh.
+
+Grounding: Candidate 1's instructions (cut power, check plug, unplug if hot, don't switch on) are all directly from chunks. The credit claim is unconfirmed. Candidate 0's instructions: unplug (grounded), contact within 7 days (unconfirmed), €15 credit (unconfirmed), keep item (unconfirmed). So candidate 1 is more grounded. But candidate 1's "We have issued €15 store credit" is a false/unsupported assertion of an action taken — that's a grounding problem too, arguably worse than a conditional offer. Hmm.
+
+The rubric: "A claim the chunks do not confirm counts as unconfirmed, however plausible it sounds." Both have unconfirmed credit claims. Candidate 1 has fewer unconfirmed claims overall. So grounding: candidate 1 slightly better.
+
+Usefulness: Candidate 0 gives a complete resolution path (contact within 7 days, credit, keep item). Candidate 1 gives safety steps but no next-step contact. For a customer wanting warranty resolution, candidate 0 is more useful. But candidate 0's steps include unconfirmed policy. Still, usefulness to customer: candidate 0 better.
+
+Tone: Candidate 0 better (empathy, apology).
+
+Overall: This is a tradeoff. Which is best? The rubric has three criteria. Candidate 0 wins on helpfulness and tone, loses slightly on grounding. Candidate 1 wins on grounding, loses on helpfulness and tone.
+
+I think candidate 0 is the best overall because it addresses the customer's actual need (warranty resolution) with a clear process and empathetic tone, while its grounding issues are mostly additional unconfirmed policy details. However, the grounding criterion is important — unconfirmed claims are penalized. Candidate 1's unconfirmed claim is a factual assertion of issued credit, which is more problematic than candidate 0's conditional offer? Actually both are unconfirmed. Candidate 1 has fewer unconfirmed claims.
+
+Hmm. Let me think about which to pick as best. The task: score the best candidate against the three criteria. I need to pick one.
+
+I'll pick candidate 0 as best: it's more helpful (clear next steps for warranty resolution) and better tone (apology, empathy). Grounding: both have the unconfirmed €15 credit; candidate 0 adds unconfirmed policy details (7 days, keep item) which is a grounding minus. But candidate 1 asserts credit already issued, which is also unconfirmed and could mislead. I'll note grounding is roughly comparable with candidate 1 slightly more faithful to chunk text, but candidate 0's overall helpfulness and tone make it best.
+
+Actually, let me reconsider. The scoring is for the best candidate only. I should give scores reflecting the best candidate's performance on each criterion.
+
+Scores for candidate 0:
+- grounded: 3 (core safety advice grounded, but unconfirmed credit/policy details)
+- helpful: 4 (clear resolution path, addresses safety and warranty)
+- tone: 4 (empathetic, professional)
+
+Best index: 0.
+
+Let me write

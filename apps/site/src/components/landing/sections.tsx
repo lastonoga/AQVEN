@@ -29,10 +29,11 @@ import {
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
-interface Row {
-  heading: string;
-  body: string;
-  image: string;
+interface StudioView {
+  icon: React.ReactNode;
+  title: string;
+  summary: string;
+  src: string;
   alt: string;
 }
 
@@ -52,30 +53,41 @@ const STAKES = [
   { icon: <Database className="size-5" />, label: "Records" },
 ];
 
-const ROWS: Row[] = [
+const STUDIO_VIEWS: StudioView[] = [
   {
-    heading: "See every step on one screen.",
-    body: "What runs, what feeds what, where a person has to approve. Read from your files, not from a diagram somebody drew six months ago.",
-    image: "/images/studio/project-flows.png",
+    icon: <Workflow className="size-5" />,
+    title: "See the whole project",
+    summary: "Every workflow in the project, read from your files.",
+    src: "/images/studio/project-flows.png",
     alt: "AQVEN Studio showing a project and its workflows",
   },
   {
-    heading: "Find where a bad result came from.",
-    body: "Open the exact case and walk back to the first step that didn't do what it should.",
-    image: "/images/studio/runs.png",
+    icon: <Zap className="size-5" />,
+    title: "Find a bad result",
+    summary: "A recorded run, with its cost, duration and finished steps.",
+    src: "/images/studio/runs.png",
     alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
   },
   {
-    heading: "Look inside any step.",
-    body: "What went in, what came out, which model answered, what it cost. Raw values, not a summary.",
-    image: "/images/studio/node-inspector.png",
+    icon: <Layers className="size-5" />,
+    title: "Look inside a step",
+    summary: "The exact input and output of a single node.",
+    src: "/images/studio/node-inspector.png",
     alt: "AQVEN Studio node inspector showing the input and output of one step",
   },
   {
-    heading: "See if quality is going up or down.",
-    body: "Not one failure at a time. The direction, across every case you care about, after every change.",
-    image: "/images/studio/evaluations.png",
+    icon: <ChartLine className="size-5" />,
+    title: "Score a change",
+    summary: "Scorers, a dataset and a policy behind one evaluation.",
+    src: "/images/studio/evaluations.png",
     alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
+  },
+  {
+    icon: <Database className="size-5" />,
+    title: "Keep the cases",
+    summary: "The reusable cases every evaluation runs against.",
+    src: "/images/studio/dataset-controls.png",
+    alt: "AQVEN Studio Datasets tab with a CSV upload, a selected dataset and its list of cases",
   },
 ];
 
@@ -159,30 +171,40 @@ export const StudioEvidence = () => (
       </h2>
     </div>
     <Tabs
-      defaultValue={ROWS[0].heading}
+      defaultValue={STUDIO_VIEWS[0].title}
       orientation="vertical"
-      className="mt-14 grid grid-cols-1 gap-4 rounded-xl border border-border p-4 lg:mt-20 lg:grid-cols-4"
+      className="mt-14 grid grid-cols-1 items-start gap-4 lg:mt-20 lg:grid-cols-5 lg:gap-6"
     >
-      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-lg bg-muted p-1.5">
-        {ROWS.map((row) => (
+      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-xl bg-muted p-1.5 lg:col-span-2">
+        {STUDIO_VIEWS.map((view) => (
           <TabsTrigger
-            key={row.heading}
-            value={row.heading}
-            className="w-full justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
+            key={view.title}
+            value={view.title}
+            className="h-auto w-full items-start justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
           >
-            <span className="font-semibold">{row.heading}</span>
+            <span className="flex items-start gap-3">
+              <span className="mt-0.5 shrink-0 text-muted-foreground">{view.icon}</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="font-semibold">{view.title}</span>
+                <span className="text-sm font-normal text-muted-foreground">{view.summary}</span>
+              </span>
+            </span>
           </TabsTrigger>
         ))}
       </TabsList>
-      {ROWS.map((row) => (
-        <TabsContent key={row.heading} value={row.heading} className="col-span-1 m-0 lg:col-span-3">
-          <p className="max-w-2xl text-muted-foreground lg:text-lg">{row.body}</p>
-          <img
-            src={row.image}
-            alt={row.alt}
-            loading="lazy"
-            className="mt-6 w-full rounded-lg border border-border bg-card object-cover"
-          />
+      {STUDIO_VIEWS.map((view) => (
+        <TabsContent key={view.title} value={view.title} className="m-0 lg:col-span-3">
+          {/* Fixed-ratio frame: the source screenshots range from 1.50 to 4.35 in aspect, so
+              each one is matted inside a constant box and switching views never shifts
+              the layout. Capture future shots at 16:9 and the matting disappears. */}
+          <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/10">
+            <img
+              src={view.src}
+              alt={view.alt}
+              loading="lazy"
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
         </TabsContent>
       ))}
     </Tabs>
