@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import type { ReasoningMessagePartProps, TextMessagePartProps } from "@assistant-ui/react"
+import type { TextMessagePartProps } from "@assistant-ui/react"
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown"
 import remarkGfm from "remark-gfm"
 import { MARKDOWN_COMPONENTS, Text, TextRuns, type TextLine } from "@/components/studio"
@@ -30,10 +30,6 @@ export function ProseText() {
 
 export function UserProseText({ text }: TextMessagePartProps) {
   return <ProseLines text={text} role="lead" />
-}
-
-export function ReasoningText({ text }: ReasoningMessagePartProps) {
-  return <ProseLines text={text} role="hint" />
 }
 
 export const USER_PARTS = { Text: UserProseText } as const

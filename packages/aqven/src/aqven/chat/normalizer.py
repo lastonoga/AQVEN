@@ -48,6 +48,7 @@ from aqven.chat.routes import Route, Router, dispatch, first_match, ignore
 from aqven.chat.tool_effects import ToolOutcome, claude_tool_effect
 from aqven.chat.tool_names import claude_tool_identity
 from aqven.chat.turn_cost import TurnCostMeter
+from aqven.chat.turn_usage import TurnUsageMeter
 from aqven.ports.chat import (
     ChatErrorCode,
     ChatMessageId,
@@ -132,6 +133,7 @@ class ClaudeEventNormalizer:
         self._interrupting = False
         self._error_reported = False
         self._cost = TurnCostMeter()
+        self._tokens = TurnUsageMeter()
         self._message_routes: tuple[Router, ...] = (
             Route(StreamEvent, self._stream_event),
             Route(AssistantMessage, self._assistant_message),
@@ -142,6 +144,7 @@ class ClaudeEventNormalizer:
         )
         self._stream_handlers: Mapping[str, Callable[[StreamEventWire], ChatEventBuilders]] = {
             "message_start": self._message_start,
+            "message_delta": self._message_delta,
             "content_block_start": self._block_start,
             "content_block_delta": self._block_delta,
         }
@@ -174,6 +177,7 @@ class ClaudeEventNormalizer:
         self._tools.clear()
         self._interrupting = False
         self._error_reported = False
+        self._tokens.begin_turn()
 
     def restart_cost(self) -> None:
         self._cost.restart()
@@ -222,7 +226,15 @@ class ClaudeEventNormalizer:
         self._message_id = ChatMessageId(wire.message.id)
         self._streamed.add(wire.message.id)
         self._blocks.clear()
-        return ()
+        self._tokens.begin_message(wire.message.usage)
+        return (usage_reported(self._tokens.reported(self._model), self._message_id),)
+
+    def _message_delta(self, wire: StreamEventWire) -> ChatEventBuilders:
+        if wire.usage is None:
+            return ()
+        self._tokens.advance(wire.usage)
+        reported = self._tokens.reported(self._model, wire.usage.thinking_tokens)
+        return (usage_reported(reported, self._message_id),)
 
     def _block_start(self, wire: StreamEventWire) -> ChatEventBuilders:
         if wire.index is None or wire.content_block is None:
@@ -386,6 +398,7 @@ class ClaudeEventNormalizer:
             tokens_out=wire.output_tokens,
             cache_read_tokens=wire.cache_read_input_tokens or 0,
             cache_write_tokens=wire.cache_creation_input_tokens or 0,
+            thinking_tokens=wire.thinking_tokens,
             cost_usd=self._cost.turn_cost(message.total_cost_usd),
         )
 

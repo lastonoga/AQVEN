@@ -31,6 +31,10 @@ export type ToolSnapshot = {
 
 export type ChatFailure = { readonly code: ChatErrorCode; readonly message: string; readonly retryable: boolean }
 
+export type ReasoningSpan = { readonly startedAt: number; readonly endedAt: number | null; readonly tokens: number }
+
+export type ReasoningSpans = Readonly<Record<string, ReasoningSpan>>
+
 type ToolPart = ToolSnapshot & {
   readonly kind: "tool"
   readonly toolCallId: string
@@ -50,9 +54,16 @@ export type ChatTranscript = {
   readonly state: ChatState
   readonly lastSeq: number
   readonly failure: ChatFailure | null
+  readonly reasoning: ReasoningSpans
 }
 
-export const EMPTY_TRANSCRIPT: ChatTranscript = { messages: [], state: "idle", lastSeq: 0, failure: null }
+export const EMPTY_TRANSCRIPT: ChatTranscript = {
+  messages: [],
+  state: "idle",
+  lastSeq: 0,
+  failure: null,
+  reasoning: {},
+}
 
 const FAILED_TOOL: readonly ChatToolStatus[] = ["error", "denied", "interrupted"]
 
@@ -131,7 +142,11 @@ const FOLD: { readonly [K in ChatEventType]: Fold<K> } = {
   chat_file_edit: (transcript, event) =>
     withTool(transcript, event.tool_call_id, (part) => ({ ...part, facet: { kind: "fileEdit", path: event.path, change: event.change, diff: event.diff } })),
   chat_approval_requested: (transcript, event) =>
-    withTool(transcript, event.tool_call_id, (part) => ({ ...part, approval: { id: event.approval_id, prompt: event.reason, decision: null } })),
+    withTool(transcript, event.tool_call_id, (part) => ({
+      ...part,
+      argsText: JSON.stringify(event.input),
+      approval: { id: event.approval_id, prompt: event.reason, decision: null },
+    })),
   chat_approval_resolved: (transcript, event) =>
     mapMessages(transcript, (message) => {
       if (message.kind !== "assistant") return message
@@ -157,9 +172,42 @@ const foldEvent = <K extends ChatEventType>(transcript: ChatTranscript, event: E
 
 export const CHAT_EVENT_TYPES: readonly string[] = Object.keys(FOLD)
 
+const openSpan = (spans: ReasoningSpans, messageId: string, at: number): ReasoningSpans => ({
+  ...spans,
+  [messageId]: { startedAt: spans[messageId]?.startedAt ?? at, endedAt: null, tokens: spans[messageId]?.tokens ?? 0 },
+})
+
+const countedSpan = (spans: ReasoningSpans, messageId: string | null | undefined, tokens: number): ReasoningSpans => {
+  if (messageId === null || messageId === undefined || tokens === 0) return spans
+  const span = spans[messageId]
+  return span === undefined ? spans : { ...spans, [messageId]: { ...span, tokens } }
+}
+
+const closeSpans = (spans: ReasoningSpans, at: number): ReasoningSpans =>
+  Object.fromEntries(
+    Object.entries(spans).map(([messageId, span]) => [messageId, span.endedAt === null ? { ...span, endedAt: at } : span]),
+  )
+
+const ENDS_THINKING: readonly ChatEventType[] = [
+  "chat_text_delta",
+  "chat_tool_call_started",
+  "chat_turn_started",
+  "chat_turn_finished",
+  "chat_error",
+]
+
+const spansAfter = (spans: ReasoningSpans, event: ApiChatEvent): ReasoningSpans => {
+  const at = Date.parse(event.at)
+  if (Number.isNaN(at)) return spans
+  if (event.type === "chat_reasoning_delta") return openSpan(spans, event.message_id, at)
+  if (event.type === "chat_usage") return countedSpan(spans, event.message_id, event.usage.thinking_tokens ?? 0)
+  return ENDS_THINKING.includes(event.type) ? closeSpans(spans, at) : spans
+}
+
 export const applyChatEvent = (transcript: ChatTranscript, event: ApiChatEvent): ChatTranscript => {
   if (event.seq <= transcript.lastSeq) return transcript
-  return { ...foldEvent(transcript, event), lastSeq: event.seq }
+  const folded = foldEvent(transcript, event)
+  return { ...folded, reasoning: spansAfter(folded.reasoning, event), lastSeq: event.seq }
 }
 
 export const applyChatEvents = (transcript: ChatTranscript, events: readonly ApiChatEvent[]): ChatTranscript => events.reduce(applyChatEvent, transcript)

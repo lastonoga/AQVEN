@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
@@ -10,6 +11,7 @@ class ApprovalVerdict:
     decision: ApprovalDecision
     message: str | None
     resolved_by: ApprovalResolver
+    answers: Mapping[str, str] | None = None
 
 
 DEFAULT_APPROVAL_TIMEOUT_SECONDS: Final[float] = 600.0
@@ -46,7 +48,7 @@ class ApprovalRegistry:
         pending = self._pending.get(answer.approval_id)
         if pending is None or pending.session_id != session_id or pending.future.done():
             return False
-        pending.future.set_result(ApprovalVerdict(answer.decision, answer.message, "user"))
+        pending.future.set_result(ApprovalVerdict(answer.decision, answer.message, "user", answer.answers))
         return True
 
     def resolve_session(self, session_id: ChatSessionId, resolved_by: ApprovalResolver) -> int:

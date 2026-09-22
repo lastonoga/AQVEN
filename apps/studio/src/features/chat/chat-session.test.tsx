@@ -79,7 +79,7 @@ describe("ChatSession", () => {
 
     emit(upTo(4))
     expect(screen.getByText("List the flow ids in this project with one Bash command, then answer in one short sentence.")).toBeDefined()
-    expect(screen.getByText("The user wants flow ids listed using")).toBeDefined()
+    expect(screen.getByRole("button", { name: "Toggle the thinking" }).textContent).toContain("Thinking…")
     expect(screen.getByRole("button", { name: "Stop" })).toBeDefined()
 
     emit(liveTurnEvents)
@@ -88,16 +88,18 @@ describe("ChatSession", () => {
     expect(screen.getByRole("button", { name: "Send" })).toBeDefined()
   })
 
-  it("reports what the agent is doing while the turn runs and clears it when idle", () => {
+  it("leaves the running state to the thread itself instead of repeating it below", () => {
     const { transport, emit } = recorder()
     mount(transport)
     expect(screen.queryByRole("status")).toBeNull()
 
-    emit(upTo(2))
-    expect(screen.getByRole("status").textContent).toContain("Thinking")
+    emit(upTo(4))
+    expect(screen.queryByRole("status")).toBeNull()
+    expect(screen.getByRole("button", { name: "Toggle the thinking" }).textContent).toContain("Thinking…")
 
     emit(upTo(42))
-    expect(screen.getByRole("status").textContent).toContain("Running a tool")
+    expect(screen.getByRole("status").textContent).toContain("Working…")
+    expect(screen.getByRole("button", { name: "Toggle the thinking" }).textContent).toContain("Thought for")
 
     emit(liveTurnEvents)
     expect(screen.queryByRole("status")).toBeNull()

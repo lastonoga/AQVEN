@@ -8,6 +8,7 @@ import { AssistantMessage } from "./assistant-message"
 import type { ChatFailure, ChatState } from "./chat-events"
 import { Composer } from "./composer"
 import { Hint } from "./hint"
+import { useThinkingNow } from "./reasoning-context"
 import { UserMessage } from "./user-message"
 
 const MESSAGE_VIEW: Readonly<Record<MessageState["role"], ReactNode>> = {
@@ -34,14 +35,17 @@ function ScrollToBottom() {
   )
 }
 
-function ThreadState({ state }: { readonly state: ChatState }) {
-  const t = useTranslations("chat.state")
-  if (state === "idle") return null
+const QUIET: readonly ChatState[] = ["idle", "waiting_approval"]
+
+function ThreadLoader({ state }: { readonly state: ChatState }) {
+  const t = useTranslations("chat.loader")
+  const thinking = useThinkingNow()
+  if (thinking || QUIET.includes(state)) return null
   return (
     <Text role="hint" tone="neutral" asChild>
-      <p role="status" aria-label={t("aria")} className="flex items-center gap-2 px-3.5 pb-1">
+      <p role="status" aria-label={t("aria")} className="flex items-center gap-1.5 px-3.5 pb-1">
         <Dot tone="primary" pulse />
-        {t(state)}
+        {t("working")}
       </p>
     </Text>
   )
@@ -69,7 +73,7 @@ export function Thread({ failure, state }: { readonly failure: ChatFailure | nul
         <Surface variant="plain" asChild>
           <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto">
             <ScrollToBottom />
-            <ThreadState state={state} />
+            <ThreadLoader state={state} />
             <ThreadFailure failure={failure} />
             <Composer />
           </ThreadPrimitive.ViewportFooter>

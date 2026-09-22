@@ -167,7 +167,7 @@ def test_real_sdk_client_over_recorded_cli_frames(tmp_path: Path) -> None:
     assert [(event.status, event.input, event.result_preview) for event in finished] == [
         ("ok", {"flow": "support_case"}, "aqven check: OK")
     ]
-    usage = of_type(seen, ChatUsageReported)[0].usage
+    usage = of_type(seen, ChatUsageReported)[-1].usage
     assert (usage.tokens_in, usage.tokens_out, str(usage.cost_usd)) == (210, 62, "0.0031")
     assert of_type(seen, ChatTurnFinished)[0].stop_reason == "end_turn"
     assert [json.dumps(answer.response, sort_keys=True) for answer in transport.answers] == [

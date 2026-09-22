@@ -151,8 +151,8 @@ def status_changed(state: ChatState) -> ChatEventBuilder:
     return lambda stamp: ChatStatus(**stamp, state=state)
 
 
-def usage_reported(usage: ChatUsage) -> ChatEventBuilder:
-    return lambda stamp: ChatUsageReported(**stamp, usage=usage)
+def usage_reported(usage: ChatUsage, message_id: ChatMessageId | None = None) -> ChatEventBuilder:
+    return lambda stamp: ChatUsageReported(**stamp, message_id=message_id, usage=usage)
 
 
 def error_raised(code: ChatErrorCode, message: str, retryable: bool) -> ChatEventBuilder:
