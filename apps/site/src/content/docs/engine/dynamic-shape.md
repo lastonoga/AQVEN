@@ -127,10 +127,10 @@ Every set starts with a `kind` field pinned to the current intent by its own `en
 `CaseRecord`'s discriminator uses, so the value this shape eventually produces already carries the tag
 `narrow` checks against.
 
-`extract`, the `record` loop's first body node covered in
-[How to repeat a step with a limit](/engine/loop-node/), reads `case_form`'s output as its own
-`form_fields` input and fills in the record against it. Its inference file is where the field that
-doesn't have a fixed shape gets declared:
+`extract`, the `record` loop's first body node (see [How to repeat a step with a limit](/engine/loop-node/)
+for what a loop node's body does), reads `case_form`'s output as its own `form_fields` input and fills in
+the record against it. Its inference file is where the field that doesn't have a fixed shape gets
+declared:
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -181,7 +181,7 @@ at most 30 fields, 2 levels deep, 400 characters per text field, 10 items in any
 
 The same `record` value gets read two different ways further into the flow. `validate`, the loop's
 second body node, takes it in as `Dynamic` itself and checks business rules off it by field name, no
-fixed type needed — see [How to repeat a step with a limit](/engine/loop-node/). Once the loop is done,
+fixed type needed. Once the loop is done,
 `to_record` narrows the very same value down to `CaseRecord` — see
 [How to narrow a dynamic value to a type](/engine/narrow-node/).
 
@@ -195,8 +195,8 @@ flow, `intake_extra` is taken in as `Dynamic` too, and used as plain data rather
 
 - [How to narrow a dynamic value to a type](/engine/narrow-node/) — the other half of the `Dynamic`
   story: turning a value like `record` into an ordinary typed value once you know exactly what it is.
-- [How to repeat a step with a limit](/engine/loop-node/) — `extract` and `validate`, the two nodes
-  that produce and consume this page's example `Dynamic` value.
+- [How to repeat a step with a limit](/engine/loop-node/) — what a `loop` node's body and passes are,
+  the shape `extract` and `validate` run inside.
 - [How to write a step in Python](/engine/code-node/) — `case_form`, the node that builds the
   `FieldSpec[]` shape this page's example is built from.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
