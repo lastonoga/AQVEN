@@ -80,7 +80,7 @@ class DatasetRangePreview(ResourceModel):
 class ManualRangeRequest(RequestModel):
     input: JsonValue = Field(default_factory=dict)
     context: dict[str, JsonValue] = Field(default_factory=dict)
-    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict[NodeId, JsonValue])
 
 
 class ManualMissingRangeData(ResourceModel):
@@ -241,10 +241,8 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         ranges: list[ManualRangePair] = []
         for first, start_node in enumerate(flow.order):
             for end_node in flow.order[first:]:
-                included = frozenset(flow.order[first:flow.order.index(end_node) + 1])
-                references = range_references(
-                    flow, start_node, end_node, body.input, body.context, body.node_outputs
-                )
+                included = frozenset(flow.order[first : flow.order.index(end_node) + 1])
+                references = range_references(flow, start_node, end_node, body.input, body.context, body.node_outputs)
                 inputs: dict[str, None] = {}
                 context_keys: dict[str, None] = {}
                 fixtures: dict[str, None] = {}
@@ -260,21 +258,21 @@ def build_flows_router(context: ServerContext) -> APIRouter:
                             fixtures[reference.replace(f"${parsed.node_id}.out", f"${fixture}.out", 1)] = None
                 missing = tuple(
                     ManualMissingRangeData(reference=item.reference, reason=item.reason)
-                    for item in range_missing(
-                        flow, start_node, end_node, body.input, body.context, body.node_outputs
-                    )
+                    for item in range_missing(flow, start_node, end_node, body.input, body.context, body.node_outputs)
                 )
                 if "$input" in inputs and body.input == {} and not any(item.reference == "$input" for item in missing):
                     missing += (ManualMissingRangeData(reference="$input", reason="flow input is empty"),)
-                ranges.append(ManualRangePair(
-                    start_node=start_node,
-                    end_node=end_node,
-                    available=not missing,
-                    input_paths=tuple(inputs),
-                    context_keys=tuple(context_keys),
-                    node_output_paths=tuple(fixtures),
-                    missing=missing,
-                ))
+                ranges.append(
+                    ManualRangePair(
+                        start_node=start_node,
+                        end_node=end_node,
+                        available=not missing,
+                        input_paths=tuple(inputs),
+                        context_keys=tuple(context_keys),
+                        node_output_paths=tuple(fixtures),
+                        missing=missing,
+                    )
+                )
         return ManualRangePreview(order=flow.order, ranges=tuple(ranges))
 
     @router.get("/flows/{flow_id}/nodes", operation_id="flow_nodes", openapi_extra=rest_only(PROJECT_FILES))

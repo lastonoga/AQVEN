@@ -4,11 +4,11 @@ from typing import Final
 import pytest
 
 from aqven.models.rate import ProviderLimiters, RateLimiter
-from aqven.spec import DataPolicy, ProviderLimits, ProviderName, ProviderSpec
+from aqven.spec import DataPolicy, ProviderLimits, ProviderName, ProviderSpec, Retention
 
 OPENROUTER: Final = ProviderName("openrouter")
 OPENAI: Final = ProviderName("openai")
-POLICY: Final = DataPolicy(allows_pii=True, allows_sensitive=False, retention="zero")
+POLICY: Final = DataPolicy(allows_pii=True, allows_sensitive=False, retention=Retention.ZERO)
 
 
 def provider(name: ProviderName, rpm: int | None) -> ProviderSpec:

@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Final
 
 import pytest
@@ -8,7 +9,7 @@ from pydantic import JsonValue, SecretStr
 from aqven.app.workers import MAX_PARALLEL_KEY, MAX_PARALLEL_SCOPE, InvalidWorkerCount, configured_workers
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
 
-MOMENT: Final = "2026-09-21T12:00:00Z"
+MOMENT: Final = datetime(2026, 9, 21, 12, 0, tzinfo=UTC)
 
 
 @dataclass(slots=True)

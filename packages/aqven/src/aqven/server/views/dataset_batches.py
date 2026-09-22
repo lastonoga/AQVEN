@@ -175,7 +175,7 @@ class SqliteDatasetBatchStore:
 class DatasetBatchJobs:
     context: ServerContext
     store: SqliteDatasetBatchStore | None = None
-    tasks: dict[str, asyncio.Task[None]] = field(default_factory=dict)
+    tasks: dict[str, asyncio.Task[None]] = field(default_factory=dict[str, asyncio.Task[None]])
 
     def opened(self) -> SqliteDatasetBatchStore:
         if self.store is None:

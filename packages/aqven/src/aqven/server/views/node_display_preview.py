@@ -29,7 +29,13 @@ def node_output_display_preview(state: WorkspaceState, flow_id: str, node_id: st
     inference = detail.inference_spec
     formatter = None if inference is None or inference.display is None else inference.display.output
     source = detail.display_sources.get("output")
-    if formatter is None or formatter.template is None or source is None or detail.inference is None:
+    if (
+        formatter is None
+        or formatter.template is None
+        or source is None
+        or inference is None
+        or detail.inference is None
+    ):
         raise not_found(f"node {node_id} has no output display template")
     try:
         template = CurrentTemplateLoader(state.root).load(source.path)

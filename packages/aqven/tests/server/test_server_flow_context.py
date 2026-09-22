@@ -120,17 +120,13 @@ def test_dataset_range_preview_and_batch_use_case_output_fixture(
     )
     assert preview.status_code == 200, preview.text
     assert preview.json()["order"] == ["classify", "route", "summarize"]
-    route_only = next(
-        row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
-    )
+    route_only = next(row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "route")
     assert route_only["available"] is True and route_only["missing"] == []
 
     unavailable = context_client.post(
         "/api/flows/triage/dataset-range", json={"dataset_id": "slice_cases", "case_names": ["ready", "missing"]}
     )
-    route_only = next(
-        row for row in unavailable.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
-    )
+    route_only = next(row for row in unavailable.json()["ranges"] if row["start_node"] == row["end_node"] == "route")
     assert route_only["available"] is False
     assert any(item["case_name"] == "missing" and "classify" in item["reference"] for item in route_only["missing"])
 
@@ -162,11 +158,12 @@ def test_dataset_range_preview_and_batch_use_case_output_fixture(
     assert started.status_code == 202, started.text
     assert started.json()["start_node"] == "route"
     assert started.json()["end_node"] == "route"
+    batch = context_client.get(f"/api/dataset-batches/{started.json()['batch_id']}").json()
     for _ in range(100):
-        batch = context_client.get(f"/api/dataset-batches/{started.json()['batch_id']}").json()
         if batch["status"] != "running":
             break
         time.sleep(0.05)
+        batch = context_client.get(f"/api/dataset-batches/{started.json()['batch_id']}").json()
     assert batch["status"] == "completed"
     assert server_engine.started[-1].node_outputs == {"classify": {"category": "billing"}}
     assert (server_engine.started[-1].start_node, server_engine.started[-1].end_node) == ("route", "route")
@@ -224,9 +221,7 @@ def test_manual_range_reports_inputs_needed_by_each_selected_stage(context_clien
 
     assert preview.status_code == 200, preview.text
     assert preview.json()["order"] == ["classify", "route", "summarize"]
-    classify = next(
-        row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "classify"
-    )
+    classify = next(row for row in preview.json()["ranges"] if row["start_node"] == row["end_node"] == "classify")
     assert classify["input_paths"] == ["$input"]
     assert classify["context_keys"] == []
     assert classify["node_output_paths"] == []
@@ -246,12 +241,8 @@ def test_manual_range_resolves_switch_branch_using_draft_upstream_output(context
 
     assert billing.status_code == 200, billing.text
     assert delivery.status_code == 200, delivery.text
-    billing_route = next(
-        row for row in billing.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
-    )
-    delivery_route = next(
-        row for row in delivery.json()["ranges"] if row["start_node"] == row["end_node"] == "route"
-    )
+    billing_route = next(row for row in billing.json()["ranges"] if row["start_node"] == row["end_node"] == "route")
+    delivery_route = next(row for row in delivery.json()["ranges"] if row["start_node"] == row["end_node"] == "route")
     assert billing_route["input_paths"] == []
     assert billing_route["context_keys"] == []
     assert billing_route["node_output_paths"] == ["$classify.out.category"]

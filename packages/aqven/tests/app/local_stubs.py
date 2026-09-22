@@ -16,6 +16,7 @@ from aqven.runtime.address import ExecutionAddress, RunId
 from aqven.runtime.events import RunEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution
 from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse
 from aqven.runtime.runs import (
     CancelRequest,
     CancelResult,
@@ -38,7 +39,7 @@ def unused() -> NoReturn:
 
 
 class UnusedEngineFacade:
-    async def start_run(self, request: RunStartRequest) -> RunStarted:
+    async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         unused()
 
     async def get_run(self, run_id: RunId) -> RunSnapshot:
@@ -62,6 +63,9 @@ class UnusedEngineFacade:
         address: ExecutionAddress,
         include_payloads: IncludePayloads = "truncated",
     ) -> ExecutionDetail:
+        unused()
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
         unused()
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:

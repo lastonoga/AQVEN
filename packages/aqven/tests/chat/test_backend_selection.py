@@ -76,6 +76,9 @@ class FakeBackend:
     async def close_session(self, session_id: ChatSessionId) -> None:
         raise NotImplementedError
 
+    async def apply_settings(self, session_id: ChatSessionId) -> None:
+        raise NotImplementedError
+
 
 def test_backend_selection_defaults_to_claude_and_persists_codex() -> None:
     values = MemorySettings()

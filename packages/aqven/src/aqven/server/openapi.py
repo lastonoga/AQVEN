@@ -12,6 +12,7 @@ from aqven.runtime.address import ExecutionAddress, RunId
 from aqven.runtime.events import RunEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution
 from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse
 from aqven.runtime.runs import (
     CancelRequest,
     CancelResult,
@@ -60,6 +61,9 @@ class ContractEngine:
         address: ExecutionAddress,
         include_payloads: IncludePayloads = "truncated",
     ) -> ExecutionDetail:
+        unavailable()
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
         unavailable()
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:

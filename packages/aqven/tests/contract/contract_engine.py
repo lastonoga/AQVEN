@@ -35,6 +35,7 @@ from aqven.runtime import (
     SpecVersionInfo,
     node_address,
 )
+from aqven.runtime.presentation import PresentationRequest, PresentationResponse
 
 RUN_ID: Final = RunId("01999c2a-5e10-7b3c-9d4e-6f7a8b9c0d1e")
 FORK_ID: Final = RunId("01999c2a-7f21-7c4d-8e5f-7a8b9c0d1e2f")
@@ -208,6 +209,10 @@ class ScriptedEngine:
             rule_firings=(),
             human=resource(HumanWaitDetail, **human),
         )
+
+    async def present_run(self, run_id: RunId, request: PresentationRequest) -> PresentationResponse:
+        self._known(run_id)
+        return PresentationResponse(results=())
 
     async def resume(self, run_id: RunId, request: ResumeRequest) -> ResumeResult:
         self._known(run_id)
