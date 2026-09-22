@@ -12,6 +12,7 @@ export type StepData = {
   readonly outputs: number
   readonly problems: number
   readonly size: CanvasSize
+  readonly reversed: boolean
 }
 
 export type ContainerData = {
@@ -20,6 +21,7 @@ export type ContainerData = {
   readonly members: number
   readonly problems: number
   readonly size: CanvasSize
+  readonly reversed: boolean
 }
 
 export type StepFlowNode = Node<StepData, "step">
@@ -54,7 +56,16 @@ const stepNode = (node: CanvasStep): StepFlowNode => ({
   height: node.box.height,
   type: "step",
   selectable: true,
-  data: { kind: node.kind, name: node.name, meta: node.meta, inputs: node.inputs, outputs: node.outputs, problems: node.problems, size: node.size },
+  data: {
+    kind: node.kind,
+    name: node.name,
+    meta: node.meta,
+    inputs: node.inputs,
+    outputs: node.outputs,
+    problems: node.problems,
+    size: node.size,
+    reversed: node.reversed,
+  },
 })
 
 const containerNode = (node: CanvasContainer): ContainerFlowNode => ({
@@ -63,7 +74,7 @@ const containerNode = (node: CanvasContainer): ContainerFlowNode => ({
   height: node.box.height,
   type: "container",
   selectable: true,
-  data: { kind: node.kind, name: node.name, members: node.members, problems: node.problems, size: node.size },
+  data: { kind: node.kind, name: node.name, members: node.members, problems: node.problems, size: node.size, reversed: node.reversed },
 })
 
 export const toFlowNodes = (nodes: readonly CanvasNode[]): CanvasFlowNode[] =>

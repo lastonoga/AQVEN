@@ -13,6 +13,7 @@ type CanvasCommon = {
   readonly kind: NodeKind
   readonly name: string
   readonly problems: number
+  readonly reversed: boolean
 }
 
 export type CanvasStep = CanvasCommon & {
@@ -145,6 +146,39 @@ const ranksOf = (ids: readonly string[], pairs: readonly Pair[]): ReadonlyMap<st
   return ranks
 }
 
+const predecessorsOf = (pairs: readonly Pair[]): ReadonlyMap<string, readonly string[]> => {
+  const map = new Map<string, string[]>()
+  pairs.forEach((pair) => {
+    map.set(pair.target, [...(map.get(pair.target) ?? []), pair.source])
+  })
+  return map
+}
+
+const barycenterOf = (id: string, predecessors: ReadonlyMap<string, readonly string[]>, position: ReadonlyMap<string, number>): number | null => {
+  const known = (predecessors.get(id) ?? []).flatMap((parent) => {
+    const at = position.get(parent)
+    return at === undefined ? [] : [at]
+  })
+  return known.length === 0 ? null : known.reduce((total, at) => total + at, 0) / known.length
+}
+
+const orderedByBarycenter = (ranked: readonly (readonly Sized[])[], pairs: readonly Pair[]): readonly (readonly Sized[])[] => {
+  const predecessors = predecessorsOf(pairs)
+  const position = new Map<string, number>()
+  return ranked.map((members) => {
+    const ordered = members
+      .map((member, index) => ({ member, index }))
+      .sort((left, right) => {
+        const leftKey = barycenterOf(left.member.id, predecessors, position) ?? left.index
+        const rightKey = barycenterOf(right.member.id, predecessors, position) ?? right.index
+        return leftKey - rightKey || left.index - right.index
+      })
+      .map(({ member }) => member)
+    ordered.forEach((member, index) => position.set(member.id, index))
+    return ordered
+  })
+}
+
 const columnsOf = (sized: readonly Sized[], pairs: readonly Pair[]): readonly Column[] => {
   const ranks = ranksOf(
     sized.map((node) => node.id),
@@ -155,16 +189,12 @@ const columnsOf = (sized: readonly Sized[], pairs: readonly Pair[]): readonly Co
     const rank = ranks.get(node.id) ?? 0
     byRank.set(rank, [...(byRank.get(rank) ?? []), node])
   })
-  return [...byRank.keys()]
-    .sort((left, right) => left - right)
-    .map((rank) => {
-      const members = byRank.get(rank) ?? []
-      return {
-        members,
-        width: members.reduce((widest, node) => Math.max(widest, node.width), 0),
-        height: members.reduce((total, node) => total + node.height, 0) + STACK_GAP * (members.length - 1),
-      }
-    })
+  const ascending = [...byRank.keys()].sort((left, right) => left - right).map((rank) => byRank.get(rank) ?? [])
+  return orderedByBarycenter(ascending, pairs).map((members) => ({
+    members,
+    width: members.reduce((widest, node) => Math.max(widest, node.width), 0),
+    height: members.reduce((total, node) => total + node.height, 0) + STACK_GAP * (members.length - 1),
+  }))
 }
 
 const wrapRows = (columns: readonly Column[]): readonly (readonly Column[])[] =>
@@ -179,25 +209,32 @@ const wrapRows = (columns: readonly Column[]): readonly (readonly Column[])[] =>
 const rowWidth = (row: readonly Column[]): number =>
   row.reduce((total, column) => total + column.width, 0) + RANK_GAP * Math.max(row.length - 1, 0)
 
-const placeColumns = (sized: readonly Sized[], pairs: readonly Pair[]): { readonly boxes: ReadonlyMap<string, Box> } & Size => {
+const placeColumns = (
+  sized: readonly Sized[],
+  pairs: readonly Pair[],
+): { readonly boxes: ReadonlyMap<string, Box>; readonly reversed: ReadonlySet<string> } & Size => {
   const rows = wrapRows(columnsOf(sized, pairs))
   const canvasWidth = rows.reduce((widest, row) => Math.max(widest, rowWidth(row)), 0)
   const boxes = new Map<string, Box>()
+  const reversed = new Set<string>()
   let top = 0
-  rows.forEach((row) => {
+  rows.forEach((row, rowIndex) => {
     const rowHeight = row.reduce((tallest, column) => Math.max(tallest, column.height), 0)
-    let left = canvasWidth - rowWidth(row)
+    const flip = rowIndex % 2 === 1
+    let left = 0
     row.forEach((column) => {
+      const columnLeft = flip ? canvasWidth - left - column.width : left
       let memberTop = top + (rowHeight - column.height) / 2
       column.members.forEach((member) => {
-        boxes.set(member.id, { x: left + (column.width - member.width) / 2, y: memberTop, width: member.width, height: member.height })
+        boxes.set(member.id, { x: columnLeft + (column.width - member.width) / 2, y: memberTop, width: member.width, height: member.height })
+        if (flip) reversed.add(member.id)
         memberTop += member.height + STACK_GAP
       })
       left += column.width + RANK_GAP
     })
     top += rowHeight + ROW_GAP
   })
-  return { boxes, width: canvasWidth, height: Math.max(top - ROW_GAP, 0) }
+  return { boxes, reversed, width: canvasWidth, height: Math.max(top - ROW_GAP, 0) }
 }
 
 const backEdges = (kind: NodeKind | null, sized: readonly Sized[], pairs: readonly Pair[]): readonly CanvasEdge[] => {
@@ -243,7 +280,16 @@ const buildLevel = (
   const placed = placeColumns(sized, pairs)
   const own = inner.flatMap(({ member, level: child }): readonly CanvasNode[] => {
     const box = placed.boxes.get(member.node_id) ?? { x: 0, y: 0, width: 0, height: 0 }
-    const common = { id: member.node_id, parent: level, box, size: sizeAt(depth), kind: member.kind, name: member.local_id, problems: member.problems_count }
+    const common = {
+      id: member.node_id,
+      parent: level,
+      box,
+      size: sizeAt(depth),
+      kind: member.kind,
+      name: member.local_id,
+      problems: member.problems_count,
+      reversed: placed.reversed.has(member.node_id),
+    }
     if (child.nodes.length === 0) {
       return [{ ...common, role: "step", meta: nodeSubtitle(member) ?? "", inputs: member.upstream.length, outputs: member.downstream.length }]
     }
