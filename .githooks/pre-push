@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "pre-push: uv not on PATH, skipping the generated-reference check" >&2
+  exit 0
+fi
+
+echo "pre-push: checking apps/site/src/content/docs/reference/python-api.md is current..."
+if ! uv run --frozen python tools/generate_reference.py --check; then
+  echo "pre-push: run 'uv run --frozen python tools/generate_reference.py' and commit the result" >&2
+  exit 1
+fi

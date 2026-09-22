@@ -47,7 +47,11 @@
   ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §8) запрещает docstring у функций шагов и `Signature`
   builder-а **проекта на aqven** — движка это не касается. Единственное исключение по всему репозиторию —
   публичная поверхность пакетов `aqven` и `aqven-llm`: там docstring обязателен и служит источником
-  API-референса сайта документации ([ADR-0031](docs/adr/0031-public-api-docstrings.md)).
+  API-референса сайта документации ([ADR-0031](docs/adr/0031-public-api-docstrings.md)). После правки публичной
+  поверхности (новое поле датакласса, сигнатура, docstring) перегенерируй референс: `uv run python
+  tools/generate_reference.py`, иначе CI (`reference:check` в `Pages`) упадёт на устаревшем
+  `apps/site/src/content/docs/reference/python-api.md`. `mise run install` включает git hook
+  `.githooks/pre-push`, который проверяет это перед каждым push; `mise run check` — тот же чек локально.
 - **Плоский код.** Ранние возвраты, guard clauses, таблицы обработчиков и Strategy вместо
   вложенных if/else и лестниц switch.
 - **SOLID и именованные паттерны.** Применил паттерн — назови его в описании изменения.
