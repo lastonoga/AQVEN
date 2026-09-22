@@ -105,6 +105,13 @@ in full on [How to handle a shape you don't know in advance](/engine/dynamic-sha
 - Before reaching for `Dynamic`, check whether an allowed-set (case 1), a discriminated union with a
   `switch` (case 2), or unrolled `{key, value}` rows (case 3) already covers what you need — each keeps
   every field ordinarily typed and every guarantee `aqven check` can give you.
+- An allowed-set only becomes a real constrained choice for the model up to 50 values: AQVEN rewrites
+  the schema so the model can literally only pick one of the values you gave it. Past 50, the model
+  isn't restricted to your list anymore — it can return anything that fits the field's own type. AQVEN
+  still checks the answer against the full set afterward and retries on a bad pick, but that catches the
+  mistake after the fact instead of preventing it. For a genuinely large candidate set — hundreds or
+  thousands of ids — narrow it to the relevant candidates yourself, with your own retrieval or
+  filtering, before the call, instead of handing the model the whole list.
 - Reach for case 4 the moment most of a node's output is fixed and only one genuinely open-ended part
   depends on data. Don't widen the whole output to `Dynamic` because one field needs it — keep the rest
   ordinarily typed.
