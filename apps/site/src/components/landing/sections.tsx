@@ -265,7 +265,7 @@ export const Stack = () => (
         <CardContent>
           <p className="text-muted-foreground">
             AQVEN runs next to your application: your providers, your tools, your stack. Python, on
-            your machine, pointed at the project folder you already have.
+            your machine, with the workflow committed in your own repo.
           </p>
         </CardContent>
       </Card>

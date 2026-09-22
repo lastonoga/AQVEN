@@ -14,6 +14,7 @@ import enum
 import importlib
 import inspect
 import json
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast, get_origin
@@ -115,6 +116,10 @@ def constraints_text(schema: dict[str, Any]) -> str:
 
 def clean(value: object) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def machine_independent(text: str) -> str:
+    return text.replace(sys.executable, "sys.executable")
 
 
 def default_text(
@@ -282,14 +287,17 @@ def api_page() -> str:
                     or inspect.isasyncgenfunction(method)
                     else "def"
                 )
-                lines.append(f"- `{prefix} {method_name}{signature}`")
+                lines.append(machine_independent(f"- `{prefix} {method_name}{signature}`"))
             lines.append("")
         elif callable(value):
             try:
                 prefix = "async def" if inspect.iscoroutinefunction(value) else "def"
+                signature = inspect.signature(
+                    value, annotation_format=annotationlib.Format.STRING
+                )
                 lines.extend(
                     (
-                        f"`{prefix} {name}{inspect.signature(value, annotation_format=annotationlib.Format.STRING)}`",
+                        machine_independent(f"`{prefix} {name}{signature}`"),
                         "",
                     )
                 )
@@ -371,7 +379,7 @@ def builtins_page() -> tuple[str, dict[str, str]]:
             signature = inspect.signature(
                 function, annotation_format=annotationlib.Format.STRING
             )
-            lines.append(f"| `{name}` | `{clean(f'{function.__name__}{signature}')}` |")
+            lines.append(f"| `{name}` | `{machine_independent(clean(f'{function.__name__}{signature}'))}` |")
         lines.append("")
     lines.extend(("## `with` parameter models", ""))
     models = policy_param_models()
@@ -443,7 +451,7 @@ def authoring_api_page() -> str:
         signature = inspect.signature(
             value, annotation_format=annotationlib.Format.STRING
         )
-        lines.extend((f"## {name}", "", f"`def {name}{signature}`", ""))
+        lines.extend((f"## {name}", "", machine_independent(f"`def {name}{signature}`"), ""))
     for name in ("Inference", "Flow", "BuiltNode", "BuilderError"):
         value = getattr(module, name)
         lines.extend((f"## {name}", "", f"`class {name}` · `{value.__module__}`", ""))

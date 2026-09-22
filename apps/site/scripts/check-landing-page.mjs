@@ -28,7 +28,7 @@ const requiredMarkers = [
   "Not a tracing tool. Not a drag-and-drop builder.",
   "Keep your models. Keep your code.",
   "Source available.",
-  "Start with a workflow you already have.",
+  "Know what your workflow does before it runs.",
   "uv tool install aqven",
 ];
 
@@ -52,25 +52,39 @@ for (const marker of requiredScreenshots) {
   );
 }
 
-const forbiddenMarkers = ["uv run aqven", "aqven check ."];
+const forbiddenMarkers = [
+  { marker: "uv run aqven", reason: "is a command that only works inside an existing project" },
+  { marker: "aqven check .", reason: "is a command that only works inside an existing project" },
+  {
+    marker: "Nothing to rewrite",
+    reason:
+      "claims AQVEN adopts a workflow you already run. The only way to create a project is `aqven new`, and every flow, node and prompt is authored as a file",
+  },
+  {
+    marker: "Point AQVEN at your project",
+    reason:
+      "claims AQVEN adopts a workflow you already run. The only way to create a project is `aqven new`, and every flow, node and prompt is authored as a file",
+  },
+];
 
-for (const marker of forbiddenMarkers) {
-  assert.ok(!page.includes(marker), `The landing page must not show commands: ${marker}`);
+for (const { marker, reason } of forbiddenMarkers) {
+  assert.ok(!page.includes(marker), `The landing page must not say "${marker}": it ${reason}.`);
 }
 
 // Zero em-dashes anywhere visible on the page - a deliberate design-taste rule (headlines, body
 // copy, captions, quotes), not a typo guard. Regular hyphens or a colon/comma restructure instead.
 assert.ok(!page.includes("—"), "The landing page must not contain an em-dash (—).");
 
-// AQVEN is source-available (PolyForm Shield 1.0.0), not open source, and never was — see
-// docs/adr/0039-polyform-shield-license.md. Calling it "open source" or "MIT" is a license claim, not a
-// typo; the ADR is explicit that this word choice must not reach marketing.
+// AQVEN is source-available (AQVEN License 1.0.0, a modified PolyForm Shield that additionally
+// restricts commercial distribution), not open source, and never was. Calling it "open source" or
+// "MIT" is a license claim, not a typo. The LICENSE file also asks not to be cited as unmodified
+// PolyForm Shield, so the page should say "AQVEN License", not "PolyForm Shield".
 const licenseMisclaims = ["Open source", "open-source", "open source", '"MIT"', ">MIT<"];
 
 for (const marker of licenseMisclaims) {
   assert.ok(
     !page.includes(marker),
-    `The landing page must not claim AQVEN is open source or MIT-licensed (found: ${marker}). It is source-available under PolyForm Shield — see docs/adr/0039-polyform-shield-license.md.`
+    `The landing page must not claim AQVEN is open source or MIT-licensed (found: ${marker}). It is source-available under the AQVEN License 1.0.0.`
   );
 }
 
