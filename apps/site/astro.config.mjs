@@ -83,6 +83,7 @@ export default defineConfig({
                 { slug: "engine/prompts" },
                 { slug: "engine/field-constraints" },
                 { slug: "engine/dynamic-shape" },
+                { slug: "engine/display-templates" },
               ],
             },
             {

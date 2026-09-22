@@ -162,6 +162,8 @@ template can produce more than one role in the same call.
 ## See also
 
 - [How to call a model](/engine/llm-node/) — the node kind that calls the prompt you write here.
+- [How to customize a node's display in Studio](/engine/display-templates/) — the same file-naming and
+  Liquid pattern, for how the node's input and output look in Studio instead of what the model reads.
 - [Three prompt levels](/concepts/three-prompt-levels/) — when to reach for level 2 or level 3 instead
   of staying at plain text, and what each one costs you.
 - [Inference specifications](/reference/inference/) — every field on `InferenceSpec`, including `prompt`.
