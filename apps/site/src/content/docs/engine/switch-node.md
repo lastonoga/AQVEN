@@ -35,7 +35,7 @@ default: every value the switch can see needs its own case.
 
 ### Example
 
-This is the showcase project's `route` node in its `support_case` flow: it picks how a case gets
+This is the [showcase](/start/quickstart/) project's `route` node in its `support_case` flow: it picks how a case gets
 resolved based on what kind of case it is. Create it yourself with:
 
 ```bash

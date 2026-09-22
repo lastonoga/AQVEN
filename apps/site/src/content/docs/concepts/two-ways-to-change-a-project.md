@@ -21,7 +21,7 @@ and commits without complaint.
 
 What catches this is `{{CLI_COMMAND}} check`, described in full on
 [how to check a project before committing](/engine/check/). Run by hand, it's a normal CLI command.
-The showcase project also shows how to run it for you automatically: a couple of agent-harness
+The [showcase](/start/quickstart/) project also shows how to run it for you automatically: a couple of agent-harness
 configuration files that add a hook, firing after every file write and again when the agent finishes,
 that blocks with `check`'s real error output if the tree is now invalid. That hook is a convention a
 project sets up for its own agent, not a property of AQVEN itself — a project that hasn't wired one up

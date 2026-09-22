@@ -64,7 +64,7 @@ have once the flow is running — a marketplace's own intake form, a case record
 which kind of case it turns out to be. Cases 4 and 5 exist for exactly that, and the choice between them
 is how much of the node's output actually needs to give up the guarantees above.
 
-## Case 4 in the showcase: triage's intake_extra
+## Case 4 in the [showcase](/start/quickstart/): triage's intake_extra
 
 The showcase project's `support_case` flow has a real case 4. Its `triage` inference's `out:` block ends
 like this — two of its four static fields shown, the rest collapsed:

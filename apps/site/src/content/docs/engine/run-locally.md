@@ -33,7 +33,7 @@ out of several, and what each of `run`'s exit codes means.
   naming the node's address, the attempt it answers, and a payload shaped like that node's `form` type
   — see [how to pause for a person](/engine/human-node/) for what `form` means and what a payload has
   to match. Without it, a run that reaches an open human wait suspends instead of continuing. The
-  showcase project ships one of these files already, at `samples/answers.json`.
+  [showcase](/start/quickstart/) project ships one of these files already, at `samples/answers.json`.
 - `--cassettes DIR` replays or records model calls against a directory instead of always calling the
   real provider, and `--cassette-mode` picks how: `replay_strict` (the default once `--cassettes` is
   set) only ever replays — a call with no matching recording is a hard error naming the exact key, and

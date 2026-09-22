@@ -39,7 +39,7 @@ same prompt the engine would send, with no network call and no tokens spent.
 
 ### Example
 
-Create the showcase project and connect an agent to it as in
+Create the [showcase](/start/quickstart/) project and connect an agent to it as in
 [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
 
 ```bash

@@ -16,7 +16,7 @@ is that report.
 
 - `{{CLI_COMMAND}} secrets <path>` lists every secret the project declares: one row per provider that
   needs an API key, one row per `secrets` entry a tool's YAML declares, one row per `headers` entry an
-  MCP server's YAML declares. Two tools that both need the same environment variable — the showcase's
+  MCP server's YAML declares. Two tools that both need the same environment variable — the [showcase](/start/quickstart/)'s
   `lookup_order` and `issue_store_credit` both read `LUMEN_ORDERS_TOKEN` — get their own row each, not
   one merged row, because each is a separate place in the project that has to resolve it.
 - Each row names the secret, the environment variable it resolves from, and what declared it — a

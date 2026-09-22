@@ -54,7 +54,7 @@ the question more than once.
 
 ### A real example: one prompt, two models
 
-The showcase project's `support_case` flow asks the same question more than once, once per model
+The [showcase](/start/quickstart/) project's `support_case` flow asks the same question more than once, once per model
 family, to get independent draft replies. The question itself is one Inference file,
 `nodes/polish/revise.inference.yaml`. Here's a slice of its typed contract:
 

@@ -27,7 +27,7 @@ downstream reads named fields instead of an open-ended blob.
 
 ### Example
 
-This is the showcase project's `to_record` node, in its `support_case` flow: it narrows the case
+This is the [showcase](/start/quickstart/) project's `to_record` node, in its `support_case` flow: it narrows the case
 record an earlier `loop` node filled in — declared `Dynamic` there because its shape depends on which
 kind of case it turns out to be — down to `CaseRecord`, a discriminated union with three variants:
 `defect`, `delivery`, `question`. Create it yourself with:

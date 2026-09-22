@@ -49,7 +49,7 @@ from a terminal, while watching every command, file edit, and tool call as it ha
 
 ### Example
 
-Open the showcase project's `support_case` flow and its chat panel. Start a new thread, leave approval
+Open the [showcase](/start/quickstart/) project's `support_case` flow and its chat panel. Start a new thread, leave approval
 mode on **Manual**, and ask: "Add a `promises` scorer to the `reply_quality` eval." The agent reads the
 eval file, then proposes writing the change — because the thread is in Manual mode, an Allow/Deny bar
 appears on that edit before anything is written. Click **Allow**, and the diff lands in the file.

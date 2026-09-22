@@ -38,7 +38,7 @@ first two tools worth calling once you are.
 
 ### Example
 
-This technique doesn't need the showcase project — a minimal one with an offline test is enough. Create
+This technique doesn't need the [showcase](/start/quickstart/) project — a minimal one with an offline test is enough. Create
 one and connect an agent to it as in [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
 
 ```bash

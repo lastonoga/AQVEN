@@ -29,7 +29,7 @@ level deeper. It sits flat inside its parent node's folder, and its id is qualif
 `parent__child`. A folder one level deep never turns into two levels just because the node inside it
 has children.
 
-Here's the real `decide/` folder from `judge_panel`, a small complete flow in the showcase project. It's
+Here's the real `decide/` folder from `judge_panel`, a small complete flow in the [showcase](/start/quickstart/) project. It's
 one parent node, `decide`, with one nested child, `tie_break`, that itself uses a full `llm` file set:
 
 ```

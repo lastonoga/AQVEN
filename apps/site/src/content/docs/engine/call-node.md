@@ -28,7 +28,7 @@ whatever that flow returns becomes the node's own output.
 
 ### Example
 
-This is the showcase project's `panel` node, in its `support_case` flow: instead of running one more
+This is the [showcase](/start/quickstart/) project's `panel` node, in its `support_case` flow: instead of running one more
 model itself, it hands the case summary, three reply drafts, and knowledge-base excerpts to a whole
 separate flow — a panel of judges that picks the best draft. Create it yourself with:
 

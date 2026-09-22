@@ -35,7 +35,7 @@ page connects a coding agent *to* AQVEN, so it can read and edit your project. T
 
 ### Example
 
-The showcase project's `helpdesk` server, `mcp/helpdesk.yaml`, uses one URL and one bearer token:
+The [showcase](/start/quickstart/) project's `helpdesk` server, `mcp/helpdesk.yaml`, uses one URL and one bearer token:
 
 ```yaml
 apiVersion: "aqven/v1"

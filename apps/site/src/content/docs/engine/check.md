@@ -43,7 +43,7 @@ that change what runs, and a gotcha in how they combine.
 
 ### Example
 
-Create the showcase project if you don't already have one:
+Create the [showcase](/start/quickstart/) project if you don't already have one:
 
 ```bash
 {{CLI_COMMAND}} new my_project --template showcase

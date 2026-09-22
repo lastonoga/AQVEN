@@ -27,7 +27,7 @@ your own code or routes data; this is the one that talks to a model.
 
 ### Example
 
-This is the showcase project's `tie_break` node: the judge panel's tie-breaker, nested one level under
+This is the [showcase](/start/quickstart/) project's `tie_break` node: the judge panel's tie-breaker, nested one level under
 the `decide` node in its `judge_panel` flow. Create it yourself with:
 
 ```bash

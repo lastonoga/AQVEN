@@ -42,7 +42,7 @@ changing the result.
 
 ### Example
 
-This is the showcase project's `drafts` node, one of two `parallel` nodes in its `support_case` flow
+This is the [showcase](/start/quickstart/) project's `drafts` node, one of two `parallel` nodes in its `support_case` flow
 (the other, `approvals`, is the `parallel` node behind [how to pause for a
 person](/engine/human-node/)). Create it yourself with:
 

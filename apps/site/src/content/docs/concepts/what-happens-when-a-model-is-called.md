@@ -43,7 +43,7 @@ errors so it can fix its own output, up to a bounded number of extra attempts yo
 only fires on the `ok` branch — a response that was refused or truncated never reaches this step, because
 the outcome check already stopped it.
 
-The showcase project's `gpt` agent (`agents/gpt.yaml`) raises this bound above the default of 1, for an
+The [showcase](/start/quickstart/) project's `gpt` agent (`agents/gpt.yaml`) raises this bound above the default of 1, for an
 agent that drafts a long answer and revises it against critique before a final call:
 
 ```yaml

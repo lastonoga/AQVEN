@@ -41,7 +41,7 @@ one control on it changes anything.
 
 ### Example
 
-Open the showcase project in Studio:
+Open the [showcase](/start/quickstart/) project in Studio:
 
 ```bash
 {{CLI_COMMAND}} new my_project --template showcase

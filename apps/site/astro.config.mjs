@@ -49,9 +49,14 @@ export default defineConfig({
           label: "Start",
           items: [
             { slug: "start" },
-            { slug: "start/quickstart" },
-            { slug: "start/engineering-loop-walkthrough" },
-            { slug: "start/where-next" },
+            {
+              label: "Get started",
+              items: [
+                { slug: "start/quickstart" },
+                { slug: "start/engineering-loop-walkthrough" },
+                { slug: "start/where-next" },
+              ],
+            },
           ],
         },
         {
@@ -97,8 +102,13 @@ export default defineConfig({
           label: "Studio",
           items: [
             { slug: "studio" },
-            { slug: "studio/first-workflow" },
-            { slug: "studio/open-a-project" },
+            {
+              label: "Get started",
+              items: [
+                { slug: "studio/first-workflow" },
+                { slug: "studio/open-a-project" },
+              ],
+            },
             {
               label: "Read & respond",
               items: [
@@ -127,17 +137,17 @@ export default defineConfig({
           label: "MCP & CLI",
           items: [
             { slug: "mcp-cli" },
-            { slug: "mcp-cli/connect-an-agent" },
             {
-              label: "Read & edit a project",
+              label: "Connect & read a project",
               items: [
+                { slug: "mcp-cli/connect-an-agent" },
                 { slug: "mcp-cli/read-project-structure" },
-                { slug: "mcp-cli/edit-a-flow" },
               ],
             },
             {
-              label: "Check, run & test",
+              label: "Edit, check & test",
               items: [
+                { slug: "mcp-cli/edit-a-flow" },
                 { slug: "mcp-cli/preview-a-prompt" },
                 { slug: "mcp-cli/check-and-test" },
                 { slug: "mcp-cli/runs" },
@@ -155,9 +165,9 @@ export default defineConfig({
               items: [
                 { slug: "integrations/model-providers" },
                 { slug: "integrations/external-mcp-servers" },
+                { slug: "integrations/secrets-and-environment" },
               ],
             },
-            { slug: "integrations/secrets-and-environment" },
           ],
         },
         {
@@ -167,6 +177,7 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
+            { slug: "concepts" },
             {
               label: "Foundations",
               items: [

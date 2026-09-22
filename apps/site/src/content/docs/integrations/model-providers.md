@@ -43,7 +43,7 @@ names it shares that declaration.
 
 ### Example
 
-The showcase project routes every agent through one provider, `openrouter`, declared once in its
+The [showcase](/start/quickstart/) project routes every agent through one provider, `openrouter`, declared once in its
 `aqven.yaml`:
 
 ```yaml

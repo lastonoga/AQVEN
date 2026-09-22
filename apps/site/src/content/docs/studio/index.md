@@ -10,8 +10,9 @@ editor and a terminal. Open it from your project with `{{CLI_COMMAND}} studio` (
 — this area goes deeper on each screen than those two pages do, and
 [the engineering loop](/concepts/engineering-loop/) explains why the screens are shaped the way they are).
 
-Start with [your first workflow in Studio](/studio/first-workflow/) if you haven't opened Studio
-before, or [how to open an existing project](/studio/open-a-project/) if you're coming back to one.
+**Get started** with [your first workflow in Studio](/studio/first-workflow/) if you haven't opened
+Studio before, or [how to open an existing project](/studio/open-a-project/) if you're coming back to
+one.
 
 **Read & respond** covers the screens for understanding and reacting to what a run produced:
 [how to read a workflow's graph](/studio/understand-the-graph/) (the canvas and the node list),

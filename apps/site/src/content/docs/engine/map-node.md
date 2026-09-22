@@ -38,7 +38,7 @@ has a single body node that runs once per list item, however many items there tu
 
 ### Example
 
-The showcase project's own `map` node, `vote` in `support_case`, binds three of an earlier node's
+The [showcase](/start/quickstart/) project's own `map` node, `vote` in `support_case`, binds three of an earlier node's
 outputs into its body alongside the item it's mapping over. Here's a small, self-contained `map` node
 instead, checked clean with `aqven check`: it reads its list straight off the flow's own input, so
 there's nothing upstream to explain.

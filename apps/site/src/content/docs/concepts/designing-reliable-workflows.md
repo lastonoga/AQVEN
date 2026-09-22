@@ -9,7 +9,7 @@ Splitting a step into more nodes, running branches in `parallel`, looping on a c
 judge panel all cost something — latency, money, or both — and none of them buy reliability just by
 existing. Each is worth it only at a real boundary: a genuine change in the kind of uncertainty a step is
 resolving, a verifiable intermediate result, or independent signal that a single call can't produce on
-its own. AQVEN's showcase project already makes these calls well in several places; this page names the
+its own. AQVEN's [showcase](/start/quickstart/) project already makes these calls well in several places; this page names the
 judgment behind them so you can make the same calls in your own flows.
 
 ## Where a step earns its own node

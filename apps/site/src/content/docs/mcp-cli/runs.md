@@ -66,7 +66,7 @@ knowing before you build assumptions on one and hit the other.
 
 ### Example
 
-Create the showcase project and connect an agent to it as in
+Create the [showcase](/start/quickstart/) project and connect an agent to it as in
 [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
 
 ```bash

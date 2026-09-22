@@ -31,7 +31,7 @@ service or do anything asynchronous, that's a `tool` node instead — a `code` n
 
 ### Example
 
-This is the showcase project's `tally` node, the step right after the `vote` map node in its
+This is the [showcase](/start/quickstart/) project's `tally` node, the step right after the `vote` map node in its
 `support_case` flow — it tallies the votes `vote` produced into a single intent. Create it yourself
 with:
 

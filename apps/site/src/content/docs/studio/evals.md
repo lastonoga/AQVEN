@@ -53,7 +53,7 @@ eyeballed guess.
 
 ### Example
 
-Open the showcase project's `support_case` flow. From the terminal, in the project folder:
+Open the [showcase](/start/quickstart/) project's `support_case` flow. From the terminal, in the project folder:
 
 ```
 {{CLI_COMMAND}} eval --eval reply_quality

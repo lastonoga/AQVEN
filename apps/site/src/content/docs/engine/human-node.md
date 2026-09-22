@@ -33,7 +33,7 @@ to submit an answer, or for the deadline to pass first.
 
 ### Example
 
-This is the showcase project's `lead` node, one of two `human` nodes inside `approvals`, a `parallel`
+This is the [showcase](/start/quickstart/) project's `lead` node, one of two `human` nodes inside `approvals`, a `parallel`
 node in its `support_case` flow. Create it yourself with:
 
 ```bash

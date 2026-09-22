@@ -39,7 +39,7 @@ want, read back once you actually know what it is.
 
 ### Example
 
-This is the showcase project's `case_form` and `record__extract` nodes, in its `support_case` flow.
+This is the [showcase](/start/quickstart/) project's `case_form` and `record__extract` nodes, in its `support_case` flow.
 `case_form` decides a case record's form from its intent — a warranty defect, a delivery problem, or a
 plain question — before the record itself gets filled in. Create it yourself with:
 

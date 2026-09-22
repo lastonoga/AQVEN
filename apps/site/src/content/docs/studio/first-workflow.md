@@ -19,7 +19,7 @@ uv tool install {{CLI_COMMAND}}
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-The showcase template gives you two real flows to look at, `support_case` and `judge_panel`, so there's
+The [showcase](/start/quickstart/) template gives you two real flows to look at, `support_case` and `judge_panel`, so there's
 something to click through once Studio is open.
 
 ## 1. Start Studio

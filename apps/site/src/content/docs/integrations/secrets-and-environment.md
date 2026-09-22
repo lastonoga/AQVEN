@@ -31,7 +31,7 @@ secrets](/engine/secrets/) is where you confirm it, see every secret the project
 
 ### Example
 
-Create the showcase project and copy its `.env.example`:
+Create the [showcase](/start/quickstart/) project and copy its `.env.example`:
 
 ```bash
 {{CLI_COMMAND}} new my_project --template showcase

@@ -50,7 +50,7 @@ start and check an eval run, and read an eval run's gate report on its own.
 
 ### Example
 
-Create the showcase project and connect an agent to it as in
+Create the [showcase](/start/quickstart/) project and connect an agent to it as in
 [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
 
 ```bash

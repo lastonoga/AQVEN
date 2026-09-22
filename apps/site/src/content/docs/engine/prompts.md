@@ -39,7 +39,7 @@ reads what the file actually contains and dispatches to the right one.
 
 ### Example
 
-These three real files from the showcase project show all three levels. Create the project yourself
+These three real files from the [showcase](/start/quickstart/) project show all three levels. Create the project yourself
 with:
 
 ```bash

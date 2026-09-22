@@ -11,7 +11,7 @@ typed in and submitted.
 
 ## Steps
 
-- Open a flow's review screen by changing the last part of its URL to `review` — for the showcase
+- Open a flow's review screen by changing the last part of its URL to `review` — for the [showcase](/start/quickstart/)
   project's `support_case` flow, that's `.../flows/support_case/review`.
 - The left column is a queue of every paused run, sorted by deadline, soonest first. Each card names the
   run, the execution address (which node, and which branch or iteration if it's nested inside a loop or

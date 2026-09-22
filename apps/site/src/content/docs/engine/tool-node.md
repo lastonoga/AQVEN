@@ -46,7 +46,7 @@ for it to finish. A `code` node's function is always synchronous plain Python; t
 
 ### Example
 
-This is the showcase project's `search_kb` node, one of three `tool` nodes in its `support_case` flow.
+This is the [showcase](/start/quickstart/) project's `search_kb` node, one of three `tool` nodes in its `support_case` flow.
 Create it yourself with:
 
 ```bash

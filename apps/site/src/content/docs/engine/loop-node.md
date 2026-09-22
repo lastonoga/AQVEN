@@ -43,7 +43,7 @@ or a hard cap is reached, then hands back whichever pass's results a second poli
 
 ### Example
 
-This is the showcase project's `polish` node in its `support_case` flow: it takes the winning draft a
+This is the [showcase](/start/quickstart/) project's `polish` node in its `support_case` flow: it takes the winning draft a
 `call` node chose earlier in the flow, revises it, has a second model critique the revision, and repeats
 until the critique's score clears a threshold or stops improving, up to three passes. Create it yourself
 with:
