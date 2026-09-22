@@ -47,19 +47,13 @@ flows/
   support_case/
     flow.yaml
     nodes/
-      ...
       panel/
         panel.node.yaml
-      polish/
-        polish.node.yaml
       ...
   judge_panel/
     flow.yaml
     nodes/
-      judges/
-      aggregate/
-      decide/
-      pick/
+      ...
 ```
 
 The showcase is written for a Russian-market storefront, so its descriptions are in Russian; the files
@@ -93,50 +87,16 @@ returns:
   from: "$pick.out.winner"
 - name: "verdict"
   from: "$pick.out.verdict"
-order:
-- "judges"
-- "aggregate"
-- "decide"
-- "pick"
-requires:
-- rule: "families_distinct"
-  nodes:
-  - "judges__deepseek"
-  - "judges__qwen"
-  - "judges__llama"
-  min: 3
-- rule: "family_disjoint_from_input"
-  nodes:
-  - "judges__deepseek"
-  - "judges__qwen"
-  - "judges__llama"
-  input: "candidates"
-- rule: "field_before"
-  nodes:
-  - "judges__deepseek"
-  - "judges__qwen"
-  - "judges__llama"
-  - "decide__tie_break"
-  first: "rationale"
-  second: "scores"
 ```
 
 `input: "PanelRequest"` is why `panel.node.yaml`'s `in` has exactly three fields — `summary`,
 `candidates`, `chunks` — `PanelRequest`'s own three fields, no more and no fewer. `output:
 "PanelOutcome"` and `returns` are why, downstream, another node can read `$panel.out.winner` and
 `$panel.out.verdict`: `PanelOutcome`'s two fields, populated from whatever `pick`, the last node
-`judge_panel` runs, returned. `polish`, the node right after `panel` in `support_case`, does exactly
-that:
-
-```yaml
-init:
-  revise:
-  - name: "previous"
-    from: "$panel.out.winner"
-```
-
-`order` and `requires` — everything else in `judge_panel/flow.yaml` — belong to the called flow
-itself, the same fields any flow declares whether or not something else calls it.
+`judge_panel` runs, returned. Downstream nodes read `$panel.out.winner` like any other node's output —
+nothing marks it as having come from a whole separate flow underneath. The flow also declares `order`
+(the sequence its own nodes run in) and `requires` (cross-node validation rules) — real fields on any
+flow, just not ones this page needs to explain `call`.
 
 ## See also
 
