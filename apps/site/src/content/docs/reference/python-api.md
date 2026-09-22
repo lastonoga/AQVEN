@@ -317,7 +317,7 @@ NewType creates simple unique types with almost zero runtime overhead.
 
 ## create_mcp_server
 
-`def create_mcp_server(root: 'Path', *, engine: 'EngineFacade | None' = None, write: 'bool' = True, python: 'str' = '/Users/kirunya/Projects/my/ai-workflows-automate/.worktrees/aqven-docs-ia-wave6/.venv/bin/python') -> 'MCPServer'`
+`def create_mcp_server(root: 'Path', *, engine: 'EngineFacade | None' = None, write: 'bool' = True, python: 'str' = '/Users/kirunya/Projects/my/ai-workflows-automate/.venv/bin/python') -> 'MCPServer'`
 
 ## export_openapi
 
