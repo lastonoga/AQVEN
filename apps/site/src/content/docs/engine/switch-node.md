@@ -92,17 +92,11 @@ delivery problem and a plain question both get resolved without ever calling a m
 `action`, a `summary`, an optional `credit`, and the policy it was decided under; the two fixed cases
 leave `credit` and `policy` null since there's no per-case policy behind an always-the-same decision.
 
-`resolve.node.yaml`, the node `defect` runs, is where `$case` shows up:
+`resolve`, the node `defect` runs, is where `$case` shows up. Four of its `in` bindings read straight
+from `$case`:
 
 ```yaml
-apiVersion: "aqven/v1"
-kind: "Node"
-node: "llm"
-description: "An agent resolves the defect case: the order, prior contacts, policy from a subagent, credit with approval"
-agent: "resolver"
 in:
-- name: "customer"
-  from: "$input.customer"
 - name: "order_id"
   from: "$case.order_id"
 - name: "symptom"
@@ -111,13 +105,9 @@ in:
   from: "$case.purchased_on"
 - name: "safety_risk"
   from: "$case.safety_risk"
-- name: "intake_extra"
-  from: "$triage.out.intake_extra"
-- name: "policies"
-  from: "$search_kb.out.policies"
 ```
 
-Because this node only ever runs inside the `defect` case, `$case` here is `on` narrowed to the
+Because `resolve` only ever runs inside the `defect` case, `$case` here is `on` narrowed to the
 `defect` variant of `CaseRecord` — so `$case.order_id`, `$case.symptom`, `$case.purchased_on`, and
 `$case.safety_risk` are exactly that variant's own fields. Had `delivery` or `question` run a node of
 their own, `$case` inside it would resolve to their variant's fields instead — `damage` and
