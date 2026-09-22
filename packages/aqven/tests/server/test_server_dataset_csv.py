@@ -21,6 +21,7 @@ from aqven.server.views import dataset_csv
 from aqven.spec import Image
 
 LUMEN_SOURCE = Path(__file__).resolve().parents[4] / "examples/lumen"
+LUMEN_BLOBS_FIXTURE = Path(__file__).resolve().parent / "fixtures/lumen_blobs"
 
 
 @pytest.fixture
@@ -89,7 +90,7 @@ def test_csv_template_exposes_per_node_context_and_all_fields_round_trip(
         origin_page = next(field for field in template["fields"] if field["column"] == "inputs.origin.page")
         assert origin_page["required"] is False
         photo = next(field for field in template["fields"] if field["column"] == "inputs.photo")
-        assert "Фото" in photo["description"]
+        assert "Photo" in photo["description"]
         assert "node_outputs.prepare.message" in fields
         assert nodes["record__validate"]["parent_node_id"] == "record"
         assert nodes["record__validate"]["context_columns"] == ["context.date"]
@@ -355,7 +356,7 @@ def lumen_client(
 ) -> TestClient:
     project = tmp_path / "lumen"
     shutil.copytree(LUMEN_SOURCE, project, ignore=shutil.ignore_patterns(".aqven"))
-    shutil.copytree(LUMEN_SOURCE / ".aqven/blobs", project / ".aqven/blobs")
+    shutil.copytree(LUMEN_BLOBS_FIXTURE, project / ".aqven/blobs")
     options = replace(server_options, blob_directory=project / ".aqven/blobs", compiler=ReportCompiler())
     app = create_app(project, server_engine, server_settings, options=options)
     return TestClient(app, base_url=SERVER_BASE, headers=AUTH)
