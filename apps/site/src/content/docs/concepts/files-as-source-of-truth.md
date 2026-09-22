@@ -31,39 +31,25 @@ level deeper. It sits flat inside its parent node's folder, and its id is qualif
 `parent__child`. A folder one level deep never turns into two levels just because the node inside it
 has children.
 
-Here's the real file tree of `judge_panel`, a small complete flow in the showcase project. It has a
-plain node (`aggregate`), a node with a nested child that itself uses a full `llm` file set
-(`decide` and `decide__tie_break`), and a node with three nested siblings (`judges`,
-`judges__deepseek`, `judges__llama`, `judges__qwen`):
+Here's the real `decide/` folder from `judge_panel`, a small complete flow in the showcase project. It's
+one parent node, `decide`, with one nested child, `tie_break`, that itself uses a full `llm` file set:
 
 ```
-flows/judge_panel/
-  flow.yaml
-  nodes/
-    aggregate/
-      aggregate.node.yaml
-      aggregate.py
-    decide/
-      decide.node.yaml
-      tie_break.node.yaml
-      tie_break.inference.yaml
-      tie_break.prompt.md
-    judges/
-      judges.node.yaml
-      judges.py
-      deepseek.node.yaml
-      llama.node.yaml
-      qwen.node.yaml
-    pick/
-      pick.node.yaml
-      pick.py
+flows/judge_panel/nodes/decide/
+  decide.node.yaml
+  tie_break.node.yaml
+  tie_break.inference.yaml
+  tie_break.prompt.md
 ```
 
-`deepseek.node.yaml`, `llama.node.yaml`, and `qwen.node.yaml` sit beside `judges.node.yaml`, in the
-same `judges/` folder — not in a `judges/nodes/` folder of their own. Their full ids are
-`judge_panel.judges__deepseek`, `judge_panel.judges__llama`, and `judge_panel.judges__qwen`. The same
-pattern gives `decide__tie_break` its id from a file sitting next to `decide.node.yaml`, complete with
-its own inference contract and prompt file — a full `llm` node's file set, just nested.
+`tie_break.node.yaml`, `tie_break.inference.yaml`, and `tie_break.prompt.md` sit beside
+`decide.node.yaml`, in the same `decide/` folder — not in a `decide/nodes/` folder of their own. The
+child's full id is `judge_panel.decide__tie_break`, and it's complete with its own inference contract
+and prompt file — a full `llm` node's file set, just nested.
+
+The same rule holds when a node has several nested children instead of one: `judge_panel` also has a
+`judges` node with three nested siblings sitting flat beside it in the same `judges/` folder —
+`judges__deepseek`, `judges__llama`, and `judges__qwen`.
 
 ## What's actually on disk
 
