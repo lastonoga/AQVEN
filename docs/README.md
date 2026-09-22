@@ -22,6 +22,19 @@
 в [DECISIONS.md](DECISIONS.md) и разобраны в ADR. Отклонения от спеки при переходе на Python
 (VoltAgent, экспорт) — [ADR-0025](adr/0025-python-engine.md) §7.
 
+**Инженерная практика LLM-воркфлоу извне.** 2026-09-22: три внешних research-документа по production-
+инженерии LLM-воркфлоу (паттерны оркестрации и провайдеры, decision framework декомпозиции/дивергенции/
+critic-loop, правила дизайна JSON Schema) кросс-проверены против реального кода и доков комплекта —
+[research/llm-workflow-engineering-gap-analysis.md](research/llm-workflow-engineering-gap-analysis.md)
+(сами документы — [research/llm-workflow-production-patterns-and-providers.md](research/llm-workflow-production-patterns-and-providers.md),
+[research/llm-workflow-decomposition-decision-framework.md](research/llm-workflow-decomposition-decision-framework.md),
+[research/json-schema-design-rules.md](research/json-schema-design-rules.md)). Итог: несколько правил
+компилятора уже названы кодом в 07 (R-35, R-36, R-37a, R-J2, R-J5, R-J6), но не реализованы в
+`check/`, и один вероятный риск в проде (дискриминированные union компилируются в `oneOf`, что OpenAI
+strict отклоняет). Новые открытые вопросы — F-113…F-120, L-37…L-39, PR-18 в
+[99-open-questions.md](99-open-questions.md). Читать перед работой над 05, 06, 07, 09, 11, 13 или
+слоем провайдеров.
+
 ## С чего начать
 
 | Если вы | Читайте в таком порядке |
