@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Черновик ответа покупателю с цитатами базы знаний моделью семейства Mistral"
+description: "A customer reply draft with knowledge-base citations from a Mistral-family model"
 inference: "revise"
 agent: "mistral"
 in:

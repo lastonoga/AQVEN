@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "tool"
-description: "Находит фрагменты базы знаний и политики магазина по обращению"
+description: "Finds knowledge base chunks and store policies for the case"
 tool: "search_kb"
 in:
 - name: "query"

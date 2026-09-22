@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "switch"
-description: "При согласии судей берёт сводный вердикт, при расхождении зовёт судью тай-брейка"
+description: "Takes the merged verdict when the judges agree, calls the tie-break judge when they do not"
 on: "$aggregate.out.level"
 cases:
   agreed:
@@ -20,7 +20,7 @@ cases:
 out:
 - name: "verdict"
   type: "JudgeVerdict"
-  description: "Итоговый вердикт панели"
+  description: "Final panel verdict"
 - name: "tie_broken"
   type: "Bool"
-  description: "Вердикт вынес судья тай-брейка"
+  description: "The verdict came from the tie-break judge"

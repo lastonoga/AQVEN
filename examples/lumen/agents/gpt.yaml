@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Автор ответа семейства OpenAI: черновик, правка по критике и тай-брейк панели судей"
+description: "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break"
 model: "openrouter:openai/gpt-oss-20b"
 settings:
   temperature: 0.3

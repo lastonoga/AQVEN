@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "id"
-description: "Ключ сигнала дефекта из справочника категории товара"
+description: "Key of a defect signal from the product category reference"
 pattern: "^[a-z][a-z0-9_]{0,39}$"
 allowed_set: "dynamic"
 code_format: "identity"

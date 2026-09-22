@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Правит ответ по прошлой версии и критике"
+description: "Revises the reply from its previous version and the critique"
 agent: "gpt"
 in:
 - name: "summary"

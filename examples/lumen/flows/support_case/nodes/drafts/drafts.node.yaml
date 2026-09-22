@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "parallel"
-description: "Три черновика ответа моделями трёх семейств"
+description: "Three reply drafts from models of three families"
 body:
   gpt: "gpt"
   mistral: "mistral"
@@ -14,6 +14,6 @@ join:
 out:
 - name: "candidates"
   type: "ReplyDraft[]"
-  description: "Черновики ответа, завершившиеся успешно"
+  description: "Reply drafts that finished successfully"
   maxItems: 3
   from: "$ok[*].reply"

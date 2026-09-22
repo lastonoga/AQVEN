@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "tool"
-description: "Озвучивает ответ голосом на языке покупателя"
+description: "Reads the reply aloud in the customer's language"
 tool: "synthesize_voice"
 in:
 - name: "text"

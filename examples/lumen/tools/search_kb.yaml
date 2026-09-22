@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Поиск фрагментов базы знаний и политик обслуживания по сути обращения"
+description: "Search for knowledge base chunks and service policies by what the case is about"
 run: "@root.tools.functions:search_kb"
 effect: "read"
 secrets:
@@ -9,23 +9,23 @@ secrets:
 in:
 - name: "query"
   type: "Text"
-  description: "Поисковый запрос: краткая суть обращения"
+  description: "Search query: what the case is about, in short"
   maxLength: 600
 - name: "category"
   type: "ProductCategory"
-  description: "Категория товара для отбора статей"
+  description: "Product category used to select articles"
 - name: "locale"
   type: "Locale"
-  description: "Язык статей"
+  description: "Language of the articles"
 - name: "tenant"
   type: "TenantId"
-  description: "Тенант, чья база знаний используется"
+  description: "The tenant whose knowledge base is used"
 out:
 - name: "chunks"
   type: "KbChunk[]"
-  description: "Найденные фрагменты статей"
+  description: "Article chunks that were found"
   maxItems: 80
 - name: "policies"
   type: "Policy[]"
-  description: "Применимые политики обслуживания"
+  description: "Service policies that apply"
   maxItems: 20

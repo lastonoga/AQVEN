@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Eval"
-description: "Качество ответа покупателю: оценка критика, те же проверки цитат и обещаний, что при исполнении, и стоимость; гейт релиза и оптимизация промта и вариантов GEPA"
+description: "Quality of the customer reply: the critic's score, the same citation and promise checks as at run time, and cost; the release gate and GEPA optimization of the prompt and its variants"
 inference: "revise"
 agent: "gpt"
 dataset: "reply_cases"

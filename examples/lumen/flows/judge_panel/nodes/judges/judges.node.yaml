@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "parallel"
-description: "Три судьи разных семейств независимо оценивают черновики"
+description: "Three judges from different families score the drafts independently"
 body:
   deepseek: "deepseek"
   qwen: "qwen"
@@ -13,6 +13,6 @@ join:
 out:
 - name: "verdicts"
   type: "JudgeVerdict[]"
-  description: "Вердикты судей, завершившиеся успешно"
+  description: "Judge verdicts that finished successfully"
   maxItems: 3
   from: "$ok"

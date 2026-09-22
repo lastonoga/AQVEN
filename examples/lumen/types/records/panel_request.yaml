@@ -1,17 +1,17 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Вход панели судей: обращение, кандидаты ответа и фрагменты базы знаний"
+description: "Input to the judge panel: the case, the reply candidates and the knowledge base chunks"
 fields:
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание обращения"
+  description: "Case summary"
   maxLength: 600
 - name: "candidates"
   type: "ReplyDraft[]"
-  description: "Черновики ответа для слепого сравнения"
+  description: "Reply drafts for blind comparison"
   maxItems: 3
 - name: "chunks"
   type: "KbChunk[]"
-  description: "Фрагменты базы знаний, на которые опираются черновики"
+  description: "Knowledge base chunks the drafts rely on"
   maxItems: 80

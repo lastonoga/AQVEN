@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Судья панели семейства Qwen"
+description: "Qwen-family panel judge"
 model: "openrouter:qwen/qwen3-30b-a3b-instruct-2507"
 settings:
   temperature: 0

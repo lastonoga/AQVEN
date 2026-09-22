@@ -1,33 +1,33 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Анкета обращения по форме из данных: значения берутся из текста, краткого содержания и вложений, замечания проверки исправляются"
+description: "The case form filled from the data: values come from the text, the summary and the attachments, and review remarks get fixed"
 in:
 - name: "message"
   type: "Text"
-  description: "Текст обращения покупателя после нормализации пробелов"
+  description: "Customer case text after whitespace normalization"
   maxLength: 4000
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание обращения после разбора"
+  description: "Case summary after parsing"
   maxLength: 600
 - name: "form_fields"
   type: "FieldSpec[]"
-  description: "Поля анкеты для намерения обращения"
+  description: "Form fields for the case intent"
   maxItems: 30
 - name: "feedback"
   type: "Issue[]?"
-  description: "Замечания проверки прошлой попытки; null — попытка первая"
+  description: "Review remarks from the previous attempt; null means this is the first attempt"
   maxItems: 10
 - name: "photo"
   type: "Image?"
-  description: "Фото товара или дефекта; null, если фото не приложено"
+  description: "Photo of the product or the defect; null when no photo was attached"
 - name: "invoice"
   type: "Document?"
-  description: "Счёт или чек покупки; null, если документ не приложен"
+  description: "Invoice or purchase receipt; null when no document was attached"
 out:
 - name: "record"
   type: "Dynamic"
-  description: "Заполненная анкета обращения по форме из входа"
+  description: "The case form filled in against the form from the input"
   schema_from: "$in.form_fields"
   value_type: "CaseRecord"
   limits:

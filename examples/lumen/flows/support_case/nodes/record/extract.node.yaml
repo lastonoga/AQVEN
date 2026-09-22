@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Заполняет анкету по форме из текста, фото и счёта; на повторе учитывает замечания проверки"
+description: "Fills the form from the text, the photo and the invoice; on a repeat it takes the review remarks into account"
 agent: "gemini"
 in:
 - name: "message"

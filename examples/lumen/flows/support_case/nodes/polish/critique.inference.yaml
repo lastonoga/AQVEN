@@ -1,32 +1,32 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Критика ответа покупателю: опора на фрагменты базы знаний, согласие с решением и полнота; оценка и блокирующие замечания"
+description: "Critique of the customer reply: grounding in the knowledge-base chunks, agreement with the decision and completeness; a score and blocking remarks"
 in:
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание обращения после разбора"
+  description: "Case summary after parsing"
   maxLength: 600
 - name: "resolution"
   type: "Resolution"
-  description: "Принятое решение, с которым ответ должен совпадать"
+  description: "The decision the reply has to match"
 - name: "chunks"
   type: "KbChunk[]"
-  description: "Фрагменты базы знаний, на которые должен опираться ответ"
+  description: "Knowledge base chunks the reply must rely on"
   maxItems: 80
 - name: "reply"
   type: "ReplyDraft"
-  description: "Ответ на проверку с цитатами"
+  description: "The reply under review, with its citations"
 out:
 - name: "rationale"
   type: "Text"
-  description: "Обоснование оценки, написанное до балла"
+  description: "Reasoning for the score, written before the score"
   maxLength: 600
 - name: "score"
   type: "Score"
-  description: "Итоговая оценка ответа: опора на базу знаний, согласие с решением, полнота"
+  description: "Final score of the reply: grounding in the knowledge base, agreement with the decision, completeness"
 - name: "blocking"
   type: "Text[]"
-  description: "Блокирующие замечания, без исправления которых ответ нельзя отправлять"
+  description: "Blocking remarks that must be fixed before the reply can be sent"
   maxLength: 200
   maxItems: 5
 checks:

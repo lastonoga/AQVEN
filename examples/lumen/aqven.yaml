@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Project"
-description: "Lumen: поддержка покупателей бренда умного освещения — воркфлоу обращения и вызываемый им воркфлоу панели судей на все паттерны и режимы исполнения"
+description: "Lumen: customer support for a smart lighting brand — a case workflow and the judge panel workflow it calls, covering every node kind and execution mode"
 package: "lumen"
 providers:
 - id: "openrouter"

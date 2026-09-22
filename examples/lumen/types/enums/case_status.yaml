@@ -1,9 +1,9 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "enum"
-description: "Итог обращения"
+description: "Outcome of the case"
 values:
 - value: "sent"
-  description: "Ответ отправлен покупателю"
+  description: "The reply was sent to the customer"
 - value: "rejected"
-  description: "Ответ отклонён руководителем поддержки"
+  description: "The reply was rejected by the support lead"

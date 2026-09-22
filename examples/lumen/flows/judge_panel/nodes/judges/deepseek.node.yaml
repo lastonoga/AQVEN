@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Судья семейства DeepSeek оценивает черновики вслепую"
+description: "A DeepSeek-family judge scores the drafts blind"
 inference: "tie_break"
 agent: "deepseek"
 in:

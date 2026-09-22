@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Голос за намерение обращения с одной перспективы"
+description: "A ballot for the case intent from one perspective"
 agent: "llama"
 in:
 - name: "summary"

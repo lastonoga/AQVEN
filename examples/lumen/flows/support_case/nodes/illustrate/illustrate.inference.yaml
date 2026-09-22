@@ -1,21 +1,21 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Картинка-инструкция к ответу покупателю в стиле категории товара; фото покупателя, если оно есть, уходит модели вложением"
+description: "An instruction image for the customer reply in the style of the product category; the customer's photo, when there is one, goes to the model as an attachment"
 in:
 - name: "text"
   type: "Text"
-  description: "Текст ответа покупателю, шаги которого показывает картинка"
+  description: "The customer reply whose steps the image shows"
   maxLength: 1500
 - name: "category"
   type: "ProductCategory"
-  description: "Категория товара, задающая сцену картинки"
+  description: "Product category that sets the scene of the image"
 - name: "photo"
   type: "Image?"
-  description: "Фото товара от покупателя; null, если фото не приложено"
+  description: "The customer's product photo; null when no photo was attached"
 out:
 - name: "image"
   type: "Image"
-  description: "Картинка-инструкция"
+  description: "Instruction image"
 display:
   input:
     template: "illustrate.input.display.liquid"

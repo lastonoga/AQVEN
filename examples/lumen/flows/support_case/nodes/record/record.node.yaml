@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "loop"
-description: "Заполняет анкету обращения по форме, проверяет бизнес-правилами и чинит по замечаниям"
+description: "Fills the case form, checks it against the business rules and repairs it from the remarks"
 body:
 - "extract"
 - "validate"
@@ -15,6 +15,6 @@ select:
 out:
 - name: "record"
   type: "Dynamic"
-  description: "Анкета последней итерации"
+  description: "The form from the last pass"
   from: "$iter.extract.out.record"
   value_type: "CaseRecord"

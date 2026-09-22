@@ -1,16 +1,16 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Фрагмент статьи базы знаний Lumen"
+description: "A chunk of a Lumen knowledge base article"
 fields:
 - name: "chunk_id"
   type: "KbChunkId"
-  description: "Идентификатор фрагмента"
+  description: "Chunk identifier"
 - name: "title"
   type: "Text"
-  description: "Заголовок статьи"
+  description: "Article title"
   maxLength: 120
 - name: "text"
   type: "Text"
-  description: "Текст фрагмента"
+  description: "Chunk text"
   maxLength: 1500

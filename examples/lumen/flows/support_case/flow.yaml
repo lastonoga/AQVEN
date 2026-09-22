@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Обращение покупателя Lumen: разбор вложений, намерение голосованием с каскадом, анкета с ремонтом, решение, ответ по базе знаний с панелью судей и полировкой, медиа ответа и согласование людьми"
+description: "A Lumen customer case: attachment parsing, intent by ballot with a cascade, a form with repair, the decision, a knowledge-base reply with a judge panel and polishing, reply media and human approvals"
 input: "CaseRequest"
 output: "CaseOutcome"
 returns:

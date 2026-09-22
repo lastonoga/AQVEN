@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Агент решает гарантийный случай: заказ, история обращений, политика через субагента, кредит с одобрением"
+description: "An agent decides the warranty case: order, case history, policy through a subagent, store credit with approval"
 agent: "resolver"
 in:
 - name: "customer"

@@ -1,5 +1,5 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "id"
-description: "Номер заказа в интернет-магазине Lumen"
+description: "Order number in the Lumen online store"
 pattern: "^LUM-[0-9]{8}$"

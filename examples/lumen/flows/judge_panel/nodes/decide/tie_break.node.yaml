@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Судья семейства OpenAI разрешает расхождение панели по её вердиктам"
+description: "An OpenAI-family judge resolves the panel's disagreement from its verdicts"
 agent: "gpt"
 in:
 - name: "summary"

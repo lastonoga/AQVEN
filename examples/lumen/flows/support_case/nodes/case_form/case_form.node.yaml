@@ -1,15 +1,15 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Строит форму анкеты обращения по намерению: поля совпадают с вариантом CaseRecord"
+description: "Builds the case form from the intent: its fields match the matching CaseRecord variant"
 run: "case_form"
 in:
 - name: "intent"
   type: "CaseIntent"
-  description: "Намерение обращения"
+  description: "Case intent"
   from: "$intent.out.intent"
 out:
 - name: "fields"
   type: "FieldSpec[]"
-  description: "Поля анкеты обращения"
+  description: "Fields of the case form"
   maxItems: 30

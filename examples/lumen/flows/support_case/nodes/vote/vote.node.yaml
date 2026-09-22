@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "map"
-description: "Три независимых голоса дешёвой открытой модели за намерение, по одному на перспективу"
+description: "Three independent intent ballots from a cheap open model, one per perspective"
 over: "$prepare.out.perspectives"
 body: "ballot"
 concurrency: 3
@@ -10,6 +10,6 @@ on_item_error:
 out:
 - name: "ballots"
   type: "IntentBallot[]"
-  description: "Голоса, завершившиеся успешно"
+  description: "Ballots that finished successfully"
   maxItems: 3
   from: "$ok"

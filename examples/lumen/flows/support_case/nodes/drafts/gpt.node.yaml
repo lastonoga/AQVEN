@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Черновик ответа покупателю с цитатами базы знаний моделью семейства OpenAI"
+description: "A customer reply draft with knowledge-base citations from an OpenAI-family model"
 inference: "revise"
 agent: "gpt"
 in:

@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "switch"
-description: "Маршрутизирует обращение по виду анкеты: гарантийный случай решает агент, доставка и вопрос — фиксированным решением"
+description: "Routes the case by the form kind: an agent decides a warranty case, delivery and question cases get a fixed decision"
 on: "$to_record.out"
 cases:
   defect:
@@ -28,4 +28,4 @@ cases:
 out:
 - name: "resolution"
   type: "Resolution"
-  description: "Решение по обращению"
+  description: "Decision on the case"

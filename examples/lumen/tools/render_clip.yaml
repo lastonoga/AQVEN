@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Короткий ролик по картинке-инструкции: долгая задача генерации видео в Together"
+description: "A short clip from the instruction image: a long-running video job on Together"
 run: "@root.tools.functions:start_clip"
 effect: "external"
 idempotency_key:
@@ -17,17 +17,17 @@ wait:
 in:
 - name: "image"
   type: "Image"
-  description: "Картинка-инструкция — первый кадр ролика"
+  description: "The instruction image, the first frame of the clip"
 - name: "text"
   type: "Text"
-  description: "Текст ответа — сценарий ролика"
+  description: "The reply text, the script of the clip"
   maxLength: 1500
 - name: "seconds"
   type: "Int"
-  description: "Длительность ролика в секундах"
+  description: "Length of the clip in seconds"
   minimum: 4
   maximum: 8
 out:
 - name: "clip"
   type: "Video"
-  description: "Готовый ролик в MP4"
+  description: "The finished clip as MP4"

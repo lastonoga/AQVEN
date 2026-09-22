@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "id"
-description: "Идентификатор фрагмента статьи базы знаний"
+description: "Identifier of a knowledge base article chunk"
 pattern: "^kb_[a-z0-9]{10}$"
 allowed_set: "dynamic"

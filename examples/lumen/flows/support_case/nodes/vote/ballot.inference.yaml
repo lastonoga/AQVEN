@@ -1,32 +1,32 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Намерение обращения по краткому содержанию и наблюдениям; перспектива задаёт угол зрения голоса"
+description: "The case intent from the summary and the observations; the perspective sets the angle of the ballot"
 in:
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание обращения после разбора"
+  description: "Case summary after parsing"
   maxLength: 600
 - name: "observations"
   type: "Observation[]"
-  description: "Наблюдения по сигналам категории"
+  description: "Observations against the category signals"
   maxItems: 12
 - name: "safety_risk"
   type: "Bool"
-  description: "Есть ли в обращении признаки угрозы безопасности"
+  description: "Whether the case shows signs of a safety hazard"
 - name: "perspective"
   type: "VotePerspective?"
-  description: "Угол зрения голоса; null — решение без заданной перспективы"
+  description: "The angle of the ballot; null means a decision with no perspective set"
 out:
 - name: "rationale"
   type: "Text"
-  description: "Обоснование намерения, записывается до выбора"
+  description: "Reasoning for the intent, written before the choice"
   maxLength: 300
 - name: "intent"
   type: "CaseIntent"
-  description: "Намерение обращения"
+  description: "Case intent"
 - name: "confidence"
   type: "Score"
-  description: "Уверенность в выбранном намерении"
+  description: "Confidence in the chosen intent"
 examples:
 - name: "flicker_defect"
   in:

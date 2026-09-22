@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Голосовая версия ответа через синтез речи OpenAI"
+description: "A voice version of the reply through OpenAI speech synthesis"
 run: "@root.tools.functions:synthesize_voice"
 effect: "external"
 idempotency_key:
@@ -12,12 +12,12 @@ secrets:
 in:
 - name: "text"
   type: "Text"
-  description: "Текст ответа для озвучки"
+  description: "The reply text to read aloud"
   maxLength: 1500
 - name: "locale"
   type: "Locale"
-  description: "Язык и акцент озвучки"
+  description: "Language and accent of the narration"
 out:
 - name: "voice"
   type: "Audio"
-  description: "Озвученный ответ в WAV"
+  description: "The narrated reply as WAV"

@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "tool"
-description: "Рендерит короткий ролик по картинке-инструкции долгой задачей с ожиданием"
+description: "Renders a short clip from the instruction image as a long-running job with a wait"
 tool: "render_clip"
 in:
 - name: "image"

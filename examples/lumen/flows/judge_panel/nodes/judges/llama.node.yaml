@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Судья семейства Meta оценивает черновики вслепую"
+description: "A Meta-family judge scores the drafts blind"
 inference: "tie_break"
 agent: "llama"
 in:

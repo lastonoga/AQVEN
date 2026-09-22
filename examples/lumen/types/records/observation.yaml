@@ -1,12 +1,12 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Наблюдение разбора: какой сигнал найден и в чём он проявился"
+description: "A parsing observation: which signal was found and how it showed"
 fields:
 - name: "key"
   type: "SignalKey"
-  description: "Ключ сигнала из списка категории"
+  description: "Signal key from the category list"
 - name: "value"
   type: "Text"
-  description: "Что именно замечено в тексте или вложениях"
+  description: "What exactly was noticed in the text or the attachments"
   maxLength: 200
