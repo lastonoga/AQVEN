@@ -78,9 +78,7 @@ def execution_order(flow: CompiledFlow, selected_nodes: Sequence[NodeId] | None)
     unknown = [node_id for node_id in selected_nodes if node_id not in top_level]
     if unknown:
         raise SelectionError(f"selected nodes are not top-level nodes of flow {flow.flow_id}: {', '.join(unknown)}")
-    dependencies: Mapping[NodeId, frozenset[NodeId]] = {
-        node_id: _dependencies(flow, node_id) for node_id in flow.order
-    }
+    dependencies: Mapping[NodeId, frozenset[NodeId]] = {node_id: _dependencies(flow, node_id) for node_id in flow.order}
     included = set(selected_nodes)
     pending = list(selected_nodes)
     while pending:
@@ -127,7 +125,7 @@ def _switch_value(
     source: JsonValue
     if ref.root is RefRoot.INPUT:
         source = inputs
-    elif ref.root is RefRoot.RUN_CONTEXT and ref.key in context:
+    elif ref.root is RefRoot.RUN_CONTEXT and ref.key is not None and ref.key in context:
         source = context[ref.key]
     elif ref.root is RefRoot.NODE and ref.node_id is not None:
         visible = _visible(flow, switch.node_id, ref.node_id)
@@ -216,9 +214,7 @@ def range_missing(
                         )
                     else:
                         excluded.update(
-                            case.node
-                            for name, case in member.cases.items()
-                            if name != active and case.node is not None
+                            case.node for name, case in member.cases.items() if name != active and case.node is not None
                         )
                         payload["cases"] = {active: payload["cases"][active]}
             for text in _references(payload):
@@ -228,7 +224,7 @@ def range_missing(
                     if not _path_present(inputs, ref.steps):
                         reason = "flow input field is missing"
                 elif ref.root is RefRoot.RUN_CONTEXT:
-                    if ref.key not in context or not _path_present(context[ref.key], ref.steps):
+                    if ref.key is None or ref.key not in context or not _path_present(context[ref.key], ref.steps):
                         reason = "run context field is missing"
                 elif ref.root is RefRoot.NODE and ref.node_id is not None:
                     visible = _visible(flow, member.node_id, ref.node_id)

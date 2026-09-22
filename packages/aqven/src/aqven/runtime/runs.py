@@ -29,7 +29,7 @@ class RunStartRequest(RequestModel):
     selected_nodes: tuple[NodeId, ...] | None = None
     start_node: NodeId | None = None
     end_node: NodeId | None = None
-    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict[NodeId, JsonValue])
     cassette_id: str | None = None
     human_answers: tuple[ScriptedAnswer, ...] | None = None
 
@@ -110,7 +110,7 @@ class HumanAnswerStatus(ResourceModel):
 class RunSnapshot(RunSummary):
     execution_id: str
     context: RunContext | None
-    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict[NodeId, JsonValue])
     spec_version: SpecVersionInfo
     input_ref: ValueRef | None
     output_ref: ValueRef | None

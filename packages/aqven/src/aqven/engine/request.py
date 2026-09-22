@@ -25,7 +25,7 @@ class RunSpec(BaseModel):
     selected_nodes: tuple[NodeId, ...] | None = None
     start_node: NodeId | None = None
     end_node: NodeId | None = None
-    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict)
+    node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict[NodeId, JsonValue])
     cassettes: CassetteConfig | None = None
     human_answers: tuple[ScriptedAnswer, ...] = ()
     mcp_stubs: tuple[McpToolStub, ...] = ()

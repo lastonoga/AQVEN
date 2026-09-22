@@ -1211,8 +1211,8 @@ def test_openrouter_profiles_match_the_openrouter_models_api() -> None:
 
 
 def test_a_provider_declares_its_requests_per_minute_and_rejects_a_rate_below_one() -> None:
-    def project_with(limits: dict[str, object] | None) -> dict[str, object]:
-        provider: dict[str, object] = {
+    def project_with(limits: dict[str, JsonValue] | None) -> dict[str, JsonValue]:
+        provider: dict[str, JsonValue] = {
             "id": "openrouter",
             "api_key": "ref:env/OPENROUTER_API_KEY",
             "data_policy": {"allows_pii": True, "allows_sensitive": False, "retention": "zero"},
