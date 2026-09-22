@@ -3,8 +3,6 @@ title: Ten kinds of nodes
 description: Every node in an AQVEN flow is one of exactly ten kinds, each with its own how-to page.
 ---
 
-# Ten kinds of nodes
-
 ## In short
 
 Every node in an AQVEN flow is one of exactly ten kinds, set by its `node: "<kind>"` field. Seven kinds

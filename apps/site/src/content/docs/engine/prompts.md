@@ -3,8 +3,6 @@ title: How to write a prompt
 description: Write a prompt as plain text, a Liquid template, or a Python function — AQVEN picks the level from what the file actually contains.
 ---
 
-# How to write a prompt
-
 ## When you need this
 
 Every `llm` node reads its prompt from its own file, never from a string inside the node's YAML. Write

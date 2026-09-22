@@ -3,8 +3,6 @@ title: How to check your model providers are configured
 description: What {{CLI_COMMAND}} models check reports for each agent's models — the structured output modes they support, and, with --live, whether they actually work against the real provider — without running any flow.
 ---
 
-# How to check your model providers are configured
-
 ## When you need this
 
 An agent's `model` field is just a string until something actually calls it. Before you run a flow for

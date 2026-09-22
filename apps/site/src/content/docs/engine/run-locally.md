@@ -3,8 +3,6 @@ title: How to run a flow without a server
 description: Every run flag beyond the quickstart basics — context, targeting a flow, JSON events, cassette replay, human answers — and what each exit code means.
 ---
 
-# How to run a flow without a server
-
 ## When you need this
 
 [Quickstart](/start/quickstart/) already creates a project and calls `{{CLI_COMMAND}} run` once with

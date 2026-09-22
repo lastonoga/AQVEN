@@ -3,8 +3,6 @@ title: How to set a secret for a provider, tool, or MCP server
 description: Copy .env.example to .env, and set the same ref:env/NAME value wherever a provider, a tool, or an MCP server declares it.
 ---
 
-# How to set a secret for a provider, tool, or MCP server
-
 ## When you need this
 
 You've just declared a provider, a tool, or an MCP server, and it names a secret it needs — a model API

@@ -53,7 +53,7 @@ Use these names with `use:` in a policy or evaluator slot. The accepted `with:` 
 | `cost_usd` | `cost_usd(value: 'BaseModel', context: 'Context', params: 'NoParams') -> 'Verdict'` |
 | `latency_ms` | `latency_ms(value: 'BaseModel', context: 'Context', params: 'NoParams') -> 'Verdict'` |
 
-# `with` parameter models
+## `with` parameter models
 
 ## BestParams
 

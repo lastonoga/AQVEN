@@ -3,8 +3,6 @@ title: How to run a step over a collection
 description: Add a map node that runs one node once per item in a list, with a concurrency cap and a policy for what happens when one item fails.
 ---
 
-# How to run a step over a collection
-
 ## When you need this
 
 Use a `map` node whenever a step needs to run once per item in a list you don't know the size of

@@ -3,8 +3,6 @@ title: Files as source of truth
 description: A workflow project is a tree of files on disk — a node is a folder, and identity is a path, not a stored id.
 ---
 
-# Files as source of truth
-
 ## In short
 
 An AQVEN project is a plain file tree, and that tree is the only copy of the truth. A node is a

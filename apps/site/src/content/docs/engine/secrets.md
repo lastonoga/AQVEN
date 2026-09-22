@@ -3,8 +3,6 @@ title: How to manage secrets
 description: What {{CLI_COMMAND}} secrets reports for every secret a project declares — across providers, tools, and MCP servers — and how it decides whether one is set, without ever printing the value itself.
 ---
 
-# How to manage secrets
-
 ## When you need this
 
 A project accumulates secrets as you add providers, tools, and MCP servers: a model API key, a

@@ -3,8 +3,6 @@ title: How to call a model
 description: Add an llm node that calls an agent through a typed inference, with its prompt in its own file.
 ---
 
-# How to call a model
-
 ## When you need this
 
 Use an `llm` node whenever a step in your flow needs a model to read something and produce structured

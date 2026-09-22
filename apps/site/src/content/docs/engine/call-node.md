@@ -3,8 +3,6 @@ title: How to reuse a flow as a step
 description: Add a call node that runs another flow as a single step, passing it typed input and getting back whatever that flow declares as its own output.
 ---
 
-# How to reuse a flow as a step
-
 ## When you need this
 
 Use a `call` node when a group of steps deserves to be its own flow — reusable from more than one

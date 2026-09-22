@@ -3,8 +3,6 @@ title: How an agent reads a project's structure
 description: There's no MCP tool that lists or fetches a project's structure — an agent reads the flow files directly, the same way it reads any other code.
 ---
 
-# How an agent reads a project's structure
-
 ## When you need this
 
 You're connected to a project over MCP and you need to know what's in it — which flows exist, what a

@@ -3,8 +3,6 @@ title: How to investigate a run
 description: Open a run, trace a result back to the exact node execution that produced it, and read its input, prompt, output, and checks.
 ---
 
-# How to investigate a run
-
 ## When you need this
 
 Use this when a run gave you a result you didn't expect and you need the real cause, not a guess.

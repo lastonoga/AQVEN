@@ -3,8 +3,6 @@ title: How to see what's in a project and how it connects
 description: What {{CLI_COMMAND}} tree lists and what {{CLI_COMMAND}} refs shows for one entity — its definition, what references it, and what it references — with real output from the showcase project.
 ---
 
-# How to see what's in a project and how it connects
-
 ## When you need this
 
 Use `{{CLI_COMMAND}} tree` when you need an inventory of everything a project defines — every agent,

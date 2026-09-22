@@ -1,5 +1,5 @@
 ---
-title: Project MCP Tool Reference
+title: Project MCP tool reference
 description: Generated operation index from AQVEN's project MCP registrations.
 ---
 

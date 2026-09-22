@@ -3,8 +3,6 @@ title: What this is built on
 description: Proven components under one workflow language, not a homegrown runtime.
 ---
 
-# What this is built on
-
 ## In short
 
 AQVEN doesn't build its own durable-execution engine, LLM client, or protocol server. For the hard

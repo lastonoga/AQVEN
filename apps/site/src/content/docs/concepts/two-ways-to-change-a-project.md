@@ -3,8 +3,6 @@ title: Two ways to change a project
 description: A direct file edit is checked after the write by a project hook; flow_patch is checked before the write by a compare-and-swap that can reject it outright.
 ---
 
-# Two ways to change a project
-
 ## In short
 
 You can change an AQVEN project two ways, and both are real. **Direct edit**: open a file with

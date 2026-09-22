@@ -3,8 +3,6 @@ title: How to branch into parallel steps
 description: Add a parallel node that runs several branches against the same input at once, with a join policy that decides how their results become the node's one outcome.
 ---
 
-# How to branch into parallel steps
-
 ## When you need this
 
 Use a `parallel` node whenever a step doesn't need to wait its turn — drafting a reply with several

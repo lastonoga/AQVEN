@@ -3,8 +3,6 @@ title: How to read a workflow's graph
 description: Open a flow's canvas or its node list to see every step, how they connect, and what each one is configured to do.
 ---
 
-# How to read a workflow's graph
-
 ## When you need this
 
 Use this whenever you want to see what's actually in a flow before you dig into one step — how many

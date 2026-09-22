@@ -3,8 +3,6 @@ title: Where to go next
 description: Four paths, depending on how you work with AQVEN.
 ---
 
-# Where to go next
-
 ## Writing workflows in code
 
 Define flows and nodes as files, write prompts and step code directly, and run everything from the command line. Start with [Engine](/engine/).

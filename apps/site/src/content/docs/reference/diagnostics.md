@@ -1,5 +1,5 @@
 ---
-title: Diagnostics and Error Codes
+title: Diagnostics and error codes
 description: Generated diagnostic-code index from the AQVEN Python package.
 ---
 

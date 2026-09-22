@@ -3,8 +3,6 @@ title: How to write a step in Python
 description: Add a code node that runs a plain Python function, with typed parameters in and a typed record out.
 ---
 
-# How to write a step in Python
-
 ## When you need this
 
 Use a `code` node whenever a step is deterministic logic you'd rather write than prompt for: parsing

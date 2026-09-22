@@ -3,8 +3,6 @@ title: How to run datasets and evals as an agent
 description: Call the 5 dataset and eval MCP tools, and the one place eval_run_start's shape genuinely differs from the same call over REST.
 ---
 
-# How to run datasets and evals as an agent
-
 ## When you need this
 
 You're connected to a project over MCP and need to run a batch of dataset cases, or run an eval and

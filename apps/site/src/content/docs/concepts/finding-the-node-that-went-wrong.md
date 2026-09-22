@@ -3,8 +3,6 @@ title: How to find the node where a workflow went wrong
 description: Every step execution has a 4-field address, not just a node name, because the same node can run more than once inside one run.
 ---
 
-# How to find the node where a workflow went wrong
-
 ## In short
 
 A node's name alone doesn't tell you which run of it you're looking at, because a parallel branch, a

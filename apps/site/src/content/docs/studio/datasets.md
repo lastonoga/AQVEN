@@ -3,8 +3,6 @@ title: How to work with datasets in Studio
 description: Browse and search saved cases, add new ones by CSV import or AI generation, then run one case or a whole batch and read the results.
 ---
 
-# How to work with datasets in Studio
-
 ## When you need this
 
 Use this when you want to run a flow against more than one made-up input: a set of saved, realistic

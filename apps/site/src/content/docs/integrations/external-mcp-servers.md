@@ -3,8 +3,6 @@ title: How to connect an external MCP server
 description: Register a remote MCP server in aqven.yaml and give its tools to an agent, either the whole server or one named tool at a time.
 ---
 
-# How to connect an external MCP server
-
 ## When you need this
 
 Use this when an agent needs tools that already live behind someone else's MCP server — a helpdesk, a

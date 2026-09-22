@@ -3,8 +3,6 @@ title: How to handle a shape you don't know in advance
 description: Declare a field Dynamic, describe its real shape as FieldSpec data your code builds at run time, and read the result back narrowed or as it is.
 ---
 
-# How to handle a shape you don't know in advance
-
 ## When you need this
 
 Some fields can't get a type when you write the flow: what a marketplace's intake form asks for, or

@@ -3,8 +3,6 @@ title: How to repeat a step with a limit
 description: Add a loop node that runs the same sequence of steps pass after pass, stopping on a policy or a hard cap, then picks which pass's output the node returns.
 ---
 
-# How to repeat a step with a limit
-
 ## When you need this
 
 Use a `loop` node whenever a step needs another look at its own result — filling in a record and

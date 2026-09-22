@@ -34,8 +34,8 @@ export default defineConfig({
             { label: "Studio", link: "/studio/" },
             { label: "MCP & CLI", link: "/mcp-cli/" },
             { label: "Integrations", link: "/integrations/" },
-            { label: "Concepts", link: "/concepts/what-this-is-built-on/" },
             { label: "Reference", link: "/reference/" },
+            { label: "Concepts", link: "/concepts/" },
           ],
         }),
       ],
@@ -81,7 +81,7 @@ export default defineConfig({
               ],
             },
             {
-              label: "Check, run & connect",
+              label: "CLI tooling",
               items: [
                 { slug: "engine/check" },
                 { slug: "engine/generate-types" },
@@ -98,8 +98,9 @@ export default defineConfig({
           items: [
             { slug: "studio" },
             { slug: "studio/first-workflow" },
+            { slug: "studio/open-a-project" },
             {
-              label: "Understand & investigate",
+              label: "Read & respond",
               items: [
                 { slug: "studio/understand-the-graph" },
                 { slug: "studio/investigate-a-run" },
@@ -114,11 +115,10 @@ export default defineConfig({
               ],
             },
             {
-              label: "Workspace",
+              label: "Chat & settings",
               items: [
                 { slug: "studio/chat" },
                 { slug: "studio/settings" },
-                { slug: "studio/open-a-project" },
               ],
             },
           ],
@@ -133,12 +133,12 @@ export default defineConfig({
               items: [
                 { slug: "mcp-cli/read-project-structure" },
                 { slug: "mcp-cli/edit-a-flow" },
-                { slug: "mcp-cli/preview-a-prompt" },
               ],
             },
             {
               label: "Check, run & test",
               items: [
+                { slug: "mcp-cli/preview-a-prompt" },
                 { slug: "mcp-cli/check-and-test" },
                 { slug: "mcp-cli/runs" },
                 { slug: "mcp-cli/datasets-and-evals" },
@@ -155,9 +155,9 @@ export default defineConfig({
               items: [
                 { slug: "integrations/model-providers" },
                 { slug: "integrations/external-mcp-servers" },
-                { slug: "integrations/secrets-and-environment" },
               ],
             },
+            { slug: "integrations/secrets-and-environment" },
           ],
         },
         {
@@ -171,12 +171,12 @@ export default defineConfig({
               label: "Foundations",
               items: [
                 { slug: "concepts/what-this-is-built-on" },
-                { slug: "concepts/files-as-source-of-truth" },
                 { slug: "concepts/run-survives-a-crash" },
+                { slug: "concepts/files-as-source-of-truth" },
               ],
             },
             {
-              label: "The engine",
+              label: "How a step runs",
               items: [
                 { slug: "concepts/agent-inference-and-the-llm-node" },
                 { slug: "concepts/ten-kinds-of-nodes" },
@@ -186,7 +186,7 @@ export default defineConfig({
               ],
             },
             {
-              label: "Working with a project",
+              label: "Debugging and changing a project",
               items: [
                 { slug: "concepts/engineering-loop" },
                 { slug: "concepts/finding-the-node-that-went-wrong" },

@@ -8,14 +8,18 @@ This is the file-based way of building an AQVEN workflow. A flow is a directory 
 in the YAML. You edit these with a text editor and a terminal instead of a browser; it's the same
 flow definition Studio edits visually, just from the other side.
 
-Each node kind gets its own how-to page here. Start with [how to call a model](/engine/llm-node/) and
-[how to write a step in Python](/engine/code-node/) — the two you'll use most. The other eight cover
-giving an agent a tool, pausing for a person, running steps in parallel, mapping a step over a
-collection, routing by a value, repeating a step with a limit, reusing a flow as a step, and narrowing
-a dynamic value to a type. [How to write a prompt](/engine/prompts/) covers the Markdown files those
-model calls read from.
+The sidebar groups this area into three parts. **Node kinds** is one how-to page per kind of step.
+Start with [how to call a model](/engine/llm-node/) and [how to write a step in Python](/engine/code-node/)
+— the two you'll use most. The other eight cover giving an agent a tool, pausing for a person, running
+steps in parallel, mapping a step over a collection, routing by a value, repeating a step with a limit,
+reusing a flow as a step, and narrowing a dynamic value to a type.
 
-The [`check` command](/engine/check/) validates the whole tree before any of it reaches a teammate or
-a release. The CLI has more commands beyond that — generating types and editor schemas, inspecting how
-a project's pieces connect, running a flow locally without a server, managing secrets, and checking
-your model providers are configured.
+**Prompts & data shape** covers the two things every node's inputs and outputs lean on:
+[how to write a prompt](/engine/prompts/) (the Markdown files a model call reads from) and
+[how to handle a shape you don't know in advance](/engine/dynamic-shape/) (for a field whose type isn't
+fixed until run time).
+
+**CLI tooling** is everything you run from a terminal instead of Studio. The [`check`
+command](/engine/check/) validates the whole tree before any of it reaches a teammate or a release. The
+rest cover generating types and editor schemas, inspecting how a project's pieces connect, running a
+flow locally without a server, managing secrets, and checking your model providers are configured.

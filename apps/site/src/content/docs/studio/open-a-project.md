@@ -3,8 +3,6 @@ title: How to open an existing project in Studio
 description: Reopen Studio on a project you already have, or point it at a different project without hunting for a project picker.
 ---
 
-# How to open an existing project in Studio
-
 ## When you need this
 
 Use this once you already have an AQVEN project on disk and want Studio open on it again — after

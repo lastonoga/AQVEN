@@ -3,8 +3,6 @@ title: How to check a project before committing
 description: What check actually validates in a project — file shape, type references, bindings, prompts, and a simulated run of every flow — and how to read a real error.
 ---
 
-# How to check a project before committing
-
 ## When you need this
 
 Run `{{CLI_COMMAND}} check` after any edit to a flow, node, prompt, or type, and always before you

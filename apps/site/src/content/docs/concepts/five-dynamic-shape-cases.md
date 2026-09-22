@@ -3,8 +3,6 @@ title: Five cases of dynamic input and output shape
 description: The five ways a node's input or output shape can vary at run time, from an allowed-set of values to a fully dynamic schema, and the rule for picking the least dynamic one that solves the task.
 ---
 
-# Five cases of dynamic input and output shape
-
 ## In short
 
 A node's fields don't have to be fixed the moment you write the flow — AQVEN gives you five different

@@ -3,8 +3,6 @@ title: How to edit a flow's structure as an agent
 description: Use flow_patch's 11 operations and a compare-and-swap file check to restructure a flow safely, and handle a stale-file conflict correctly.
 ---
 
-# How to edit a flow's structure as an agent
-
 ## When you need this
 
 A flow's files on disk are the actual definition — the same bytes the compiler and the runtime read.

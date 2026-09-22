@@ -373,7 +373,7 @@ def builtins_page() -> tuple[str, dict[str, str]]:
             )
             lines.append(f"| `{name}` | `{clean(f'{function.__name__}{signature}')}` |")
         lines.append("")
-    lines.extend(("# `with` parameter models", ""))
+    lines.extend(("## `with` parameter models", ""))
     models = policy_param_models()
     lines.extend(model_section(model) for model in models)
     schemas = {
@@ -515,7 +515,7 @@ def project_mcp_tools_page() -> str:
         names.update(__import__("re").findall(r'name="([a-z_]+)"', text))
     lines = [
         "---",
-        "title: Project MCP Tool Reference",
+        "title: Project MCP tool reference",
         "description: Generated operation index from AQVEN's project MCP registrations.",
         "---",
         "",
@@ -536,7 +536,7 @@ def project_mcp_tools_page() -> str:
 def diagnostics_page() -> str:
     lines = [
         "---",
-        "title: Diagnostics and Error Codes",
+        "title: Diagnostics and error codes",
         "description: Generated diagnostic-code index from the AQVEN Python package.",
         "---",
         "",
@@ -557,7 +557,7 @@ def diagnostics_page() -> str:
 def environment_page() -> str:
     lines = [
         "---",
-        "title: Environment Variables",
+        "title: Environment variables",
         "description: Generated provider key-variable index from the installed AQVEN packages.",
         "---",
         "",

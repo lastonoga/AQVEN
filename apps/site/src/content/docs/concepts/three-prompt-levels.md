@@ -3,8 +3,6 @@ title: Three prompt levels
 description: When to reach for a plain prompt, a Liquid template, or a Python function, and what each one gives up in exchange for what it gains.
 ---
 
-# Three prompt levels
-
 ## In short
 
 A prompt file can be plain text, a Liquid template, or a Python function, and AQVEN picks the level from

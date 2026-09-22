@@ -3,8 +3,6 @@ title: How to narrow a dynamic value to a type
 description: Add a narrow node that validates a Dynamic value against one real record or union type, turning an open-ended blob into ordinary typed fields.
 ---
 
-# How to narrow a dynamic value to a type
-
 ## When you need this
 
 Use a `narrow` node when a value in your flow is declared `Dynamic` — its shape wasn't fixed in

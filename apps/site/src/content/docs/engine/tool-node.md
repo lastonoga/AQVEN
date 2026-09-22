@@ -3,8 +3,6 @@ title: How to give an agent a tool
 description: Add a tool node that runs a piece of code you wrote, with a typed contract, its own secrets, and an optional wait for a long-running job.
 ---
 
-# How to give an agent a tool
-
 ## When you need this
 
 Use a `tool` node whenever a step needs to reach outside the flow itself: call an internal API, hit a

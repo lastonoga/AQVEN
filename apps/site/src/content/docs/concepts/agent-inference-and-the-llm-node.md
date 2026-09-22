@@ -3,8 +3,6 @@ title: Agent, Inference, and the llm node
 description: An llm node is backed by three separately filed entities that vary independently, not one blob of config.
 ---
 
-# Agent, Inference, and the llm node
-
 ## In short
 
 One `llm` node is actually three separate files: an **Agent** (which model, at what settings — "how to

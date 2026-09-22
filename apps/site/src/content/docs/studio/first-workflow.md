@@ -3,8 +3,6 @@ title: Your first workflow in Studio
 description: Open a project entirely from the browser — check your agent and provider keys, then land on a real graph.
 ---
 
-# Your first workflow in Studio
-
 ## What you'll have at the end
 
 Studio running against a real project, your coding agent and model provider keys confirmed from its

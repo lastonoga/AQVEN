@@ -3,8 +3,6 @@ title: How to start and follow runs as an agent
 description: Call the 8 run_* MCP tools to start, watch, fork, and cancel a run — and the two places their shape genuinely differs from the same operations over REST.
 ---
 
-# How to start and follow runs as an agent
-
 ## When you need this
 
 You're connected to a project over MCP and need to run a flow, or check on one that's already running,

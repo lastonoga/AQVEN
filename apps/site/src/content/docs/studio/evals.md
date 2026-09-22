@@ -3,8 +3,6 @@ title: How to read an eval and its gate
 description: Start an eval run from the terminal, then read its scorers and its gate verdict — pass, warn, or block — in Studio.
 ---
 
-# How to read an eval and its gate
-
 ## When you need this
 
 Use this once you've run a fix against a dataset and need more than "it ran" — you need to know

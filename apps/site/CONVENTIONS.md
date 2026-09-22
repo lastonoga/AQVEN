@@ -60,10 +60,13 @@ scipy/statsmodels-статистика гейтов, CLI-заглушки `fmt`/
 
 Сами заголовки — на английском, это уже часть опубликованной страницы.
 
-### Tutorial (H1 = действие, например «Quickstart»)
+Starlight рендерит `<h1>` сам, из `title` фронтматтера — страница не пишет `# <Title>` в теле,
+иначе заголовок дублируется на странице (проверено на реальной сборке). Тело начинается сразу с
+первого `##`.
+
+### Tutorial (H1 = действие, например «Quickstart», это `title` фронтматтера, не строка в теле)
 
 ```
-# <Title>
 ## What you'll have at the end
 ## Before you start
 ## 1. <First action>
@@ -75,10 +78,10 @@ scipy/statsmodels-статистика гейтов, CLI-заглушки `fmt`/
 Шаги — линейная последовательность, без ветвлений «if your case is A». Один путь от начала до
 результата. Если внутри шага есть проверка «получилось ли» — `### Check` внутри этого шага.
 
-### How-to (H1 = задача в форме вопроса, например «How to connect an external MCP server»)
+### How-to (H1 = задача в форме вопроса, например «How to connect an external MCP server», — `title`
+фронтматтера в формате «How to <task>», не строка в теле)
 
 ```
-# How to <task>
 ## When you need this
 ## Steps
 ### Example
@@ -89,10 +92,10 @@ scipy/statsmodels-статистика гейтов, CLI-заглушки `fmt`/
 `## When you need this` — 1–3 предложения, не абзац предыстории. `### Example` — runnable-фрагмент,
 по умолчанию построен на showcase-флоу (`aqven new` → `support_case`), а не на придуманных данных.
 
-### Explanation / Concept (H1 = утверждение или вопрос, например «What happens when you call a model»)
+### Explanation / Concept (H1 = утверждение или вопрос, например «What happens when you call a model»,
+— `title` фронтматтера, не строка в теле)
 
 ```
-# <Statement>
 ## In short
 ## <Содержательные разделы по сути, английские заголовки>
 ## How this shapes what you do

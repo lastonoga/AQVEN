@@ -3,8 +3,6 @@ title: How to check and test a project as an agent
 description: Call aqven_check, pyright_check, and pytest_run over MCP to validate a project and its code, and read a failure correctly.
 ---
 
-# How to check and test a project as an agent
-
 ## When you need this
 
 Call these after every edit — the same three checks a human would run by hand

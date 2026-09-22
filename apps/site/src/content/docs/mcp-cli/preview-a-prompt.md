@@ -3,8 +3,6 @@ title: How to preview a prompt as an agent
 description: Call prompt_preview to see the exact instructions, messages, attachments and resolved output mode an llm node sends, and read its two real failure modes.
 ---
 
-# How to preview a prompt as an agent
-
 ## When you need this
 
 Call `prompt_preview` after editing a prompt, a fragment, a variant, or an `llm` node's inference

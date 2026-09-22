@@ -3,8 +3,6 @@ title: How to connect a model provider
 description: Declare a provider in aqven.yaml, point an agent's model field at it, and set the one credential the provider needs.
 ---
 
-# How to connect a model provider
-
 ## When you need this
 
 An agent's `model` field names a provider and a model in one string, but that string only works once

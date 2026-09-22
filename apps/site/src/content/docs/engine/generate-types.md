@@ -3,8 +3,6 @@ title: How to generate types and editor schemas
 description: What {{CLI_COMMAND}} generate and {{CLI_COMMAND}} schema each write to disk, when a type change does and doesn't show up, and how to point your editor at the schema files.
 ---
 
-# How to generate types and editor schemas
-
 ## When you need this
 
 `{{CLI_COMMAND}} generate` turns your project's type YAML into a `types.py` you can import from

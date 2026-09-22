@@ -3,8 +3,6 @@ title: How to pause for a person
 description: Add a human node that suspends a run and waits for a person to submit a typed answer, with a deadline and a policy for what happens if nobody answers in time.
 ---
 
-# How to pause for a person
-
 ## When you need this
 
 Use a `human` node whenever a step needs a person's judgment before the flow can continue — approving

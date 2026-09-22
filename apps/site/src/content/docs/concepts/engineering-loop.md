@@ -1,9 +1,7 @@
 ---
-title: The engineering loop
+title: "The engineering loop: from incident to verified fix"
 description: From an unexpected result to a verified fix — understand, investigate, test the change.
 ---
-
-# The engineering loop: from incident to verified fix
 
 ## In short
 

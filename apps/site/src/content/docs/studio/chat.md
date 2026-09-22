@@ -3,8 +3,6 @@ title: How to use the AI chat in Studio
 description: Pick a backend, start a thread, and let an agent run commands, edit files, and call tools on this project without leaving Studio.
 ---
 
-# How to use the AI chat in Studio
-
 ## When you need this
 
 Use the chat panel when you want an agent to actually work on the project you have open — not just

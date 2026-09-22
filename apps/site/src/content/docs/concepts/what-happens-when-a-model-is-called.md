@@ -3,8 +3,6 @@ title: What happens when a model is called
 description: Every model call lands on one of three outcomes before AQVEN parses anything, and only two kinds of retry happen for you.
 ---
 
-# What happens when a model is called
-
 ## In short
 
 Every model call ends in one of three outcomes — `ok`, `refusal`, or `truncated` — decided from the

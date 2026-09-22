@@ -3,8 +3,6 @@ title: Designing reliable workflows
 description: More nodes, more parallel branches, and more critic loops are not automatically more reliable — when splitting a step, branching into parallel, looping on a critic, or building a judge panel actually earns its cost.
 ---
 
-# Designing reliable workflows
-
 ## In short
 
 Splitting a step into more nodes, running branches in `parallel`, looping on a critic, or building a

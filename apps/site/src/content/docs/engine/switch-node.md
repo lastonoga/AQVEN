@@ -3,8 +3,6 @@ title: How to route by a value
 description: Add a switch node that runs a different node, binds a different value, or both, for each possible value of an enum or a discriminated union, with every value covered and no default case.
 ---
 
-# How to route by a value
-
 ## When you need this
 
 Use a `switch` node whenever a step's next move depends on a value you already have — the kind of a

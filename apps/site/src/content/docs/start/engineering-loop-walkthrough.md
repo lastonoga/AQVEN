@@ -3,8 +3,6 @@ title: From a bad answer to a verified fix
 description: One example, three moves — see the graph, find the cause, verify the fix.
 ---
 
-# From a bad answer to a verified fix
-
 ## What you'll have at the end
 
 You will have opened the same project from the quickstart in your browser, looked at its graph, run

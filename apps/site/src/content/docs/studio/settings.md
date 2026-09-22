@@ -3,8 +3,6 @@ title: How to check Studio's settings
 description: What each of Studio's five settings sections shows, and the one control among them that actually changes anything.
 ---
 
-# How to check Studio's settings
-
 ## When you need this
 
 Use this when you want to confirm which project Studio is serving, whether your chat agent is signed

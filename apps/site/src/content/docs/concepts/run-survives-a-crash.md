@@ -3,8 +3,6 @@ title: A run survives a process crash
 description: A flow run is one durable workflow that checkpoints as it goes, so a crash or restart resumes it automatically instead of losing it.
 ---
 
-# A run survives a process crash
-
 ## In short
 
 A flow run isn't a script that dies with the process running it — it's one durable workflow, and every

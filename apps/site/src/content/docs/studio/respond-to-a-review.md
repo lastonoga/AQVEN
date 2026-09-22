@@ -3,8 +3,6 @@ title: How to respond to a human-review request
 description: Open the review queue, read what a paused run produced, and submit the answer its human node's form is waiting for.
 ---
 
-# How to respond to a human-review request
-
 ## When you need this
 
 Use this when a run is paused waiting for a person to answer — a [human node](/engine/human-node/)
