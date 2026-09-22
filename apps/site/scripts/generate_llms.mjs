@@ -55,8 +55,8 @@ const AREAS = [
   ["Studio", (page) => page.slug.startsWith("studio/")],
   ["MCP & CLI", (page) => page.slug.startsWith("mcp-cli/")],
   ["Integrations", (page) => page.slug.startsWith("integrations/")],
-  ["Reference", (page) => page.slug.startsWith("reference/")],
   ["Concepts", (page) => page.slug.startsWith("concepts/")],
+  ["Reference", (page) => page.slug.startsWith("reference/")],
 ];
 const index = [
   "# AQVEN Documentation",

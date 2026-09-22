@@ -34,8 +34,8 @@ export default defineConfig({
             { label: "Studio", link: "/studio/" },
             { label: "MCP & CLI", link: "/mcp-cli/" },
             { label: "Integrations", link: "/integrations/" },
-            { label: "Reference", link: "/reference/" },
             { label: "Concepts", link: "/concepts/" },
+            { label: "Reference", link: "/reference/" },
           ],
         }),
       ],
@@ -171,10 +171,6 @@ export default defineConfig({
           ],
         },
         {
-          label: "Reference",
-          items: [{ autogenerate: { directory: "reference" } }],
-        },
-        {
           label: "Concepts",
           items: [
             { slug: "concepts" },
@@ -206,6 +202,10 @@ export default defineConfig({
               ],
             },
           ],
+        },
+        {
+          label: "Reference",
+          items: [{ autogenerate: { directory: "reference" } }],
         },
       ],
     }),
