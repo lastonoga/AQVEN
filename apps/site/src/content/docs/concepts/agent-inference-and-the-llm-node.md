@@ -104,11 +104,10 @@ how open-ended the answer is, and what a wrong answer costs.
 
 A step with a small, closed set of possible answers — classify into one of a few categories, pick a route,
 fill in a field whose type is already fully specified — usually doesn't need your strongest, most
-expensive model. The showcase's `vote` step is a real instance of this: each vote in `support_case` picks
-one of three fixed intents (`defect`, `delivery`, `question`) from a short summary and a handful of
-observations. Its Agent, `llama`, points at `meta-llama/llama-3.1-8b-instruct`, with `temperature: 0.2` and
-a max token limit of 800 — a small, cheap, low-latency model for a small, closed decision, and its own
-description in the project calls it out as the cheap choice on purpose.
+expensive model. A real example of this kind of step: a `vote` node that picks one of three fixed
+intents (`defect`, `delivery`, `question`) from a short summary and a handful of observations. Its Agent
+points at `meta-llama/llama-3.1-8b-instruct`, with `temperature: 0.2` and a max token limit of 800 — a
+small, cheap, low-latency model for a small, closed decision, deliberately chosen for exactly that.
 
 A step that has to produce genuinely new content — draft a reply, write an explanation, synthesize
 something that wasn't already in the input — benefits more from a stronger model. The `drafts` step
