@@ -3,9 +3,8 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-from aqven_llm.catalog import PROVIDERS
-
 from aqven.engine.throttle import MINIMUM_WORKERS
+from aqven_llm.catalog import PROVIDERS
 
 FALLBACK_WORKERS: Final = 4
 
@@ -78,8 +77,7 @@ def ask_provider() -> tuple[str, str, str | None]:
 def ask_pii() -> bool:
     answer = (
         input(
-            "Will this project ever handle personal or sensitive data "
-            "(names, emails, health or financial info)? [y/N] "
+            "Will this project ever handle personal or sensitive data (names, emails, health or financial info)? [y/N] "
         )
         .strip()
         .lower()

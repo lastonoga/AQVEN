@@ -2,7 +2,6 @@ import pytest
 
 from aqven.console.new_wizard import (
     PROVIDER_SHORTLIST,
-    WizardAnswers,
     ask_budget_usd_micros,
     ask_pii,
     ask_provider,

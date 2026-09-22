@@ -14,7 +14,6 @@ from aqven.cli import main
 from aqven.codegen import GENERATED_HEADER, GENERATED_TYPES
 from aqven.console.new import NewProjectRequest, ProjectCreator, create_project
 from aqven.console.project_template import (
-    MINIMAL_TEMPLATE,
     TEMPLATE_SUFFIX,
     TEMPLATES,
     RenderedFile,
@@ -310,8 +309,16 @@ def test_provider_flag_writes_the_real_key_variable_and_skips_the_wizard(
 ) -> None:
     workspace = tmp_path_factory.mktemp("flagged")
     completed = run_python(
-        workspace, "-m", "aqven", "new", "flagged-project", "--provider", "anthropic",
-        "--aqven-path", str(AQVEN_PACKAGE), "--no-sync",
+        workspace,
+        "-m",
+        "aqven",
+        "new",
+        "flagged-project",
+        "--provider",
+        "anthropic",
+        "--aqven-path",
+        str(AQVEN_PACKAGE),
+        "--no-sync",
     )
     assert completed.returncode == 0, completed.stderr
     manifest = (workspace / "flagged-project" / "flagged_project" / "aqven.yaml").read_text()

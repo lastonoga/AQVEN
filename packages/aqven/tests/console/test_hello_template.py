@@ -32,8 +32,16 @@ def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
 def created(tmp_path_factory: pytest.TempPathFactory) -> Path:
     workspace = tmp_path_factory.mktemp("hello")
     completed = run_python(
-        workspace, "-m", "aqven", "new", "hello-project", "--template", HELLO_TEMPLATE,
-        "--aqven-path", str(AQVEN_PACKAGE), "--no-sync",
+        workspace,
+        "-m",
+        "aqven",
+        "new",
+        "hello-project",
+        "--template",
+        HELLO_TEMPLATE,
+        "--aqven-path",
+        str(AQVEN_PACKAGE),
+        "--no-sync",
     )
     assert completed.returncode == 0, completed.stderr
     return workspace / "hello-project"

@@ -10,9 +10,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Final, Protocol
+from typing import Final, Protocol, cast
 
 from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.settings_store import open_settings_store
@@ -209,16 +210,30 @@ class GenerateModels:
         raise NewProjectFailed(f"aqven generate failed:\n{format_text(loaded.diagnostics)}")
 
 
-def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
-    yaml = YAML()
+class _RoundTripYaml(Protocol):
+    preserve_quotes: bool
+
+    def load(self, stream: object) -> object: ...
+
+    def dump(self, data: object, stream: object) -> None: ...
+
+
+def _round_trip_yaml() -> _RoundTripYaml:
+    yaml = cast("_RoundTripYaml", YAML())
     yaml.preserve_quotes = True
+    return yaml
+
+
+def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
+    yaml = _round_trip_yaml()
     with aqven_yaml.open(encoding=FILE_ENCODING) as handle:
-        data = yaml.load(handle)
-    provider = data["providers"][0]
+        data = cast("CommentedMap", yaml.load(handle))
+    provider = cast("CommentedMap", cast("CommentedSeq", data["providers"])[0])
     provider["id"] = wizard.provider_id
     provider["api_key"] = f"ref:env/{wizard.provider_env_var}"
-    provider["data_policy"]["allows_pii"] = wizard.allows_pii
-    provider["data_policy"]["allows_sensitive"] = wizard.allows_pii
+    policy = cast("CommentedMap", provider["data_policy"])
+    policy["allows_pii"] = wizard.allows_pii
+    policy["allows_sensitive"] = wizard.allows_pii
     if wizard.budget_usd_micros is not None:
         data["limits"] = {"usd_micros": wizard.budget_usd_micros}
     with aqven_yaml.open("w", encoding=FILE_ENCODING) as handle:
