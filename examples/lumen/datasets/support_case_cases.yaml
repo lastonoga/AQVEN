@@ -6,19 +6,19 @@ cases:
   inputs:
     customer:
       customer_id: "cus_7k2m9p4q1x8z"
-      display_name: "Анна Смирнова"
+      display_name: "Anna Smirnova"
       email: "anna.smirnova@example.com"
       tier: "plus"
-      locale: "ru-RU"
+      locale: "en-GB"
     origin:
       kind: "marketplace"
       marketplace: "amazon"
       order_ref: "113-4829175-6630201"
-    message: "Здравствуйте! Лента Lumen Flow 5 м пришла в помятой коробке. После подключения она мигает у контроллера, а контроллер через полчаса становится тёплым. Подскажите, как правильно подключить контроллер: может, я что-то сделала не так? Или ленту повредили при доставке? Фото контроллера и счёт прикладываю, заказ оформлен 03.09.2027."
+    message: "Hello! The Lumen Flow 5 m strip arrived in a dented box. Once connected it flickers near the controller, and the controller turns warm after half an hour. Could you tell me how to wire the controller properly — maybe I did something wrong? Or was the strip damaged in delivery? I am attaching a photo of the controller and the invoice; the order was placed on 03/09/2027."
     order_id: "LUM-20260903"
     product:
       sku: "SKU-LS5M01"
-      name: "Lumen Flow Strip 5 м"
+      name: "Lumen Flow Strip 5 m"
       category: "light_strip"
       lamp_kind: "smart_wifi"
     tags:
@@ -46,14 +46,14 @@ cases:
   inputs:
     customer:
       customer_id: "cus_3n8b5v2c6x1a"
-      display_name: "Дмитрий Орлов"
+      display_name: "Dmitry Orlov"
       email: null
       tier: "standard"
-      locale: "ru-RU"
+      locale: "en-GB"
     origin:
       kind: "storefront"
       page: "support"
-    message: "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит."
+    message: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
     order_id: null
     product:
       sku: "SKU-GL27E1"
@@ -69,23 +69,23 @@ cases:
     invoice: null
   node_outputs:
     prepare:
-      message: "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит."
+      message: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
       channel: "storefront"
       signals:
       - key: "no_power"
-        label: "Не включается"
+        label: "Does not turn on"
       - key: "flicker"
-        label: "Мерцает"
+        label: "Flickers"
       - key: "overheating"
-        label: "Перегревается"
+        label: "Overheats"
       - key: "burning_smell"
-        label: "Пахнет гарью"
+        label: "Smells of burning"
       - key: "app_offline"
-        label: "Не отвечает в приложении"
+        label: "Does not respond in the app"
       - key: "package_damaged"
-        label: "Повреждена упаковка"
+        label: "The packaging is damaged"
       - key: "usage_question"
-        label: "Вопрос по использованию"
+        label: "A question about use"
       intake_fields: []
       perspectives:
       - "words"
@@ -100,15 +100,15 @@ cases:
   inputs:
     customer:
       customer_id: "cus_9d4f6h1j3k5m"
-      display_name: "Ольга Кузнецова"
+      display_name: "Olga Kuznetsova"
       email: "olga.kuznetsova@example.com"
       tier: "business"
-      locale: "ru-RU"
+      locale: "en-GB"
     origin:
       kind: "marketplace"
       marketplace: "ozon"
       order_ref: "CASE-3"
-    message: "Торшер Lumen Arc Floor пришёл в смятой коробке с треснувшим плафоном; покупатель приложил фото упаковки."
+    message: "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; the customer attached a photo of the packaging."
     order_id: null
     product:
       sku: "SKU-ARCF01"

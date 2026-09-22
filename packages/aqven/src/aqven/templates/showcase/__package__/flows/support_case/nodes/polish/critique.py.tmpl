@@ -22,13 +22,13 @@ def _verdict(reasons: Iterable[str | None]) -> Verdict:
 def _approved_with_blockers(critique: CritiqueOut) -> str | None:
     if critique.score < APPROVAL_SCORE or not critique.blocking:
         return None
-    return "Высокая оценка при блокирующих замечаниях: снизь оценку или убери замечания, которые не блокируют отправку."
+    return "A high score with blocking remarks: lower the score, or drop the remarks that do not block sending."
 
 
 def _rejected_without_blockers(critique: CritiqueOut) -> str | None:
     if critique.score >= REJECTION_SCORE or critique.blocking:
         return None
-    return "Низкая оценка без блокирующих замечаний: назови, что мешает отправке, или повысь оценку."
+    return "A low score with no blocking remarks: name what stops it being sent, or raise the score."
 
 
 CRITIQUE_RULES: Final[tuple[CritiqueRule, ...]] = (_approved_with_blockers, _rejected_without_blockers)

@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Решает гарантийный случай: заказ, история обращений, политика через субагента, кредит с одобрением"
+description: "Decides a warranty case: order, case history, policy through a subagent, store credit with approval"
 model: "openrouter:openai/gpt-oss-20b"
 settings:
   temperature: 0.2
@@ -16,7 +16,7 @@ tools:
 - "find_tickets"
 subagents:
 - name: "research_policy"
-  description: "Исследует политику магазина и прецеденты по вопросу"
+  description: "Researches store policy and precedents for the question"
   agent: "researcher"
   inference: "research_policy"
 approval:

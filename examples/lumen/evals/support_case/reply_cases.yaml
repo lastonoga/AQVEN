@@ -3,51 +3,51 @@ kind: "Dataset"
 cases:
 - name: "strip_flicker_credit"
   inputs:
-    summary: "Лента Lumen Flow 5 м мигает у контроллера третий день, контроллер сильно нагревается через полчаса работы; покупатель боится оставлять ленту включённой."
+    summary: "The Lumen Flow 5 m strip has been flickering near the controller for three days, and the controller gets very hot after half an hour; the customer is afraid to leave the strip on."
     customer:
       customer_id: "cus_7k2m9p4q1x8z"
-      display_name: "Анна Смирнова"
+      display_name: "Anna Smirnova"
       email: "anna.smirnova@example.com"
       tier: "plus"
-      locale: "ru-RU"
-    locale: "ru-RU"
+      locale: "en-GB"
+    locale: "en-GB"
     channel: "amazon"
     product:
       sku: "SKU-LS5M01"
-      name: "Lumen Flow Strip 5 м"
+      name: "Lumen Flow Strip 5 m"
       category: "light_strip"
       lamp_kind: "smart_wifi"
     resolution:
       action: "store_credit"
-      summary: "Кредит магазина 15,00 € по гарантии за перегрев контроллера ленты"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
       credit:
         amount_minor: 1500
         currency: "eur"
       policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
     chunks:
     - chunk_id: "kb_strip0flck"
-      title: "Мерцание ленты Flow"
-      text: "Если лента Flow мерцает у контроллера, отключите питание, проверьте, что штекер контроллера вставлен до щелчка, и перезапустите ленту через приложение Lumen. Если мерцание повторяется, контроллер подлежит гарантийной замене."
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
     - chunk_id: "kb_ctrlheat01"
-      title: "Нагрев контроллера"
-      text: "Контроллер ленты Flow в работе тёплый, но не горячий. Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её до проверки: это признак неисправности блока питания."
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
     - chunk_id: "kb_credit2026"
-      title: "Кредит магазина по гарантии"
-      text: "Покупатели Lumen Plus получают кредит магазина за неисправный товар в течение гарантийного срока. Кредит зачисляется на аккаунт в течение 24 часов и действует 12 месяцев."
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
     previous: null
     critique: null
   metadata:
     split: "train"
 - name: "bulb_app_offline_advice"
   inputs:
-    summary: "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит."
+    summary: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
     customer:
       customer_id: "cus_3n8b5v2c6x1a"
-      display_name: "Дмитрий Орлов"
+      display_name: "Dmitry Orlov"
       email: null
       tier: "standard"
-      locale: "ru-RU"
-    locale: "ru-RU"
+      locale: "en-GB"
+    locale: "en-GB"
     channel: "storefront"
     product:
       sku: "SKU-GL27E1"
@@ -56,30 +56,30 @@ cases:
       lamp_kind: "smart_wifi"
     resolution:
       action: "advice"
-      summary: "Ответ по базе знаний без компенсации"
+      summary: "A knowledge base answer with no compensation"
       credit: null
       policy: null
     chunks:
     - chunk_id: "kb_bulbwifi24"
-      title: "Подключение лампы Glow к Wi-Fi"
-      text: "Лампы Glow работают только в сети 2,4 ГГц. После смены роутера или пароля лампу нужно заново добавить в приложение: удалите её из списка устройств и выполните сопряжение."
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
     - chunk_id: "kb_bulbreset5"
-      title: "Сброс лампы Glow"
-      text: "Чтобы сбросить лампу Glow, включите и выключите её пять раз подряд с интервалом в одну секунду. Лампа мигнёт трижды и перейдёт в режим сопряжения."
+      title: "Resetting a Glow bulb"
+      text: "To reset a Glow bulb, switch it on and off five times in a row, one second apart. The bulb blinks three times and goes into pairing mode."
     previous: null
     critique: null
   metadata:
     split: "dev"
 - name: "lamp_crushed_box_reship"
   inputs:
-    summary: "Торшер Lumen Arc Floor пришёл в смятой коробке с треснувшим плафоном; покупатель приложил фото упаковки."
+    summary: "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; the customer attached a photo of the packaging."
     customer:
       customer_id: "cus_9d4f6h1j3k5m"
-      display_name: "Ольга Кузнецова"
+      display_name: "Olga Kuznetsova"
       email: "olga.kuznetsova@example.com"
       tier: "business"
-      locale: "ru-RU"
-    locale: "ru-RU"
+      locale: "en-GB"
+    locale: "en-GB"
     channel: "ozon"
     product:
       sku: "SKU-ARCF01"
@@ -88,16 +88,16 @@ cases:
       lamp_kind: "mains"
     resolution:
       action: "reship"
-      summary: "Повторная отправка заказа за счёт магазина"
+      summary: "The order is shipped again at the store's expense"
       credit: null
       policy: null
     chunks:
     - chunk_id: "kb_shipdmg001"
-      title: "Повреждение при доставке"
-      text: "Если товар пришёл повреждённым, сохраните упаковку и сфотографируйте её. Lumen повторно отправит заказ за свой счёт, а повреждённый товар заберёт курьер."
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
     - chunk_id: "kb_ozonclaim1"
-      title: "Заказы с Ozon"
-      text: "По заказам с Ozon повторная отправка оформляется через поддержку Lumen, отдельную заявку на площадке создавать не нужно."
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
     previous: null
     critique: null
   metadata:

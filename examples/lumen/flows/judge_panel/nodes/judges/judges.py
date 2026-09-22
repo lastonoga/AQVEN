@@ -20,5 +20,5 @@ def agreeing_verdicts(state: JoinState[JudgeVerdict], params: AgreementParams) -
     if state.pending:
         return Wait()
     if len(state.values) < params.min_agree:
-        return Fail(f"ответили судей: {len(state.values)}, а для решения нужно {params.min_agree}")
+        return Fail(f"judges that answered: {len(state.values)}, but the decision needs {params.min_agree}")
     return Done(state.values)

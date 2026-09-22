@@ -39,10 +39,10 @@ def _required_present(values: RecordValues, fields: Sequence[FieldSpec], today: 
         _issue(
             field.name,
             "required_missing",
-            f"Не заполнено обязательное поле {field.name}",
+            f"The required field {field.name} is empty",
             field.type,
             None,
-            "Заполни поле по тексту обращения и вложениям",
+            "Fill the field from the case text and the attachments",
         )
         for field in fields
         if not field.type.endswith("?") and values.get(field.name) is None
@@ -56,10 +56,10 @@ def _purchase_not_in_future(values: RecordValues, fields: Sequence[FieldSpec], t
     issue = _issue(
         "purchased_on",
         "purchase_in_future",
-        "Дата покупки позже даты обращения",
-        f"не позже {today.isoformat()}",
+        "The purchase date is later than the case date",
+        f"no later than {today.isoformat()}",
         purchased,
-        "Дата покупки не может быть позже даты обращения: это опечатка, верни null",
+        "The purchase date cannot be later than the case date: it is a typo, return null",
     )
     return (issue,)
 
@@ -70,10 +70,10 @@ def _overheating_is_risk(values: RecordValues, fields: Sequence[FieldSpec], toda
     issue = _issue(
         "safety_risk",
         "overheating_without_risk",
-        "Перегрев всегда означает риск для безопасности",
+        "Overheating always means a safety risk",
         "true",
         json.dumps(values.get("safety_risk")),
-        "Поставь safety_risk в true",
+        "Set safety_risk to true",
     )
     return (issue,)
 
@@ -84,10 +84,10 @@ def _missing_item_has_carrier(values: RecordValues, fields: Sequence[FieldSpec],
     issue = _issue(
         "carrier_ref",
         "carrier_ref_required",
-        "Для недостающего товара нужен номер отправления у перевозчика",
-        "номер отправления",
+        "A missing item needs the carrier tracking number",
+        "tracking number",
         None,
-        "Найди номер отправления в тексте обращения или в счёте",
+        "Find the tracking number in the case text or in the invoice",
     )
     return (issue,)
 

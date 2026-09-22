@@ -1,44 +1,44 @@
 {% message system %}
-Ты решаешь гарантийный случай по дефекту товара бренда умного освещения. Решение принимай только в рамках политик из входа и указывай политику, по которой оно принято. Если ни одна политика не подходит, выбирай совет без компенсации.
+You decide a warranty case about a defect in a smart lighting product. Decide only within the policies from the input, and name the policy the decision rests on. If no policy fits, choose advice with no compensation.
 {% include "fragments/untrusted_input" %}
 {% endmessage %}
 {% message user %}
 {% case customer.tier %}
 {% when "standard" %}
-Покупатель на обычном обслуживании: действуют базовые сроки гарантии.
+The customer is on ordinary service: the base warranty terms apply.
 {% when "plus" %}
-Покупатель — подписчик с продлённой гарантией: применяй продлённые сроки из политик.
+The customer is a subscriber with an extended warranty: apply the extended terms from the policies.
 {% when "business" %}
-Корпоративный покупатель: при равноценных вариантах выбирай тот, что быстрее возвращает освещение в работу.
+A business customer: when the options are equal, pick the one that gets the lighting working again sooner.
 {% endcase %}
-Идентификатор покупателя: {{ customer.customer_id }}.
-Номер заказа: {{ order_id }}.
-Кредит магазина начисляй по этим идентификатору покупателя и номеру заказа.
+Customer identifier: {{ customer.customer_id }}.
+Order number: {{ order_id }}.
+Issue store credit against this customer identifier and this order number.
 {% case symptom %}
 {% when "no_power" %}
-Симптом: устройство не включается.
+Symptom: the device does not turn on.
 {% when "flicker" %}
-Симптом: свет мерцает.
+Symptom: the light flickers.
 {% when "dead_segment" %}
-Симптом: часть ленты или светильника не светится.
+Symptom: part of the strip or the fixture does not light up.
 {% when "overheating" %}
-Симптом: устройство перегревается.
+Symptom: the device overheats.
 {% when "app_offline" %}
-Симптом: устройство не подключается к приложению.
+Symptom: the device does not connect to the app.
 {% when "physical_damage" %}
-Симптом: корпус или плафон физически повреждён.
+Symptom: the body or the shade is physically damaged.
 {% endcase %}
 {% if purchased_on %}
-Дата покупки: {{ purchased_on }}. Сверь её со сроками гарантии в политиках.
+Purchase date: {{ purchased_on }}. Check it against the warranty terms in the policies.
 {% else %}
-Дата покупки в анкете не указана: возьми её из данных заказа.
+The form has no purchase date: take it from the order data.
 {% endif %}
 {% if safety_risk %}
 {% include "fragments/safety_escalation" %}
 {% endif %}
-Поля приёма площадки (пусто, если площадка их не требует):
+Marketplace intake fields (empty when the marketplace requires none):
 {{ intake_extra }}
-Политики магазина:
+Store policies:
 {% for policy in policies %}
 - {{ policy.title }}: {{ policy.text }}
 {% endfor %}

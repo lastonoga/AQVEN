@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "switch"
-description: "Маршрутизирует обращение по виду анкеты: гарантийный случай решает агент, доставка и вопрос — фиксированным решением"
+description: "Routes the case by the form kind: an agent decides a warranty case, delivery and question cases get a fixed decision"
 on: "$to_record.out"
 cases:
   defect:
@@ -14,7 +14,7 @@ cases:
     - name: "resolution"
       value:
         action: "reship"
-        summary: "Повторная отправка заказа за счёт магазина"
+        summary: "The order is shipped again at the store's expense"
         credit: null
         policy: null
   question:
@@ -22,10 +22,10 @@ cases:
     - name: "resolution"
       value:
         action: "advice"
-        summary: "Ответ по базе знаний без компенсации"
+        summary: "A knowledge base answer with no compensation"
         credit: null
         policy: null
 out:
 - name: "resolution"
   type: "Resolution"
-  description: "Решение по обращению"
+  description: "Decision on the case"

@@ -1,23 +1,23 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "union"
-description: "Откуда пришло обращение покупателя"
+description: "Where the customer case came from"
 discriminator: "kind"
 variants:
 - name: "storefront"
-  description: "Форма поддержки на витрине интернет-магазина Lumen"
+  description: "The support form on the Lumen online store"
   fields:
   - name: "page"
     type: "Text"
-    description: "Страница витрины, с которой покупатель написал"
+    description: "The store page the customer wrote from"
     maxLength: 200
 - name: "marketplace"
-  description: "Обращение по заказу на маркетплейсе"
+  description: "A case about a marketplace order"
   fields:
   - name: "marketplace"
     type: "Marketplace"
-    description: "Маркетплейс заказа"
+    description: "Marketplace of the order"
   - name: "order_ref"
     type: "Text"
-    description: "Номер заказа на маркетплейсе"
+    description: "Order number on the marketplace"
     maxLength: 40

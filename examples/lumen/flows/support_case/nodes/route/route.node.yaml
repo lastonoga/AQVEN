@@ -14,7 +14,7 @@ cases:
     - name: "resolution"
       value:
         action: "reship"
-        summary: "Повторная отправка заказа за счёт магазина"
+        summary: "The order is shipped again at the store's expense"
         credit: null
         policy: null
   question:
@@ -22,7 +22,7 @@ cases:
     - name: "resolution"
       value:
         action: "advice"
-        summary: "Ответ по базе знаний без компенсации"
+        summary: "A knowledge base answer with no compensation"
         credit: null
         policy: null
 out:

@@ -11,4 +11,4 @@ class EmptyListParams(BaseModel):
 
 def no_issues(state: LoopState, params: EmptyListParams) -> StopDecision:
     found = state.read(params.path)
-    return Stop(f"{params.path} пуст") if isinstance(found, list) and not found else Continue()
+    return Stop(f"{params.path} is empty") if isinstance(found, list) and not found else Continue()

@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Начисляет покупателю кредит магазина по заказу"
+description: "Issues store credit to the customer against an order"
 run: "@root.tools.functions:issue_store_credit"
 effect: "write"
 idempotency_key:
@@ -12,19 +12,19 @@ secrets:
 in:
 - name: "customer_id"
   type: "CustomerId"
-  description: "Покупатель, которому начисляется кредит"
+  description: "The customer the credit is issued to"
 - name: "order_id"
   type: "OrderId"
-  description: "Заказ, по которому начисляется кредит"
+  description: "The order the credit is issued against"
 - name: "amount"
   type: "Money"
-  description: "Сумма кредита"
+  description: "Credit amount"
 out:
 - name: "credit_id"
   type: "Text"
-  description: "Идентификатор начисления"
+  description: "Identifier of the issued credit"
   maxLength: 15
   pattern: "^cr_[a-z0-9]{12}$"
 - name: "amount"
   type: "Money"
-  description: "Начисленная сумма"
+  description: "Amount issued"

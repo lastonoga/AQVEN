@@ -1,12 +1,12 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Сигнал, который разбор обращения ищет в тексте и вложениях"
+description: "A signal the case parsing looks for in the text and the attachments"
 fields:
 - name: "key"
   type: "SignalKey"
-  description: "Ключ сигнала"
+  description: "Signal key"
 - name: "label"
   type: "Text"
-  description: "Название сигнала для модели и оператора"
+  description: "Name of the signal, for the model and the agent"
   maxLength: 80

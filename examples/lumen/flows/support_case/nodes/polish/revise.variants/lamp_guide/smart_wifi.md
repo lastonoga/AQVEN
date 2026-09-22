@@ -1,1 +1,1 @@
-Лампа умная, подключена к Wi-Fi и управляется из приложения Lumen. Сначала дай шаги в приложении, затем сброс и повторное сопряжение, если они описаны во фрагментах. Требования к сети называй только по фрагментам.
+The lamp is smart, connected over Wi-Fi and controlled from the Lumen app. Give the steps in the app first, then the reset and re-pairing, if the chunks describe them. State network requirements only from the chunks.

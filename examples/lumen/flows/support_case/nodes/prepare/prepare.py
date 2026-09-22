@@ -17,16 +17,16 @@ MESSAGE_LIMIT: Final = 4000
 PERSPECTIVES: Final[tuple[VotePerspective, ...]] = ("words", "evidence", "risk")
 
 SIGNAL_LABELS: Final[Mapping[str, str]] = {
-    "no_power": "Не включается",
-    "flicker": "Мерцает",
-    "dead_segment": "Не светит участок ленты",
-    "overheating": "Перегревается",
-    "burning_smell": "Пахнет гарью",
-    "app_offline": "Не отвечает в приложении",
-    "cracked_shade": "Треснул плафон",
-    "package_damaged": "Повреждена упаковка",
-    "missing_part": "Не хватает детали",
-    "usage_question": "Вопрос по использованию",
+    "no_power": "Does not turn on",
+    "flicker": "Flickers",
+    "dead_segment": "A section of the strip does not light",
+    "overheating": "Overheats",
+    "burning_smell": "Smells of burning",
+    "app_offline": "Does not respond in the app",
+    "cracked_shade": "The shade is cracked",
+    "package_damaged": "The packaging is damaged",
+    "missing_part": "A part is missing",
+    "usage_question": "A question about use",
 }
 
 LAMP_SIGNALS: Final = frozenset(SIGNAL_LABELS) - {"dead_segment", "app_offline"}
@@ -47,24 +47,24 @@ INTAKE_FIELDS: Final[Mapping[Channel, tuple[FieldSpec, ...]]] = {
         FieldSpec(
             name="return_reason",
             type="Text",
-            description="Причина возврата, выбранная покупателем на Amazon",
+            description="Return reason the customer picked on Amazon",
             maxLength=20,
             enum=["defective", "damaged", "not_as_described"],
         ),
         FieldSpec(
             name="asin",
             type="Text?",
-            description="ASIN товара на Amazon; null, если его нет в обращении",
+            description="Amazon ASIN of the product; null when the case does not carry one",
             maxLength=10,
             pattern=r"^B0[A-Z0-9]{8}$",
         ),
     ),
     "ozon": (
-        FieldSpec(name="posting_number", type="Text", description="Номер отправления Ozon", maxLength=40),
+        FieldSpec(name="posting_number", type="Text", description="Ozon shipment number", maxLength=40),
         FieldSpec(
             name="claim_type",
             type="Text",
-            description="Тип претензии, выбранный покупателем на Ozon",
+            description="Claim type the customer picked on Ozon",
             maxLength=10,
             enum=["defect", "damage", "missing"],
         ),

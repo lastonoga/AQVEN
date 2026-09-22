@@ -1,1 +1,1 @@
-Лампа работает от встроенного аккумулятора. Сначала предложи полностью зарядить её штатным кабелем, если такой шаг есть во фрагментах. Нагрев, вздутие или запах от корпуса — повод сразу прекратить зарядку и использование.
+The lamp runs on a built-in battery. First suggest charging it fully with its own cable, if the chunks describe that step. Heat, swelling or a smell from the body is a reason to stop charging and using it right away.

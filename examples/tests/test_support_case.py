@@ -60,12 +60,10 @@ CLIP_URL: Final = "https://cdn.together.example/videos/vid_7h3k9m2p.mp4"
 LEAD: Final = node_address("approvals__lead", branch_key="lead")
 PAINTER: Final = "openrouter:google/gemini-3.1-flash-lite-image"
 PAINTER_FALLBACK: Final = "openrouter:openai/gpt-5-image-mini"
-CREDIT_DENIAL: Final = (
-    "Руководитель поддержки отказал в начислении: кредит не начислен, выбери решение без кредита магазина"
-)
+CREDIT_DENIAL: Final = "The support lead refused the credit: none was issued, pick a decision without store credit"
 REPLY_APPROVAL: Final = ReplyApproval(decision="approve", edited_text=None, note=None)
 MEDIA_APPROVAL: Final = MediaApproval(use_image=True, use_voice=True, use_clip=False)
-SPLIT_RATIONALE: Final = "Голос перспективы: разбор обращения даёт именно это намерение"
+SPLIT_RATIONALE: Final = "Ballot from this perspective: parsing the case gives exactly this intent"
 SPLIT_CONFIDENCE: Final = 0.8
 SPLIT_BALLOTS: Final = tuple(
     node_output(
@@ -84,23 +82,23 @@ KB: Final = SearchKbOut.model_validate(
         "chunks": [
             {
                 "chunk_id": "kb_strip0flck",
-                "title": "Мерцание ленты Flow",
-                "text": "Если лента Flow мерцает у контроллера, отключите питание и проверьте штекер контроллера. "
-                "Если мерцание повторяется, контроллер подлежит гарантийной замене.",
+                "title": "Flow strip flicker",
+                "text": "If a Flow strip flickers near the controller, cut the power and check the controller plug. "
+                "If the flicker comes back, the controller is replaced under warranty.",
             },
             {
                 "chunk_id": "kb_ctrlheat01",
-                "title": "Нагрев контроллера",
-                "text": "Если корпус контроллера горячий на ощупь, сразу отключите ленту от сети и не включайте её "
-                "до проверки.",
+                "title": "Controller heat",
+                "text": "If the controller body is hot to the touch, unplug the strip at once and do not switch it on "
+                "until it has been checked.",
             },
         ],
         "policies": [
             {
                 "policy_id": "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34",
-                "title": "Кредит магазина по гарантии",
-                "text": "Покупатели Lumen Plus получают кредит магазина до 20 € за неисправный товар "
-                "в гарантийный срок.",
+                "title": "Store credit under warranty",
+                "text": "Lumen Plus customers receive store credit of up to €20 for a faulty product "
+                "within the warranty period.",
             }
         ],
     }
@@ -114,7 +112,7 @@ ORDER: Final = LookupOrderOut.model_validate(
         "items": [
             {
                 "sku": "SKU-LS5M01",
-                "name": "Lumen Flow Strip 5 м",
+                "name": "Lumen Flow Strip 5 m",
                 "category": "light_strip",
                 "lamp_kind": "smart_wifi",
             }
@@ -144,18 +142,18 @@ MCP_STUBS: Final = (
     McpToolStub(
         server=McpServerId("helpdesk"),
         tool="search_tickets",
-        result={"tickets": [{"ticket_id": "HD-48213", "subject": "Контроллер Flow греется", "status": "closed"}]},
+        result={"tickets": [{"ticket_id": "HD-48213", "subject": "Flow controller runs hot", "status": "closed"}]},
     ),
     McpToolStub(
         server=McpServerId("helpdesk"),
         tool="search_macros",
-        result={"macros": [{"macro_id": "warranty_credit", "title": "Кредит по гарантии Lumen Plus"}]},
+        result={"macros": [{"macro_id": "warranty_credit", "title": "Lumen Plus warranty credit"}]},
     ),
 )
 
 QUESTION: Final = {
     "origin": CaseOriginStorefront(kind="storefront", page="/help/glow-e27"),
-    "message": "Подскажите, лампа Glow E27 работает с Wi-Fi 5 ГГц? Хочу поставить её в спальню.",
+    "message": "Does the Glow E27 bulb work with 5 GHz Wi-Fi? I want to put it in the bedroom.",
     "order_id": None,
     "product": ProductRef.model_validate(
         {"sku": "SKU-GL27E1", "name": "Lumen Glow E27", "category": "smart_bulb", "lamp_kind": "smart_wifi"}
@@ -342,7 +340,7 @@ async def test_fork_at_lead_approval_rejects_reply(
     await run.resume(resume_request(await wait_at(run, LEAD), REPLY_APPROVAL))
     await run.result()
     fork = await run.fork(LEAD)
-    rejection = ReplyApproval(decision="reject", edited_text=None, note="Ответ обещает больше политики")
+    rejection = ReplyApproval(decision="reject", edited_text=None, note="The reply promises more than the policy")
     await fork.resume(resume_request(await wait_at(fork, LEAD), rejection))
     result = await fork.result()
     assert result.output is not None, result.error

@@ -1,56 +1,56 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Намерение обращения по краткому содержанию и наблюдениям; перспектива задаёт угол зрения голоса"
+description: "The case intent from the summary and the observations; the perspective sets the angle of the ballot"
 in:
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание обращения после разбора"
+  description: "Case summary after parsing"
   maxLength: 600
 - name: "observations"
   type: "Observation[]"
-  description: "Наблюдения по сигналам категории"
+  description: "Observations against the category signals"
   maxItems: 12
 - name: "safety_risk"
   type: "Bool"
-  description: "Есть ли в обращении признаки угрозы безопасности"
+  description: "Whether the case shows signs of a safety hazard"
 - name: "perspective"
   type: "VotePerspective?"
-  description: "Угол зрения голоса; null — решение без заданной перспективы"
+  description: "The angle of the ballot; null means a decision with no perspective set"
 out:
 - name: "rationale"
   type: "Text"
-  description: "Обоснование намерения, записывается до выбора"
+  description: "Reasoning for the intent, written before the choice"
   maxLength: 300
 - name: "intent"
   type: "CaseIntent"
-  description: "Намерение обращения"
+  description: "Case intent"
 - name: "confidence"
   type: "Score"
-  description: "Уверенность в выбранном намерении"
+  description: "Confidence in the chosen intent"
 examples:
 - name: "flicker_defect"
   in:
-    summary: "Светодиодная лента мерцает на участке у контроллера через неделю после установки, подключение сделано по инструкции"
+    summary: "An LED strip flickers in the section near the controller a week after install; it was wired as the manual says"
     observations:
     - key: "flicker"
-      value: "Мерцание у контроллера, сильнее на низкой яркости"
+      value: "Flicker near the controller, stronger at low brightness"
     safety_risk: false
     perspective: null
   out:
-    rationale: "Товар пришёл исправным и перестал нормально работать при обычном использовании — это дефект изделия"
+    rationale: "The product arrived working and stopped working properly under ordinary use, so this is a product defect"
     intent: "defect"
     confidence: 0.9
 - name: "crushed_box"
   in:
-    summary: "Настольная лампа пришла в смятой коробке с треснувшим плафоном, покупатель просит решить вопрос с доставкой"
+    summary: "A table lamp arrived in a crushed box with a cracked shade; the customer asks to sort out the delivery"
     observations:
     - key: "package_damaged"
-      value: "Коробка смята с одного угла"
+      value: "The box is crushed on one corner"
     - key: "cracked_shade"
-      value: "Трещина через весь плафон"
+      value: "A crack across the whole shade"
     safety_risk: false
     perspective: null
   out:
-    rationale: "Упаковка и плафон повреждены при перевозке, а не в работе товара — это проблема доставки"
+    rationale: "The packaging and the shade were damaged in transit, not in use, so this is a delivery problem"
     intent: "delivery"
     confidence: 0.85

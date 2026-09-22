@@ -1,13 +1,13 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Денежная сумма в минимальных единицах валюты"
+description: "A money amount in the smallest units of its currency"
 fields:
 - name: "amount_minor"
   type: "Int"
-  description: "Сумма в центах, пенсах или иных минимальных единицах"
+  description: "The amount in cents, pence or other smallest units"
   minimum: 0
   maximum: 1000000000
 - name: "currency"
   type: "CurrencyCode"
-  description: "Валюта суммы"
+  description: "Currency of the amount"

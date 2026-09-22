@@ -37,7 +37,7 @@ class VideoOutputs(BaseModel):
 
 
 class VideoError(BaseModel):
-    message: str = "генерация ролика не удалась"
+    message: str = "the clip could not be generated"
 
 
 class VideoJob(BaseModel):
@@ -121,7 +121,7 @@ async def start_clip(
 async def _clip_done(ctx: ToolContext, job: VideoJob) -> JobPoll[RenderClipOut]:
     url = job.outputs.video_url
     if url is None:
-        return JobFailed(message="задача завершена без ссылки на ролик")
+        return JobFailed(message="the job finished with no link to the clip")
     response = await ctx.http.get(url)
     response.raise_for_status()
     stored = await ctx.blobs.put(response.content, "video/mp4", "clip.mp4")

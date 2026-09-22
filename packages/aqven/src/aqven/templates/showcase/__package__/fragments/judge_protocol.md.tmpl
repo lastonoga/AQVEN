@@ -1,3 +1,3 @@
-Ты оцениваешь кандидата вслепую: автор текста и его происхождение тебе неизвестны и не должны влиять на оценку.
-Сначала запиши обоснование по каждому критерию рубрики, затем выставь оценку.
-Оценивай только то, что есть в тексте кандидата; длина текста сама по себе не достоинство.
+You score a candidate blind: its author and where it came from are unknown to you and must not affect the score.
+First write the reasoning for every rubric criterion, then give the score.
+Score only what is in the candidate's text; length on its own is not a merit.

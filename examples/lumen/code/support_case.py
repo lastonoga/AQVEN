@@ -10,15 +10,20 @@ type PromiseRule = Callable[[str, Resolution], str | None]
 MINOR_UNITS_PER_MAJOR: Final = 100
 
 COMPENSATION_PHRASES: Final = (
-    "кредит магазина",
-    "возврат денег",
-    "возврат средств",
-    "вернём деньги",
-    "компенсаци",
+    "store credit",
+    "money back",
+    "a refund",
+    "we will refund",
+    "compensation",
     "store credit",
     "refund",
 )
-REPLACEMENT_PHRASES: Final = ("отправим замену", "заменим товар", "новый товар взамен", "replacement")
+REPLACEMENT_PHRASES: Final = (
+    "we will send a replacement",
+    "we will replace the product",
+    "a new product instead",
+    "replacement",
+)
 
 FORBIDDEN_PROMISES: Final[Mapping[ResolutionAction, tuple[str, ...]]] = {
     "store_credit": (),
@@ -27,7 +32,7 @@ FORBIDDEN_PROMISES: Final[Mapping[ResolutionAction, tuple[str, ...]]] = {
     "advice": (*COMPENSATION_PHRASES, *REPLACEMENT_PHRASES),
 }
 
-CURRENCY: Final = r"(?:[€$£]|eur|usd|gbp|евро|доллар|фунт)"
+CURRENCY: Final = r"(?:[€$£]|eur|usd|gbp|euro|dollar|pound)"
 AMOUNT: Final = r"(?<![\d.,])(?P<major>\d{1,3}(?:[ \u00a0\u202f]\d{3})+|\d+)(?:[.,](?P<minor>\d{1,2}))?(?!\d)"
 AMOUNT_PATTERNS: Final = (re.compile(rf"{CURRENCY}\s?{AMOUNT}"), re.compile(rf"{AMOUNT}\s?{CURRENCY}"))
 MINOR_DIGITS: Final = 2
@@ -48,14 +53,14 @@ def _forbidden_promise(text: str, resolution: Resolution) -> str | None:
     phrase = next((item for item in FORBIDDEN_PROMISES[resolution.action] if item in text), None)
     if phrase is None:
         return None
-    return f"Ответ обещает «{phrase}», а принятое решение этого не даёт. Опиши только принятое решение."
+    return f"The reply promises \u201c{phrase}\u201d, which the decision does not give. Describe only the decision."
 
 
 def _foreign_amount(text: str, resolution: Resolution) -> str | None:
     credited = frozenset({resolution.credit.amount_minor}) if resolution.credit is not None else frozenset[int]()
     if _amounts(text) <= credited:
         return None
-    return "Ответ называет сумму, которой нет в решении. Назови только сумму кредита из решения или не называй сумму."
+    return "The reply names an amount the decision does not carry: name the credit amount from the decision, or none."
 
 
 def _amounts(text: str) -> frozenset[int]:

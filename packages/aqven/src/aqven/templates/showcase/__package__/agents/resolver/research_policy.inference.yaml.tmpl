@@ -1,21 +1,21 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Исследование политики магазина и прецедентов хелпдеска по вопросу основного агента"
+description: "Research of store policy and helpdesk precedents for the main agent's question"
 in:
 - name: "question"
   type: "Text"
-  description: "Вопрос основного агента о политике магазина"
+  description: "The main agent's question about store policy"
   maxLength: 500
 - name: "category"
   type: "ProductCategory"
-  description: "Категория товара, к которой относится вопрос"
+  description: "Product category the question is about"
 out:
 - name: "answer"
   type: "Text"
-  description: "Краткий ответ на вопрос по найденным правилам и прецедентам"
+  description: "Short answer to the question from the rules and precedents found"
   maxLength: 800
 - name: "sources"
   type: "Text[]"
-  description: "Обращения и макросы хелпдеска, на которые опирается ответ"
+  description: "Helpdesk cases and macros the answer relies on"
   maxLength: 120
   maxItems: 5

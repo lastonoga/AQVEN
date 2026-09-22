@@ -1,30 +1,30 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Нормализует текст обращения, выводит канал, сигналы категории товара, поля приёма площадки и перспективы голосования"
+description: "Normalizes the case text and derives the channel, the product category signals, the intake fields the marketplace requires and the voting perspectives"
 run: "prepare"
 in:
 - name: "request"
   type: "CaseRequest"
-  description: "Обращение покупателя целиком"
+  description: "The whole customer case"
   from: "$input"
 out:
 - name: "message"
   type: "Text"
-  description: "Текст обращения с нормализованными пробелами"
+  description: "Case text with normalized whitespace"
   maxLength: 4000
 - name: "channel"
   type: "Channel"
-  description: "Канал, из которого пришло обращение"
+  description: "Channel the case came from"
 - name: "signals"
   type: "SignalDef[]"
-  description: "Допустимые сигналы наблюдений для категории товара"
+  description: "Observation signals allowed for the product category"
   maxItems: 20
 - name: "intake_fields"
   type: "FieldSpec[]"
-  description: "Поля приёма, которые требует площадка"
+  description: "Intake fields the marketplace requires"
   maxItems: 10
 - name: "perspectives"
   type: "VotePerspective[]"
-  description: "Перспективы независимых голосов за намерение"
+  description: "Perspectives for the independent intent ballots"
   maxItems: 3
