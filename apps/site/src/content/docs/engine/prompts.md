@@ -35,7 +35,10 @@ reads what the file actually contains and dispatches to the right one.
   `RenderedPrompt`, built from the `system`, `user`, and `assistant` helpers in `aqven.spec`.
 - `{{CLI_COMMAND}} check` parses every prompt file and rejects one that doesn't parse, is missing, or
   points a level-3 reference at a function that doesn't exist — before any of it reaches a teammate or a
-  release.
+  release. It also rejects a node whose declared input the prompt never actually reads: a model answers
+  worse as irrelevant context piles up, even long before the context window is anywhere near full, so
+  the check keeps a node's inputs to exactly what its prompt reads, not whatever might come in handy
+  someday.
 
 ### Example
 
