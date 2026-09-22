@@ -16,30 +16,24 @@ export const PROVIDER_LOGOS: ProviderLogo[] = [
 export const Providers = () => (
   <div className="border-y border-border bg-background-subtle py-10">
     <div className="container mx-auto px-6">
-      <p className="mb-6 text-center text-sm text-muted-foreground">
-        Bring your own key. Works with the models you already pay for, and everything else in the{" "}
+      <p className="mb-8 text-center text-sm text-muted-foreground">
+        Bring your own key. Works with these and the rest of the{" "}
         <a href="/reference/provider-catalog/" className="underline underline-offset-4">
           provider catalog
         </a>
         .
       </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+      <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6 sm:gap-x-12">
         {PROVIDER_LOGOS.map((logo) => (
-          <span
+          <svg
             key={logo.name}
-            title={logo.name}
-            className="flex items-center gap-2 text-muted-foreground grayscale opacity-70 transition-opacity hover:opacity-100"
+            viewBox={logo.viewBox}
+            className="size-7 shrink-0 fill-current text-muted-foreground"
+            role="img"
           >
-            <svg
-              viewBox={logo.viewBox}
-              className="size-5 shrink-0 fill-current"
-              role="img"
-              aria-label={logo.name}
-            >
-              <path d={logo.path} />
-            </svg>
-            <span className="text-sm font-medium">{logo.name}</span>
-          </span>
+            <title>{logo.name}</title>
+            <path d={logo.path} />
+          </svg>
         ))}
       </div>
     </div>
