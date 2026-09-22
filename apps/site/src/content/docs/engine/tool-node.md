@@ -152,6 +152,9 @@ touches that path at all; it's a plain function call.
   never leaves the process.
 - [How to connect an external MCP server](/integrations/external-mcp-servers/) — registering a server
   and giving its tools to an agent.
+- [Media has real limits on both sides of a model call](/concepts/media-has-real-limits-on-both-sides/)
+  — why resizing, trimming or tiling an `Image`, `Audio` or `Video` field belongs in a `tool` node's
+  `ToolContext.blobs`, not a `code` node.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `ToolNodeSpec`, generated from the code.

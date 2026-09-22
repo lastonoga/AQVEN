@@ -129,11 +129,14 @@ video and audio specifically, not the rules themselves.
    [`aqven models check`](/engine/check-providers/) confirms what an agent's models support
    structurally; it does not check media limits, so this discovery step is always manual, against the
    provider's own current documentation.
-2. **On the input side, prepare the media yourself in a `code` node before the call**, instead of
-   letting the provider reshape it invisibly. Which preparation is right depends on whether the task
-   needs the excess fidelity: a single downscale or trim is the cheap default when it doesn't; splitting
-   into several pieces that each fit the ceiling is the move when it does, at the cost of more calls or
-   tokens.
+2. **On the input side, prepare the media yourself in a `tool` node before the call**, instead of
+   letting the provider reshape it invisibly. This has to be a `tool` node, not a `code` node: reading or
+   writing the real bytes behind an `Image`, `Audio`, `Video` or `Document` field goes through
+   `ToolContext.blobs`, an async `get`/`put` pair a `code` node's synchronous function never receives — a
+   `code` node only ever sees a media field's metadata (`media_type`, `blob_id`, `size_bytes`), never its
+   content. Which preparation is right depends on whether the task needs the excess fidelity: a single
+   downscale or trim is the cheap default when it doesn't; splitting into several pieces that each fit the
+   ceiling is the move when it does, at the cost of more calls or tokens.
 3. **On the output side, if the task needs more than one generation call can produce, restructure the
    flow into several calls** instead of trying to ask for more in one. Whether those calls chain
    sequentially or run independently is a judgment about the task, not a fixed recipe — and either way,
@@ -150,13 +153,13 @@ What that looks like for the modalities this page actually researched:
   request instead of one oversized block: providers support several images per call precisely for this
   (Anthropic's own guidance treats a multi-page document the same way — several image blocks, one per
   page, each labeled so the model can refer back to a specific one). More crops means more tokens and a
-  `code` node that knows how to tile and label them, so it's a real cost, worth paying only when the task
+  `tool` node that knows how to tile and label them, so it's a real cost, worth paying only when the task
   actually needs full-resolution detail everywhere. The showcase's own sample case hides this, because
   its photo is already reasonably sized — test with a real, oversized phone photo before you trust the
   flow either way.
 - **Video and audio input (rule 2):** trim to the moment that matters rather than relying on a
   provider's sampling to find it. A model sampling three hours of video at low resolution to answer a
-  question about ten seconds of it is both slower and less accurate than a `code` node that clips first.
+  question about ten seconds of it is both slower and less accurate than a `tool` node that clips first.
 - **Video generation past a duration cap (rule 3):** if a case genuinely needs a five-minute video from
   a model capped at fifteen or thirty seconds per call, the flow becomes several nodes, and which node
   kind ties them together depends on how the segments relate to each other. A later segment that depends
@@ -167,7 +170,8 @@ What that looks like for the modalities this page actually researched:
   reaches the target. Segments that can be planned and generated independently — a known shot list, a
   fixed number of scenes that don't need to flow from one to the next — are a job for
   [`parallel` or `map`](/engine/map-node/) instead, generating every segment at once. Either way, a final
-  `code` node concatenates the pieces; what differs is only the shape above it, and rule 3 is why: the
+  `tool` node concatenates the pieces — combining real video files is a blob read/write, not deterministic
+  logic — and what differs is only the shape above it, and rule 3 is why: the
   provider's cap decided a pipeline was needed, the dependency between pieces decided which one.
 - **Long generation, any modality (rule 3, the general case):** a long document past a model's maximum
   output length, a long narration past a text-to-speech endpoint's input cap, a poster past a diffusion
@@ -185,9 +189,11 @@ What that looks like for the modalities this page actually researched:
 - [Field constraints](/engine/field-constraints/) — what AQVEN's type system does enforce on other field kinds
 - [The `llm` node](/engine/llm-node/) — where a media field reaches a model, and where image generation
   is just another `out` field
-- [The `code` node](/engine/code-node/) — where a resize, trim or transcode step belongs
-- [How to give an agent a tool](/engine/tool-node/) — where generation past what `llm` supports directly
+- [How to give an agent a tool](/engine/tool-node/) — where a resize, trim, tile or transcode step
+  actually belongs, `ToolContext.blobs` included, and where generation past what `llm` supports directly
   lives, `wait` included
+- [The `code` node](/engine/code-node/) — deterministic logic with no blob access; confirms why media
+  preparation doesn't belong here
 - [How to repeat a step with a limit](/engine/loop-node/) — for chaining capped generations that depend
   on each other, one pass at a time
 - [The `map` node](/engine/map-node/) — concurrency, provider rate limits, and for chaining capped
