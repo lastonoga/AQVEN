@@ -40,11 +40,11 @@ first two tools worth calling once you are.
 
 ### Example
 
-Create the showcase project if you don't already have one, and connect an agent to it as in
-[How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
+This technique doesn't need the showcase project — a minimal one with an offline test is enough. Create
+one and connect an agent to it as in [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/):
 
 ```bash
-{{CLI_COMMAND}} new my_project --template showcase
+{{CLI_COMMAND}} new my_project --with-tests
 cd my_project/my_project
 ```
 
@@ -60,13 +60,13 @@ to keep it short:
   "warnings": 0,
   "diagnostics": [],
   "omitted": 0,
-  "duration_ms": 2435,
+  "duration_ms": 1934,
   "failure": null
 }
 ```
 
-Now typo one field's type — in `types/records/issue.yaml`, `Issue.severity` goes from `IssueSeverity` to
-`IssueSeverityLevel`, a type that doesn't exist in the project. Calling `aqven_check` again, scoped with
+Now typo one field's type — in `types/records/answer.yaml`, `Answer.tone` goes from `Tone` to `Tones`, a
+type that doesn't exist in the project. Calling `aqven_check` again, scoped with
 `paths: ["types/records"]`:
 
 ```json
@@ -80,17 +80,17 @@ Now typo one field's type — in `types/records/issue.yaml`, `Issue.severity` go
     {
       "code": "E_TYPE_UNKNOWN",
       "severity": "error",
-      "file": "types/records/issue.yaml",
-      "path": ["fields", 3, "type"],
-      "message": "type IssueSeverityLevel is neither built in nor declared in the project",
+      "file": "types/records/answer.yaml",
+      "path": ["fields", 1, "type"],
+      "message": "type Tones is neither built in nor declared in the project",
       "rule": null,
-      "line": 20,
+      "line": 11,
       "column": 3,
       "hint": null
     }
   ],
   "omitted": 0,
-  "duration_ms": 2527,
+  "duration_ms": 1827,
   "failure": null
 }
 ```
@@ -99,8 +99,8 @@ Both calls came back with `is_error: false` at the MCP envelope level. The only 
 between a clean project and a broken one is `ok` and `diagnostics` inside the result — nothing at the
 protocol level marks this call as having failed.
 
-Calling `pyright_check` with `paths: ["my_project/code/support_case.py"]` — a real file already in the
-project, paths here relative to the folder one level above the project root:
+Calling `pyright_check` with `paths: ["my_project/flows/answer_question/nodes/prepare/prepare.py"]` — a
+real file already in the project, paths here relative to the folder one level above the project root:
 
 ```json
 {
@@ -114,13 +114,13 @@ project, paths here relative to the folder one level above the project root:
   "informations": 0,
   "diagnostics": [],
   "omitted": 0,
-  "duration_ms": 738,
+  "duration_ms": 545,
   "failure": null
 }
 ```
 
-Add a throwaway `my_project/code/_demo.py` with one bad assignment — `value: int = "not an int"` — and
-call `pyright_check` again with `paths: ["my_project/code/_demo.py"]`:
+Add a throwaway `my_project/_demo.py` with one bad assignment — `value: int = "not an int"` — and call
+`pyright_check` again with `paths: ["my_project/_demo.py"]`:
 
 ```json
 {
@@ -134,10 +134,10 @@ call `pyright_check` again with `paths: ["my_project/code/_demo.py"]`:
   "informations": 0,
   "diagnostics": [
     {
-      "file": "my_project/code/_demo.py",
+      "file": "my_project/_demo.py",
       "severity": "error",
       "rule": "reportAssignmentType",
-      "message": "Type \"Literal['not an int']\" is not assignable to declared type \"int\"\n  \"Literal['not an int']\" is not assignable to \"int\"",
+      "message": "Type \"Literal['not an int']\" is not assignable to declared type \"int\"\n  \"Literal['not an int']\" is not assignable to \"int\"",
       "line": 1,
       "column": 14,
       "end_line": 1,
@@ -145,17 +145,13 @@ call `pyright_check` again with `paths: ["my_project/code/_demo.py"]`:
     }
   ],
   "omitted": 0,
-  "duration_ms": 297,
+  "duration_ms": 283,
   "failure": null
 }
 ```
 
-`pytest_run` needs something to run, so add `tests/test_demo.py`:
-
-```python
-def test_addition():
-    assert 2 + 2 == 4
-```
+`--with-tests` already generated one offline test, so `pytest_run` has something to call right away —
+`keyword: "test_answer_question_runs_offline"`:
 
 ```json
 {
@@ -168,14 +164,13 @@ def test_addition():
   "skipped": 0,
   "failures": [],
   "omitted": 0,
-  "duration_ms": 2230,
-  "output_tail": ".                                                                        [100%]\n1 passed, 36 deselected in 0.09s\n"
+  "duration_ms": 2954,
+  "output_tail": ".                                                                        [100%]\n1 passed in 0.49s\n"
 }
 ```
 
-That's `pytest_run` called with `keyword: "test_addition"` — pytest collected the rest of the project's
-own tests too and deselected them, the same as `-k test_addition` would on the command line. Break the
-assertion — `4` becomes `5` — and run it again:
+Break the test — change the expected `tone` in its final assertion from `"friendly"` to `"formal"` — and
+run it again:
 
 ```json
 {
@@ -188,15 +183,15 @@ assertion — `4` becomes `5` — and run it again:
   "skipped": 0,
   "failures": [
     {
-      "test": "tests.test_demo::test_addition",
+      "test": "tests.test_answer_question::test_answer_question_runs_offline",
       "kind": "failure",
-      "message": "assert (2 + 2) == 5",
-      "details": "def test_addition():\n>       assert 2 + 2 == 5\nE       assert (2 + 2) == 5\n\ntests/test_demo.py:2: AssertionError"
+      "message": "AssertionError: assert Answer(reply=...ne='friendly') == Answer(reply=...tone='formal')\n  \n  Use -v to get more diff",
+      "details": "    def test_answer_question_runs_offline(aqven_project: Project, aqven_engine: EngineSession) -> None:\n        ...\n        assert result.status == \"completed\", result.error\n>       assert result.output == Answer(reply=REPLY, tone=\"formal\")\nE       AssertionError: assert Answer(reply=...ne='friendly') == Answer(reply=...tone='formal')\n\ntests/test_answer_question.py:37: AssertionError"
     }
   ],
   "omitted": 0,
-  "duration_ms": 2298,
-  "output_tail": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________________________ test_addition _________________________________\n\n    def test_addition():\n>       assert 2 + 2 == 5\nE       assert (2 + 2) == 5\n\ntests/test_demo.py:2: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_demo.py::test_addition - assert (2 + 2) == 5\n1 failed, 36 deselected in 0.16s\n"
+  "duration_ms": 2080,
+  "output_tail": "F                                                                        [100%]\n=================================== FAILURES ===================================\n______________________ test_answer_question_runs_offline _______________________\n\n>       assert result.output == Answer(reply=REPLY, tone=\"formal\")\nE       AssertionError: assert Answer(reply=...ne='friendly') == Answer(reply=...tone='formal')\n\ntests/test_answer_question.py:37: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_answer_question.py::test_answer_question_runs_offline - Ass...\n1 failed in 0.25s\n"
 }
 ```
 
