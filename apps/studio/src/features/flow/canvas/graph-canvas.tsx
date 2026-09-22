@@ -13,6 +13,7 @@ import { absoluteBox, type CanvasGraph } from "../layout"
 import { ContainerNode } from "./container-node"
 import { FlowEdge } from "./flow-edge"
 import { Legend } from "./legend"
+import { nodePorts } from "./ports"
 import { SelectedNodeContext } from "./selection"
 import { StepNode } from "./step-node"
 import { fitViewOptions, toFlowEdges, toFlowNodes, type CanvasFlowNode } from "./to-flow"
@@ -48,7 +49,7 @@ export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend 
     <SelectedNodeContext value={selected}>
       <ReactFlow
         aria-label={t("aria")}
-        nodes={toFlowNodes(graph.nodes)}
+        nodes={toFlowNodes(graph.nodes, nodePorts(graph))}
         edges={toFlowEdges(graph.edges)}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}

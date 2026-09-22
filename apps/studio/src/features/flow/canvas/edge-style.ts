@@ -11,17 +11,21 @@ export type FlowEdgeData<K extends EdgeVariant = EdgeVariant> = {
   [P in K]: { readonly variant: P; readonly label: string | null } & EdgeFields[P]
 }[K]
 
-const STROKE_WIDTH = 1.25
+export type FlowEdgeRenderData<K extends EdgeVariant = EdgeVariant> = FlowEdgeData<K> & { readonly color: string }
 
-export const EDGE_COLOR: Readonly<Record<EdgeVariant, string>> = {
-  flow: "var(--ring)",
-  back: "var(--loop)",
+const STROKE_WIDTH = 1.5
+
+const DASH: Readonly<Record<EdgeVariant, string | undefined>> = {
+  flow: undefined,
+  back: "7 5",
 }
 
-export const EDGE_STYLE: Readonly<Record<EdgeVariant, CSSProperties>> = {
-  flow: { stroke: EDGE_COLOR.flow, strokeWidth: STROKE_WIDTH, strokeLinecap: "round" },
-  back: { stroke: EDGE_COLOR.back, strokeWidth: STROKE_WIDTH, strokeLinecap: "round", strokeDasharray: "7 5" },
-}
+export const edgeStyle = (variant: EdgeVariant, color: string): CSSProperties => ({
+  stroke: color,
+  strokeWidth: STROKE_WIDTH,
+  strokeLinecap: "round",
+  strokeDasharray: DASH[variant],
+})
 
 export const LABEL_TONE: Readonly<Record<EdgeVariant, Tone>> = {
   flow: "neutral",
