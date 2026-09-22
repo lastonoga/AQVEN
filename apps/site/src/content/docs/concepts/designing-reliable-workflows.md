@@ -49,8 +49,9 @@ The showcase reaches for `parallel` twice for the same underlying reason — get
 signal before committing to an answer — and picks a different shape each time, because the diversity
 comes from a different place.
 
-`drafts` runs three `llm` branches against three different model families — GPT, Mistral, and Gemini
-family models, not the same model called three times — and joins them with `quorum(min_ok: 2)`: two
+`drafts` runs three `llm` branches against three different model families — OpenAI-family,
+Mistral-family, and Google-family models, not the same model called three times — and joins them with
+`quorum(min_ok: 2)`: two
 family-diverse drafts are enough to work with, and one model being down or refusing doesn't have to stall
 the case. `vote` takes a different route to the same idea: one inexpensive model, run three times through
 a `map` node, but with a different prompt angle each time — one pass reads mainly the customer's own
@@ -99,10 +100,10 @@ need them.
 ## A judge panel: a real verdict, not just another draft
 
 Judging is a different kind of step from generating, and the showcase's `judge_panel` flow treats it as
-one. Three `llm` judges — DeepSeek, Qwen, and Llama family models — score the same candidates
-independently and in parallel. A `code` node aggregates their scores, and a `switch` node checks whether
-they agree closely enough; when they don't, it calls in a fourth judge — a GPT-family tie-break — to
-settle it.
+one. Three `llm` judges — DeepSeek-family, Qwen-family, and Meta-family models — score the same
+candidates independently and in parallel. A `code` node aggregates their scores, and a `switch` node
+checks whether they agree closely enough; when they don't, it calls in a fourth judge — an OpenAI-family
+tie-break — to settle it.
 
 The judgment call: a judge scoring another model's output is only as trustworthy as its independence from
 what it's judging. A judge sharing a model family with the model it's scoring tends to share that
