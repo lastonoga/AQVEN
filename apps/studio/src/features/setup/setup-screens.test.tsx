@@ -86,6 +86,19 @@ describe("Settings", () => {
     expect(screen.getByText("aqven studio")).toBeTruthy()
   })
 
+  it("shows the project's index state and every workflow with a link into its canvas", async () => {
+    await renderRoute("/settings")
+    expect(await screen.findByText("ready")).toBeTruthy()
+    expect(screen.getByText("no problems")).toBeTruthy()
+    const list = await screen.findByRole("navigation", { name: "Workflows of the project" })
+    expect(within(list).getAllByRole("heading").map((row) => row.textContent)).toEqual(liveFlows.map((flow) => flow.flow_id))
+    expect(within(list).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(
+      liveFlows.map((flow) => `/flows/${flow.flow_id}/canvas`),
+    )
+    expect(within(list).getByText("30 nodes")).toBeTruthy()
+    expect(within(list).getByText("CaseRequest → CaseOutcome")).toBeTruthy()
+  })
+
   it("lists every secret the project declares with the variable, the source and who declares it", async () => {
     await renderRoute("/settings?section=providers")
     expect(await screen.findByText("Project secrets")).toBeTruthy()

@@ -20,7 +20,6 @@
     "run": "run {run}",
     "neverRun": "never run",
     "current": "OPEN",
-    "project": "Project overview",
     "studioSettings": "Studio settings"
   }
 }

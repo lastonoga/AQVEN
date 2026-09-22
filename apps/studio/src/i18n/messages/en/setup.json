@@ -97,17 +97,6 @@
     "project": {
       "title": "Project",
       "description": "Studio serves the project it was launched in. To work on another project, run the same command in its folder.",
-      "folder": "Folder",
-      "package": "Package",
-      "engine": "Engine",
-      "projectFile": "Project file",
-      "lockFile": "Lock file",
-      "index": "Index",
-      "problems": "Problems",
-      "clean": "no problems",
-      "counts": "{errors} errors · {warnings} warnings · {infos} info",
-      "none": "—",
-      "open": "Project overview",
       "anotherProject": "Open another project"
     },
     "mcp": {

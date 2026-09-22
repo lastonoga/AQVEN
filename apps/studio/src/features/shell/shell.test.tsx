@@ -66,9 +66,8 @@ describe("Shell", () => {
     const texts = items.map((item) => item.textContent)
     expect(texts[0]).toBe("judge_panel8 nodes · never run")
     expect(texts[1]).toMatch(new RegExp(`^support_case30 nodes · run ${lastRun().ref} · .+OPEN$`))
-    expect(texts.slice(2)).toEqual(["Project overview", "Studio settings"])
+    expect(texts.slice(2)).toEqual(["Studio settings"])
     expect(items.slice(0, 2).map(hrefOf)).toEqual([`${FLOWS}/judge_panel/nodes`, `${FLOWS}/support_case/nodes`])
-    expect(hrefOf(within(menu).getByRole("menuitem", { name: "Project overview" }))).toBe("/project")
     expect(hrefOf(within(menu).getByRole("menuitem", { name: "Studio settings" }))).toBeNull()
   })
 
