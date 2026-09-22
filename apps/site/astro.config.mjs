@@ -150,9 +150,14 @@ export default defineConfig({
           label: "Integrations",
           items: [
             { slug: "integrations" },
-            { slug: "integrations/model-providers" },
-            { slug: "integrations/external-mcp-servers" },
-            { slug: "integrations/secrets-and-environment" },
+            {
+              label: "Connect",
+              items: [
+                { slug: "integrations/model-providers" },
+                { slug: "integrations/external-mcp-servers" },
+                { slug: "integrations/secrets-and-environment" },
+              ],
+            },
           ],
         },
         {
