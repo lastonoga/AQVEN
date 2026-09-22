@@ -40,70 +40,78 @@ has a single body node that runs once per list item, however many items there tu
 
 ### Example
 
-This is the showcase project's `vote` node in its `support_case` flow: three independent votes on the
-customer's intent, one per perspective, using a cheap model. Create it yourself with:
+The showcase project's own `map` node, `vote` in `support_case`, binds three of an earlier node's
+outputs into its body alongside the item it's mapping over. Here's a small, self-contained `map` node
+instead, checked clean with `aqven check`: it reads its list straight off the flow's own input, so
+there's nothing upstream to explain.
 
-```bash
-{{CLI_COMMAND}} new my_project --template showcase
-```
-
-Its file lives at `flows/support_case/nodes/vote/vote.node.yaml`. The showcase is written for a
-Russian-market storefront, so its descriptions are in Russian; the file below is translated to English
-for this page:
+`each.node.yaml`, in `flows/digest/nodes/each/`:
 
 ```yaml
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "map"
-description: "Three independent votes on intent from a cheap open model, one per perspective"
-over: "$prepare.out.perspectives"
-body: "ballot"
-concurrency: 3
+description: "Summarizes each ticket in the batch"
+over: "$input.tickets"
+body: "summarize"
+concurrency: 4
 on_item_error:
   use: "skip"
 out:
-- name: "ballots"
-  type: "IntentBallot[]"
-  description: "Votes that finished successfully"
-  maxItems: 3
-  from: "$ok"
+- name: "summaries"
+  type: "Text[]"
+  description: "Summaries, in ticket order"
+  maxItems: 20
+  maxLength: 200
+  from: "$ok[*].summary"
+- name: "failures"
+  type: "MapItemError[]"
+  description: "Tickets that failed to summarize"
+  maxItems: 20
+  from: "$failed"
 ```
 
-`prepare`, an earlier `code` node, outputs `perspectives`, a list of up to three `VotePerspective`
-values (`words`, `evidence`, `risk`). With `concurrency: 3`, all three votes fire at once. `skip` means
-one perspective's vote failing — a refusal, a timeout — doesn't take the case down; the node still
-succeeds with however many votes made it through, from zero up to three.
+`over: "$input.tickets"` is the flow's own input list, one item per ticket — no other node's output to
+track down. With `concurrency: 4`, up to four tickets summarize at once; `on_item_error: {use: "skip"}`
+means one bad ticket doesn't take the rest down. `out` uses both reference forms a `map` node's `out`
+gets: `$ok[*].summary` collects the `summary` field from every ticket that succeeded, in order, and
+`$failed` collects the ones that didn't, each as `{index, code, message}` — `MapItemError`, a built-in
+type.
 
-`ballot.node.yaml`, the body, is an ordinary `llm` node. It binds `$item` — the perspective for this
-particular run — alongside the case data every vote needs:
+`summarize.node.yaml`, the body, sits next to `each.node.yaml` in the same directory, qualified to the
+id `digest.each__summarize`. It's an ordinary `code` node — a `map` node's body can be any node kind,
+not just `llm`:
 
 ```yaml
 apiVersion: "aqven/v1"
 kind: "Node"
-node: "llm"
-description: "One vote on the case's intent, from a single perspective"
-agent: "llama"
+node: "code"
+description: "Summarizes one ticket to its first 200 characters"
+run: "summarize"
 in:
-- name: "summary"
-  from: "$triage.out.summary"
-- name: "observations"
-  from: "$triage.out.observations"
-- name: "safety_risk"
-  from: "$triage.out.safety_risk"
-- name: "perspective"
+- name: "ticket"
+  type: "Text"
+  description: "The ticket text for this item"
+  maxLength: 2000
   from: "$item"
+out:
+- name: "summary"
+  type: "Text"
+  description: "The ticket's summary"
+  maxLength: 200
 ```
 
-Each vote returns one `IntentBallot`: a rationale, the intent it picked, and a confidence score. Back
-in `vote.node.yaml`, `$ok` collects the `IntentBallot` from every vote that succeeded into `ballots` —
-that's the whole item, since `ballot` returns a single record rather than several output fields. A
-later `code` node reads `$vote.out.ballots` to tally the votes into one final intent.
+`from: "$item"` binds the current ticket — the same reference form the showcase's own `ballot.node.yaml`
+uses inside `vote`, just without another node's output bound alongside it. `summarize.py`, next to this
+file, returns `summary` truncated to 200 characters; nothing about the function itself is specific to
+running inside a `map` node.
 
 ## See also
 
 - [How to branch into parallel steps](/engine/parallel-node/) — fixed branches that all run at once,
   instead of one body node run per list item.
-- [How to call a model](/engine/llm-node/) — what `ballot`, the map's body, actually is.
+- [How to write a step in Python](/engine/code-node/) — what `summarize`, this example's body, actually
+  is.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `MapNodeSpec`, generated from the code.
