@@ -36,7 +36,7 @@ interface Row {
   alt: string;
 }
 
-const TRUST = ["Source available", "PolyForm Shield", "Python", "Runs locally", "No account needed"];
+const TRUST = ["Source available", "AQVEN License", "Python", "Runs locally", "No account needed"];
 
 const QUOTES = [
   "I don't recognize half of this.",
@@ -130,25 +130,22 @@ export const Problem = () => (
         runs thousands of times before anyone notices something drifted.
       </p>
     </div>
-    <div className="mx-auto mt-14 grid max-w-4xl gap-4 sm:grid-cols-2">
+    <div className="mx-auto mt-14 grid max-w-4xl gap-x-12 gap-y-7 sm:grid-cols-2">
       {QUOTES.map((quote) => (
-        <Card key={quote}>
-          <CardContent>
-            <blockquote>
-              <p className="text-muted-foreground italic">&ldquo;{quote}&rdquo;</p>
-            </blockquote>
-          </CardContent>
-        </Card>
+        <blockquote key={quote} className="border-l-2 border-border pl-5">
+          <p className="text-muted-foreground italic lg:text-lg">&ldquo;{quote}&rdquo;</p>
+        </blockquote>
       ))}
     </div>
-    <div className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="mx-auto mt-14 flex max-w-3xl flex-wrap items-center justify-center gap-x-10 gap-y-4">
       {STAKES.map((item) => (
-        <Card key={item.label}>
-          <CardContent className="flex flex-col items-center gap-3 text-center">
-            <span className="text-muted-foreground">{item.icon}</span>
-            <span className="text-sm font-medium">{item.label}</span>
-          </CardContent>
-        </Card>
+        <span
+          key={item.label}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+        >
+          {item.icon}
+          {item.label}
+        </span>
       ))}
     </div>
   </Section>
@@ -300,6 +297,7 @@ export const INSIDE_FEATURES = [
     title: "Workflows",
     description: "Steps, order, and what connects to what.",
     href: "/concepts/files-as-source-of-truth/",
+    wide: true,
   },
   {
     icon: <Blocks className="size-5" />,
@@ -336,6 +334,7 @@ export const INSIDE_FEATURES = [
     title: "Runs",
     description: "Every execution, recorded and inspectable.",
     href: "/studio/investigate-a-run/",
+    wide: true,
   },
   {
     icon: <Database className="size-5" />,
@@ -366,6 +365,7 @@ export const INSIDE_FEATURES = [
     title: "For coding agents",
     description: "Project context an agent can read.",
     href: "/mcp-cli/connect-an-agent/",
+    wide: true,
   },
 ];
 
@@ -381,13 +381,28 @@ export const WhatsInside = () => (
       {INSIDE_FEATURES.map((item) => (
         <Card
           key={item.title}
-          className="relative transition-shadow hover:ring-foreground/20 hover:shadow-sm"
+          className={cn(
+            "relative transition-[transform,box-shadow,--tw-ring-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            "hover:-translate-y-0.5 hover:ring-foreground/20 hover:shadow-md active:translate-y-0",
+            item.wide && "bg-linear-to-br from-muted via-card to-card lg:col-span-2",
+          )}
         >
-          <CardContent className="flex flex-col items-start gap-3">
-            <span className="flex size-10 items-center justify-center rounded-full bg-accent text-muted-foreground">
+          {item.wide && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(to_bottom_right,black,transparent_65%)]"
+            />
+          )}
+          <CardContent className="relative flex flex-col items-start gap-3">
+            <span
+              className={cn(
+                "flex size-10 items-center justify-center rounded-full text-muted-foreground",
+                item.wide ? "bg-background text-foreground ring-1 ring-foreground/10" : "bg-accent",
+              )}
+            >
               {item.icon}
             </span>
-            <span className="font-medium tracking-tight">
+            <span className={cn("font-medium tracking-tight", item.wide && "text-base")}>
               <a href={item.href} className="after:absolute after:inset-0">
                 {item.title}
               </a>
