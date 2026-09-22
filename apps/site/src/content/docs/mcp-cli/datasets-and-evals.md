@@ -60,51 +60,35 @@ Create the showcase project and connect an agent to it as in
 cd my_project/my_project
 ```
 
-Start a batch over two cases of `support_case`'s dataset. This project has no `OPENROUTER_API_KEY` set,
-so both cases fail predictably, which keeps this example short. Real response:
+Start `reply_quality`, the showcase project's eval for `support_case`, with no baseline. Real response
+over MCP — the full record, immediately, before any case has run:
 
 ```json
 {
-  "batch_id": "01a0c615-7518-7741-aa0c-64f863a75592",
-  "flow_id": "support_case",
-  "dataset_id": "support_case_cases",
-  "case_names": ["strip_flicker_credit", "bulb_app_offline_advice"],
-  "mode": "live",
-  "status": "running",
-  "cases_total": 2,
-  "cases_completed": 0,
-  "cases_failed": 0,
-  "cost_usd": "0"
-}
-```
-
-A moment later, `dataset_batch_get` with that `batch_id` shows both cases failed to start, as expected
-without a model key:
-
-```json
-{
-  "batch_id": "01a0c615-7518-7741-aa0c-64f863a75592",
-  "status": "failed",
-  "cases_total": 2,
-  "cases_completed": 0,
-  "cases_failed": 2,
-  "cost_usd": "0"
-}
-```
-
-Now start `reply_quality`, the showcase project's eval for the same flow, with no baseline. Real
-response over MCP — the full record, `scorers` and `gate` both still empty because nothing has run yet:
-
-```json
-{
-  "eval_run_id": "01a0c615-bbdd-70a5-ae6b-f7c31bee96c2",
+  "eval_run_id": "01a0c6a9-e7da-75a5-9652-f9be5d8dc06c",
   "eval_id": "reply_quality",
   "dataset_id": "reply_cases",
+  "inference": "revise",
+  "agent": "gpt",
   "status": "running",
+  "spec_hash": "",
+  "started_at": "2026-09-22T01:10:18.842100Z",
+  "finished_at": null,
+  "repeats": 3,
+  "seeds": [],
   "cases_total": 0,
+  "cases_ok": 0,
+  "cases_failed": 0,
+  "dropped_cases": [],
+  "cost_usd": "0",
+  "tokens_in": 0,
+  "tokens_out": 0,
   "scorers": [],
   "baseline_run_id": null,
-  "gate": null
+  "deltas": [],
+  "gate": null,
+  "notes": [],
+  "error": null
 }
 ```
 
@@ -113,37 +97,34 @@ this is the real divergence, not just different encoding of the same fields:
 
 ```json
 {
-  "eval_run_id": "01a0c616-7d3a-72ae-b75d-8375df0de76f",
+  "eval_run_id": "01a0c6a9-e92b-764b-9c05-c10ec5d5b0ac",
   "eval_id": "reply_quality",
   "status": "running",
-  "poll": "/api/eval-runs/01a0c616-7d3a-72ae-b75d-8375df0de76f"
+  "poll": "/api/eval-runs/01a0c6a9-e92b-764b-9c05-c10ec5d5b0ac"
 }
 ```
 
-The run finishes seconds later — every case fails for the same missing-key reason as the batch above.
-Call `eval_gate` on it now, with no baseline ever given: a real tool error, not a plain result.
+The run finishes seconds later — every case fails without a model key. Call `eval_gate` on the MCP run
+now, with no baseline ever given: a real tool error, not a plain result.
 
 ```json
 {
   "ok": false,
   "op": "eval_gate",
   "code": "NOT_FOUND",
-  "message": "eval run 01a0c615-bbdd-70a5-ae6b-f7c31bee96c2 has no gate report: it ran without a baseline"
+  "message": "eval run 01a0c6a9-e7da-75a5-9652-f9be5d8dc06c has no gate report: it ran without a baseline"
 }
 ```
 
-Start `reply_quality` again, this time with `baseline_run_id` set to that first run. The showcase
-dataset only has 3 cases, well under the eval's own `min_dataset: 200`, so the gate's own statistics
-refuse to give a verdict — but this time `eval_gate` succeeds, a plain 200 with a real reason:
+Start `reply_quality` again with `baseline_run_id` set to that first run, and call `eval_gate` once it
+finishes. The showcase dataset has far fewer cases than the eval's own `min_dataset: 200`, so the gate's
+own statistics refuse to give a verdict — but this time `eval_gate` succeeds, a plain 200 with a real
+reason:
 
 ```json
 {
   "decision": "GATE_UNAVAILABLE",
-  "reason_code": "dataset_too_small",
-  "seeds": [0, 1, 2],
-  "repeats": 3,
-  "per_test": [],
-  "dropped_cases": []
+  "reason_code": "dataset_too_small"
 }
 ```
 
