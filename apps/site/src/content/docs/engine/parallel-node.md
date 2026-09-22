@@ -84,37 +84,19 @@ case — the node only fails once fewer than two branches can still possibly suc
 then pulls the `reply` field out of every draft that made it through, as a list of two or three
 `ReplyDraft`s.
 
-Each key in `body` names a sibling `llm` node in the same directory. `gpt.node.yaml` calls the same
-inference the other two branches do, with `agent: "gpt"` the only thing that sets it apart:
+Each key in `body` names a sibling `llm` node in the same directory: `gpt.node.yaml`,
+`mistral.node.yaml`, and `gemini.node.yaml` are three `llm` nodes that are identical except for their
+`agent` field and description — same inference, same input bindings, a different model family
+answering:
 
 ```yaml
-apiVersion: "aqven/v1"
-kind: "Node"
 node: "llm"
-description: "Draft a reply to the customer with knowledge-base citations, using an OpenAI-family model"
-inference: "revise"
 agent: "gpt"
-in:
-  - name: "summary"
-    from: "$triage.out.summary"
-  - name: "customer"
-    from: "$input.customer"
-  - name: "locale"
-    from: "$input.customer.locale"
-  - name: "channel"
-    from: "$prepare.out.channel"
-  - name: "product"
-    from: "$input.product"
-  - name: "resolution"
-    from: "$route.out.resolution"
-  - name: "chunks"
-    from: "$search_kb.out.chunks"
 ```
 
-`mistral.node.yaml` and `gemini.node.yaml` are the same file with `agent` set to `"mistral"` and
-`"gemini"` instead — same inference, same bindings, a different model family answering. The
-`revise` inference behind all three returns one field, `reply: ReplyDraft`, which is exactly what
-`$ok[*].reply` in `drafts.node.yaml` projects into `candidates`.
+The other two branches set `agent` to `"mistral"` and `"gemini"` instead. The `revise` inference
+behind all three returns one field, `reply: ReplyDraft`, which is exactly what `$ok[*].reply` in
+`drafts.node.yaml` projects into `candidates`.
 
 ## See also
 
