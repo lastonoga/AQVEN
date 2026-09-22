@@ -13,7 +13,6 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,15 +29,12 @@ import {
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
-interface Shot {
+interface StudioView {
+  icon: React.ReactNode;
+  title: string;
+  summary: string;
   src: string;
   alt: string;
-}
-
-interface Topic {
-  heading: string;
-  body: string;
-  shots: Shot[];
 }
 
 const TRUST = ["Source available", "AQVEN License", "Python", "Runs locally", "No account needed"];
@@ -57,50 +53,41 @@ const STAKES = [
   { icon: <Database className="size-5" />, label: "Records" },
 ];
 
-const TOPICS: Topic[] = [
+const STUDIO_VIEWS: StudioView[] = [
   {
-    heading: "See every step on one screen.",
-    body: "What runs, what feeds what, where a person has to approve. Read from your files, not from a diagram somebody drew six months ago.",
-    shots: [
-      {
-        src: "/images/studio/project-flows.png",
-        alt: "AQVEN Studio showing a project and its workflows",
-      },
-    ],
+    icon: <Workflow className="size-5" />,
+    title: "See the whole project",
+    summary: "Every workflow in the project, read from your files.",
+    src: "/images/studio/project-flows.png",
+    alt: "AQVEN Studio showing a project and its workflows",
   },
   {
-    heading: "Find where a bad result came from.",
-    body: "Open the exact case and walk back to the first step that didn't do what it should.",
-    shots: [
-      {
-        src: "/images/studio/runs.png",
-        alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
-      },
-    ],
+    icon: <Zap className="size-5" />,
+    title: "Find a bad result",
+    summary: "A recorded run, with its cost, duration and finished steps.",
+    src: "/images/studio/runs.png",
+    alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
   },
   {
-    heading: "Look inside any step.",
-    body: "What went in, what came out, which model answered, what it cost. Raw values, not a summary.",
-    shots: [
-      {
-        src: "/images/studio/node-inspector.png",
-        alt: "AQVEN Studio node inspector showing the input and output of one step",
-      },
-    ],
+    icon: <Layers className="size-5" />,
+    title: "Look inside a step",
+    summary: "The exact input and output of a single node.",
+    src: "/images/studio/node-inspector.png",
+    alt: "AQVEN Studio node inspector showing the input and output of one step",
   },
   {
-    heading: "See if quality is going up or down.",
-    body: "Not one failure at a time. The direction, across every case you care about, after every change.",
-    shots: [
-      {
-        src: "/images/studio/evaluations.png",
-        alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
-      },
-      {
-        src: "/images/studio/dataset-controls.png",
-        alt: "AQVEN Studio Datasets tab with a CSV upload, a selected dataset and its list of cases",
-      },
-    ],
+    icon: <ChartLine className="size-5" />,
+    title: "Score a change",
+    summary: "Scorers, a dataset and a policy behind one evaluation.",
+    src: "/images/studio/evaluations.png",
+    alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
+  },
+  {
+    icon: <Database className="size-5" />,
+    title: "Keep the cases",
+    summary: "The reusable cases every evaluation runs against.",
+    src: "/images/studio/dataset-controls.png",
+    alt: "AQVEN Studio Datasets tab with a CSV upload, a selected dataset and its list of cases",
   },
 ];
 
@@ -176,48 +163,6 @@ export const Problem = () => (
   </Section>
 );
 
-const TopicPanel = ({ topic }: { topic: Topic }) => {
-  const [active, setActive] = useState(0);
-  const shot = topic.shots[active];
-
-  return (
-    <div>
-      <p className="max-w-2xl text-muted-foreground lg:text-lg">{topic.body}</p>
-      {/* Fixed-ratio frame: screenshots vary from 1.5 to 4.35 in aspect, so the image is
-          matted inside a constant box. Switching tabs never shifts the layout. */}
-      <div className="mt-6 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-foreground/10">
-        <img
-          src={shot.src}
-          alt={shot.alt}
-          loading="lazy"
-          className="max-h-full max-w-full object-contain"
-        />
-      </div>
-      {topic.shots.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {topic.shots.map((item, index) => (
-            <button
-              key={item.src}
-              type="button"
-              onClick={() => setActive(index)}
-              aria-pressed={index === active}
-              aria-label={item.alt}
-              className={cn(
-                "flex h-14 w-24 items-center justify-center overflow-hidden rounded-md bg-muted ring-1 transition duration-200",
-                index === active
-                  ? "ring-foreground/40"
-                  : "opacity-60 ring-foreground/10 hover:opacity-100",
-              )}
-            >
-              <img src={item.src} alt="" className="max-h-full max-w-full object-contain" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const StudioEvidence = () => (
   <Section>
     <div className="mx-auto max-w-3xl text-center">
@@ -226,28 +171,40 @@ export const StudioEvidence = () => (
       </h2>
     </div>
     <Tabs
-      defaultValue={TOPICS[0].heading}
+      defaultValue={STUDIO_VIEWS[0].title}
       orientation="vertical"
-      className="mt-14 grid grid-cols-1 gap-4 rounded-xl border border-border p-4 lg:mt-20 lg:grid-cols-4"
+      className="mt-14 grid grid-cols-1 items-start gap-4 lg:mt-20 lg:grid-cols-5 lg:gap-6"
     >
-      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-lg bg-muted p-1.5">
-        {TOPICS.map((topic) => (
+      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-xl bg-muted p-1.5 lg:col-span-2">
+        {STUDIO_VIEWS.map((view) => (
           <TabsTrigger
-            key={topic.heading}
-            value={topic.heading}
-            className="w-full justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
+            key={view.title}
+            value={view.title}
+            className="h-auto w-full items-start justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
           >
-            <span className="font-semibold">{topic.heading}</span>
+            <span className="flex items-start gap-3">
+              <span className="mt-0.5 shrink-0 text-muted-foreground">{view.icon}</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="font-semibold">{view.title}</span>
+                <span className="text-sm font-normal text-muted-foreground">{view.summary}</span>
+              </span>
+            </span>
           </TabsTrigger>
         ))}
       </TabsList>
-      {TOPICS.map((topic) => (
-        <TabsContent
-          key={topic.heading}
-          value={topic.heading}
-          className="col-span-1 m-0 lg:col-span-3"
-        >
-          <TopicPanel topic={topic} />
+      {STUDIO_VIEWS.map((view) => (
+        <TabsContent key={view.title} value={view.title} className="m-0 lg:col-span-3">
+          {/* Fixed-ratio frame: the source screenshots range from 1.50 to 4.35 in aspect, so
+              each one is matted inside a constant box and switching views never shifts
+              the layout. Capture future shots at 16:9 and the matting disappears. */}
+          <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/10">
+            <img
+              src={view.src}
+              alt={view.alt}
+              loading="lazy"
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
         </TabsContent>
       ))}
     </Tabs>
