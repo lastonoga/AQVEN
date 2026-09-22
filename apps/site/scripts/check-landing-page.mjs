@@ -57,6 +57,10 @@ for (const marker of forbiddenMarkers) {
   assert.ok(!page.includes(marker), `The landing page must not show commands: ${marker}`);
 }
 
+// Zero em-dashes anywhere visible on the page - a deliberate design-taste rule (headlines, body
+// copy, captions, quotes), not a typo guard. Regular hyphens or a colon/comma restructure instead.
+assert.ok(!page.includes("—"), "The landing page must not contain an em-dash (—).");
+
 // AQVEN is source-available (PolyForm Shield 1.0.0), not open source, and never was — see
 // docs/adr/0039-polyform-shield-license.md. Calling it "open source" or "MIT" is a license claim, not a
 // typo; the ADR is explicit that this word choice must not reach marketing.
@@ -75,7 +79,7 @@ assert.ok(
 );
 
 const counts = [
-  { label: "documentation tiles", needle: 'class="flex flex-col items-start', expected: 12 },
+  { label: "documentation tiles", needle: "after:absolute after:inset-0", expected: 12 },
   { label: "problem quotes", needle: "<blockquote", expected: 4 },
 ];
 

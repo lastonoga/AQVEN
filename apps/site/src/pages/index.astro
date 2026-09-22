@@ -14,6 +14,7 @@ import {
   WhatsInside,
   TrustStrip,
 } from "@/components/landing/sections";
+import { Providers } from "@/components/landing/provider-logos";
 
 const repo = "https://github.com/lastonoga/AQVEN";
 const docs = "/start/";
@@ -38,7 +39,7 @@ const menu = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AQVEN — The source-available workbench for AI workflows</title>
+    <title>AQVEN: The source-available workbench for AI workflows</title>
     <meta
       name="description"
       content="Built for humans and coding agents. Build your AI workflow, check it before it runs, and see exactly what it did."
@@ -69,7 +70,7 @@ const menu = [
       <Hero1
         badge={{ text: "Source available · Runs on your machine" }}
         heading="Build AI workflows you can trust to run the business."
-        description="AQVEN helps engineers build, inspect, test, and improve AI agents, automations, and business processes — before unreliable behavior reaches customers."
+        description="AQVEN helps engineers build, inspect, test, and improve AI agents, automations, and business processes, before unreliable behavior reaches customers."
         command="uv tool install aqven"
         buttons={{
           primary: { text: "Get started", url: quickstart },
@@ -95,6 +96,7 @@ const menu = [
 
       <Comparison />
       <Stack />
+      <Providers />
 
       <Cta10
         heading="Start with a workflow you already have."

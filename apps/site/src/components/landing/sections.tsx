@@ -16,7 +16,16 @@ import {
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
@@ -96,11 +105,11 @@ const Section = ({ className, children }: { className?: string; children: React.
 
 export const TrustStrip = () => (
   <div className="border-y border-border bg-background-subtle">
-    <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-6 py-4">
+    <div className="container mx-auto flex flex-wrap items-center justify-center gap-2 px-6 py-4">
       {TRUST.map((item) => (
-        <span key={item} className="text-sm text-muted-foreground">
+        <Badge key={item} variant="secondary">
           {item}
-        </span>
+        </Badge>
       ))}
     </div>
   </div>
@@ -117,29 +126,29 @@ export const Problem = () => (
         are somewhere else. Then your coding agent edits ten things at once, twice a week.
       </p>
       <p className="mt-4 text-muted-foreground lg:text-lg">
-        A month in, nobody on the team can say what actually happens — and it&rsquo;s not a demo. It
+        A month in, nobody on the team can say what actually happens, and it&rsquo;s not a demo. It
         runs thousands of times before anyone notices something drifted.
       </p>
     </div>
     <div className="mx-auto mt-14 grid max-w-4xl gap-4 sm:grid-cols-2">
       {QUOTES.map((quote) => (
-        <blockquote
-          key={quote}
-          className="rounded-lg border border-border bg-card p-5 text-card-foreground"
-        >
-          <p className="text-muted-foreground italic">&ldquo;{quote}&rdquo;</p>
-        </blockquote>
+        <Card key={quote}>
+          <CardContent>
+            <blockquote>
+              <p className="text-muted-foreground italic">&ldquo;{quote}&rdquo;</p>
+            </blockquote>
+          </CardContent>
+        </Card>
       ))}
     </div>
     <div className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
       {STAKES.map((item) => (
-        <div
-          key={item.label}
-          className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6"
-        >
-          <span className="text-muted-foreground">{item.icon}</span>
-          <span className="text-sm font-medium">{item.label}</span>
-        </div>
+        <Card key={item.label}>
+          <CardContent className="flex flex-col items-center gap-3 text-center">
+            <span className="text-muted-foreground">{item.icon}</span>
+            <span className="text-sm font-medium">{item.label}</span>
+          </CardContent>
+        </Card>
       ))}
     </div>
   </Section>
@@ -182,10 +191,14 @@ export const StudioEvidence = () => (
     </Tabs>
     <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
       {GUARDS.map((guard) => (
-        <div key={guard.heading} className="rounded-lg border border-border bg-card p-8">
-          <h3 className="text-xl font-semibold tracking-tight">{guard.heading}</h3>
-          <p className="mt-3 text-muted-foreground">{guard.body}</p>
-        </div>
+        <Card key={guard.heading}>
+          <CardHeader>
+            <CardTitle className="text-xl">{guard.heading}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">{guard.body}</p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   </Section>
@@ -198,27 +211,27 @@ export const Comparison = () => (
         Not a tracing tool. Not a drag-and-drop builder.
       </h2>
     </div>
-    <div className="mx-auto mt-12 max-w-4xl overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="p-4 font-medium text-muted-foreground"> </th>
-            <th className="p-4 font-medium text-muted-foreground">Tracing tools</th>
-            <th className="p-4 font-medium text-muted-foreground">Visual builders</th>
-            <th className="p-4 font-semibold text-foreground">AQVEN</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="mx-auto mt-12 max-w-4xl">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead> </TableHead>
+            <TableHead>Tracing tools</TableHead>
+            <TableHead>Visual builders</TableHead>
+            <TableHead className="font-semibold text-foreground">AQVEN</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {COMPARE.map((item) => (
-            <tr key={item.row} className="border-b border-border">
-              <td className="p-4 font-medium">{item.row}</td>
-              <td className="p-4 text-muted-foreground">{item.tracing}</td>
-              <td className="p-4 text-muted-foreground">{item.builders}</td>
-              <td className="p-4 font-medium">{item.aqven}</td>
-            </tr>
+            <TableRow key={item.row}>
+              <TableCell className="whitespace-normal font-medium">{item.row}</TableCell>
+              <TableCell className="whitespace-normal text-muted-foreground">{item.tracing}</TableCell>
+              <TableCell className="whitespace-normal text-muted-foreground">{item.builders}</TableCell>
+              <TableCell className="whitespace-normal font-medium">{item.aqven}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   </Section>
 );
@@ -226,30 +239,34 @@ export const Comparison = () => (
 export const Stack = () => (
   <Section>
     <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-2">
-      <div className="rounded-lg border border-border bg-card p-8">
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Keep your models. Keep your code.
-        </h2>
-        <p className="mt-4 text-muted-foreground">
-          AQVEN runs next to your application — your providers, your tools, your stack. Python, on
-          your machine, pointed at the project folder you already have.
-        </p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8">
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Source available.
-        </h2>
-        <p className="mt-4 text-muted-foreground">
-          Read the code. Run it yourself. Change it to fit how your team works. Your workflows are
-          files in your repo — they&rsquo;re yours, and they stay yours whatever happens to us.
-        </p>
-        <a
-          href={REPO}
-          className="mt-6 inline-flex text-sm font-medium underline underline-offset-4"
-        >
-          View on GitHub
-        </a>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl md:text-3xl">Keep your models. Keep your code.</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            AQVEN runs next to your application: your providers, your tools, your stack. Python, on
+            your machine, pointed at the project folder you already have.
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl md:text-3xl">Source available.</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Read the code. Run it yourself. Change it to fit how your team works. Your workflows are
+            files in your repo: they&rsquo;re yours, and they stay yours whatever happens to us.
+          </p>
+          <a
+            href={REPO}
+            className="mt-6 inline-flex text-sm font-medium underline underline-offset-4"
+          >
+            View on GitHub
+          </a>
+        </CardContent>
+      </Card>
     </div>
   </Section>
 );
@@ -263,7 +280,7 @@ export const AGENT_FEATURES = [
   {
     icon: <Lock className="size-5" />,
     title: "It can't wire two steps together wrong.",
-    description: "Types don't match, the check fails — before production does.",
+    description: "Types don't match, the check fails before production does.",
   },
   {
     icon: <Shield className="size-5" />,
@@ -362,17 +379,22 @@ export const WhatsInside = () => (
     </div>
     <div className="mx-auto mt-14 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {INSIDE_FEATURES.map((item) => (
-        <a
+        <Card
           key={item.title}
-          href={item.href}
-          className="flex flex-col items-start gap-3 rounded-lg border border-border bg-card p-6 transition-colors hover:border-ring hover:bg-accent"
+          className="relative transition-shadow hover:ring-foreground/20 hover:shadow-sm"
         >
-          <span className="flex size-10 items-center justify-center rounded-full bg-accent text-muted-foreground">
-            {item.icon}
-          </span>
-          <span className="font-medium tracking-tight">{item.title}</span>
-          <span className="text-sm text-muted-foreground">{item.description}</span>
-        </a>
+          <CardContent className="flex flex-col items-start gap-3">
+            <span className="flex size-10 items-center justify-center rounded-full bg-accent text-muted-foreground">
+              {item.icon}
+            </span>
+            <span className="font-medium tracking-tight">
+              <a href={item.href} className="after:absolute after:inset-0">
+                {item.title}
+              </a>
+            </span>
+            <span className="text-sm text-muted-foreground">{item.description}</span>
+          </CardContent>
+        </Card>
       ))}
     </div>
     <div className="mt-14 flex justify-center">
