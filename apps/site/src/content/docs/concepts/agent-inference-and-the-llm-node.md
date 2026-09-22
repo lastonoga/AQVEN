@@ -54,14 +54,24 @@ output contract, same prompt — can be put to several different models, each th
 is how you get independent answers to one well-defined question, one per model family, without writing
 the question more than once.
 
-### A real example: one prompt, three models
+### A real example: one prompt, two models
 
-The showcase project's `support_case` flow asks the same question three times, once per model family,
-to get three independent draft replies. The question itself is one Inference file,
-`nodes/polish/revise.inference.yaml`, with typed `in` fields (summary, customer, resolution, the
-retrieved knowledge-base chunks, and so on) and one `out` field, a reply with citations.
+The showcase project's `support_case` flow asks the same question more than once, once per model
+family, to get independent draft replies. The question itself is one Inference file,
+`nodes/polish/revise.inference.yaml`. Here's a slice of its typed contract:
 
-Three node files put that same question to three different models. Each lives in its own file, in
+```yaml
+in:
+- name: "summary"
+  type: "Text"
+- name: "chunks"
+  type: "KbChunk[]"
+out:
+- name: "reply"
+  type: "ReplyDraft"
+```
+
+Two node files put that same question to two different models. Each lives in its own file, in
 `nodes/drafts/`, and each names the same inference by id but a different agent. `gemini.node.yaml`:
 
 ```yaml
@@ -78,21 +88,11 @@ inference: "revise"
 agent: "gpt"
 ```
 
-And `mistral.node.yaml`:
-
-```yaml
-node: "llm"
-inference: "revise"
-agent: "mistral"
-```
-
-All three `in` blocks bind the exact same upstream fields — same summary, same customer, same
-resolution, same knowledge-base chunks — because it's the same question. Only `agent:` changes. Each
+Both bind the same upstream fields, because it's the same question — only `agent:` changes. Each
 `agent` id points at its own file: `agents/gemini.yaml` sets `model:
-"openrouter:google/gemini-2.5-flash-lite"` with `temperature: 0.2`, `agents/gpt.yaml` sets `model:
-"openrouter:openai/gpt-oss-20b"` with `temperature: 0.3` and 4 retries, and a third Agent file does the
-same for a Mistral model. Three model calls, one prompt, one contract, three independent drafts — a
-downstream node picks the best one.
+"openrouter:google/gemini-2.5-flash-lite"` with `temperature: 0.2`, and `agents/gpt.yaml` sets `model:
+"openrouter:openai/gpt-oss-20b"` with `temperature: 0.3` and 4 retries. Two model calls, one prompt,
+one contract, two independent drafts — a downstream node picks the best one.
 
 The reverse direction is just as ordinary and easier to miss because it doesn't stand out in a file
 tree: any two nodes anywhere in the project that both write `agent: "gemini"` are already reusing that
@@ -108,7 +108,7 @@ change the Inference file, and every node built on top of it (if more than one i
 
 When you want the same question answered by more than one model, don't copy the Inference: add another
 node file that names the same `inference` id and a different `agent` id, the way the showcase project's
-three draft nodes do. And when you're deciding where a new `llm` node's three files fit among AQVEN's
+draft nodes do. And when you're deciding where a new `llm` node's three files fit among AQVEN's
 other node kinds, [ten kinds of nodes](/concepts/ten-kinds-of-nodes/) is the map — `llm` is one of ten,
 each with its own job.
 
