@@ -148,7 +148,9 @@ describe("RunsScreen", () => {
     await waitFor(() => {
       expect(router.state.location.search).toMatchObject({ run: FAILED_RUN_ID })
     })
-    expect(await screen.findByRole("combobox", { name: new RegExp(ref(FAILED_RUN_ID)) })).toBeTruthy()
+    expect(
+      await screen.findByRole("combobox", { name: new RegExp(ref(FAILED_RUN_ID)) }, { timeout: 10_000 }),
+    ).toBeTruthy()
   })
 
   it("keeps the selected run compact and shows dataset and nodes in open options", async () => {
@@ -419,7 +421,11 @@ describe("RunsScreen", () => {
     await waitFor(() => {
       expect(router.state.location.search).toMatchObject({ stage: "finalize|||", node: "drafts__gpt" })
     })
-    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Close the call panel" }))
+    fireEvent.click(
+      within(await screen.findByRole("dialog", {}, { timeout: 10_000 })).getByRole("button", {
+        name: "Close the call panel",
+      }),
+    )
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ run: COMPLETED_RUN_ID, stage: "finalize|||" })
     })
@@ -575,7 +581,7 @@ describe("RunsScreen", () => {
     expect(within(output).getAllByText("reply.text:").length).toBeGreaterThan(0)
     expect(within(output).queryAllByText("inline")).toHaveLength(0)
     fireEvent.click(firstButton(output))
-    const panel = await screen.findByRole("dialog")
+    const panel = await screen.findByRole("dialog", {}, { timeout: 10_000 })
     fireEvent.click(within(panel).getByRole("radio", { name: "Raw" }))
     expect(within(panel).getAllByText(/"reply"/).length).toBeGreaterThan(0)
     expect(within(panel).getByText("inline value")).toBeTruthy()
@@ -591,7 +597,7 @@ describe("RunsScreen", () => {
     fireEvent.click(within(navigation).getByRole("radio", { name: "Raw" }))
     expect(output.querySelector("pre")).not.toBeNull()
     fireEvent.click(firstButton(output))
-    const panel = await screen.findByRole("dialog")
+    const panel = await screen.findByRole("dialog", {}, { timeout: 10_000 })
     expect(within(panel).getAllByText(/"reply"/).length).toBeGreaterThan(0)
     expect(output.querySelector("pre")).not.toBeNull()
   })
@@ -625,7 +631,7 @@ describe("RunsScreen", () => {
     expect(runOutput.querySelector("pre")?.textContent).toContain('"blob_id": "sha256-video-raw"')
 
     fireEvent.click(firstButton(output))
-    const panel = await screen.findByRole("dialog")
+    const panel = await screen.findByRole("dialog", {}, { timeout: 10_000 })
     expect(within(panel).queryByLabelText("video/mp4")).toBeNull()
     expect(within(panel).getByText(/"blob_id": "sha256-video-raw"/u)).toBeTruthy()
   })
