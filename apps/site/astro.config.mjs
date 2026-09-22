@@ -86,6 +86,10 @@ export default defineConfig({
               ],
             },
             {
+              label: "Datasets & evals",
+              items: [{ slug: "engine/custom-evaluator" }],
+            },
+            {
               label: "CLI tooling",
               items: [
                 { slug: "engine/check" },

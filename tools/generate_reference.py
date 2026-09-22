@@ -365,6 +365,9 @@ def builtins_page() -> tuple[str, dict[str, str]]:
         "",
         "Use these names with `use:` in a policy or evaluator slot. The accepted `with:` keys follow each Python signature; run `{{CLI_COMMAND}} check` to validate the slot and parameters.",
         "",
+        "None of these fit your check? [How to write a custom evaluator](/engine/custom-evaluator/) covers "
+        "writing your own with `run:` instead of `use:` — same signature shape as every `evaluator` row below.",
+        "",
     ]
     for slot, members in BUILTINS.items():
         lines.extend(

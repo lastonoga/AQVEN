@@ -76,5 +76,7 @@ scorer didn't.
   eyeballed.
 - [How to work with datasets in Studio](/studio/datasets/) — where the dataset an eval scores comes
   from, and how a batch run relates to an eval run.
+- [How to write a custom evaluator](/engine/custom-evaluator/) — the scorer list this page reads is
+  authored here, built-in names and your own `run:`-based functions alike.
 - [How to investigate a run](/studio/investigate-a-run/) — the same run detail a case's flow-run link
   takes you to.

@@ -21,9 +21,11 @@ for it to finish. A `code` node's function is always synchronous plain Python; t
   one. A tool has no separate node-level contract; the node just binds values into the fields the tool
   already declares.
 - Write the function. Its first parameter is `ToolContext`, imported from `aqven.runtime` — an HTTP
-  client, your declared secrets, and, for a write or external tool, an idempotency key AQVEN derives
-  for you — followed by one parameter per `in` field, same names, same order. Return a record built
-  from the `out` fields.
+  client, your declared secrets, a blob store (`ctx.blobs`, for reading or writing the actual bytes
+  behind an `Image`, `Audio`, `Video` or `Document` field — a `code` node's function never gets this,
+  which is why media handling always lives here, not there), and, for a write or external tool, an
+  idempotency key AQVEN derives for you — followed by one parameter per `in` field, same names, same
+  order. Return a record built from the `out` fields.
 - If the call needs a credential, declare it under `secrets` — a name plus a reference to an
   environment variable — and read it back inside the function through the tool context instead of the
   process environment directly.
@@ -138,6 +140,31 @@ async def search_kb(
 
 The showcase's other two `tool` nodes, `clip` and `voice`, call tools that return media instead of
 text, and `clip`'s tool also declares `wait`, because rendering a video takes longer than one request.
+`voice`'s tool, `synthesize_voice`, is the shorter of the two and shows `ctx.blobs` doing real work —
+storing bytes a provider returned as an `Audio` value the tool can actually return:
+
+```python
+async def synthesize_voice(
+    ctx: ToolContext,
+    text: Annotated[str, StringConstraints(max_length=1500)],
+    locale: Locale,
+) -> SynthesizeVoiceOut:
+    response = await ctx.http.post(
+        SPEECH_URL,
+        headers=_bearer(ctx.secret("openai_api_key")),
+        json={"model": SPEECH_MODEL, "input": text, "voice": SPEECH_VOICE, "response_format": "wav"},
+    )
+    response.raise_for_status()
+    stored = await ctx.blobs.put(response.content, "audio/wav", "voice.wav")
+    return SynthesizeVoiceOut(voice=_typed(Audio, stored))
+```
+
+`ctx.blobs.put(data, media_type, name)` writes real bytes and hands back a plain `MediaValue` — the
+same shape every `Image`/`Audio`/`Video`/`Document` field carries, but not yet typed as the specific one
+the `out` contract declares. `_typed(Audio, stored)` re-validates it into that exact type; the showcase
+defines this small helper once and reuses it everywhere a tool returns media. The mirror operation,
+`ctx.blobs.get(media)`, reads an existing field's real bytes back out — that's the one a resize, trim or
+tile step calls first, before doing anything to the content itself.
 
 ## Under the hood
 
