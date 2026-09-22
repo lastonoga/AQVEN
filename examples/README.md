@@ -1,8 +1,8 @@
-# Showcase: поддержка Lumen
+# Showcase: Lumen support
 
-Воркфлоу `support_case` и вызываемый им воркфлоу `judge_panel` показывают все паттерны и режимы исполнения aqven. Проект —
-в [DESIGN.md](DESIGN.md), модуль — `lumen/`, хост — `lumen/app.py` и `lumen/__main__.py`, тесты — `tests/`.
-Раскладка — как у проекта, созданного `aqven new`.
+The `support_case` workflow and the `judge_panel` workflow it calls show every aqven pattern and execution mode. The
+design is in [DESIGN.md](DESIGN.md), the module is `lumen/`, the host is `lumen/app.py` and `lumen/__main__.py`, the
+tests are in `tests/`. The layout is the one a project created by `aqven new` gets.
 
 ```
 prepare → triage → vote(map) → tally → intent(switch: cascade) → case_form → record(loop: extract-validate-repair)
@@ -10,11 +10,11 @@ prepare → triage → vote(map) → tally → intent(switch: cascade) → case_
 → polish(loop: critic-revise) → illustrate → voice → clip(wait) → approvals(parallel humans) → finalize
 ```
 
-## Критик и правка: `polish`
+## Critique and revision: `polish`
 
-Победитель панели судей правится, пока критик другого семейства не поставит 0.85 или оценка не перестанет расти.
-Итерация — это выходы узлов тела, отдельного блока состояния нет; остановка и выбор — встроенные политики.
-Файл — `flows/support_case/nodes/polish/polish.node.yaml`.
+The panel's winning draft is revised until a critic from another family gives it 0.85, or the score stops rising.
+A pass is the outputs of the body nodes — there is no separate state block; stopping and selection are built-in
+policies. The file is `flows/support_case/nodes/polish/polish.node.yaml`.
 
 ```yaml
 node: "loop"
@@ -42,45 +42,47 @@ select:
     path: "$iter.critique.out.score"
 ```
 
-Узлы тела лежат плоско в той же папке `nodes/polish/`. `revise.node.yaml` — свой инференс `revise` @ `gpt`
-(`revise.inference.yaml`, `revise.prompt.md`, `revise.variants/lamp_guide/`): на первой итерации `previous` приходит из
-`init`, дальше `previous ← $acc.revise.out.reply` и `critique ← $acc.critique.out`. `critique.node.yaml` — свой инференс
-`critique` @ `mistral`, его проверка `critique_consistent` — в `critique.py` рядом. Тот же `critique` судит `revise` в eval
-`evals/support_case/reply_quality.yaml`, а оценщик `promises_match_resolution` из `code/support_case.py` — одновременно
-проверка `revise` и скорер этого eval.
+The body nodes sit flat in the same `nodes/polish/` folder. `revise.node.yaml` has its own `revise` inference @ `gpt`
+(`revise.inference.yaml`, `revise.prompt.md`, `revise.variants/lamp_guide/`): on the first pass `previous` comes from
+`init`, after that `previous ← $acc.revise.out.reply` and `critique ← $acc.critique.out`. `critique.node.yaml` has its
+own `critique` inference @ `mistral`, and its check `critique_consistent` lives in `critique.py` beside it. The same
+`critique` judges `revise` in the eval `evals/support_case/reply_quality.yaml`, and the evaluator
+`promises_match_resolution` from `code/support_case.py` is at once a check on `revise` and a scorer of that eval.
 
-## Раскладка
+## Layout
 
-Загрузчик находит описания по `kind` в любом месте модуля, фиксирован только `aqven.yaml`; стандартная раскладка даёт каждому
-виду одно место. Id — имя файла до первой точки (у `flow.yaml` — имя папки), сопутствующие файлы сущности лежат рядом с тем же
-префиксом. Агент одним файлом — `agents/<агент>.yaml`, агент с сопутствующими файлами — папка `agents/<агент>/`. У каждого узла
-верхнего уровня своя папка `nodes/<узел>/`, все его потомки на любой глубине лежат в ней плоско.
+The loader finds definitions by their `kind` anywhere in the module; only `aqven.yaml` is fixed. The standard layout
+gives every kind one place. An id is the file name up to the first dot (for `flow.yaml`, the folder name), and the
+files that belong to an entity sit beside it under the same prefix. An agent in one file is `agents/<agent>.yaml`, an
+agent with companion files gets the folder `agents/<agent>/`. Every top-level node has its own `nodes/<node>/` folder,
+and all of its descendants, however deep, sit flat inside it.
 
 ```
-pyproject.toml                       один пакет lumen, модуль в корне проекта
-.mcp.json                            MCP-сервер проекта по stdio: uv run aqven mcp lumen
-AGENTS.md, CLAUDE.md, .claude/       правила и хуки для кодовых агентов: aqven check после правок и на остановке
+pyproject.toml                       one lumen package, the module at the project root
+.mcp.json                            the project MCP server over stdio: uv run aqven mcp lumen
+AGENTS.md, CLAUDE.md, .claude/       rules and hooks for coding agents: aqven check after edits and on stop
 lumen/
-  app.py                             хост: приложение ASGI, монтирование в чужое приложение, вызов в процессе
-  __main__.py                        запуск сервера: python -m lumen
-  samples/                           входы примера: case_request.json, answers.json, фото и счёт
-  .env.example                       OPENROUTER_API_KEY и переменные AQVEN_*
+  app.py                             the host: the ASGI app, mounting into another app, calling in process
+  __main__.py                        starting the server: python -m lumen
+  samples/                           inputs of the example: case_request.json, answers.json, a photo and an invoice
+  .env.example                       OPENROUTER_API_KEY and the AQVEN_* variables
   aqven.yaml
-  types.py                           модели всех типов и входов-выходов инференсов, тулов и шагов code: aqven generate,
-                                     не коммитится, первая строка — заголовок DO NOT EDIT
+  types.py                           models of every type and of inference, tool and code step inputs and outputs:
+                                     aqven generate, not committed, first line is the DO NOT EDIT header
   agents/<agent>.yaml                deepseek, gemini, gpt, llama, mistral, painter, qwen, researcher
   agents/resolver/                   resolver.yaml, resolver.instructions.md,
-                                     research_policy.inference.yaml, research_policy.prompt.md — инференс субагента
-  tools/<tool>.yaml, functions.py    тулы и их функции
+                                     research_policy.inference.yaml, research_policy.prompt.md — the subagent inference
+  tools/<tool>.yaml, functions.py    tools and their functions
   mcp/helpdesk.yaml
   types/enums/, ids/, records/, unions/, values/
   fragments/                         brand_voice, citation_rules, judge_protocol, safety_escalation, untrusted_input
-  code/support_case.py               Python нескольких мест: проверка инференса revise и скорер eval
+  code/support_case.py               Python used in several places: a check on the revise inference and an eval scorer
+  datasets/                          cases of a flow or an inference
   evals/support_case/                reply_cases.yaml, reply_quality.yaml
   flows/
     support_case/
       flow.yaml
-      nodes/triage/                  triage.node.yaml, triage.inference.yaml, triage.prompt.md — без ключа inference
+      nodes/triage/                  triage.node.yaml, triage.inference.yaml, triage.prompt.md — with no inference key
       nodes/prepare/                 prepare.node.yaml, prepare.py — run: "prepare"
       nodes/record/                  record.node.yaml, record.py, extract.node.yaml, extract.inference.yaml,
                                      extract.prompt.md, validate.node.yaml, validate.py
@@ -94,21 +96,22 @@ lumen/
       nodes/judges/, aggregate/, decide/, pick/
 ```
 
-| Что | Где |
+| What | Where |
 |---|---|
-| Инференс одного узла | рядом с узлом под его именем: `nodes/triage/triage.inference.yaml`, `nodes/record/extract.inference.yaml`, `nodes/route/resolve.inference.yaml`, `nodes/illustrate/illustrate.inference.yaml` |
-| Общий инференс | у первого узла-владельца, остальные ссылаются `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini` и eval; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — скорер eval |
-| Инференс субагента | в папке агента: `agents/resolver/research_policy.inference.yaml` |
-| Потомки узла | плоско в папке узла верхнего уровня: `nodes/route/resolve.node.yaml`, `flows/judge_panel/nodes/judges/deepseek.node.yaml`; развёрнутый id — `route__resolve`, `judges__deepseek` |
-| Промт | `<инференс>.prompt.md` рядом с `<инференс>.inference.yaml`; уровень 3 — `prompt: "illustrate_prompt"` из `nodes/illustrate/illustrate.py` |
-| Варианты по виду лампы | `flows/support_case/nodes/polish/revise.variants/lamp_guide/` |
-| Фрагменты промтов | `fragments/` корня, `{% include "fragments/untrusted_input" %}` с любой глубины |
-| Политики: встроенные `use`, свои `run` | `join`, `stop`, `select`, `on_item_error` в узлах; свои — `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
-| Оценщики: проверки и скореры | `checks` в `<инференс>.inference.yaml`, `scorers` в `evals/support_case/reply_quality.yaml` |
-| Типы | только YAML в `types/` корня; код импортирует модели типов и входов-выходов инференсов (`ReviseIn`, `ReviseOut`), тулов (`SearchKbOut`) и шагов `code` (`SupportCasePrepareOut`) из `lumen.types` (`from lumen.types import CaseRequest`); шаг, чей выход равен типу реестра, возвращает этот тип (`pick` — `PanelOutcome`, `finalize` — `CaseOutcome`) |
-| Ссылки на код | `run: "tally"` — `tally.py` рядом с `tally.node.yaml`, загрузка по пути файла; `@root.tools.functions:…` и `@root.code.support_case:…` — путь импорта от корня пакета; полный путь `lumen.code.support_case:promises_match_resolution` тоже работает |
+| The inference of one node | beside the node under its name: `nodes/triage/triage.inference.yaml`, `nodes/record/extract.inference.yaml`, `nodes/route/resolve.inference.yaml`, `nodes/illustrate/illustrate.inference.yaml` |
+| A shared inference | at the first node that owns it, the rest reference it with `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini` and the eval; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — the eval scorer |
+| A subagent inference | in the agent's folder: `agents/resolver/research_policy.inference.yaml` |
+| Child nodes | flat in the folder of the top-level node: `nodes/route/resolve.node.yaml`, `flows/judge_panel/nodes/judges/deepseek.node.yaml`; the expanded id is `route__resolve`, `judges__deepseek` |
+| A prompt | `<inference>.prompt.md` beside `<inference>.inference.yaml`; at level 3 it is `prompt: "illustrate_prompt"` from `nodes/illustrate/illustrate.py` |
+| Variants by lamp kind | `flows/support_case/nodes/polish/revise.variants/lamp_guide/` |
+| Prompt fragments | `fragments/` at the root, `{% include "fragments/untrusted_input" %}` from any depth |
+| Policies: built-in `use`, your own `run` | `join`, `stop`, `select`, `on_item_error` in the nodes; your own in `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
+| Evaluators: checks and scorers | `checks` in `<inference>.inference.yaml`, `scorers` in `evals/support_case/reply_quality.yaml` |
+| Types | YAML only, under `types/` at the root; the code imports the models of types and of inference inputs and outputs (`ReviseIn`, `ReviseOut`), of tools (`SearchKbOut`) and of `code` steps (`SupportCasePrepareOut`) from `lumen.types` (`from lumen.types import CaseRequest`); a step whose output equals a registry type returns that type (`pick` — `PanelOutcome`, `finalize` — `CaseOutcome`) |
+| Code references | `run: "tally"` — `tally.py` beside `tally.node.yaml`, loaded by file path; `@root.tools.functions:…` and `@root.code.support_case:…` — an import path from the package root; the full path `lumen.code.support_case:promises_match_resolution` works too |
 
-`aqven tree` перечисляет сущности по видам с путями файлов и режимом вывода агентов; промты, варианты, фрагменты и Python в него не входят.
+`aqven tree` lists entities by kind with their file paths and the output mode of every agent; prompts, variants,
+fragments and Python are not in it.
 
 ```
 $ uv run aqven tree examples/lumen
@@ -241,13 +244,14 @@ eval (1)
   reply_quality  evals/support_case/reply_quality.yaml
 ```
 
-## Модели
+## Models
 
-Пример работает на самых дешёвых моделях OpenRouter с возможностями узлов агента (решение владельца от 2026-09-17), в
-`aqven.yaml` один провайдер `openrouter` с `routing {data_collection: deny, zdr: false}`: самые дешёвые эндпоинты части моделей
-и фолбэк `painter` не ZDR. Таблица агентов, отклонения и причины — в [DESIGN.md](DESIGN.md) §6.1–§6.2.
+The example runs on the cheapest OpenRouter models that have the capabilities its agent nodes need (owner's decision
+of 2026-09-17). `aqven.yaml` declares one provider, `openrouter`, with `routing {data_collection: deny, zdr: false}`:
+the cheapest endpoints of some models, and the `painter` fallback, are not ZDR. The agent table, the exceptions and
+the reasons are in [DESIGN.md](DESIGN.md) §6.1–§6.2.
 
-| Агент | Модель |
+| Agent | Model |
 |---|---|
 | `gpt`, `resolver` | `openrouter:openai/gpt-oss-20b` |
 | `gemini` | `openrouter:google/gemini-2.5-flash-lite` |
@@ -255,30 +259,32 @@ eval (1)
 | `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` |
 | `qwen` | `openrouter:qwen/qwen3-30b-a3b-instruct-2507` |
 | `llama` | `openrouter:meta-llama/llama-3.1-8b-instruct` |
-| `painter` | `openrouter:google/gemini-3.1-flash-lite-image`, фолбэк `openrouter:openai/gpt-5-image-mini` |
+| `painter` | `openrouter:google/gemini-3.1-flash-lite-image`, fallback `openrouter:openai/gpt-5-image-mini` |
 
-Ключ — `OPENROUTER_API_KEY` в `.env` проекта или в окружении процесса. `uv run aqven models check --project
-examples/lumen` показывает режим вывода каждого агента, `--live` шлёт по короткому запросу на режим.
+The key is `OPENROUTER_API_KEY`, in the project `.env` or in the process environment. `uv run aqven models check
+--project examples/lumen` prints the output mode of every agent, and `--live` sends one tiny request per mode.
 
-## Нагрузка
+## Load
 
-Две ручки, обе необязательные ([ADR-0044](../docs/adr/0044-provider-rate-limit-and-worker-pool.md)).
+Two knobs, both optional ([ADR-0044](../docs/adr/0044-provider-rate-limit-and-worker-pool.md)).
 
-**Частота запросов к провайдеру** объявлена у провайдера в `aqven.yaml` и в этом примере равна `limits.rpm: 60` —
-один запрос в секунду. Слоты выдаются с равным интервалом, простой не копит право на всплеск, поэтому лимит не
-превышается никогда. Значение иллюстративное: настоящий потолок зависит от тарифа, поднимайте под свой.
+**The request rate to the provider** is declared on the provider in `aqven.yaml`, and in this example it is
+`limits.rpm: 60` — one request a second. Slots are handed out at an even interval and idle time does not earn the
+right to a burst, so the limit is never exceeded. The value is illustrative: the real ceiling depends on your plan,
+so raise it to yours.
 
-**Число одновременно исполняемых узлов** задаётся не файлом, а настройкой проекта `runtime.max_parallel` — это
-свойство машины, а не воркфлоу, и у ноутбука с CI-раннером числа разные. Разово перекрывается флагом:
+**How many nodes run at once** is not set by a file but by the project setting `runtime.max_parallel` — that is a
+property of the machine rather than of the workflow, and a laptop and a CI runner want different numbers. Override it
+for one run with a flag:
 
 ```
 uv run aqven run --flow support_case --input examples/lumen/samples/case_request.json --max-parallel 4
 ```
 
-Обе ручки независимы от узловой: у `map` в `support_case/nodes/vote` стоит `concurrency: 3`, и эффективная
-одновременность — минимум из трёх.
+Both are independent of the node-level knob: the `map` in `support_case/nodes/vote` carries `concurrency: 3`, and the
+effective concurrency is the smallest of the three.
 
-## Запуск
+## Running it
 
 ```
 uv run aqven generate examples/lumen
@@ -288,47 +294,51 @@ uv run aqven refs inference:revise examples/lumen
 uv run pytest examples
 ```
 
-Тесты сценариев идут на кассетах `tests/cassettes/support_case/<сценарий>/` без сети. Перезапись сценария — отдельным
-запуском pytest с ключом OpenRouter: `AQVEN_LIVE=1 uv run pytest examples/tests/test_support_case.py -k <сценарий>`;
-режим `record_new` проигрывает записанное и дописывает только новые запросы.
+The scenario tests replay cassettes from `tests/cassettes/support_case/<scenario>/` with no network. Re-recording a
+scenario is a separate pytest run with an OpenRouter key:
+`AQVEN_LIVE=1 uv run pytest examples/tests/test_support_case.py -k <scenario>`; the `record_new` mode replays what is
+already recorded and appends only the new requests.
 
-`run`, `serve`, `studio`, `dev` и `mcp` работают; `fmt`, `plan`, `build`, `eval` и `optimize` пока отвечают «не реализовано» с кодом выхода 2.
+`run`, `serve`, `studio`, `dev`, `mcp` and `eval` work; `fmt`, `plan`, `build` and `optimize` still answer "not
+implemented" with exit code 2.
 
-## Четыре способа запустить
+## Four ways to start it
 
-`lumen/app.py` загружает `lumen/.env`, читает типизированные настройки окружения и собирает приложение той же сборкой, что и
-`aqven serve`: API, Studio, MCP, движок и токен доступа. `lumen/__main__.py` поднимает его под uvicorn.
+`lumen/app.py` loads `lumen/.env`, reads typed environment settings and assembles the application the same way
+`aqven serve` does: API, Studio, MCP, the engine and the access token. `lumen/__main__.py` runs it under uvicorn.
 
-| Способ | Команда или код |
+| Way | Command or code |
 |---|---|
-| CLI разработчика | `uv run aqven dev lumen` — сервер, слежение за файлами и Studio в браузере |
-| Свой запуск | `uv run python -m lumen` или консольная команда `uv run lumen` — uvicorn на `AQVEN_HOST:AQVEN_PORT`, печатает URL с токеном |
-| Своим uvicorn | `uv run uvicorn lumen.app:app` — то же приложение под своим сервером |
-| В чужом приложении | `lumen.app.host_application()` — `FastAPI`, который монтирует `lumen.app.app` на `/aqven` и прокидывает его lifespan через `local_app_lifespan` |
+| Developer CLI | `uv run aqven dev lumen` — the server, file watching and Studio in the browser |
+| Its own entry point | `uv run python -m lumen`, or the console command `uv run lumen` — uvicorn on `AQVEN_HOST:AQVEN_PORT`, printing the URL with the token |
+| Your own uvicorn | `uv run uvicorn lumen.app:app` — the same application under your own server |
+| Inside another application | `lumen.app.host_application()` — a `FastAPI` that mounts `lumen.app.app` at `/aqven` and carries its lifespan through `local_app_lifespan` |
 
-В процессе, без сервера: `await lumen.app.handle_case(lumen.app.sample_request())` — `Project.load` → `flow_typed` → `run`;
-так же доступны `start`, `events`, `waits`, `resume`, `fork`, `cancel`.
+In process, with no server: `await lumen.app.handle_case(lumen.app.sample_request())` — `Project.load` → `flow_typed`
+→ `run`; `start`, `events`, `waits`, `resume`, `fork` and `cancel` are available the same way.
 
-Свой guard вместо локального токена: `create_local_app(root, LocalAppOptions(access=None))` отдаёт приложение без защиты —
-хост закрывает его своей аутентификацией; `access=<свой объект>` оборачивает приложение своим ASGI-guard. Studio под
-префиксом не работает (бандл ссылается на абсолютные пути `/assets/...`), API, SSE и MCP — работают.
+Your own guard instead of the local token: `create_local_app(root, LocalAppOptions(access=None))` returns the
+application unprotected, so the host closes it with its own authentication; `access=<your object>` wraps the
+application in your own ASGI guard. Studio does not work under a path prefix (the bundle references absolute
+`/assets/...` paths); the API, SSE and MCP do.
 
-## Переменные окружения
+## Environment variables
 
-Читаются после `.env`; переменные процесса важнее `.env`, явные аргументы кода и CLI важнее обеих. Неверное значение
-останавливает старт с ошибкой, называющей переменную.
+They are read after `.env`; process variables win over `.env`, and explicit arguments in code and on the CLI win over
+both. A wrong value stops startup with an error that names the variable.
 
-| Переменная | По умолчанию | Значение |
+| Variable | Default | Meaning |
 |---|---|---|
-| `AQVEN_STUDIO` | `true` | `false` — только API, SSE и MCP: без страницы Studio, чата и браузера |
-| `AQVEN_HOST` | `127.0.0.1` | адрес привязки |
-| `AQVEN_PORT` | `5180` | порт |
-| `AQVEN_OPEN_BROWSER` | `false` для `python -m lumen` и `aqven serve`, `true` для `aqven dev` | открывать ли браузер |
+| `AQVEN_STUDIO` | `true` | `false` — API, SSE and MCP only: no Studio page, no chat, no browser |
+| `AQVEN_HOST` | `127.0.0.1` | bind address |
+| `AQVEN_PORT` | `5180` | port |
+| `AQVEN_OPEN_BROWSER` | `false` for `python -m lumen` and `aqven serve`, `true` for `aqven dev` | whether to open a browser |
 
-## Любой HTTP- и MCP-клиент
+## Any HTTP and MCP client
 
-Контракт — OpenAPI на `/api/openapi.json`, схемы событий — на `/api/schemas/events`, события — обычный SSE, авторизация —
-`Authorization: Bearer <токен>` (он же в `.aqven/server.json` и в URL, который печатает `python -m lumen`).
+The contract is OpenAPI at `/api/openapi.json`, the event schemas are at `/api/schemas/events`, events are plain SSE,
+and authorization is `Authorization: Bearer <token>` (the same token is in `.aqven/server.json` and in the URL that
+`python -m lumen` prints).
 
 ```
 TOKEN=$(python -c "import json,sys; print(json.load(open('lumen/.aqven/server.json'))['token'])")
@@ -342,12 +352,12 @@ curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   http://127.0.0.1:5180/api/runs/$RUN/resume
 ```
 
-MCP по stdio (`.mcp.json` проекта) — для Claude Code, Cursor и любого клиента:
+MCP over stdio (the project's `.mcp.json`) — for Claude Code, Cursor and any other client:
 
 ```json
 {"mcpServers": {"aqven": {"type": "stdio", "command": "uv", "args": ["run", "aqven", "mcp", "lumen"]}}}
 ```
 
-Тот же набор тулов доступен по streamable HTTP на `http://127.0.0.1:5180/mcp/` с тем же Bearer-токеном, а
-`aqven.app.create_mcp_server(root)` отдаёт объект сервера `mcp` 2.2.0 — его можно запустить по stdio, смонтировать на любой
-путь или объединить со своими тулами.
+The same set of tools is available over streamable HTTP at `http://127.0.0.1:5180/mcp/` with the same bearer token,
+and `aqven.app.create_mcp_server(root)` returns an `mcp` 2.2.0 server object — you can run it over stdio, mount it on
+any path, or combine it with your own tools.
