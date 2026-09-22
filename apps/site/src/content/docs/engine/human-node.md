@@ -59,28 +59,18 @@ on_timeout:
   assignee: "support_manager"
   timeout_seconds: 7200
 in:
-  - name: "reply"
-    type: "ReplyDraft"
-    description: "The reply after polishing"
-    from: "$polish.out.reply"
   - name: "resolution"
     type: "Resolution"
     description: "The resolution decided for the case"
     from: "$route.out.resolution"
-  - name: "score"
-    type: "Score"
-    description: "The critic's score for the reply"
-    from: "$polish.out.score"
-  - name: "iterations"
-    type: "Int"
-    description: "How many editing rounds the reply went through"
-    from: "$polish.out.iterations"
 ```
 
-The four `in` fields are shown to the lead while they decide — the drafted reply, the resolution
-already picked for the case, a critic's score, and how many rounds of editing the draft went through.
-None of that is part of what the lead submits back: only `ReplyApproval`, the type `form` names,
-defines that shape — declared like any other record type, in its own file:
+That `in` field is context shown to the lead while they decide — the resolution already picked for the
+case (the real node has three more `in` fields, the same shape as this one, pulling in the drafted
+reply, its score, and how many editing rounds it went through). None of it is part of what the lead
+submits back: only `ReplyApproval`, the type `form` names, defines that shape — declared like any other
+record type, in its own file. Here are its two most illustrative fields (the real file also has a
+third, `note`, for an optional comment):
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -95,10 +85,6 @@ fields:
   type: "Text?"
   description: "The corrected text when edited; null otherwise"
   maxLength: 1500
-- name: "note"
-  type: "Text?"
-  description: "The lead's note; null if there isn't one"
-  maxLength: 400
 ```
 
 `decision` is an enum with three values — `approve`, `edit`, `reject` — so the lead's answer is that
@@ -107,21 +93,9 @@ decision plus, when they edit, the corrected text.
 If `support_lead` doesn't answer within 14400 seconds (four hours), the wait escalates to
 `support_manager` with a fresh two-hour deadline. If the manager doesn't answer either, the node fails.
 
-The `approvals` node's other branch, `brand`, waits on a brand editor to pick which media to send with
-the reply, and picks a different `on_timeout` policy — a fallback instead of an escalation, since a
-missing media choice isn't worth blocking the case on:
-
-```yaml
-on_timeout:
-  policy: "default"
-  value:
-    use_image: false
-    use_voice: true
-    use_clip: false
-```
-
-That `value` matches `MediaApproval`, `brand`'s own `form`, field for field — if it didn't, the node
-would fail instead of falling back to it.
+The other policy from the list above, `default`, looks like this inline: `on_timeout: {policy:
+"default", value: <a value shaped like form>}`. With it, the node succeeds automatically on that value
+once the deadline passes — marked degraded, instead of failing or escalating to another assignee.
 
 ## Under the hood
 
