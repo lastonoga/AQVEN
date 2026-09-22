@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 import keyword
 import re
@@ -9,11 +10,25 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Final, Protocol
+from typing import Final, Protocol, cast
 
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap, CommentedSeq
+
+from aqven.app.locations import ProjectState, StudioState, studio_data_dir
+from aqven.app.settings_store import open_settings_store
+from aqven.app.workers import MAX_PARALLEL_KEY
 from aqven.codegen import GENERATED_TYPES, generate_types
 from aqven.console.command import EXIT_FAILED, EXIT_OK, EXIT_USAGE, PROGRAM
+from aqven.console.new_wizard import (
+    UnknownProvider,
+    WizardAnswers,
+    run_wizard,
+    should_run_wizard,
+    wizard_from_provider,
+)
 from aqven.console.project_template import (
+    HELLO_TEMPLATE,
     MINIMAL_TEMPLATE,
     TEMPLATES,
     ProjectTemplate,
@@ -64,6 +79,7 @@ class NewProjectRequest:
     sync: bool = True
     force: bool = False
     with_tests: bool = False
+    wizard: WizardAnswers | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +210,62 @@ class GenerateModels:
         raise NewProjectFailed(f"aqven generate failed:\n{format_text(loaded.diagnostics)}")
 
 
+class _RoundTripYaml(Protocol):
+    preserve_quotes: bool
+
+    def load(self, stream: object) -> object: ...
+
+    def dump(self, data: object, stream: object) -> None: ...
+
+
+def _round_trip_yaml() -> _RoundTripYaml:
+    yaml = cast("_RoundTripYaml", YAML())
+    yaml.preserve_quotes = True
+    return yaml
+
+
+def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
+    yaml = _round_trip_yaml()
+    with aqven_yaml.open(encoding=FILE_ENCODING) as handle:
+        data = cast("CommentedMap", yaml.load(handle))
+    provider = cast("CommentedMap", cast("CommentedSeq", data["providers"])[0])
+    provider["id"] = wizard.provider_id
+    provider["api_key"] = f"ref:env/{wizard.provider_env_var}"
+    policy = cast("CommentedMap", provider["data_policy"])
+    policy["allows_pii"] = wizard.allows_pii
+    policy["allows_sensitive"] = wizard.allows_pii
+    if wizard.budget_usd_micros is not None:
+        data["limits"] = {"usd_micros": wizard.budget_usd_micros}
+    with aqven_yaml.open("w", encoding=FILE_ENCODING) as handle:
+        yaml.dump(data, handle)
+
+
+def patch_env(module_root: Path, wizard: WizardAnswers) -> None:
+    example = module_root / ENV_EXAMPLE
+    text = example.read_text(encoding=FILE_ENCODING).replace("OPENROUTER_API_KEY=", f"{wizard.provider_env_var}=")
+    example.write_text(text, encoding=FILE_ENCODING)
+    if wizard.api_key is not None:
+        (module_root / ".env").write_text(
+            text.replace(f"{wizard.provider_env_var}=", f"{wizard.provider_env_var}={wizard.api_key}"),
+            encoding=FILE_ENCODING,
+        )
+
+
+async def persist_max_parallel(module_root: Path, value: int) -> None:
+    store = open_settings_store(ProjectState(module_root), StudioState(studio_data_dir(None)))
+    await store.set_value("project", MAX_PARALLEL_KEY, value)
+
+
+@dataclass(frozen=True, slots=True)
+class ApplyWizardAnswers:
+    wizard: WizardAnswers
+
+    def apply(self, draft: ProjectDraft) -> None:
+        patch_provider(draft.module_root / "aqven.yaml", self.wizard)
+        patch_env(draft.module_root, self.wizard)
+        asyncio.run(persist_max_parallel(draft.module_root, self.wizard.max_parallel))
+
+
 @dataclass(frozen=True, slots=True)
 class ProjectCreator:
     templates: Mapping[str, ProjectTemplate] = field(default_factory=lambda: TEMPLATES)
@@ -201,10 +273,11 @@ class ProjectCreator:
     locate: ExecutableLocator = shutil.which
 
     def steps(self, request: NewProjectRequest) -> tuple[ProjectStep, ...]:
+        wizard: tuple[ProjectStep, ...] = (ApplyWizardAnswers(request.wizard),) if request.wizard is not None else ()
         sync: tuple[ProjectStep, ...] = (
             (SyncEnvironment(self.runner, self.locate(UV_EXECUTABLE)),) if request.sync else ()
         )
-        return (WriteFiles(), *sync, GenerateModels())
+        return (WriteFiles(), *wizard, *sync, GenerateModels())
 
     def create(self, request: NewProjectRequest) -> int:
         try:
@@ -244,6 +317,17 @@ def _optional_text(value: object) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
+def wizard_for(explicit_provider: str | None) -> WizardAnswers | None:
+    if should_run_wizard(explicit_provider):
+        return run_wizard()
+    if explicit_provider is None:
+        return None
+    try:
+        return wizard_from_provider(explicit_provider)
+    except UnknownProvider as error:
+        raise NewProjectFailed(str(error), EXIT_USAGE) from error
+
+
 @dataclass(frozen=True, slots=True)
 class NewCommand:
     help: str = "create a project from a template, install its environment with uv sync and generate its models"
@@ -252,9 +336,10 @@ class NewCommand:
         parser.add_argument("target", type=Path, metavar="PATH", help="folder of the new project")
         parser.add_argument(
             "--template",
-            default=MINIMAL_TEMPLATE,
+            default=None,
             choices=sorted(TEMPLATES),
-            help="; ".join(f"{name}: {template.description}" for name, template in TEMPLATES.items()),
+            help="; ".join(f"{name}: {template.description}" for name, template in TEMPLATES.items())
+            + "; defaults to hello when the bootstrap wizard runs, minimal otherwise",
         )
         parser.add_argument(
             "--package", default=None, metavar="NAME", help="Python package name; the folder name by default"
@@ -271,15 +356,30 @@ class NewCommand:
         )
         parser.add_argument("--no-sync", action="store_true", help="do not run uv sync")
         parser.add_argument("--force", action="store_true", help="write into a folder that is not empty")
+        parser.add_argument(
+            "--provider",
+            default=None,
+            metavar="NAME",
+            help="skip the interactive provider question and use this catalog id",
+        )
 
     def execute(self, arguments: argparse.Namespace) -> int:
+        explicit_provider = _optional_text(arguments.provider)
+        try:
+            wizard = wizard_for(explicit_provider)
+        except NewProjectFailed as failure:
+            print(f"{PROGRAM} {COMMAND}: {failure}", file=sys.stderr)
+            return failure.exit_code
+        given_template = _optional_text(arguments.template)
+        template = given_template or (HELLO_TEMPLATE if wizard is not None else MINIMAL_TEMPLATE)
         request = NewProjectRequest(
             target=Path(str(arguments.target)),
-            template=str(arguments.template),
+            template=template,
             package=_optional_text(arguments.package),
             aqven_path=_optional_path(arguments.aqven_path),
             sync=not bool(arguments.no_sync),
             force=bool(arguments.force),
             with_tests=bool(arguments.with_tests),
+            wizard=wizard,
         )
         return create_project(request)

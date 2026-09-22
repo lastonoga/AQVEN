@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Builds a static greeting; this whole flow is a placeholder, not real logic"
+run: "greet"
+in:
+- name: "name"
+  type: "Text"
+  description: "Name of the person to greet"
+  maxLength: 200
+  from: "$input.name"
+out:
+- name: "message"
+  type: "Text"
+  description: "The greeting text"
+  maxLength: 250

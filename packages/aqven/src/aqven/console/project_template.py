@@ -17,6 +17,7 @@ AQVEN_REQUIREMENT_TOKEN: Final = "__aqven_requirement__"
 UV_SOURCES_TOKEN: Final = "__uv_sources__\n"
 MINIMAL_TEMPLATE: Final = "minimal"
 SHOWCASE_TEMPLATE: Final = "showcase"
+HELLO_TEMPLATE: Final = "hello"
 BINARY_SUFFIXES: Final = frozenset({".jpg", ".jpeg", ".png", ".pdf", ".mp4", ".wav", ".ico"})
 MODULE_ROOT: Final = PACKAGE_TOKEN
 TESTS_FOLDER: Final = "tests"
@@ -128,5 +129,9 @@ TEMPLATES: Final[Mapping[str, ProjectTemplate]] = {
     SHOWCASE_TEMPLATE: PackageDataTemplate(
         name=SHOWCASE_TEMPLATE,
         description="the lumen example: two flows with every node kind, human waits, tools, evals and main.py",
+    ),
+    HELLO_TEMPLATE: PackageDataTemplate(
+        name=HELLO_TEMPLATE,
+        description="one code step, no model calls — runs immediately, a placeholder for your real workflow",
     ),
 }

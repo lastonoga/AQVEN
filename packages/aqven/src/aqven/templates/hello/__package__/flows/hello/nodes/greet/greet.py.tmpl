@@ -1,0 +1,9 @@
+from typing import Annotated
+
+from pydantic import StringConstraints
+
+from __package__.types import HelloGreetOut
+
+
+def greet(name: Annotated[str, StringConstraints(max_length=200)]) -> HelloGreetOut:
+    return HelloGreetOut(message=f"Hello, {name}! This is a placeholder flow, not your real workflow.")
