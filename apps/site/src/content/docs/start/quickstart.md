@@ -29,17 +29,48 @@ inside the same install — there's no separate Node.js toolchain to set up.
 ## 1. Create a project
 
 ```bash
-{{CLI_COMMAND}} new my_project --template showcase
+{{CLI_COMMAND}} new my_project
 ```
 
-`{{CLI_COMMAND}} new` does three things in one step: it writes the project's files from a template,
-installs the project's own dependencies with `uv sync`, and generates typed Python models for every
-type the project declares. `--template showcase` picks AQVEN's full example: a customer support case
-that triages an incoming message, routes it, drafts a reply with three model providers at once, has a
-panel of judges pick the best draft, and sends it for human approval. Most of the rest of this site
-builds on this same project, so it's worth the extra minute over the smaller default template.
+Run this on a real terminal and AQVEN asks you three questions before it writes a single file:
 
-When it finishes, you'll see something like this:
+```text
+Which model provider do you have a key for?
+  1. openrouter
+  2. anthropic
+  3. openai
+  4. google
+  5. mistral
+  6. deepseek
+  7. something else
+> 1
+Paste the OPENROUTER_API_KEY value now, or press Enter to add it later:
+Will this project ever handle personal or sensitive data (names, emails, health or financial info)? [y/N]
+Budget per run, in USD (press Enter for no limit):
+```
+
+Your answers go straight into the new project: the provider and its key into `aqven.yaml` and `.env`,
+the data question into that provider's `data_policy`, the budget into `limits.usd_micros`. Press Enter
+on the key if you don't have it on hand yet — the project still gets created, just without one written
+to `.env` yet. This is how you start a project of your own: `{{CLI_COMMAND}} new` does three things in
+one step, wizard included — it writes the project's files, installs its dependencies with `uv sync`,
+and generates typed Python models for every type the project declares — and lands you on a minimal
+starter with one placeholder step, ready to build a real flow into.
+
+This walkthrough uses AQVEN's own full example instead of a blank starter, so the rest of it assumes
+you ran this exact command instead of the wizard above:
+
+```bash
+{{CLI_COMMAND}} new my_project --template showcase --provider openrouter
+```
+
+`--template showcase` asks for AQVEN's full example by name — a customer support case that triages an
+incoming message, routes it, drafts a reply with three model providers at once, has a panel of judges
+pick the best draft, and sends it for human approval — and `--provider openrouter` answers the wizard's
+first question for you so the command runs straight through with no prompts, the same way a script or a
+CI job would call it. Most of the rest of this site builds on this same project.
+
+When the showcase command above finishes, you'll see something like this:
 
 ```text
 created my-project in my_project from the showcase template
