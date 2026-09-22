@@ -25,7 +25,7 @@ from aqven.app.host_os import OWNER_PERMISSIONS, permission_bits
 from aqven.app.instance import bind_loopback, bound_port
 from aqven.app.locations import ProjectState
 from aqven.app.options import ServerOptions
-from aqven.app.runtime import LocalServer, Reused, ServeOutcome, Started
+from aqven.app.runtime import DOCS_URL, LocalServer, Reused, ServeOutcome, Started, startup_message
 from aqven.app.runtime_file import ServerRecord, read_server_record
 from aqven.ports.engine import EngineFacade
 
@@ -85,6 +85,58 @@ async def running(
 
 def http_client(record: ServerRecord) -> httpx2.AsyncClient:
     return httpx2.AsyncClient(base_url=record.url, trust_env=False, timeout=5.0)
+
+
+MINIMAL_PROJECT: Final = """apiVersion: "aqven/v1"
+kind: "Project"
+description: "minimal test project"
+package: "demo"
+"""
+
+PROVIDER_BLOCK: Final = """providers:
+- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: false
+    allows_sensitive: false
+    retention: "unknown"
+"""
+
+
+def loadable_project(folder: Path, extra: str = "") -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "aqven.yaml").write_text(MINIMAL_PROJECT + extra, encoding="utf-8")
+    return folder.resolve()
+
+
+def test_startup_message_shows_the_server_mcp_and_docs_urls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from aqven.console import style
+
+    monkeypatch.setattr(style.sys.stderr, "isatty", lambda: False)
+    root = loadable_project(tmp_path / "project")
+
+    message = startup_message("studio", "http://127.0.0.1:5180/", "http://127.0.0.1:5180/mcp/", root, 12)
+
+    assert "http://127.0.0.1:5180/" in message
+    assert "http://127.0.0.1:5180/mcp/" in message
+    assert DOCS_URL in message
+    assert "provider" not in message
+    assert "ready in 12ms" in message
+
+
+def test_startup_message_shows_provider_key_status(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from aqven.console import style
+
+    monkeypatch.setattr(style.sys.stderr, "isatty", lambda: False)
+    root = loadable_project(tmp_path / "project", PROVIDER_BLOCK)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+    missing = startup_message("studio", "http://127.0.0.1:5180/", "http://127.0.0.1:5180/mcp/", root, 5)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test-123")
+    present = startup_message("studio", "http://127.0.0.1:5180/", "http://127.0.0.1:5180/mcp/", root, 5)
+
+    assert "openrouter" in missing and "key missing" in missing
+    assert "openrouter" in present and "key set" in present
 
 
 @pytest.mark.asyncio

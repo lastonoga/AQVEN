@@ -69,6 +69,7 @@ def studio_server_options(launch: ApplicationLaunch, features: StudioFeatures) -
         mcp_url=launch.record.mcp_url,
         watch=features.watch,
         compiler=ReportCompiler(),
+        shutdown_signal=launch.shutdown_signal,
     )
 
 
@@ -146,6 +147,7 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
             effort=launch.chat_effort,
             permission_mode=launch.chat_permission_mode,
         ),
+        shutdown_signal=launch.shutdown_signal,
     )
     return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
 

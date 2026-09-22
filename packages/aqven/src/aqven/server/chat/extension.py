@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
@@ -38,9 +39,10 @@ def studio_chat_parts(
     settings: BackendSettingValues,
     allowed_tools: tuple[str, ...] = (),
     defaults: ChatSessionDefaults | None = None,
+    shutdown_signal: asyncio.Event | None = None,
 ) -> ChatServerParts:
-    chat = create_claude_chat(project_root, access_token, allowed_tools)
-    codex = CodexAgentBackend(chat.journal, project_root, mcp_url, access_token)
+    chat = create_claude_chat(project_root, access_token, allowed_tools, shutdown_signal=shutdown_signal)
+    codex = CodexAgentBackend(chat.journal, project_root, mcp_url, access_token, shutdown_signal=shutdown_signal)
     registry = BackendRegistry({"claude": chat.backend, "codex": codex}, BackendSelection(settings))
     chosen = defaults or ChatSessionDefaults()
     router = build_chat_router(

@@ -44,12 +44,29 @@ class ChatEmitter:
         return events
 
 
+async def _wait_for_signal_or_shutdown(
+    waiter: asyncio.Event, shutdown: asyncio.Event | None, idle_seconds: float
+) -> None:
+    if shutdown is None:
+        with suppress(TimeoutError):
+            await asyncio.wait_for(waiter.wait(), idle_seconds)
+        return
+    waiting = asyncio.ensure_future(waiter.wait())
+    shutting = asyncio.ensure_future(shutdown.wait())
+    try:
+        await asyncio.wait((waiting, shutting), timeout=idle_seconds, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        waiting.cancel()
+        shutting.cancel()
+
+
 async def follow_chat_events(
     journal: ChatJournal,
     signals: ChatSignals,
     session_id: ChatSessionId,
     after_seq: int,
     idle_seconds: float = FOLLOW_IDLE_SECONDS,
+    shutdown: asyncio.Event | None = None,
 ) -> AsyncIterator[ChatEvent]:
     cursor = after_seq
     while True:
@@ -61,7 +78,6 @@ async def follow_chat_events(
             cursor = events[-1].seq
             continue
         stored = journal.get_session(session_id)
-        if stored is None or stored.closed:
+        if stored is None or stored.closed or (shutdown is not None and shutdown.is_set()):
             return
-        with suppress(TimeoutError):
-            await asyncio.wait_for(waiter.wait(), idle_seconds)
+        await _wait_for_signal_or_shutdown(waiter, shutdown, idle_seconds)

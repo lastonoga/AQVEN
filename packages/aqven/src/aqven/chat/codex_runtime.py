@@ -1,6 +1,7 @@
+import asyncio
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from openai_codex.client import ApprovalHandler, CodexClient, CodexConfig
 from pydantic import SecretStr
@@ -29,3 +30,4 @@ class CodexChatRuntime:
     clock: Clock
     ids: IdFactory = new_chat_id
     client_factory: CodexClientFactory = sdk_client
+    shutdown: asyncio.Event = field(default_factory=asyncio.Event)
