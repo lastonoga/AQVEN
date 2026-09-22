@@ -23,14 +23,13 @@ and commits without complaint.
 
 What catches this is `{{CLI_COMMAND}} check`, described in full on
 [how to check a project before committing](/engine/check/). Run by hand, it's a normal CLI command.
-But it can also run for you automatically: the showcase project's agent setup wires it into an
-agent-harness hook that fires after every file write and again when the agent finishes, and blocks
-with `check`'s real error output if the tree is now invalid. That hook is two ordinary files —
-project-level configuration, not something AQVEN ships or requires. Nothing about AQVEN itself makes
-this happen; a project without that hook wired up gets no automatic check at all, and even with it
-wired up, the broken intermediate state was already written and committable before the hook ever ran.
-An invalid tree just can't be released — `{{CLI_COMMAND}} check` is also what CI runs before a build
-can ship.
+The showcase project also shows how to run it for you automatically: a couple of agent-harness
+configuration files that add a hook, firing after every file write and again when the agent finishes,
+that blocks with `check`'s real error output if the tree is now invalid. That hook is a convention a
+project sets up for its own agent, not a property of AQVEN itself — a project that hasn't wired one up
+gets no automatic check at all, and even with one wired up, the broken intermediate state was already
+written and committable before the hook ever ran. An invalid tree just can't be released —
+`{{CLI_COMMAND}} check` is also what CI runs before a build can ship.
 
 ## `flow_patch`: checked before the write, or not written at all
 
