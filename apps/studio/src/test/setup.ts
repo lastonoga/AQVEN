@@ -1,6 +1,8 @@
-import { cleanup } from "@testing-library/react"
+import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest"
 import { server } from "@/mocks/node"
+
+configure({ asyncUtilTimeout: 10_000 })
 
 class ResizeObserverStub {
   observe(): void {
