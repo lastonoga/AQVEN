@@ -16,8 +16,8 @@ export const Route = createFileRoute("/settings")({
   validateSearch: validateSettingsSearch,
   loaderDeps: ({ search: { section } }) => ({ section }),
   loader: async ({ context: { api }, deps }) => {
-    const project = await api.project.info()
-    return { project, section: deps.section ?? SETTINGS_SECTIONS[0] }
+    const [project, flows] = await Promise.all([api.project.info(), api.project.flows()])
+    return { project, flows, section: deps.section ?? SETTINGS_SECTIONS[0] }
   },
   component: SettingsScreen,
 })

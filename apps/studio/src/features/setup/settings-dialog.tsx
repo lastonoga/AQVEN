@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { X } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiProject, SettingsSection } from "@/domain"
+import type { ApiFlow, ApiProject, SettingsSection } from "@/domain"
 import { SETTINGS_SECTIONS } from "@/domain"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -9,9 +9,11 @@ import { SettingsContent, SettingsNav } from "./settings-screen"
 
 export function SettingsDialog({
   project,
+  flows,
   onClose,
 }: {
   readonly project: ApiProject
+  readonly flows: readonly ApiFlow[]
   readonly onClose: () => void
 }) {
   const t = useTranslations("setup.settings")
@@ -38,7 +40,7 @@ export function SettingsDialog({
             <SettingsNav section={section} onSectionChange={setSection} />
           </aside>
           <div key={section} className="min-h-0 overflow-auto bg-background-subtle p-4 sm:p-5">
-            <SettingsContent project={project} section={section} />
+            <SettingsContent project={project} flows={flows} section={section} />
           </div>
         </div>
       </DialogContent>

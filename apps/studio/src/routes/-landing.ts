@@ -4,7 +4,7 @@ import { landingFlow } from "@/lib/landing"
 import { ROUTE_PATH } from "@/lib/routes"
 
 const projectRedirect = (): never => {
-  throw redirect({ to: ROUTE_PATH.project })
+  throw redirect({ to: ROUTE_PATH.settings })
 }
 
 export const redirectToLanding = async ({ api }: RouterContext): Promise<never> => {

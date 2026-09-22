@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoRouteImport } from './routes/demo'
-import { Route as ProjectRouteImport } from './routes/project'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as FlowsFlowIdRouteRouteImport } from './routes/flows/$flowId/route'
@@ -31,11 +30,6 @@ const IndexRoute = IndexRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectRoute = ProjectRouteImport.update({
-  id: '/project',
-  path: '/project',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -92,7 +86,6 @@ const FlowsFlowIdRunsRoute = FlowsFlowIdRunsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
@@ -107,7 +100,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
@@ -122,7 +114,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/demo'
-    | '/project'
     | '/settings'
     | '/setup'
     | '/flows/$flowId'
@@ -154,7 +144,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/demo'
-    | '/project'
     | '/settings'
     | '/setup'
     | '/flows/$flowId/canvas'
@@ -168,7 +157,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/demo'
-    | '/project'
     | '/settings'
     | '/setup'
     | '/flows/$flowId'
@@ -184,7 +172,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DemoRoute: typeof DemoRoute
-  ProjectRoute: typeof ProjectRoute
   SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
   FlowsFlowIdRouteRoute: typeof FlowsFlowIdRouteRouteWithChildren
@@ -204,13 +191,6 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/project': {
-      id: '/project'
-      path: '/project'
-      fullPath: '/project'
-      preLoaderRoute: typeof ProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -312,7 +292,6 @@ const FlowsFlowIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoRoute: DemoRoute,
-  ProjectRoute: ProjectRoute,
   SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
   FlowsFlowIdRouteRoute: FlowsFlowIdRouteRouteWithChildren,

@@ -33,6 +33,7 @@ export function Shell() {
       {settingsOpen ? (
         <SettingsDialog
           project={project}
+          flows={flows}
           onClose={() => { setSettingsOpen(false) }}
         />
       ) : null}

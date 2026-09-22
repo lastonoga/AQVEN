@@ -1,18 +1,33 @@
 import { useEffect, useState, type JSX, type ReactNode } from "react"
 import { Link, useRouter } from "@tanstack/react-router"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiProject, ApiProviderKey, ApiSecret, SettingsSection } from "@/domain"
+import type { ApiFlow, ApiProject, ApiProviderKey, ApiSecret, SettingsSection } from "@/domain"
 import { SETTINGS_SECTIONS } from "@/domain"
-import { Heading, INDEX_STATUS_TONE, Page, PropertyList, Text, TitledPanel, type PropertyRow } from "@/components/studio"
+import {
+  COMPILE_STATUS_TONE,
+  Empty,
+  Heading,
+  INDEX_STATUS_TONE,
+  Page,
+  PropertyList,
+  Surface,
+  Tag,
+  Text,
+  TitledPanel,
+  type PropertyRow,
+  type Tone,
+} from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import { flowId as toFlowId, isoDateTime } from "@/data/ids"
+import { useRelativeTime } from "@/i18n/format"
 import type { Translator } from "@/i18n/translator"
 import { ROUTE_PATH, settingsRouteApi } from "@/lib/routes"
 import { ChatStatusPanel } from "./chat-status"
 import { CommandLine } from "./command-line"
-import { ANOTHER_PROJECT_COMMAND, mcpCommands, UPGRADE_COMMANDS } from "./presenters"
+import { ANOTHER_PROJECT_COMMAND, flowProblems, mcpCommands, shortHash, UPGRADE_COMMANDS } from "./presenters"
 import { ProjectSecrets } from "./project-secrets"
 import { ProviderKeys } from "./provider-keys"
 import { SettingRows } from "./setting-row"
@@ -22,6 +37,7 @@ const NAV_ITEM_CLASS = "flex min-h-10 w-full items-center border-l-2 border-tran
 
 type SectionProps = {
   readonly project: ApiProject
+  readonly flows: readonly ApiFlow[]
   readonly providers: readonly ApiProviderKey[]
   readonly secrets: readonly ApiSecret[]
 }
@@ -35,7 +51,9 @@ function CommandBlock({ title, hint, command }: { readonly title: string; readon
   )
 }
 
-const problemsRow = (project: ApiProject, t: Translator<"setup.settings.project">): PropertyRow => {
+type FlowTag = { readonly id: string; readonly label: string; readonly tone: Tone }
+
+const indexProblemsRow = (project: ApiProject, t: Translator<"project.index">): PropertyRow => {
   const { error, warning, info } = project.problems
   if (error + warning + info === 0) return { key: t("problems"), value: t("clean"), tone: "success" }
   return {
@@ -45,30 +63,94 @@ const problemsRow = (project: ApiProject, t: Translator<"setup.settings.project"
   }
 }
 
-function ProjectSection({ project }: SectionProps) {
-  const t = useTranslations("setup.settings.project")
+const quarantinedRow = (project: ApiProject, t: Translator<"project.index">): PropertyRow => {
+  if (project.quarantined_files.length === 0) return { key: t("quarantined"), value: t("none"), tone: "neutral" }
+  return { key: t("quarantined"), value: project.quarantined_files.join(", "), tone: "warning" }
+}
+
+const flowTags = (flow: ApiFlow, t: Translator<"project.flows">, vocabulary: Translator<"domain">): readonly FlowTag[] => {
+  const problems = flowProblems(flow)
+  const tags: readonly FlowTag[] = [
+    { id: "nodes", label: t("nodes", { count: flow.node_count }), tone: "neutral" },
+    { id: "status", label: vocabulary(`compileStatus.${flow.compile_status}`), tone: COMPILE_STATUS_TONE[flow.compile_status] },
+  ]
+  if (problems === null) return tags
+  return [...tags, { id: "problems", label: t(`problems.${problems.severity}`, { count: problems.count }), tone: problems.tone }]
+}
+
+function FlowRow({ flow }: { readonly flow: ApiFlow }) {
+  const t = useTranslations("project.flows")
   const vocabulary = useTranslations("domain")
-  const open = (
-    <Button variant="outline" size="sm" asChild>
-      <Link to={ROUTE_PATH.project}>
-        {t("open")}
-        <ArrowRight />
+  return (
+    <Surface variant="panel" padding="sm" interactive asChild>
+      <Link to={ROUTE_PATH.canvas} params={{ flowId: toFlowId(flow.flow_id) }}>
+        <Heading
+          size="block"
+          title={flow.flow_id}
+          below={[t("io", { input: flow.input_type ?? t("unknownType"), output: flow.output_type ?? t("unknownType") }), flow.root_path]}
+          trailing={
+            <div className="flex items-center gap-1.5">
+              {flowTags(flow, t, vocabulary).map((tag) => (
+                <Tag key={tag.id} size="xs" tone={tag.tone}>
+                  {tag.label}
+                </Tag>
+              ))}
+            </div>
+          }
+        />
       </Link>
-    </Button>
+    </Surface>
   )
-  const rows: readonly PropertyRow[] = [
-    { key: t("folder"), value: project.root },
-    { key: t("package"), value: project.package ?? t("none") },
-    { key: t("engine"), value: project.engine_version },
-    { key: t("projectFile"), value: project.project_file?.path ?? t("none") },
-    { key: t("lockFile"), value: project.lock_file?.path ?? t("none") },
-    { key: t("index"), value: vocabulary(`indexStatus.${project.index.status}`), tone: INDEX_STATUS_TONE[project.index.status] },
-    problemsRow(project, t),
+}
+
+function FlowList({ flows }: { readonly flows: readonly ApiFlow[] }) {
+  const t = useTranslations("project.flows")
+  if (flows.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
+  return (
+    <nav aria-label={t("navAria")} className="flex flex-col gap-1.5 p-3">
+      {flows.map((flow) => (
+        <FlowRow key={flow.flow_id} flow={flow} />
+      ))}
+    </nav>
+  )
+}
+
+function ProjectSection({ project, flows }: SectionProps) {
+  const t = useTranslations("setup.settings.project")
+  const summaryT = useTranslations("project.summary")
+  const indexT = useTranslations("project.index")
+  const flowsT = useTranslations("project.flows")
+  const vocabulary = useTranslations("domain")
+  const ago = useRelativeTime("long")
+  const { index } = project
+  const summaryRows: readonly PropertyRow[] = [
+    { key: summaryT("root"), value: project.root },
+    { key: summaryT("package"), value: project.package ?? summaryT("none") },
+    { key: summaryT("engine"), value: project.engine_version },
+    { key: summaryT("treeHash"), value: shortHash(project.tree_hash) },
+    { key: summaryT("projectFile"), value: project.project_file?.path ?? summaryT("none") },
+    { key: summaryT("lockFile"), value: project.lock_file?.path ?? summaryT("noLockFile") },
+    { key: summaryT("mcp"), value: project.mcp_url ?? summaryT("none") },
+    { key: summaryT("specSeq"), value: String(project.spec_seq) },
+  ]
+  const indexRows: readonly PropertyRow[] = [
+    { key: indexT("status"), value: vocabulary(`indexStatus.${index.status}`), tone: INDEX_STATUS_TONE[index.status] },
+    { key: indexT("generation"), value: String(index.generation) },
+    { key: indexT("indexedAt"), value: ago(isoDateTime(index.indexed_at)) },
+    { key: indexT("pending"), value: String(index.pending_files) },
+    indexProblemsRow(project, indexT),
+    quarantinedRow(project, indexT),
   ]
   return (
     <>
-      <TitledPanel size="section" title={t("title")} below={[t("description")]} trailing={open}>
-        <PropertyList rows={rows} />
+      <TitledPanel size="section" title={t("title")} below={[t("description")]}>
+        <PropertyList rows={summaryRows} />
+      </TitledPanel>
+      <TitledPanel size="section" title={indexT("title")}>
+        <PropertyList rows={indexRows} />
+      </TitledPanel>
+      <TitledPanel size="section" title={flowsT("title")}>
+        <FlowList flows={flows} />
       </TitledPanel>
       <TitledPanel size="section" title={t("anotherProject")}>
         <div className="p-3">
@@ -178,7 +260,15 @@ export function SettingsBody({ section, ...props }: SectionProps & { readonly se
 const EMPTY_PROVIDERS: readonly ApiProviderKey[] = []
 const EMPTY_SECRETS: readonly ApiSecret[] = []
 
-export function SettingsContent({ project, section }: { readonly project: ApiProject; readonly section: SettingsSection }) {
+export function SettingsContent({
+  project,
+  flows,
+  section,
+}: {
+  readonly project: ApiProject
+  readonly flows: readonly ApiFlow[]
+  readonly section: SettingsSection
+}) {
   const t = useTranslations("setup.settings")
   const { api } = useRouter().options.context
   const [providers, setProviders] = useState<readonly ApiProviderKey[] | null>(null)
@@ -216,7 +306,15 @@ export function SettingsContent({ project, section }: { readonly project: ApiPro
       </div>
     )
   }
-  return <SettingsBody project={project} section={section} providers={providers ?? EMPTY_PROVIDERS} secrets={secrets ?? EMPTY_SECRETS} />
+  return (
+    <SettingsBody
+      project={project}
+      flows={flows}
+      section={section}
+      providers={providers ?? EMPTY_PROVIDERS}
+      secrets={secrets ?? EMPTY_SECRETS}
+    />
+  )
 }
 
 function SettingsHeader({ project }: { readonly project: string }) {
@@ -239,14 +337,14 @@ function SettingsHeader({ project }: { readonly project: string }) {
 }
 
 export function SettingsScreen(): JSX.Element {
-  const { project, section } = settingsRouteApi.useLoaderData()
+  const { project, flows, section } = settingsRouteApi.useLoaderData()
   return (
     <Page
       width="md"
       header={<SettingsHeader project={project.package ?? project.root} />}
       aside={{ content: <SettingsNav section={section} />, width: NAV_WIDTH }}
     >
-      <SettingsContent project={project} section={section} />
+      <SettingsContent project={project} flows={flows} section={section} />
     </Page>
   )
 }
