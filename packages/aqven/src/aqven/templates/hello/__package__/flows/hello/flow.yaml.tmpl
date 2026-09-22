@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "A placeholder flow, generated so the project runs immediately. Not your real workflow: describe what you actually want in Studio or your coding agent, and it will replace this."
+input: "Greeting"
+output: "Greeted"
+returns:
+- name: "message"
+  from: "$greet.out.message"
+order:
+- "greet"
