@@ -139,6 +139,8 @@ differently — `enum` is what you reach for first, and it covers most cases.
   the ones this page doesn't cover (`from`, `value`, `schema_from`).
 - [Five cases of dynamic input and output shape](/concepts/five-dynamic-shape-cases/) — allowed-sets, and
   what to reach for when a field's shape isn't fixed enough to give it an ordinary type at all.
+- [What happens to media before a model sees it](/concepts/what-happens-to-media-before-a-model-sees-it/)
+  — why `Image`, `Audio`, `Video` and `Document` have none of the constraints on this page.
 - [How to handle a shape you don't know in advance](/engine/dynamic-shape/) — the `Dynamic` type, for when
   the whole output shape, not just one field's value, depends on data.
 - [What this is built on](/concepts/what-this-is-built-on/) — the retry and guarantee layer that enforces

@@ -164,6 +164,9 @@ and what it adds.
 
 - [How to constrain a field's values](/engine/field-constraints/) — every constraint keyword an `in` or
   `out` field can carry, one small example each.
+- [What happens to media before a model sees it](/concepts/what-happens-to-media-before-a-model-sees-it/)
+  — an `Image`, `Audio`, `Video` or `Document` `in` field has no size limit AQVEN enforces; the provider
+  reshapes it on its own terms.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `LlmNodeSpec`, generated from the code.

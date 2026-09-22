@@ -61,7 +61,12 @@ tests/                                 offline tests of the example, at the proj
    what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
    want.
 6. API keys live only in `__package__/.env`, which is gitignored; variables of the process environment take
-   precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or commits.
+   precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or
+   commits. To find out which providers are actually configured before recommending a model or debugging
+   a missing-key error, run `aqven secrets __package__` instead: it reports, per declared secret, where
+   it comes from and only a masked tail of its value (`••••3456`), never the real key. Use
+   `aqven models check --project __package__` the same way to see what an agent's models actually
+   support before changing one.
 7. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
 8. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
    Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
@@ -178,6 +183,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven prompt preview support_case.polish__revise --project __package__` | the exact messages that llm node sends to the model |
 | `... --input __package__/samples/case_request.json --variant tone=warm` | the same preview with your own input and a forced prompt variant |
 | `uv run aqven models check --project __package__` | output modes of every agent model; `--live` sends one tiny request per mode |
+| `uv run aqven secrets __package__` | every provider, tool and MCP secret the project declares, where it comes from, and a masked tail if it's set |
 | `uv run aqven generate __package__` | writes `__package__/types.py` |
 | `uv run aqven tree __package__` | entities by kind with their files |
 | `uv run aqven run support_case --root __package__ --input __package__/samples/case_request.json` | runs a flow without a server |

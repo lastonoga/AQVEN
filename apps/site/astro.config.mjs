@@ -190,6 +190,7 @@ export default defineConfig({
                 { slug: "concepts/three-prompt-levels" },
                 { slug: "concepts/five-dynamic-shape-cases" },
                 { slug: "concepts/what-happens-when-a-model-is-called" },
+                { slug: "concepts/what-happens-to-media-before-a-model-sees-it" },
               ],
             },
             {
