@@ -71,7 +71,7 @@ Grep: "\$triage\." in flows/support_case/nodes/**/*.yaml
 ```
 
 For the same question with full references (file, line, and field), run `{{CLI_COMMAND}} refs
-node:triage .` from a terminal — see the worked example on
+node:triage .` from a terminal — see how to read that output on
 [How to see what's in a project and how it connects](/engine/inspect-project/).
 
 ## See also

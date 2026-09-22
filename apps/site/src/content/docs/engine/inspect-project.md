@@ -48,7 +48,8 @@ cd my_project/my_project
 ```
 
 `tree` lists the whole project, one group per kind. This is the real output on an unmodified showcase
-project:
+project, trimmed here to the first few rows of the two largest groups — run it yourself for the
+untruncated list:
 
 ```bash
 {{CLI_COMMAND}} tree .
@@ -82,50 +83,7 @@ type (49)
   CascadeTier       types/enums/cascade_tier.yaml
   CaseIntent        types/enums/case_intent.yaml
   CaseOrigin        types/unions/case_origin.yaml
-  CaseOutcome       types/records/case_outcome.yaml
-  CaseRecord        types/unions/case_record.yaml
-  CaseRequest       types/records/case_request.yaml
-  CaseStatus        types/enums/case_status.yaml
-  Channel           types/enums/channel.yaml
-  Citation          types/records/citation.yaml
-  CriterionScore    types/records/criterion_score.yaml
-  Critique          types/records/critique.yaml
-  CurrencyCode      types/enums/currency_code.yaml
-  Customer          types/records/customer.yaml
-  CustomerId        types/ids/customer_id.yaml
-  CustomerTier      types/enums/customer_tier.yaml
-  DefectSymptom     types/enums/defect_symptom.yaml
-  DeliveryDamage    types/enums/delivery_damage.yaml
-  IntentBallot      types/records/intent_ballot.yaml
-  Issue             types/records/issue.yaml
-  IssueSeverity     types/enums/issue_severity.yaml
-  JudgeVerdict      types/records/judge_verdict.yaml
-  KbChunk           types/records/kb_chunk.yaml
-  KbChunkId         types/ids/kb_chunk_id.yaml
-  LampKind          types/enums/lamp_kind.yaml
-  Marketplace       types/enums/marketplace.yaml
-  MediaApproval     types/records/media_approval.yaml
-  Money             types/records/money.yaml
-  Observation       types/records/observation.yaml
-  OrderId           types/ids/order_id.yaml
-  PanelOutcome      types/records/panel_outcome.yaml
-  PanelRequest      types/records/panel_request.yaml
-  PanelVerdict      types/records/panel_verdict.yaml
-  Policy            types/records/policy.yaml
-  PolicyId          types/ids/policy_id.yaml
-  ProductCategory   types/enums/product_category.yaml
-  ProductRef        types/records/product_ref.yaml
-  ReplyApproval     types/records/reply_approval.yaml
-  ReplyCriterion    types/enums/reply_criterion.yaml
-  ReplyDraft        types/records/reply_draft.yaml
-  ReplyMedia        types/records/reply_media.yaml
-  Resolution        types/records/resolution.yaml
-  ResolutionAction  types/enums/resolution_action.yaml
-  Score             types/values/score.yaml
-  SignalDef         types/records/signal_def.yaml
-  SignalKey         types/ids/signal_key.yaml
-  SkuId             types/ids/sku_id.yaml
-  VotePerspective   types/enums/vote_perspective.yaml
+  ... 44 more types, run it yourself for the full list
 inference (9)
   ballot           flows/support_case/nodes/vote/ballot.inference.yaml
   critique         flows/support_case/nodes/polish/critique.inference.yaml
@@ -145,39 +103,7 @@ node (38)
   judge_panel.decide__tie_break  flows/judge_panel/nodes/decide/tie_break.node.yaml
   judge_panel.judges             flows/judge_panel/nodes/judges/judges.node.yaml
   judge_panel.judges__deepseek   flows/judge_panel/nodes/judges/deepseek.node.yaml
-  judge_panel.judges__llama      flows/judge_panel/nodes/judges/llama.node.yaml
-  judge_panel.judges__qwen       flows/judge_panel/nodes/judges/qwen.node.yaml
-  judge_panel.pick               flows/judge_panel/nodes/pick/pick.node.yaml
-  support_case.approvals         flows/support_case/nodes/approvals/approvals.node.yaml
-  support_case.approvals__brand  flows/support_case/nodes/approvals/brand.node.yaml
-  support_case.approvals__lead   flows/support_case/nodes/approvals/lead.node.yaml
-  support_case.case_form         flows/support_case/nodes/case_form/case_form.node.yaml
-  support_case.clip              flows/support_case/nodes/clip/clip.node.yaml
-  support_case.drafts            flows/support_case/nodes/drafts/drafts.node.yaml
-  support_case.drafts__gemini    flows/support_case/nodes/drafts/gemini.node.yaml
-  support_case.drafts__gpt       flows/support_case/nodes/drafts/gpt.node.yaml
-  support_case.drafts__mistral   flows/support_case/nodes/drafts/mistral.node.yaml
-  support_case.finalize          flows/support_case/nodes/finalize/finalize.node.yaml
-  support_case.illustrate        flows/support_case/nodes/illustrate/illustrate.node.yaml
-  support_case.intent            flows/support_case/nodes/intent/intent.node.yaml
-  support_case.intent__escalate  flows/support_case/nodes/intent/escalate.node.yaml
-  support_case.panel             flows/support_case/nodes/panel/panel.node.yaml
-  support_case.polish            flows/support_case/nodes/polish/polish.node.yaml
-  support_case.polish__critique  flows/support_case/nodes/polish/critique.node.yaml
-  support_case.polish__revise    flows/support_case/nodes/polish/revise.node.yaml
-  support_case.prepare           flows/support_case/nodes/prepare/prepare.node.yaml
-  support_case.record            flows/support_case/nodes/record/record.node.yaml
-  support_case.record__extract   flows/support_case/nodes/record/extract.node.yaml
-  support_case.record__validate  flows/support_case/nodes/record/validate.node.yaml
-  support_case.route             flows/support_case/nodes/route/route.node.yaml
-  support_case.route__resolve    flows/support_case/nodes/route/resolve.node.yaml
-  support_case.search_kb         flows/support_case/nodes/search_kb/search_kb.node.yaml
-  support_case.tally             flows/support_case/nodes/tally/tally.node.yaml
-  support_case.to_record         flows/support_case/nodes/to_record/to_record.node.yaml
-  support_case.triage            flows/support_case/nodes/triage/triage.node.yaml
-  support_case.voice             flows/support_case/nodes/voice/voice.node.yaml
-  support_case.vote              flows/support_case/nodes/vote/vote.node.yaml
-  support_case.vote__ballot      flows/support_case/nodes/vote/ballot.node.yaml
+  ... 33 more nodes, run it yourself for the full list
 dataset (5)
   reply_cases                   evals/support_case/reply_cases.yaml
   support_case_cases            datasets/support_case_cases.yaml
@@ -215,48 +141,31 @@ references (1):
 Two tools and another type use `Money` as a field type, and `Money` itself has one field typed
 `CurrencyCode`. Changing `Money`'s shape means checking all four of those call sites.
 
-A node tells a different story — this is what `refs` is for before a rename. `support_case.triage` is
-early in its flow, so almost every later node in `support_case` pulls a value from it:
+A node tells a different story — this is what `refs` is for before a rename. `record__extract` is a
+small `llm` node partway through the flow, so its full picture in both directions still fits on screen:
 
 ```bash
-{{CLI_COMMAND}} refs node:triage .
+{{CLI_COMMAND}} refs node:extract .
 ```
 
 ```text
-node:support_case.triage
-definition: flows/support_case/nodes/triage/triage.node.yaml
-referenced by (18):
-  flow:support_case                   flows/support_case/flow.yaml:30 order[1]
-  node:support_case.drafts__gemini    flows/support_case/nodes/drafts/gemini.node.yaml:9 in[0].from
-  node:support_case.drafts__gpt       flows/support_case/nodes/drafts/gpt.node.yaml:9 in[0].from
-  node:support_case.drafts__mistral   flows/support_case/nodes/drafts/mistral.node.yaml:9 in[0].from
-  node:support_case.illustrate        flows/support_case/nodes/illustrate/illustrate.node.yaml:10 in[1].from
-  node:support_case.intent__escalate  flows/support_case/nodes/intent/escalate.node.yaml:9 in[0].from
-  node:support_case.intent__escalate  flows/support_case/nodes/intent/escalate.node.yaml:11 in[1].from
-  node:support_case.intent__escalate  flows/support_case/nodes/intent/escalate.node.yaml:13 in[2].from
-  node:support_case.panel             flows/support_case/nodes/panel/panel.node.yaml:8 in[0].from
-  node:support_case.polish__critique  flows/support_case/nodes/polish/critique.node.yaml:8 in[0].from
-  node:support_case.polish__revise    flows/support_case/nodes/polish/revise.node.yaml:8 in[0].from
-  node:support_case.record__extract   flows/support_case/nodes/record/extract.node.yaml:10 in[1].from
-  node:support_case.route__resolve    flows/support_case/nodes/route/resolve.node.yaml:18 in[5].from
-  node:support_case.search_kb         flows/support_case/nodes/search_kb/search_kb.node.yaml:8 in[0].from
-  node:support_case.search_kb         flows/support_case/nodes/search_kb/search_kb.node.yaml:10 in[1].from
-  node:support_case.vote__ballot      flows/support_case/nodes/vote/ballot.node.yaml:8 in[0].from
-  node:support_case.vote__ballot      flows/support_case/nodes/vote/ballot.node.yaml:10 in[1].from
-  node:support_case.vote__ballot      flows/support_case/nodes/vote/ballot.node.yaml:12 in[2].from
-references (6):
-  inference:triage           flows/support_case/nodes/triage/triage.node.yaml inference (by convention)
-  agent:gemini               flows/support_case/nodes/triage/triage.node.yaml:5 agent
-  node:support_case.prepare  flows/support_case/nodes/triage/triage.node.yaml:8 in[0].from
-  node:support_case.prepare  flows/support_case/nodes/triage/triage.node.yaml:10 in[1].from
-  node:support_case.prepare  flows/support_case/nodes/triage/triage.node.yaml:16 in[4].from
-  node:support_case.prepare  flows/support_case/nodes/triage/triage.node.yaml:18 in[5].from
+node:support_case.record__extract
+definition: flows/support_case/nodes/record/extract.node.yaml
+referenced by (2):
+  node:support_case.record            flows/support_case/nodes/record/record.node.yaml:6 body[0]
+  node:support_case.record__validate  flows/support_case/nodes/record/validate.node.yaml:10 in[0].from
+references (5):
+  inference:extract            flows/support_case/nodes/record/extract.node.yaml inference (by convention)
+  agent:gemini                 flows/support_case/nodes/record/extract.node.yaml:5 agent
+  node:support_case.prepare    flows/support_case/nodes/record/extract.node.yaml:8 in[0].from
+  node:support_case.triage     flows/support_case/nodes/record/extract.node.yaml:10 in[1].from
+  node:support_case.case_form  flows/support_case/nodes/record/extract.node.yaml:12 in[2].from
 ```
 
-That's `refs node:triage .` — just the local name, no flow prefix — resolving on its own to
-`node:support_case.triage`, because no other flow in this project has a node called `triage`. The
-`inference:triage (by convention)` line is the node picking up `triage.inference.yaml` by folder and
-stem, not by anything written in `triage.node.yaml`.
+That's `refs node:extract .` — just the local name, no flow prefix — resolving on its own to
+`node:support_case.record__extract`, because no other flow in this project has a node called `extract`.
+The `inference:extract (by convention)` line is the node picking up `extract.inference.yaml` by folder
+and stem, not by anything written in `extract.node.yaml`.
 
 Looking up something that isn't there fails instead of printing an empty result:
 
