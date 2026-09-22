@@ -1,8 +1,31 @@
-import { ArrowRight, CircleAlert, CircleCheck } from "lucide-react";
+import { ArrowRight, CircleAlert, CircleCheck, RotateCw } from "lucide-react";
 import { cn } from "cn";
 
-const NodeChip = ({ label, kind }: { label: string; kind: string }) => (
-  <div className="flex shrink-0 flex-col items-center gap-1 rounded-md border border-border bg-card px-3 py-2 text-center shadow-xs">
+const NodeChip = ({
+  label,
+  kind,
+  loop,
+  transparent,
+}: {
+  label: string;
+  kind: string;
+  loop?: boolean;
+  transparent?: boolean;
+}) => (
+  <div
+    className={cn(
+      "relative flex shrink-0 flex-col items-center gap-1 rounded-md border border-border px-3 py-2 text-center",
+      transparent ? "bg-transparent" : "bg-card shadow-xs",
+    )}
+  >
+    {loop && (
+      <span
+        className="absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full border border-border bg-background-subtle"
+        title="loops until it succeeds"
+      >
+        <RotateCw className="size-2.5 text-muted-foreground" aria-hidden="true" />
+      </span>
+    )}
     <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{kind}</span>
     <span className="font-mono text-xs font-medium text-foreground">{label}</span>
   </div>
@@ -75,6 +98,185 @@ export const ReviewLikeCodeSchematic = () => (
       <DiffLine sign="-">billing, technical, other.</DiffLine>
       <DiffLine sign="+">billing, technical, refund, other.</DiffLine>
     </div>
+  </div>
+);
+
+const FileCard = ({ path, lines }: { path: string; lines: string[] }) => (
+  <div className="overflow-hidden rounded-lg border border-border">
+    <div className="border-b border-border bg-background-subtle px-3 py-2">
+      <code className="font-mono text-xs text-muted-foreground">{path}</code>
+    </div>
+    <div className="bg-card px-3 py-2 font-mono text-xs leading-relaxed text-foreground">
+      {lines.map((line, i) => (
+        <div key={i} className="whitespace-pre">
+          {line || " "}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const NODE_YAML_LINES = [
+  'kind: "Node"',
+  'node: "code"',
+  'description: "Reads unresolved tickets from the queue"',
+  'run: "collect_orders"',
+  "in:",
+  '- name: "queue_id"',
+  '  type: "QueueId"',
+  '  from: "$input.queue_id"',
+  "out:",
+  '- name: "tickets"',
+  '  type: "Ticket[]"',
+];
+
+const NODE_PY_LINES = [
+  "from route_ticket.types import QueueId, CollectOrdersOut",
+  "",
+  "def collect_orders(queue_id: QueueId) -> CollectOrdersOut:",
+  "    tickets = fetch_open_tickets(queue_id)",
+  "    return CollectOrdersOut(tickets=tickets)",
+];
+
+export const RealFilesSchematic = () => (
+  <div className="flex flex-col gap-3">
+    <FileCard path="flows/route_ticket/nodes/collect_orders/collect_orders.node.yaml" lines={NODE_YAML_LINES} />
+    <FileCard path="flows/route_ticket/nodes/collect_orders/collect_orders.py" lines={NODE_PY_LINES} />
+  </div>
+);
+
+const REPO_TREE_LINES = [
+  "AQVEN/",
+  "├── packages/",
+  "│   ├── aqven/          the engine",
+  "│   └── aqven-llm/      model providers",
+  "├── apps/",
+  "│   └── studio/         the UI",
+  "├── LICENSE              AQVEN License 1.0.0",
+  "└── README.md",
+];
+
+const TerminalCard = ({ lines }: { lines: string[] }) => (
+  <div className="overflow-hidden rounded-lg border border-border">
+    <div className="flex items-center gap-1.5 border-b border-border bg-background-subtle px-3 py-2">
+      <span className="size-2 rounded-full bg-border" />
+      <span className="size-2 rounded-full bg-border" />
+      <span className="size-2 rounded-full bg-border" />
+    </div>
+    <div className="bg-card px-3 py-2 font-mono text-xs leading-relaxed">
+      {lines.map((line, i) => (
+        <div key={i} className="whitespace-pre text-muted-foreground">
+          <span className="text-success">$ </span>
+          {line}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const RepoOwnershipSchematic = () => (
+  <div className="flex flex-col gap-3">
+    <FileCard path="lastonoga/AQVEN" lines={REPO_TREE_LINES} />
+    <TerminalCard lines={["git clone https://github.com/lastonoga/AQVEN", "cd AQVEN && uv sync"]} />
+  </div>
+);
+
+const TRACE_STEPS = [
+  { node: "collect_orders", detail: "3 orders read from queue", llm: false },
+  { node: "classify_intent", detail: "category: refund, confidence: 0.41", llm: true },
+  { node: "route_to_queue", detail: "sent to: escalations", llm: false },
+];
+
+export const RunTraceSchematic = () => (
+  <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-background-subtle p-4">
+    {TRACE_STEPS.map((step, i) => (
+      <div key={step.node} className="flex items-start gap-2">
+        <span className="mt-1.5 font-mono text-[10px] text-muted-foreground">{i + 1}</span>
+        <div
+          className={cn(
+            "flex flex-1 flex-col gap-0.5 rounded-md border px-2.5 py-1.5",
+            step.llm ? "border-llm-border bg-llm-bg" : "border-border bg-card",
+          )}
+        >
+          <span className="font-mono text-xs font-medium text-foreground">{step.node}</span>
+          <span className={cn("font-mono text-[10px]", step.llm ? "text-llm" : "text-muted-foreground")}>
+            {step.detail}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const GATE_SCORERS = [
+  { name: "concern_recall", before: 78, after: 92 },
+  { name: "no_invented_concerns", before: 94, after: 100 },
+  { name: "confidence_calibrated", before: 85, after: 81 },
+];
+
+export const EvalGateSchematic = () => (
+  <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-background-subtle p-4">
+    {GATE_SCORERS.map((scorer) => {
+      const delta = scorer.after - scorer.before;
+      const improved = delta >= 0;
+      return (
+        <div key={scorer.name} className="flex items-center gap-2">
+          <span className="w-28 shrink-0 truncate font-mono text-[10px] text-muted-foreground">{scorer.name}</span>
+          <div className="relative h-1.5 flex-1 rounded-full bg-border">
+            <div
+              className={cn("absolute inset-y-0 left-0 rounded-full", improved ? "bg-success" : "bg-destructive")}
+              style={{ width: `${scorer.after}%` }}
+            />
+            <div className="absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-foreground/60" style={{ left: `${scorer.before}%` }} />
+          </div>
+          <span className={cn("w-9 shrink-0 text-right font-mono text-[10px]", improved ? "text-success" : "text-destructive")}>
+            {improved ? "+" : ""}
+            {delta}
+          </span>
+        </div>
+      );
+    })}
+    <div className="mt-1 flex items-center gap-1.5 self-start rounded-full border border-success/30 bg-success/10 px-2.5 py-1">
+      <CircleCheck className="size-3 text-success" aria-hidden="true" />
+      <span className="font-mono text-[10px] text-success">gate: pass</span>
+    </div>
+  </div>
+);
+
+export const RegressionCaseSchematic = () => (
+  <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background-subtle px-4 py-4">
+    <div className="flex flex-col gap-0.5">
+      <span className="font-mono text-xs font-medium text-foreground">angry_refund_request</span>
+      <span className="font-mono text-[10px] text-muted-foreground">datasets/route_ticket_cases.yaml</span>
+    </div>
+    <span className="flex shrink-0 items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 font-mono text-[10px] text-success">
+      <CircleCheck className="size-3" aria-hidden="true" /> regression test
+    </span>
+  </div>
+);
+
+const COST_NODES = [
+  { node: "collect_orders", cost: "$0.00", latency: "12ms", expensive: false },
+  { node: "classify_intent", cost: "$0.02", latency: "840ms", expensive: true },
+  { node: "route_to_queue", cost: "$0.00", latency: "3ms", expensive: false },
+];
+
+export const CostLatencySchematic = () => (
+  <div className="flex flex-col gap-1 rounded-lg border border-border bg-background-subtle p-4">
+    {COST_NODES.map((node) => (
+      <div
+        key={node.node}
+        className={cn(
+          "flex items-center justify-between rounded-md border px-2.5 py-1.5",
+          node.expensive ? "border-destructive/30 bg-destructive/5" : "border-border bg-card",
+        )}
+      >
+        <span className="font-mono text-xs text-foreground">{node.node}</span>
+        <span className={cn("font-mono text-[10px]", node.expensive ? "text-destructive" : "text-muted-foreground")}>
+          {node.cost} · {node.latency}
+        </span>
+      </div>
+    ))}
   </div>
 );
 
@@ -169,6 +371,43 @@ export const MiniCheckPassedSchematic = () => (
   </div>
 );
 
+const ForkConnector = () => (
+  <svg viewBox="0 0 100 34" className="h-8 w-24 shrink-0 overflow-visible" aria-hidden="true">
+    <path d="M50 0 L50 10" className="fill-none stroke-2 stroke-border" />
+    <path d="M14 10 L86 10" className="fill-none stroke-2 stroke-border" />
+    <path d="M14 10 L14 26" className="fill-none stroke-2 stroke-border" />
+    <path d="M86 10 L86 26" className="fill-none stroke-2 stroke-border" />
+    <path d="M10 22 L14 27 L18 22" className="fill-none stroke-2 stroke-border" />
+    <path d="M82 22 L86 27 L90 22" className="fill-none stroke-2 stroke-border" />
+  </svg>
+);
+
+export const HeroCanvasSchematic = () => (
+  <div className="relative w-full overflow-hidden rounded-md border border-border">
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:20px_20px]"
+    />
+    <div className="relative flex flex-col items-center gap-1 px-6 py-8">
+      <div className="flex flex-col items-center gap-3 sm:flex-row">
+        <NodeChip label="collect_orders" kind="code" transparent />
+        <Connector />
+        <NodeChip label="classify_intent" kind="llm" transparent />
+      </div>
+      <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">parallel</span>
+      <ForkConnector />
+      <div className="flex items-center gap-6">
+        <NodeChip label="notify_customer" kind="tool" transparent />
+        <NodeChip label="retry_failed" kind="loop" loop transparent />
+      </div>
+      <div className="mt-5 flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1">
+        <CircleCheck className="size-3.5 text-success" aria-hidden="true" />
+        <span className="font-mono text-xs text-success">aqven check: 0 errors</span>
+      </div>
+    </div>
+  </div>
+);
+
 export const MiniAgentReadSchematic = () => (
   <div className="flex w-full flex-col gap-1 rounded border border-border bg-card px-2.5 py-2">
     <span className="font-mono text-[10px] text-muted-foreground">reading flows/route_ticket/flow.yaml</span>
@@ -178,3 +417,5 @@ export const MiniAgentReadSchematic = () => (
     </span>
   </div>
 );
+
+export const heroCanvasVisual = <HeroCanvasSchematic />;

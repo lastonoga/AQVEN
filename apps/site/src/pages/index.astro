@@ -8,13 +8,16 @@ import { Footer2 } from "@/components/footer2";
 import {
   AGENT_FEATURES,
   Comparison,
+  FAQ,
   Problem,
   Stack,
   StudioEvidence,
+  Testimonial,
   WhatsInside,
   TrustStrip,
 } from "@/components/landing/sections";
 import { Providers } from "@/components/landing/provider-logos";
+import { heroCanvasVisual } from "@/components/landing/schematics";
 
 const repo = "https://github.com/lastonoga/AQVEN";
 const docs = "/start/";
@@ -22,9 +25,7 @@ const quickstart = "/start/quickstart/";
 
 const logo = {
   url: "/",
-  src: "/favicon.svg",
-  alt: "AQVEN",
-  title: "AQVEN",
+  title: "aqven",
 };
 
 const menu = [
@@ -76,15 +77,12 @@ const menu = [
           primary: { text: "Get started", url: quickstart },
           secondary: { text: "GitHub", url: repo },
         }}
-        image={{
-          src: "/images/studio/canvas.png",
-          alt: "AQVEN Studio showing a multi-step AI workflow on one canvas",
-        }}
+        visual={heroCanvasVisual}
       />
 
       <TrustStrip />
       <Problem />
-      <StudioEvidence client:visible />
+      <StudioEvidence />
       <WhatsInside />
 
       <Feature15
@@ -97,6 +95,8 @@ const menu = [
       <Comparison />
       <Stack />
       <Providers />
+      <FAQ client:visible />
+      <Testimonial />
 
       <Cta10
         heading="Know what your workflow does before it runs."

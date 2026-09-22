@@ -14,10 +14,10 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "cn";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -28,24 +28,19 @@ import {
 } from "@/components/ui/table";
 import {
   CheckBeforeItRunsSchematic,
-  MiniAgentReadSchematic,
+  CostLatencySchematic,
+  EvalGateSchematic,
   MiniCheckPassedSchematic,
-  MiniRunsSchematic,
   MiniTypeMismatchSchematic,
-  MiniWorkflowSchematic,
+  RealFilesSchematic,
+  RegressionCaseSchematic,
+  RepoOwnershipSchematic,
   ReviewLikeCodeSchematic,
+  RunTraceSchematic,
   ScatteredFilesSchematic,
 } from "@/components/landing/schematics";
 
 const REPO = "https://github.com/lastonoga/AQVEN";
-
-interface StudioView {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  src: string;
-  alt: string;
-}
 
 const TRUST = ["Source available", "AQVEN License", "Python", "Runs locally", "No account needed"];
 
@@ -63,41 +58,36 @@ const STAKES = [
   { icon: <Database className="size-5" />, label: "Records" },
 ];
 
-const STUDIO_VIEWS: StudioView[] = [
+const GUARDS: { heading: string; body: string; visual: React.ReactNode }[] = [
   {
-    icon: <Workflow className="size-5" />,
-    title: "See the whole project",
-    summary: "Every workflow in the project, read from your files.",
-    src: "/images/studio/project-flows.png",
-    alt: "AQVEN Studio showing a project and its workflows",
+    heading: "Check it before it runs.",
+    body: "Broken connections between steps, inputs that don't match, a prompt pointing at something that isn't there. Caught before a customer finds it.",
+    visual: <CheckBeforeItRunsSchematic />,
   },
   {
-    icon: <Zap className="size-5" />,
-    title: "Find a bad result",
-    summary: "A recorded run, with its cost, duration and finished steps.",
-    src: "/images/studio/runs.png",
-    alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
+    heading: "Review a change like code.",
+    body: "A prompt edit shows up in your diff. Your teammate reviews the logic in a pull request, the same as everything else you ship.",
+    visual: <ReviewLikeCodeSchematic />,
   },
   {
-    icon: <Layers className="size-5" />,
-    title: "Look inside a step",
-    summary: "The exact input and output of a single node.",
-    src: "/images/studio/node-inspector.png",
-    alt: "AQVEN Studio node inspector showing the input and output of one step",
+    heading: "No more guessing why an answer went wrong.",
+    body: "Every run keeps its full event log: what each step received, what it returned, what it cost. An \"almost right\" answer stops being a guess.",
+    visual: <RunTraceSchematic />,
   },
   {
-    icon: <ChartLine className="size-5" />,
-    title: "Score a change",
-    summary: "Scorers, a dataset and a policy behind one evaluation.",
-    src: "/images/studio/evaluations.png",
-    alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
+    heading: "Know an edit helped, before you ship it.",
+    body: "Run the same dataset before and after. The gate reports which scores went up, which went down, and whether it's a real improvement, not a vibe.",
+    visual: <EvalGateSchematic />,
   },
   {
-    icon: <Database className="size-5" />,
-    title: "Keep the cases",
-    summary: "The reusable cases every evaluation runs against.",
-    src: "/images/studio/dataset-controls.png",
-    alt: "AQVEN Studio Datasets tab with a CSV upload, a selected dataset and its list of cases",
+    heading: "Fix a bug once. It stays fixed.",
+    body: "A bug you fixed without a case for it comes back next edit. Pin the exact input that broke it as a dataset case, and the fix survives the next change, yours or your agent's.",
+    visual: <RegressionCaseSchematic />,
+  },
+  {
+    heading: "No surprise on the bill.",
+    body: "Every step's dollar cost and latency, per run. The expensive node is visible before it becomes a surprise on the bill.",
+    visual: <CostLatencySchematic />,
   },
 ];
 
@@ -172,69 +162,18 @@ export const StudioEvidence = () => (
         Your team can finally read the workflow.
       </h2>
     </div>
-    <Tabs
-      defaultValue={STUDIO_VIEWS[0].title}
-      orientation="vertical"
-      className="mt-14 grid grid-cols-1 items-start gap-4 lg:mt-20 lg:grid-cols-5 lg:gap-6"
-    >
-      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-xl bg-muted p-1.5 lg:col-span-2">
-        {STUDIO_VIEWS.map((view) => (
-          <TabsTrigger
-            key={view.title}
-            value={view.title}
-            className="h-auto w-full items-start justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
-          >
-            <span className="flex items-start gap-3">
-              <span className="mt-0.5 shrink-0 text-muted-foreground">{view.icon}</span>
-              <span className="flex flex-col gap-0.5">
-                <span className="font-semibold">{view.title}</span>
-                <span className="text-sm font-normal text-muted-foreground">{view.summary}</span>
-              </span>
-            </span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      {STUDIO_VIEWS.map((view) => (
-        <TabsContent key={view.title} value={view.title} className="m-0 lg:col-span-3">
-          {/* Fixed-ratio frame: the source screenshots range from 1.50 to 4.35 in aspect, so
-              each one is matted inside a constant box and switching views never shifts
-              the layout. Capture future shots at 16:9 and the matting disappears. */}
-          <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/10">
-            <img
-              src={view.src}
-              alt={view.alt}
-              loading="lazy"
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
-        </TabsContent>
+    <div className="mx-auto mt-14 grid max-w-6xl items-start gap-6 md:grid-cols-2 lg:mt-20 lg:grid-cols-3">
+      {GUARDS.map((guard) => (
+        <Card key={guard.heading}>
+          <CardHeader>
+            <CardTitle className="text-xl">{guard.heading}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {guard.visual}
+            <p className="text-muted-foreground">{guard.body}</p>
+          </CardContent>
+        </Card>
       ))}
-    </Tabs>
-    <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Check it before it runs.</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <CheckBeforeItRunsSchematic />
-          <p className="text-muted-foreground">
-            Broken connections between steps, inputs that don&rsquo;t match, a prompt pointing at
-            something that isn&rsquo;t there. Caught before a customer finds it.
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Review a change like code.</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <ReviewLikeCodeSchematic />
-          <p className="text-muted-foreground">
-            A prompt edit shows up in your diff. Your teammate reviews the logic in a pull
-            request, the same as everything else you ship.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   </Section>
 );
@@ -278,30 +217,143 @@ export const Stack = () => (
         <CardHeader>
           <CardTitle className="text-2xl md:text-3xl">Keep your models. Keep your code.</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           <p className="text-muted-foreground">
             AQVEN runs next to your application: your providers, your tools, your stack. Python, on
-            your machine, with the workflow committed in your own repo.
+            your machine, with the workflow committed in your own repo. Here&rsquo;s an actual node,
+            not a mockup:
           </p>
+          <RealFilesSchematic />
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl md:text-3xl">Source available.</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           <p className="text-muted-foreground">
             Read the code. Run it yourself. Change it to fit how your team works. Your workflows are
             files in your repo: they&rsquo;re yours, and they stay yours whatever happens to us.
           </p>
+          <RepoOwnershipSchematic />
           <a
             href={REPO}
-            className="mt-6 inline-flex text-sm font-medium underline underline-offset-4"
+            className="inline-flex text-sm font-medium underline underline-offset-4"
           >
             View on GitHub
           </a>
         </CardContent>
       </Card>
+    </div>
+  </Section>
+);
+
+const FAQS = [
+  {
+    question: "Is AQVEN open source?",
+    answer:
+      "No. AQVEN is source-available under the AQVEN License 1.0.0, a modified PolyForm Shield license: you can read the code, run it and change it, and the license restricts commercial redistribution.",
+  },
+  {
+    question: "What models and providers does AQVEN support?",
+    answer:
+      "OpenAI, Anthropic, Google Gemini, OpenRouter, Mistral, DeepSeek and more, through one provider catalog. Swap a model per agent without touching the rest of the workflow.",
+  },
+  {
+    question: "Do I need an account or a cloud service?",
+    answer:
+      "No. uv tool install aqven runs locally: Python, SQLite, your own machine. Nothing to sign up for, nothing hosted by us.",
+  },
+  {
+    question: "Can my coding agent actually edit these workflows?",
+    answer:
+      "Yes, that's the point. Every flow, node and prompt is a plain file your agent can read, edit and check, the same way it already edits your application code.",
+  },
+  {
+    question: "Does AQVEN replace my application, or run alongside it?",
+    answer:
+      "Alongside it. AQVEN runs next to your existing application, using your providers and your tools. The workflow is a set of files in your repo, not a separate platform.",
+  },
+  {
+    question: "What happens to my workflows if AQVEN goes away?",
+    answer:
+      "They stay yours. Every flow, node, prompt and dataset is already a file committed to your own repo, not a definition trapped in someone else's platform.",
+  },
+];
+
+export const FAQ = () => (
+  <Section className="bg-background-subtle">
+    <div className="mx-auto max-w-3xl text-center">
+      <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl lg:text-5xl">
+        Frequently asked questions.
+      </h2>
+    </div>
+    <Accordion type="single" collapsible className="mx-auto mt-14 w-full max-w-2xl">
+      {FAQS.map((faq) => (
+        <AccordionItem key={faq.question} value={faq.question}>
+          <AccordionTrigger className="text-left text-base font-medium">
+            {faq.question}
+          </AccordionTrigger>
+          <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  </Section>
+);
+
+const CASE_STUDY_STATS = [
+  { value: "1 week → 1 day", label: "to a better workflow" },
+  { value: "~$30", label: "total experiment budget" },
+  { value: "~500", label: "workflow, prompt and model variations tried" },
+];
+
+export const Testimonial = () => (
+  <Section>
+    <div className="mx-auto max-w-3xl">
+      <Badge variant="secondary">Why I built this</Badge>
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-balance md:text-4xl">
+        A week of manual tuning. Then one day and $30.
+      </h2>
+      <div className="mt-8 space-y-4 text-muted-foreground">
+        <p>
+          For Tonicc, a face-scan skincare app I built, reliability matters. It&rsquo;s not a
+          medical diagnosis, but a false positive, a confused finding, or a bad recommendation
+          still matters. So the workflow makes roughly 250 model calls per face: different crops,
+          different models, different prompts, cross-checks, validation, adjudication.
+        </p>
+        <p>
+          Getting there by hand took a week: swapping prompts, swapping models, rerunning tests,
+          reading failures, trying again.
+        </p>
+        <p>
+          For the next iteration, I gave Claude a different job inside AQVEN Studio: research
+          known failure modes for this kind of vision task, generate the riskiest hypothesis
+          about what could be wrong, test it, record what happened, and generate the next one. It
+          ran through roughly 500 workflow, prompt and model variations in about a day, for about
+          $30, and the result was more stable and performed better than the version I&rsquo;d
+          spent a week building by hand.
+        </p>
+      </div>
+      <div className="mt-10 grid grid-cols-1 gap-6 border-y border-border py-8 sm:grid-cols-3">
+        {CASE_STUDY_STATS.map((stat) => (
+          <div key={stat.label} className="text-center sm:text-left">
+            <div className="font-mono text-2xl font-semibold text-foreground">{stat.value}</div>
+            <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-10 text-xl font-medium text-balance md:text-2xl">
+        &ldquo;The model isn&rsquo;t the system. The loop around the model is.&rdquo;
+      </p>
+      <div className="mt-6 flex items-center gap-3">
+        <span className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-semibold text-foreground">
+          KB
+        </span>
+        <div>
+          <div className="font-semibold">Kir Burkhanov</div>
+          <div className="text-sm text-muted-foreground">Author of AQVEN</div>
+        </div>
+      </div>
     </div>
   </Section>
 );
@@ -327,7 +379,7 @@ export const AGENT_FEATURES = [
   {
     icon: <Sparkles className="size-5" />,
     title: "The docs are written for it, not only for you.",
-    description: "Machine-readable project context an agent can load before it edits.",
+    description: "Every page also ships as llms.txt, a plain-Markdown index an agent fetches before it edits.",
   },
 ];
 
@@ -338,7 +390,6 @@ export const INSIDE_FEATURES = [
     description: "Steps, order, and what connects to what.",
     href: "/concepts/files-as-source-of-truth/",
     wide: true,
-    visual: <MiniWorkflowSchematic />,
   },
   {
     icon: <Blocks className="size-5" />,
@@ -376,7 +427,6 @@ export const INSIDE_FEATURES = [
     description: "Every execution, recorded and inspectable.",
     href: "/studio/investigate-a-run/",
     wide: true,
-    visual: <MiniRunsSchematic />,
   },
   {
     icon: <Database className="size-5" />,
@@ -408,7 +458,6 @@ export const INSIDE_FEATURES = [
     description: "Project context an agent can read.",
     href: "/mcp-cli/connect-an-agent/",
     wide: true,
-    visual: <MiniAgentReadSchematic />,
   },
 ];
 
@@ -451,7 +500,6 @@ export const WhatsInside = () => (
               </a>
             </span>
             <span className="text-sm text-muted-foreground">{item.description}</span>
-            {item.visual && <div className="mt-1">{item.visual}</div>}
           </CardContent>
         </Card>
       ))}

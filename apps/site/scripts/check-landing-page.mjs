@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const distDir = new URL("../dist/", import.meta.url);
 const pagePath = new URL("index.html", distDir);
@@ -7,17 +7,6 @@ const pagePath = new URL("index.html", distDir);
 assert.ok(existsSync(pagePath), "Build the site before checking the landing page.");
 
 const page = readFileSync(pagePath, "utf8");
-
-// StudioEvidence ships as a client:visible island (Tabs need JS to switch) — only the default
-// tab's screenshot is in the static HTML. The other three are compiled into its JS chunk instead
-// and only reach the DOM once the visitor clicks a tab, so this check scans the whole build
-// output (HTML + every _astro/*.js chunk), not just index.html, to still catch a dropped tab.
-const astroDir = new URL("_astro/", distDir);
-const bundleText = readdirSync(astroDir)
-  .filter((name) => name.endsWith(".js"))
-  .map((name) => readFileSync(new URL(name, astroDir), "utf8"))
-  .join("\n");
-const buildOutput = page + bundleText;
 
 const requiredMarkers = [
   "Build AI workflows you can trust to run the business.",
@@ -30,26 +19,28 @@ const requiredMarkers = [
   "Source available.",
   "Know what your workflow does before it runs.",
   "uv tool install aqven",
+  "aqven check: 0 errors",
+  "E_REF_MISSING",
+  "billing, technical, refund, other.",
+  "classify.prompt.md",
+  "No more guessing why an answer went wrong.",
+  "Know an edit helped, before you ship it.",
+  "Fix a bug once. It stays fixed.",
+  "No surprise on the bill.",
+  "gate: pass",
+  "angry_refund_request",
+  "collect_orders.node.yaml",
+  "def collect_orders(queue_id: QueueId)",
+  "Frequently asked questions.",
+  "Is AQVEN open source?",
+  "llms.txt",
+  "A week of manual tuning. Then one day and $30.",
+  "The loop around the model is.",
+  "Kir Burkhanov",
 ];
 
 for (const marker of requiredMarkers) {
   assert.ok(page.includes(marker), `Expected the landing page to contain: ${marker}`);
-}
-
-const requiredScreenshots = [
-  "/images/studio/canvas.png",
-  "/images/studio/project-flows.png",
-  "/images/studio/runs.png",
-  "/images/studio/node-inspector.png",
-  "/images/studio/evaluations.png",
-  "/images/studio/dataset-controls.png",
-];
-
-for (const marker of requiredScreenshots) {
-  assert.ok(
-    buildOutput.includes(marker),
-    `Expected the build output (HTML or a JS chunk) to contain: ${marker}`
-  );
 }
 
 const forbiddenMarkers = [
@@ -76,10 +67,19 @@ for (const { marker, reason } of forbiddenMarkers) {
 assert.ok(!page.includes("—"), "The landing page must not contain an em-dash (—).");
 
 // AQVEN is source-available (AQVEN License 1.0.0, a modified PolyForm Shield that additionally
-// restricts commercial distribution), not open source, and never was. Calling it "open source" or
-// "MIT" is a license claim, not a typo. The LICENSE file also asks not to be cited as unmodified
-// PolyForm Shield, so the page should say "AQVEN License", not "PolyForm Shield".
-const licenseMisclaims = ["Open source", "open-source", "open source", '"MIT"', ">MIT<"];
+// restricts commercial distribution), not open source, and never was. Claiming it IS open source or
+// MIT is a license misclaim, not a typo. The FAQ legitimately asks "Is AQVEN open source?" and
+// answers "No" - these patterns catch the affirmative claim, not the phrase itself. The LICENSE
+// file also asks not to be cited as unmodified PolyForm Shield, so the page should say "AQVEN
+// License", not "PolyForm Shield".
+const licenseMisclaims = [
+  "AQVEN is open source",
+  "AQVEN is open-source",
+  "is an open source",
+  "is an open-source",
+  '"MIT"',
+  ">MIT<",
+];
 
 for (const marker of licenseMisclaims) {
   assert.ok(

@@ -30,7 +30,8 @@ interface HeroBasicProps {
   description: string;
   command?: string;
   buttons?: Buttons;
-  image: Image;
+  image?: Image;
+  visual?: React.ReactNode;
   className?: string;
 }
 
@@ -63,7 +64,7 @@ const defaultProps: Hero1Props = {
 };
 
 const Hero1 = (props: Props) => {
-  const { badge, heading, description, command, buttons, image, className } = {
+  const { badge, heading, description, command, buttons, image, visual, className } = {
     ...defaultProps,
     ...props,
   };
@@ -111,7 +112,9 @@ const Hero1 = (props: Props) => {
               </code>
             )}
           </div>
-          {image.srcDark ? (
+          {visual ? (
+            visual
+          ) : image?.srcDark ? (
             <>
               <img
                 src={image.src}
@@ -124,13 +127,13 @@ const Hero1 = (props: Props) => {
                 className="hidden aspect-video w-full rounded-md border border-border object-cover object-top dark:block"
               />
             </>
-          ) : (
+          ) : image ? (
             <img
               src={image.src}
               alt={image.alt}
               className="aspect-video w-full rounded-md border border-border object-cover object-top"
             />
-          )}
+          ) : null}
         </div>
       </div>
     </section>

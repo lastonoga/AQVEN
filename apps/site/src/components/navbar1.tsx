@@ -29,8 +29,8 @@ interface Navbar1Props {
   className?: string;
   logo?: {
     url: string;
-    src: string;
-    alt: string;
+    src?: string;
+    alt?: string;
     title: string;
     className?: string;
   };
@@ -140,11 +140,9 @@ const Navbar1 = ({
           <div className="flex items-center gap-6">
             {/* Logo */}
             <a href={logo.url} className="flex shrink-0 items-center gap-2">
-              <img
-                src={logo.src}
-                className="max-h-8 shrink-0"
-                alt={logo.alt}
-              />
+              {logo.src && (
+                <img src={logo.src} className="max-h-8 shrink-0" alt={logo.alt ?? logo.title} />
+              )}
               <span className="shrink-0 text-2xl font-bold whitespace-nowrap">
                 {logo.title}
               </span>
@@ -168,11 +166,8 @@ const Navbar1 = ({
           <div className="flex items-center justify-between">
             {/* Logo */}
             <a href={logo.url} className="flex items-center gap-2">
-              <img
-                src={logo.src}
-                className="max-h-8"
-                alt={logo.alt}
-              />
+              {logo.src && <img src={logo.src} className="max-h-8" alt={logo.alt ?? logo.title} />}
+              <span className="text-xl font-bold whitespace-nowrap">{logo.title}</span>
             </a>
             <Sheet>
               <SheetTrigger asChild>
@@ -184,11 +179,10 @@ const Navbar1 = ({
                 <SheetHeader>
                   <SheetTitle>
                     <a href={logo.url} className="flex items-center gap-2">
-                      <img
-                        src={logo.src}
-                        className="max-h-8"
-                        alt={logo.alt}
-                      />
+                      {logo.src && (
+                        <img src={logo.src} className="max-h-8" alt={logo.alt ?? logo.title} />
+                      )}
+                      <span className="text-xl font-bold whitespace-nowrap">{logo.title}</span>
                     </a>
                   </SheetTitle>
                 </SheetHeader>

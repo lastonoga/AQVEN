@@ -21,7 +21,7 @@ export default defineConfig({
       autoTheme: true,
     }),
     starlight({
-      title: "AQVEN",
+      title: "aqven",
       description: "Engineer AI systems, not just prompts.",
       expressiveCode: { emitExternalStylesheet: false },
       customCss: ["./src/styles/aqven-landing.css"],
