@@ -290,7 +290,8 @@ def test_templates_are_strategies(tmp_path: Path) -> None:
 def test_unknown_template_lists_the_available_ones(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert create_project(NewProjectRequest(target=tmp_path / "shop", template="huge", sync=False)) == 2
 
-    assert f"unknown template 'huge'; available templates: {MINIMAL_TEMPLATE}" in capsys.readouterr().err
+    available = ", ".join(sorted(TEMPLATES))
+    assert f"unknown template 'huge'; available templates: {available}" in capsys.readouterr().err
 
 
 def test_tests_are_created_only_when_asked(tmp_path: Path) -> None:
