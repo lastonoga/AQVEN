@@ -121,6 +121,32 @@ def test_follow_replays_history_streams_live_events_and_stops_on_close(tmp_path:
     assert [event.state for event in received if isinstance(event, ChatStatus)] == ["streaming", "idle"]
 
 
+def test_follow_stops_promptly_on_shutdown_signal_without_closing_the_session(tmp_path: Path) -> None:
+    journal = SqliteChatJournal.for_project(tmp_path, fixed_clock)
+    signals = ChatSignals()
+    session_id = ChatSessionId("chat-shutdown")
+    journal.create_session(new_session(session_id, tmp_path), MCP_URL)
+    shutdown = asyncio.Event()
+
+    async def scenario() -> None:
+        async def consume() -> None:
+            events = follow_chat_events(journal, signals, session_id, 0, idle_seconds=30.0, shutdown=shutdown)
+            async for _event in events:
+                pass
+
+        consumer = asyncio.create_task(consume())
+        await asyncio.sleep(0.05)
+        assert not consumer.done()
+        shutdown.set()
+        async with asyncio.timeout(1.0):
+            await consumer
+
+    asyncio.run(scenario())
+    stored = journal.get_session(session_id)
+    assert stored is not None
+    assert not stored.closed
+
+
 def test_approval_registry_answers_only_matching_session() -> None:
     async def scenario() -> tuple[bool, bool, str, int, str]:
         registry = ApprovalRegistry()

@@ -73,11 +73,12 @@ class ClaudeOptionsFactory:
         project_root = Path(stored.session.project_root)
         server = aqven_mcp_server(stored.mcp_url, self.settings.mcp_token)
         config = write_mcp_config({AQVEN_MCP_SERVER: server}, self.settings.mcp_config_directory)
+        mode = PERMISSION_MODES[stored.session.permission_mode]
         options = ClaudeAgentOptions(
             cwd=project_root,
             cli_path=self.settings.cli_path,
             model=stored.session.model,
-            permission_mode=PERMISSION_MODES[stored.session.permission_mode],
+            permission_mode=mode,
             system_prompt=claude_system_prompt(project_root),
             mcp_servers=config.path,
             strict_mcp_config=True,
@@ -85,7 +86,7 @@ class ClaudeOptionsFactory:
             allowed_tools=list(self.settings.allowed_tools),
             disallowed_tools=self.guard.permission_rules(config.locations()),
             hooks=self.guard.hooks(),
-            can_use_tool=can_use_tool,
+            can_use_tool=None if mode == TRUSTED_MODE else can_use_tool,
             include_partial_messages=True,
             thinking=ThinkingConfigEnabled(
                 type="enabled", budget_tokens=thinking_budget(stored.session.effort), display="summarized"

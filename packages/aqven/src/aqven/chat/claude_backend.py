@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from functools import partial
@@ -71,7 +72,9 @@ class ClaudeAgentBackend:
         return runner.begin_turn(message.client_op_id, message.text)
 
     def events(self, session_id: ChatSessionId, after_seq: int = 0) -> AsyncIterator[ChatEvent]:
-        return follow_chat_events(self._runtime.journal, self._runtime.signals, session_id, after_seq)
+        return follow_chat_events(
+            self._runtime.journal, self._runtime.signals, session_id, after_seq, shutdown=self._runtime.shutdown
+        )
 
     async def answer_approval(self, session_id: ChatSessionId, answer: ApprovalAnswer) -> None:
         self._require_open(session_id)
@@ -145,6 +148,7 @@ def create_claude_chat(
     project_root: Path,
     mcp_token: SecretStr,
     allowed_tools: tuple[str, ...] = (),
+    shutdown_signal: asyncio.Event | None = None,
 ) -> ClaudeChat:
     cli = locate_claude_cli()
     journal = SqliteChatJournal.for_project(project_root)
@@ -161,5 +165,6 @@ def create_claude_chat(
         ),
         login=ClaudeLoginProbe(cli, SubprocessCommandRunner(partial(scrubbed_environment, project_root))),
         clock=utc_now,
+        shutdown=shutdown_signal or asyncio.Event(),
     )
     return ClaudeChat(ClaudeAgentBackend(runtime), journal)
