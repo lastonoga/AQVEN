@@ -26,7 +26,7 @@ interface Row {
   alt: string;
 }
 
-const TRUST = ["Open source", "MIT", "Python", "Runs locally", "No account needed"];
+const TRUST = ["Source available", "PolyForm Shield", "Python", "Runs locally", "No account needed"];
 
 const QUOTES = [
   "I don't recognize half of this.",
@@ -239,7 +239,7 @@ export const Stack = () => (
       </div>
       <div className="rounded-lg border border-border bg-card p-8">
         <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Open source. Free forever.
+          Source available.
         </h2>
         <p className="mt-4 text-muted-foreground">
           Read the code. Run it yourself. Change it to fit how your team works. Your workflows are

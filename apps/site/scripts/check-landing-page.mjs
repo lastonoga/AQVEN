@@ -8,7 +8,7 @@ assert.ok(existsSync(pagePath), "Build the site before checking the landing page
 const page = readFileSync(pagePath, "utf8");
 
 const requiredMarkers = [
-  "The open-source workbench for AI workflows.",
+  "The source-available workbench for AI workflows.",
   "Built for humans and coding agents.",
   "AI workflows get hard to follow, fast.",
   "A broken AI workflow costs real money.",
@@ -16,7 +16,7 @@ const requiredMarkers = [
   "Your coding agent stops guessing.",
   "Not a tracing tool. Not a drag-and-drop builder.",
   "Keep your models. Keep your code.",
-  "Open source. Free forever.",
+  "Source available.",
   "Start with a workflow you already have.",
   "/images/studio/canvas.png",
   "/images/studio/project-flows.png",
@@ -33,6 +33,18 @@ const forbiddenMarkers = ["uv run aqven", "aqven check ."];
 
 for (const marker of forbiddenMarkers) {
   assert.ok(!page.includes(marker), `The landing page must not show commands: ${marker}`);
+}
+
+// AQVEN is source-available (PolyForm Shield 1.0.0), not open source, and never was — see
+// docs/adr/0039-polyform-shield-license.md. Calling it "open source" or "MIT" is a license claim, not a
+// typo; the ADR is explicit that this word choice must not reach marketing.
+const licenseMisclaims = ["Open source", "open-source", "open source", '"MIT"', ">MIT<"];
+
+for (const marker of licenseMisclaims) {
+  assert.ok(
+    !page.includes(marker),
+    `The landing page must not claim AQVEN is open source or MIT-licensed (found: ${marker}). It is source-available under PolyForm Shield — see docs/adr/0039-polyform-shield-license.md.`
+  );
 }
 
 assert.ok(
