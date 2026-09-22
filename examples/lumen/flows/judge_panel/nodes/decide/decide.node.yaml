@@ -1,0 +1,26 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Takes the merged verdict when the judges agree, calls the tie-break judge when they do not"
+on: "$aggregate.out.level"
+cases:
+  agreed:
+    bind:
+    - name: "verdict"
+      from: "$aggregate.out.consensus"
+    - name: "tie_broken"
+      value: false
+  split:
+    node: "tie_break"
+    bind:
+    - name: "verdict"
+      from: "$tie_break.out"
+    - name: "tie_broken"
+      value: true
+out:
+- name: "verdict"
+  type: "JudgeVerdict"
+  description: "Final panel verdict"
+- name: "tie_broken"
+  type: "Bool"
+  description: "The verdict came from the tie-break judge"

@@ -1,0 +1,1856 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-18c81ba80ad16e96e7a242aa6ccdcfd767782ab44ddc6f9729b5c7d87f35fc5b",
+  "request_key": "sha256-b8ecc0a4d8deac9a5d7d734f85dc3a1a60509be0c40c2722306b65afdfabfac3",
+  "model_ref": "openrouter:qwen/qwen3-30b-a3b-instruct-2507",
+  "site": {
+    "address": {
+      "node_id": "panel__judges__qwen",
+      "branch_key": "qwen",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"best_index\": 0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"rationale\": \"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "Ground",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ed",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ":",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " correctly",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " states",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " lacks",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " info",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " on",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Wi",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "-Fi",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " compatibility",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " bedroom",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " suitability",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " which",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " fully",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " supported",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 1",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " makes",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " unsupported",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " claims",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 2",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "4",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " GHz",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " only",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " bulb",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " suitability",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " citing",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " irrelevant",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " chunks",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " (",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "kb",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "_strip",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "fl",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ck",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " kb",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "_ctrl",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "heat",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "1",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ")",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " strip",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " flick",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ering",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " controller",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " heat",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\\u2014",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "no",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " mention",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " of",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Wi",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "-Fi",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " or",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " bulbs",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Thus",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 1",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " grounded",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Helpful",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ":",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " honestly",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " admits",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " lack",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " of",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " info",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " setting",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " proper",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " expectations",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 1",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " offers",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " troubleshooting",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " steps",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " in",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " chunks",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " so",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reliably",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " helpful",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Tone",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ":",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Both",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " are",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " neutral",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " polite",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " but",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " avoids",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " over",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "reach",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Best",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " candidate",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " 0",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".\"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"scores\": [{",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"criterion\": \"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ground",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ed\"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 5}",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", {",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"criterion\": \"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "help",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ful\"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 3}",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", {",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"criterion\": \"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "tone\"",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ", \"score\": 4}]}",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"best_index\": 0, \"rationale\": \"Grounded: Candidate 0 correctly states the knowledge base lacks info on Wi-Fi compatibility and bedroom suitability, which is fully supported. Candidate 1 makes unsupported claims about 2.4 GHz only and bulb suitability, citing irrelevant chunks (kb_strip0flck, kb_ctrlheat01) about strip flickering and controller heat\\u2014no mention of Wi-Fi or bulbs. Thus, Candidate 1 is not grounded. Helpful: Candidate 0 honestly admits lack of info, setting proper expectations. Candidate 1 offers troubleshooting steps not in the chunks, so not reliably helpful. Tone: Both are neutral and polite, but Candidate 0 avoids overreach. Best candidate is 0.\", \"scores\": [{\"criterion\": \"grounded\", \"score\": 5}, {\"criterion\": \"helpful\", \"score\": 3}, {\"criterion\": \"tone\", \"score\": 4}]}",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"best_index\": 0, \"rationale\": \"Grounded: Candidate 0 correctly states the knowledge base lacks info on Wi-Fi compatibility and bedroom suitability, which is fully supported. Candidate 1 makes unsupported claims about 2.4 GHz only and bulb suitability, citing irrelevant chunks (kb_strip0flck, kb_ctrlheat01) about strip flickering and controller heat\\u2014no mention of Wi-Fi or bulbs. Thus, Candidate 1 is not grounded. Helpful: Candidate 0 honestly admits lack of info, setting proper expectations. Candidate 1 offers troubleshooting steps not in the chunks, so not reliably helpful. Tone: Both are neutral and polite, but Candidate 0 avoids overreach. Best candidate is 0.\", \"scores\": [{\"criterion\": \"grounded\", \"score\": 5}, {\"criterion\": \"helpful\", \"score\": 3}, {\"criterion\": \"tone\", \"score\": 4}]}",
+        "tool_call_id": "call_8cd11433e21f4ba3b9b9ea6d",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1750,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 1065,
+      "output_tokens": 193,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "qwen/qwen3-30b-a3b-instruct-2507",
+    "timestamp": "2026-09-22T08:11:56.180083Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-22T08:11:54Z",
+      "downstream_provider": "StreamLake",
+      "finish_reason": "tool_calls",
+      "cost": 0.00012152115,
+      "upstream_inference_cost": 0.00012152115,
+      "upstream_inference_prompt_cost": 8.42625e-05,
+      "upstream_inference_completions_cost": 3.725865e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790064714-nf3P9IUGW6mo4k7F28Ur",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -1,0 +1,6 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Классификация и тексты"
+model: "openai:gpt-5.4-mini"
+settings:
+  temperature: 0.2

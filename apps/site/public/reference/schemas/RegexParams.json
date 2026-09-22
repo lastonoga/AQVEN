@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "$ref": "#/$defs/RefPath"
+    },
+    "pattern": {
+      "minLength": 1,
+      "title": "Pattern",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field",
+    "pattern"
+  ],
+  "title": "RegexParams",
+  "type": "object"
+}

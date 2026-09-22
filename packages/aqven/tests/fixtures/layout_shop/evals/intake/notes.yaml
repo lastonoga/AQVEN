@@ -1,0 +1,6 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "short"
+  inputs:
+    text: "Лампа мигает"

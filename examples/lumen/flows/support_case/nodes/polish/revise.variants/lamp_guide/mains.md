@@ -1,0 +1,1 @@
+The lamp runs on mains power and has no app. Start any troubleshooting step by unplugging it from the socket, and never suggest opening the body or changing the wiring. If the chunks carry advice about the switch, the dimmer or the socket base, give it as a separate step.

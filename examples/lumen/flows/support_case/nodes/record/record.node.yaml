@@ -1,0 +1,20 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "loop"
+description: "Fills the case form, checks it against the business rules and repairs it from the remarks"
+body:
+- "extract"
+- "validate"
+max_iter: 3
+stop:
+- run: "no_issues"
+  with:
+    path: "$iter.validate.out.issues"
+select:
+  use: "last"
+out:
+- name: "record"
+  type: "Dynamic"
+  description: "The form from the last pass"
+  from: "$iter.extract.out.record"
+  value_type: "CaseRecord"

@@ -1,0 +1,18 @@
+{
+  "name": "aqven",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.21.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "pnpm --filter @aqven/studio build",
+    "test": "pnpm --filter @aqven/studio test",
+    "lint": "pnpm --filter @aqven/studio lint",
+    "docs:dev": "pnpm --filter @aqven/site dev",
+    "docs:build": "pnpm --filter @aqven/site build"
+  }
+}

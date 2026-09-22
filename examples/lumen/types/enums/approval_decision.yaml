@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "The support lead's decision on the reply"
+values:
+- value: "approve"
+  description: "Send the reply as it is"
+- value: "edit"
+  description: "Send the reply with an edit to the text"
+- value: "reject"
+  description: "Do not send the reply"

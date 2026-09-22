@@ -1,0 +1,28 @@
+import json
+
+from starlette.routing import Mount, Route
+
+from lumen import app as host
+from lumen.types import CaseOutcome, CaseRequest
+
+
+def probe() -> str:
+    routes = host.app.routes
+    flow = host.project().flow_typed(host.FLOW_ID, CaseRequest, CaseOutcome)
+    host_mounts = [route.path for route in host.host_application().routes if isinstance(route, Mount)]
+    return json.dumps(
+        {
+            "studio": "studio_asset" in [route.name for route in routes if isinstance(route, Route)],
+            "mounts": [route.path for route in routes if isinstance(route, Mount)],
+            "host_mounts": host_mounts,
+            "host": host.SETTINGS.host,
+            "port": host.SETTINGS.port,
+            "url": host.studio_url(),
+            "flow": flow.flow_id,
+            "sample": host.sample_request().message[:16],
+        }
+    )
+
+
+if __name__ == "__main__":
+    print(probe())

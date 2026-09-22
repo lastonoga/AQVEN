@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Case channel: it sets the intake fields and the tone of the reply"
+values:
+- value: "storefront"
+  description: "The Lumen online store"
+- value: "amazon"
+  description: "The Amazon marketplace"
+- value: "ozon"
+  description: "The Ozon marketplace"

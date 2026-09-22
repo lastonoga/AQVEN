@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A reference to a catalogue product"
+fields:
+- name: "sku"
+  type: "SkuId"
+  description: "Product SKU"
+- name: "name"
+  type: "Text"
+  description: "Product name in the catalogue"
+  maxLength: 120
+- name: "category"
+  type: "ProductCategory"
+  description: "Product category"
+- name: "lamp_kind"
+  type: "LampKind?"
+  description: "Lamp kind; null for accessories with no light of their own"

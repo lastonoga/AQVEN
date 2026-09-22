@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Outcome of the case"
+values:
+- value: "sent"
+  description: "The reply was sent to the customer"
+- value: "rejected"
+  description: "The reply was rejected by the support lead"

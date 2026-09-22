@@ -1,0 +1,37 @@
+import asyncio
+import json
+from collections.abc import AsyncIterator
+from typing import Final
+
+from pydantic_ai import models
+from pydantic_ai.messages import ModelMessage
+from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
+
+from aqven.runtime import Project
+from aqven.testing.engines import EngineSession
+from __package__.types import Answer, Question
+
+FLOW: Final = "answer_question"
+MODEL: Final = "openrouter:openai/gpt-oss-20b"
+REPLY: Final = "aqven runs typed AI workflows described in YAML."
+
+type Chunk = str | dict[int, DeltaToolCall]
+
+
+async def scripted_reply(messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[Chunk]:
+    arguments = json.dumps({"reply": REPLY})
+    if not info.output_tools:
+        yield arguments
+        return
+    yield {0: DeltaToolCall(name=info.output_tools[0].name, json_args=arguments, tool_call_id="reply")}
+
+
+def test_answer_question_runs_offline(aqven_project: Project, aqven_engine: EngineSession) -> None:
+    aqven_engine.models({MODEL: FunctionModel(stream_function=scripted_reply, model_name="scripted")})
+    flow = aqven_project.flow_typed(FLOW, Question, Answer)
+
+    with models.override_allow_model_requests(False):
+        result = asyncio.run(flow.run(Question(text="  What   is aqven? ", tone="friendly")))
+
+    assert result.status == "completed", result.error
+    assert result.output == Answer(reply=REPLY, tone="friendly")

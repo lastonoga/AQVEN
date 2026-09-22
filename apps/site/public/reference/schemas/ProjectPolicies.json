@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "PiiDetector": {
+      "enum": [
+        "email",
+        "phone",
+        "card_number",
+        "iban",
+        "ip_address"
+      ],
+      "title": "PiiDetector",
+      "type": "string"
+    },
+    "PiiPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "mask_in_traces": {
+          "title": "Mask In Traces",
+          "type": "boolean"
+        },
+        "redact": {
+          "items": {
+            "$ref": "#/$defs/PiiDetector"
+          },
+          "title": "Redact",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mask_in_traces",
+        "redact"
+      ],
+      "title": "PiiPolicy",
+      "type": "object"
+    },
+    "TrustLevel": {
+      "enum": [
+        "trusted",
+        "untrusted"
+      ],
+      "title": "TrustLevel",
+      "type": "string"
+    },
+    "TrustPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "default_in": {
+          "$ref": "#/$defs/TrustLevel"
+        }
+      },
+      "required": [
+        "default_in"
+      ],
+      "title": "TrustPolicy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "pii": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PiiPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "trust": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TrustPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "title": "ProjectPolicies",
+  "type": "object"
+}

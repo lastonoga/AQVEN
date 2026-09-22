@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Приём заметки"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$review.out.text"
+order:
+- "clean"
+- "reply"
+- "review"

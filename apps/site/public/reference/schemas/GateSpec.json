@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "BootstrapSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "BCa",
+          "title": "Method",
+          "type": "string"
+        },
+        "resamples": {
+          "minimum": 1,
+          "title": "Resamples",
+          "type": "integer"
+        },
+        "seed": {
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "method",
+        "resamples",
+        "seed"
+      ],
+      "title": "BootstrapSpec",
+      "type": "object"
+    },
+    "GateAction": {
+      "enum": [
+        "release",
+        "require_approval",
+        "reject"
+      ],
+      "title": "GateAction",
+      "type": "string"
+    },
+    "GateActions": {
+      "additionalProperties": false,
+      "properties": {
+        "block": {
+          "$ref": "#/$defs/GateAction"
+        },
+        "gate_unavailable": {
+          "$ref": "#/$defs/GateAction"
+        },
+        "pass": {
+          "$ref": "#/$defs/GateAction"
+        },
+        "warn": {
+          "$ref": "#/$defs/GateAction"
+        }
+      },
+      "required": [
+        "pass",
+        "warn",
+        "block",
+        "gate_unavailable"
+      ],
+      "title": "GateActions",
+      "type": "object"
+    },
+    "GateFamilies": {
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Primary",
+          "type": "array"
+        },
+        "safety": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Safety"
+        },
+        "secondary": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secondary"
+        }
+      },
+      "required": [
+        "primary"
+      ],
+      "title": "GateFamilies",
+      "type": "object"
+    },
+    "JudgeAdmission": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration_dataset": {
+          "title": "Calibration Dataset",
+          "type": "string"
+        },
+        "min_krippendorff_alpha": {
+          "maximum": 1,
+          "minimum": -1,
+          "title": "Min Krippendorff Alpha",
+          "type": "number"
+        },
+        "min_weighted_kappa": {
+          "maximum": 1,
+          "minimum": -1,
+          "title": "Min Weighted Kappa",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min_weighted_kappa",
+        "min_krippendorff_alpha",
+        "calibration_dataset"
+      ],
+      "title": "JudgeAdmission",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actions": {
+      "$ref": "#/$defs/GateActions"
+    },
+    "alpha_primary": {
+      "exclusiveMaximum": 1,
+      "exclusiveMinimum": 0,
+      "title": "Alpha Primary",
+      "type": "number"
+    },
+    "alpha_safety": {
+      "exclusiveMaximum": 1,
+      "exclusiveMinimum": 0,
+      "title": "Alpha Safety",
+      "type": "number"
+    },
+    "baseline": {
+      "minLength": 1,
+      "title": "Baseline",
+      "type": "string"
+    },
+    "bootstrap": {
+      "$ref": "#/$defs/BootstrapSpec"
+    },
+    "families": {
+      "$ref": "#/$defs/GateFamilies"
+    },
+    "judge_admission": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/JudgeAdmission"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "max_dropped_ratio": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Max Dropped Ratio",
+      "type": "number"
+    },
+    "min_dataset": {
+      "minimum": 1,
+      "title": "Min Dataset",
+      "type": "integer"
+    },
+    "min_discordant": {
+      "minimum": 0,
+      "title": "Min Discordant",
+      "type": "integer"
+    },
+    "ni_margin": {
+      "minimum": 0,
+      "title": "Ni Margin",
+      "type": "number"
+    },
+    "q_secondary": {
+      "exclusiveMaximum": 1,
+      "exclusiveMinimum": 0,
+      "title": "Q Secondary",
+      "type": "number"
+    },
+    "repeats": {
+      "minimum": 1,
+      "title": "Repeats",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "baseline",
+    "repeats",
+    "min_dataset",
+    "min_discordant",
+    "families",
+    "alpha_primary",
+    "q_secondary",
+    "alpha_safety",
+    "ni_margin",
+    "bootstrap",
+    "max_dropped_ratio",
+    "actions"
+  ],
+  "title": "GateSpec",
+  "type": "object"
+}

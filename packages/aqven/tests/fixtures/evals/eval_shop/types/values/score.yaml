@@ -1,0 +1,7 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "value"
+description: "A score between zero and one"
+base: "Float"
+minimum: 0
+maximum: 1

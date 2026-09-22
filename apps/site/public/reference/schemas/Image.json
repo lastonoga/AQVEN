@@ -1,0 +1,83 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "$media": {
+      "maxLength": 255,
+      "pattern": "^image/[a-z0-9.+-]+$",
+      "title": "$Media",
+      "type": "string"
+    },
+    "blob_id": {
+      "pattern": "^sha256-[0-9a-f]{64}$",
+      "title": "Blob Id",
+      "type": "string"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Name"
+    },
+    "note": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "readOnly": true,
+      "title": "Note"
+    },
+    "poster_blob_id": {
+      "anyOf": [
+        {
+          "pattern": "^sha256-[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "readOnly": true,
+      "title": "Poster Blob Id"
+    },
+    "size_bytes": {
+      "minimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    },
+    "url": {
+      "anyOf": [
+        {
+          "maxLength": 2048,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "readOnly": true,
+      "title": "Url"
+    }
+  },
+  "required": [
+    "$media",
+    "blob_id",
+    "size_bytes",
+    "name"
+  ],
+  "title": "Image",
+  "type": "object"
+}

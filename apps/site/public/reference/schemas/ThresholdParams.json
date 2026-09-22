@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "RefPath": {
+      "pattern": "^\\$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "gte": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gte"
+    },
+    "lte": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lte"
+    },
+    "path": {
+      "$ref": "#/$defs/RefPath"
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "title": "ThresholdParams",
+  "type": "object"
+}

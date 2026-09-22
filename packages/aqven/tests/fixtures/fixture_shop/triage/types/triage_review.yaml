@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Решение оператора по очереди"
+fields:
+- name: "category"
+  type: "TriageCategory"
+  description: "Очередь, выбранная оператором"

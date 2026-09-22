@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "PiiDetector": {
+      "enum": [
+        "email",
+        "phone",
+        "card_number",
+        "iban",
+        "ip_address"
+      ],
+      "title": "PiiDetector",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "mask_in_traces": {
+      "title": "Mask In Traces",
+      "type": "boolean"
+    },
+    "redact": {
+      "items": {
+        "$ref": "#/$defs/PiiDetector"
+      },
+      "title": "Redact",
+      "type": "array"
+    }
+  },
+  "required": [
+    "mask_in_traces",
+    "redact"
+  ],
+  "title": "PiiPolicy",
+  "type": "object"
+}

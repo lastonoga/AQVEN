@@ -1,0 +1,113 @@
+{
+  "$defs": {
+    "DatasetCase": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context"
+        },
+        "expected_output": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "inputs": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metadata"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "node_outputs": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node Outputs"
+        }
+      },
+      "required": [
+        "name",
+        "inputs"
+      ],
+      "title": "DatasetCase",
+      "type": "object"
+    },
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/DatasetCase"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    },
+    "flow": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Flow"
+    },
+    "kind": {
+      "const": "Dataset",
+      "title": "Kind",
+      "type": "string"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "cases"
+  ],
+  "title": "DatasetFile",
+  "type": "object"
+}

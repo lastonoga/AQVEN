@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Tool"
+description: "A voice version of the reply through OpenAI speech synthesis"
+run: "@root.tools.functions:synthesize_voice"
+effect: "external"
+idempotency_key:
+- "text"
+- "locale"
+secrets:
+- name: "openai_api_key"
+  ref: "ref:env/OPENAI_API_KEY"
+in:
+- name: "text"
+  type: "Text"
+  description: "The reply text to read aloud"
+  maxLength: 1500
+- name: "locale"
+  type: "Locale"
+  description: "Language and accent of the narration"
+out:
+- name: "voice"
+  type: "Audio"
+  description: "The narrated reply as WAV"

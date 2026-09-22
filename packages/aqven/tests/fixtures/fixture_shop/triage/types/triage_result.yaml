@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Итог сортировки"
+fields:
+- name: "category"
+  type: "TriageCategory"
+  description: "Очередь обращения"
+- name: "summary"
+  type: "Text"
+  description: "Краткое содержание"
+  maxLength: 200

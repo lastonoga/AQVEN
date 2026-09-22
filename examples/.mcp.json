@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "aqven": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "aqven", "mcp", "lumen"]
+    }
+  }
+}

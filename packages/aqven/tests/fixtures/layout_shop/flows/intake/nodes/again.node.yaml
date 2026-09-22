@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Повторный ответ инференсом узла reply другим агентом"
+inference: "reply"
+agent: "critic"
+in:
+- name: "text"
+  from: "$reply.out.text"

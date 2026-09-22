@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Result of the judge panel"
+fields:
+- name: "verdict"
+  type: "JudgeVerdict"
+  description: "Final panel verdict"
+- name: "tie_broken"
+  type: "Bool"
+  description: "The judges' disagreement was settled by a tie-break"
+- name: "spread"
+  type: "Float"
+  description: "Largest score spread on a single criterion among the judges who picked the majority candidate"
+  minimum: 0
+  maximum: 4

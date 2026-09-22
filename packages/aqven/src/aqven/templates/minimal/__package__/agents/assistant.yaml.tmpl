@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Answers questions briefly and checks the length of its drafts"
+model: "openrouter:openai/gpt-oss-20b"
+settings:
+  temperature: 0.2
+  max_tokens: 1000
+tools:
+- "count_words"
+output:
+  strict: false

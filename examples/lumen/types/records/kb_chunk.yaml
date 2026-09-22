@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A chunk of a Lumen knowledge base article"
+fields:
+- name: "chunk_id"
+  type: "KbChunkId"
+  description: "Chunk identifier"
+- name: "title"
+  type: "Text"
+  description: "Article title"
+  maxLength: 120
+- name: "text"
+  type: "Text"
+  description: "Chunk text"
+  maxLength: 1500

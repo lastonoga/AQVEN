@@ -1,0 +1,132 @@
+{
+  "flowTab": {
+    "canvas": "Nodes",
+    "nodes": "Nodes",
+    "datasets": "Datasets",
+    "runs": "Runs",
+    "review": "Review",
+    "evals": "Evals"
+  },
+  "nodeKind": {
+    "llm": "LLM",
+    "code": "Code",
+    "tool": "Tool",
+    "human": "Human",
+    "parallel": "Parallel",
+    "map": "Map",
+    "switch": "Switch",
+    "loop": "Loop",
+    "call": "Call",
+    "narrow": "Narrow"
+  },
+  "runStatus": {
+    "queued": "QUEUED",
+    "running": "RUNNING",
+    "suspended": "SUSPENDED",
+    "completed": "COMPLETED",
+    "failed": "FAILED",
+    "cancelled": "CANCELLED"
+  },
+  "executionStatus": {
+    "pending": "PENDING",
+    "running": "RUNNING",
+    "ok": "OK",
+    "failed": "FAILED",
+    "skipped": "SKIPPED",
+    "suspended": "SUSPENDED",
+    "cancelled": "CANCELLED"
+  },
+  "runMode": {
+    "live": "live",
+    "replay": "replay",
+    "experiment": "experiment",
+    "dryrun": "dry run"
+  },
+  "compileStatus": {
+    "ok": "ok",
+    "not_runnable": "not runnable",
+    "invalid": "invalid",
+    "unreadable": "unreadable"
+  },
+  "indexStatus": {
+    "ready": "ready",
+    "building": "building",
+    "degraded": "degraded"
+  },
+  "waitKind": {
+    "form": "form",
+    "tool_approval": "tool approval"
+  },
+  "waitState": {
+    "waiting": "waiting",
+    "resolved": "resolved",
+    "timed_out": "timed out"
+  },
+  "onTimeout": {
+    "fail": "fail",
+    "default": "use default",
+    "escalate": "escalate"
+  },
+  "approvalDecision": {
+    "allow": "Allow",
+    "deny": "Deny"
+  },
+  "typeKind": {
+    "record": "record",
+    "enum": "enum",
+    "union": "union",
+    "id": "id",
+    "value": "value"
+  },
+  "severity": {
+    "error": "error",
+    "warning": "warning"
+  },
+  "lineageRelation": {
+    "fork": "fork",
+    "replay": "replay"
+  },
+  "specOrigin": {
+    "working_copy": "working copy",
+    "release": "release"
+  },
+  "modality": {
+    "text": "text",
+    "image": "image",
+    "audio": "audio",
+    "video": "video",
+    "document": "document"
+  },
+  "bindingSource": {
+    "ref": "ref",
+    "literal": "literal",
+    "secret": "secret"
+  },
+  "provenance": {
+    "static": "static",
+    "data": "data",
+    "knowledge": "knowledge",
+    "generated": "generated",
+    "human": "human"
+  },
+  "reasoning": {
+    "off": "off",
+    "low": "low",
+    "medium": "medium",
+    "high": "high"
+  },
+  "usage": {
+    "node": "{count, plural, one {# node} other {# nodes}}",
+    "slot": "{count, plural, one {# slot} other {# slots}}"
+  },
+  "chatPermissionMode": {
+    "default": "Manual",
+    "defaultDetail": "The agent asks before it changes anything",
+    "accept_edits": "Edit automatically",
+    "accept_editsDetail": "The agent edits files without asking",
+    "plan": "Plan",
+    "planDetail": "The agent explores and proposes, without editing",
+    "trust": "Trust",
+    "trustDetail": "The agent runs everything without asking, including commands"
+  }
+}

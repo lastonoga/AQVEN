@@ -1,0 +1,21 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Research of store policy and helpdesk precedents for the main agent's question"
+in:
+- name: "question"
+  type: "Text"
+  description: "The main agent's question about store policy"
+  maxLength: 500
+- name: "category"
+  type: "ProductCategory"
+  description: "Product category the question is about"
+out:
+- name: "answer"
+  type: "Text"
+  description: "Short answer to the question from the rules and precedents found"
+  maxLength: 800
+- name: "sources"
+  type: "Text[]"
+  description: "Helpdesk cases and macros the answer relies on"
+  maxLength: 120
+  maxItems: 5

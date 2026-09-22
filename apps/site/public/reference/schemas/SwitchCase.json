@@ -1,0 +1,67 @@
+{
+  "$defs": {
+    "FieldBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "FieldBinding",
+      "type": "object"
+    },
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bind": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/FieldBinding"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bind"
+    },
+    "node": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Node"
+    }
+  },
+  "title": "SwitchCase",
+  "type": "object"
+}

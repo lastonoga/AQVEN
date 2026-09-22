@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Short reply to a question in the requested tone"
+in:
+- name: "text"
+  type: "Text"
+  description: "Question"
+  maxLength: 2000
+- name: "tone"
+  type: "Tone"
+  description: "Tone of the reply"
+out:
+- name: "reply"
+  type: "Text"
+  description: "Reply in at most 120 words"
+  maxLength: 2000

@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Criterion the reply is scored on"
+values:
+- value: "grounded"
+  description: "Grounding in the knowledge base"
+- value: "helpful"
+  description: "Usefulness to the customer"
+- value: "tone"
+  description: "Brand tone"

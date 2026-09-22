@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "shipping"
+  inputs:
+    question: "When does my order ship?"
+  metadata:
+    split: "test"
+- name: "refund"
+  inputs:
+    question: "How do I get a refund?"
+  metadata:
+    split: "test"
+- name: "warranty"
+  inputs:
+    question: "Is the lamp under warranty?"
+  metadata:
+    split: "test"

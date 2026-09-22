@@ -1,0 +1,126 @@
+{
+  "closeAria": "Close the call panel",
+  "tabsAria": "Sections of this call",
+  "notRecorded": "The engine recorded nothing here",
+  "blobSection": "Blob {blob}",
+  "tab": {
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "checks": "Checks"
+  },
+  "emptyTab": {
+    "model": "No model facts for this call",
+    "input": "No input recorded for this call",
+    "prompt": "This node has no prompt on disk",
+    "output": "No output recorded for this call",
+    "checks": "No checks recorded for this call"
+  },
+  "address": {
+    "branch": "branch {value}",
+    "iteration": "iteration {value}",
+    "item": "item {value}"
+  },
+  "flag": {
+    "true": "yes",
+    "false": "no"
+  },
+  "ref": {
+    "section": "Reference",
+    "sectionOf": "Reference of {node}",
+    "kind": "Kind",
+    "inline": "inline value",
+    "blob": "blob",
+    "hash": "Content hash",
+    "mediaType": "Media type",
+    "size": "Size",
+    "mediaSlot": "Media at {slot}"
+  },
+  "model": {
+    "section": "Model",
+    "noModel": "No model used",
+    "technical": "Execution details"
+  },
+  "schema": {
+    "fields": "Schema fields",
+    "unavailable": "Schema unavailable for this run",
+    "currentNotice": "Current flow schema; the original run plan is unavailable.",
+    "required": "required",
+    "allowedValues": "Allowed values",
+    "type": "Type: {type}"
+  },
+  "field": {
+    "node": "Node",
+    "branch": "Branch",
+    "iteration": "Iteration",
+    "item": "Item",
+    "kind": "Kind",
+    "status": "Status",
+    "agent": "Agent",
+    "inference": "Inference",
+    "model": "Model",
+    "profile": "Profile",
+    "cost": "Cost",
+    "tokens": "Tokens in / out",
+    "latency": "Latency",
+    "attempts": "Attempts",
+    "cacheHit": "Cache hit",
+    "degraded": "Degraded",
+    "startedAt": "Started",
+    "finishedAt": "Finished",
+    "traceId": "Trace id",
+    "spanId": "Span id",
+    "summary": "Summary"
+  },
+  "input": {
+    "schemaSection": "Input schema",
+    "section": "Actual input",
+    "noneRecorded": "This run did not save the per-node input.",
+    "upstreamSection": "Output of {node}"
+  },
+  "prompt": {
+    "renderedSection": "Generated prompt",
+    "timeline": "Message timeline",
+    "notCaptured": "This run did not save the messages sent to the model. The current template below cannot reconstruct them.",
+    "variants": "Selected variants",
+    "section": "Current prompt template",
+    "showTemplate": "Show template source",
+    "fileSection": "Prompt file",
+    "inference": "Inference",
+    "level": "Level",
+    "path": "Path",
+    "fileHash": "File hash",
+    "slotsSection": "Slots"
+  },
+  "output": {
+    "schemaSection": "Output schema",
+    "effectiveSchemaSection": "Output schema used for this call",
+    "section": "Actual output",
+    "responseSection": "Recorded model response text",
+    "noResponse": "The engine streamed no model output for this call"
+  },
+  "checks": {
+    "section": "Checks",
+    "noneRecorded": "No check results were recorded for this call",
+    "onFail": "on failure: {policy}",
+    "rawSection": "Checks, raw",
+    "rulesSection": "Rule firings, raw",
+    "noRules": "No rule firings recorded",
+    "attemptsSection": "Attempts, raw",
+    "errorSection": "Error, raw",
+    "attempt": "attempt {attempt}",
+    "true": "passed",
+    "false": "failed"
+  },
+  "human": {
+    "section": "Human step",
+    "answerSection": "Answer payload",
+    "waitKind": "Wait kind",
+    "state": "State",
+    "assignee": "Assignee",
+    "formType": "Form type",
+    "deadline": "Deadline",
+    "resolvedBy": "Resolved by"
+  }
+}

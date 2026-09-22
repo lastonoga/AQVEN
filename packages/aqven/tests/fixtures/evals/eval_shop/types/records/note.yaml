@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A customer note"
+fields:
+- name: "text"
+  type: "Text"
+  description: "Note text"
+  maxLength: 200

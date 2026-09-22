@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Checks the form against the business rules and returns remarks for repair"
+run: "validate_record"
+in:
+- name: "record"
+  type: "Dynamic"
+  description: "The form the model filled in"
+  from: "$extract.out.record"
+- name: "fields"
+  type: "FieldSpec[]"
+  description: "The form the case form was filled against"
+  maxItems: 30
+  from: "$case_form.out.fields"
+- name: "today"
+  type: "Date"
+  description: "Run date"
+  from: "$run.context.date"
+out:
+- name: "issues"
+  type: "Issue[]"
+  description: "Rules that were broken; empty when the form is valid"
+  maxItems: 10

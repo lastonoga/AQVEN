@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "parallel"
+description: "Three reply drafts from models of three families"
+body:
+  gpt: "gpt"
+  mistral: "mistral"
+  gemini: "gemini"
+join:
+  use: "quorum"
+  with:
+    min_ok: 2
+    on_error: "skip"
+out:
+- name: "candidates"
+  type: "ReplyDraft[]"
+  description: "Reply drafts that finished successfully"
+  maxItems: 3
+  from: "$ok[*].reply"

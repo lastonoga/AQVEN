@@ -1,0 +1,19 @@
+Let me analyze this case. The customer received a dented box, the strip flickers near the controller, the controller gets hot to the touch after half an hour, and the customer is unsure if they wired it correctly. The case is treated as a safety matter.
+
+Intent options: defect, delivery, question.
+
+The customer is unsure if they wired the controller correctly - that's a question. But there's also overheating which is a safety hazard. The flicker could be from wiring or defect. The dented box suggests delivery damage.
+
+Which intent? The customer is asking whether they wired it correctly or if it was damaged during delivery. The primary concern is a question - they're unsure about wiring. But overheating is a safety hazard.
+
+Hmm. The intent categories: defect, delivery, question. The customer's message is essentially asking for help diagnosing - is it my wiring or delivery damage? That's a question. But the overheating suggests a potential defect.
+
+Let me think about what the "intent" means for a support desk case. The customer is unsure if they wired correctly - that's a question about usage. The flicker and overheating could be defect. The dented box is delivery.
+
+The summary says "The customer is concerned about safety and is unsure if they wired the controller correctly or if the strip was damaged during delivery." This is a diagnostic question - they want to know the cause. I'd lean toward "question" since the customer is asking whether their wiring is correct.
+
+But overheating is a safety hazard - could be a defect. However, the customer hasn't confirmed it's defective; they're asking.
+
+I think "question" fits best: the customer is unsure about wiring and asking for guidance. Confidence moderate, maybe 0.6.
+
+Rationale: Customer is unsure whether the issue is their wiring or delivery damage; they're asking for diagnosis, not reporting a confirmed defect or delivery claim.

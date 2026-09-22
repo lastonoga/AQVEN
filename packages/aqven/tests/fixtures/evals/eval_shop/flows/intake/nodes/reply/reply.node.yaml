@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Answer the question with this node inference"
+agent: "writer"
+in:
+- name: "question"
+  from: "$input.text"

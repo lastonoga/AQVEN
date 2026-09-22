@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "union"
+description: "Where the customer case came from"
+discriminator: "kind"
+variants:
+- name: "storefront"
+  description: "The support form on the Lumen online store"
+  fields:
+  - name: "page"
+    type: "Text"
+    description: "The store page the customer wrote from"
+    maxLength: 200
+- name: "marketplace"
+  description: "A case about a marketplace order"
+  fields:
+  - name: "marketplace"
+    type: "Marketplace"
+    description: "Marketplace of the order"
+  - name: "order_ref"
+    type: "Text"
+    description: "Order number on the marketplace"
+    maxLength: 40

@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "DefaultOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "const": "default",
+          "title": "Policy",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "policy",
+        "value"
+      ],
+      "title": "DefaultOnTimeout",
+      "type": "object"
+    },
+    "EscalateOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "assignee": {
+          "minLength": 1,
+          "title": "Assignee",
+          "type": "string"
+        },
+        "policy": {
+          "const": "escalate",
+          "title": "Policy",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "minimum": 1,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "policy",
+        "assignee",
+        "timeout_seconds"
+      ],
+      "title": "EscalateOnTimeout",
+      "type": "object"
+    },
+    "FailOnTimeout": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "const": "fail",
+          "title": "Policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy"
+      ],
+      "title": "FailOnTimeout",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "TimeoutPolicy": {
+      "discriminator": {
+        "mapping": {
+          "default": "#/$defs/DefaultOnTimeout",
+          "escalate": "#/$defs/EscalateOnTimeout",
+          "fail": "#/$defs/FailOnTimeout"
+        },
+        "propertyName": "policy"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FailOnTimeout"
+        },
+        {
+          "$ref": "#/$defs/DefaultOnTimeout"
+        },
+        {
+          "$ref": "#/$defs/EscalateOnTimeout"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assignee": {
+      "minLength": 1,
+      "title": "Assignee",
+      "type": "string"
+    },
+    "on_timeout": {
+      "$ref": "#/$defs/TimeoutPolicy"
+    },
+    "timeout_seconds": {
+      "minimum": 1,
+      "title": "Timeout Seconds",
+      "type": "integer"
+    },
+    "tools": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Tools",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tools",
+    "assignee",
+    "timeout_seconds",
+    "on_timeout"
+  ],
+  "title": "ToolApprovalSpec",
+  "type": "object"
+}

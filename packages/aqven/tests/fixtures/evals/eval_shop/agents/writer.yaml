@@ -1,0 +1,4 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Answers customer questions in one short sentence"
+model: "openai:gpt-5.4-mini"

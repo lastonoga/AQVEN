@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A ballot for the case intent"
+fields:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the ballot, written before the choice"
+  maxLength: 300
+- name: "intent"
+  type: "CaseIntent"
+  description: "The intent the ballot was cast for"
+- name: "confidence"
+  type: "Score"
+  description: "Confidence of the ballot"

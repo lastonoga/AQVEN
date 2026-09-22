@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "policy": {
+      "const": "default",
+      "title": "Policy",
+      "type": "string"
+    },
+    "value": {
+      "$ref": "#/$defs/JsonValue"
+    }
+  },
+  "required": [
+    "policy",
+    "value"
+  ],
+  "title": "DefaultOnTimeout",
+  "type": "object"
+}

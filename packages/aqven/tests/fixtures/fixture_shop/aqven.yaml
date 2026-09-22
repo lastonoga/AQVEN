@@ -1,0 +1,17 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "Магазин для тестов загрузчика и проверки"
+package: "fixture_shop"
+providers:
+- id: "openai"
+  api_key: "ref:env/OPENAI_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "zero"
+- id: "together"
+  api_key: "ref:env/TOGETHER_API_KEY"
+  data_policy:
+    allows_pii: false
+    allows_sensitive: false
+    retention: "unknown"

@@ -1,0 +1,25 @@
+We need to produce a reply in en-GB, short, friendly, precise, no exclamation marks, no mention of store website or outside contact. Must reference knowledge base chunks. Must not promise compensation. Must mention Lumen Plus subscription benefits only if chunks carry them – but chunks don't mention subscription benefits. So ignore. Must not mention customer's name or personal data. Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot give app steps. We can give safety steps. Must cite chunks. Must not mention any other info. Must not exceed 1500 characters. Must include citations array with chunk_id and quote. Up to 6 items. Provide reply.text and reply.citations.
+
+We need to address empathy. So start with acknowledging concern. Then give safety steps: cut power, check controller plug, if flicker continues replace controller under warranty. If hot, unplug immediately, do not switch on until inspected. Also mention potential damage during delivery. Suggest checking for dents or damage. Also mention wiring check: ensure controller is wired correctly, but we cannot give specifics beyond that. But we can say "ensure the controller is connected to the strip as per the diagram" but not mention specifics. But we must not add facts not in chunks. The chunk only says cut power and check plug. So we can say "check the controller plug" but not mention wiring diagram. But we can say "ensure the controller is correctly wired to the strip" but that might be beyond chunk. But it's a general safety step. But we must not add facts not in chunks. The chunk doesn't mention wiring. So we should not mention wiring. But the customer asked if wired correctly. We can say "please ensure the controller is connected as per the included instructions" but that might be beyond chunk. But maybe acceptable as general advice. But we must not add facts. The chunk doesn't mention wiring. But we can say "check the controller plug" which covers wiring. So we can say "check the controller plug" and "ensure it's securely connected". That may be acceptable.
+
+Also mention potential damage during delivery: "the dented box may indicate damage; please inspect the strip for any visible damage." That is not in chunk but is general. But we can mention it as a suggestion. But must not add facts not in chunk. But it's general advice. Might be okay.
+
+We need to cite chunks: kb_strip0flck and kb_ctrlheat01. Provide quotes.
+
+Let's craft reply.
+
+Reply text: ~200-300 words. Provide citations.
+
+We must not mention store website or outside contact. Just say "If you need further assistance, let us know." That is fine.
+
+Now produce JSON with reply.text and reply.citations array.
+
+Let's craft citations:
+
+From kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We can use these quotes.
+
+Now produce final.

@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "string"
+    }
+  },
+  "required": [
+    "value",
+    "description"
+  ],
+  "title": "EnumValue",
+  "type": "object"
+}

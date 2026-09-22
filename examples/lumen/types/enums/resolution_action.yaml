@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Action taken on the case"
+values:
+- value: "store_credit"
+  description: "Issue store credit"
+- value: "replacement"
+  description: "Replace the product"
+- value: "reship"
+  description: "Ship the order again"
+- value: "advice"
+  description: "Give advice with no compensation"

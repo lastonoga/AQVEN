@@ -1,0 +1,26 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "The cascade: takes the ballots' intent when they agree, lets a stronger model decide when they do not"
+on: "$tally.out.agreement"
+cases:
+  agreed:
+    bind:
+    - name: "intent"
+      from: "$tally.out.intent"
+    - name: "tier"
+      value: "cheap"
+  split:
+    node: "escalate"
+    bind:
+    - name: "intent"
+      from: "$escalate.out.intent"
+    - name: "tier"
+      value: "strong"
+out:
+- name: "intent"
+  type: "CaseIntent"
+  description: "Final case intent"
+- name: "tier"
+  type: "CascadeTier"
+  description: "The cascade stage that produced the intent"

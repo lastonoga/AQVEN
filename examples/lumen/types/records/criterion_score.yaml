@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Score of the reply on a single criterion"
+fields:
+- name: "criterion"
+  type: "ReplyCriterion"
+  description: "The criterion being scored"
+- name: "score"
+  type: "Int"
+  description: "A score from 1 to 5"
+  minimum: 1
+  maximum: 5

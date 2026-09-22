@@ -1,0 +1,40 @@
+{
+  "title": "Human review",
+  "subtitle": "steps that wait for a person before the run continues",
+  "filter": {
+    "labelAria": "Queue filter",
+    "all": "All",
+    "overdue": "Overdue"
+  },
+  "queue": {
+    "labelAria": "Review queue",
+    "run": "run {run}",
+    "assignee": "assigned to {assignee}",
+    "attempt": "attempt {attempt}"
+  },
+  "deadline": {
+    "left": "{duration} left",
+    "overdue": "overdue {duration}",
+    "overdueAria": "past the deadline",
+    "onTimeout": "on timeout: {action}"
+  },
+  "detail": {
+    "answer": "Your answer · {form}",
+    "toolCall": "Tool call",
+    "callId": "call {id}",
+    "arguments": "arguments",
+    "suspendData": "What the run produced",
+    "storedBlob": "stored as blob {blob}"
+  },
+  "field": {
+    "optional": "{label} (optional)",
+    "yes": "Yes",
+    "no": "No",
+    "rawLabel": "Answer payload (JSON)",
+    "invalidJson": "This is not valid JSON."
+  },
+  "decision": {
+    "submit": "Submit and resume",
+    "rejected": "The answer was not accepted: {reason}"
+  }
+}

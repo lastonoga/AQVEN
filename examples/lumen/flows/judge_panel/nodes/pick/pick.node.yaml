@@ -1,0 +1,32 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Picks the winning draft from the verdict and assembles the panel result"
+run: "pick"
+in:
+- name: "candidates"
+  type: "ReplyDraft[]"
+  description: "Reply drafts"
+  maxItems: 3
+  from: "$input.candidates"
+- name: "verdict"
+  type: "JudgeVerdict"
+  description: "Final panel verdict"
+  from: "$decide.out.verdict"
+- name: "tie_broken"
+  type: "Bool"
+  description: "The verdict came from the tie-break judge"
+  from: "$decide.out.tie_broken"
+- name: "spread"
+  type: "Float"
+  description: "Largest score spread among the judges on a single criterion"
+  minimum: 0
+  maximum: 4
+  from: "$aggregate.out.spread"
+out:
+- name: "winner"
+  type: "ReplyDraft"
+  description: "Winning draft"
+- name: "verdict"
+  type: "PanelVerdict"
+  description: "Panel verdict with the tie-break flag and the score spread"

@@ -1,0 +1,4 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Перепроверяет ответ"
+model: "openai:gpt-5.6-terra"

@@ -1,0 +1,8 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "tool"
+description: "Штамп прогона"
+tool: "stamp"
+in:
+- name: "text"
+  from: "$clean.out.text"

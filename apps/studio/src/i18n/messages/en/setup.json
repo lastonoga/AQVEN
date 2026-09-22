@@ -1,0 +1,136 @@
+{
+  "onboarding": {
+    "brand": "AQVEN Studio",
+    "title": "Set up {project}",
+    "lead": "Studio runs inside the project it was launched in. Check the chat agent, check the model keys your workflows need, then open a workflow.",
+    "stepsAria": "Setup steps",
+    "steps": {
+      "agent": "1 · Chat agent",
+      "providers": "2 · Model keys",
+      "workflow": "3 · Workflows"
+    },
+    "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip to Studio"
+  },
+  "agent": {
+    "title": "Chat agent",
+    "description": "The chat runs the agent on this computer with your own subscription. Studio never reads or stores your credentials.",
+    "names": {
+      "claude": "Claude Agent",
+      "codex": "Codex"
+    },
+    "backend": "Agent",
+    "selectBackend": "Chat backend",
+    "loading": "Loading the selected agent…",
+    "backendLoadFailed": "Could not load the selected agent",
+    "switching": "Switching agent…",
+    "retry": "Try again",
+    "checking": "Checking agent sign-in…",
+    "selectHint": "New threads use this agent. Existing Claude and Codex threads stay in this project.",
+    "state": "Sign-in",
+    "states": {
+      "logged_in": "SIGNED IN",
+      "logged_out": "SIGNED OUT",
+      "unknown": "UNKNOWN"
+    },
+    "method": "Method",
+    "methods": {
+      "subscription": "subscription",
+      "api_key": "API key"
+    },
+    "account": "Account",
+    "detail": "Detail",
+    "none": "—",
+    "checkAgain": "Check again"
+  },
+  "providers": {
+    "title": "Model keys",
+    "description": "Workflow nodes call models with these keys. A key comes from the process environment, or from the .env file of this project.",
+    "missingNote": "No model key resolves yet. Export the environment variable, or add it to the .env file of this project.",
+    "declared": "declared by this project",
+    "notSet": "not set · {variable}",
+    "source": {
+      "environment": "ENV",
+      "dotenv": ".ENV FILE",
+      "missing": "NOT SET"
+    }
+  },
+  "secrets": {
+    "title": "Project secrets",
+    "description": "Tools, MCP servers and providers of this project read these secrets by name. A secret that does not resolve fails the run with SECRET_MISSING.",
+    "declaredBy": "{name} · {scope} {by}",
+    "scope": {
+      "provider": "provider",
+      "tool": "tool",
+      "mcp_server": "MCP server"
+    },
+    "empty": "This project declares no secrets."
+  },
+  "workflow": {
+    "title": "Workflows",
+    "description": "Open one to keep working on it.",
+    "navAria": "Workflows of the project",
+    "nodes": "{count, plural, one {# node} other {# nodes}}",
+    "empty": "No workflows yet",
+    "emptyHint": "A workflow is a flow.yaml file under the flows folder of this project. Ask the chat agent to draft the first one."
+  },
+  "command": {
+    "copyAria": "Copy command"
+  },
+  "settings": {
+    "title": "Settings",
+    "lead": "Settings of this project and of Studio on this computer.",
+    "back": "Back to Studio",
+    "closeAria": "Close settings",
+    "loadError": "Settings could not be loaded.",
+    "loading": "Loading settings…",
+    "retry": "Try again",
+    "navAria": "Settings sections",
+    "sections": {
+      "project": "Project",
+      "agents": "Chat agent",
+      "providers": "Model keys",
+      "mcp": "MCP connections",
+      "updates": "Updates"
+    },
+    "project": {
+      "title": "Project",
+      "description": "Studio serves the project it was launched in. To work on another project, run the same command in its folder.",
+      "folder": "Folder",
+      "package": "Package",
+      "engine": "Engine",
+      "projectFile": "Project file",
+      "lockFile": "Lock file",
+      "index": "Index",
+      "problems": "Problems",
+      "clean": "no problems",
+      "counts": "{errors} errors · {warnings} warnings · {infos} info",
+      "none": "—",
+      "open": "Project overview",
+      "anotherProject": "Open another project"
+    },
+    "mcp": {
+      "server": "AQVEN MCP server",
+      "serverDescription": "External agents get the same tools as the Studio chat. The HTTP endpoint needs this launch's token, so agents connect through aqven mcp, which reads it or starts the server in the background.",
+      "address": "Address",
+      "auth": "Access",
+      "authValue": "Bearer token from .aqven/server.json",
+      "none": "—",
+      "connect": "Connect an agent",
+      "claudeCode": "Claude Code",
+      "claudeCodeHint": "Run once in this project folder.",
+      "stdio": "Cursor, Claude Desktop and other stdio clients",
+      "stdioHint": "Add this server to the MCP config of the client."
+    },
+    "updates": {
+      "title": "Updates",
+      "description": "Studio ships inside the aqven package of the environment of this project.",
+      "installed": "Installed engine",
+      "uv": "With uv",
+      "uvHint": "Then restart aqven studio.",
+      "pip": "With pip",
+      "pipHint": "Then restart aqven studio."
+    }
+  }
+}

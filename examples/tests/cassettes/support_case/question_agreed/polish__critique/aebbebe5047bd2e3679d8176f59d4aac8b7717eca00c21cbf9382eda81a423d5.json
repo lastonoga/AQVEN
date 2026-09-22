@@ -1,0 +1,2156 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-aebbebe5047bd2e3679d8176f59d4aac8b7717eca00c21cbf9382eda81a423d5",
+  "request_key": "sha256-6915c93235924c2fbebb4fc6963b13939a9fa0b0f4b6b776dcdd18f6effe2bae",
+  "model_ref": "openrouter:mistralai/mistral-nemo",
+  "site": {
+    "address": {
+      "node_id": "polish__critique",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ration",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ale",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " grounded",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " in",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " chunks",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " provided",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " chunks",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " do",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " contain",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Wi",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "-Fi",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " compatibility",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " or",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " bedroom",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " suitability",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " so",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " correct",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " in",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " stating",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " that",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " does",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " contain",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " this",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " However",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " does",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " not",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " mention",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " that",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " limited",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " to",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " controller",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " heat",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " strip",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " flick",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "er",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " which",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " could",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " be",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " misleading",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " to",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " customer",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " agrees",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " with",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " decision",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " of",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " providing",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " a",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " answer",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " with",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " no",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " compensation",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " as",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " there",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " no",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " relevant",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " to",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " provide",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " complete",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " in",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " that",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " it",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " fully",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "答",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "es",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ,",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "score",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " ",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "0",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "5",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "block",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "ing",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "\":",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " [\"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " should",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " mention",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " that",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " the",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " knowledge",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " base",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " is",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " limited",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " to",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " controller",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " heat",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " strip",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " flick",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "er",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".\",",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " \"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "The",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " reply",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " should",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " provide",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " on",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " where",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " to",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " find",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " more",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " information",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " about",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " Wi",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "-Fi",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " compatibility",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " and",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " bedroom",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": " suitability",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": ".\"",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "]",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "}",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"rationale\": \"The reply is not grounded in the knowledge base chunks provided. The chunks do not contain information about Wi-Fi compatibility or bedroom suitability, so the reply is correct in stating that the knowledge base does not contain this information. However, the reply does not mention that the knowledge base is limited to information about controller heat and strip flicker, which could be misleading to the customer. The reply agrees with the decision of providing a knowledge base answer with no compensation, as there is no relevant information to provide. The reply is complete in that it fully答es\" , \"score\": 0.5, \"blocking\": [\"The reply should mention that the knowledge base is limited to information about controller heat and strip flicker.\", \"The reply should provide information on where to find more information about Wi-Fi compatibility and bedroom suitability.\"]}",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"rationale\": \"The reply is not grounded in the knowledge base chunks provided. The chunks do not contain information about Wi-Fi compatibility or bedroom suitability, so the reply is correct in stating that the knowledge base does not contain this information. However, the reply does not mention that the knowledge base is limited to information about controller heat and strip flicker, which could be misleading to the customer. The reply agrees with the decision of providing a knowledge base answer with no compensation, as there is no relevant information to provide. The reply is complete in that it fully答es\" , \"score\": 0.5, \"blocking\": [\"The reply should mention that the knowledge base is limited to information about controller heat and strip flicker.\", \"The reply should provide information on where to find more information about Wi-Fi compatibility and bedroom suitability.\"]}",
+        "tool_call_id": "chatcmpl-tool-b8980f4d5c70bcf6",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 800,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 32,
+      "output_tokens": 184,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "mistralai/mistral-nemo",
+    "timestamp": "2026-09-22T08:13:25.471333Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-22T08:13:24Z",
+      "downstream_provider": "Io Net",
+      "finish_reason": "tool_calls",
+      "cost": 5.90272e-05,
+      "upstream_inference_cost": 5.90272e-05,
+      "upstream_inference_prompt_cost": 3.19424e-05,
+      "upstream_inference_completions_cost": 2.70848e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790064804-sVDyYzd9Z9mZcrRgRMS6",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

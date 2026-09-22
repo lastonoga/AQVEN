@@ -1,0 +1,93 @@
+{
+  "composer": {
+    "placeholder": "Ask, or assign an edit…",
+    "addAria": "Add context",
+    "dictateAria": "Dictate",
+    "stopDictationAria": "Stop dictation",
+    "sendAria": "Send",
+    "cancelAria": "Stop"
+  },
+  "message": {
+    "copyAria": "Copy",
+    "copied": "Copied",
+    "retryAria": "Retry",
+    "moreAria": "More actions"
+  },
+  "session": {
+    "connecting": "Connecting to the agent…",
+    "backendLoadFailed": "Could not load the selected agent",
+    "selectedAgentChanged": "The selected agent changed in another window. Review the current agent and try again.",
+    "loadFailed": "Could not load threads: {detail}",
+    "noThread": "No thread for this agent yet. Open the thread menu to start one.",
+    "loggedOut": "The agent backend is not signed in: {detail}"
+  },
+  "threads": {
+    "triggerAria": "Switch thread",
+    "select": "Select thread",
+    "new": "New thread",
+    "project": "Project"
+  },
+  "tool": {
+    "toggleAria": "Toggle details",
+    "running": "running…",
+    "exitCode": "exit code {code}",
+    "mcp": "{server} · {tool}",
+    "fileChange": {
+      "added": "file added",
+      "modified": "file changed",
+      "deleted": "file deleted"
+    }
+  },
+  "approval": {
+    "prompt": "This tool call needs your decision."
+  },
+  "question": {
+    "multiHint": "choose one or more",
+    "other": "Other…",
+    "otherAria": "Your own answer for {header}",
+    "otherPlaceholder": "Write your own answer",
+    "submit": "Send answers",
+    "skip": "Skip",
+    "progress": "{answered} of {total} answered",
+    "refused": "The answers did not reach the agent. Try again."
+  },
+  "error": {
+    "auth_required": "The agent backend needs you to sign in again.",
+    "rate_limited": "The agent backend is rate limited. Try again shortly.",
+    "billing": "The agent backend refused the turn for billing reasons.",
+    "backend_unavailable": "The agent backend is unavailable.",
+    "invalid_request": "The agent backend rejected the request.",
+    "internal": "The agent backend failed on its side."
+  },
+  "thread": {
+    "scrollToBottomAria": "Scroll to latest message"
+  },
+  "thinking": {
+    "running": "Thinking… {seconds}s",
+    "done": "Thought for {seconds}s",
+    "toggleAria": "Toggle the thinking",
+    "tokens": "· {tokens} thinking tokens"
+  },
+  "loader": {
+    "working": "Working…",
+    "aria": "Agent status"
+  },
+  "settings": {
+    "modelLabel": "Model",
+    "modelDefault": "Default model",
+    "modelsUnavailable": "Model list unavailable",
+    "effortLabel": "Reasoning effort",
+    "permissionLabel": "Approvals",
+    "effort": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "Very high",
+      "max": "Max"
+    },
+    "menuAria": "Model and agent settings",
+    "effortAuto": "Auto",
+    "modelAgentDefault": "Agent default",
+    "forNextThread": "For a new thread"
+  }
+}

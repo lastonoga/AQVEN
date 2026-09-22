@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A Lumen customer with their contact details"
+pii: "pii"
+fields:
+- name: "customer_id"
+  type: "CustomerId"
+  description: "Customer identifier in the CRM"
+- name: "display_name"
+  type: "Text"
+  description: "The name the customer gave"
+  maxLength: 120
+- name: "email"
+  type: "Text?"
+  description: "Email address; null when the customer did not leave one"
+  maxLength: 254
+- name: "tier"
+  type: "CustomerTier"
+  description: "Service tier"
+- name: "locale"
+  type: "Locale"
+  description: "Language and region used with the customer"

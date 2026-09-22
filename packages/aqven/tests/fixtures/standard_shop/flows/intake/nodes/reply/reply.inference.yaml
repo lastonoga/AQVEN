@@ -1,0 +1,31 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Короткий ответ на заметку в заданном тоне"
+in:
+- name: "text"
+  type: "Text"
+  description: "Заметка"
+  maxLength: 200
+- name: "mood"
+  type: "Mood"
+  description: "Тон ответа"
+out:
+- name: "text"
+  type: "Text"
+  description: "Ответ"
+  maxLength: 200
+- name: "mood"
+  type: "Mood"
+  description: "Тон, которым получился ответ"
+- name: "score"
+  type: "Score"
+  description: "Уверенность в ответе"
+variants:
+  tone:
+    on: "mood"
+    cases:
+      calm: "calm"
+      warm: "warm"
+checks:
+- run: "reply_is_short"
+  on_fail: "flag"

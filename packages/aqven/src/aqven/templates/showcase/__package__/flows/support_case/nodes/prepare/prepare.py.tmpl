@@ -1,0 +1,85 @@
+from collections.abc import Mapping
+from typing import Final
+
+from aqven.spec import FieldSpec
+from __package__.types import (
+    CaseOriginMarketplace,
+    CaseRequest,
+    Channel,
+    ProductCategory,
+    SignalDef,
+    SignalKey,
+    SupportCasePrepareOut,
+    VotePerspective,
+)
+
+MESSAGE_LIMIT: Final = 4000
+PERSPECTIVES: Final[tuple[VotePerspective, ...]] = ("words", "evidence", "risk")
+
+SIGNAL_LABELS: Final[Mapping[str, str]] = {
+    "no_power": "Does not turn on",
+    "flicker": "Flickers",
+    "dead_segment": "A section of the strip does not light",
+    "overheating": "Overheats",
+    "burning_smell": "Smells of burning",
+    "app_offline": "Does not respond in the app",
+    "cracked_shade": "The shade is cracked",
+    "package_damaged": "The packaging is damaged",
+    "missing_part": "A part is missing",
+    "usage_question": "A question about use",
+}
+
+LAMP_SIGNALS: Final = frozenset(SIGNAL_LABELS) - {"dead_segment", "app_offline"}
+
+CATEGORY_SIGNALS: Final[Mapping[ProductCategory, frozenset[str]]] = {
+    "desk_lamp": LAMP_SIGNALS,
+    "floor_lamp": LAMP_SIGNALS,
+    "smart_bulb": frozenset(
+        {"no_power", "flicker", "overheating", "burning_smell", "app_offline", "package_damaged", "usage_question"}
+    ),
+    "light_strip": frozenset(SIGNAL_LABELS) - {"cracked_shade"},
+    "accessory": frozenset({"no_power", "package_damaged", "missing_part", "usage_question"}),
+}
+
+INTAKE_FIELDS: Final[Mapping[Channel, tuple[FieldSpec, ...]]] = {
+    "storefront": (),
+    "amazon": (
+        FieldSpec(
+            name="return_reason",
+            type="Text",
+            description="Return reason the customer picked on Amazon",
+            maxLength=20,
+            enum=["defective", "damaged", "not_as_described"],
+        ),
+        FieldSpec(
+            name="asin",
+            type="Text?",
+            description="Amazon ASIN of the product; null when the case does not carry one",
+            maxLength=10,
+            pattern=r"^B0[A-Z0-9]{8}$",
+        ),
+    ),
+    "ozon": (
+        FieldSpec(name="posting_number", type="Text", description="Ozon shipment number", maxLength=40),
+        FieldSpec(
+            name="claim_type",
+            type="Text",
+            description="Claim type the customer picked on Ozon",
+            maxLength=10,
+            enum=["defect", "damage", "missing"],
+        ),
+    ),
+}
+
+
+def prepare(request: CaseRequest) -> SupportCasePrepareOut:
+    origin = request.origin
+    channel: Channel = origin.marketplace if isinstance(origin, CaseOriginMarketplace) else "storefront"
+    keys = CATEGORY_SIGNALS[request.product.category] if request.product is not None else frozenset(SIGNAL_LABELS)
+    return SupportCasePrepareOut(
+        message=" ".join(request.message.split())[:MESSAGE_LIMIT],
+        channel=channel,
+        signals=[SignalDef(key=SignalKey(key), label=label) for key, label in SIGNAL_LABELS.items() if key in keys],
+        intake_fields=list(INTAKE_FIELDS[channel]),
+        perspectives=list(PERSPECTIVES),
+    )

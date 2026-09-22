@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "MetricKind": {
+      "enum": [
+        "binary",
+        "ordinal",
+        "continuous"
+      ],
+      "title": "MetricKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/MetricKind"
+    }
+  },
+  "required": [
+    "id",
+    "kind"
+  ],
+  "title": "ScorerHead",
+  "type": "object"
+}

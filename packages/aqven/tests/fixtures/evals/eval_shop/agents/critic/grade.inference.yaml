@@ -1,0 +1,20 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "Grades how well the answer serves the question"
+in:
+- name: "question"
+  type: "Text"
+  description: "Customer question"
+  maxLength: 200
+- name: "answer"
+  type: "Text"
+  description: "Answer produced by the writer"
+  maxLength: 200
+out:
+- name: "score"
+  type: "Score"
+  description: "Quality of the answer"
+- name: "rationale"
+  type: "Text"
+  description: "Why the answer got this score"
+  maxLength: 200

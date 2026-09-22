@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Покупатель"
+pii: "pii"
+fields:
+- name: "name"
+  type: "Text"
+  description: "Имя покупателя"
+  maxLength: 120
+- name: "email"
+  type: "Text?"
+  description: "Почта, если указана"
+  maxLength: 254

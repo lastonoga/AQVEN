@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "__package__: AI workflows on aqven"
+package: "__package__"
+providers:
+- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: false
+    allows_sensitive: false
+    retention: "unknown"

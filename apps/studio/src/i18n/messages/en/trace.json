@@ -1,0 +1,84 @@
+{
+  "openCell": "Open {row} for {name}",
+  "matrixRow": {
+    "call": "Call",
+    "agent": "Agent",
+    "model": "Model",
+    "input": "Input",
+    "prompt": "Prompt",
+    "output": "Output",
+    "postCheck": "Post check"
+  },
+  "matrixSub": {
+    "branches": "{count, plural, one {# branch in parallel} other {# branches in parallel}}",
+    "items": "{count, plural, one {# mapped item} other {# mapped items}}",
+    "iterations": "{count, plural, one {# iteration} other {# iterations}} · {calls, plural, one {# call} other {# calls}}",
+    "takenBranch": "{count, plural, one {# branch taken} other {# branches taken}}",
+    "calledNodes": "{count, plural, one {# called node} other {# called nodes}}",
+    "costTime": "cost · latency · tokens",
+    "declared": "agent and inference of the node",
+    "upstream": "outputs the node reads",
+    "modelRequest": "model request for this call",
+    "outputChecks": "checks on the output"
+  },
+  "coordinate": {
+    "branch": "branch {value}",
+    "iteration": "iteration {value}",
+    "item": "item {value}"
+  },
+  "call": {
+    "cached": "cache hit",
+    "degraded": "degraded"
+  },
+  "agent": {
+    "agent": "agent {value}",
+    "inference": "inference {value}",
+    "profile": "profile {value}",
+    "noModel": "no model"
+  },
+  "input": {
+    "fromUpstream": "recorded outputs of the upstream nodes"
+  },
+  "prompt": {
+    "inference": "inference {value}",
+    "level": "level {level}",
+    "notCaptured": "Model messages were not saved for this run"
+  },
+  "ref": {
+    "inline": "inline",
+    "blob": "blob",
+    "media": "media {slot}"
+  },
+  "postCheck": {
+    "attempts": "{count, plural, one {# failed attempt} other {# failed attempts}}",
+    "rules": "{count, plural, one {# rule firing} other {# rule firings}}"
+  },
+  "expander": {
+    "children": "{count, plural, one {# nested call} other {# nested calls}}",
+    "toggleAria": "Toggle the nested calls of {name}"
+  },
+  "nested": {
+    "title": "Inside {name}",
+    "fanOut": "{count, plural, one {# call} other {# calls}}"
+  },
+  "attempts": {
+    "title": "Failed attempts of {name} · {count, plural, one {# attempt} other {# attempts}}",
+    "aria": "Failed attempts of {name}",
+    "attempt": "Attempt",
+    "cause": "Cause",
+    "action": "Action",
+    "message": "Message",
+    "problems": "Fields",
+    "hint": "Hint",
+    "rawExcerpt": "Raw excerpt"
+  },
+  "exit": {
+    "reason": "loop exited on {reason}",
+    "selected": "kept iteration {iteration}",
+    "scores": "scores {scores}"
+  },
+  "stage": {
+    "calls": "{count, plural, =0 {single call} one {# call} other {# calls}}",
+    "pending": "not started"
+  }
+}

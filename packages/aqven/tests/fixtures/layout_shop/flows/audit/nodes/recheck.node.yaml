@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Перепроверка инференсом узла reply из воркфлоу intake"
+inference: "reply"
+agent: "critic"
+in:
+- name: "text"
+  from: "$accept.out.text"

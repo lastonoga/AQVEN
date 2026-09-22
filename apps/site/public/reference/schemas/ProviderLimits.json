@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "rpm": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rpm"
+    }
+  },
+  "title": "ProviderLimits",
+  "type": "object"
+}

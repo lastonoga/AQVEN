@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "The support lead's approval of the reply"
+fields:
+- name: "decision"
+  type: "ApprovalDecision"
+  description: "Decision on the reply"
+- name: "edited_text"
+  type: "Text?"
+  description: "The corrected text when it was edited; null otherwise"
+  maxLength: 1500
+- name: "note"
+  type: "Text?"
+  description: "The lead's note; null when there is none"
+  maxLength: 400

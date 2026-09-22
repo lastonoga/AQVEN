@@ -1,0 +1,40 @@
+[project]
+name = "__project__"
+version = "0.1.0"
+description = "__package__: AI workflows on aqven, built from the lumen example"
+requires-python = ">=3.14,<3.15"
+dependencies = ["__aqven_requirement__"]
+
+[project.scripts]
+__project__ = "__package__.__main__:serve"
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.16.7"]
+
+__uv_sources__
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "__package__"
+source-exclude = [".aqven", ".env", ".env.example"]
+wheel-exclude = [".aqven", ".env", ".env.example"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+aqven_project = "__package__"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+extend-exclude = ["__package__/types.py"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aqven", "__package__"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"

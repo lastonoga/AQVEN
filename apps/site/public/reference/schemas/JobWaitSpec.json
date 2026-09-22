@@ -1,0 +1,26 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "interval_seconds": {
+      "minimum": 1,
+      "title": "Interval Seconds",
+      "type": "integer"
+    },
+    "poll": {
+      "title": "Poll",
+      "type": "string"
+    },
+    "timeout_seconds": {
+      "minimum": 1,
+      "title": "Timeout Seconds",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "poll",
+    "interval_seconds",
+    "timeout_seconds"
+  ],
+  "title": "JobWaitSpec",
+  "type": "object"
+}

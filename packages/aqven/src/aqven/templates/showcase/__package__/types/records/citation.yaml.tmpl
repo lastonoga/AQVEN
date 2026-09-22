@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A quote from a knowledge base chunk"
+fields:
+- name: "chunk_id"
+  type: "KbChunkId"
+  description: "The chunk the quote is taken from"
+- name: "quote"
+  type: "Text"
+  description: "Verbatim quote from the chunk text"
+  maxLength: 300

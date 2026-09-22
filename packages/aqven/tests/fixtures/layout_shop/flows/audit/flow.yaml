@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Аудит приёма заметки"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$recheck.out.text"
+order:
+- "accept"
+- "recheck"

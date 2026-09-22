@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "A stronger model decides the intent when the ballots disagree"
+inference: "ballot"
+agent: "deepseek"
+in:
+- name: "summary"
+  from: "$triage.out.summary"
+- name: "observations"
+  from: "$triage.out.observations"
+- name: "safety_risk"
+  from: "$triage.out.safety_risk"

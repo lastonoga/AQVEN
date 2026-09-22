@@ -1,0 +1,19 @@
+We need to produce a reply that addresses the customer's question: compatibility of Lumen Glow E27 smart bulb with 5 GHz Wi-Fi networks and suitability for use in a bedroom. The knowledge base chunks only talk about Flow strip flicker and controller heat. So we cannot answer those questions. We must state that the knowledge base does not contain information about Wi-Fi compatibility or bedroom suitability. Also mention that the knowledge base is limited to controller heat and strip flicker. Also provide guidance on where to find more info (maybe Lumen support website or product manual). We must not promise compensation or refund. We must not mention personal data. We must keep reply short, friendly, precise. We must cite the chunks. We need to produce JSON with reply.text and reply.citations array. Each citation must have chunk_id and quote. We can cite both chunks. We must keep reply.text <=1500 chars. citations <=6. Each quote <=300 chars.
+
+We need to reference the chunks: kb_strip0flck and kb_ctrlheat01. Provide quotes.
+
+We need to mention that the knowledge base only covers controller heat and strip flicker. Provide suggestion to consult product manual or support page for Wi-Fi compatibility and bedroom suitability.
+
+We must not mention the customer's name or email.
+
+We must mention that the customer is a Lumen Plus subscriber: mention subscription benefits only if chunks carry them. But chunks don't mention subscription benefits. So we cannot mention them.
+
+We need to produce final_result function call with reply: {text: "...", citations: [...]}. Let's craft reply.
+
+Reply text: "Thank you for your question. The current knowledge base only contains information about controller heat and Flow strip flicker. It does not cover Wi‑Fi compatibility or bedroom suitability for the Lumen Glow E27. For details on Wi‑Fi bands and recommended usage environments, please refer to the product manual or the Lumen support website. If you need further assistance, let us know."
+
+We need to cite both chunks: kb_strip0flck quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." kb_ctrlheat01 quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to ensure quotes <=300 chars. They are fine.
+
+We must output JSON with reply.text and reply.citations array. Let's produce.
