@@ -19,6 +19,7 @@ interface FeatureIconListItem {
   description: string;
   icon?: React.ReactNode;
   href?: string;
+  visual?: React.ReactNode;
 }
 
 interface FeatureIconListProps {
@@ -154,6 +155,7 @@ const Feature15 = (props: Props) => {
                 <p className="mt-2 text-muted-foreground">
                   {feature.description}
                 </p>
+                {feature.visual && <div className="mt-4">{feature.visual}</div>}
               </div>
             </div>
           ))}
