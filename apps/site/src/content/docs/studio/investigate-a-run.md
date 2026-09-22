@@ -81,6 +81,8 @@ loop's footer names which pass it kept.
   through by hand on one real case.
 - [How to read a workflow's graph](/studio/understand-the-graph/) — the node inspector this screen's
   side panel borrows its formatted/raw switch from.
+- [How to customize a node's display in Studio](/engine/display-templates/) — what builds the
+  formatted view of a node's input and output, instead of the raw JSON.
 - [How to work with datasets in Studio](/studio/datasets/) — where `Start a run` sends you to pick a
   case.
 - [How to respond to a human-review request](/studio/respond-to-a-review/) — what to do with a run
