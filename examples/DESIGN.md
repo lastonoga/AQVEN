@@ -1,50 +1,51 @@
-# Showcase: пример Lumen
+# Showcase: the Lumen example
 
-> Статус: проект, 2026-09-17
-> Закон: решения владельца от 2026-09-17 (O1–O22, §1), [DECISIONS.md](../../../docs/DECISIONS.md),
-> [ADR-0006](../../../docs/adr/0006-dynamic-allowed-sets.md), [ADR-0025](../../../docs/adr/0025-python-engine.md)–[ADR-0029](../../../docs/adr/0029-trust-and-quality-python.md),
-> [23. API студии](../../../docs/23-studio-api.md). Семантика комбинаторов, циклов и судей — [03](../../../docs/03-core-language.md), [04](../../../docs/04-ir-schema.md).
-> Решения владельца и ADR сильнее этого документа и [06](../../../docs/06-registries.md).
+> Status: design, 2026-09-17
+> Law: the owner's decisions of 2026-09-17 (O1–O22, §1), [DECISIONS.md](../docs/DECISIONS.md),
+> [ADR-0006](../docs/adr/0006-dynamic-allowed-sets.md), [ADR-0025](../docs/adr/0025-python-engine.md)–[ADR-0029](../docs/adr/0029-trust-and-quality-python.md),
+> [23. Studio API](../docs/23-studio-api.md). The semantics of combinators, loops and judges are in [03](../docs/03-core-language.md), [04](../docs/04-ir-schema.md).
+> The owner's decisions and the ADRs outrank this document and [06](../docs/06-registries.md).
 
-Пометка **«предложение — нет в ADR»** стоит у конструкции, которую не фиксируют ни ADR, ни решения O1–O22. Её принимает
-владелец (и тогда пишется ADR) или она меняется.
+The mark **"proposal — not in an ADR"** sits on a construct that neither the ADRs nor decisions O1–O22 fix. The owner
+either accepts it (and then an ADR is written) or it changes.
 
-## 1. Решения владельца от 2026-09-17
+## 1. The owner's decisions of 2026-09-17
 
-| # | Решение | Как отражено здесь |
+| # | Decision | How it shows up here |
 |---|---|---|
-| O1 | Один пример на все паттерны и режимы исполнения; переиспользуемые части — часть примера | воркфлоу `support_case` и вызываемый им воркфлоу `judge_panel` (§4–§5) |
-| O2 | Узел `llm` ссылается на агента; модель и её настройки есть только у агента (`provider:model`) | `agents/<id>.yaml`, `agents/resolver/resolver.yaml`, §6.2 |
-| O3 | Агенты, тулы и MCP-серверы — файлы реестров модуля; узлы тулы не настраивают; `aqven.yaml` — проект и провайдеры; возможности моделей — встроенная таблица профилей | §6.1–§6.4 |
-| O4 | Лимиты и бюджеты необязательны везде; нет ключа — нет лимита | ключ `limits` у проекта, воркфлоу, узла, агента; в примере — только у агента `resolver` |
-| O5 | Пост-проверки инференса: встроенные и свои, `on_fail: retry \| fail \| flag`; движок — `output_validator` + `ModelRetry` | §6.5 |
-| O6 | Выход всегда структурированный JSON; текстового режима нет | `E_TEXT_OUTPUT`, §9.4 |
-| O7 | Промт живёт в инференсе, узел говорит только `agent` + привязки входов (и `inference`, если инференс общий) | §6.5, §7 |
-| O8 | Промт уровня 1 или 2 — `<инференс>.prompt.md` рядом с `<инференс>.inference.yaml`, подхватывается по соглашению (уточнено O18, имена файлов — O22) | §3, §6.5 |
-| O9 | Место выбора алгоритма — политика: ровно одно из `use: <встроенная>` и `run: модуль:функция`, параметры в `with`; встроенные и свои взаимозаменяемы | §6.6: `join`, `stop`, `select`, `on_item_error`, оценщики; свои — `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
-| O10 | Варианты промта объявляются в `<инференс>.inference.yaml` (`variants`: `on`, `cases`, `default`), файлы — `<инференс>.variants/<слот>/<вариант>.md`, промт выводит `{{ variants.<слот> }}` | слот `lamp_guide` у `revise` по `product.lamp_kind`, §6.5 |
-| O11 | Виды узлов раздельны; проверка инференса и скорер eval — один оценщик; у `loop` нет блока итерации; поля управляющих узлов единые: `body`, `in`, `out` и политики | §4, §6.6, §10 |
-| O12 | Слоя кэша нет: нет `determinism`, `ttl_ms`, `ttl_seconds`; нет хука `prepare` у узлов; `effect` остаётся | узлы `code`, `tool` и тулы без этих ключей, §4, §6.3 |
-| O13 | Сущности Connection нет: коннекторы к данным — шаги `code` и тулы | `tools/functions.py` |
-| O14 | Загрузчик ищет `*.yaml` с `apiVersion: aqven/v1` рекурсивно и разбирает по `kind`; id — имя файла до первой точки, у `flow.yaml` — имя папки (уточнено O22) | §3 |
-| O15 | Узел `llm` с `<узел>.inference.yaml` рядом берёт его без ключа `inference`; `inference: <id>` — только для общего инференса | `triage`, `vote__ballot`, `record__extract`, `route__resolve`, `polish__revise`, `polish__critique`, `illustrate`, `decide__tie_break`, §3 |
-| O16 | Единица раскладки — шаг; место сущности — наименьший общий предок её пользователей | уточнено O22: у вида одно место, папка узла — у узла верхнего уровня, §3 |
-| O17 | Несколько воркфлоу; проектные папки `agents/`, `tools/`, `mcp/`; отдельного вида «компонент» нет — переиспользуемый подграф — воркфлоу, его вызывает узел `call` | `flows/judge_panel/` — второй воркфлоу, узел `panel` — `call` с `flow: judge_panel` (§5) |
-| O18 | Любое место — выбор пользователя, стандарт раскладки — O22; соглашение с явным переопределением: `prompt` — путь к `.md` где угодно или `модуль:функция`, вариант — id или путь к `.md` | явного пути к промту в примере нет, единственный ключ `prompt` — функция `illustrate_prompt`; `W_PROMPT_SHADOWED` проверяет `tests/test_check.py`, §3 |
-| O19 | Раскладка по ролям. Типы — только YAML, модели Pydantic генерирует `aqven generate` в `types.py` корня модуля; место каждого вида — O22 | §3, §9 |
-| O20 | Короткие ссылки на код: `<функция>` из `<id>.py` рядом с объявляющим файлом, `@here.`, `@flow.`, `@<flow_id>.`, `@root.`, полный путь; в IR — только абсолютный путь | §3 |
-| O21 | Подпапки по виду при большом числе файлов | `types/enums/`, `ids/`, `records/`, `unions/`, `values/` (O22), §3, §8 |
-| O22 | Стандартная раскладка, окончательная на сейчас: у вида одно место. Корень — `aqven.yaml`, `agents/<агент>.yaml` (агент с сопутствующими файлами — папка `agents/<агент>/`: `<агент>.yaml`, `<агент>.instructions.md`, инференсы его субагентов), `tools/<тул>.yaml` и `tools/functions.py` (ссылка `@root.tools.functions:<функция>`), `mcp/<сервер>.yaml`, `types/{ids,enums,records,unions,values}/<тип>.yaml`, `fragments/<фрагмент>.md`, `code/<модуль>.py` (Python нескольких мест), `evals/<воркфлоу>/`, `flows/<воркфлоу>/flow.yaml`. У каждого узла верхнего уровня — папка `nodes/<узел>/` с `<узел>.node.yaml` и его `.inference.yaml`, `.prompt.md`, `.variants/`, `.py`; все потомки узла на любой глубине — плоско в той же папке по тому же правилу префикса, вложенных папок нет. `types.py` корня модуля (рядом с папкой `types/` без `__init__.py`, импорт — `lumen.types`) — модели всех типов и входов-выходов каждого инференса (`<Инференс>In`, `<Инференс>Out`), тула с `run` (`<Тул>In`, `<Тул>Out`) и шага `code` (`<Воркфлоу><Узел>In`, `<Воркфлоу><Узел>Out`), рукописных копий нет. Id — имя файла до первой точки; голое имя в `run` — `<id>.py` рядом с объявляющим файлом, загрузка по пути файла | §3, §8, §9 |
+| O1 | One example covering every pattern and execution mode; reusable parts are part of the example | the `support_case` workflow and the `judge_panel` workflow it calls (§4–§5) |
+| O2 | An `llm` node references an agent; the model and its settings live only on the agent (`provider:model`) | `agents/<id>.yaml`, `agents/resolver/resolver.yaml`, §6.2 |
+| O3 | Agents, tools and MCP servers are module registry files; nodes do not configure tools; `aqven.yaml` holds the project and the providers; model capabilities come from a built-in profile table | §6.1–§6.4 |
+| O4 | Limits and budgets are optional everywhere; no key means no limit | the `limits` key on the project, a workflow, a node and an agent; in the example, only on the `resolver` agent |
+| O5 | Inference post-checks: built-in and your own, `on_fail: retry \| fail \| flag`; the engine uses `output_validator` + `ModelRetry` | §6.5 |
+| O6 | Output is always structured JSON; there is no text mode | `E_TEXT_OUTPUT`, §9.4 |
+| O7 | The prompt lives in the inference; the node says only `agent` plus input bindings (and `inference`, when the inference is shared) | §6.5, §7 |
+| O8 | A level 1 or 2 prompt is `<inference>.prompt.md` beside `<inference>.inference.yaml`, picked up by convention (refined by O18, file names by O22) | §3, §6.5 |
+| O9 | The place where an algorithm is chosen is a policy: exactly one of `use: <built-in>` and `run: module:function`, parameters in `with`; built-in and your own are interchangeable | §6.6: `join`, `stop`, `select`, `on_item_error`, evaluators; your own in `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
+| O10 | Prompt variants are declared in `<inference>.inference.yaml` (`variants`: `on`, `cases`, `default`), the files are `<inference>.variants/<slot>/<variant>.md`, and the prompt prints `{{ variants.<slot> }}` | the `lamp_guide` slot on `revise` by `product.lamp_kind`, §6.5 |
+| O11 | Node kinds are separate; an inference check and an eval scorer are one evaluator; `loop` has no iteration block; the fields of control nodes are the same: `body`, `in`, `out` and policies | §4, §6.6, §10 |
+| O12 | There is no cache layer: no `determinism`, `ttl_ms`, `ttl_seconds`; no `prepare` hook on nodes; `effect` stays | `code` and `tool` nodes and the tools carry none of those keys, §4, §6.3 |
+| O13 | There is no Connection entity: connectors to data are `code` steps and tools | `tools/functions.py` |
+| O14 | The loader looks for `*.yaml` with `apiVersion: aqven/v1` recursively and sorts them by `kind`; an id is the file name up to the first dot, and for `flow.yaml` it is the folder name (refined by O22) | §3 |
+| O15 | An `llm` node with a `<node>.inference.yaml` beside it takes that one without an `inference` key; `inference: <id>` is only for a shared inference | `triage`, `vote__ballot`, `record__extract`, `route__resolve`, `polish__revise`, `polish__critique`, `illustrate`, `decide__tie_break`, §3 |
+| O16 | The unit of layout is the step; an entity lives at the lowest common ancestor of its users | refined by O22: one place per kind, and a node folder belongs to a top-level node, §3 |
+| O17 | Several workflows; the project folders `agents/`, `tools/`, `mcp/`; there is no separate "component" kind — a reusable subgraph is a workflow, called by a `call` node | `flows/judge_panel/` is the second workflow, and the `panel` node is a `call` with `flow: judge_panel` (§5) |
+| O18 | Any location is the user's choice, and the layout standard is O22; convention with an explicit override: `prompt` is a path to a `.md` anywhere, or `module:function`, and a variant is an id or a path to a `.md` | the example has no explicit prompt path; the only `prompt` key is the `illustrate_prompt` function; `W_PROMPT_SHADOWED` is covered by `tests/test_check.py`, §3 |
+| O19 | Layout by role. Types are YAML only, and `aqven generate` writes the Pydantic models into `types.py` at the module root; the place of every kind is O22 | §3, §9 |
+| O20 | Short code references: `<function>` from `<id>.py` beside the declaring file, `@here.`, `@flow.`, `@<flow_id>.`, `@root.`, or a full path; the IR keeps only the absolute path | §3 |
+| O21 | Subfolders by kind when there are many files | `types/enums/`, `ids/`, `records/`, `unions/`, `values/` (O22), §3, §8 |
+| O22 | The standard layout, final for now: one place per kind. At the root — `aqven.yaml`, `agents/<agent>.yaml` (an agent with companion files gets the folder `agents/<agent>/`: `<agent>.yaml`, `<agent>.instructions.md`, the inferences of its subagents), `tools/<tool>.yaml` and `tools/functions.py` (referenced as `@root.tools.functions:<function>`), `mcp/<server>.yaml`, `types/{ids,enums,records,unions,values}/<type>.yaml`, `fragments/<fragment>.md`, `code/<module>.py` (Python used in several places), `evals/<workflow>/`, `flows/<workflow>/flow.yaml`. Every top-level node gets the folder `nodes/<node>/` with `<node>.node.yaml` and its `.inference.yaml`, `.prompt.md`, `.variants/`, `.py`; every descendant of that node, however deep, sits flat in the same folder under the same prefix rule, with no nested folders. `types.py` at the module root (beside the `types/` folder, which has no `__init__.py`, imported as `lumen.types`) holds the models of every type and of the inputs and outputs of every inference (`<Inference>In`, `<Inference>Out`), of every tool with `run` (`<Tool>In`, `<Tool>Out`) and of every `code` step (`<Workflow><Node>In`, `<Workflow><Node>Out`); there are no hand-written copies. An id is the file name up to the first dot; a bare name in `run` means `<id>.py` beside the declaring file, loaded by file path | §3, §8, §9 |
 
-## 2. Сценарий
+## 2. The scenario
 
-**Lumen** — бренд умного освещения. Покупатель пишет в поддержку с витрины или маркетплейса и прикладывает фото, голосовое,
-видео дефекта и счёт. У товара есть вид лампы (`LampKind`: сетевая, аккумуляторная, умная Wi-Fi, умная Zigbee) — от него
-зависят советы в ответе. Воркфлоу `support_case` разбирает обращение и вложения, голосованием с каскадом определяет намерение,
-заполняет анкету обращения из формы категории с проверкой и ремонтом, маршрутизирует (агент с тулами решает гарантийный
-случай), пишет ответ по базе знаний тремя семействами моделей с советами по виду лампы, отдаёт кандидатов воркфлоу панели судей `judge_panel`, полирует победителя циклом
-критики, генерирует картинку-инструкцию, голосовое и короткий ролик и ждёт параллельного согласования руководителя поддержки и
-бренд-редактора.
+**Lumen** is a smart lighting brand. A customer writes to support from the online store or a marketplace and attaches a
+photo, a voice message, a video of the defect and an invoice. The product has a lamp kind (`LampKind`: mains,
+rechargeable, smart Wi-Fi, smart Zigbee), and the advice in the reply depends on it. The `support_case` workflow parses
+the case and its attachments, decides the intent by ballot with a cascade, fills the case form from the category form
+with a check and a repair, routes it (an agent with tools decides a warranty case), writes a reply from the knowledge
+base with three model families and advice for the lamp kind, hands the candidates to the `judge_panel` workflow,
+polishes the winner in a critique loop, generates an instruction image, a voice track and a short clip, and waits for
+the support lead and the brand editor to approve in parallel.
 
 ```
 prepare → triage → vote(map) → tally → intent(switch: cascade) → case_form → record(loop) → to_record(narrow)
@@ -52,90 +53,96 @@ prepare → triage → vote(map) → tally → intent(switch: cascade) → case_
 → illustrate → voice → clip(wait) → approvals(parallel humans) → finalize
 ```
 
-## 3. Раскладка
+## 3. Layout
 
-Корень проекта aqven — `lumen/` (пакет `lumen`) в корне проекта. Пути ниже — от него, кроме хоста.
+The aqven project root is `lumen/` (the `lumen` package) at the project root. The paths below are relative to it,
+except for the host.
 
-Загрузчик рекурсивно находит все `*.yaml` с `apiVersion: aqven/v1` и разбирает их по `kind`; фиксирован только `aqven.yaml`
-в корне (O14). **Id сущности — имя файла до первой точки:** `intent.node.yaml` — узел `intent`, `revise.inference.yaml` —
-инференс `revise`, `reply_quality.yaml` — eval `reply_quality`, `resolver.yaml` — агент `resolver`. Исключение одно —
-`flow.yaml` (и билдер `flow.py`): id воркфлоу — имя его папки. Суффиксы `.node.yaml` и `.inference.yaml` — соглашение O22: вид
-всё равно берётся из `kind`, а суффикс, противоречащий `kind`, — `E_KIND_PATH_MISMATCH`. Id уникален среди сущностей одного
-вида (дубликат — `E_ID_DUPLICATE` с обоими путями). Узел принадлежит воркфлоу, чей `flow.yaml` лежит в ближайшей папке выше;
-папки узлов на id не влияют — развёрнутый id (`route__resolve`) строится по `body` и `cases` родителя.
+The loader recursively finds every `*.yaml` with `apiVersion: aqven/v1` and sorts them by `kind`; only `aqven.yaml` at
+the root is fixed (O14). **An entity's id is the file name up to the first dot:** `intent.node.yaml` is the node
+`intent`, `revise.inference.yaml` is the inference `revise`, `reply_quality.yaml` is the eval `reply_quality`, and
+`resolver.yaml` is the agent `resolver`. There is one exception — `flow.yaml` (and the builder `flow.py`): a
+workflow's id is the name of its folder. The suffixes `.node.yaml` and `.inference.yaml` are the O22 convention: the
+kind still comes from `kind`, and a suffix that contradicts `kind` is `E_KIND_PATH_MISMATCH`. An id is unique among
+entities of one kind (a duplicate is `E_ID_DUPLICATE`, with both paths). A node belongs to the workflow whose
+`flow.yaml` sits in the nearest folder above it; node folders do not affect ids — the expanded id (`route__resolve`)
+is built from the parent's `body` and `cases`.
 
-**Стандартная раскладка: у вида одно место (O22).** Папка вида есть ровно на одном уровне: `types/`, `fragments/`, `code/` и
-`evals/` — только в корне модуля, у воркфлоу и узлов их нет. Сопутствующие файлы сущности лежат рядом с её файлом под тем же
-префиксом: `<id>.instructions.md`, `<id>.inference.yaml`, `<id>.prompt.md`, `<id>.variants/`, `<id>.py`. Агент без
-сопутствующих файлов — один файл `agents/<агент>.yaml`; агент с ними — папка `agents/<агент>/`. У каждого узла верхнего уровня
-воркфлоу своя папка `nodes/<узел>/`; все его потомки (`body` у `parallel`, `map`, `loop`, `cases` у `switch`) на любой глубине
-лежат в этой же папке плоско по тому же правилу префикса, вложенных папок узлов нет.
+**The standard layout: one place per kind (O22).** A kind's folder exists at exactly one level: `types/`,
+`fragments/`, `code/` and `evals/` live only at the module root, and workflows and nodes have none of them. The files
+that belong to an entity sit beside its own file under the same prefix: `<id>.instructions.md`,
+`<id>.inference.yaml`, `<id>.prompt.md`, `<id>.variants/`, `<id>.py`. An agent with no companion files is the single
+file `agents/<agent>.yaml`; an agent with them gets the folder `agents/<agent>/`. Every top-level node of a workflow
+gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `parallel`, `map`, `loop`, and `cases` of
+`switch`), however deep, sit flat in that same folder under the same prefix rule, with no nested node folders.
 
-| Вид | Место | В примере |
+| Kind | Place | In the example |
 |---|---|---|
-| проект | `aqven.yaml` | провайдеры и политики данных |
-| агент | `agents/<агент>.yaml` | девять агентов одним файлом |
-| агент с сопутствующими файлами | `agents/<агент>/<агент>.yaml`, `<агент>.instructions.md`, инференсы его субагентов: `<инференс>.inference.yaml`, `<инференс>.prompt.md`, `<инференс>.variants/` | `agents/resolver/`: инструкции и инференс субагента `research_policy` |
-| тулы | `tools/<тул>.yaml`, функции тулов — `tools/functions.py`, ссылка `@root.tools.functions:<функция>` | шесть тулов |
-| MCP-серверы | `mcp/<сервер>.yaml` | `helpdesk` |
-| типы | `types/`, подпапки по виду типа: `enums/`, `ids/`, `records/`, `unions/`, `values/` (ограниченные скаляры) | все 49 типов обоих воркфлоу и тулов |
-| общие фрагменты промтов | `fragments/<фрагмент>.md` | `untrusted_input`, `safety_escalation`, `citation_rules`, `brand_voice`, `judge_protocol` |
-| Python нескольких мест | `code/<модуль>.py` — несколько узлов, узел и eval, несколько воркфлоу | `code/support_case.py`: оценщик `promises_match_resolution` — проверка инференса `revise` и скорер eval `reply_quality` |
-| датасеты и evals воркфлоу | `evals/<воркфлоу>/` | `evals/support_case/reply_cases.yaml`, `reply_quality.yaml` |
-| воркфлоу | `flows/<воркфлоу>/flow.yaml` | `support_case`, `judge_panel` |
-| узел верхнего уровня | `flows/<воркфлоу>/nodes/<узел>/<узел>.node.yaml` | `nodes/route/route.node.yaml` |
-| потомок узла на любой глубине | плоско в папке узла верхнего уровня: `nodes/<узел>/<потомок>.node.yaml` | `nodes/route/resolve.node.yaml`, `nodes/polish/revise.node.yaml` |
-| инференс узла `llm` | рядом с узлом, тот же префикс: `<узел>.inference.yaml`, `<узел>.prompt.md`, `<узел>.variants/<слот>/<вариант>.md` | `nodes/triage/triage.*`, `nodes/polish/revise.*` |
-| код узла | `<узел>.py` рядом с узлом — его шаг, свои проверки его инференса, свои политики, промт уровня 3 | `nodes/prepare/prepare.py`, `nodes/judges/judges.py`, `nodes/polish/critique.py`, `nodes/illustrate/illustrate.py` |
-| сгенерированное | `types.py` корня модуля — модели всех типов и входов-выходов каждого инференса, тула и шага `code` | `aqven generate`, в `.gitignore` |
+| project | `aqven.yaml` | providers and data policies |
+| agent | `agents/<agent>.yaml` | nine agents, one file each |
+| agent with companion files | `agents/<agent>/<agent>.yaml`, `<agent>.instructions.md`, the inferences of its subagents: `<inference>.inference.yaml`, `<inference>.prompt.md`, `<inference>.variants/` | `agents/resolver/`: the instructions and the `research_policy` subagent inference |
+| tools | `tools/<tool>.yaml`, tool functions in `tools/functions.py`, referenced as `@root.tools.functions:<function>` | six tools |
+| MCP servers | `mcp/<server>.yaml` | `helpdesk` |
+| types | `types/`, with subfolders by type kind: `enums/`, `ids/`, `records/`, `unions/`, `values/` (constrained scalars) | all 49 types of both workflows and the tools |
+| shared prompt fragments | `fragments/<fragment>.md` | `untrusted_input`, `safety_escalation`, `citation_rules`, `brand_voice`, `judge_protocol` |
+| Python used in several places | `code/<module>.py` — several nodes, a node and an eval, several workflows | `code/support_case.py`: the evaluator `promises_match_resolution` is both a check on the `revise` inference and a scorer of the `reply_quality` eval |
+| datasets and evals of a workflow | `evals/<workflow>/` | `evals/support_case/reply_cases.yaml`, `reply_quality.yaml` |
+| workflow | `flows/<workflow>/flow.yaml` | `support_case`, `judge_panel` |
+| top-level node | `flows/<workflow>/nodes/<node>/<node>.node.yaml` | `nodes/route/route.node.yaml` |
+| a node's descendant, at any depth | flat in the top-level node's folder: `nodes/<node>/<child>.node.yaml` | `nodes/route/resolve.node.yaml`, `nodes/polish/revise.node.yaml` |
+| the inference of an `llm` node | beside the node under the same prefix: `<node>.inference.yaml`, `<node>.prompt.md`, `<node>.variants/<slot>/<variant>.md` | `nodes/triage/triage.*`, `nodes/polish/revise.*` |
+| a node's code | `<node>.py` beside the node — its step, its own checks on its inference, its own policies, a level 3 prompt | `nodes/prepare/prepare.py`, `nodes/judges/judges.py`, `nodes/polish/critique.py`, `nodes/illustrate/illustrate.py` |
+| generated | `types.py` at the module root — the models of every type and of the inputs and outputs of every inference, tool and `code` step | `aqven generate`, in `.gitignore` |
 
-**Общий инференс.** Инференс лежит рядом с узлом-владельцем под его именем, и его id — id этого узла. Другие узлы и evals
-ссылаются на него `inference: <id>`. Владелец — первый по порядку воркфлоу узел-пользователь, чей id не совпадает с id агента:
+**A shared inference.** The inference sits beside the node that owns it, under that node's name, and takes its id.
+Other nodes and evals reference it with `inference: <id>`. The owner is the first node in workflow order that uses it
+and whose id does not match the agent's id:
 
-| Инференс | Файл | Кто ссылается `inference: <id>` |
+| Inference | File | Who references it with `inference: <id>` |
 |---|---|---|
 | `ballot` | `flows/support_case/nodes/vote/ballot.inference.yaml` | `intent__escalate` |
-| `revise` | `flows/support_case/nodes/polish/revise.inference.yaml` | `drafts__gpt`, `drafts__mistral`, `drafts__gemini`, eval `reply_quality` |
-| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | скорер `critique` eval `reply_quality` |
+| `revise` | `flows/support_case/nodes/polish/revise.inference.yaml` | `drafts__gpt`, `drafts__mistral`, `drafts__gemini`, the `reply_quality` eval |
+| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | the `critique` scorer of the `reply_quality` eval |
 | `tie_break` | `flows/judge_panel/nodes/decide/tie_break.inference.yaml` | `judges__deepseek`, `judges__qwen`, `judges__llama`, `decide__tie_break` |
 
-**Инференс субагента.** Инференс `research_policy` не принадлежит ни одному узлу: его вызывает субагент агента `resolver`. Поэтому
-он лежит в папке этого агента под своим именем: `agents/resolver/research_policy.inference.yaml` и
-`agents/resolver/research_policy.prompt.md`. Узла `research_policy` нет, и инференс ни к какому узлу не прикрепляется.
+**A subagent inference.** The `research_policy` inference belongs to no node: it is called by a subagent of the
+`resolver` agent. So it sits in that agent's folder under its own name:
+`agents/resolver/research_policy.inference.yaml` and `agents/resolver/research_policy.prompt.md`. There is no
+`research_policy` node, and the inference is attached to no node.
 
 ```
 aqven.yaml                                         kind Project
-types.py                                           модели Pydantic всех типов и входов-выходов инференсов, тулов и шагов code: aqven generate, в .gitignore
+types.py                                           Pydantic models of every type and of inference, tool and code step inputs and outputs: aqven generate, in .gitignore
 agents/
-  <agent>.yaml                                     kind Agent, восемь файлов: deepseek, gemini, gpt, llama, mistral, painter, qwen, researcher
+  <agent>.yaml                                     kind Agent, eight files: deepseek, gemini, gpt, llama, mistral, painter, qwen, researcher
   resolver/
-    resolver.yaml                                  kind Agent: тулы, MCP-тул, субагент, одобрение, limits
-    resolver.instructions.md                       инструкции агента (уровень 1)
-    research_policy.inference.yaml, .prompt.md     инференс субагента research_policy
-tools/<tool>.yaml, functions.py                    kind Tool и функции тулов
+    resolver.yaml                                  kind Agent: tools, an MCP tool, a subagent, approval, limits
+    resolver.instructions.md                       agent instructions (level 1)
+    research_policy.inference.yaml, .prompt.md     the research_policy subagent inference
+tools/<tool>.yaml, functions.py                    kind Tool and the tool functions
 mcp/helpdesk.yaml                                  kind McpServer
 types/
-  enums/                                           17 перечислений
-  ids/                                             6 идентификаторов
-  records/                                         23 записи
+  enums/                                           17 enums
+  ids/                                             6 identifiers
+  records/                                         23 records
   unions/                                          CaseOrigin, CaseRecord
   values/                                          Score
 fragments/                                         untrusted_input, safety_escalation, citation_rules, brand_voice, judge_protocol
-code/support_case.py                               promises_match_resolution: проверка revise и скорер eval reply_quality
-evals/support_case/                                reply_cases.yaml — kind Dataset, reply_quality.yaml — kind Eval инференса revise
+code/support_case.py                               promises_match_resolution: a check on revise and a scorer of the reply_quality eval
+evals/support_case/                                reply_cases.yaml — kind Dataset, reply_quality.yaml — kind Eval of the revise inference
 flows/
-  support_case/                                    воркфлоу обращения
-    flow.yaml                                      kind Flow: вход, выход, порядок узлов
+  support_case/                                    the case workflow
+    flow.yaml                                      kind Flow: input, output, node order
     nodes/
-      prepare/prepare.node.yaml, prepare.py        шаг code, run: "prepare"
-      triage/triage.node.yaml, .inference.yaml, .prompt.md  шаг llm со своим инференсом: ключа inference нет (O15)
+      prepare/prepare.node.yaml, prepare.py        a code step, run: "prepare"
+      triage/triage.node.yaml, .inference.yaml, .prompt.md  an llm step with its own inference: no inference key (O15)
       vote/vote.node.yaml                          map
-      vote/ballot.node.yaml, .inference.yaml, .prompt.md  инференс ballot
+      vote/ballot.node.yaml, .inference.yaml, .prompt.md  the ballot inference
       tally/tally.node.yaml, tally.py
       intent/intent.node.yaml                      switch
       intent/escalate.node.yaml                    inference: "ballot"
       case_form/case_form.node.yaml, case_form.py
-      record/record.node.yaml, record.py           цикл, своя политика остановки
+      record/record.node.yaml, record.py           a loop with its own stop policy
       record/extract.node.yaml, .inference.yaml, .prompt.md
       record/validate.node.yaml, validate.py
       to_record/to_record.node.yaml                narrow
@@ -148,189 +155,203 @@ flows/
       polish/polish.node.yaml                      loop
       polish/revise.node.yaml, .inference.yaml, .prompt.md, .variants/lamp_guide/
       polish/critique.node.yaml, .inference.yaml, .prompt.md, .py
-      illustrate/illustrate.node.yaml, .inference.yaml, .py  промт уровня 3 — функция в illustrate.py
+      illustrate/illustrate.node.yaml, .inference.yaml, .py  a level 3 prompt — a function in illustrate.py
       voice/voice.node.yaml, clip/clip.node.yaml   tool
       approvals/approvals.node.yaml                parallel
       approvals/lead.node.yaml, brand.node.yaml    human
       finalize/finalize.node.yaml, finalize.py
-  judge_panel/                                     воркфлоу панели судей, его вызывает узел support_case/panel
-    flow.yaml                                      вход PanelRequest, выход PanelOutcome, контракт requires
+  judge_panel/                                     the judge panel workflow, called by the support_case/panel node
+    flow.yaml                                      input PanelRequest, output PanelOutcome, the requires contract
     nodes/
-      judges/judges.node.yaml, judges.py           parallel, своя политика join
+      judges/judges.node.yaml, judges.py           parallel, with its own join policy
       judges/deepseek.node.yaml, qwen.node.yaml, llama.node.yaml  inference: "tie_break"
       aggregate/aggregate.node.yaml, aggregate.py
       decide/decide.node.yaml                      switch
-      decide/tie_break.node.yaml, .inference.yaml, .prompt.md  инференс tie_break
+      decide/tie_break.node.yaml, .inference.yaml, .prompt.md  the tie_break inference
       pick/pick.node.yaml, pick.py
 ```
 
-Короткая запись `triage/triage.node.yaml, .inference.yaml` в дереве означает файлы `triage/triage.node.yaml` и
-`triage/triage.inference.yaml`. Сущности по видам с путями файлов выводит `aqven tree` (вывод — в [README.md](README.md)).
+The short form `triage/triage.node.yaml, .inference.yaml` in the tree means the files `triage/triage.node.yaml` and
+`triage/triage.inference.yaml`. `aqven tree` prints the entities by kind with their file paths (its output is in
+[README.md](README.md)).
 
-Соглашения (O15, O20):
+Conventions (O15, O20):
 
-- **Инференс узла.** `<узел>.inference.yaml` рядом с `<узел>.node.yaml` — инференс этого узла, ключа `inference` нет. Ключ
-  `inference: <id>` ссылается на инференс с другим именем и нужен, только когда инференс переиспользуется. Оба сразу —
-  `E_SOURCE_CONFLICT`.
-- **Промт.** Нет ключа `prompt` — берётся `<инференс>.prompt.md` рядом с `<инференс>.inference.yaml`. Явный `prompt` — путь к
-  `.md` (от папки инференса, `@flow/` — от папки воркфлоу, `@root/` — от корня модуля) или ссылка на функцию (уровень 3). Ни
-  то, ни другое не разрешилось — `E_PROMPT_MISSING`; явный путь при своём `<инференс>.prompt.md` рядом — `W_PROMPT_SHADOWED`.
-  Явного пути к промту в примере нет: у каждого инференса с шаблоном свой `.prompt.md` рядом, единственный ключ `prompt` —
-  функция `illustrate_prompt`.
-- **Варианты.** Значение `cases`/`default` — id варианта из `<инференс>.variants/<слот>/<вариант>.md` рядом с инференсом или
-  явный путь к `.md`. Файл с префиксом инференса, который не достижим из промта, — `E_ORPHAN_FILE`.
-- **Include.** Путь считается от включающего файла, от папки инференса или от корня модуля, `@root/` — от корня:
-  `{% include "fragments/brand_voice" %}` и `{% include "fragments/untrusted_input" %}` с любой глубины узла и из папки агента
-  находят корневой `fragments/`. Префикс `@flow/` в `include` каркас пока не принимает (§14). Фрагмент — статичный текст без
-  переменных. Частей промта в стандарте нет: статичные части `brand_voice` и `judge_protocol` — общие фрагменты, а часть с
-  переменными (прошлая версия ответа и критика) встроена в `nodes/polish/revise.prompt.md` под `{% if previous %}`.
-- **Ссылки на код (O20).** Каждая ссылка `run`, `wait.poll`, `prompt` уровня 3, `checks[].run`, `scorers[].run` пишется самой
-  короткой формой, которая работает. Загрузчик разрешает запись в абсолютную ссылку от места файла; IR, хэши и записи прогона
-  хранят только абсолютную ссылку, поэтому перенос файла меняет лишь разрешение.
+- **A node's inference.** `<node>.inference.yaml` beside `<node>.node.yaml` is that node's inference, with no
+  `inference` key. The key `inference: <id>` references an inference under another name and is needed only when the
+  inference is reused. Both at once is `E_SOURCE_CONFLICT`.
+- **The prompt.** With no `prompt` key, `<inference>.prompt.md` beside `<inference>.inference.yaml` is taken. An
+  explicit `prompt` is a path to a `.md` (from the inference folder, `@flow/` from the workflow folder, `@root/` from
+  the module root) or a function reference (level 3). Neither resolving is `E_PROMPT_MISSING`; an explicit path while
+  a `<inference>.prompt.md` sits beside it is `W_PROMPT_SHADOWED`. The example has no explicit prompt path: every
+  templated inference has its own `.prompt.md` beside it, and the only `prompt` key is the `illustrate_prompt`
+  function.
+- **Variants.** A `cases`/`default` value is a variant id from `<inference>.variants/<slot>/<variant>.md` beside the
+  inference, or an explicit path to a `.md`. A file under the inference prefix that the prompt cannot reach is
+  `E_ORPHAN_FILE`.
+- **Include.** The path is resolved from the including file, from the inference folder or from the module root, and
+  `@root/` from the root: `{% include "fragments/brand_voice" %}` and `{% include "fragments/untrusted_input" %}` find
+  the root `fragments/` from any node depth and from the agent folder. The `@flow/` prefix in `include` is not
+  accepted by the framework yet (§14). A fragment is static text with no variables. There are no prompt parts in the
+  standard: the static parts `brand_voice` and `judge_protocol` are shared fragments, and the part with variables (the
+  previous reply and the critique) is inlined in `nodes/polish/revise.prompt.md` under `{% if previous %}`.
+- **Code references (O20).** Every `run`, `wait.poll`, level 3 `prompt`, `checks[].run` and `scorers[].run` reference
+  is written in the shortest form that works. The loader resolves it into an absolute reference from the file's
+  location; the IR, the hashes and the run records store only the absolute reference, so moving a file changes nothing
+  but the resolution.
 
-  | Форма | Разрешается в | В примере |
+  | Form | Resolves to | In the example |
   |---|---|---|
-  | `<функция>` | `@root/<папка>/<id>.py:<функция>` — файл с id объявляющего файла рядом с ним, загружается по пути файла | шаги `code` (`run: "prepare"` → `nodes/prepare/prepare.py`, `run: "validate_record"` → `nodes/record/validate.py`), свои политики (`run: "no_issues"` → `nodes/record/record.py`, `run: "agreeing_verdicts"` → `nodes/judges/judges.py`), проверка (`run: "critique_consistent"` в `critique.inference.yaml` → `nodes/polish/critique.py`), промт уровня 3 (`prompt: "illustrate_prompt"` → `nodes/illustrate/illustrate.py`) |
-  | `@root/<путь>.py:<функция>` | как написано: файл от корня модуля, загружается по пути файла | — |
-  | `@here.<модуль>:<функция>` | модуль в папке YAML, путь импорта | — |
-  | `@flow.<путь>:<функция>` | путь импорта от папки воркфлоу, где лежит YAML | — |
-  | `@<flow_id>.<путь>:<функция>` | путь импорта от папки воркфлоу по его id | — |
-  | `@root.<путь>:<функция>` | путь импорта от корня пакета — общий код `code/` и `tools/` | тулы: `run: "@root.tools.functions:search_kb"`; оценщик: `run: "@root.code.support_case:promises_match_resolution"` в `revise.inference.yaml` и в скорере `promises` eval `reply_quality` |
-  | `<пакет>.<модуль>:<функция>` | как написано | в YAML примера нет; так абсолютную ссылку показывает `aqven refs`: `lumen.code.support_case:promises_match_resolution` |
+  | `<function>` | `@root/<folder>/<id>.py:<function>` — the file named after the declaring file's id, beside it, loaded by file path | `code` steps (`run: "prepare"` → `nodes/prepare/prepare.py`, `run: "validate_record"` → `nodes/record/validate.py`), your own policies (`run: "no_issues"` → `nodes/record/record.py`, `run: "agreeing_verdicts"` → `nodes/judges/judges.py`), a check (`run: "critique_consistent"` in `critique.inference.yaml` → `nodes/polish/critique.py`), a level 3 prompt (`prompt: "illustrate_prompt"` → `nodes/illustrate/illustrate.py`) |
+  | `@root/<path>.py:<function>` | as written: a file from the module root, loaded by file path | — |
+  | `@here.<module>:<function>` | a module in the YAML's folder, by import path | — |
+  | `@flow.<path>:<function>` | an import path from the workflow folder the YAML sits in | — |
+  | `@<flow_id>.<path>:<function>` | an import path from the workflow folder named by its id | — |
+  | `@root.<path>:<function>` | an import path from the package root — shared code in `code/` and `tools/` | tools: `run: "@root.tools.functions:search_kb"`; an evaluator: `run: "@root.code.support_case:promises_match_resolution"` in `revise.inference.yaml` and in the `promises` scorer of the `reply_quality` eval |
+  | `<package>.<module>:<function>` | as written | not in the example YAML; this is how `aqven refs` prints an absolute reference: `lumen.code.support_case:promises_match_resolution` |
 
-  Диагностики: `E_ALIAS_UNKNOWN` (неизвестный `@имя`), `E_ALIAS_RESERVED` (id воркфлоу `here`, `flow` или `root`),
-  `E_ALIAS_OUTSIDE_PACKAGE` (папка точечной формы не импортируется), `E_CODE_NOT_FOUND` (нет `<id>.py` рядом или функции в
-  нём), `E_CODE_REF_UNRESOLVED` (не разрешилась иная форма).
-- **Python.** Код узла загружается по пути файла (`importlib.util.spec_from_file_location`), а не по пути импорта, поэтому
-  одноимённые модули разных папок не конфликтуют, а папкам узлов не нужны имена-идентификаторы Python. Точечные пути импорта и
-  псевдонимы `@root.`/`@flow.` — для общего кода в `code/` и `tools/`: `lumen.code.support_case`, `lumen.tools.functions`.
-  Типы и модели входов-выходов инференсов, тулов и шагов `code` в код приходят только из `lumen.types` (§9). Суффиксы `.node.yaml`,
-  `.inference.yaml`, `.instructions.md`, `.prompt.md`, `.variants/`, файл `<id>.py`, имена `functions.py`, `code/`,
-  `fragments/` и подпапок видов типов фиксирует O22.
+  Diagnostics: `E_ALIAS_UNKNOWN` (an unknown `@name`), `E_ALIAS_RESERVED` (a workflow id of `here`, `flow` or `root`),
+  `E_ALIAS_OUTSIDE_PACKAGE` (the folder of a dotted form is not importable), `E_CODE_NOT_FOUND` (no `<id>.py` beside
+  it, or no such function in it), `E_CODE_REF_UNRESOLVED` (any other form failed to resolve).
+- **Python.** A node's code is loaded by file path (`importlib.util.spec_from_file_location`) rather than by import
+  path, so modules of the same name in different folders do not clash and node folders need no Python-identifier
+  names. Dotted import paths and the `@root.`/`@flow.` aliases are for shared code in `code/` and `tools/`:
+  `lumen.code.support_case`, `lumen.tools.functions`. Types and the input and output models of inferences, tools and
+  `code` steps reach the code only from `lumen.types` (§9). The suffixes `.node.yaml`, `.inference.yaml`,
+  `.instructions.md`, `.prompt.md`, `.variants/`, the `<id>.py` file, and the names `functions.py`, `code/`,
+  `fragments/` and the type-kind subfolders are fixed by O22.
 
-Хост — в самом модуле: `lumen/app.py` (приложение ASGI, монтирование в чужое приложение и вызов воркфлоу в процессе) и
-`lumen/__main__.py` (запуск сервера). В корне проекта — `tests/`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/`,
-`.gitignore` (`lumen/types.py`, `.env`), `pyproject.toml` с единственным пакетом `lumen` и модулем в корне —
-раскладка проекта, созданного `aqven new`. Соглашения YAML — ADR-0026 §1 (блочный стиль, строки в
-кавычках, `apiVersion` и `kind` первыми, camelCase только у ключевых слов JSON Schema, `description` у полей, промт — никогда
-строкой). Код — Python 3.14, pyright strict, без комментариев и docstring, плоский, сеть только `httpx2` через `ctx.http`.
+The host lives in the module itself: `lumen/app.py` (the ASGI app, mounting into another application, and calling the
+workflow in process) and `lumen/__main__.py` (starting the server). At the project root sit `tests/`, `.mcp.json`,
+`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.gitignore` (`lumen/types.py`, `.env`) and `pyproject.toml` with the single
+`lumen` package and the module at the root — the layout of a project created by `aqven new`. The YAML conventions are
+ADR-0026 §1 (block style, quoted strings, `apiVersion` and `kind` first, camelCase only for JSON Schema keywords, a
+`description` on every field, and never a prompt as a string). The code is Python 3.14, pyright strict, with no
+comments and no docstrings, flat, and the network only through `httpx2` via `ctx.http`.
 
-## 4. Воркфлоу `support_case`
+## 4. The `support_case` workflow
 
-`flows/support_case/flow.yaml`: `input: "CaseRequest"`, `output: "CaseOutcome"`, `context: [date, tenant_id]`, `order` — 18 узлов
-ниже, `returns` — поля `CaseOutcome` из `$finalize.out.<поле>`. Узел верхнего уровня — `nodes/<узел>/<узел>.node.yaml`, его
-потомки — плоско рядом: `nodes/<узел>/<потомок>.node.yaml`; в столбце «Узел» потомок записан как `<узел>/<потомок>`. Адрес
-исполнения — развёрнутый id через `__` (`route__resolve`, `approvals__lead`) с `branch_key`, `iteration`, `item_index`.
-Функция шага `code` — в `<узел>.py` рядом с файлом узла, ссылка — голое имя функции: `run: "prepare"` →
+`flows/support_case/flow.yaml`: `input: "CaseRequest"`, `output: "CaseOutcome"`, `context: [date, tenant_id]`, `order`
+is the 18 nodes below, and `returns` maps the `CaseOutcome` fields from `$finalize.out.<field>`. A top-level node is
+`nodes/<node>/<node>.node.yaml`, and its descendants sit flat beside it as `nodes/<node>/<child>.node.yaml`; in the
+"Node" column a descendant is written `<node>/<child>`. An execution address is the expanded id joined by `__`
+(`route__resolve`, `approvals__lead`) with `branch_key`, `iteration` and `item_index`. The function of a `code` step
+lives in `<node>.py` beside the node file, referenced by the bare function name: `run: "prepare"` →
 `nodes/prepare/prepare.py` (O20).
 
-| # | Узел | Вид | Что делает | Паттерны и конструкции |
+| # | Node | Kind | What it does | Patterns and constructs |
 |---|---|---|---|---|
-| 1 | `prepare` | code `run: prepare` | нормализует текст, выводит `channel`, сигналы категории, поля приёма площадки, три перспективы голосования | предобработка; вход-union `CaseOrigin` |
-| 2 | `triage` | llm, свой инференс `triage` @ `gemini` | разбор текста и всех вложений | медиавход Image/Audio/Video/Document; уровень 2; случаи 3 и 4; allowed-set кодами (`SignalKey`); `triage.inference.yaml` рядом с узлом |
-| 3 | `vote` | map по `$prepare.out.perspectives`, `body: ballot`, `concurrency: 3`, `on_item_error {use: skip}` | три голоса дешёвой открытой модели | map; self-consistency; встроенная политика ошибки элемента |
-| 3a | `vote/ballot` | llm, свой инференс `ballot` @ `llama`, `perspective: $item` | голос за намерение | дешёвая модель через OpenRouter; few-shot |
-| 4 | `tally` | code `run: tally` | согласие при большинстве голосов (не меньше двух) с уверенностью ≥ 0.6, иначе `split` и намерение самого уверенного голоса | слияние |
-| 5 | `intent` | switch по `$tally.out.agreement`: `agreed` — bind из `tally`, `tier: "cheap"`; `split` — узел `escalate`, `tier: "strong"` | каскад дешёвая → сильная | cascade; `switch` по enum |
-| 5a | `intent/escalate` | llm `inference: ballot` @ `deepseek` (без `perspective`) | решение сильной модели | один инференс — разные агенты |
-| 6 | `case_form` | code `run: case_form`, `intent: $intent.out.intent` | `FieldSpec[]` анкеты по намерению: поля совпадают с вариантом `CaseRecord`, `order_id`, `symptom` и `damage` ссылаются на типы реестра `OrderId`, `DefectSymptom`, `DeliveryDamage` | динамическая форма |
-| 7 | `record` | loop `body [extract, validate]`, `max_iter: 3`, `stop [{run: no_issues, with {path: $iter.validate.out.issues}}]`, `select {use: last}`, `record ← $iter.extract.out.record` | анкета с проверкой и ремонтом по `Issue[]` | extract-validate-repair; случай 5; своя политика остановки |
-| 7a | `record/extract` | llm, свой инференс `extract` @ `gemini`, `feedback: $acc.validate.out.issues` | анкета `Dynamic` по форме | Image?/Document? на Google через OpenRouter |
-| 7b | `record/validate` | code `run: validate_record` (`validate.py`), `today: $run.context.date` | бизнес-правила анкеты | проверка; code со входом `Dynamic`; контекст прогона |
-| 8 | `to_record` | narrow `$record.out.record` → `CaseRecord` | сужение формы из данных в union | narrow |
-| 9 | `search_kb` | tool `search_kb` | фрагменты базы знаний (≤ 80) и политики (≤ 20) | HTTP через `httpx2`; retrieve |
-| 10 | `route` | switch по `$to_record.out`: `defect` — узел `resolve`; `delivery`, `question` — bind литералом | маршрутизация по варианту | router; union + switch (случай 2), `$case` |
-| 10a | `route/resolve` | llm, свой инференс `resolve` @ `resolver` | решение гарантийного случая агентом | функции-тулы, MCP-тул, субагент, одобрение тула, `limits`; allowed-set кодами (`PolicyId`); слот `Dynamic` целиком |
-| 11 | `drafts` | parallel `body {gpt, mistral, gemini}`, `join {use: quorum, with {min_ok: 2, on_error: skip}}`; `candidates` из `$ok[*].reply` | три черновика ответа | diverge-merge; OpenAI, Mistral, Google |
-| 11a–c | `drafts/{gpt,mistral,gemini}` | llm `inference: revise` @ одноимённый агент, `product: $input.product` | ответ с цитатами и советами по виду лампы | индексный выбор (`KbChunkId`, > 50); пост-проверки; ground; вариант промта `lamp_guide` |
-| 12 | `panel` | call `judge_panel` | выбор лучшего кандидата | вызов другого воркфлоу с контрактом; панель судей |
-| 13 | `polish` | loop `body [revise, critique]`, `init {revise: [previous ← $panel.out.winner]}`, `max_iter: 3`, `stop [{use: threshold, with {path: $iter.critique.out.score, gte: 0.85}}, {use: stagnation, with {path, window: 1, min_delta: 0.02}}]`, `select {use: best, with {path: $iter.critique.out.score}}` | правка по критике | critic-revise; одиночный судья; встроенные политики остановки и выбора |
-| 13a | `polish/revise` | llm, свой инференс `revise` @ `gpt`, `previous: $acc.revise.out.reply`, `critique: $acc.critique.out` | правка | тот же инференс, что у черновиков |
-| 13b | `polish/critique` | llm, свой инференс `critique` @ `mistral`, `reply: $revise.out.reply` | оценка опоры, согласия с решением и полноты | одиночный судья другого семейства; тот же инференс — судья eval (§10) |
-| 14 | `illustrate` | llm, свой инференс `illustrate` @ `painter` | картинка-инструкция | медиавыход Image; уровень 3 (`prompt: illustrate_prompt` → `illustrate.py`); фолбэк-модель |
-| 15 | `voice` | tool `synthesize_voice` | голосовая версия ответа | медиавыход Audio тулом; `external` + идемпотентность |
-| 16 | `clip` | tool `render_clip` | короткий ролик по картинке | медиавыход Video; долгая задача с `wait` |
-| 17 | `approvals` | parallel `body {lead, brand}`, `join {use: all}` | согласование | параллельные ожидания людей |
-| 17a | `approvals/lead` | human `ReplyApproval`, `support_lead`, 14400 с, `escalate` → `support_manager`, 7200 с | ответ и решение | форма; `escalate` |
-| 17b | `approvals/brand` | human `MediaApproval`, `brand_editor`, 86400 с, `default {use_image: false, use_voice: true, use_clip: false}` | медиа ответа | `default` |
-| 18 | `finalize` | code `run: finalize` | номер обращения, время закрытия, итог | слияние; время и случайность в шаге |
+| 1 | `prepare` | code `run: prepare` | normalizes the text and derives `channel`, the category signals, the marketplace intake fields and three voting perspectives | preprocessing; a union input, `CaseOrigin` |
+| 2 | `triage` | llm, its own `triage` inference @ `gemini` | parses the text and every attachment | Image/Audio/Video/Document input; level 2; cases 3 and 4; an allowed set by code (`SignalKey`); `triage.inference.yaml` beside the node |
+| 3 | `vote` | map over `$prepare.out.perspectives`, `body: ballot`, `concurrency: 3`, `on_item_error {use: skip}` | three ballots from a cheap open model | map; self-consistency; a built-in item-error policy |
+| 3a | `vote/ballot` | llm, its own `ballot` inference @ `llama`, `perspective: $item` | a ballot for the intent | a cheap model through OpenRouter; few-shot |
+| 4 | `tally` | code `run: tally` | agreement when a majority (at least two) votes with confidence ≥ 0.6, otherwise `split` and the intent of the most confident ballot | merging |
+| 5 | `intent` | switch on `$tally.out.agreement`: `agreed` binds from `tally` with `tier: "cheap"`; `split` runs the `escalate` node with `tier: "strong"` | the cheap → strong cascade | cascade; `switch` over an enum |
+| 5a | `intent/escalate` | llm `inference: ballot` @ `deepseek` (no `perspective`) | the stronger model decides | one inference, different agents |
+| 6 | `case_form` | code `run: case_form`, `intent: $intent.out.intent` | the `FieldSpec[]` of the form by intent: the fields match the matching `CaseRecord` variant, and `order_id`, `symptom` and `damage` reference the registry types `OrderId`, `DefectSymptom`, `DeliveryDamage` | a dynamic form |
+| 7 | `record` | loop `body [extract, validate]`, `max_iter: 3`, `stop [{run: no_issues, with {path: $iter.validate.out.issues}}]`, `select {use: last}`, `record ← $iter.extract.out.record` | the form with a check and a repair driven by `Issue[]` | extract-validate-repair; case 5; its own stop policy |
+| 7a | `record/extract` | llm, its own `extract` inference @ `gemini`, `feedback: $acc.validate.out.issues` | a `Dynamic` form filled against the schema | Image?/Document? on Google through OpenRouter |
+| 7b | `record/validate` | code `run: validate_record` (`validate.py`), `today: $run.context.date` | the business rules of the form | a check; `code` with a `Dynamic` input; the run context |
+| 8 | `to_record` | narrow `$record.out.record` → `CaseRecord` | narrowing a data-driven form into a union | narrow |
+| 9 | `search_kb` | tool `search_kb` | knowledge base chunks (≤ 80) and policies (≤ 20) | HTTP through `httpx2`; retrieve |
+| 10 | `route` | switch on `$to_record.out`: `defect` runs the `resolve` node; `delivery` and `question` bind a literal | routing by union variant | router; union + switch (case 2), `$case` |
+| 10a | `route/resolve` | llm, its own `resolve` inference @ `resolver` | an agent decides the warranty case | function tools, an MCP tool, a subagent, tool approval, `limits`; an allowed set by code (`PolicyId`); a whole `Dynamic` slot |
+| 11 | `drafts` | parallel `body {gpt, mistral, gemini}`, `join {use: quorum, with {min_ok: 2, on_error: skip}}`; `candidates` from `$ok[*].reply` | three reply drafts | diverge-merge; OpenAI, Mistral, Google |
+| 11a–c | `drafts/{gpt,mistral,gemini}` | llm `inference: revise` @ the agent of the same name, `product: $input.product` | a reply with citations and lamp-kind advice | selection by index (`KbChunkId`, > 50); post-checks; grounding; the `lamp_guide` prompt variant |
+| 12 | `panel` | call `judge_panel` | picking the best candidate | calling another workflow with a contract; the judge panel |
+| 13 | `polish` | loop `body [revise, critique]`, `init {revise: [previous ← $panel.out.winner]}`, `max_iter: 3`, `stop [{use: threshold, with {path: $iter.critique.out.score, gte: 0.85}}, {use: stagnation, with {path, window: 1, min_delta: 0.02}}]`, `select {use: best, with {path: $iter.critique.out.score}}` | revision from critique | critic-revise; a single judge; built-in stop and select policies |
+| 13a | `polish/revise` | llm, its own `revise` inference @ `gpt`, `previous: $acc.revise.out.reply`, `critique: $acc.critique.out` | the revision | the same inference the drafts use |
+| 13b | `polish/critique` | llm, its own `critique` inference @ `mistral`, `reply: $revise.out.reply` | scoring grounding, agreement with the decision and completeness | a single judge from another family; the same inference is the eval judge (§10) |
+| 14 | `illustrate` | llm, its own `illustrate` inference @ `painter` | the instruction image | Image output; level 3 (`prompt: illustrate_prompt` → `illustrate.py`); a fallback model |
+| 15 | `voice` | tool `synthesize_voice` | the voice version of the reply | Audio output from a tool; `external` plus idempotency |
+| 16 | `clip` | tool `render_clip` | a short clip from the image | Video output; a long-running job with `wait` |
+| 17 | `approvals` | parallel `body {lead, brand}`, `join {use: all}` | the approvals | parallel waits on people |
+| 17a | `approvals/lead` | human `ReplyApproval`, `support_lead`, 14400 s, `escalate` → `support_manager`, 7200 s | the reply and the decision | a form; `escalate` |
+| 17b | `approvals/brand` | human `MediaApproval`, `brand_editor`, 86400 s, `default {use_image: false, use_voice: true, use_clip: false}` | the reply media | `default` |
+| 18 | `finalize` | code `run: finalize` | the case number, the closing time and the outcome | merging; time and randomness inside a step |
 
-Третья политика таймаута, `fail`, — у одобрения тула агента `resolver` (§6.2). Литералы веток `route`: `delivery` →
-`{action: "reship", summary: "Повторная отправка заказа за счёт магазина", credit: null, policy: null}`, `question` →
-`{action: "advice", summary: "Ответ по базе знаний без компенсации", credit: null, policy: null}`.
+The third timeout policy, `fail`, sits on the tool approval of the `resolver` agent (§6.2). The `route` branch
+literals: `delivery` → `{action: "reship", summary: "The order is shipped again at the store's expense", credit: null,
+policy: null}`, `question` → `{action: "advice", summary: "A knowledge base answer with no compensation", credit:
+null, policy: null}`.
 
-**Цикл без блока итерации (O11).** Состояние итерации — выходы узлов тела: в `stop`, `select` и `out` цикла это
-`$iter.<узел>.out`, в теле — `$acc.<узел>.out`, выходы прошлой итерации (на первой — `null`). `init.<узел>` привязывает входы
-узла тела на первой итерации поверх его `in`: `polish__revise` первым проходом правит победителя панели, дальше — свой прошлый
-ответ по критике. `$loop.iterations` и `$loop.stop_reason` доступны в `out`. Порядок наложения `init` на `in` —
-**предложение — нет в ADR**.
+**A loop with no iteration block (O11).** The state of a pass is the outputs of the body nodes: in the loop's `stop`,
+`select` and `out` that is `$iter.<node>.out`, and inside the body it is `$acc.<node>.out`, the outputs of the previous
+pass (`null` on the first). `init.<node>` binds the inputs of a body node on the first pass, over its own `in`:
+`polish__revise` revises the panel winner on the first pass and its own previous reply from the critique after that.
+`$loop.iterations` and `$loop.stop_reason` are available in `out`. The order in which `init` overlays `in` is a
+**proposal — not in an ADR**.
 
-Узлы `llm` и `tool` не объявляют типов: входы и выходы берутся из инференса или тула, в файле узла — только привязки
-`{name, from | value}`. Необязательный вход `T?` можно не привязывать — придёт `null`. **Предложение — нет в ADR**
-(форма привязки; O7 фиксирует, что узел только связывает входы).
+`llm` and `tool` nodes declare no types: the inputs and outputs come from the inference or the tool, and the node file
+holds only the bindings `{name, from | value}`. An optional input `T?` may be left unbound and arrives as `null`.
+**Proposal — not in an ADR** (the binding form; O7 fixes only that a node binds inputs).
 
-## 5. Воркфлоу `judge_panel`
+## 5. The `judge_panel` workflow
 
-Второй воркфлоу проекта (O17): переиспользуемый подграф с контрактом, его вызывает узел `support_case/panel`
-(`node: call`, `flow: "judge_panel"`). Отдельного вида «компонент» нет: контракт — вход и выход воркфлоу и `requires`.
+The project's second workflow (O17): a reusable subgraph with a contract, called by the `support_case/panel` node
+(`node: call`, `flow: "judge_panel"`). There is no separate "component" kind: the contract is the workflow's input,
+output and `requires`.
 
-`flows/judge_panel/flow.yaml`: `input: "PanelRequest"` (`summary: Text` 600, `candidates: ReplyDraft[]` 3, `chunks: KbChunk[]`
-80), `output: "PanelOutcome"` (`winner: ReplyDraft`, `verdict: PanelVerdict`), `returns` — `winner` ← `$pick.out.winner`,
-`verdict` ← `$pick.out.verdict`, `order: [judges, aggregate, decide, pick]`. Узлы читают вход воркфлоу как `$input.<поле>`;
-привязки `in` узла `call` сверяются с полями `PanelRequest`, а `$panel.out` — запись `PanelOutcome`.
+`flows/judge_panel/flow.yaml`: `input: "PanelRequest"` (`summary: Text` 600, `candidates: ReplyDraft[]` 3,
+`chunks: KbChunk[]` 80), `output: "PanelOutcome"` (`winner: ReplyDraft`, `verdict: PanelVerdict`), `returns` maps
+`winner` ← `$pick.out.winner` and `verdict` ← `$pick.out.verdict`, and `order: [judges, aggregate, decide, pick]`. The
+nodes read the workflow input as `$input.<field>`; the `in` bindings of the `call` node are checked against the fields
+of `PanelRequest`, and `$panel.out` is a `PanelOutcome` record.
 
-| Узел | Вид | Что |
+| Node | Kind | What |
 |---|---|---|
-| `judges` | parallel `body {deepseek, qwen, llama}`, `join {run: agreeing_verdicts, with {min_agree: 2}}`, `verdicts` из `$ok` | три судьи `inference: tie_break` @ `deepseek`, `qwen`, `llama`; своя политика слияния `judges.py`: готово, как только двое выбрали одного кандидата (третий отменяется), иначе ждёт всех; ответивших меньше двух — ошибка |
-| `aggregate` | code `run: aggregate` | большинство по `best_index`, медиана баллов, разброс, `level: Agreement` |
-| `decide` | switch по `$aggregate.out.level`: `agreed` — bind `verdict`, `tie_broken: false`; `split` — узел `tie_break`, `tie_broken: true` | решение панели |
-| `decide/tie_break` | llm, свой инференс `tie_break` @ `gpt`, `panel: $judges.out.verdicts` | тай-брейк моделью OpenAI |
-| `pick` | code `run: pick` | кандидат по `best_index`, итоговый `PanelVerdict` |
+| `judges` | parallel `body {deepseek, qwen, llama}`, `join {run: agreeing_verdicts, with {min_agree: 2}}`, `verdicts` from `$ok` | three judges with `inference: tie_break` @ `deepseek`, `qwen`, `llama`; the custom join policy in `judges.py`: done as soon as two of them pick the same candidate (the third is cancelled), otherwise it waits for all; fewer than two answering is an error |
+| `aggregate` | code `run: aggregate` | the majority by `best_index`, the median scores, the spread, and `level: Agreement` |
+| `decide` | switch on `$aggregate.out.level`: `agreed` binds `verdict` with `tie_broken: false`; `split` runs the `tie_break` node with `tie_broken: true` | the panel's decision |
+| `decide/tie_break` | llm, its own `tie_break` inference @ `gpt` , `panel: $judges.out.verdicts` | the tie-break by an OpenAI model |
+| `pick` | code `run: pick` | the candidate by `best_index` and the final `PanelVerdict` |
 
-Контракт `requires`: `families_distinct {nodes: [judges__deepseek, judges__qwen, judges__llama], min: 3}`;
+The `requires` contract: `families_distinct {nodes: [judges__deepseek, judges__qwen, judges__llama], min: 3}`;
 `family_disjoint_from_input {nodes: [judges__deepseek, judges__qwen, judges__llama], input: candidates}`;
-`field_before {nodes: [judges__deepseek, judges__qwen, judges__llama, decide__tie_break], first: rationale, second: scores}`.
-Тай-брейк ведёт `gpt` — семейство одного из авторов (`drafts__gpt`), поэтому `decide__tie_break` исключён из
-`family_disjoint_from_input`: решение владельца от 2026-09-17 о самых дешёвых моделях убрало агента `grok` пятого семейства.
-Семейство узла — семейство модели его агента и
-фолбэков по таблице профилей (§6.4). Ключ `nodes` у `field_before` — **предложение — нет в ADR** (03 §4.3).
+`field_before {nodes: [judges__deepseek, judges__qwen, judges__llama, decide__tie_break], first: rationale, second:
+scores}`. The tie-break is run by `gpt`, a family one of the authors also uses (`drafts__gpt`), so `decide__tie_break`
+is excluded from `family_disjoint_from_input`: the owner's decision of 2026-09-17 about the cheapest models removed
+the fifth-family `grok` agent. A node's family is the family of its agent's model and of its fallbacks, by the profile
+table (§6.4). The `nodes` key on `field_before` is a **proposal — not in an ADR** (03 §4.3).
 
-## 6. Реестры модуля
+## 6. Module registries
 
 ### 6.1. `aqven.yaml` — `kind: Project`
 
-Ключи: `description`, `package: "lumen"`, `providers[]`, `policies`, `limits?`, `renames?`. Провайдер:
-`{id, api_key: ref:env/…, base_url?, data_policy {allows_pii, allows_sensitive, retention}, routing?}`; `id` — имя
-провайдера Pydantic AI и префикс строки модели. Ключи провайдера — **предложение — нет в ADR** (O3 называет только ссылки на
-секреты и base URL).
+Keys: `description`, `package: "lumen"`, `providers[]`, `policies`, `limits?`, `renames?`. A provider is
+`{id, api_key: ref:env/…, base_url?, data_policy {allows_pii, allows_sensitive, retention}, routing?}`; `id` is the
+Pydantic AI provider name and the prefix of the model string. The provider keys are a **proposal — not in an ADR**
+(O3 names only secret references and the base URL).
 
-Решение владельца от 2026-09-17: пример работает на самых дешёвых моделях OpenRouter, поэтому в `aqven.yaml` остался один
-провайдер.
+The owner's decision of 2026-09-17: the example runs on the cheapest OpenRouter models, so `aqven.yaml` kept a single
+provider.
 
-| Провайдер | Секрет | `allows_pii` | `retention` | Прочее |
+| Provider | Secret | `allows_pii` | `retention` | Other |
 |---|---|---|---|---|
 | `openrouter` | `ref:env/OPENROUTER_API_KEY` | true | unknown | `routing {data_collection: deny, zdr: false}` |
 
-**Почему `zdr: false`.** По `GET /api/v1/models/{id}/endpoints` и `GET /api/v1/endpoints/zdr` на 2026-09-17 самые дешёвые
-эндпоинты части моделей примера не ZDR: `google/gemini-2.5-flash-lite` — Google AI Studio flex (0.05/0.20 $ за 1M токенов против
-0.10/0.40 у ZDR-эндпоинта Vertex), `qwen/qwen3-30b-a3b-instruct-2507` — StreamLake (0.048/0.193 против 0.09/0.30),
-`openai/gpt-oss-20b` — Darkbloom; фолбэк `painter` `openai/gpt-5-image-mini` отдаёт только OpenAI без ZDR. С `zdr: true`
-фолбэк недоступен, а остальные запросы уходят на эндпоинты дороже. `data_collection: deny` оставлен: провайдеры, обучающиеся
-на запросах, не выбираются. Хранение запросов провайдерами не гарантировано, поэтому `retention: unknown`. Флаг `zdr` в запросе
-работает как OR с настройкой аккаунта OpenRouter: включённый на аккаунте ZDR запрос не отключит. В записанных кассетах
-запросы обслужили DeepInfra, Darkbloom, Amazon Bedrock, Groq, CoreWeave, Io Net, Google, StreamLake, Relace, SiliconFlow, Alibaba
-и OpenAI.
+**Why `zdr: false`.** By `GET /api/v1/models/{id}/endpoints` and `GET /api/v1/endpoints/zdr` as of 2026-09-17, the
+cheapest endpoints of some of the example's models are not ZDR: `google/gemini-2.5-flash-lite` is Google AI Studio
+flex ($0.05/$0.20 per 1M tokens against $0.10/$0.40 on the ZDR Vertex endpoint),
+`qwen/qwen3-30b-a3b-instruct-2507` is StreamLake (0.048/0.193 against 0.09/0.30), and `openai/gpt-oss-20b` is
+Darkbloom; the `painter` fallback `openai/gpt-5-image-mini` is served only by OpenAI without ZDR. With `zdr: true` the
+fallback is unavailable and the rest of the requests go to more expensive endpoints. `data_collection: deny` stays:
+providers that train on requests are never selected. Request retention by providers is not guaranteed, hence
+`retention: unknown`. The `zdr` flag in a request ORs with the OpenRouter account setting: a request cannot switch off
+ZDR that the account has on. In the recorded cassettes the requests were served by DeepInfra, Darkbloom, Amazon
+Bedrock, Groq, CoreWeave, Io Net, Google, StreamLake, Relace, SiliconFlow, Alibaba and OpenAI.
 
-`policies`: `pii {mask_in_traces: true, redact: [email, phone, card_number, iban]}`, `trust {default_in: untrusted}`.
+`policies`: `pii {mask_in_traces: true, redact: [email, phone, card_number, iban]}`,
+`trust {default_in: untrusted}`.
 
-### 6.2. Агенты — `agents/<id>.yaml` или `agents/<id>/<id>.yaml`, `kind: Agent`
+### 6.2. Agents — `agents/<id>.yaml` or `agents/<id>/<id>.yaml`, `kind: Agent`
 
-Ниже — `agents/resolver/resolver.yaml`: агент с сопутствующими файлами лежит папкой.
+Below is `agents/resolver/resolver.yaml`: an agent with companion files lives in a folder.
 
 ```yaml
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Решает гарантийный случай: заказ, история обращений, политика через субагента, кредит с одобрением"
+description: "Decides a warranty case: order, case history, policy through a subagent, store credit with approval"
 model: "openrouter:openai/gpt-oss-20b"
 settings:
   temperature: 0.2
@@ -346,7 +367,7 @@ tools:
 - "find_tickets"
 subagents:
 - name: "research_policy"
-  description: "Исследует политику магазина и прецеденты по вопросу"
+  description: "Researches store policy and precedents for the question"
   agent: "researcher"
   inference: "research_policy"
 approval:
@@ -363,58 +384,65 @@ limits:
   usd_micros: 80000
 ```
 
-Ключи: `model`, `fallback_models?`, `settings? {temperature, top_p, max_tokens, seed, provider_options}` (имена —
-`ModelSettings` Pydantic AI), `output? {mode = auto|tool|native|prompted, strict = true, retries = 1, on_refusal = fail|fallback, on_truncated = fail|fallback}`,
-`instructions?` (путь `./<агент>.instructions.md` от файла агента, уровень 1), `tools?`, `mcp_servers?`, `subagents?[] {name,
-description, agent, inference}` (инференс субагента лежит в папке агента, который его вызывает:
-`agents/resolver/research_policy.inference.yaml`), `approval? {tools, assignee, timeout_seconds, on_timeout}` (`default` запрещён), `limits?`, `capabilities?
-{family, input, output, strict}` — переопределение таблицы профилей. Состав — O2; имена ключей — **предложение — нет в ADR**.
+Keys: `model`, `fallback_models?`, `settings? {temperature, top_p, max_tokens, seed, provider_options}` (the names are
+Pydantic AI's `ModelSettings`),
+`output? {mode = auto|tool|native|prompted, strict = true, retries = 1, on_refusal = fail|fallback, on_truncated = fail|fallback}`,
+`instructions?` (the path `./<agent>.instructions.md` from the agent file, level 1), `tools?`, `mcp_servers?`,
+`subagents?[] {name, description, agent, inference}` (a subagent's inference sits in the folder of the agent that
+calls it: `agents/resolver/research_policy.inference.yaml`), `approval? {tools, assignee, timeout_seconds, on_timeout}`
+(`default` is forbidden), `limits?`, and `capabilities? {family, input, output, strict}` — an override of the profile
+table. The set of keys is O2; their names are a **proposal — not in an ADR**.
 
-| Агент | Модель | Семейство | `output` | Особое | Где |
+| Agent | Model | Family | `output` | Notable | Where |
 |---|---|---|---|---|---|
 | `gemini` | `openrouter:google/gemini-2.5-flash-lite` | google | `auto → tool`, strict false, retries 2 | `capabilities.input: [text, image, audio, video, document]`; temperature 0.2 | `triage`, `record__extract`, `drafts__gemini` |
-| `llama` | `openrouter:meta-llama/llama-3.1-8b-instruct` | meta | `auto → tool`, strict false | temperature 0.2 | `vote__ballot`, `panel`: `judges__llama` |
-| `mistral` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false, retries 2 | temperature 0.2; бывший агент `claude` | `drafts__mistral`, `polish__critique`; `reflection_agent` eval |
-| `gpt` | `openrouter:openai/gpt-oss-20b` | openai | `auto → tool`, strict false, retries 4 | temperature 0.3, max_tokens 4000 | `drafts__gpt`, `polish__revise`, `panel`: `decide__tie_break` |
-| `resolver` | `openrouter:openai/gpt-oss-20b` | openai | `native`, strict false, retries 3 | тулы, MCP-тул, субагент, одобрение (`fail`), `limits` (requests 12) | `route__resolve` |
-| `researcher` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false | `mcp_servers: [helpdesk]` | субагент `resolver` |
-| `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` | deepseek | `auto → tool`, strict false | temperature 0 | `intent__escalate`, `judges__deepseek`; судья evals |
-| `qwen` | `openrouter:qwen/qwen3-30b-a3b-instruct-2507` | qwen | `tool` явно, strict false | temperature 0 | `judges__qwen` |
-| `painter` | `openrouter:google/gemini-3.1-flash-lite-image` | google | `prompted` явно, strict false | `fallback_models: [openrouter:openai/gpt-5-image-mini]`; `capabilities {input: [text, image], output: [text, image]}` | `illustrate` |
+| `llama` | `openrouter:meta-llama/llama-3.1-8b-instruct` | meta | `auto → tool`, strict false | temperature 0.2 | `vote__ballot`, and in `panel`: `judges__llama` |
+| `mistral` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false, retries 2 | temperature 0.2; formerly the `claude` agent | `drafts__mistral`, `polish__critique`; the eval `reflection_agent` |
+| `gpt` | `openrouter:openai/gpt-oss-20b` | openai | `auto → tool`, strict false, retries 4 | temperature 0.3, max_tokens 4000 | `drafts__gpt`, `polish__revise`, and in `panel`: `decide__tie_break` |
+| `resolver` | `openrouter:openai/gpt-oss-20b` | openai | `native`, strict false, retries 3 | tools, an MCP tool, a subagent, approval (`fail`), `limits` (requests 12) | `route__resolve` |
+| `researcher` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false | `mcp_servers: [helpdesk]` | the `resolver` subagent |
+| `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` | deepseek | `auto → tool`, strict false | temperature 0 | `intent__escalate`, `judges__deepseek`; the eval judge |
+| `qwen` | `openrouter:qwen/qwen3-30b-a3b-instruct-2507` | qwen | `tool` explicitly, strict false | temperature 0 | `judges__qwen` |
+| `painter` | `openrouter:google/gemini-3.1-flash-lite-image` | google | `prompted` explicitly, strict false | `fallback_models: [openrouter:openai/gpt-5-image-mini]`; `capabilities {input: [text, image], output: [text, image]}` | `illustrate` |
 
-Таблица модели агентов утверждена владельцем 2026-09-17: самая дешёвая модель OpenRouter с возможностями узлов агента.
-Отклонения от неё и причины:
+The agent model table was approved by the owner on 2026-09-17: the cheapest OpenRouter model with the capabilities the
+agent's nodes need. The exceptions and their reasons:
 
-- `record__extract` перешёл с бывшего `claude` на `gemini`: у `mistralai/mistral-nemo` только текстовый вход, а узлу нужны
-  `Image?` и `Document?` (`E_MODALITY_UNSUPPORTED`).
-- `decide__tie_break` перешёл с удалённого `grok` на `gpt`, `intent__escalate` — с `claude` на `deepseek`; узел
-  `drafts__claude` переименован операцией `flow_patch` (`rename_node`) в `drafts__mistral`, запись — в `renames` `aqven.yaml`.
-- Фолбэк `painter` — `openai/gpt-5-image-mini`: единственная другая модель с выходом-картинкой не дороже основной на картинку
-  (в кассетах 0.0216 $ против 0.0337 $ у `gemini-3.1-flash-lite-image`).
-- Режим вывода. `aqven models check` без `--live` — по всем агентам; `--live` 2026-09-17 — `gemini-2.5-flash-lite`: tool, native,
-  prompted работают; `mistral-nemo`, `deepseek-v4-flash-0731`, `llama-3.1-8b-instruct`: tool и prompted работают, native
-  отклоняет Pydantic AI; `gpt-oss-20b` (все три) и `qwen3-30b-a3b-instruct-2507` (tool) проверены тем же днём при реализации
-  `output.mode`. `qwen` закреплён на `tool` явно: таблица известных моделей aqven даёт ему `tool`, а закрепление убирает
-  `W_OUTPUT_MODE_RESOLVED`. `resolver` на `tool` финальный ответ не держал (текст вместо тула, чужие ключи, оборванный JSON) —
-  закреплён `native`, модель не повышалась. `gpt` в `tool` в части попыток сплющивает `reply` в строку — повторов стало 4,
-  модель не повышалась. `painter` закреплён `prompted`: для выхода-картинки режим не влияет, закрепление убирает предупреждение.
+- `record__extract` moved from the former `claude` to `gemini`: `mistralai/mistral-nemo` takes text only, and the node
+  needs `Image?` and `Document?` (`E_MODALITY_UNSUPPORTED`).
+- `decide__tie_break` moved from the removed `grok` to `gpt`, and `intent__escalate` from `claude` to `deepseek`; the
+  node `drafts__claude` was renamed to `drafts__mistral` by a `flow_patch` operation (`rename_node`), and the entry is
+  in `renames` in `aqven.yaml`.
+- The `painter` fallback is `openai/gpt-5-image-mini`: the only other model with image output that is no more
+  expensive than the primary one per image (in the cassettes $0.0216 against $0.0337 for
+  `gemini-3.1-flash-lite-image`).
+- Output mode. `aqven models check` without `--live` covers every agent; `--live` on 2026-09-17 showed:
+  `gemini-2.5-flash-lite` — tool, native and prompted all work; `mistral-nemo`, `deepseek-v4-flash-0731` and
+  `llama-3.1-8b-instruct` — tool and prompted work, and Pydantic AI rejects native; `gpt-oss-20b` (all three) and
+  `qwen3-30b-a3b-instruct-2507` (tool) were checked the same day while `output.mode` was implemented. `qwen` is pinned
+  to `tool` explicitly: aqven's known-model table gives it `tool`, and pinning removes `W_OUTPUT_MODE_RESOLVED`.
+  `resolver` on `tool` did not hold the final answer (text instead of a tool call, foreign keys, truncated JSON), so
+  it was pinned to `native` rather than moved to a bigger model. `gpt` on `tool` flattens `reply` into a string on
+  some attempts, so its retries went to 4 rather than the model being upgraded. `painter` is pinned to `prompted`: the
+  mode does not matter for image output, and pinning removes the warning.
 
-Идентификаторы, модальности и `structured_outputs` сверены со списком `https://openrouter.ai/api/v1/models` и эндпоинтами
-моделей 2026-09-17 (444 модели).
+The identifiers, modalities and `structured_outputs` were checked against `https://openrouter.ai/api/v1/models` and
+the model endpoints on 2026-09-17 (444 models).
 
-### 6.3. Тулы и MCP — `tools/<id>.yaml` `kind: Tool`, `mcp/<id>.yaml` `kind: McpServer`
+### 6.3. Tools and MCP — `tools/<id>.yaml` `kind: Tool`, `mcp/<id>.yaml` `kind: McpServer`
 
-Тул — типизированная функция: `run` (код) **или** `mcp {server, tool}`; `effect`, `idempotency_key?` (имена полей `in`,
-обязателен при `write`/`external`), `secrets?[] {name, ref}`, `wait? {poll, interval_seconds, timeout_seconds}`, `in[]`, `out[]`
-(у MCP-тула `in`/`out` не пишутся: схему отдаёт сервер). Классов детерминизма и TTL нет (O12): кэша нет, replay и fork берут
-записанные выходы шагов; `effect` управляет повторами, безопасностью форка, тестовым режимом и одобрением. Один и тот же тул
-служит шагом `node: tool` (только `run`) и тулом агента. Шаг и тул агента одной записью — **предложение — нет в ADR**. Функции
-всех тулов — `tools/functions.py`: тулы — проектная папка, общие помощники HTTP живут рядом. Ссылка у всех тулов —
-`@root.tools.functions:<функция>` (O20, O22).
+A tool is a typed function: `run` (code) **or** `mcp {server, tool}`; plus `effect`, `idempotency_key?` (names of `in`
+fields, required for `write`/`external`), `secrets?[] {name, ref}`, `wait? {poll, interval_seconds, timeout_seconds}`,
+`in[]` and `out[]` (an MCP tool writes no `in`/`out`: the server supplies the schema). There are no determinism
+classes and no TTL (O12): there is no cache, and replay and fork take the recorded step outputs; `effect` drives
+retries, fork safety, test mode and approval. One and the same tool serves as a `node: tool` step (only with `run`)
+and as an agent tool. One entry for both is a **proposal — not in an ADR**. The functions of every tool live in
+`tools/functions.py`: tools are a project folder, so the shared HTTP helpers live next to them. Every tool references
+them as `@root.tools.functions:<function>` (O20, O22).
 
-| Тул | Источник | `effect` | `in` | `out` |
+| Tool | Source | `effect` | `in` | `out` |
 |---|---|---|---|---|
-| `search_kb` | `@root.tools.functions:search_kb` | read, секрет `kb_token` ← `ref:env/LUMEN_KB_TOKEN` | `query: Text` (600), `category: ProductCategory`, `locale: Locale`, `tenant: TenantId` | `chunks: KbChunk[]` (80), `policies: Policy[]` (20) |
+| `search_kb` | `@root.tools.functions:search_kb` | read, secret `kb_token` ← `ref:env/LUMEN_KB_TOKEN` | `query: Text` (600), `category: ProductCategory`, `locale: Locale`, `tenant: TenantId` | `chunks: KbChunk[]` (80), `policies: Policy[]` (20) |
 | `synthesize_voice` | `@root.tools.functions:synthesize_voice` | external, `idempotency_key: [text, locale]`, `openai_api_key` ← `ref:env/OPENAI_API_KEY` | `text: Text` (1500), `locale: Locale` | `voice: Audio` |
 | `render_clip` | `@root.tools.functions:start_clip`, `wait {poll: @root.tools.functions:poll_clip, interval_seconds: 20, timeout_seconds: 1800}` | external, `idempotency_key: [image, text, seconds]`, `together_api_key` ← `ref:env/TOGETHER_API_KEY` | `image: Image`, `text: Text` (1500), `seconds: Int` 4..8 | `clip: Video` |
 | `lookup_order` | `@root.tools.functions:lookup_order` | read, `orders_token` ← `ref:env/LUMEN_ORDERS_TOKEN` | `order_id: OrderId` | `order_id: OrderId`, `placed_on: Date`, `delivered_on: Date?`, `total: Money`, `items: ProductRef[]` (20) |
@@ -422,49 +450,52 @@ description, agent, inference}` (инференс субагента лежит 
 | `find_tickets` | `mcp {server: helpdesk, tool: search_tickets}` | read | — | — |
 
 `mcp/helpdesk.yaml`: `transport: "streamable_http"`, `url: "https://helpdesk.lumen.example/mcp"`,
-`headers: [{name: Authorization, value: ref:env/LUMEN_HELPDESK_TOKEN}]`. Генерация: голос — OpenAI `POST /v1/audio/speech`,
-ролик — Together `POST /v2/videos` с опросом; модель озвучки и путь опроса не сверены.
+`headers: [{name: Authorization, value: ref:env/LUMEN_HELPDESK_TOKEN}]`. Generation: the voice is OpenAI
+`POST /v1/audio/speech`, the clip is Together `POST /v2/videos` with polling; the speech model and the polling path
+have not been verified.
 
-### 6.4. Таблица профилей моделей
+### 6.4. The model profile table
 
-Возможности модели (`family`, `input`, `output`, `strict`) — встроенная таблица `aqven.spec.profiles`, ключ — строка модели;
-неизвестная модель получает профиль «только текст, без strict», семейство — по провайдеру или вендорному префиксу
-(`meta-llama/` → meta, `x-ai/` → xai, `moonshotai/` → moonshot, `deepseek/`, `deepseek-ai/` → deepseek, `qwen/`, `Qwen/` → qwen,
-`z-ai/` → zhipu, `mistralai/` → mistral). Агент переопределяет ключом `capabilities`. Форма таблицы — **предложение — нет в ADR** (O3).
+A model's capabilities (`family`, `input`, `output`, `strict`) come from the built-in table `aqven.spec.profiles`,
+keyed by the model string; an unknown model gets the "text only, no strict" profile, and its family comes from the
+provider or the vendor prefix (`meta-llama/` → meta, `x-ai/` → xai, `moonshotai/` → moonshot, `deepseek/`,
+`deepseek-ai/` → deepseek, `qwen/`, `Qwen/` → qwen, `z-ai/` → zhipu, `mistralai/` → mistral). An agent overrides it
+with the `capabilities` key. The shape of the table is a **proposal — not in an ADR** (O3).
 
-Моделей примера в таблице нет: текстовые модели получают профиль по умолчанию с семейством по вендорному префиксу, а
-`gemini` и `painter` объявляют `capabilities` сами.
+None of the example's models are in the table: the text models get the default profile with a family from the vendor
+prefix, and `gemini` and `painter` declare `capabilities` themselves.
 
-| Модель | `input` | `output` | `strict` | Откуда |
+| Model | `input` | `output` | `strict` | Source |
 |---|---|---|---|---|
-| `openrouter:google/gemini-2.5-flash-lite` | text, image, audio, video, document | text | false | `capabilities` агента `gemini` |
-| `openrouter:google/gemini-3.1-flash-lite-image`, `openrouter:openai/gpt-5-image-mini` | text, image | text, image | false | `capabilities` агента `painter` |
-| `openrouter:openai/gpt-oss-20b`, `openrouter:mistralai/mistral-nemo`, `openrouter:deepseek/deepseek-v4-flash-0731`, `openrouter:qwen/qwen3-30b-a3b-instruct-2507`, `openrouter:meta-llama/llama-3.1-8b-instruct` | text | text | false | профиль по умолчанию |
+| `openrouter:google/gemini-2.5-flash-lite` | text, image, audio, video, document | text | false | the `capabilities` of the `gemini` agent |
+| `openrouter:google/gemini-3.1-flash-lite-image`, `openrouter:openai/gpt-5-image-mini` | text, image | text, image | false | the `capabilities` of the `painter` agent |
+| `openrouter:openai/gpt-oss-20b`, `openrouter:mistralai/mistral-nemo`, `openrouter:deepseek/deepseek-v4-flash-0731`, `openrouter:qwen/qwen3-30b-a3b-instruct-2507`, `openrouter:meta-llama/llama-3.1-8b-instruct` | text | text | false | the default profile |
 
-### 6.5. Инференсы — `<id>.inference.yaml`, `kind: Inference`
+### 6.5. Inferences — `<id>.inference.yaml`, `kind: Inference`
 
-Id инференса — имя файла до первой точки. Инференс лежит рядом с узлом-владельцем под его именем и получает его id (`triage`,
-`ballot`, `extract`, `resolve`, `revise`, `critique`, `illustrate`, `tie_break`); общий инференс другие узлы и evals называют
-`inference: <id>` (§3). Инференс субагента лежит в папке агента, который его вызывает (`research_policy` в `agents/resolver/`).
-Ниже — фрагмент `flows/support_case/nodes/polish/revise.inference.yaml`: входы `product` и `chunks`, выход и все ключи, кроме
-части проверок.
+An inference's id is the file name up to the first dot. The inference sits beside the node that owns it, under that
+node's name, and takes its id (`triage`, `ballot`, `extract`, `resolve`, `revise`, `critique`, `illustrate`,
+`tie_break`); other nodes and evals name a shared inference with `inference: <id>` (§3). A subagent's inference sits
+in the folder of the agent that calls it (`research_policy` in `agents/resolver/`). Below is a fragment of
+`flows/support_case/nodes/polish/revise.inference.yaml`: the `product` and `chunks` inputs, the output and every key
+except some of the checks.
 
 ```yaml
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Ответ покупателю по принятому решению и фрагментам базы знаний с цитатами; при наличии прошлой версии — правка по критике"
+description: "A customer reply from the decision and the knowledge-base chunks, with citations; when a previous version exists, a revision from the critique"
 in:
 - name: "product"
   type: "ProductRef?"
-  description: "Товар обращения; вид лампы выбирает вариант советов, null — товар не указан"
+  description: "The product of the case; the lamp kind picks the advice variant, null means no product was given"
 - name: "chunks"
   type: "KbChunk[]"
-  description: "Фрагменты базы знаний — единственный источник фактов и цитат"
+  description: "Knowledge base chunks, the only source of facts and quotes"
   maxItems: 80
 out:
 - name: "reply"
   type: "ReplyDraft"
-  description: "Текст ответа и цитаты фрагментов, на которые он опирается"
+  description: "The reply text and the chunk quotes it relies on"
 variants:
   lamp_guide:
     on: "product.lamp_kind"
@@ -491,116 +522,126 @@ checks:
   on_fail: "retry"
 ```
 
-Ключи: `description`, `in[]`, `out[]` (≥ 1 поля, выход ограничен), `prompt?`, `variants?`, `allowed_sets?[] {type, from,
-labels_from?}` с корнем `$in`, `examples?[] {name, in, out}` (значения проверяются моделями `in`/`out`; адаптер вставляет пары
-user/assistant после системных сообщений), `checks?[]`. `schema_from` у выхода `Dynamic` — тоже путь от `$in`. Include — путь
-от включающего файла, папки инференса или корня модуля (§3): `{% include "fragments/<имя>" %}` — общий фрагмент корня
-(статичный текст). Состав — O7; имена ключей, корни `$in`/`$out` и вставка примеров — **предложение — нет в ADR**.
+Keys: `description`, `in[]`, `out[]` (at least one field, the output is bounded), `prompt?`, `variants?`,
+`allowed_sets?[] {type, from, labels_from?}` rooted at `$in`, `examples?[] {name, in, out}` (the values are validated
+by the `in`/`out` models, and the adapter inserts the user/assistant pairs after the system messages), and `checks?[]`.
+`schema_from` on a `Dynamic` output is also a path from `$in`. An include path is resolved from the including file,
+the inference folder or the module root (§3): `{% include "fragments/<name>" %}` is a shared root fragment (static
+text). The set of keys is O7; their names, the `$in`/`$out` roots and the insertion of examples are a
+**proposal — not in an ADR**.
 
-**Промт: соглашение и переопределение (O8, O18).** Без ключа `prompt` промт уровня 1 или 2 — `<инференс>.prompt.md` рядом с
-`<инференс>.inference.yaml`, уровень — по содержимому. Явный `prompt` — путь к `.md` где угодно (от файла инференса, `@flow/`
-или `@root/`, `prompt: "@root/<путь>.md"`) или ссылка на функцию уровня 3 в любой форме O20 (`prompt: "illustrate_prompt"`).
-Не разрешилось ни то, ни другое — `E_PROMPT_MISSING`; явный путь при своём `<инференс>.prompt.md` рядом — предупреждение
+**The prompt: convention and override (O8, O18).** With no `prompt` key, the level 1 or 2 prompt is
+`<inference>.prompt.md` beside `<inference>.inference.yaml`, and the level follows from its content. An explicit
+`prompt` is a path to a `.md` anywhere (from the inference file, `@flow/` or `@root/`, as `prompt: "@root/<path>.md"`)
+or a level 3 function reference in any O20 form (`prompt: "illustrate_prompt"`). Neither resolving is
+`E_PROMPT_MISSING`; an explicit path while a `<inference>.prompt.md` sits beside it is the warning
 `W_PROMPT_SHADOWED`.
 
-**Варианты промта (O10, O18).** `variants.<слот> {on, cases, default?}`: `on` — путь от входа инференса (`product.lamp_kind`),
-`cases` — значение → вариант, `default` — вариант для остальных значений и `null`. Вариант — id файла
-`<инференс>.variants/<слот>/<вариант>.md` рядом с инференсом или явный путь к `.md`; он рендерится с теми же входами и
-подчиняется тем же правилам уровня 2; `<инференс>.prompt.md` выводит выбранный вариант переменной `{{ variants.<слот> }}` и
-логики выбора не содержит (мелкие различия формулировок — `{% if %}` и `{% case %}` внутри промта). check: каждый вариант из
-`cases` и `default` есть файлом, каждый файл назван (`E_VARIANT_MISSING`, `E_ORPHAN_FILE`); `on` — вход enum или Text; enum
-покрыт `cases` или есть `default`, у `T?` `default` обязателен (`E_VARIANT_NOT_EXHAUSTIVE`); варианты и промт читают только
-входы, промт выводит каждый слот; селектор `on` считается использованием входа. Прогон пишет выбранный вариант по слоту; GEPA
-оптимизирует файлы вариантов как отдельные текстовые единицы. Выбор сложнее равенства одного входа — промт уровня 3.
+**Prompt variants (O10, O18).** `variants.<slot> {on, cases, default?}`: `on` is a path from the inference input
+(`product.lamp_kind`), `cases` maps a value to a variant, and `default` is the variant for every other value and for
+`null`. A variant is the id of the file `<inference>.variants/<slot>/<variant>.md` beside the inference, or an
+explicit path to a `.md`; it is rendered with the same inputs and obeys the same level 2 rules;
+`<inference>.prompt.md` prints the chosen variant through `{{ variants.<slot> }}` and contains no selection logic
+(small differences in wording are `{% if %}` and `{% case %}` inside the prompt). Checks: every variant from `cases`
+and `default` exists as a file, and every file is named (`E_VARIANT_MISSING`, `E_ORPHAN_FILE`); `on` is an enum or
+Text input; an enum is covered by `cases` or there is a `default`, and for `T?` a `default` is required
+(`E_VARIANT_NOT_EXHAUSTIVE`); the variants and the prompt read inputs only, and the prompt prints every slot; the
+`on` selector counts as using that input. A run records the chosen variant per slot, and GEPA optimizes the variant
+files as separate text units. A selection more complex than equality on one input means a level 3 prompt.
 
-**Пост-проверки — оценщики (O5, O9, O11).** Проверка — ссылка на оценщика: встроенный `use: <id>` с `with`, свой
-`run: модуль:функция` с `with?` или судья `inference` + `agent` (входы судьи привязываются по имени к `in` и `out`
-проверяемого инференса, оценка — поле `score` его выхода); рядом `on_fail` и `threshold?`. Та же ссылка без `on_fail` — скорер
-eval (§10). Контракт оценщика (`aqven.policies.Evaluator`): `(value: <модель out>, context: EvalContext[<модель in>, <модель
-out>], params: <модель with>) -> Verdict {passed, score?, reason?}`; модели `in` и `out` — сгенерированные `<Инференс>In` и
-`<Инференс>Out` из `lumen.types` (`ReviseIn`, `ReviseOut`); модель параметров — последний параметр функции, у своих
-проверок без параметров — `NoParams`. Порядок исполнения: валидация Pydantic → allowed-set → проверки в порядке объявления.
-`retry` — `ModelRetry(reason)` в счёт `output.retries` агента; `fail` — узел падает; `flag` — значение проходит, `CheckOutcome`
-пишется в исполнение.
+**Post-checks are evaluators (O5, O9, O11).** A check is a reference to an evaluator: a built-in `use: <id>` with
+`with`, your own `run: module:function` with an optional `with`, or a judge `inference` + `agent` (the judge's inputs
+bind by name to the `in` and `out` of the inference under review, and the score is the `score` field of its output);
+`on_fail` and an optional `threshold` sit beside it. The same reference without `on_fail` is an eval scorer (§10).
+The evaluator contract (`aqven.policies.Evaluator`) is
+`(value: <out model>, context: EvalContext[<in model>, <out model>], params: <with model>) -> Verdict {passed, score?, reason?}`;
+the `in` and `out` models are the generated `<Inference>In` and `<Inference>Out` from `lumen.types` (`ReviseIn`,
+`ReviseOut`), and the parameter model is the function's last parameter, `NoParams` for your own checks with no
+parameters. Order of execution: Pydantic validation → allowed set → the checks in declaration order. `retry` raises
+`ModelRetry(reason)` against the agent's `output.retries`; `fail` fails the node; `flag` lets the value through and
+writes a `CheckOutcome` into the execution.
 
-| Встроенная | `with` |
+| Built-in | `with` |
 |---|---|
 | `not_empty` | `field` |
 | `max_words` | `field`, `max` |
-| `language` | `field`, `locale` (путь к `Locale`) |
-| `no_pii` | `fields[]`, `detectors?[]` (по умолчанию все детекторы) |
+| `language` | `field`, `locale` (a path to a `Locale`) |
+| `no_pii` | `fields[]`, `detectors?[]` (every detector by default) |
 | `regex` | `field`, `pattern` |
-| `unique_items` | `field` (список записей), `key` |
+| `unique_items` | `field` (a list of records), `key` |
 | `ids_in_allowed_set` | `field`, `allowed` |
 | `citations_in_sources` | `citations`, `sources`, `id`, `quote`, `text` |
-| `cost_usd`, `latency_ms` | — (метрики прогона для скореров) |
+| `cost_usd`, `latency_ms` | — (run metrics, for scorers) |
 
-### 6.6. Политики (O9)
+### 6.6. Policies (O9)
 
-Каждое место, где язык выбирает алгоритм, — одна форма ссылки (Strategy + Registry): ровно одно из `use: <встроенная>` и
-`run: модуль:функция`, параметры — `with`. Встроенные — обычные функции `aqven.policies` под своими id с тем же контрактом
-слота, поэтому встроенная и своя взаимозаменяемы. Политики чистые (без ввода-вывода, времени и случайности): исполнитель пишет
-их входы и решения, replay и fork их воспроизводят.
+Every place where the language picks an algorithm has one reference form (Strategy + Registry): exactly one of
+`use: <built-in>` and `run: module:function`, with the parameters in `with`. The built-ins are ordinary
+`aqven.policies` functions under their own ids with the same slot contract, so a built-in and your own are
+interchangeable. Policies are pure (no I/O, no time, no randomness): the executor records their inputs and decisions,
+and replay and fork reproduce them.
 
-| Слот | Узел | Контракт | Встроенные и `with` | В примере |
+| Slot | Node | Contract | Built-ins and their `with` | In the example |
 |---|---|---|---|---|
-| `join` | parallel | `(state: JoinState[T], params) -> Wait \| Done[T] \| Fail`; вызывается после каждой завершённой ветки, `state` — завершённые ветки в порядке завершения (ключ, значение или ошибка) и ключи ожидающих; `Done` и `Fail` отменяют ожидающие ветки | `all`, `any`, `first_success`, `quorum {min_ok, on_error: skip \| fail}` | `drafts` — `quorum`, `approvals` — `all`, `judges` — своя `agreeing_verdicts {min_agree}` |
-| `stop[]` | loop | `(state: LoopState, params) -> Continue \| Stop(reason)`; цикл останавливается, когда любая политика вернула `Stop`; `max_iter` — структурный предел | `threshold {path, gte \| lte}`, `stagnation {path, window, min_delta}` | `polish` — `threshold` и `stagnation`, `record` — своя `no_issues {path}` |
-| `select` | loop | `(state: LoopState, params) -> int` — номер выбранной итерации | `last`, `best {path}` | `record` — `last`, `polish` — `best` |
-| `on_item_error` | map | `(item: T, error: MapItemError, params) -> Skip \| Fail \| Default[O]` | `skip`, `fail`, `default {value}` | `vote` — `skip` |
-| `checks[]`, `scorers[]` | inference, eval | оценщик, §6.5 | §6.5 | §7, §10 |
+| `join` | parallel | `(state: JoinState[T], params) -> Wait \| Done[T] \| Fail`; called after every finished branch, with `state` holding the finished branches in completion order (key, value or error) and the keys of those still pending; `Done` and `Fail` cancel the pending ones | `all`, `any`, `first_success`, `quorum {min_ok, on_error: skip \| fail}` | `drafts` uses `quorum`, `approvals` uses `all`, `judges` uses its own `agreeing_verdicts {min_agree}` |
+| `stop[]` | loop | `(state: LoopState, params) -> Continue \| Stop(reason)`; the loop stops as soon as any policy returns `Stop`; `max_iter` is the structural limit | `threshold {path, gte \| lte}`, `stagnation {path, window, min_delta}` | `polish` uses `threshold` and `stagnation`, `record` uses its own `no_issues {path}` |
+| `select` | loop | `(state: LoopState, params) -> int` — the index of the chosen pass | `last`, `best {path}` | `record` uses `last`, `polish` uses `best` |
+| `on_item_error` | map | `(item: T, error: MapItemError, params) -> Skip \| Fail \| Default[O]` | `skip`, `fail`, `default {value}` | `vote` uses `skip` |
+| `checks[]`, `scorers[]` | inference, eval | an evaluator, §6.5 | §6.5 | §7, §10 |
 
-Отдельного `on_branch_error` нет: обработка ошибок веток — параметр политики `join`. check: ссылка резолвится
-(`E_POLICY_UNKNOWN`, `E_CODE_REF_UNRESOLVED`), заданы ровно одно из `use` и `run`, `with` проходит модель параметров функции
-(`E_POLICY_PARAMS`, у оценщиков — `E_CHECK_PARAMS`), сигнатура совпадает с контрактом слота и типами узла: `T` у `join` —
-выход веток, `O` у `on_item_error` — выход тела map, `value` и `context` оценщика — модели `out` и `in` инференса
-(`E_CODE_SIGNATURE_MISMATCH`); пути `RefPath` в `with` резолвятся в области узла, у встроенных проверяется и их тип
-(`threshold` — число, `max_words` — Text).
+There is no separate `on_branch_error`: handling branch errors is a parameter of the `join` policy. Checks: the
+reference resolves (`E_POLICY_UNKNOWN`, `E_CODE_REF_UNRESOLVED`), exactly one of `use` and `run` is set, `with`
+validates against the function's parameter model (`E_POLICY_PARAMS`, or `E_CHECK_PARAMS` for evaluators), and the
+signature matches the slot contract and the node's types: `T` in `join` is the branch output, `O` in `on_item_error`
+is the map body output, and an evaluator's `value` and `context` are the `out` and `in` models of the inference
+(`E_CODE_SIGNATURE_MISMATCH`); the `RefPath` paths in `with` resolve in the node's scope, and for built-ins their type
+is checked too (`threshold` wants a number, `max_words` wants Text).
 
-Свои политики примера лежат в `<узел>.py` рядом с узлом, который их использует, ссылка — голое имя:
+The example's own policies live in `<node>.py` beside the node that uses them, referenced by the bare name:
 `flows/judge_panel/nodes/judges/judges.py` —
-`agreeing_verdicts(state: JoinState[JudgeVerdict], params: AgreementParams) -> JoinDecision[JudgeVerdict]`,
+`agreeing_verdicts(state: JoinState[JudgeVerdict], params: AgreementParams) -> JoinDecision[JudgeVerdict]`;
 `flows/support_case/nodes/record/record.py` — `no_issues(state: LoopState, params: EmptyListParams) -> StopDecision`.
 
-## 7. Инференсы примера
+## 7. The inferences of the example
 
-Пути в столбце «Файлы» — от `flows/support_case/nodes/`, кроме `tie_break` и `research_policy`.
+The paths in the "Files" column are relative to `flows/support_case/nodes/`, except for `tie_break` and
+`research_policy`.
 
-| Инференс (файлы) | Уровень | `in` | `out` | Особое | Агенты |
+| Inference (files) | Level | `in` | `out` | Notable | Agents |
 |---|---|---|---|---|---|
-| `triage` (`triage/triage.inference.yaml`, `.prompt.md`) | 2 | `message: Text` (4000), `channel: Channel`, `customer: Customer`, `product: ProductRef?`, `signals: SignalDef[]` (20), `intake_fields: FieldSpec[]` (10), `photo: Image?`, `voice_note: Audio?`, `video: Video?`, `invoice: Document?` | `summary: Text` (600), `category: ProductCategory`, `observations: Observation[]` (12), `safety_risk: Bool`, `intake_extra: Dynamic` (`schema_from: $in.intake_fields`, `limits {max_fields 10, max_depth 1, max_text_length 200, max_items 5}`) | allowed-set `SignalKey` ← `$in.signals[*].key` / `label`; проверки (параметры в `with`) `unique_items {field: $out.observations, key: key}` retry, `not_empty {field: $out.summary}` retry; `{% message %}`, `{% case channel %}`, `{% if %}` по медиа и `product`, `{% for %}` по `signals` и `intake_fields`, фрагменты `fragments/safety_escalation`, `fragments/untrusted_input` | `gemini` |
-| `ballot` (`vote/ballot.inference.yaml`, `.prompt.md`) | 2 | `summary: Text` (600), `observations: Observation[]` (12), `safety_risk: Bool`, `perspective: VotePerspective?` | `rationale: Text` (300), `intent: CaseIntent`, `confidence: Score` | `{% if perspective %}{% case perspective %}` без `else`; два `examples` (`flicker_defect`, `crushed_box`); фрагмент `fragments/untrusted_input` | `llama`, `deepseek` |
-| `extract` (`record/extract.inference.yaml`, `.prompt.md`) | 2 | `message: Text` (4000), `summary: Text` (600), `form_fields: FieldSpec[]` (30), `feedback: Issue[]?` (10), `photo: Image?`, `invoice: Document?` | `record: Dynamic` (`schema_from: $in.form_fields`, `limits {max_fields 30, max_depth 2, max_text_length 400, max_items 10}`) | `{% for %}` по полям формы и замечаниям; даты в формате ГГГГ-ММ-ДД; фрагмент `fragments/untrusted_input` | `gemini` |
-| `resolve` (`route/resolve.inference.yaml`, `.prompt.md`) | 2 | `customer: Customer`, `order_id: OrderId`, `symptom: DefectSymptom`, `purchased_on: Date?`, `safety_risk: Bool`, `intake_extra: Dynamic`, `policies: Policy[]` (20) | `resolution: Resolution` | allowed-set `PolicyId` ← `$in.policies[*].policy_id` / `title` (коды `prefixed_ordinal`); `{{ intake_extra }}` целиком; фрагменты `fragments/untrusted_input`, `fragments/safety_escalation` под `{% if safety_risk %}` | `resolver` |
-| `research_policy` (`agents/resolver/research_policy.inference.yaml`, `.prompt.md`) | 1 | `question: Text` (500), `category: ProductCategory` | `answer: Text` (800), `sources: Text[]` (5 × 120) | инструкция одним текстом без переменных; промт по соглашению рядом с инференсом | `researcher` |
-| `revise` (`polish/revise.inference.yaml`, `.prompt.md`, `.variants/`) | 2 | `summary: Text` (600), `customer: Customer`, `locale: Locale`, `channel: Channel`, `product: ProductRef?`, `resolution: Resolution`, `chunks: KbChunk[]` (80), `previous: ReplyDraft?`, `critique: Critique?` | `reply: ReplyDraft` | индексный выбор `KbChunkId`; слот вариантов `lamp_guide` по `product.lamp_kind`: `revise.variants/lamp_guide/{mains,rechargeable,smart_wifi,smart_zigbee,unknown}.md`, `default: unknown`; проверки `citations_in_sources` retry, `max_words {field: $out.reply.text, max: 220}` retry, `no_pii {fields: [$out.reply.text]}` fail, `language {field: $out.reply.text, locale: $in.locale}` flag, `run: @root.code.support_case:promises_match_resolution` retry; фрагменты `fragments/brand_voice`, `fragments/citation_rules`, `fragments/untrusted_input`; прошлая версия и критика — под `{% if previous %}` | `gpt`, `mistral`, `gemini` |
-| `tie_break` (`flows/judge_panel/nodes/decide/tie_break.inference.yaml`, `.prompt.md`) | 1 | `summary: Text` (600), `candidates: ReplyDraft[]` (3), `chunks: KbChunk[]` (80), `panel: JudgeVerdict[]?` (3) | `rationale: Text` (600), `scores: CriterionScore[]` (3), `best_index: Int` 0..2 | обоснование раньше оценок | `deepseek`, `qwen`, `llama`, `gpt` |
-| `critique` (`polish/critique.inference.yaml`, `.prompt.md`, `.py`) | 2 | `summary: Text` (600), `resolution: Resolution`, `chunks: KbChunk[]` (80), `reply: ReplyDraft` | `rationale: Text` (600), `score: Score`, `blocking: Text[]` (5 × 200) — поля `Critique` | фрагменты `fragments/judge_protocol`, `fragments/citation_rules`, `fragments/untrusted_input`; проверка `run: critique_consistent` (`critique.py`) flag; судья eval `reply_quality`: входы находятся по имени, оценка — `score` | `mistral`, `deepseek` (eval) |
-| `illustrate` (`illustrate/illustrate.inference.yaml`, `.py`) | 3 | `text: Text` (1500), `category: ProductCategory`, `photo: Image?` | `image: Image` | `prompt: illustrate_prompt` (`illustrate.py` рядом); медиа дописывает адаптер | `painter` |
+| `triage` (`triage/triage.inference.yaml`, `.prompt.md`) | 2 | `message: Text` (4000), `channel: Channel`, `customer: Customer`, `product: ProductRef?`, `signals: SignalDef[]` (20), `intake_fields: FieldSpec[]` (10), `photo: Image?`, `voice_note: Audio?`, `video: Video?`, `invoice: Document?` | `summary: Text` (600), `category: ProductCategory`, `observations: Observation[]` (12), `safety_risk: Bool`, `intake_extra: Dynamic` (`schema_from: $in.intake_fields`, `limits {max_fields 10, max_depth 1, max_text_length 200, max_items 5}`) | the allowed set `SignalKey` ← `$in.signals[*].key` / `label`; checks (parameters in `with`) `unique_items {field: $out.observations, key: key}` retry and `not_empty {field: $out.summary}` retry; `{% message %}`, `{% case channel %}`, `{% if %}` over the media and `product`, `{% for %}` over `signals` and `intake_fields`, and the fragments `fragments/safety_escalation`, `fragments/untrusted_input` | `gemini` |
+| `ballot` (`vote/ballot.inference.yaml`, `.prompt.md`) | 2 | `summary: Text` (600), `observations: Observation[]` (12), `safety_risk: Bool`, `perspective: VotePerspective?` | `rationale: Text` (300), `intent: CaseIntent`, `confidence: Score` | `{% if perspective %}{% case perspective %}` with no `else`; two `examples` (`flicker_defect`, `crushed_box`); the fragment `fragments/untrusted_input` | `llama`, `deepseek` |
+| `extract` (`record/extract.inference.yaml`, `.prompt.md`) | 2 | `message: Text` (4000), `summary: Text` (600), `form_fields: FieldSpec[]` (30), `feedback: Issue[]?` (10), `photo: Image?`, `invoice: Document?` | `record: Dynamic` (`schema_from: $in.form_fields`, `limits {max_fields 30, max_depth 2, max_text_length 400, max_items 10}`) | `{% for %}` over the form fields and the remarks; dates as YYYY-MM-DD; the fragment `fragments/untrusted_input` | `gemini` |
+| `resolve` (`route/resolve.inference.yaml`, `.prompt.md`) | 2 | `customer: Customer`, `order_id: OrderId`, `symptom: DefectSymptom`, `purchased_on: Date?`, `safety_risk: Bool`, `intake_extra: Dynamic`, `policies: Policy[]` (20) | `resolution: Resolution` | the allowed set `PolicyId` ← `$in.policies[*].policy_id` / `title` (codes `prefixed_ordinal`); `{{ intake_extra }}` as a whole; the fragments `fragments/untrusted_input` and `fragments/safety_escalation` under `{% if safety_risk %}` | `resolver` |
+| `research_policy` (`agents/resolver/research_policy.inference.yaml`, `.prompt.md`) | 1 | `question: Text` (500), `category: ProductCategory` | `answer: Text` (800), `sources: Text[]` (5 × 120) | one block of instruction text with no variables; the prompt sits beside the inference by convention | `researcher` |
+| `revise` (`polish/revise.inference.yaml`, `.prompt.md`, `.variants/`) | 2 | `summary: Text` (600), `customer: Customer`, `locale: Locale`, `channel: Channel`, `product: ProductRef?`, `resolution: Resolution`, `chunks: KbChunk[]` (80), `previous: ReplyDraft?`, `critique: Critique?` | `reply: ReplyDraft` | selection by index over `KbChunkId`; the `lamp_guide` variant slot by `product.lamp_kind`: `revise.variants/lamp_guide/{mains,rechargeable,smart_wifi,smart_zigbee,unknown}.md`, `default: unknown`; checks `citations_in_sources` retry, `max_words {field: $out.reply.text, max: 220}` retry, `no_pii {fields: [$out.reply.text]}` fail, `language {field: $out.reply.text, locale: $in.locale}` flag, `run: @root.code.support_case:promises_match_resolution` retry; the fragments `fragments/brand_voice`, `fragments/citation_rules`, `fragments/untrusted_input`; the previous version and the critique sit under `{% if previous %}` | `gpt`, `mistral`, `gemini` |
+| `tie_break` (`flows/judge_panel/nodes/decide/tie_break.inference.yaml`, `.prompt.md`) | 1 | `summary: Text` (600), `candidates: ReplyDraft[]` (3), `chunks: KbChunk[]` (80), `panel: JudgeVerdict[]?` (3) | `rationale: Text` (600), `scores: CriterionScore[]` (3), `best_index: Int` 0..2 | the reasoning comes before the scores | `deepseek`, `qwen`, `llama`, `gpt` |
+| `critique` (`polish/critique.inference.yaml`, `.prompt.md`, `.py`) | 2 | `summary: Text` (600), `resolution: Resolution`, `chunks: KbChunk[]` (80), `reply: ReplyDraft` | `rationale: Text` (600), `score: Score`, `blocking: Text[]` (5 × 200) — the fields of `Critique` | the fragments `fragments/judge_protocol`, `fragments/citation_rules`, `fragments/untrusted_input`; the check `run: critique_consistent` (`critique.py`) flag; as the judge of the `reply_quality` eval its inputs are found by name and the score is `score` | `mistral`, `deepseek` (eval) |
+| `illustrate` (`illustrate/illustrate.inference.yaml`, `.py`) | 3 | `text: Text` (1500), `category: ProductCategory`, `photo: Image?` | `image: Image` | `prompt: illustrate_prompt` (`illustrate.py` beside it); the adapter appends the media | `painter` |
 
-Уровень 2 соблюдает правила ADR-0029 §8: каждая переменная — вход, каждый вход использован, `{{ output_format }}` ровно раз,
-медиа только в условиях, `case` без `else`, `for` один уровень и только по массиву с `maxItems`, фильтров нет, `message` на
-верхнем уровне.
+Level 2 obeys the rules of ADR-0029 §8: every variable is an input, every input is used, `{{ output_format }}` appears
+exactly once, media appear only inside conditions, `case` has no `else`, `for` is one level deep and only over an
+array with `maxItems`, there are no filters, and `message` sits at the top level.
 
-## 8. Типы
+## 8. Types
 
-Файл типа — `types/<вид>/<snake_name>.yaml`, id — PascalCase имени. Папка `types/` одна — в корне модуля, у воркфлоу, узлов и
-инференсов её нет; подпапка — вид типа (O21, O22):
+A type file is `types/<kind>/<snake_name>.yaml`, and the id is the PascalCase name. There is one `types/` folder, at
+the module root; workflows, nodes and inferences have none. The subfolder is the type kind (O21, O22):
 
-| Папка | Типы |
+| Folder | Types |
 |---|---|
 | `types/enums/` (17) | `Agreement`, `ApprovalDecision`, `CascadeTier`, `CaseIntent`, `CaseStatus`, `Channel`, `CurrencyCode`, `CustomerTier`, `DefectSymptom`, `DeliveryDamage`, `IssueSeverity`, `LampKind`, `Marketplace`, `ProductCategory`, `ReplyCriterion`, `ResolutionAction`, `VotePerspective` |
 | `types/ids/` (6) | `CustomerId`, `KbChunkId`, `OrderId`, `PolicyId`, `SignalKey`, `SkuId` |
 | `types/records/` (23) | `CaseOutcome`, `CaseRequest`, `Citation`, `CriterionScore`, `Critique`, `Customer`, `IntentBallot`, `Issue`, `JudgeVerdict`, `KbChunk`, `MediaApproval`, `Money`, `Observation`, `PanelOutcome`, `PanelRequest`, `PanelVerdict`, `Policy`, `ProductRef`, `ReplyApproval`, `ReplyDraft`, `ReplyMedia`, `Resolution`, `SignalDef` |
 | `types/unions/` (2) | `CaseOrigin`, `CaseRecord` |
-| `types/values/` (1, ограниченные скаляры) | `Score` |
+| `types/values/` (1, constrained scalars) | `Score` |
 
-`Customer` — `pii: pii`; `customer_id`, `display_name`, `email?`, `tier`, `locale`. `LampKind` — enum `mains`, `rechargeable`,
-`smart_wifi`, `smart_zigbee` (O10). `ProductRef` — `sku`, `name`, `category`, `lamp_kind: LampKind?` (`null` у аксессуаров).
-`Score` — Float 0..1. `Issue` — `path: Text[]` (8 × 64), `code`, `message`, `severity: IssueSeverity`, `expected?`,
-`observed?`, `repair_hint?`.
+`Customer` is `pii: pii`, with `customer_id`, `display_name`, `email?`, `tier`, `locale`. `LampKind` is the enum
+`mains`, `rechargeable`, `smart_wifi`, `smart_zigbee` (O10). `ProductRef` is `sku`, `name`, `category`,
+`lamp_kind: LampKind?` (`null` for accessories). `Score` is a Float 0..1. `Issue` is `path: Text[]` (8 × 64), `code`,
+`message`, `severity: IssueSeverity`, `expected?`, `observed?`, `repair_hint?`.
 
-| Тип | Вид | Поля или значения |
+| Type | Kind | Fields or values |
 |---|---|---|
 | `Marketplace` | enum | amazon, ozon |
 | `CaseOrigin` | union `kind` | `storefront {page: Text 200}`, `marketplace {marketplace: Marketplace, order_ref: Text 40}` |
@@ -619,19 +660,19 @@ out>], params: <модель with>) -> Verdict {passed, score?, reason?}`; мо�
 | `CaseRecord` | union `kind` | `defect {order_id: OrderId, symptom: DefectSymptom, purchased_on: Date?, safety_risk: Bool}`, `delivery {order_id: OrderId, damage: DeliveryDamage, carrier_ref: Text? 40}`, `question {topic: Text 200, order_id: OrderId?}` |
 | `KbChunkId` | id | `pattern ^kb_[a-z0-9]{10}$`, `allowed_set: dynamic` |
 | `KbChunk` | record | `chunk_id: KbChunkId`, `title: Text 120`, `text: Text 1500` |
-| `PolicyId` | id | UUID `pattern`, `allowed_set: dynamic`, `code_format: prefixed_ordinal` |
+| `PolicyId` | id | a UUID `pattern`, `allowed_set: dynamic`, `code_format: prefixed_ordinal` |
 | `Policy` | record | `policy_id: PolicyId`, `title: Text 120`, `text: Text 1200` |
 | `ResolutionAction` | enum | store_credit, replacement, reship, advice |
 | `Resolution` | record | `action: ResolutionAction`, `summary: Text 400`, `credit: Money?`, `policy: PolicyId?` |
 | `Citation` | record | `chunk_id: KbChunkId`, `quote: Text 300` |
 | `ReplyDraft` | record | `text: Text 1500`, `citations: Citation[]` (6) |
-| `Critique` | record | `rationale: Text 600`, `score: Score`, `blocking: Text[]` (5 × 200); вход `revise.critique` ← `$acc.critique.out` — выход инференса `critique` с теми же полями |
+| `Critique` | record | `rationale: Text 600`, `score: Score`, `blocking: Text[]` (5 × 200); the input `revise.critique` ← `$acc.critique.out` is the output of the `critique` inference with the same fields |
 | `ReplyCriterion` | enum | grounded, helpful, tone |
 | `CriterionScore` | record | `criterion: ReplyCriterion`, `score: Int` 1..5 |
 | `JudgeVerdict` | record | `rationale: Text 600`, `scores: CriterionScore[]` (3), `best_index: Int` 0..2 |
 | `PanelVerdict` | record | `verdict: JudgeVerdict`, `tie_broken: Bool`, `spread: Float` 0..4 |
-| `PanelRequest` | record | `summary: Text 600`, `candidates: ReplyDraft[]` (3), `chunks: KbChunk[]` (80) — вход воркфлоу `judge_panel` |
-| `PanelOutcome` | record | `winner: ReplyDraft`, `verdict: PanelVerdict` — выход воркфлоу `judge_panel` |
+| `PanelRequest` | record | `summary: Text 600`, `candidates: ReplyDraft[]` (3), `chunks: KbChunk[]` (80) — the input of the `judge_panel` workflow |
+| `PanelOutcome` | record | `winner: ReplyDraft`, `verdict: PanelVerdict` — the output of the `judge_panel` workflow |
 | `ApprovalDecision` | enum | approve, edit, reject |
 | `ReplyApproval` | record | `decision: ApprovalDecision`, `edited_text: Text? 1500`, `note: Text? 400` |
 | `MediaApproval` | record | `use_image: Bool`, `use_voice: Bool`, `use_clip: Bool` |
@@ -639,106 +680,119 @@ out>], params: <модель with>) -> Verdict {passed, score?, reason?}`; мо�
 | `ReplyMedia` | record | `image: Image?`, `voice: Audio?`, `clip: Video?` |
 | `CaseOutcome` | record | `case_ref: Text` `^CASE-[0-9A-HJKMNP-TV-Z]{26}$`, `status: CaseStatus`, `intent: CaseIntent`, `tier: CascadeTier`, `record: CaseRecord`, `resolution: Resolution`, `reply: ReplyDraft?`, `media: ReplyMedia`, `closed_at: DateTime` |
 
-## 9. Код модуля
+## 9. The module's code
 
-**Один источник типов (O19, O22).** Типы описываются только файлами `kind: Type`; модели Pydantic для кода генерируются, руками
-не пишутся. `aqven generate` (его же вызывает `aqven check`) пишет в `types.py` корня модуля модели всех типов модуля и входов и
-выходов каждого инференса: `<Инференс>In` и `<Инференс>Out` (`TriageIn`, `ReviseOut`, `ResearchPolicyIn`, `TieBreakOut`); каждого
-тула с `run`: `<Тул>In` и `<Тул>Out` (`SearchKbOut`, `IssueStoreCreditOut`, `RenderClipOut`); каждого шага `code`:
-`<Воркфлоу><Узел>In` и `<Воркфлоу><Узел>Out` (`SupportCasePrepareOut`, `JudgePanelAggregateOut`) — id узла уникален только в
-воркфлоу; расхождение файла с описаниями — предупреждение `W_GENERATED_STALE` (правка руками: файл сгенерирован, правки
-перезаписываются, меняйте YAML). Первая строка файла — единственный разрешённый комментарий:
+**One source of types (O19, O22).** Types are described only by `kind: Type` files; the Pydantic models for the code
+are generated, never hand-written. `aqven generate` (which `aqven check` calls too) writes into `types.py` at the
+module root the models of every type in the module and of the inputs and outputs of every inference —
+`<Inference>In` and `<Inference>Out` (`TriageIn`, `ReviseOut`, `ResearchPolicyIn`, `TieBreakOut`); of every tool with
+`run` — `<Tool>In` and `<Tool>Out` (`SearchKbOut`, `IssueStoreCreditOut`, `RenderClipOut`); and of every `code` step —
+`<Workflow><Node>In` and `<Workflow><Node>Out` (`SupportCasePrepareOut`, `JudgePanelAggregateOut`), because a node id
+is unique only within its workflow. A file that has drifted from the definitions is the warning `W_GENERATED_STALE`
+(hand edits: the file is generated, edits are overwritten, change the YAML instead). The first line of the file is the
+only comment allowed:
 `# Generated by aqven generate. DO NOT EDIT: changes are overwritten; edit the YAML and run aqven generate.`
-Файл `types.py` — в `.gitignore` примера и попадает в колесо (uv_build не читает `.gitignore`), поэтому `aqven generate` идёт
-до `uv build`. У папки `types/` нет `__init__.py`: иначе она заслоняет `types.py`, и `aqven check` сообщает `E_TYPES_PACKAGE`.
-Папка модуля сама не должна быть в `sys.path` или `PYTHONPATH`: `types.py` заслонит модуль `types` стандартной библиотеки —
-`W_TYPES_SHADOWS_STDLIB`. Перед тестами файл перегенерирует плагин pytest `aqven` по ini-параметру `aqven_project` хоста —
-до импорта `tests/conftest.py`. Генератор
-повторяет грамматику ссылок на типы: запись — `BaseModel` с `GENERATED_CONFIG` (`extra="forbid"`, `frozen=True`,
-`revalidate_instances="always"`, `serialize_by_alias=True`), enum — `type X = Literal[...]`, id — `X = NewType("X", str)` и
-`type XField = Annotated[X, StringConstraints(...)]`, value — `type X = Annotated[float, Field(...)]`, union — классы вариантов
-`<Тип><Вариант>` (`CaseRecordDefect`) с дискриминатором первым и `type X = Annotated[A | B, Field(discriminator="kind")]`.
-Код импортирует типы и модели входов-выходов инференсов, тулов и шагов из `lumen.types`; медиа, `FieldSpec`, `DynamicValue`,
-`Locale`, `TenantId`, `RenderedPrompt`, `GENERATED_CONFIG` — из `aqven.spec`; `EvalContext`, `Verdict`, `NoParams`, `RefPath`,
-`JoinState`, `LoopState` и решения политик — из `aqven.policies`; `ToolContext`, `JobHandle`, `JobPoll` — из `aqven.runtime`.
-Рукописных копий типов и входов-выходов нет нигде; `aqven check` сверяет нормализованные схемы аннотаций функции с `in`/`out`.
-Шаг, чей выход по схеме равен типу реестра, возвращает этот тип: `pick` — `PanelOutcome`, `finalize` — `CaseOutcome`.
-Рукописные модели остались только у форм, которых YAML не объявляет: параметры своих политик (`AgreementParams`,
-`EmptyListParams`) и ответ API видео Together в `tools/functions.py` (`VideoJob`, `VideoOutputs`, `VideoError`). `FieldSpec` в
-коде ссылается на тип реестра по id (`OrderId`, `DefectSymptom`, `DeliveryDamage`): ограничения и значения enum берутся из
-типа, их копии в `FieldSpec` — `E_TYPE_CONSTRAINT_MISMATCH`.
+`types.py` is in the example's `.gitignore` and does go into the wheel (uv_build does not read `.gitignore`), so
+`aqven generate` runs before `uv build`. The `types/` folder has no `__init__.py`: otherwise it shadows `types.py` and
+`aqven check` reports `E_TYPES_PACKAGE`. The module folder itself must not be on `sys.path` or `PYTHONPATH`:
+`types.py` would shadow the standard library's `types` module — `W_TYPES_SHADOWS_STDLIB`. Before the tests the file is
+regenerated by the `aqven` pytest plugin from the host's `aqven_project` ini setting, before `tests/conftest.py` is
+imported. The generator mirrors the grammar of type references: a record becomes a `BaseModel` with
+`GENERATED_CONFIG` (`extra="forbid"`, `frozen=True`, `revalidate_instances="always"`, `serialize_by_alias=True`), an
+enum becomes `type X = Literal[...]`, an id becomes `X = NewType("X", str)` plus
+`type XField = Annotated[X, StringConstraints(...)]`, a value becomes `type X = Annotated[float, Field(...)]`, and a
+union becomes variant classes `<Type><Variant>` (`CaseRecordDefect`) with the discriminator first plus
+`type X = Annotated[A | B, Field(discriminator="kind")]`. The code imports types and the input and output models of
+inferences, tools and steps from `lumen.types`; media, `FieldSpec`, `DynamicValue`, `Locale`, `TenantId`,
+`RenderedPrompt` and `GENERATED_CONFIG` from `aqven.spec`; `EvalContext`, `Verdict`, `NoParams`, `RefPath`,
+`JoinState`, `LoopState` and the policy decisions from `aqven.policies`; and `ToolContext`, `JobHandle`, `JobPoll`
+from `aqven.runtime`. There are no hand-written copies of types or of input and output models anywhere, and
+`aqven check` compares the normalized schemas of a function's annotations against `in`/`out`. A step whose output
+schema equals a registry type returns that type: `pick` returns `PanelOutcome`, `finalize` returns `CaseOutcome`.
+Hand-written models remain only for shapes the YAML does not declare: the parameters of your own policies
+(`AgreementParams`, `EmptyListParams`) and the Together video API response in `tools/functions.py` (`VideoJob`,
+`VideoOutputs`, `VideoError`). A `FieldSpec` in the code references a registry type by its id (`OrderId`,
+`DefectSymptom`, `DeliveryDamage`): the constraints and enum values come from the type, and copies of them inside the
+`FieldSpec` are `E_TYPE_CONSTRAINT_MISMATCH`.
 
-Функция лежит в `<id>.py` рядом с файлом сущности, которая её использует; Python нескольких мест — в `code/<модуль>.py`; функции
-тулов — в `tools/functions.py`. Пути узлов ниже — от `flows/<воркфлоу>/nodes/`:
+A function lives in `<id>.py` beside the file of the entity that uses it; Python used in several places lives in
+`code/<module>.py`; and the tool functions live in `tools/functions.py`. The node paths below are relative to
+`flows/<workflow>/nodes/`:
 
-| Модуль | Ссылка в YAML | Функции |
+| Module | Reference in the YAML | Functions |
 |---|---|---|
-| `tools/functions.py` | `@root.tools.functions:<функция>` у всех тулов | `async search_kb(ctx, query, category, locale, tenant) -> SearchKbOut`, `async synthesize_voice(ctx, text, locale) -> SynthesizeVoiceOut`, `async start_clip(ctx, image, text, seconds) -> JobHandle`, `async poll_clip(ctx, job) -> JobPoll[RenderClipOut]`, `async lookup_order(ctx, order_id) -> LookupOrderOut`, `async issue_store_credit(ctx, customer_id, order_id, amount) -> IssueStoreCreditOut` |
-| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — в `checks` инференса `revise` и в скорере `promises` eval `reply_quality` | оценщик `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` |
+| `tools/functions.py` | `@root.tools.functions:<function>` on every tool | `async search_kb(ctx, query, category, locale, tenant) -> SearchKbOut`, `async synthesize_voice(ctx, text, locale) -> SynthesizeVoiceOut`, `async start_clip(ctx, image, text, seconds) -> JobHandle`, `async poll_clip(ctx, job) -> JobPoll[RenderClipOut]`, `async lookup_order(ctx, order_id) -> LookupOrderOut`, `async issue_store_credit(ctx, customer_id, order_id, amount) -> IssueStoreCreditOut` |
+| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — in the `checks` of the `revise` inference and in the `promises` scorer of the `reply_quality` eval | the evaluator `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` |
 | `support_case`: `prepare/prepare.py` | `prepare` | `prepare(request) -> SupportCasePrepareOut` |
 | `support_case`: `tally/tally.py` | `tally` | `tally(ballots) -> SupportCaseTallyOut` |
 | `support_case`: `case_form/case_form.py` | `case_form` | `case_form(intent) -> SupportCaseCaseFormOut` |
-| `support_case`: `record/record.py` | `no_issues` | политика `no_issues(state: LoopState, params: EmptyListParams) -> StopDecision` |
+| `support_case`: `record/record.py` | `no_issues` | the policy `no_issues(state: LoopState, params: EmptyListParams) -> StopDecision` |
 | `support_case`: `record/validate.py` | `validate_record` | `validate_record(record: DynamicValue, fields, today) -> SupportCaseValidateOut` |
-| `support_case`: `polish/critique.py` | `critique_consistent` | оценщик `critique_consistent(value: CritiqueOut, context: EvalContext[CritiqueIn, CritiqueOut], params: NoParams) -> Verdict` |
-| `support_case`: `illustrate/illustrate.py` | `illustrate_prompt` | промт уровня 3 `illustrate_prompt(text, category) -> RenderedPrompt` |
+| `support_case`: `polish/critique.py` | `critique_consistent` | the evaluator `critique_consistent(value: CritiqueOut, context: EvalContext[CritiqueIn, CritiqueOut], params: NoParams) -> Verdict` |
+| `support_case`: `illustrate/illustrate.py` | `illustrate_prompt` | the level 3 prompt `illustrate_prompt(text, category) -> RenderedPrompt` |
 | `support_case`: `finalize/finalize.py` | `finalize` | `finalize(intent, tier, record, resolution, reply, lead, media, image, voice, clip) -> CaseOutcome` |
-| `judge_panel`: `judges/judges.py` | `agreeing_verdicts` | политика `agreeing_verdicts(state: JoinState[JudgeVerdict], params: AgreementParams) -> JoinDecision[JudgeVerdict]` |
+| `judge_panel`: `judges/judges.py` | `agreeing_verdicts` | the policy `agreeing_verdicts(state: JoinState[JudgeVerdict], params: AgreementParams) -> JoinDecision[JudgeVerdict]` |
 | `judge_panel`: `aggregate/aggregate.py` | `aggregate` | `aggregate(verdicts) -> JudgePanelAggregateOut` |
 | `judge_panel`: `pick/pick.py` | `pick` | `pick(candidates, verdict, tie_broken, spread) -> PanelOutcome` |
 
-Параметры функции уровня 3 — немедийные входы инференса; параметры шага — `in` узла; тул — `ctx` и `in` тула; оценщик —
-`value`, `context`, `params`; политика — контракт слота (§6.6). **Предложение — нет в ADR** (ADR-0026 §5 фиксирует только шаг `code`).
+The parameters of a level 3 function are the non-media inputs of the inference; the parameters of a step are the
+node's `in`; a tool takes `ctx` plus the tool's `in`; an evaluator takes `value`, `context` and `params`; and a policy
+follows its slot contract (§6.6). **Proposal — not in an ADR** (ADR-0026 §5 fixes only the `code` step).
 
-## 10. Качество, человек, политики
+## 10. Quality, people and policies
 
-- **PII и доверие.** `Customer` — `pii`; слоты с ним уходят только агентам, чьи провайдеры (модель и фолбэки) разрешают PII.
-  Провайдер один — OpenRouter с `allows_pii: true`; `llama` по построению получает только `summary`, наблюдения и
-  кандидатов, а негативный тест `E_PII_PROVIDER` выключает `allows_pii` в копии `aqven.yaml`. `trust.default_in: untrusted` и фрагмент
-  `untrusted_input` во всех промтах с текстом покупателя.
-- **Человек.** Формы `ReplyApproval`, `MediaApproval`; политики `escalate` (`lead`), `default` (`brand`), `fail` (одобрение
-  `issue_store_credit`, ожидание `wait_kind: tool_approval` по адресу `route__resolve`, `branch_key: defect`). Сценарные ответы —
-  `ScriptedHuman`; форк — на `approvals__lead` (`branch_key: lead`).
-- **Кассеты.** `tests/cassettes/support_case/<сценарий>/`, `replay_strict`, `ALLOW_MODEL_REQUESTS = False` (ADR-0029 §5).
-  Голоса `vote` различаются входом `perspective`: одинаковые запросы в одном прогоне дали бы один ключ кассеты
-  (`AMBIGUOUS_REPLAY`, ADR-0029 §1), а seed на узле O2 не допускает. Все пять сценариев записаны 2026-09-17 на моделях
-  агентов с `AQVEN_LIVE=1` (`record_new`):
+- **PII and trust.** `Customer` is `pii`; slots that carry it go only to agents whose providers (the model and its
+  fallbacks) allow PII. There is one provider, OpenRouter, with `allows_pii: true`; `llama` by construction receives
+  only the summary, the observations and the candidates, and a negative test for `E_PII_PROVIDER` switches
+  `allows_pii` off in a copy of `aqven.yaml`. `trust.default_in: untrusted` and the `untrusted_input` fragment appear
+  in every prompt that carries customer text.
+- **People.** The forms are `ReplyApproval` and `MediaApproval`; the policies are `escalate` (`lead`), `default`
+  (`brand`) and `fail` (the approval of `issue_store_credit`, a wait with `wait_kind: tool_approval` at the address
+  `route__resolve`, `branch_key: defect`). Scripted answers come from `ScriptedHuman`, and the fork happens at
+  `approvals__lead` (`branch_key: lead`).
+- **Cassettes.** `tests/cassettes/support_case/<scenario>/`, `replay_strict`, `ALLOW_MODEL_REQUESTS = False`
+  (ADR-0029 §5). The `vote` ballots differ by their `perspective` input: identical requests within one run would share
+  a cassette key (`AMBIGUOUS_REPLAY`, ADR-0029 §1), and O2 does not allow a seed on a node. All five scenarios were
+  recorded on 2026-09-17 against the agents' own models with `AQVEN_LIVE=1` (`record_new`):
 
-  | Сценарий | Вход | Что проверяет |
+  | Scenario | Input | What it covers |
   |---|---|---|
-  | `question_agreed` | вопрос про Wi-Fi 5 ГГц с витрины, без вложений | голоса согласны → `tier: cheap`, анкета `question`, `advice`, `sent` |
-  | `defect_split_vote` | `lumen/samples/case_request.json`: помятая коробка, мерцание и тёплый контроллер, вопрос «неправильно подключила или повредили при доставке?», дата заказа с опечаткой `03.09.2027`, счёт без даты | голоса расходятся: тест задаёт их напрямую через `node_output("vote__ballot", …, item_index=…)` — `defect`, `delivery`, `question` → `intent__escalate` @ `deepseek` → `tier: strong`; первая анкета берёт будущую дату, `validate_record` даёт `purchase_in_future`, вторая возвращает `null`: два прохода `record__extract`; `store_credit` после одобрения |
-  | `tool_approval_denied` | тот же вход; одобрение `issue_store_credit` отклонено с причиной | решение без `store_credit`; узел `illustrate` заменён сценарной `FunctionModel` (`test_denied_tool_approval_withholds_credit_with_scripted_painter`): бюджет записи — не больше трёх генераций картинок |
-  | `painter_fallback` | тот же вход; `provider_fault` на основную модель `painter` | ответ `illustrate` даёт `openai/gpt-5-image-mini` |
-  | `fork_lead_reject` | тот же вход; руководитель одобряет ответ через `resume`, форк с `approvals__lead` отклоняет | `status: rejected`, `reply: null` |
+  | `question_agreed` | a question about 5 GHz Wi-Fi from the storefront, with no attachments | the ballots agree → `tier: cheap`, a `question` form, `advice`, `sent` |
+  | `defect_split_vote` | `lumen/samples/case_request.json`: a dented box, flicker and a warm controller, the question "did I wire it wrong or was it damaged in delivery?", an order date with the typo `03.09.2027`, and an invoice with no date | the ballots diverge: the test sets them directly through `node_output("vote__ballot", …, item_index=…)` — `defect`, `delivery`, `question` → `intent__escalate` @ `deepseek` → `tier: strong`; the first form takes the future date, `validate_record` reports `purchase_in_future`, and the second returns `null`: two passes of `record__extract`; `store_credit` after approval |
+  | `tool_approval_denied` | the same input; the `issue_store_credit` approval is refused with a reason | a decision without `store_credit`; the `illustrate` node is replaced by a scripted `FunctionModel` (`test_denied_tool_approval_withholds_credit_with_scripted_painter`): the recording budget is at most three image generations |
+  | `painter_fallback` | the same input, with a `provider_fault` on the primary `painter` model | `illustrate` is answered by `openai/gpt-5-image-mini` |
+  | `fork_lead_reject` | the same input; the lead approves the reply through `resume`, and a fork from `approvals__lead` rejects it | `status: rejected`, `reply: null` |
 
-  Четыре сценария с дефектом делят запросы до одобрения тула: кассеты `defect_split_vote` скопированы в остальные три до
-  записи, а неиспользуемые файлы после записи удалены по трассе загрузок реплея. Ролик `clip` и голос `voice` остаются
-  заглушками `MockTransport`, MCP хелпдеска — `McpToolStub`. После каждого теста движок останавливается: DBOS ставит свой пул
-  потоков пулом по умолчанию цикла событий, а anyio закрывает его в конце теста.
-- **Evals.** В корневой `evals/<воркфлоу>/` того воркфлоу, чей инференс оценивают (`evals/support_case/`). Датасет
-  `reply_cases.yaml` (id — имя файла, ключа `name` нет) — входы `revise` (с `product` и видом лампы), `metadata.split: train|dev|test`. Eval `reply_quality.yaml`:
-  `inference: revise`, `agent: gpt`, `dataset: reply_cases`, скореры — те же ссылки на оценщиков, что у проверок (O11):
-  `critique` (continuous) — судья `inference: critique`, `agent: deepseek`, тот же инференс, что у одиночного судьи
-  `polish__critique`; `citations` (binary) — `use: citations_in_sources` с тем же `with`, что у проверки `revise`;
-  `promises` (binary) — `run: @root.code.support_case:promises_match_resolution`, та же функция из `code/` и та же ссылка, что
-  у проверки `retry`; `cost_usd` — `use: cost_usd`. Гейт как в 13 §8 (`primary: [critique]`, `safety: [citations, promises,
-  cost_usd]`, `min_dataset: 200` → на примере честный `GATE_UNAVAILABLE`); `optimization {engine: gepa, objective: critique,
-  reflection_agent: mistral, max_metric_calls: 400, stop_score: 0.92}` — GEPA правит `revise.prompt.md` и файлы вариантов
-  `revise.variants/lamp_guide/` как отдельные текстовые единицы. Цель eval — пара инференс + агент — **предложение — нет в ADR**
-  (13 §4, ADR-0029 §9).
+  The four defect scenarios share every request up to the tool approval: the `defect_split_vote` cassettes were copied
+  into the other three before recording, and the files left unused after recording were removed by following the
+  replay load trace. The `clip` and `voice` tools stay `MockTransport` stubs, and the helpdesk MCP stays an
+  `McpToolStub`. The engine is stopped after every test: DBOS installs its own thread pool as the event loop's
+  default, and anyio closes it at the end of the test.
+- **Evals.** They live in the root `evals/<workflow>/` of the workflow whose inference they score
+  (`evals/support_case/`). The dataset `reply_cases.yaml` (its id is the file name, with no `name` key) holds `revise`
+  inputs (with `product` and a lamp kind) and `metadata.split: train|dev|test`. The eval `reply_quality.yaml` has
+  `inference: revise`, `agent: gpt`, `dataset: reply_cases`, and scorers that are the same evaluator references the
+  checks use (O11): `critique` (continuous) is the judge `inference: critique`, `agent: deepseek` — the same inference
+  the single judge `polish__critique` uses; `citations` (binary) is `use: citations_in_sources` with the same `with`
+  as the `revise` check; `promises` (binary) is `run: @root.code.support_case:promises_match_resolution`, the same
+  function from `code/` and the same reference as the `retry` check; and `cost_usd` is `use: cost_usd`. The gate is as
+  in 13 §8 (`primary: [critique]`, `safety: [citations, promises, cost_usd]`, `min_dataset: 200` → an honest
+  `GATE_UNAVAILABLE` on this example); `optimization {engine: gepa, objective: critique, reflection_agent: mistral,
+  max_metric_calls: 400, stop_score: 0.92}` — GEPA edits `revise.prompt.md` and the files under
+  `revise.variants/lamp_guide/` as separate text units. That an eval targets an inference and agent pair is a
+  **proposal — not in an ADR** (13 §4, ADR-0029 §9).
 
-## 11. Хост и режимы исполнения
+## 11. The host and the execution modes
 
-| Режим | Где |
+| Mode | Where |
 |---|---|
-| Импорт в процесс: `run` и `start` → `waits` → `resume` → `result` | `lumen.app.handle_case`: `Project.load(lumen)`, `flow_typed("support_case", CaseRequest, CaseOutcome)`; `tests/support.py` добавляет `resume_request` |
-| Приложение ASGI | `main.app` — `create_local_app`: API, Studio, MCP, чат, движок в lifespan, локальный токен; `main.host_application()` монтирует его на `/aqven` в чужое приложение FastAPI через `local_app_lifespan`; `AQVEN_STUDIO`, `AQVEN_HOST`, `AQVEN_PORT`, `AQVEN_OPEN_BROWSER` читаются после `.env` |
-| Любой HTTP-клиент | контракт в `/api/openapi.json` и `/api/schemas/events`, SSE и `Authorization: Bearer`; curl-примеры — в [README.md](README.md); наш `AqvenClient` — только удобство, его тесты живут в `packages/aqven/tests/client/` |
-| MCP и Claude Code | `.mcp.json` → `http://127.0.0.1:5180/mcp/`; тулы `run_start`, `run_list`, `run_get_node`, `run_resume`, `run_fork` (23 §13.4) |
-| Студия | `aqven studio lumen` — сервер на 127.0.0.1 с токеном запуска и браузер; `aqven dev lumen --dev-origin http://localhost:5173` — разработка студии на Vite |
-| CLI | работают `generate`, `check` (сначала генерирует типы), `schema`, `tree` (сущности по видам с путями файлов, вывод — в [README.md](README.md)), `refs KIND:ID` (определение, входящие и исходящие ссылки: `refs inference:revise`), `run support_case --root lumen --input lumen/samples/case_request.json --human-answers lumen/samples/answers.json` (локальный прогон без сервера, события печатаются по мере появления), `serve`, `studio`, `dev`, `mcp` (stdio-мост: берёт работающий сервер проекта или запускает его в фоне); отвечают «не реализовано» с кодом выхода 2 — `fmt`, `plan`, `build`, `eval --eval reply_quality`, `optimize --eval reply_quality` |
-| pytest без сети | `tests/test_check.py` (негативы в том числе `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `E_CODE_NOT_FOUND`, `E_ALIAS_UNKNOWN`), `tests/test_support_case.py` (`aqven_engine`: пять сценариев §10 на кассетах `replay_strict` при `ALLOW_MODEL_REQUESTS = False`, `ScriptedHuman`, одобрение и отказ тула, фолбэк `painter` через `provider_fault`, заглушки MCP, HTTP-тулы на `MockTransport`, форк). Запись кассет — `AQVEN_LIVE=1` с ключом OpenRouter: режим `record_new` проигрывает записанное и дописывает новое на моделях самих агентов, тестового профиля моделей нет; каждый сценарий записывается отдельным запуском pytest |
+| Import in process: `run` and `start` → `waits` → `resume` → `result` | `lumen.app.handle_case`: `Project.load(lumen)`, `flow_typed("support_case", CaseRequest, CaseOutcome)`; `tests/support.py` adds `resume_request` |
+| ASGI application | `main.app` — `create_local_app`: API, Studio, MCP, chat, the engine in the lifespan, and the local token; `main.host_application()` mounts it at `/aqven` inside another FastAPI application through `local_app_lifespan`; `AQVEN_STUDIO`, `AQVEN_HOST`, `AQVEN_PORT` and `AQVEN_OPEN_BROWSER` are read after `.env` |
+| Any HTTP client | the contract is in `/api/openapi.json` and `/api/schemas/events`, with SSE and `Authorization: Bearer`; the curl examples are in [README.md](README.md); our `AqvenClient` is only a convenience, and its tests live in `packages/aqven/tests/client/` |
+| MCP and Claude Code | `.mcp.json` → `http://127.0.0.1:5180/mcp/`; the tools `run_start`, `run_list`, `run_get_node`, `run_resume`, `run_fork` (23 §13.4) |
+| Studio | `aqven studio lumen` — a server on 127.0.0.1 with a launch token, plus a browser; `aqven dev lumen --dev-origin http://localhost:5173` — Studio development on Vite |
+| CLI | working: `generate`, `check` (which generates the types first), `schema`, `tree` (entities by kind with file paths, output in [README.md](README.md)), `refs KIND:ID` (the definition plus incoming and outgoing references: `refs inference:revise`), `run support_case --root lumen --input lumen/samples/case_request.json --human-answers lumen/samples/answers.json` (a local run with no server, printing events as they appear), `serve`, `studio`, `dev`, `mcp` (the stdio bridge: it takes the project's running server or starts one in the background), and `eval --eval reply_quality`; answering "not implemented" with exit code 2 — `fmt`, `plan`, `build`, `optimize --eval reply_quality` |
+| pytest with no network | `tests/test_check.py` (negatives, among them `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `E_CODE_NOT_FOUND`, `E_ALIAS_UNKNOWN`) and `tests/test_support_case.py` (`aqven_engine`: the five scenarios of §10 on `replay_strict` cassettes with `ALLOW_MODEL_REQUESTS = False`, `ScriptedHuman`, tool approval and refusal, the `painter` fallback through `provider_fault`, MCP stubs, HTTP tools on `MockTransport`, and a fork). Recording the cassettes takes `AQVEN_LIVE=1` with an OpenRouter key: `record_new` replays what exists and appends what is new, against the agents' own models — there is no test model profile — and each scenario is recorded by its own pytest run |
 
 ```
 uv run aqven check examples/lumen
@@ -748,60 +802,70 @@ claude mcp add aqven -- uv run aqven mcp examples/lumen
 uv run pytest examples
 ```
 
-## 12. Изменения библиотеки `aqven`
+## 12. Changes to the `aqven` library
 
-Цель — меньше кода: удаляется всё, что пример не использует.
+The goal is less code: everything the example does not use is removed.
 
-| Модуль | Изменение |
+| Module | Change |
 |---|---|
-| `aqven.spec` | Новые виды `Inference`, `Agent`, `Tool`, `McpServer` (модули `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `profiles.py` (таблица §6.4, `parse_model`, `resolve_profile`); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` + `on_fail`, `threshold`; `ScorerSpec` = `EvaluatorRef` + `id`, `kind`. `ProjectSpec` без `defaults`, `models`, `roles`, `mcp_servers`; `ProviderSpec.id` — имя провайдера. Узел `llm` = `inference?` (нет — `<узел>.inference.yaml` рядом с `<узел>.node.yaml`) + `agent` + привязки; `tool` = `tool` + привязки; `call` — вызываемый воркфлоу + привязки (O17). Без `determinism` и `ttl_ms` у узлов `code` и тулов (O12). Один `Limits` вместо `Budget`, `AgentLimits`, `timeout_ms`, `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — без блока итерации, `stop_when`, `stagnation`, `score`, `quorum`, `on_branch_error`; `max_iter` обязателен. У `map` нет `max_items`. Удалены `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, роли и каталог, `ToolCallRecord`, проекции `via`, общие промты по ключу, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. Билдер: `Inference` вместо `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
-| `aqven.policies` | Контракты слотов (`JoinPolicy`, `StopPolicy`, `SelectPolicy`, `ItemErrorPolicy`, `Evaluator`), решения (`Wait`, `Done`, `Fail`, `Continue`, `Stop`, `Skip`, `Default`), `EvalContext`, `Verdict`, реестр встроенных `BUILTINS` |
-| `aqven.loader` | Сделано (O14, O15, O22): рекурсивный поиск `*.yaml` с `apiVersion: aqven/v1`, разбор по `kind`, id — имя файла до первой точки (у `flow.yaml` — имя папки), `E_KIND_PATH_MISMATCH` по суффиксу, уникальность по виду, узел — ближайшему `flow.yaml` выше, неявный инференс `<узел>.inference.yaml` рядом с `<узел>.node.yaml`, тексты `<инференс>.prompt.md` и `<инференс>.variants/<слот>/*.md` по префиксу инференса, include от файла, папки инференса или корня, голое имя в `run` — `<id>.py` рядом, загрузка по пути файла. Сделано (O17, O18, O20): вызов воркфлоу узлом `call` (`CallNodeSpec.flow`, контракт `requires` у `FlowSpec`); явный `prompt` и вариант — путь к `.md`; `W_PROMPT_SHADOWED`; псевдонимы ссылок на код `aliases.py`. Осталось: `@flow/` в `{% include %}` (§14) |
-| `aqven.codegen` | Сделано (O19, O22): `aqven generate` пишет в `types.py` корня модуля модели типов, `<Инференс>In`/`<Инференс>Out` каждого инференса, `<Тул>In`/`<Тул>Out` каждого тула с `run` и `<Воркфлоу><Узел>In`/`<Воркфлоу><Узел>Out` каждого шага `code`, `aqven check` генерирует перед проверкой, `W_GENERATED_STALE`; плагин pytest перегенерирует до conftest |
-| `aqven.check` | `registry` (агенты, тулы, MCP, провайдеры, фолбэки, субагенты, одобрение), `inferences` (промт, варианты, примеры, allowed-set), `policies` (политики слотов и оценщики проверок и скореров), `capabilities` (медиа, strict, PII по агенту и фолбэкам) вместо `catalog`, `strict`, `media`, `agents`; привязки узлов сверяются со входами инференса, тула, вызываемого воркфлоу |
-| `aqven.diagnostics` | Новые `E_INFERENCE_UNKNOWN`, `E_AGENT_UNKNOWN`, `E_TOOL_UNKNOWN`, `E_INPUT_UNBOUND`, `E_INPUT_UNKNOWN`, `E_CHECK_PARAMS`, `E_EXAMPLE_INVALID`, `E_TEXT_OUTPUT`, `E_APPROVAL_TOOL`, `E_AGENT_RECURSION`, `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_VARIANT_NOT_EXHAUSTIVE`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `W_PROMPT_SHADOWED` (O18); удаляются `E_PROMPT_MISPLACED` и `E_PROMPT_AMBIGUOUS` (O18: путь в `prompt` законен, рядом лежащий `<инференс>.prompt.md` — предупреждение), `E_COMPONENT_UNKNOWN` и `E_COMPONENT_RECURSION` переходят на воркфлоу (O17); удалены `E_MODEL_ROLE_UNKNOWN`, `E_MODEL_UNKNOWN`, `E_LOOP_UNBOUNDED`, `E_MAP_UNBOUNDED`, `E_APPROVAL_MISSING`, `E_COMPONENT_BINDING`, `E_FLOW_SOURCE_CONFLICT`, резервные `W_DYNAMIC_EXCESS`, `W_LOCK_STALE`, `E_PROMPT_BUDGET` |
-| `aqven.runtime` | `NodeExecution.agent`, `.inference`; `CheckOutcome {check, on_fail, passed, feedback, attempt}`; `ForkOverrides.agent` вместо `model_profile`; `ProviderFault.model` — строка модели; удалены `RecordedToolOutput`, `RawHumanMessage`, `narrowing.py`, `issues.py` |
-| `aqven.testing` | удалены `recorded_tool_output`, `ScriptedHuman.raw`, `DirectoryBlobStore`, фикстура `blob_store` |
-| `aqven.cli`, `aqven.client`, `aqven.evals` | без изменений формы; `EvalSpec` — `inference` + `agent`, судья и reflection — агенты |
+| `aqven.spec` | New kinds `Inference`, `Agent`, `Tool`, `McpServer` (the modules `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `profiles.py` (the table of §6.4, `parse_model`, `resolve_profile`); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` plus `on_fail` and `threshold`; `ScorerSpec` = `EvaluatorRef` plus `id` and `kind`. `ProjectSpec` loses `defaults`, `models`, `roles` and `mcp_servers`; `ProviderSpec.id` is the provider name. An `llm` node is `inference?` (absent means `<node>.inference.yaml` beside `<node>.node.yaml`) plus `agent` plus bindings; `tool` is `tool` plus bindings; `call` is the called workflow plus bindings (O17). No `determinism` or `ttl_ms` on `code` nodes and tools (O12). One `Limits` instead of `Budget`, `AgentLimits`, `timeout_ms` and `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — with no iteration block, `stop_when`, `stagnation`, `score`, `quorum` or `on_branch_error`; `max_iter` is required. `map` has no `max_items`. Removed: `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, roles and the catalogue, `ToolCallRecord`, `via` projections, shared prompts by key, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. The builder: `Inference` instead of `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
+| `aqven.policies` | The slot contracts (`JoinPolicy`, `StopPolicy`, `SelectPolicy`, `ItemErrorPolicy`, `Evaluator`), the decisions (`Wait`, `Done`, `Fail`, `Continue`, `Stop`, `Skip`, `Default`), `EvalContext`, `Verdict`, and the `BUILTINS` registry |
+| `aqven.loader` | Done (O14, O15, O22): the recursive search for `*.yaml` with `apiVersion: aqven/v1`, sorting by `kind`, an id as the file name up to the first dot (the folder name for `flow.yaml`), `E_KIND_PATH_MISMATCH` from the suffix, uniqueness per kind, a node belonging to the nearest `flow.yaml` above it, the implicit `<node>.inference.yaml` beside `<node>.node.yaml`, the texts `<inference>.prompt.md` and `<inference>.variants/<slot>/*.md` by the inference prefix, includes resolved from the file, the inference folder or the root, and a bare name in `run` meaning `<id>.py` beside it, loaded by file path. Done (O17, O18, O20): calling a workflow from a `call` node (`CallNodeSpec.flow`, the `requires` contract on `FlowSpec`); an explicit `prompt` and variant as a path to a `.md`; `W_PROMPT_SHADOWED`; the code reference aliases in `aliases.py`. Left: `@flow/` in `{% include %}` (§14) |
+| `aqven.codegen` | Done (O19, O22): `aqven generate` writes into `types.py` at the module root the type models, `<Inference>In`/`<Inference>Out` for every inference, `<Tool>In`/`<Tool>Out` for every tool with `run`, and `<Workflow><Node>In`/`<Workflow><Node>Out` for every `code` step; `aqven check` generates before checking; `W_GENERATED_STALE`; and the pytest plugin regenerates before conftest |
+| `aqven.check` | `registry` (agents, tools, MCP, providers, fallbacks, subagents, approval), `inferences` (the prompt, variants, examples, allowed sets), `policies` (slot policies and the evaluators of checks and scorers) and `capabilities` (media, strict, PII by agent and fallbacks) instead of `catalog`, `strict`, `media` and `agents`; node bindings are checked against the inputs of the inference, the tool or the called workflow |
+| `aqven.diagnostics` | New: `E_INFERENCE_UNKNOWN`, `E_AGENT_UNKNOWN`, `E_TOOL_UNKNOWN`, `E_INPUT_UNBOUND`, `E_INPUT_UNKNOWN`, `E_CHECK_PARAMS`, `E_EXAMPLE_INVALID`, `E_TEXT_OUTPUT`, `E_APPROVAL_TOOL`, `E_AGENT_RECURSION`, `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_VARIANT_NOT_EXHAUSTIVE`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `W_PROMPT_SHADOWED` (O18); removed `E_PROMPT_MISPLACED` and `E_PROMPT_AMBIGUOUS` (O18: a path in `prompt` is legal, and a `<inference>.prompt.md` beside it is a warning); `E_COMPONENT_UNKNOWN` and `E_COMPONENT_RECURSION` move to workflows (O17); removed `E_MODEL_ROLE_UNKNOWN`, `E_MODEL_UNKNOWN`, `E_LOOP_UNBOUNDED`, `E_MAP_UNBOUNDED`, `E_APPROVAL_MISSING`, `E_COMPONENT_BINDING`, `E_FLOW_SOURCE_CONFLICT`, and the reserved `W_DYNAMIC_EXCESS`, `W_LOCK_STALE`, `E_PROMPT_BUDGET` |
+| `aqven.runtime` | `NodeExecution.agent`, `.inference`; `CheckOutcome {check, on_fail, passed, feedback, attempt}`; `ForkOverrides.agent` instead of `model_profile`; `ProviderFault.model` is a model string; removed `RecordedToolOutput`, `RawHumanMessage`, `narrowing.py`, `issues.py` |
+| `aqven.testing` | removed `recorded_tool_output`, `ScriptedHuman.raw`, `DirectoryBlobStore`, and the `blob_store` fixture |
+| `aqven.cli`, `aqven.client`, `aqven.evals` | no change in shape; `EvalSpec` is `inference` plus `agent`, and the judge and the reflection model are agents |
 
-## 13. Владение
+## 13. Ownership
 
-Раскладка по ролям (O19, O22) делает владельца папки владельцем всего в ней.
+Layout by role (O19, O22) makes the owner of a folder the owner of everything in it.
 
-| Владелец | Пути (от `examples/lumen/`, корень проекта — `examples/`) |
+| Owner | Paths (from `examples/lumen/`; the project root is `examples/`) |
 |---|---|
-| config | `aqven.yaml`, `types/`, `agents/` (с папкой `agents/resolver/` и инференсом субагента), `tools/`, `mcp/` |
-| workflow | `flows/support_case/`, `flows/judge_panel/` — воркфлоу, узлы, их инференсы, промты, варианты и код; `fragments/`, `code/`, `evals/` |
-| host | `app.py`, `__main__.py`, `samples/`, а в корне проекта `tests/`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.gitignore`, `pyproject.toml` |
+| config | `aqven.yaml`, `types/`, `agents/` (including the folder `agents/resolver/` and the subagent inference), `tools/`, `mcp/` |
+| workflow | `flows/support_case/`, `flows/judge_panel/` — the workflows, their nodes, inferences, prompts, variants and code; plus `fragments/`, `code/`, `evals/` |
+| host | `app.py`, `__main__.py`, `samples/`, and at the project root `tests/`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.gitignore`, `pyproject.toml` |
 
-`types.py` корня модуля не принадлежит никому: его пишет `aqven generate`. Чужие файлы только читаются; импорт типов и моделей
-входов-выходов инференсов, тулов и шагов из `lumen.types` и общего кода из `lumen.code` разрешён.
+`types.py` at the module root belongs to nobody: `aqven generate` writes it. Other people's files are read only;
+importing types and the input and output models of inferences, tools and steps from `lumen.types`, and shared code
+from `lumen.code`, is allowed.
 
-## 14. Открытые вопросы
+## 14. Open questions
 
-1. `MCPToolset` в pydantic-ai-slim 2.43.0 требует `fastmcp-slim[client]` и импортирует encode `httpx` (`pydantic_ai/mcp.py`)
-   — конфликт с «только httpx2» ADR-0025. Решить в движке: свой клиент MCP на `mcp` 2.2.0 или исключение.
-2. Seed на голос self-consistency O2 не выражает; пример разводит голоса входом `perspective`. Нужен ли агенту механизм выборок
-   без смены входа (и ключа кассеты) — решает владелец.
-3. Модель озвучки и путь опроса видео не сверены. Модели агентов — только OpenRouter, сверены 2026-09-17 (§6.2).
-4. Сокращённый срок ожидания человека в тестах отсутствует (23 ОВ 32): таймауты `escalate`/`default` в pytest не проигрываются.
-5. Вход `Dynamic` в записи реестра и в выходе воркфлоу пример не использует; правило для полей записей не описано.
-6. `init` задаёт входы узла тела только на первой итерации поверх его `in` — трактовка примера; O11 порядок наложения не
-   фиксирует.
-7. O20 разрешает `@flow/` в путях промтов, но `{% include %}` каркаса понимает только пути от файла, папки инференса и корня и
-   префикс `@root/`. Примеру это не мешает: фрагменты лежат в корневой `fragments/` и включаются `fragments/<имя>` с любой
-   глубины.
-8. Закрыт O22: фрагменты промтов — только `fragments/` корня.
-9. Закрыт O22: инференс субагента лежит в папке агента, `agents/resolver/research_policy.inference.yaml`.
-10. O19 говорит «перегенерирует conftest»; каркас делает это плагином pytest `aqven` (`pytest_load_initial_conftests` по
-    `aqven_project`), до импорта `conftest.py`, который сам импортирует `lumen.types`. Отдельного вызова в conftest
-    пример не держит.
-11. Генератор пишет строки длиннее 120 символов (`PolicyIdField`); хост снимает для `lumen/types.py` только E501 и исключает файл из `ruff format` своим `pyproject.toml`; заголовок ruff не отмечает.
-12. Повторные раунды одобрения тула в одном исполнении `llm` (23 ОВ 30) не решены: второй раунд открывает ожидание с тем же
-    адресом и попыткой, сценарный ответ в тот же топик с тем же ключом идемпотентности DBOS не доставляет, и прогон ждёт до
-    таймаута. Пример обходит это двумя путями: движок не спрашивает одобрения вызова с невалидными аргументами (сразу
-    `ModelRetry`), а отказ в `tool_approval_denied` приходит с причиной, после которой модель не повторяет вызов.
-13. `judges__qwen` в сценариях с дефектом не держит `rationale` ≤ 600 и обрывает JSON на `max_tokens: 1500`; панель
-    продолжает двумя судьями по политике `agreeing_verdicts`. Поднимать модель или лимит — решает владелец.
-14. Строки моделей примера не внесены во встроенную таблицу профилей `aqven.spec.profiles`; `gemini` и `painter` объявляют
-    `capabilities` сами.
+1. `MCPToolset` in pydantic-ai-slim 2.43.0 requires `fastmcp-slim[client]` and imports encode `httpx`
+   (`pydantic_ai/mcp.py`) — a conflict with the "httpx2 only" rule of ADR-0025. To be decided in the engine: our own
+   MCP client on `mcp` 2.2.0, or an exception.
+2. O2 cannot express a seed on a self-consistency ballot; the example separates the ballots by the `perspective`
+   input. Whether an agent needs a sampling mechanism that does not change the input (and the cassette key) is the
+   owner's call.
+3. The speech model and the video polling path have not been verified. The agent models are OpenRouter only and were
+   verified on 2026-09-17 (§6.2).
+4. There is no shortened human wait in the tests (23 OQ 32): the `escalate`/`default` timeouts are never played out
+   under pytest.
+5. The example does not use a `Dynamic` input inside a registry record or in a workflow output; the rule for record
+   fields is not described.
+6. `init` sets the inputs of a body node only on the first pass, over its own `in` — the example's reading; O11 does
+   not fix the overlay order.
+7. O20 allows `@flow/` in prompt paths, but the framework's `{% include %}` understands only paths from the file, the
+   inference folder and the root, plus the `@root/` prefix. This does not hinder the example: the fragments live in
+   the root `fragments/` and are included as `fragments/<name>` from any depth.
+8. Closed by O22: prompt fragments live only in the root `fragments/`.
+9. Closed by O22: a subagent's inference lives in the agent's folder, `agents/resolver/research_policy.inference.yaml`.
+10. O19 says "regenerates conftest"; the framework does it with the `aqven` pytest plugin
+    (`pytest_load_initial_conftests` keyed on `aqven_project`), before `conftest.py` — which itself imports
+    `lumen.types` — is imported. The example keeps no separate call in conftest.
+11. The generator writes lines longer than 120 characters (`PolicyIdField`); the host disables only E501 for
+    `lumen/types.py` and excludes the file from `ruff format` in its own `pyproject.toml`; ruff does not flag the
+    header.
+12. Repeated tool-approval rounds inside one `llm` execution (23 OQ 30) are unsolved: the second round opens a wait at
+    the same address and attempt, a scripted answer into the same topic with the same DBOS idempotency key is not
+    delivered, and the run waits until the timeout. The example works around it two ways: the engine does not ask for
+    approval of a call with invalid arguments (it raises `ModelRetry` at once), and the refusal in
+    `tool_approval_denied` carries a reason after which the model does not repeat the call.
+13. In the defect scenarios `judges__qwen` does not keep `rationale` within 600 characters and truncates its JSON at
+    `max_tokens: 1500`; the panel carries on with two judges under the `agreeing_verdicts` policy. Whether to raise
+    the model or the limit is the owner's call.
+14. The example's model strings are not in the built-in profile table `aqven.spec.profiles`; `gemini` and `painter`
+    declare `capabilities` themselves.
