@@ -109,6 +109,44 @@ before ten nodes reference it.
 Then write the dataset: three or four real cases with the input and the expected result, under `datasets/`. A flow
 without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
 
+## The development loop
+
+"Make it good" is not a stopping condition. Fix what good means **before** you start changing things, or you will
+edit until you run out of patience instead of until the flow works.
+
+**1. Write the target.** A dataset of real cases, then the scorers that say whether a case passed. Both are files.
+
+| What you want to measure | How |
+|---|---|
+| The whole flow on real cases | a dataset with `flow: <flow_id>`, then `dataset_batch_start` and `dataset_batch_get` |
+| One `llm` step, with numbers | a dataset without `flow:`, an `evals/<flow>/<eval>.yaml` over it, then `eval_run_start`, `eval_run_get`, `eval_gate` |
+
+An eval always scores **one inference**, not a whole flow: `inference` and `agent` are required in it. So a batch
+tells you what the flow produced, and an eval tells you how good one step is. You usually need both.
+
+Scorers, cheapest first: built-in — `not_empty`, `max_words`, `language`, `no_pii`, `regex`, `unique_items`,
+`ids_in_allowed_set`, `citations_in_sources`, `cost_usd`, `latency_ms`; your own function with `run:`; and only
+when nothing else fits, a model as judge with `inference:` and `agent:`. A judge costs tokens on every case and
+has its own error — do not reach for it to check something `regex` can check.
+
+**2. Then the loop.**
+
+1. `aqven check` first, every time. It is free and finds broken wiring before a single token is spent.
+2. Change **one** thing. Two changes at once and you cannot tell which one moved the number.
+3. Measure with the same dataset as last time. A new dataset means a new number, not a better flow.
+4. Read the cases that failed, not the average. The average hides the one input that breaks everything.
+5. For a wrong `llm` output, run `prompt_preview` before touching the prompt. An empty or literal placeholder in the
+   message means the data wiring is wrong, and no rewording fixes that.
+6. Repeat from 2.
+
+**3. Stop when the scorers say so**, not when the output looks nice to you. Pass `baseline_run_id` to
+`eval_run_start` to compare against the previous run and get `eval_gate` to judge the move: it reports which metrics
+went up, which went down, and whether the change is an improvement at all. A gate with `min_dataset` will not judge a
+dataset smaller than that — a four-case dataset is for finding bugs, not for deciding a release.
+
+**4. Lock the fix.** A bug you fixed without a case for it comes back. Add the failing input to the dataset, and, in
+a project with `tests/`, a scenario test that pins the branch with `node_output` so the fix survives the next edit.
+
 ## How to read `aqven check`
 
 Every diagnostic has a code, a file with a path inside it, a message and often a hint that names the exact fix.
@@ -141,6 +179,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven generate __package__` | writes `__package__/types.py` |
 | `uv run aqven tree __package__` | entities by kind with their files |
 | `uv run aqven run support_case --root __package__ --input __package__/samples/case_request.json` | runs a flow without a server |
+| `uv run aqven eval __package__ --eval reply_quality` | scores every case of the eval dataset; `--baseline <run>` feeds the gate |
 | `uv run aqven mcp __package__` | MCP over stdio, registered in `.mcp.json` |
 | `uv run python -m __package__` | the same server from the project's own entry point |
 | `uv run pytest` | offline tests |
