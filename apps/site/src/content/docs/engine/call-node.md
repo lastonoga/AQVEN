@@ -54,8 +54,7 @@ flows/
       ...
 ```
 
-The showcase is written for a Russian-market storefront, so its descriptions are in Russian; the files
-below are translated to English for this page. `panel.node.yaml`:
+The showcase's own file descriptions are translated to English for this page. `panel.node.yaml`:
 
 ```yaml
 apiVersion: "aqven/v1"

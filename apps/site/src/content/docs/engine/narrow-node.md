@@ -36,9 +36,8 @@ kind of case it turns out to be — down to `CaseRecord`, a discriminated union 
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its file lives at `flows/support_case/nodes/to_record/to_record.node.yaml`. The showcase is written
-for a Russian-market storefront, so its description is in Russian; the file below is translated to
-English for this page:
+Its file lives at `flows/support_case/nodes/to_record/to_record.node.yaml`. The showcase's own file
+description is translated to English for this page:
 
 ```yaml
 apiVersion: "aqven/v1"

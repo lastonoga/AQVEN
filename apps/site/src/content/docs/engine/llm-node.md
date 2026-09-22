@@ -34,9 +34,8 @@ the `decide` node in its `judge_panel` flow. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its files live at `flows/judge_panel/nodes/decide/`. The showcase is written for a Russian-market
-storefront, so its descriptions are in Russian; every file below is translated to English for this
-page. `tie_break.node.yaml` has no `inference` key — the adjacent `tie_break.inference.yaml` supplies
+Its files live at `flows/judge_panel/nodes/decide/`. The showcase's own file descriptions are translated
+to English for this page. `tie_break.node.yaml` has no `inference` key — the adjacent `tie_break.inference.yaml` supplies
 it by filename:
 
 ```yaml

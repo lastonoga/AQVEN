@@ -53,9 +53,8 @@ Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its node file lives at `flows/support_case/nodes/search_kb/search_kb.node.yaml`. The showcase is
-written for a Russian-market storefront, so its descriptions are in Russian; the file below is
-translated to English for this page. It carries no contract of its own, only a `tool` reference and
+Its node file lives at `flows/support_case/nodes/search_kb/search_kb.node.yaml`. The showcase's own
+file descriptions are translated to English for this page. It carries no contract of its own, only a `tool` reference and
 bindings:
 
 ```yaml

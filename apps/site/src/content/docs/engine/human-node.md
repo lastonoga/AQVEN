@@ -40,9 +40,8 @@ node in its `support_case` flow. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its file lives at `flows/support_case/nodes/approvals/lead.node.yaml`. The showcase is written for a
-Russian-market storefront, so its descriptions are in Russian; the file below is translated to English
-for this page:
+Its file lives at `flows/support_case/nodes/approvals/lead.node.yaml`. The showcase's own file
+descriptions are translated to English for this page:
 
 ```yaml
 apiVersion: "aqven/v1"

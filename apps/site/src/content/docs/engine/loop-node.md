@@ -57,8 +57,7 @@ Its file lives at `flows/support_case/nodes/polish/polish.node.yaml`, next to it
 `polish__revise`, `polish__critique` — so they stay distinct from any other `revise` or `critique`
 elsewhere in the project, the same way any nested node's id is qualified by its container.
 
-The showcase is written for a Russian-market storefront, so its descriptions are in Russian; the file
-below is translated to English for this page:
+The showcase's own file descriptions are translated to English for this page:
 
 ```yaml
 apiVersion: "aqven/v1"
