@@ -169,4 +169,8 @@ and what it adds.
   generation past what the provider allows needs a different flow shape, not a bigger field.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
+- [How to check your model providers are configured](/engine/check-providers/) — what `output.strict`
+  above actually does, and when `aqven models check --live` proves it's safe to turn on.
+- [How to find a model's real structural limits](/engine/check-shapes/) — before shaping `out` fields
+  below with real nesting, find how deep this agent's model actually holds up.
 - [Node specifications](/reference/nodes/) — every field on `LlmNodeSpec`, generated from the code.

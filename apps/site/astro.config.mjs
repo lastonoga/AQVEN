@@ -98,6 +98,7 @@ export default defineConfig({
                 { slug: "engine/run-locally" },
                 { slug: "engine/secrets" },
                 { slug: "engine/check-providers" },
+                { slug: "engine/check-shapes" },
               ],
             },
           ],

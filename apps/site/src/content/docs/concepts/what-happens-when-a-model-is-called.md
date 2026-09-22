@@ -55,6 +55,11 @@ output:
   retries: 4
 ```
 
+`strict: false` here is what makes this retry the one doing the work: it asks AQVEN to validate the
+response itself rather than asking the provider to constrain generation to the schema up front — every
+template ships this way by default. See [How to check your model providers are
+configured](/engine/check-providers/) for what turning `strict: true` on actually requires.
+
 Here's the transport retry in action: a call gets back a `429` response with `retry-after: 2`, twice in a
 row, then succeeds on the third attempt — each retry waits the two seconds the provider asked for, not a
 guess.
@@ -103,5 +108,10 @@ output is, and only for the five patterns listed above.
   three behaviors, and everything else AQVEN takes as-is versus adds itself.
 - [Agent specification](/reference/agents/) — the literal `output.retries`, `on_refusal`, and
   `on_truncated` fields, their types, and their defaults.
+- [How to check your model providers are configured](/engine/check-providers/) — what `output.strict`
+  does instead of leaning on this retry, and what `aqven check` requires before it compiles.
+- [How to find a model's real structural limits](/engine/check-shapes/) — the repair retry can fix a
+  wrong shape once; this finds the depth, list length and enum size where a model stops getting it right
+  at all.
 - [How to call a model](/engine/llm-node/) — where an agent's `output.retries` setting actually lives in
   a project, next to the model string and call settings.

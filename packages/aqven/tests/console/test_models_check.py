@@ -16,6 +16,7 @@ from aqven.cli import main
 from aqven.console.command import OutputFormat
 from aqven.console.models import ModelsCheckRequest, check_models
 from aqven.engine.llm import OUTPUT_TOOL_NAME
+from aqven.runtime.address import JsonObject
 from aqven.testing import copy_project
 from aqven_llm import ProviderModelFactory
 
@@ -62,9 +63,14 @@ async def tool_answer_model(model: str) -> Model:
 
 
 def request(
-    root: Path, target: str | None, *, live: bool, output: OutputFormat = OutputFormat.TEXT
+    root: Path,
+    target: str | None,
+    *,
+    live: bool,
+    output: OutputFormat = OutputFormat.TEXT,
+    provider_options: JsonObject | None = None,
 ) -> ModelsCheckRequest:
-    return ModelsCheckRequest(root=root, output=output, target=target, live=live)
+    return ModelsCheckRequest(root=root, output=output, target=target, live=live, provider_options=provider_options)
 
 
 def test_offline_report_shows_profile_support_and_the_auto_resolution(shop: Path) -> None:
@@ -171,3 +177,29 @@ def test_models_check_without_a_project_prints_the_diagnostic(
     assert main(["models", "check", "--project", str(tmp_path), "--json"]) == 1
 
     assert json.loads(capsys.readouterr().out)["diagnostics"][0]["code"] == "E_PROJECT_NOT_FOUND"
+
+
+def test_provider_options_reach_the_probed_model(shop: Path) -> None:
+    seen: list[object] = []
+
+    async def recording_model(model: str) -> Model:
+        async def stream(
+            messages: list[ModelMessage], info: AgentInfo
+        ) -> AsyncIterator[str | dict[int, DeltaToolCall]]:
+            settings = info.model_settings
+            seen.append(None if settings is None else settings.get("extra_body"))
+            yield ANSWER
+
+        return FunctionModel(stream_function=stream, model_name=model)
+
+    options: JsonObject = {"provider": {"require_parameters": True}}
+    check_models(request(shop, GPT_OSS, live=True, provider_options=options), recording_model, StringIO())
+
+    assert seen
+    assert all(sent == options for sent in seen)
+
+
+def test_provider_options_must_be_valid_json(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["models", "check", "cheap", "--project", str(shop), "--provider-options", "not json"]) == 1
+
+    assert "not valid JSON" in capsys.readouterr().err
