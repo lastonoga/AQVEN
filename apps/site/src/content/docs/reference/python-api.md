@@ -301,6 +301,7 @@ NewType creates simple unique types with almost zero runtime overhead.
 | `mcp_url` | `str \| None` | `None` |
 | `compiler` | `aqven.server.workspace.ProjectCompiler \| None` | `None` |
 | `environ` | `collections.abc.Mapping[str, str]` | `factory` |
+| `shutdown_signal` | `asyncio.locks.Event \| None` | `None` |
 
 
 ## check_project
