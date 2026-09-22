@@ -42,6 +42,7 @@ const requiredScreenshots = [
   "/images/studio/runs.png",
   "/images/studio/node-inspector.png",
   "/images/studio/evaluations.png",
+  "/images/studio/dataset-controls.png",
 ];
 
 for (const marker of requiredScreenshots) {

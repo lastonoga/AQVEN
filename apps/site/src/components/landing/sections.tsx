@@ -13,6 +13,7 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
+import { useState } from "react";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,15 @@ import {
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
-interface Row {
+interface Shot {
+  src: string;
+  alt: string;
+}
+
+interface Topic {
   heading: string;
   body: string;
-  image: string;
-  alt: string;
+  shots: Shot[];
 }
 
 const TRUST = ["Source available", "AQVEN License", "Python", "Runs locally", "No account needed"];
@@ -52,30 +57,50 @@ const STAKES = [
   { icon: <Database className="size-5" />, label: "Records" },
 ];
 
-const ROWS: Row[] = [
+const TOPICS: Topic[] = [
   {
     heading: "See every step on one screen.",
     body: "What runs, what feeds what, where a person has to approve. Read from your files, not from a diagram somebody drew six months ago.",
-    image: "/images/studio/project-flows.png",
-    alt: "AQVEN Studio showing a project and its workflows",
+    shots: [
+      {
+        src: "/images/studio/project-flows.png",
+        alt: "AQVEN Studio showing a project and its workflows",
+      },
+    ],
   },
   {
     heading: "Find where a bad result came from.",
     body: "Open the exact case and walk back to the first step that didn't do what it should.",
-    image: "/images/studio/runs.png",
-    alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
+    shots: [
+      {
+        src: "/images/studio/runs.png",
+        alt: "AQVEN Studio showing a recorded run with cost, duration and completed steps",
+      },
+    ],
   },
   {
     heading: "Look inside any step.",
     body: "What went in, what came out, which model answered, what it cost. Raw values, not a summary.",
-    image: "/images/studio/node-inspector.png",
-    alt: "AQVEN Studio node inspector showing the input and output of one step",
+    shots: [
+      {
+        src: "/images/studio/node-inspector.png",
+        alt: "AQVEN Studio node inspector showing the input and output of one step",
+      },
+    ],
   },
   {
     heading: "See if quality is going up or down.",
     body: "Not one failure at a time. The direction, across every case you care about, after every change.",
-    image: "/images/studio/evaluations.png",
-    alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
+    shots: [
+      {
+        src: "/images/studio/evaluations.png",
+        alt: "AQVEN Studio evaluations view showing scorers, a dataset and a policy",
+      },
+      {
+        src: "/images/studio/dataset-controls.png",
+        alt: "AQVEN Studio Datasets tab with a CSV upload, a selected dataset and its list of cases",
+      },
+    ],
   },
 ];
 
@@ -151,6 +176,48 @@ export const Problem = () => (
   </Section>
 );
 
+const TopicPanel = ({ topic }: { topic: Topic }) => {
+  const [active, setActive] = useState(0);
+  const shot = topic.shots[active];
+
+  return (
+    <div>
+      <p className="max-w-2xl text-muted-foreground lg:text-lg">{topic.body}</p>
+      {/* Fixed-ratio frame: screenshots vary from 1.5 to 4.35 in aspect, so the image is
+          matted inside a constant box. Switching tabs never shifts the layout. */}
+      <div className="mt-6 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-foreground/10">
+        <img
+          src={shot.src}
+          alt={shot.alt}
+          loading="lazy"
+          className="max-h-full max-w-full object-contain"
+        />
+      </div>
+      {topic.shots.length > 1 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {topic.shots.map((item, index) => (
+            <button
+              key={item.src}
+              type="button"
+              onClick={() => setActive(index)}
+              aria-pressed={index === active}
+              aria-label={item.alt}
+              className={cn(
+                "flex h-14 w-24 items-center justify-center overflow-hidden rounded-md bg-muted ring-1 transition duration-200",
+                index === active
+                  ? "ring-foreground/40"
+                  : "opacity-60 ring-foreground/10 hover:opacity-100",
+              )}
+            >
+              <img src={item.src} alt="" className="max-h-full max-w-full object-contain" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const StudioEvidence = () => (
   <Section>
     <div className="mx-auto max-w-3xl text-center">
@@ -159,30 +226,28 @@ export const StudioEvidence = () => (
       </h2>
     </div>
     <Tabs
-      defaultValue={ROWS[0].heading}
+      defaultValue={TOPICS[0].heading}
       orientation="vertical"
       className="mt-14 grid grid-cols-1 gap-4 rounded-xl border border-border p-4 lg:mt-20 lg:grid-cols-4"
     >
       <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-lg bg-muted p-1.5">
-        {ROWS.map((row) => (
+        {TOPICS.map((topic) => (
           <TabsTrigger
-            key={row.heading}
-            value={row.heading}
+            key={topic.heading}
+            value={topic.heading}
             className="w-full justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
           >
-            <span className="font-semibold">{row.heading}</span>
+            <span className="font-semibold">{topic.heading}</span>
           </TabsTrigger>
         ))}
       </TabsList>
-      {ROWS.map((row) => (
-        <TabsContent key={row.heading} value={row.heading} className="col-span-1 m-0 lg:col-span-3">
-          <p className="max-w-2xl text-muted-foreground lg:text-lg">{row.body}</p>
-          <img
-            src={row.image}
-            alt={row.alt}
-            loading="lazy"
-            className="mt-6 w-full rounded-lg border border-border bg-card object-cover"
-          />
+      {TOPICS.map((topic) => (
+        <TabsContent
+          key={topic.heading}
+          value={topic.heading}
+          className="col-span-1 m-0 lg:col-span-3"
+        >
+          <TopicPanel topic={topic} />
         </TabsContent>
       ))}
     </Tabs>
