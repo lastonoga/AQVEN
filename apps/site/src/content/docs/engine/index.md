@@ -14,8 +14,10 @@ Start with [how to call a model](/engine/llm-node/) and [how to write a step in 
 steps in parallel, mapping a step over a collection, routing by a value, repeating a step with a limit,
 reusing a flow as a step, and narrowing a dynamic value to a type.
 
-**Prompts & data shape** covers the two things every node's inputs and outputs lean on:
-[how to write a prompt](/engine/prompts/) (the Markdown files a model call reads from) and
+**Prompts & data shape** covers the three things every node's inputs and outputs lean on:
+[how to write a prompt](/engine/prompts/) (the Markdown files a model call reads from),
+[how to constrain a field's values](/engine/field-constraints/) (length, range, pattern, and choice
+limits a model's answer has to obey), and
 [how to handle a shape you don't know in advance](/engine/dynamic-shape/) (for a field whose type isn't
 fixed until run time).
 

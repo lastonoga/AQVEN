@@ -81,6 +81,7 @@ export default defineConfig({
               label: "Prompts & data shape",
               items: [
                 { slug: "engine/prompts" },
+                { slug: "engine/field-constraints" },
                 { slug: "engine/dynamic-shape" },
               ],
             },

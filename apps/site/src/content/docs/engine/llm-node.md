@@ -18,7 +18,10 @@ your own code or routes data; this is the one that talks to a model.
   inference expects.
 - Write `<stem>.inference.yaml`: the `in` fields the model reads and the `out` fields it must return,
   each with a type and a description. This is the typed contract for the call — the model can't return
-  a field that isn't declared here.
+  a field that isn't declared here. Beyond `type` and `description`, a field can also carry constraints
+  like `maxLength`, `maxItems`, `minimum`, `maximum`, `pattern`, and `enum` — see
+  [how to constrain a field's values](/engine/field-constraints/) for what each one does, with its own
+  example.
 - Write `<stem>.prompt.md`: the prompt itself, in its own Markdown file — never inline in the YAML. It
   reads the same `in` field names the inference declares.
 - Point `agent` at an agent file (`agents/<agent_id>.yaml`) that already exists in the project, or add
@@ -159,6 +162,8 @@ and what it adds.
 
 ## See also
 
+- [How to constrain a field's values](/engine/field-constraints/) — every constraint keyword an `in` or
+  `out` field can carry, one small example each.
 - [The engineering loop](/concepts/engineering-loop/) — what to do when a run's output isn't what you
   expected.
 - [Node specifications](/reference/nodes/) — every field on `LlmNodeSpec`, generated from the code.
