@@ -16,6 +16,7 @@ import {
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const REPO = "https://github.com/lastonoga/AQVEN";
 
@@ -116,7 +117,8 @@ export const Problem = () => (
         are somewhere else. Then your coding agent edits ten things at once, twice a week.
       </p>
       <p className="mt-4 text-muted-foreground lg:text-lg">
-        A month in, nobody on the team can say what actually happens.
+        A month in, nobody on the team can say what actually happens — and it&rsquo;s not a demo. It
+        runs thousands of times before anyone notices something drifted.
       </p>
     </div>
     <div className="mx-auto mt-14 grid max-w-4xl gap-4 sm:grid-cols-2">
@@ -129,20 +131,7 @@ export const Problem = () => (
         </blockquote>
       ))}
     </div>
-  </Section>
-);
-
-export const Stakes = () => (
-  <Section className="bg-background-subtle">
-    <div className="mx-auto max-w-3xl text-center">
-      <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-        A broken AI workflow costs real money.
-      </h2>
-      <p className="mt-6 text-muted-foreground lg:text-lg">
-        This isn&rsquo;t a demo. It runs thousands of times before anyone notices something drifted.
-      </p>
-    </div>
-    <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
       {STAKES.map((item) => (
         <div
           key={item.label}
@@ -156,33 +145,42 @@ export const Stakes = () => (
   </Section>
 );
 
-export const TeamReads = () => (
+export const StudioEvidence = () => (
   <Section>
     <div className="mx-auto max-w-3xl text-center">
       <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl lg:text-5xl">
         Your team can finally read the workflow.
       </h2>
     </div>
-    <div className="mt-20 flex flex-col gap-24">
-      {ROWS.map((row, index) => (
-        <div key={row.heading} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+    <Tabs
+      defaultValue={ROWS[0].heading}
+      orientation="vertical"
+      className="mt-14 grid grid-cols-1 gap-4 rounded-xl border border-border p-4 lg:mt-20 lg:grid-cols-4"
+    >
+      <TabsList className="flex h-auto w-full flex-col justify-start gap-1 rounded-lg bg-muted p-1.5">
+        {ROWS.map((row) => (
+          <TabsTrigger
+            key={row.heading}
+            value={row.heading}
+            className="w-full justify-start rounded-lg px-4 py-3 text-start whitespace-normal"
+          >
+            <span className="font-semibold">{row.heading}</span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {ROWS.map((row) => (
+        <TabsContent key={row.heading} value={row.heading} className="col-span-1 m-0 lg:col-span-3">
+          <p className="max-w-2xl text-muted-foreground lg:text-lg">{row.body}</p>
           <img
             src={row.image}
             alt={row.alt}
             loading="lazy"
-            className={cn(
-              "w-full rounded-lg border border-border bg-card object-cover",
-              index % 2 === 1 && "lg:order-2",
-            )}
+            className="mt-6 w-full rounded-lg border border-border bg-card object-cover"
           />
-          <div className={cn(index % 2 === 1 && "lg:order-1")}>
-            <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">{row.heading}</h3>
-            <p className="mt-4 text-muted-foreground lg:text-lg">{row.body}</p>
-          </div>
-        </div>
+        </TabsContent>
       ))}
-    </div>
-    <div className="mt-24 grid gap-6 md:grid-cols-2">
+    </Tabs>
+    <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
       {GUARDS.map((guard) => (
         <div key={guard.heading} className="rounded-lg border border-border bg-card p-8">
           <h3 className="text-xl font-semibold tracking-tight">{guard.heading}</h3>
@@ -284,7 +282,7 @@ export const INSIDE_FEATURES = [
     icon: <Workflow className="size-5" />,
     title: "Workflows",
     description: "Steps, order, and what connects to what.",
-    href: "/reference/flows/",
+    href: "/concepts/files-as-source-of-truth/",
   },
   {
     icon: <Blocks className="size-5" />,
@@ -308,7 +306,7 @@ export const INSIDE_FEATURES = [
     icon: <Layers className="size-5" />,
     title: "Types",
     description: "Typed inputs and outputs between steps.",
-    href: "/reference/types/",
+    href: "/concepts/agent-inference-and-the-llm-node/",
   },
   {
     icon: <Globe className="size-5" />,

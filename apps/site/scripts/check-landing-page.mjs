@@ -1,23 +1,42 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
-const pagePath = new URL("../dist/index.html", import.meta.url);
+const distDir = new URL("../dist/", import.meta.url);
+const pagePath = new URL("index.html", distDir);
 
 assert.ok(existsSync(pagePath), "Build the site before checking the landing page.");
 
 const page = readFileSync(pagePath, "utf8");
 
+// StudioEvidence ships as a client:visible island (Tabs need JS to switch) — only the default
+// tab's screenshot is in the static HTML. The other three are compiled into its JS chunk instead
+// and only reach the DOM once the visitor clicks a tab, so this check scans the whole build
+// output (HTML + every _astro/*.js chunk), not just index.html, to still catch a dropped tab.
+const astroDir = new URL("_astro/", distDir);
+const bundleText = readdirSync(astroDir)
+  .filter((name) => name.endsWith(".js"))
+  .map((name) => readFileSync(new URL(name, astroDir), "utf8"))
+  .join("\n");
+const buildOutput = page + bundleText;
+
 const requiredMarkers = [
-  "The source-available workbench for AI workflows.",
-  "Built for humans and coding agents.",
+  "Build AI workflows you can trust to run the business.",
   "AI workflows get hard to follow, fast.",
-  "A broken AI workflow costs real money.",
+  "It runs thousands of times before anyone notices something drifted.",
   "Your team can finally read the workflow.",
   "Your coding agent stops guessing.",
   "Not a tracing tool. Not a drag-and-drop builder.",
   "Keep your models. Keep your code.",
   "Source available.",
   "Start with a workflow you already have.",
+  "uv tool install aqven",
+];
+
+for (const marker of requiredMarkers) {
+  assert.ok(page.includes(marker), `Expected the landing page to contain: ${marker}`);
+}
+
+const requiredScreenshots = [
   "/images/studio/canvas.png",
   "/images/studio/project-flows.png",
   "/images/studio/runs.png",
@@ -25,8 +44,11 @@ const requiredMarkers = [
   "/images/studio/evaluations.png",
 ];
 
-for (const marker of requiredMarkers) {
-  assert.ok(page.includes(marker), `Expected the landing page to contain: ${marker}`);
+for (const marker of requiredScreenshots) {
+  assert.ok(
+    buildOutput.includes(marker),
+    `Expected the build output (HTML or a JS chunk) to contain: ${marker}`
+  );
 }
 
 const forbiddenMarkers = ["uv run aqven", "aqven check ."];
@@ -55,7 +77,6 @@ assert.ok(
 const counts = [
   { label: "documentation tiles", needle: 'class="flex flex-col items-start', expected: 12 },
   { label: "problem quotes", needle: "<blockquote", expected: 4 },
-  { label: "workflow screenshots", needle: "/images/studio/", expected: 5 },
 ];
 
 for (const { label, needle, expected } of counts) {

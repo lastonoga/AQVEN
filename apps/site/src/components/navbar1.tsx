@@ -147,17 +147,17 @@ const Navbar1 = ({
         <nav className="hidden items-center justify-between lg:flex">
           <div className="flex items-center gap-6">
             {/* Logo */}
-            <a href={logo.url} className="flex items-center gap-2">
+            <a href={logo.url} className="flex shrink-0 items-center gap-2">
               <img
                 src={logo.src}
-                className="max-h-8"
+                className="max-h-8 shrink-0"
                 alt={logo.alt}
               />
-              <span className="text-lg font-semibold tracking-tighter">
+              <span className="shrink-0 text-lg font-semibold tracking-tighter whitespace-nowrap">
                 {logo.title}
               </span>
             </a>
-            <div className="flex items-center">
+            <div className="flex min-w-0 items-center">
               <NavigationMenu>
                 <NavigationMenuList>
                   {menu.map((item) => renderMenuItem(item))}
