@@ -12,7 +12,7 @@ import pytest
 
 from aqven.cli import main
 from aqven.codegen import GENERATED_HEADER, GENERATED_TYPES
-from aqven.console.new import NewProjectRequest, ProjectCreator, create_project
+from aqven.console.new import NewProjectRequest, ProjectCreator, aqven_requirement, create_project
 from aqven.console.new_wizard import WizardAnswers
 from aqven.console.project_template import (
     TEMPLATE_SUFFIX,
@@ -103,7 +103,7 @@ def test_new_writes_project_settings_for_uv_git_and_agents(created: Path) -> Non
 
     assert manifest["project"]["name"] == "demo-shop"
     assert manifest["project"]["requires-python"] == ">=3.14,<3.15"
-    assert manifest["project"]["dependencies"] == ["aqven==0.0.0"]
+    assert manifest["project"]["dependencies"] == [aqven_requirement()]
     assert manifest["tool"]["uv"]["sources"]["aqven"] == {"path": AQVEN_PACKAGE.as_posix(), "editable": True}
     assert manifest["tool"]["pytest"]["ini_options"]["aqven_project"] == MODULE
     assert {".env", ".aqven/", f"{MODULE}/types.py"} <= set(ignored)
