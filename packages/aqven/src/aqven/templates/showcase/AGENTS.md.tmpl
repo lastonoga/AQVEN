@@ -147,11 +147,26 @@ the request has not already answered.
 | Failure | retry, default value, or stop — a step without an answer here fails in production, not in `aqven check` |
 
 Write the files only when you have the answers. Order: types first, then agents and tools, then the nodes, then
-`flow.yaml`. Run `aqven check` after each file, not once at the end — one wrong type reference is cheaper to fix
-before ten nodes reference it.
+`flow.yaml`, then the dataset, then an eval for every `llm` node. Run `aqven check` after each file, not once at
+the end — one wrong type reference is cheaper to fix before ten nodes reference it.
 
-Then write the dataset: three or four real cases with the input and the expected result, under `datasets/`. A flow
-without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
+**A passing `aqven check` is not a finished flow.** It proves the wiring is valid; it never runs a real model and
+never tells you whether the flow actually does its job. Do not stop at `flow.yaml` and call the flow built —
+finish these two before you do:
+
+- A dataset under `datasets/` with `flow: <flow_id>`, with one case per situation this flow will actually meet in
+  its own domain: one per `switch` case or decision path from the Decisions column above, one per failure mode
+  from the Failure column, plus the ordinary case each of those is a variation on. Three near-identical
+  happy-path rows are not a dataset — a support-ticket triage flow needs an angry customer, a calm one, one in
+  the wrong language, and one where the only right answer is "escalate to a human," not four polite refund
+  requests. Write real, specific values for this flow's actual niche, not placeholders like "test input 1".
+- An `evals/<flow_id>/<node_id>.yaml` for every `llm` node — `inference` and `agent` set, plus at least the
+  cheap built-in scorers that fit its output (`not_empty`, `no_pii`, `language`, `max_words`, `regex`,
+  `ids_in_allowed_set`; see the full scorer list under *The development loop* below before reaching for a
+  judge). An `llm` node with no eval is a step nobody has actually checked, no matter how many times
+  `aqven check` passes.
+
+A flow without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
 
 ## The development loop
 
