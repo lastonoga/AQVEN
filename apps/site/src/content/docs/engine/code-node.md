@@ -39,8 +39,7 @@ with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its files live at `flows/support_case/nodes/tally/`. The showcase's own file descriptions are translated
-to English for this page. `tally.node.yaml` declares one input field, taken from the map node right before it, and three
+Here's the real example, translated to English. `tally.node.yaml` declares one input field, taken from the map node right before it, and three
 output fields:
 
 ```yaml

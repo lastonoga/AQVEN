@@ -47,8 +47,7 @@ plain question — before the record itself gets filled in. Create it yourself w
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its files live at `flows/support_case/nodes/case_form/`. The showcase's own file descriptions and data
-are translated to English for this page. `case_form.node.yaml` is an ordinary `code` node: one `CaseIntent` input, one `FieldSpec[]`
+Here's the real example, translated to English. `case_form.node.yaml` is an ordinary `code` node: one `CaseIntent` input, one `FieldSpec[]`
 output:
 
 ```yaml

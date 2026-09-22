@@ -53,8 +53,7 @@ Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its node file lives at `flows/support_case/nodes/search_kb/search_kb.node.yaml`. The showcase's own
-file descriptions are translated to English for this page. It carries no contract of its own, only a `tool` reference and
+Here's the real node file, translated to English. It carries no contract of its own, only a `tool` reference and
 bindings:
 
 ```yaml
@@ -78,7 +77,7 @@ in:
 flow, `$input.customer.locale` pulls straight from the flow's own input, and `$run.context.tenant_id`
 pulls from the run's context — a value the flow declares it needs from the caller, not from any node.
 
-Its tool lives at `tools/search_kb.yaml` and declares the typed contract plus how it runs:
+The tool itself declares the typed contract plus how it runs:
 
 ```yaml
 apiVersion: "aqven/v1"

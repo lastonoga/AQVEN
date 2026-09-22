@@ -54,7 +54,7 @@ flows/
       ...
 ```
 
-The showcase's own file descriptions are translated to English for this page. `panel.node.yaml`:
+Here's the real `panel.node.yaml`, translated to English:
 
 ```yaml
 apiVersion: "aqven/v1"

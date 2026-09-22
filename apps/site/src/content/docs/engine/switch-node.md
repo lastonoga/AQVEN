@@ -42,8 +42,7 @@ resolved based on what kind of case it is. Create it yourself with:
 {{CLI_COMMAND}} new my_project --template showcase
 ```
 
-Its file lives at `flows/support_case/nodes/route/route.node.yaml`. The showcase's own file
-descriptions are translated to English for this page:
+Here's the real file, translated to English:
 
 ```yaml
 apiVersion: "aqven/v1"
