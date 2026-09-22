@@ -45,22 +45,23 @@ return the structured output AQVEN expects, not only whether a request to them w
 
 ### Example
 
-Create the showcase project if you don't already have one:
+Create the minimal project if you don't already have one — `models check` works on one agent file at a
+time, so it needs nothing flow-shaped:
 
 ```bash
-{{CLI_COMMAND}} new my_project --template showcase
+{{CLI_COMMAND}} new my_project
 cd my_project/my_project
 ```
 
-With no API key set anywhere, the static check still works — this is the real output for `gpt`, whose
-agent file leaves `output.mode` as `auto`:
+With no API key set anywhere, the static check still works — this is the real output for `assistant`,
+whose agent file leaves `output.mode` as `auto`:
 
 ```bash
-{{CLI_COMMAND}} models check gpt
+{{CLI_COMMAND}} models check assistant
 ```
 
 ```text
-agent gpt (agents/gpt.yaml)
+agent assistant (agents/assistant.yaml)
   output.mode: auto -> tool (profile: Pydantic AI profile default for openrouter:openai/gpt-oss-20b)
   model openrouter:openai/gpt-oss-20b (auto: tool)
     mode      profile
@@ -72,36 +73,15 @@ agent gpt (agents/gpt.yaml)
       mode: tool
 ```
 
-That exits `0`. `painter` shows what a two-model agent looks like — a primary model and one fallback
-model, each getting its own block:
+That exits `0`. An agent with more than one model — a primary `model` plus `fallback_models` — gets one
+block per model instead of one, so you can compare what each one supports before deciding whether they
+actually agree.
+
+`--json` prints the same facts as one JSON object instead of text. Here's the shape, trimmed to one
+target and the first of its model's three modes — the other keys and modes follow the same pattern:
 
 ```bash
-{{CLI_COMMAND}} models check painter
-```
-
-```text
-agent painter (agents/painter.yaml)
-  output.mode: prompted -> prompted (declared: output.mode is set explicitly)
-  model openrouter:google/gemini-3.1-flash-lite-image (auto: native)
-    mode      profile
-    tool      unsupported
-    native    supported
-    prompted  supported
-  model openrouter:openai/gpt-5-image-mini (auto: tool)
-    mode      profile
-    tool      supported
-    native    supported
-    prompted  supported
-  YAML for the agent file:
-    output:
-      mode: prompted
-```
-
-`--json` on that same `gpt` check gives the same report as one object, with `profile_supports` per mode
-and a `live` field of `"not_run"` because `--live` wasn't set:
-
-```bash
-{{CLI_COMMAND}} models check gpt --json
+{{CLI_COMMAND}} models check assistant --json
 ```
 
 ```json
@@ -110,18 +90,14 @@ and a `live` field of `"not_run"` because `--live` wasn't set:
   "ok": true,
   "targets": [
     {
-      "agent": "gpt",
-      "file": "agents/gpt.yaml",
-      "declared_mode": "auto",
+      "agent": "assistant",
+      "file": "agents/assistant.yaml",
       "resolved_mode": "tool",
-      "source": "profile",
-      "reason": "Pydantic AI profile default for openrouter:openai/gpt-oss-20b",
+      ...
       "models": [
         {
           "model": "openrouter:openai/gpt-oss-20b",
-          "auto_mode": "tool",
-          "auto_source": "profile",
-          "auto_reason": "Pydantic AI profile default for openrouter:openai/gpt-oss-20b",
+          ...
           "modes": [
             {
               "mode": "tool",
@@ -131,29 +107,10 @@ and a `live` field of `"not_run"` because `--live` wasn't set:
               "message": null,
               "excerpt": null
             },
-            {
-              "mode": "native",
-              "profile_supports": true,
-              "live": "not_run",
-              "code": null,
-              "message": null,
-              "excerpt": null
-            },
-            {
-              "mode": "prompted",
-              "profile_supports": true,
-              "live": "not_run",
-              "code": null,
-              "message": null,
-              "excerpt": null
-            }
-          ],
-          "working": null
+            ...
+          ]
         }
-      ],
-      "suggested_mode": "tool",
-      "snippet": "output:\n  mode: tool",
-      "ok": true
+      ]
     }
   ]
 }
@@ -163,7 +120,7 @@ Adding `--live` with no `OPENROUTER_API_KEY` set anywhere shows the real failure
 skipping the check:
 
 ```bash
-{{CLI_COMMAND}} models check gpt --live
+{{CLI_COMMAND}} models check assistant --live
 ```
 
 ```text
