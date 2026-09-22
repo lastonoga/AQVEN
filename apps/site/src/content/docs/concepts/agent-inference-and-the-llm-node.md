@@ -96,6 +96,37 @@ The reverse direction is just as ordinary and easier to miss because it doesn't 
 tree: any two nodes anywhere in the project that both write `agent: "gemini"` are already reusing that
 one Agent for whatever different questions their own Inference files ask.
 
+## Picking a model for an agent
+
+An Agent's `model:` field is a choice you make for every `llm` node — AQVEN has no built-in logic that
+picks a model based on what the node does, or that tiers models by role. What's worth weighing yourself is
+how open-ended the answer is, and what a wrong answer costs.
+
+A step with a small, closed set of possible answers — classify into one of a few categories, pick a route,
+fill in a field whose type is already fully specified — usually doesn't need your strongest, most
+expensive model. The showcase's `vote` step is a real instance of this: each vote in `support_case` picks
+one of three fixed intents (`defect`, `delivery`, `question`) from a short summary and a handful of
+observations. Its Agent, `llama`, points at `meta-llama/llama-3.1-8b-instruct`, with `temperature: 0.2` and
+a max token limit of 800 — a small, cheap, low-latency model for a small, closed decision, and its own
+description in the project calls it out as the cheap choice on purpose.
+
+A step that has to produce genuinely new content — draft a reply, write an explanation, synthesize
+something that wasn't already in the input — benefits more from a stronger model. The `drafts` step
+covered above is that kind of step: writing a full customer reply from scratch, not choosing among a
+handful of labels, and each of its three Agents carries a max token limit of 3000 to 4000, several times
+the vote Agent's — sized for the bigger, more open-ended job each one does.
+
+When a step's job is to judge or critique another step's output rather than generate or classify, the
+model to reach for isn't automatically "the strongest one you have" — see
+[Designing reliable workflows](/concepts/designing-reliable-workflows/) for why model-family diversity
+matters more there.
+
+None of this is something `aqven check` verifies or AQVEN enforces. An Agent's `model:` field accepts any
+model string regardless of what the node using it does — nothing stops you from pointing a three-way
+classification node at your most expensive model, or a generation node at your cheapest one. Matching the
+model to the shape of the task is a judgment call you make when you write the Agent file, the same way the
+showcase's authors made it for `vote` and `drafts`.
+
 ## How this shapes what you do
 
 When a call should switch models, change the Agent file — every node pointing at that Agent id picks up
@@ -119,3 +150,5 @@ each with its own job.
 - [Files as source of truth](/concepts/files-as-source-of-truth/) — why a node's files sit colocated by
   filename in the first place.
 - [Ten kinds of nodes](/concepts/ten-kinds-of-nodes/) — where `llm` sits among the other node kinds.
+- [Designing reliable workflows](/concepts/designing-reliable-workflows/) — why a judge or critic Agent
+  benefits from model-family diversity more than from raw model strength.
