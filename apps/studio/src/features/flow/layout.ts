@@ -176,14 +176,17 @@ const wrapRows = (columns: readonly Column[]): readonly (readonly Column[])[] =>
     return [...rows.slice(0, -1), [...current, column]]
   }, [])
 
+const rowWidth = (row: readonly Column[]): number =>
+  row.reduce((total, column) => total + column.width, 0) + RANK_GAP * Math.max(row.length - 1, 0)
+
 const placeColumns = (sized: readonly Sized[], pairs: readonly Pair[]): { readonly boxes: ReadonlyMap<string, Box> } & Size => {
   const rows = wrapRows(columnsOf(sized, pairs))
+  const canvasWidth = rows.reduce((widest, row) => Math.max(widest, rowWidth(row)), 0)
   const boxes = new Map<string, Box>()
   let top = 0
-  let width = 0
   rows.forEach((row) => {
     const rowHeight = row.reduce((tallest, column) => Math.max(tallest, column.height), 0)
-    let left = 0
+    let left = canvasWidth - rowWidth(row)
     row.forEach((column) => {
       let memberTop = top + (rowHeight - column.height) / 2
       column.members.forEach((member) => {
@@ -192,10 +195,9 @@ const placeColumns = (sized: readonly Sized[], pairs: readonly Pair[]): { readon
       })
       left += column.width + RANK_GAP
     })
-    width = Math.max(width, left - RANK_GAP)
     top += rowHeight + ROW_GAP
   })
-  return { boxes, width, height: Math.max(top - ROW_GAP, 0) }
+  return { boxes, width: canvasWidth, height: Math.max(top - ROW_GAP, 0) }
 }
 
 const backEdges = (kind: NodeKind | null, sized: readonly Sized[], pairs: readonly Pair[]): readonly CanvasEdge[] => {
