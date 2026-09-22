@@ -11,14 +11,6 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -153,17 +145,13 @@ const Navbar1 = ({
                 className="max-h-8 shrink-0"
                 alt={logo.alt}
               />
-              <span className="shrink-0 text-lg font-semibold tracking-tighter whitespace-nowrap">
+              <span className="shrink-0 text-2xl font-bold whitespace-nowrap">
                 {logo.title}
               </span>
             </a>
-            <div className="flex min-w-0 items-center">
-              <NavigationMenu>
-                <NavigationMenuList>
-                  {menu.map((item) => renderMenuItem(item))}
-                </NavigationMenuList>
-              </NavigationMenu>
-            </div>
+            <ul className="flex min-w-0 items-center gap-1">
+              {menu.map((item) => renderMenuItem(item))}
+            </ul>
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline" size="sm">
@@ -230,28 +218,31 @@ const Navbar1 = ({
 const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
     return (
-      <NavigationMenuItem key={item.title}>
-        <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
-        <NavigationMenuContent className="bg-popover text-popover-foreground">
+      <li key={item.title} className="group relative">
+        <button
+          type="button"
+          className="inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-accent-foreground"
+        >
+          {item.title}
+        </button>
+        <div className="invisible absolute top-full left-0 z-50 grid gap-1 rounded-md border bg-popover p-2 text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:visible group-hover:opacity-100">
           {item.items.map((subItem) => (
-            <NavigationMenuLink asChild key={subItem.title} className="w-80">
-              <SubMenuLink item={subItem} />
-            </NavigationMenuLink>
+            <SubMenuLink key={subItem.title} item={subItem} />
           ))}
-        </NavigationMenuContent>
-      </NavigationMenuItem>
+        </div>
+      </li>
     );
   }
 
   return (
-    <NavigationMenuItem key={item.title}>
-      <NavigationMenuLink
+    <li key={item.title}>
+      <a
         href={item.url}
         className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-accent-foreground"
       >
         {item.title}
-      </NavigationMenuLink>
-    </NavigationMenuItem>
+      </a>
+    </li>
   );
 };
 
