@@ -287,11 +287,11 @@ class ProjectCreator:
         except NewProjectFailed as failure:
             print(f"{PROGRAM} {COMMAND}: {failure}", file=sys.stderr)
             return failure.exit_code
-        print(created_message(draft))
+        print(created_message(draft, request.wizard))
         return EXIT_OK
 
 
-def created_message(draft: ProjectDraft) -> str:
+def created_message(draft: ProjectDraft, wizard: WizardAnswers | None) -> str:
     module = draft.rendered.module_root.as_posix()
     return "\n".join(
         (
@@ -299,10 +299,16 @@ def created_message(draft: ProjectDraft) -> str:
             f"generated {module}/{GENERATED_TYPES}",
             "next steps:",
             f"  cd {draft.target}",
-            f"  cp {module}/{ENV_EXAMPLE} {module}/.env and set the API keys in it",
+            env_next_step(module, wizard),
             f"  uv run aqven dev {module}",
         )
     )
+
+
+def env_next_step(module: str, wizard: WizardAnswers | None) -> str:
+    if wizard is not None and wizard.api_key is not None:
+        return f"  {wizard.provider_env_var} is already set in {module}/.env"
+    return f"  cp {module}/{ENV_EXAMPLE} {module}/.env and set the API keys in it"
 
 
 def create_project(request: NewProjectRequest, creator: ProjectCreator | None = None) -> int:

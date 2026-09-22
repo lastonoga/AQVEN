@@ -13,6 +13,7 @@ import pytest
 from aqven.cli import main
 from aqven.codegen import GENERATED_HEADER, GENERATED_TYPES
 from aqven.console.new import NewProjectRequest, ProjectCreator, create_project
+from aqven.console.new_wizard import WizardAnswers
 from aqven.console.project_template import (
     TEMPLATE_SUFFIX,
     TEMPLATES,
@@ -333,3 +334,39 @@ def test_unknown_provider_flag_fails_cleanly(tmp_path: Path, capsys: pytest.Capt
 
     assert code == 2
     assert "unknown provider 'not-a-real-provider'" in capsys.readouterr().err
+
+
+def test_next_steps_say_cp_env_example_when_no_key_was_pasted(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    wizard = WizardAnswers(
+        provider_id="openrouter",
+        provider_env_var="OPENROUTER_API_KEY",
+        api_key=None,
+        allows_pii=False,
+        budget_usd_micros=None,
+        max_parallel=4,
+    )
+    assert create_project(NewProjectRequest(target=tmp_path / "shop", sync=False, wizard=wizard)) == 0
+
+    out = capsys.readouterr().out
+    assert "cp shop/.env.example shop/.env and set the API keys in it" in out
+    assert "already set" not in out
+
+
+def test_next_steps_skip_the_cp_when_the_wizard_already_wrote_the_key(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    wizard = WizardAnswers(
+        provider_id="openrouter",
+        provider_env_var="OPENROUTER_API_KEY",
+        api_key="sk-test-123",
+        allows_pii=False,
+        budget_usd_micros=None,
+        max_parallel=4,
+    )
+    assert create_project(NewProjectRequest(target=tmp_path / "shop", sync=False, wizard=wizard)) == 0
+
+    out = capsys.readouterr().out
+    assert "OPENROUTER_API_KEY is already set in shop/.env" in out
+    assert "cp shop/.env.example" not in out
