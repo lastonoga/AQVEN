@@ -6,6 +6,8 @@ from aqven.console.new_wizard import (
     ask_budget_usd_micros,
     ask_pii,
     ask_provider,
+    computed_max_parallel,
+    run_wizard,
     should_run_wizard,
 )
 
@@ -73,3 +75,25 @@ def test_ask_budget_skip_means_no_limit(monkeypatch: pytest.MonkeyPatch) -> None
 def test_ask_budget_converts_dollars_to_micros(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("builtins.input", lambda _prompt="": "2.50")
     assert ask_budget_usd_micros() == 2_500_000
+
+
+def test_computed_max_parallel_uses_cpu_count(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("os.cpu_count", lambda: 8)
+    assert computed_max_parallel() == 8
+
+
+def test_computed_max_parallel_falls_back_when_cpu_count_is_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("os.cpu_count", lambda: None)
+    assert computed_max_parallel() == 4
+
+
+def test_run_wizard_bundles_every_answer(monkeypatch: pytest.MonkeyPatch) -> None:
+    answers = iter(["1", "", "n", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    monkeypatch.setattr("os.cpu_count", lambda: 4)
+    result = run_wizard()
+    assert result.provider_id == "openrouter"
+    assert result.api_key is None
+    assert result.allows_pii is False
+    assert result.budget_usd_micros is None
+    assert result.max_parallel == 4

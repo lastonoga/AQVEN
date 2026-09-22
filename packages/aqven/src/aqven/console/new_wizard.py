@@ -1,8 +1,13 @@
+import os
 import sys
 from dataclasses import dataclass
 from typing import Final
 
 from aqven_llm.catalog import PROVIDERS
+
+from aqven.engine.throttle import MINIMUM_WORKERS
+
+FALLBACK_WORKERS: Final = 4
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,3 +72,21 @@ def ask_budget_usd_micros() -> int | None:
     if not answer:
         return None
     return round(float(answer) * 1_000_000)
+
+
+def computed_max_parallel() -> int:
+    return max(MINIMUM_WORKERS, os.cpu_count() or FALLBACK_WORKERS)
+
+
+def run_wizard() -> WizardAnswers:
+    provider_id, env_var, api_key = ask_provider()
+    allows_pii = ask_pii()
+    budget = ask_budget_usd_micros()
+    return WizardAnswers(
+        provider_id=provider_id,
+        provider_env_var=env_var,
+        api_key=api_key,
+        allows_pii=allows_pii,
+        budget_usd_micros=budget,
+        max_parallel=computed_max_parallel(),
+    )
