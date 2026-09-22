@@ -72,60 +72,32 @@ out:
   maxItems: 30
 ```
 
-`case_form.py` builds that list by intent — three different sets of fields for three different
-intents, each matching one variant of `CaseRecord`, the union type
+`case_form.py` builds that list by intent. The real file has one branch per intent — defect,
+delivery, question — each matching one variant of `CaseRecord`, the union type
 [How to narrow a dynamic value to a type](/engine/narrow-node/) narrows this same record down to
-later:
+later. Here's the `question` branch; `defect` and `delivery` build their own `FieldSpec` list the
+same way:
 
 ```python
-from collections.abc import Mapping
-from typing import Final
-
 from aqven.spec import FieldSpec
 from __package__.types import CaseIntent, SupportCaseCaseFormOut
 
-ORDER_ID_FIELD: Final = FieldSpec(name="order_id", type="OrderId", description="The Lumen order number")
-
-INTENT_FIELDS: Final[Mapping[CaseIntent, tuple[FieldSpec, ...]]] = {
-    "defect": (
-        ORDER_ID_FIELD,
-        FieldSpec(name="symptom", type="DefectSymptom", description="The defect's main symptom"),
-        FieldSpec(
-            name="purchased_on", type="Date?", description="The purchase date from the invoice; null if there isn't one"
-        ),
-        FieldSpec(
-            name="safety_risk",
-            type="Bool",
-            description="Whether there's a safety risk: overheating, a burning smell, sparks",
-        ),
+QUESTION_FIELDS = (
+    FieldSpec(name="topic", type="Text", description="The customer's question topic", maxLength=200),
+    FieldSpec(
+        name="order_id", type="OrderId?", description="The Lumen order number; null if the question isn't about one"
     ),
-    "delivery": (
-        ORDER_ID_FIELD,
-        FieldSpec(name="damage", type="DeliveryDamage", description="What happened to the order in transit"),
-        FieldSpec(
-            name="carrier_ref",
-            type="Text?",
-            description="The carrier's shipment number; null if there isn't one",
-            maxLength=40,
-        ),
-    ),
-    "question": (
-        FieldSpec(name="topic", type="Text", description="The customer's question topic", maxLength=200),
-        FieldSpec(
-            name="order_id", type="OrderId?", description="The Lumen order number; null if the question isn't about one"
-        ),
-    ),
-}
+)
 
 
 def case_form(intent: CaseIntent) -> SupportCaseCaseFormOut:
     kind = FieldSpec(name="kind", type="Text", description="The case's kind", enum=[intent])
-    return SupportCaseCaseFormOut(fields=[kind, *INTENT_FIELDS[intent]])
+    return SupportCaseCaseFormOut(fields=[kind, *QUESTION_FIELDS])
 ```
 
-Every set starts with a `kind` field pinned to the current intent by its own `enum` — the same name
-`CaseRecord`'s discriminator uses, so the value this shape eventually produces already carries the tag
-`narrow` checks against.
+This branch — like the other two — starts with a `kind` field pinned to the current intent by its
+own `enum`, the same name `CaseRecord`'s discriminator uses, so the value this shape eventually
+produces already carries the tag `narrow` checks against.
 
 `extract`, the `record` loop's first body node (see [How to repeat a step with a limit](/engine/loop-node/)
 for what a loop node's body does), reads `case_form`'s output as its own `form_fields` input and fills in
@@ -137,28 +109,10 @@ apiVersion: "aqven/v1"
 kind: "Inference"
 description: "Fills in the case record's form from the text, summary, and attachments; on a repeat, applies the review notes"
 in:
-- name: "message"
-  type: "Text"
-  description: "The customer's request text after whitespace normalization"
-  maxLength: 4000
-- name: "summary"
-  type: "Text"
-  description: "The request's summary from triage"
-  maxLength: 600
 - name: "form_fields"
   type: "FieldSpec[]"
   description: "The case record's form fields for this case's intent"
   maxItems: 30
-- name: "feedback"
-  type: "Issue[]?"
-  description: "Notes from the previous pass's check; null on the first pass"
-  maxItems: 10
-- name: "photo"
-  type: "Image?"
-  description: "A photo of the product or the defect; null if none was attached"
-- name: "invoice"
-  type: "Document?"
-  description: "The purchase invoice or receipt; null if none was attached"
 out:
 - name: "record"
   type: "Dynamic"
@@ -172,6 +126,9 @@ out:
     max_items: 10
 ```
 
+The real inference also takes `message`, `summary`, `feedback`, `photo`, and `invoice` as input — none
+of them feed the `Dynamic` field, so they're left out here.
+
 `schema_from: "$in.form_fields"` tells AQVEN to build `record`'s actual output schema from whatever
 `form_fields` turns out to be on this run — one shape for a defect case, a different one for a delivery
 case, without writing three separate inferences. `limits` bounds it regardless of which shape shows up:
@@ -179,17 +136,8 @@ at most 30 fields, 2 levels deep, 400 characters per text field, 10 items in any
 `value_type: "CaseRecord"` records the expectation that whichever shape comes back will fit one of
 `CaseRecord`'s three variants — `narrow` is what actually checks that later, not this field.
 
-The same `record` value gets read two different ways further into the flow. `validate`, the loop's
-second body node, takes it in as `Dynamic` itself and checks business rules off it by field name, no
-fixed type needed. Once the loop is done,
-`to_record` narrows the very same value down to `CaseRecord` — see
-[How to narrow a dynamic value to a type](/engine/narrow-node/).
-
-Not every Dynamic output carries a `value_type` hint. `triage`, the flow's earlier inference, has its
-own Dynamic output — `intake_extra`, built the same way from a marketplace's own intake fields — but no
-`value_type`: a storefront order, an Amazon order, and an Ozon order each want different intake fields,
-and none of them is expected to match a record type declared anywhere in the project. Further down the
-flow, `intake_extra` is taken in as `Dynamic` too, and used as plain data rather than narrowed.
+What happens to `record` next — read as `Dynamic` by field name, or narrowed to `CaseRecord` once the
+code knows exactly which variant it is — is covered in the pages linked below.
 
 ## See also
 
