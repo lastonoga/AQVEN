@@ -33,10 +33,14 @@ export const neighboursOf = (step: SetupStep): StepNeighbours => {
   return { previous: SETUP_STEPS[index - 1], next: SETUP_STEPS[index + 1] }
 }
 
+const SHELL_SAFE = /^[\w@%+=:,./-]+$/
+
+const shellQuoted = (value: string): string => (SHELL_SAFE.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`)
+
 const stdioServer = (root: string) => ({ mcpServers: { aqven: { command: "uv", args: ["run", "--directory", root, "aqven", "mcp"] } } })
 
 export const mcpCommands = (root: string): McpCommands => ({
-  claudeCode: "claude mcp add --scope project aqven -- uv run aqven mcp",
+  claudeCode: `claude mcp add aqven -- uv run --directory ${shellQuoted(root)} aqven mcp`,
   stdio: JSON.stringify(stdioServer(root), null, 2),
 })
 

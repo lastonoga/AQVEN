@@ -62,6 +62,8 @@ permission now runs the command on its own and shows you the exit code.
 
 ## See also
 
+- [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) — the same
+  setup for Claude Code, Codex, or another agent you start yourself instead of from this panel.
 - [How to check Studio's settings](/studio/settings/) — where the chat backend is chosen and switched.
 - [How to check a project before committing](/engine/check/) — the command the example asks the agent
   to run.

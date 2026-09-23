@@ -1,0 +1,20 @@
+import { Page } from "@/components/studio"
+import { WaitsInline } from "@/features/review"
+import { seriesRouteApi } from "@/lib/routes"
+import { MetricMatrix } from "./metric-matrix"
+import { SeriesCases } from "./series-cases"
+import { SeriesHeader, SeriesVerdictBlock } from "./series-header"
+
+export function SeriesScreen() {
+  const { series, cases, filter } = seriesRouteApi.useLoaderData()
+  return (
+    <Page width="xl" header={<SeriesHeader series={series} />}>
+      <div className="flex min-w-0 flex-col gap-7">
+        <SeriesVerdictBlock series={series} />
+        <MetricMatrix series={series} />
+        {series.waits > 0 ? <WaitsInline seriesId={series.id} flowId={series.flow} /> : null}
+        <SeriesCases series={series} cases={cases} filter={filter} />
+      </div>
+    </Page>
+  )
+}

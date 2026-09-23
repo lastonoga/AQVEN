@@ -55,12 +55,12 @@ Click the dropdown at the top of the chat panel and choose **Studio settings**. 
 Click **MCP connections** and copy the Claude Code command straight out of the panel:
 
 ```bash
-claude mcp add --scope project aqven -- uv run aqven mcp
+claude mcp add aqven -- uv run --directory /path/to/my_project/my_project {{CLI_COMMAND}} mcp
 ```
 
-Run that in the project's folder from an ordinary terminal, and a Claude Code session outside Studio
-gets the same tools the Studio chat already calls — nothing in the panel itself ran that command for
-you.
+The panel fills in this project's absolute path. Run the command from an ordinary terminal in the
+folder you start Claude Code from, and a Claude Code session outside Studio gets the same tools the
+Studio chat already calls — nothing in the panel itself ran that command for you.
 
 ## See also
 

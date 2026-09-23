@@ -10,15 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BlobText } from "@/features/call-sheet"
 import { valueCell } from "@/features/trace"
 import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
+import { datasetItemOf } from "./expected"
 
 type DatasetData = {
   readonly summary: ApiDatasetSummary
-}
-
-const sourceOf = (itemId: string): { datasetId: string; caseName: string } | null => {
-  const separator = itemId.indexOf("/")
-  if (separator <= 0 || separator === itemId.length - 1) return null
-  return { datasetId: itemId.slice(0, separator), caseName: itemId.slice(separator + 1) }
 }
 
 function ValuePanel({ title, value, empty }: { readonly title: string; readonly value: unknown; readonly empty: string }) {
@@ -115,7 +110,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   const [selectedCase, setSelectedCase] = useState<ApiDatasetCase | null>(null)
   const [selectedCaseError, setSelectedCaseError] = useState(false)
   const [error, setError] = useState(false)
-  const source = snapshot.dataset_item_id === null || snapshot.dataset_item_id === undefined ? null : sourceOf(snapshot.dataset_item_id)
+  const source = datasetItemOf(snapshot.dataset_item_id)
   const datasetId = source?.datasetId ?? ""
   const caseName = source?.caseName ?? ""
   const changeOpen = (next: boolean): void => {
@@ -197,7 +192,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
             </Tabs>
             <div className="flex justify-end border-t border-border px-5 py-3">
               <Button asChild variant="outline" size="sm">
-                <Link to={ROUTE_PATH.datasets} params={params} search={{ dataset: datasetId, case: caseName }}>
+                <Link to={ROUTE_PATH.cases} params={params} search={{ dataset: datasetId, case: caseName }}>
                   {t("openPage")}<ArrowUpRight aria-hidden className="size-3.5" />
                 </Link>
               </Button>

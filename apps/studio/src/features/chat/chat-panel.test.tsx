@@ -18,12 +18,12 @@ const CREATED: ApiChatSession = {
 }
 
 const openAgentSettings = async (): Promise<HTMLElement> => {
-  const flow = await screen.findByRole("button", { name: "Switch flow" })
-  fireEvent.keyDown(flow, { key: "Enter" })
-  fireEvent.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Studio settings" }))
-  const dialog = await screen.findByRole("dialog", { name: "Settings" })
-  fireEvent.click(within(dialog).getByRole("button", { name: "Chat agent" }))
-  return dialog
+  const sections = await screen.findByRole("navigation", { name: "Project sections" })
+  fireEvent.click(within(sections).getByRole("link", { name: "Settings" }))
+  const settings = await screen.findByRole("navigation", { name: "Settings sections" })
+  fireEvent.click(within(settings).getByRole("link", { name: "Chat" }))
+  await screen.findByRole("radiogroup", { name: "Chat backend" })
+  return document.body
 }
 
 describe("ChatPanel", () => {
@@ -142,7 +142,6 @@ describe("ChatPanel", () => {
     const switcher = await within(dialog).findByRole("radiogroup", { name: "Chat backend" })
     fireEvent.click(within(switcher).getByRole("radio", { name: "Codex" }))
     await waitFor(() => { expect(within(switcher).getByRole("radio", { name: "Codex" }).getAttribute("aria-checked")).toBe("true") })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Close settings" }))
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Switch thread" }).textContent).toContain("Codex")
     })
@@ -162,7 +161,7 @@ describe("ChatPanel", () => {
     const dialog = await openAgentSettings()
     const switcher = await within(dialog).findByRole("radiogroup", { name: "Chat backend" })
     fireEvent.click(within(switcher).getByRole("radio", { name: "Codex" }))
-    expect((await screen.findByRole("alert")).textContent).toContain("Cannot select Codex")
+    expect((await screen.findAllByRole("alert")).map((alert) => alert.textContent).join(" ")).toContain("Cannot select Codex")
     expect(within(switcher).getByRole("radio", { name: "Claude Agent" }).getAttribute("aria-checked")).toBe("true")
     expect(trigger.textContent).toContain("Claude Agent · support_case")
   })
@@ -206,9 +205,8 @@ describe("ChatPanel", () => {
     const switcher = await within(dialog).findByRole("radiogroup", { name: "Chat backend" })
     fireEvent.click(within(switcher).getByRole("radio", { name: "Codex" }))
     await waitFor(() => { expect(within(switcher).getByRole("radio", { name: "Codex" }).getAttribute("aria-checked")).toBe("true") })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Close settings" }))
     expect(screen.queryByRole("button", { name: "Switch thread" })).toBeNull()
-    expect(screen.getByRole("status").textContent).toContain("Connecting to the agent")
+    expect(screen.getAllByRole("status").map((status) => status.textContent).join(" ")).toContain("Connecting to the agent")
     gate.release()
     expect((await screen.findByRole("button", { name: "Switch thread" })).textContent).toContain("Codex")
   })

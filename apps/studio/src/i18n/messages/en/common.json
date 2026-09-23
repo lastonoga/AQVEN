@@ -45,12 +45,17 @@
     "inspector": "Select a node on the canvas",
     "call": "No data for this call",
     "contract": "No data for this node",
-    "review": "Select a step to review",
-    "reviewNotFound": "No data for this review step",
     "trace": "No trace for this row",
     "run": "No data for this run",
     "tests": "No tests yet",
-    "datasets": "No datasets yet",
-    "queue": "Nothing waiting for review"
+    "datasets": "No datasets yet"
+  },
+  "stageRange": {
+    "startNode": "Start node",
+    "endNode": "End node",
+    "selectOnlyNode": "Select only {node}",
+    "moveRange": "Move selected range",
+    "moveRangeHint": "Drag to move the selected stages. Use arrow keys to move one stage at a time.",
+    "noStages": "This flow has no stages."
   }
 }

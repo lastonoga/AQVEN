@@ -1,4 +1,10 @@
 {
+  "sections": {
+    "navAria": "Project sections",
+    "flows": "Flows",
+    "research": "Research",
+    "settings": "Settings"
+  },
   "tabs": {
     "navAria": "Flow views"
   },
@@ -19,7 +25,6 @@
     "nodes": "{count, plural, one {# node} other {# nodes}}",
     "run": "run {run}",
     "neverRun": "never run",
-    "current": "OPEN",
-    "studioSettings": "Studio settings"
+    "current": "OPEN"
   }
 }

@@ -81,15 +81,13 @@
   "settings": {
     "title": "Settings",
     "lead": "Settings of this project and of Studio on this computer.",
-    "back": "Back to Studio",
-    "closeAria": "Close settings",
     "loadError": "Settings could not be loaded.",
     "loading": "Loading settings…",
     "retry": "Try again",
     "navAria": "Settings sections",
     "sections": {
       "project": "Project",
-      "agents": "Chat agent",
+      "agents": "Chat",
       "providers": "Model keys",
       "mcp": "MCP connections",
       "updates": "Updates"
@@ -108,7 +106,7 @@
       "none": "—",
       "connect": "Connect an agent",
       "claudeCode": "Claude Code",
-      "claudeCodeHint": "Run once in this project folder.",
+      "claudeCodeHint": "Run once in the folder you start Claude Code from.",
       "stdio": "Cursor, Claude Desktop and other stdio clients",
       "stdioHint": "Add this server to the MCP config of the client."
     },

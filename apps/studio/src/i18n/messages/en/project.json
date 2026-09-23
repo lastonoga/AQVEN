@@ -43,5 +43,18 @@
     "starting": "The project server is starting",
     "startingHint": "Indexing the project files. This page reloads when it is ready.",
     "stopping": "The project server is stopping"
+  },
+  "list": {
+    "title": "Flows",
+    "subtitle": "{project} · open a flow for its graph, runs and cases",
+    "navAria": "Flows of the project",
+    "nodes": "{count, plural, one {# node} other {# nodes}}",
+    "lastRun": "last run {time}",
+    "neverRun": "never run",
+    "experiments": "{count, plural, =0 {no experiments} one {# experiment} other {# experiments}}",
+    "problems": "{count, plural, one {# problem} other {# problems}}",
+    "ask": "Ask the agent to write a flow",
+    "empty": "No flows yet",
+    "emptyHint": "Ask the agent in the chat to write the first flow, or create a flow.yaml in a new folder under flows/ by hand."
   }
 }

@@ -18,23 +18,33 @@ You need:
 
 ## 1. Connect the simple way
 
-Run `{{CLI_COMMAND}} mcp` from the project folder. It doesn't implement its own tool server — it
-bridges stdio to AQVEN's own HTTP server, starting a headless copy of that server in the background
-first if one isn't already running for this project. You don't start anything yourself; the same
-command does both.
+`{{CLI_COMMAND}} mcp` doesn't implement its own tool server — it bridges stdio to AQVEN's own HTTP
+server, starting a headless copy of that server in the background first if one isn't already running
+for this project. You don't start anything yourself; the same command does both.
 
-For Claude Code, the concrete command is:
+It needs to know which project to serve. It looks for `aqven.yaml` in the folder it runs in and the
+folders above it, never below — so from the outer folder `{{CLI_COMMAND}} new` created, name the inner
+project folder: `uv run {{CLI_COMMAND}} mcp <package>`. Without it, the command stops with
+`E_PROJECT_NOT_FOUND`.
+
+**Claude Code, in a project from `{{CLI_COMMAND}} new`.** Nothing to add: the project's `.mcp.json`
+already registers `uv run {{CLI_COMMAND}} mcp <package>`. Start Claude Code in the outer folder and
+approve the `aqven` server when it asks.
+
+**Claude Code, anywhere else.** Register the server once:
 
 ```bash
-claude mcp add --scope project aqven -- uv run aqven mcp
+claude mcp add aqven -- uv run --directory /absolute/path/to/project {{CLI_COMMAND}} mcp
 ```
 
-This is the exact command shown in Studio's own **MCP connections** panel (see
-[How to check Studio's settings](/studio/settings/)). Run it once from the project folder in an
-ordinary terminal, and that Claude Code session gets the same 16 tools Studio's chat already calls.
+`/absolute/path/to/project` is the folder with `aqven.yaml`. `--directory` makes the command work
+from whatever folder Claude Code starts in, and the server is registered for the folder you run this
+in. This is the exact command shown in Studio's own **MCP connections** panel, with the project's path
+already filled in (see [How to check Studio's settings](/studio/settings/)). That Claude Code session
+gets the same 16 tools Studio's chat already calls.
 
-Any other agent that starts an MCP server over stdio can use `{{CLI_COMMAND}} mcp` the same way —
-point its MCP config at that command, run from the project folder.
+**Any other agent** that starts an MCP server over stdio runs the same command — point its MCP config
+at `uv` with the arguments `run`, `--directory`, `/absolute/path/to/project`, `{{CLI_COMMAND}}`, `mcp`.
 
 ### Check
 
@@ -70,5 +80,7 @@ check enforced, start the server with `--require-auth` and send the bearer token
 
 ## What's next
 
-[How to check and test a project as an agent](/mcp-cli/check-and-test/) — the first two tools to call
-once you're connected.
+- [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) — the setup
+  prompt that makes an agent you started yourself read the project's rules and check this connection.
+- [How to check and test a project as an agent](/mcp-cli/check-and-test/) — the first two tools to call
+  once you're connected.
