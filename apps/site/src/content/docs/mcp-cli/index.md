@@ -11,6 +11,7 @@ and previewing exactly what a prompt will send.
 **Connect & read a project** is where you start:
 
 - [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/)
+- [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/)
 - [How to read a project's structure as an agent](/mcp-cli/read-project-structure/)
 
 **Edit, check & test** is everything you do once you're connected and know what's there:

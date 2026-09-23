@@ -70,5 +70,7 @@ check enforced, start the server with `--require-auth` and send the bearer token
 
 ## What's next
 
-[How to check and test a project as an agent](/mcp-cli/check-and-test/) — the first two tools to call
-once you're connected.
+- [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) — the setup
+  prompt that makes an agent you started yourself read the project's rules and check this connection.
+- [How to check and test a project as an agent](/mcp-cli/check-and-test/) — the first two tools to call
+  once you're connected.

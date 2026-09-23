@@ -91,8 +91,10 @@ cd my_project/my_project
 ```
 
 Two folders share the name `my_project` on purpose. The outer one is a regular Python project —
-`pyproject.toml`, its own virtual environment, a lockfile. The inner one is the AQVEN project: that's
-where `aqven.yaml` lives, and every `{{CLI_COMMAND}}` command looks for it from wherever you run it.
+`pyproject.toml`, its own virtual environment, a lockfile — plus `AGENTS.md`, `CLAUDE.md` and
+`.mcp.json`, which tell a coding agent how to work on this project. The inner one is the AQVEN project:
+that's where `aqven.yaml` lives, and every `{{CLI_COMMAND}}` command looks for it from wherever you run
+it.
 
 Inside, a flow is a folder with a `flow.yaml` and a `nodes/` folder. Each node is its own
 `<node_id>.node.yaml` file; a few related nodes are often kept in the same subfolder. Here's the real
@@ -202,5 +204,8 @@ routed, drafted, judged reply.
 
 ## What's next
 
-[From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) picks up from here: the
-same project, opened in Studio, to see the graph, find why a run went wrong, and verify a fix.
+- [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) picks up from here: the
+  same project, opened in Studio, to see the graph, find why a run went wrong, and verify a fix.
+- [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) hands the same
+  project to Claude Code, Codex, or another agent instead: start the agent in the outer `my_project`
+  folder, connect AQVEN's MCP server, and paste one setup prompt.
