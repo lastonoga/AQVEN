@@ -1,0 +1,22 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "The case intent from a colleague's short summary of the customer's message"
+in:
+- name: "summary"
+  type: "Text"
+  description: "What the customer needs from support now, followed by the facts that bear on it"
+  maxLength: 600
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked; null when no product was identified"
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the intent, written before the choice"
+  maxLength: 300
+- name: "intent"
+  type: "CaseIntent"
+  description: "Case intent"
+- name: "confidence"
+  type: "Score"
+  description: "Confidence in the chosen intent"

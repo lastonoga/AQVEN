@@ -1,0 +1,22 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Two identical runs of the judge panel pick the expected winner equally often: the spread between them is the noise floor for every comparison of panel variants"
+subject:
+  flow: "judge_panel"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "run_a"
+- id: "run_b"
+checks:
+- id: "matches_expected"
+  kind: "binary"
+  use: "expected"
+question:
+  kind: "compare"
+  baseline: "run_a"
+  candidate: "run_b"
+  primary: "matches_expected"
+  margin: 0
+plan:
+  repeats: 5

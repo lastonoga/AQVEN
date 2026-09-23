@@ -31,6 +31,13 @@ These values come from enum classes in `aqven.spec.names`.
 | `max_iter` |
 | `budget` |
 
+## MetricDirection
+
+| Value |
+| --- |
+| `higher_is_better` |
+| `lower_is_better` |
+
 ## MetricKind
 
 | Value |
@@ -138,6 +145,18 @@ These values come from enum classes in `aqven.spec.names`.
 | `locale` |
 | `tenant_id` |
 
+## SeriesMetric
+
+| Value |
+| --- |
+| `success_rate` |
+| `cost_usd` |
+| `cost_of_pass` |
+| `latency_p50_ms` |
+| `latency_p95_ms` |
+| `schema_valid_first_try` |
+| `infra_error_rate` |
+
 ## SpecKind
 
 | Value |
@@ -148,6 +167,7 @@ These values come from enum classes in `aqven.spec.names`.
 | `Node` |
 | `Dataset` |
 | `Eval` |
+| `Experiment` |
 | `Inference` |
 | `Agent` |
 | `Tool` |

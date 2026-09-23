@@ -20,6 +20,7 @@ from aqven.loader.layout import (
     within,
 )
 from aqven.loader.project import (
+    LoadedExperiment,
     LoadedFlow,
     LoadedInference,
     LoadedProject,
@@ -41,6 +42,7 @@ __all__ = [
     "NODE_ID_SEPARATOR",
     "PROJECT_FILE",
     "LoadResult",
+    "LoadedExperiment",
     "LoadedFlow",
     "LoadedInference",
     "LoadedProject",

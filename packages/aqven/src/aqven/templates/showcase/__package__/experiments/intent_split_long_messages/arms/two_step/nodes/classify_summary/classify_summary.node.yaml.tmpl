@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The same cheap open model decides the intent from the condensed summary"
+agent: "llama"
+in:
+- name: "summary"
+  from: "$condense_message.out.summary"
+- name: "product"
+  from: "$input.product"

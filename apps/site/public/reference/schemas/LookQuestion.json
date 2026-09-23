@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "description": "Run the cases and show them side by side, with no statistical verdict.",
+  "properties": {
+    "kind": {
+      "const": "look",
+      "title": "Kind",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "title": "LookQuestion",
+  "type": "object"
+}

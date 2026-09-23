@@ -28,13 +28,19 @@ SOURCES: Final = (
 )
 SKIPPED_PARTS: Final = frozenset({".aqven", "__pycache__", ".ruff_cache", "cassettes", ".pytest_cache"})
 SKIPPED_FILES: Final = frozenset(
-    {f"{EXAMPLE_PACKAGE}/types.py", "tests/test_support_case.py", ".env", f"{EXAMPLE_PACKAGE}/.env"}
+    {
+        f"{EXAMPLE_PACKAGE}/types.py",
+        "tests/test_support_case.py",
+        "tests/test_experiment_coverage.py",
+        ".env",
+        f"{EXAMPLE_PACKAGE}/.env",
+    }
 )
 SKIPPED_SUFFIXES: Final = frozenset({".pyc", ".sqlite"})
 BINARY_SUFFIXES: Final = frozenset({".jpg", ".jpeg", ".png", ".pdf", ".mp4", ".wav", ".ico"})
 KEPT_TEMPLATE_FILES: Final = frozenset({"pyproject.toml.tmpl"})
 IN_SYNC: Final = "templates: in sync"
-OUT_OF_SYNC: Final = "templates: out of sync; run python scripts/sync_templates.py"
+OUT_OF_SYNC: Final = "templates: out of sync; run python tools/sync_templates.py"
 
 
 @dataclass(frozen=True, slots=True)

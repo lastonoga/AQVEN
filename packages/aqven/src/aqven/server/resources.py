@@ -28,6 +28,7 @@ type FileKind = Literal[
     "Node",
     "Dataset",
     "Eval",
+    "Experiment",
     "Inference",
     "Agent",
     "Tool",

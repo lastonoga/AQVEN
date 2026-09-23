@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The escalation path of the intent cascade: the product's normalization and attachment parsing, then the strong model that decides the intent when the cheap ballots split"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$escalate.out.rationale"
+- name: "intent"
+  from: "$escalate.out.intent"
+- name: "confidence"
+  from: "$escalate.out.confidence"
+order:
+- "prepare"
+- "triage"
+- "escalate"

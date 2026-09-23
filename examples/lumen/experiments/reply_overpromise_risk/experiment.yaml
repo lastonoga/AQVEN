@@ -1,0 +1,30 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "The polish loop keeps the reply within the decision in more than 97% of attempts: a refund, a replacement or an amount the decision does not give stays a rare failure"
+failure_mode: "overpromise"
+subject:
+  flow: "support_case"
+  from: "polish"
+  to: "polish"
+cases:
+  dataset: "support_case_cases"
+variants:
+- id: "gpt"
+checks:
+- id: "promises"
+  kind: "binary"
+  run: "@root.code.support_case:promises_match_resolution"
+- id: "customer_language"
+  kind: "binary"
+  use: "language"
+  with:
+    field: "$out.reply.text"
+    locale: "$in.locale"
+question:
+  kind: "threshold"
+  metric: "promises"
+  above: 0.97
+  margin: 0.01
+plan:
+  cases: 12
+  repeats: 20

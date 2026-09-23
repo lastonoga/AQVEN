@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A finished customer reply with the case context a critic reads: the summary, the decision and the knowledge base chunks"
+fields:
+- name: "summary"
+  type: "Text"
+  description: "Case summary after parsing"
+  maxLength: 600
+- name: "resolution"
+  type: "Resolution"
+  description: "The decision the reply has to match"
+- name: "chunks"
+  type: "KbChunk[]"
+  description: "Knowledge base chunks the reply must rely on"
+  maxItems: 80
+- name: "reply"
+  type: "ReplyDraft"
+  description: "The reply under review, with its citations"

@@ -26,6 +26,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `context` | `map<string, JsonValue> \| null` | No | `None` | — |
 | `node_outputs` | `map<string, JsonValue> \| null` | No | `None` | — |
 | `metadata` | `map<string, JsonValue> \| null` | No | `None` | — |
+| `tags` | `map<string, string> \| null` | No | `None` | — |
 | `expected_output` | `JsonValue` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/DatasetCase.json)

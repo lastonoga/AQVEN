@@ -8,7 +8,7 @@ from typing import Final, assert_never
 
 from pydantic import BaseModel
 
-from aqven.loader import LoadedProject, LoadResult, load_project, local_node_id
+from aqven.loader import LoadedFlow, LoadedProject, LoadResult, load_project, local_node_id
 from aqven.spec import (
     AUDIO,
     BOOL,
@@ -26,9 +26,11 @@ from aqven.spec import (
     TEXT,
     TIME_ZONE,
     VIDEO,
+    ArmId,
     CodeNodeSpec,
     Constraints,
     EnumType,
+    ExperimentId,
     FieldDecl,
     FlowId,
     IdType,
@@ -64,10 +66,12 @@ IMPORT_GROUPS: Final = (("datetime", "typing"), ("pydantic",), ("aqven.spec",))
 INPUT_SUFFIX: Final = "In"
 OUTPUT_SUFFIX: Final = "Out"
 type StepKey = tuple[FlowId, NodeId]
+type ArmStepKey = tuple[ExperimentId, ArmId, NodeId]
 
 NO_INFERENCES: Final[Mapping[InferenceId, InferenceSpec]] = MappingProxyType[InferenceId, InferenceSpec]({})
 NO_TOOLS: Final[Mapping[ToolId, ToolSpec]] = MappingProxyType[ToolId, ToolSpec]({})
 NO_STEPS: Final[Mapping[StepKey, CodeNodeSpec]] = MappingProxyType[StepKey, CodeNodeSpec]({})
+NO_ARM_STEPS: Final[Mapping[ArmStepKey, CodeNodeSpec]] = MappingProxyType[ArmStepKey, CodeNodeSpec]({})
 
 BUILTIN_NAMES: Final[Mapping[TypeId, tuple[str, str]]] = {
     TEXT: ("", "str"),
@@ -117,7 +121,18 @@ class StepShape:
         return f"{_pascal(self.flow_id)}{_pascal(local_node_id(self.node_id))}"
 
 
-type ShapeOwner = InferenceShape | ToolShape | StepShape
+@dataclass(frozen=True, slots=True)
+class ArmStepShape:
+    experiment_id: ExperimentId
+    arm_id: ArmId
+    node_id: NodeId
+
+    @property
+    def stem(self) -> str:
+        return f"{_pascal(self.experiment_id)}{_pascal(self.arm_id)}{_pascal(local_node_id(self.node_id))}"
+
+
+type ShapeOwner = InferenceShape | ToolShape | StepShape | ArmStepShape
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,18 +166,25 @@ def project_tools(project: LoadedProject) -> Mapping[ToolId, ToolSpec]:
 
 
 def project_steps(project: LoadedProject) -> Mapping[StepKey, CodeNodeSpec]:
+    return {(flow_id, node_id): spec for flow_id, flow in project.flows.items() for node_id, spec in _code_steps(flow)}
+
+
+def project_arm_steps(project: LoadedProject) -> Mapping[ArmStepKey, CodeNodeSpec]:
     return {
-        (flow_id, node_id): spec
-        for flow_id, flow in project.flows.items()
-        if flow.builder_path is None
-        for node_id, source in flow.nodes.items()
-        if isinstance(spec := source.spec, CodeNodeSpec)
+        (experiment_id, arm_id, node_id): spec
+        for experiment_id, experiment in project.experiments.items()
+        for arm_id, arm in experiment.arms.items()
+        for node_id, spec in _code_steps(arm)
     }
 
 
 def project_plan(project: LoadedProject) -> GeneratedTypes:
     return plan_types(
-        project_types(project), project_inferences(project), project_tools(project), project_steps(project)
+        project_types(project),
+        project_inferences(project),
+        project_tools(project),
+        project_steps(project),
+        project_arm_steps(project),
     )
 
 
@@ -177,6 +199,7 @@ def declared_records(
     inferences: Mapping[InferenceId, InferenceSpec],
     tools: Mapping[ToolId, ToolSpec],
     steps: Mapping[StepKey, CodeNodeSpec],
+    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
 ) -> Iterator[ShapeRecord]:
     for inference_id in sorted(inferences):
         spec = inferences[inference_id]
@@ -188,6 +211,9 @@ def declared_records(
     for key in sorted(steps):
         step = steps[key]
         yield from shape_records(StepShape(*key), step.in_, step.out)
+    for key in sorted(arm_steps):
+        step = arm_steps[key]
+        yield from shape_records(ArmStepShape(*key), step.in_, step.out)
 
 
 def plan_types(
@@ -195,10 +221,12 @@ def plan_types(
     inferences: Mapping[InferenceId, InferenceSpec] = NO_INFERENCES,
     tools: Mapping[ToolId, ToolSpec] = NO_TOOLS,
     steps: Mapping[StepKey, CodeNodeSpec] = NO_STEPS,
+    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
 ) -> GeneratedTypes:
     models = build_type_models(types)
     buildable = {type_id: spec for type_id, spec in types.items() if type_id in models.annotations}
-    candidates = (record for record in declared_records(inferences, tools, steps) if _buildable(models, record))
+    declared = declared_records(inferences, tools, steps, arm_steps)
+    candidates = (record for record in declared if _buildable(models, record))
     taken = set(_defined_names(buildable))
     records: list[ShapeRecord] = []
     conflicts: list[ShapeRecord] = []
@@ -213,8 +241,9 @@ def render_types(
     inferences: Mapping[InferenceId, InferenceSpec] = NO_INFERENCES,
     tools: Mapping[ToolId, ToolSpec] = NO_TOOLS,
     steps: Mapping[StepKey, CodeNodeSpec] = NO_STEPS,
+    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
 ) -> str:
-    return render_plan(plan_types(types, inferences, tools, steps))
+    return render_plan(plan_types(types, inferences, tools, steps, arm_steps))
 
 
 def render_plan(plan: GeneratedTypes) -> str:
@@ -353,6 +382,11 @@ ITEM_WRITERS: Final[Mapping[TypeId, Callable[[_Writer, Constraints], str]]] = {
     INT: _Writer.integer,
     FLOAT: _Writer.number,
 }
+
+
+def _code_steps(flow: LoadedFlow) -> Iterator[tuple[NodeId, CodeNodeSpec]]:
+    nodes = flow.nodes.items() if flow.builder_path is None else ()
+    return ((node_id, spec) for node_id, source in nodes if isinstance(spec := source.spec, CodeNodeSpec))
 
 
 def _buildable(models: TypeModels, record: ShapeRecord) -> bool:

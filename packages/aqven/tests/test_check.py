@@ -1352,6 +1352,13 @@ def test_eval_scorers_reuse_evaluator_references(shop: Path) -> None:
         (EVAL_FILE, 'use: "not_empty"', 'use: "accuracy"', DiagnosticCode.E_POLICY_UNKNOWN, ("scorers", 2, "use")),
         (
             EVAL_FILE,
+            'use: "not_empty"\n  with:\n    field: "$out.rationale"\n',
+            'use: "expected"\n',
+            DiagnosticCode.E_CHECK_PARAMS,
+            ("scorers", 2, "use"),
+        ),
+        (
+            EVAL_FILE,
             'field: "$out.rationale"',
             'field: "$out.reason"',
             DiagnosticCode.E_CHECK_PARAMS,
@@ -1381,6 +1388,7 @@ def test_eval_scorers_reuse_evaluator_references(shop: Path) -> None:
         "judge_input_by_name",
         "judge_with_params",
         "scorer_builtin_unknown",
+        "scorer_expected_without_a_case",
         "scorer_params_path",
         "reflection_agent",
         "inference",

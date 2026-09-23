@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent from one ballot: the product's own normalization and attachment parsing, then a single cheap ballot with no perspective"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$ballot.out.rationale"
+- name: "intent"
+  from: "$ballot.out.intent"
+- name: "confidence"
+  from: "$ballot.out.confidence"
+order:
+- "prepare"
+- "triage"
+- "ballot"

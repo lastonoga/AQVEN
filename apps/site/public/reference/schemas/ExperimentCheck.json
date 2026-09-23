@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "MetricKind": {
+      "enum": [
+        "binary",
+        "ordinal",
+        "continuous"
+      ],
+      "title": "MetricKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A detector scored on every attempt: a built-in, a ``module:function`` or a judge inference with its agent.\n\n``validated_by`` names the experiment that measured this judge on planted defects; a judge without it\nproduces signals, not evidence.",
+  "properties": {
+    "agent": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "inference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Inference"
+    },
+    "kind": {
+      "$ref": "#/$defs/MetricKind"
+    },
+    "run": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run"
+    },
+    "use": {
+      "anyOf": [
+        {
+          "pattern": "^[a-z][a-z0-9_]{0,62}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Use"
+    },
+    "validated_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validated By"
+    },
+    "with": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "With"
+    }
+  },
+  "required": [
+    "id",
+    "kind"
+  ],
+  "title": "ExperimentCheck",
+  "type": "object"
+}

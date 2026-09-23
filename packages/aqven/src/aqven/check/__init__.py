@@ -2,6 +2,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Final
 
+from aqven.check.arms import check_arms
 from aqven.check.bindings import check_bindings
 from aqven.check.bounds import check_bounds
 from aqven.check.builders import materialize_builders
@@ -9,9 +10,11 @@ from aqven.check.capabilities import check_capabilities
 from aqven.check.code import check_code
 from aqven.check.context import CheckContext, CheckRule, ResolvedAgent, ResolvedModel, resolve_agents
 from aqven.check.control import check_control
+from aqven.check.datasets import check_datasets
 from aqven.check.display import check_display
 from aqven.check.dynamic import check_dynamic
 from aqven.check.evals import check_evals
+from aqven.check.experiments import check_experiments
 from aqven.check.flows import check_flows
 from aqven.check.generated import check_generated
 from aqven.check.graph import build_graph
@@ -31,8 +34,8 @@ from aqven.check.secrets import check_secrets
 from aqven.check.tool_args import check_tool_args
 from aqven.check.types import check_types
 from aqven.diagnostics import Diagnostic, sort_diagnostics
-from aqven.loader import LoadedProject, Position, YamlPath, load_project, locate
-from aqven.spec import TypeId, TypeSpec, build_type_models
+from aqven.loader import LoadedFlow, LoadedProject, Position, SourceSpec, YamlPath, load_project, locate
+from aqven.spec import FlowSpec, NodeSpec, TypeId, TypeSpec, build_type_models
 
 RULES: Final[tuple[CheckRule, ...]] = (
     check_names,
@@ -56,8 +59,12 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_secrets,
     check_tool_args,
     check_evals,
+    check_datasets,
+    check_experiments,
     check_generated,
 )
+PROJECT_OUTPUT_RULES: Final[tuple[CheckRule, ...]] = (check_generated,)
+ARM_RULES: Final[tuple[CheckRule, ...]] = tuple(rule for rule in RULES if rule not in PROJECT_OUTPUT_RULES)
 
 
 def check_project(root: Path) -> CheckReport:
@@ -69,7 +76,8 @@ def check_project(root: Path) -> CheckReport:
         materialized = materialize_builders(loaded.project, code)
         context = build_context(materialized.project, code)
         found = [item for rule in RULES for item in rule(context)]
-    diagnostics = (*loaded.diagnostics, *materialized.diagnostics, *found)
+        arms = list(check_arms(context, ARM_RULES))
+    diagnostics = (*loaded.diagnostics, *materialized.diagnostics, *found, *arms)
     located = _located(diagnostics, _positions(materialized.project))
     return CheckReport(diagnostics=sort_diagnostics(_distinct(located)), project=materialized.project)
 
@@ -98,9 +106,19 @@ def _positions(project: LoadedProject) -> Mapping[str, Mapping[YamlPath, Positio
         *project.tools.values(),
         *project.mcp_servers.values(),
         *(source for inference in project.inferences.values() if (source := inference.source)),
-        *(source for flow in project.flows.values() for source in (flow.source, *flow.nodes.values()) if source),
+        *(experiment.source for experiment in project.experiments.values()),
+        *(source for flow in _all_flows(project) for source in _flow_sources(flow)),
     )
     return {source.path: source.positions for source in sources}
+
+
+def _all_flows(project: LoadedProject) -> tuple[LoadedFlow, ...]:
+    arms = (arm for experiment in project.experiments.values() for arm in experiment.arms.values())
+    return (*project.flows.values(), *arms)
+
+
+def _flow_sources(flow: LoadedFlow) -> tuple[SourceSpec[FlowSpec] | SourceSpec[NodeSpec], ...]:
+    return tuple(source for source in (flow.source, *flow.nodes.values()) if source is not None)
 
 
 def _located(items: Iterable[Diagnostic], positions: Mapping[str, Mapping[YamlPath, Position]]) -> Iterator[Diagnostic]:
@@ -115,6 +133,7 @@ def _distinct(items: Iterable[Diagnostic]) -> tuple[Diagnostic, ...]:
 
 
 __all__ = [
+    "ARM_RULES",
     "RULES",
     "CheckContext",
     "CheckReport",

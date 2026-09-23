@@ -13,6 +13,7 @@ class DatasetCase(SpecModel):
     context: dict[str, JsonValue] | None = None
     node_outputs: dict[NodeId, JsonValue] | None = None
     metadata: dict[str, JsonValue] | None = None
+    tags: dict[str, str] | None = None
     expected_output: JsonValue = None
 
 

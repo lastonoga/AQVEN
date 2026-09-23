@@ -12,6 +12,7 @@ from pydantic import JsonValue, TypeAdapter
 from aqven.codegen import (
     GENERATED_HEADER,
     GENERATED_TYPES,
+    ArmStepShape,
     InferenceShape,
     StepShape,
     ToolShape,
@@ -20,7 +21,9 @@ from aqven.codegen import (
     render_types,
 )
 from aqven.spec import (
+    ArmId,
     CodeNodeSpec,
+    ExperimentId,
     FieldDecl,
     FlowId,
     InferenceId,
@@ -165,6 +168,33 @@ def steps() -> dict[tuple[FlowId, NodeId], CodeNodeSpec]:
     return {
         (FlowId(flow_id), NodeId(node_id)): STEP_ADAPTER.validate_python({**STEP_HEADER, **data})
         for (flow_id, node_id), data in STEPS.items()
+    }
+
+
+ARM_STEPS: Final[Mapping[tuple[str, str, str], dict[str, JsonValue]]] = {
+    ("judge_check", "judge", "verdict"): {
+        "run": "verdict",
+        "in": [{**field("score", "Score"), "from": "$judge.out.score"}],
+        "out": [field("flag", "Flag")],
+    },
+    ("judge_again", "judge", "verdict"): {
+        "run": "verdict",
+        "in": [{**field("score", "Score"), "from": "$judge.out.score"}],
+        "out": [field("tier", "Tier")],
+    },
+    ("support", "case", "prepare"): {
+        "run": "prepare",
+        "out": [field("flag", "Flag")],
+    },
+}
+
+
+def arm_steps() -> dict[tuple[ExperimentId, ArmId, NodeId], CodeNodeSpec]:
+    return {
+        (ExperimentId(experiment_id), ArmId(arm_id), NodeId(node_id)): STEP_ADAPTER.validate_python(
+            {**STEP_HEADER, **data}
+        )
+        for (experiment_id, arm_id, node_id), data in ARM_STEPS.items()
     }
 
 
@@ -338,6 +368,30 @@ def test_step_model_name_taken_by_a_type_is_a_conflict() -> None:
     assert [(record.name, record.owner) for record in plan.conflicts] == [
         ("SupportCasePrepareOut", StepShape(FlowId("support_case"), NodeId("prepare")))
     ]
+
+
+def test_arm_step_models_carry_the_experiment_and_arm_and_follow_the_flow_steps(tmp_path: Path) -> None:
+    declared = types()
+    plan = plan_types(declared, steps=steps(), arm_steps=arm_steps())
+    target = tmp_path / "types.py"
+    target.write_text(render_types(declared, steps=steps(), arm_steps=arm_steps()), encoding="utf-8")
+    module = load_module(target)
+    models = build_type_models(declared)
+    names = [record.name for record in plan.records]
+
+    assert names[names.index("SupportCasePrepareOut") + 1 :] == [
+        "JudgeAgainJudgeVerdictIn",
+        "JudgeAgainJudgeVerdictOut",
+        "JudgeCheckJudgeVerdictIn",
+        "JudgeCheckJudgeVerdictOut",
+    ]
+    assert [(record.name, record.owner) for record in plan.conflicts] == [
+        ("SupportCasePrepareIn", ArmStepShape(ExperimentId("support"), ArmId("case"), NodeId("prepare"))),
+        ("SupportCasePrepareOut", ArmStepShape(ExperimentId("support"), ArmId("case"), NodeId("prepare"))),
+    ]
+    verdict = arm_steps()[(ExperimentId("judge_check"), ArmId("judge"), NodeId("verdict"))]
+    expected = normalized_schema(models.record("JudgeCheckJudgeVerdictIn", verdict.in_))
+    assert normalized_schema(generated_annotation(module, "JudgeCheckJudgeVerdictIn")) == expected
 
 
 def test_generate_writes_only_when_the_text_changes(tmp_path: Path) -> None:

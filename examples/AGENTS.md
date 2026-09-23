@@ -3,8 +3,10 @@
 `lumen` is an aqven project: AI workflows are YAML files next to the Python code they use. The aqven module is
 `lumen/`; its `aqven.yaml` marks the project root, and every aqven command takes that folder as its path.
 
-Documentation for this engine is at https://aqvenstudio.com — `https://aqvenstudio.com/llms.txt` is the index of
-every page in Markdown. Read it when a node kind, a policy or a command is unfamiliar, and prefer it over guessing.
+Documentation for this engine is at https://aqvenstudio.com. Before you answer any question about a node kind, a
+policy or a command, or write YAML that uses one, fetch `https://aqvenstudio.com/llms.txt` first: it is the index of
+every page in Markdown. Find the matching page in it and fetch that page too. Do this even if you think you already
+know the answer; the docs are the source of truth and guessing from memory is how stale answers happen.
 
 ## Layout
 
@@ -41,21 +43,26 @@ tests/                                 offline tests of the example, at the proj
 
 ## Rules
 
-1. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
+1. **Ask when something is genuinely unclear and the answer would change what you build.** An ambiguous
+   field type, an underspecified check, which node kind actually fits, whether an idea is even fully
+   specified — not only which provider someone has a key for. A wrong assumption costs a rewrite; a
+   question costs one reply. This applies everywhere in this file, not only when brainstorming a new flow
+   from an idea.
+2. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
    folder it is the whole safety net: it checks the files statically and then simulates every flow with generated
    values, without a network and without spending tokens. Fix every error before you finish; do not ask a model to try
    the flow instead.
-2. Never edit `lumen/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
+3. Never edit `lumen/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
    the YAML instead. Never create `lumen/types/__init__.py`: it hides the generated models.
-3. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
+4. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
    flow, node, agent, tool or type, adding or removing a node. It updates references and the rename journal. Edit by
    hand only inside one file: prompt text, descriptions, settings, one node. If `flow_patch` answers `STALE_FILE`,
    read the file again and repeat the change; never overwrite a file by force.
-4. **After editing a prompt, a fragment, a variant or an inference, run
+5. **After editing a prompt, a fragment, a variant or an inference, run
    `aqven prompt preview <flow>.<node> --project lumen`** and read
    what the model will actually receive: the instructions, every message and the output contract. Wrong data wiring
    shows up there as an empty or literal placeholder in the message.
-5. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
+6. **Choose a model with `aqven models check`, not from memory.** It prints which output modes a model supports and
    what `output.mode: auto` resolves to. Pin `output.mode` in the agent file when the resolved mode is not the one you
    want. A schema mismatch that gets retried and then succeeds in a run's events is AQVEN's own repair retry working,
    not a bug report — only a node whose *last* attempt still failed after `output.retries` ran out is worth
@@ -70,14 +77,29 @@ tests/                                 offline tests of the example, at the proj
    asking it to place literal tokens at each position and checking they came back exactly where asked, not what the
    provider's docs claim. It never stops on a transient provider hiccup — only a genuine wrong-shape answer counts
    as the limit — but every call is still billed and it needs `--live`, there is no free mode. Both commands also take `--provider-options '<json>'`, merged into the request body — run the same target with and without it to find out whether a provider-level setting like OpenRouter's `{"provider": {"require_parameters": true}}` actually changes what a model can do, instead of assuming it does.
-6. API keys live only in `lumen/.env`, which is gitignored; variables of the process environment take
-   precedence. Never read, print or edit `.env` files, and never put keys into YAML, code, tests, logs or commits.
-7. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
-8. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
-   Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
-   a flow takes: `tests/test_support_case.py` replays recorded runs of five scenarios and forces every branch
-   with node output overrides and scripted human answers.
-9. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
+7. API keys live in `lumen/.env`, which is gitignored; variables of the process environment take
+   precedence. You can read and edit `.env` directly. Before adding or changing a key, check the
+   provider's own documentation for its exact variable name and format instead of guessing one. Never put
+   a real key into YAML, code, tests, logs or commits — printing one into this conversation counts too,
+   since it ends up stored outside `.env` either way. `aqven secrets lumen` gives a quick masked
+   summary of what's configured without opening the file; `aqven models check --project lumen` does
+   the same for what a model actually supports.
+8. **Before wiring a `model` at a new agent, check what's actually configured** with
+   `aqven secrets lumen` rather than assuming the project's existing default carries over. If the
+   user asked for a specific provider, use it and add its key slot even if it's still empty — say so
+   plainly as the first thing in your reply, not buried in a summary table after the files are already
+   written. If the user did not name a provider and nothing usable is configured, stop before writing a
+   single file and ask directly which providers they actually have credentials for; don't default
+   silently to whatever the project's other agents already use, and don't build the agent, flow or types
+   first and surface the gap afterward — the answer decides which provider the files reference, so it
+   comes first. Once you know, write the key into `.env`, and fetch `llms.txt` to find the provider
+   catalog reference page for the real environment variable name and model id format, never guess either.
+9. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
+10. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
+    Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
+    a flow takes: `tests/test_support_case.py` replays recorded runs of five scenarios and forces every branch
+    with node output overrides and scripted human answers.
+11. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
 
    ```python
    from aqven.testing import node_output, offline_options
@@ -92,6 +114,16 @@ tests/                                 offline tests of the example, at the proj
 
 When the request is an idea rather than a change — "a workflow that triages support mail", an empty project — do
 not start writing files. Ask first. A wrong guess here costs a rewrite of every node below it.
+
+Before proposing a shape, use what the docs already worked out, not first instinct: fetch `llms.txt` and read
+*Ten kinds of nodes* for the node-kind map itself, *Designing reliable workflows* for when splitting a step,
+branching into `parallel`, looping on a critic, or building a judge panel actually earns its cost — none of
+them buy reliability just by existing, and reaching for one without a real boundary is a documented
+anti-pattern, not a safe default — and, whenever an attachment or a generated image, audio or video sits
+anywhere in the flow, *Media has real limits on both sides of a model call*, since a provider's cap can
+decide the whole flow's shape before a node is written, not just one step's. This is the same research the
+top of this file already tells you to fetch before answering an unfamiliar question; use it here too, before
+the flow exists, not only after something breaks.
 
 Settle these for the whole flow, then for each step. Ask them in one message, not one at a time, and ask only what
 the request has not already answered.
@@ -115,11 +147,26 @@ the request has not already answered.
 | Failure | retry, default value, or stop — a step without an answer here fails in production, not in `aqven check` |
 
 Write the files only when you have the answers. Order: types first, then agents and tools, then the nodes, then
-`flow.yaml`. Run `aqven check` after each file, not once at the end — one wrong type reference is cheaper to fix
-before ten nodes reference it.
+`flow.yaml`, then the dataset, then an eval for every `llm` node. Run `aqven check` after each file, not once at
+the end — one wrong type reference is cheaper to fix before ten nodes reference it.
 
-Then write the dataset: three or four real cases with the input and the expected result, under `datasets/`. A flow
-without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
+**A passing `aqven check` is not a finished flow.** It proves the wiring is valid; it never runs a real model and
+never tells you whether the flow actually does its job. Do not stop at `flow.yaml` and call the flow built —
+finish these two before you do:
+
+- A dataset under `datasets/` with `flow: <flow_id>`, with one case per situation this flow will actually meet in
+  its own domain: one per `switch` case or decision path from the Decisions column above, one per failure mode
+  from the Failure column, plus the ordinary case each of those is a variation on. Three near-identical
+  happy-path rows are not a dataset — a support-ticket triage flow needs an angry customer, a calm one, one in
+  the wrong language, and one where the only right answer is "escalate to a human," not four polite refund
+  requests. Write real, specific values for this flow's actual niche, not placeholders like "test input 1".
+- An `evals/<flow_id>/<node_id>.yaml` for every `llm` node — `inference` and `agent` set, plus at least the
+  cheap built-in scorers that fit its output (`not_empty`, `no_pii`, `language`, `max_words`, `regex`,
+  `ids_in_allowed_set`; see the full scorer list under *The development loop* below before reaching for a
+  judge). An `llm` node with no eval is a step nobody has actually checked, no matter how many times
+  `aqven check` passes.
+
+A flow without cases cannot be evaluated, and an idea nobody wrote cases for is usually still an idea.
 
 ## The development loop
 
@@ -190,6 +237,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `... --input lumen/samples/case_request.json --variant tone=warm` | the same preview with your own input and a forced prompt variant |
 | `uv run aqven models check --project lumen` | output modes of every agent model; `--live` sends one tiny request per mode |
 | `uv run aqven models shapes <agent> --project lumen --live` | the agent model's real nesting depth, list length and enum size; billed, requires `--live` |
+| `uv run aqven secrets lumen` | every provider, tool and MCP secret the project declares, where it comes from, and a masked tail if it's set |
 | `uv run aqven generate lumen` | writes `lumen/types.py` |
 | `uv run aqven tree lumen` | entities by kind with their files |
 | `uv run aqven run support_case --root lumen --input lumen/samples/case_request.json` | runs a flow without a server |

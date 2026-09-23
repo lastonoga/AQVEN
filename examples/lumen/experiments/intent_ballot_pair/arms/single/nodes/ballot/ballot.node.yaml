@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "One intent ballot from the cheap open model, with no perspective set"
+inference: "ballot"
+agent: "llama"
+in:
+- name: "summary"
+  from: "$triage.out.summary"
+- name: "observations"
+  from: "$triage.out.observations"
+- name: "safety_risk"
+  from: "$triage.out.safety_risk"

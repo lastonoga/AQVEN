@@ -29,6 +29,7 @@ SPEC_FILE_KINDS: Final[Mapping[SpecKind, FileKind]] = {
     SpecKind.NODE: "Node",
     SpecKind.DATASET: "Dataset",
     SpecKind.EVAL: "Eval",
+    SpecKind.EXPERIMENT: "Experiment",
     SpecKind.INFERENCE: "Inference",
     SpecKind.AGENT: "Agent",
     SpecKind.TOOL: "Tool",
@@ -48,9 +49,11 @@ def spec_paths(project: LoadedProject) -> Iterator[tuple[str, SpecKind]]:
     yield from _paths(SpecKind.MCP_SERVER, project.mcp_servers.values())
     yield from _paths(SpecKind.DATASET, project.datasets.values())
     yield from _paths(SpecKind.EVAL, project.evals.values())
+    yield from _paths(SpecKind.EXPERIMENT, (experiment.source for experiment in project.experiments.values()))
     yield from _paths(SpecKind.INFERENCE, (inference.source for inference in project.inferences.values()))
-    yield from _paths(SpecKind.FLOW, (flow.source for flow in project.flows.values()))
-    yield from _paths(SpecKind.NODE, (node for flow in project.flows.values() for node in flow.nodes.values()))
+    flows = (*project.flows.values(), *(arm for item in project.experiments.values() for arm in item.arms.values()))
+    yield from _paths(SpecKind.FLOW, (flow.source for flow in flows))
+    yield from _paths(SpecKind.NODE, (node for flow in flows for node in flow.nodes.values()))
 
 
 def declared_kinds(project: LoadedProject | None) -> Mapping[str, FileKind]:

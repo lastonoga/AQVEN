@@ -1,9 +1,10 @@
 from collections.abc import Iterable, Iterator
 from typing import Final
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter
 
 from aqven.check.context import CheckContext
+from aqven.check.datasets import STRICT, first_problem
 from aqven.check.registry import known_agent, known_inference
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader import SourceSpec, YamlPath
@@ -94,12 +95,8 @@ def _dataset(context: CheckContext, spec: EvalSpec, source: SourceSpec[DatasetFi
 
 
 def _case_value(file: str, path: YamlPath, record: object | None, value: object, name: str) -> Iterator[Diagnostic]:
-    if record is None:
+    problem = first_problem(TypeAdapter[object](record), value, STRICT) if record is not None else None
+    if problem is None:
         return
-    try:
-        TypeAdapter[object](record).validate_python(value)
-    except ValidationError as error:
-        first = error.errors()[0]
-        location = ".".join(str(part) for part in first["loc"])
-        message = f"case {name}: value does not pass the inference model: {location}: {first['msg']}"
-        yield diagnostic(DiagnosticCode.E_SPEC_INVALID, file, path, message)
+    message = f"case {name}: value does not pass the inference model: {problem}"
+    yield diagnostic(DiagnosticCode.E_SPEC_INVALID, file, path, message)

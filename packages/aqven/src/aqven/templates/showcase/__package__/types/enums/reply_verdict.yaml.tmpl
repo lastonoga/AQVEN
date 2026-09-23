@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "Whether a reply may go to the customer as it is, by the critic's reading"
+values:
+- value: "send"
+  description: "The reply may go out: the score reaches the approval threshold and nothing blocks it"
+- value: "block"
+  description: "The reply has to be fixed first: a blocking remark, or a score below the approval threshold"

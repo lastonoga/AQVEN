@@ -19,7 +19,7 @@ build-backend = "uv_build"
 module-root = ""
 module-name = "lumen"
 source-exclude = [".aqven", ".env", ".env.example"]
-wheel-exclude = [".aqven", ".env", ".env.example"]
+wheel-exclude = [".aqven", ".env", ".env.example", "lumen/experiments"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

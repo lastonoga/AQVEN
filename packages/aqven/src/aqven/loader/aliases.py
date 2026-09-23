@@ -125,6 +125,7 @@ SITES: Final[Mapping[SpecKind, tuple[tuple[Pattern, Resolver], ...]]] = {
         (("checks", ANY, "run"), resolve_code),
     ),
     SpecKind.EVAL: ((("scorers", ANY, "run"), resolve_code),),
+    SpecKind.EXPERIMENT: ((("checks", ANY, "run"), resolve_code),),
     SpecKind.AGENT: ((("instructions",), resolve_path),),
 }
 

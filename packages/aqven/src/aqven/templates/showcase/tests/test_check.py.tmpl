@@ -14,15 +14,21 @@ TRIAGE: Final = "flows/support_case/nodes/triage/triage.node.yaml"
 REVISE: Final = "flows/support_case/nodes/polish/revise"
 JUDGES: Final = "flows/judge_panel/nodes/judges"
 RESEARCH_POLICY: Final = "agents/resolver/research_policy.inference.yaml"
+NONINFERIOR: Final = "experiments/reply_noninferior_mistral/experiment.yaml"
+PANEL_AGENTS: Final = "experiments/judge_panel_agents/experiment.yaml"
+INTENT_SPLIT: Final = "experiments/intent_split_long_messages/experiment.yaml"
+REPLY_LOOK: Final = "experiments/reply_look/experiment.yaml"
+SUPPORT_CASES: Final = "datasets/support_case_cases.yaml"
 SHADOWING_PROMPT: Final[Breakage] = (RESEARCH_POLICY, "out:\n", 'prompt: "@root/fragments/untrusted_input.md"\nout:\n')
 UNBOUND_MESSAGE: Final[Breakage] = (TRIAGE, '- name: "message"\n  from: "$prepare.out.message"\n', "")
+PLAN_BEYOND_CASES: Final[Breakage] = (NONINFERIOR, "  cases: 12\n", "  cases: 40\n")
 BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_INPUT_UNBOUND": UNBOUND_MESSAGE,
     "E_PII_PROVIDER": ("aqven.yaml", "allows_pii: true", "allows_pii: false"),
     "E_MODALITY_UNSUPPORTED": (TRIAGE, 'agent: "gemini"', 'agent: "mistral"'),
     "E_SOURCE_CONFLICT": (TRIAGE, 'agent: "gemini"', 'inference: "triage"\nagent: "gemini"'),
     "E_STRICT_UNSUPPORTED": ("agents/llama.yaml", "strict: false", "strict: true"),
-    "E_TEXT_OUTPUT": ("agents/gpt.yaml", "output:\n", 'output:\n  mode: "text"\n'),
+    "E_TEXT_OUTPUT": ("agents/gpt.yaml", 'mode: "prompted"', 'mode: "text"'),
     "E_PROMPT_VARIABLE_UNDECLARED": (
         f"{REVISE}.prompt.md",
         "{{ output_format }}",
@@ -52,6 +58,24 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
         'kind: "Dataset"\n',
         'kind: "Dataset"\nname: "reply_cases"\n',
     ),
+    "E_AGENT_UNKNOWN": (NONINFERIOR, 'polish__revise: "mistral"', 'polish__revise: "claude"'),
+    "E_VARIANT_INVALID": (NONINFERIOR, 'polish__revise: "mistral"', 'prepare: "mistral"'),
+    "E_ARM_UNKNOWN": (INTENT_SPLIT, 'arm: "two_step"', 'arm: "three_step"'),
+    "E_METRIC_UNKNOWN": (PANEL_AGENTS, 'primary: "winner"', 'primary: "accuracy"'),
+    "E_DATASET_MISMATCH": (PANEL_AGENTS, 'dataset: "judge_panel_cases"', 'dataset: "support_case_cases"'),
+    "E_CASE_DUPLICATE": (
+        "datasets/judge_panel_cases.yaml",
+        'name: "panel_bulb_router_close"',
+        'name: "panel_strip_heat_clear"',
+    ),
+    "E_RANGE_INVALID": (REPLY_LOOK, 'to: "polish"', 'to: "panel"'),
+    "E_CASES_EMPTY": (REPLY_LOOK, 'regression: "yes"', 'regression: "maybe"'),
+    "E_EXPERIMENT_UNKNOWN": (
+        REPLY_LOOK,
+        'validated_by: "critique_planted_defects"',
+        'validated_by: "critique_calibration"',
+    ),
+    "E_EXPECTED_MISSING": (SUPPORT_CASES, '  expected_output:\n    intent: "defect"\n', ""),
 }
 
 PENDING_COMMANDS: Final = (
@@ -84,6 +108,11 @@ def test_broken_copy_reports_code(aqven_project_root: Path, tmp_path: Path, code
 def test_prompt_beside_explicit_path_is_shadowed(aqven_project_root: Path, tmp_path: Path) -> None:
     copy = broken_copy(aqven_project_root, tmp_path, *SHADOWING_PROMPT)
     assert "W_PROMPT_SHADOWED" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_plan_beyond_selected_cases_warns(aqven_project_root: Path, tmp_path: Path) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *PLAN_BEYOND_CASES)
+    assert "W_PLAN_EXCEEDS_CASES" in {item.code.value for item in check_project(copy).warnings}
 
 
 def test_cli_check_exit_codes(aqven_project_root: Path, tmp_path: Path) -> None:
