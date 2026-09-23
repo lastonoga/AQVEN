@@ -108,7 +108,7 @@
       "none": "—",
       "connect": "Connect an agent",
       "claudeCode": "Claude Code",
-      "claudeCodeHint": "Run once in this project folder.",
+      "claudeCodeHint": "Run once in the folder you start Claude Code from.",
       "stdio": "Cursor, Claude Desktop and other stdio clients",
       "stdioHint": "Add this server to the MCP config of the client."
     },
