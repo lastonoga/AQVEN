@@ -24,6 +24,7 @@ type AttemptCauseKind = Literal[
 ]
 type AttemptAction = Literal["retry", "repair", "fallback", "none"]
 type CallOutcome = Literal["ok", "refusal", "truncated"]
+type CostSource = Literal["provider", "prices", "genai", "unknown"]
 type LineageRelation = Literal["fork", "replay"]
 type SpecOrigin = Literal["working_copy", "release"]
 type ForkBase = Literal["original", "working"]

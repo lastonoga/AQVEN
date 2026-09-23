@@ -114,6 +114,23 @@ describe("ExperimentScreen: how we measure", () => {
   })
 })
 
+describe("ExperimentScreen: series history", () => {
+  it("marks the spend of a series with unpriced attempts as a lower bound and says why", async () => {
+    await renderRoute("/research/experiments/intent_split_long_messages")
+    const history = await screen.findByRole("table", { name: "Series of this experiment" })
+    const [, row] = within(history).getAllByRole("row")
+    expect(row?.textContent).toMatch(/≥ \$\d+\.\d+/)
+    expect(screen.getByText("Spend is a lower bound: 6 attempts in 1 series ran on a model without a known price.")).toBeTruthy()
+  })
+
+  it("shows plain spend without a note when every attempt was priced", async () => {
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    const history = await screen.findByRole("table", { name: "Series of this experiment" })
+    expect(history.textContent).not.toContain("≥")
+    expect(screen.queryByText(/Spend is a lower bound/)).toBeNull()
+  })
+})
+
 describe("ExperimentScreen: launch", () => {
   it("starts from the plan cut to the working cases, with the recommended size, its reason and the estimate", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")

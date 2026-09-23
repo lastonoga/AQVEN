@@ -28,7 +28,7 @@ from aqven.series.model import (
     SeriesStatus,
 )
 from aqven.series.protocol import MAX_WAIT_SECONDS
-from aqven.series.views import SeriesDetailView, SeriesGetResult, SeriesStarted, SeriesStartRequest
+from aqven.series.views import SeriesDetailView, SeriesGetResult, SeriesSpend, SeriesStarted, SeriesStartRequest
 from aqven.spec import CellVerdict, ExperimentId, SeriesMetric, SeriesSplit
 from aqven.spec.experiments import MAX_REPEATS
 
@@ -139,10 +139,17 @@ def started_line(started: SeriesStarted) -> str:
     )
 
 
+def spent_text(spend: SeriesSpend) -> str:
+    if spend.unpriced_attempts == 0:
+        return usd(spend.usd)
+    unpriced = counted(spend.unpriced_attempts, "attempt")
+    return f"at least {usd(spend.usd)} ({unpriced} on a model without a known price)"
+
+
 def progress_line(series: SeriesDetailView) -> str:
     return (
         f"{series.progress.done}/{series.progress.total} attempts, "
-        f"{usd(series.spend.usd)} of {usd(series.spend.cap_usd)}, status {series.status}"
+        f"{spent_text(series.spend)} of {usd(series.spend.cap_usd)}, status {series.status}"
     )
 
 

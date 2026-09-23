@@ -16141,6 +16141,15 @@
         ],
         "title": "Contrast"
       },
+      "CostSource": {
+        "type": "string",
+        "enum": [
+          "provider",
+          "prices",
+          "genai",
+          "unknown"
+        ]
+      },
       "Count": {
         "type": "integer",
         "minimum": 0
@@ -22901,6 +22910,16 @@
                 "type": "null"
               }
             ]
+          },
+          "cost_source": {
+            "$ref": "#/components/schemas/CostSource",
+            "default": "provider"
+          },
+          "unpriced_calls": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Unpriced Calls",
+            "default": 0
           }
         },
         "type": "object",
@@ -28276,6 +28295,12 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Cap Usd"
+          },
+          "unpriced_attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Unpriced Attempts",
+            "default": 0
           }
         },
         "type": "object",

@@ -40,6 +40,7 @@ from aqven.engine.policies import PolicyFactory
 from aqven.engine.runtime import ToolServices
 from aqven.models import AmbiguousReplay, CassetteMiss, RefusedOutput, TruncatedOutput
 from aqven.models.rate import ProviderLimiters
+from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingsStore
 
 WAITS_DATABASE: Final = "aqven.sqlite"
@@ -84,7 +85,11 @@ class StandardExtensions:
         limiters = self.limiters
         return LlmDependencies(
             models=EngineModelSource(
-                self.factories, ProviderKeys(services.settings, services.environ), limiters, services.budgets
+                self.factories,
+                ProviderKeys(services.settings, services.environ),
+                limiters,
+                services.budgets,
+                services.prices,
             ),
             inference_models=LoaderInferenceModels(services.loader, services.package),
             tool_contexts=EngineToolContexts(ToolContextFactory(services)),
@@ -111,6 +116,7 @@ def standard_engine_setup(
     state_dir: Path | None = None,
     factories: ModelFactories | None = None,
     max_parallel: int | None = None,
+    prices: PriceCache = NO_PRICES,
 ) -> EngineSetup:
     extensions = StandardExtensions() if factories is None else StandardExtensions(factories)
     return EngineSetup(
@@ -119,6 +125,7 @@ def standard_engine_setup(
         extensions=extensions,
         state_dir=state_dir,
         max_parallel=max_parallel,
+        prices=prices,
     )
 
 

@@ -18,6 +18,7 @@ from series_prices import FixedPrices
 from aqven.engine.assembly import standard_engine_setup
 from aqven.engine.lifecycle import EngineLifecycle
 from aqven.engine.runtime import EngineRuntime
+from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
 from aqven.series.jobs import SeriesService
 from aqven.series.model import (
@@ -212,6 +213,7 @@ def series_engine(
     settings: MemorySettings | None = None,
     real: SeriesAnalyst | None = None,
     prices: ModelPrices | None = None,
+    engine_prices: PriceCache = NO_PRICES,
 ) -> Generator[SeriesHarness]:
     chosen = settings or MemorySettings()
     analyst = StubAnalyst()
@@ -221,7 +223,7 @@ def series_engine(
     services = build_series_services(root, workspace, chosen, real or analyst, findings, known, "test")
     SERIES_SLOT.install(services)
     standard = standard_engine_setup(
-        factories=FixedModels(models.mapping()), environ=offline_environment(), settings=chosen
+        factories=FixedModels(models.mapping()), environ=offline_environment(), settings=chosen, prices=engine_prices
     )
     lifecycle = EngineLifecycle(root=root, setup=replace(standard, workflows=REGISTERED_SERIES_WORKFLOWS))
     try:

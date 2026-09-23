@@ -8,6 +8,7 @@ from typing import Final, TextIO
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
+from aqven.app.prices import LazyPriceLookup
 from aqven.app.settings_store import open_settings_store
 from aqven.app.workers import configured_workers
 from aqven.console.formats import EventFormat
@@ -234,7 +235,7 @@ async def run_flow(request: FlowRunRequest, out: TextIO = sys.stdout, err: TextI
     state.ensure()
     settings = open_settings_store(state, studio)
     workers = request.max_parallel if request.max_parallel is not None else await configured_workers(settings)
-    configure_local_engines(standard_engine_setup(settings=settings, max_parallel=workers))
+    configure_local_engines(standard_engine_setup(settings=settings, max_parallel=workers, prices=LazyPriceLookup()))
     try:
         run = await start_flow(flow, request)
         print(f"run {run.run_id}", file=err, flush=True)

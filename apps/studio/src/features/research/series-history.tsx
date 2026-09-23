@@ -5,6 +5,7 @@ import { usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { ResearchSection } from "./layout"
 import { seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
+import { isLowerBound, unpricedSpend } from "./series-presenters"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 
 const HISTORY_MIN_WIDTH = 760
@@ -45,7 +46,15 @@ function useHistoryFields(): readonly MatrixField<SeriesSummary>[] {
       track: "140px",
       render: (series) => <Text role="cell">{t("series.progress", { done: series.progress.done, total: series.progress.total })}</Text>,
     },
-    { id: "spend", label: t("experiment.history.column.spend"), track: "80px", align: "end", render: (series) => <Text role="cell">{usd(series.spend.usd)}</Text> },
+    {
+      id: "spend",
+      label: t("experiment.history.column.spend"),
+      track: "88px",
+      align: "end",
+      render: (series) => (
+        <Text role="cell">{isLowerBound(series.spend) ? t("experiment.history.lowerBound", { usd: usd(series.spend.usd) }) : usd(series.spend.usd)}</Text>
+      ),
+    },
     {
       id: "status",
       label: t("experiment.history.column.status"),
@@ -74,6 +83,17 @@ function useHistoryFields(): readonly MatrixField<SeriesSummary>[] {
   ]
 }
 
+function UnpricedNote({ series }: { readonly series: readonly SeriesSummary[] }) {
+  const t = useTranslations("research.experiment.history")
+  const unpriced = unpricedSpend(series)
+  if (unpriced.attempts === 0) return null
+  return (
+    <Text as="p" role="hint" tone="warning" className="mt-2">
+      {t("unpriced", { count: unpriced.attempts, series: unpriced.series })}
+    </Text>
+  )
+}
+
 export function SeriesHistory({ series }: { readonly series: readonly SeriesSummary[] }) {
   const t = useTranslations("research.experiment.history")
   const fields = useHistoryFields()
@@ -82,18 +102,21 @@ export function SeriesHistory({ series }: { readonly series: readonly SeriesSumm
       {series.length === 0 ? (
         <Empty title={t("empty")} hint={t("emptyHint")} />
       ) : (
-        <Surface variant="panel" className="overflow-x-auto">
-          <Matrix
-            orientation="rows"
-            rules="rows"
-            label={t("aria")}
-            minWidth={HISTORY_MIN_WIDTH}
-            items={series}
-            itemKey={(item) => item.id}
-            fields={fields}
-            rowLink={(item) => <RowLink to={ROUTE_PATH.series} params={{ seriesId: item.id }} aria-label={t("open", { ref: seriesRef(item.id) })} />}
-          />
-        </Surface>
+        <>
+          <Surface variant="panel" className="overflow-x-auto">
+            <Matrix
+              orientation="rows"
+              rules="rows"
+              label={t("aria")}
+              minWidth={HISTORY_MIN_WIDTH}
+              items={series}
+              itemKey={(item) => item.id}
+              fields={fields}
+              rowLink={(item) => <RowLink to={ROUTE_PATH.series} params={{ seriesId: item.id }} aria-label={t("open", { ref: seriesRef(item.id) })} />}
+            />
+          </Surface>
+          <UnpricedNote series={series} />
+        </>
       )}
     </ResearchSection>
   )

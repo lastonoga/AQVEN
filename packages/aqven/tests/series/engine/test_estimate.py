@@ -165,6 +165,9 @@ class HistoryStore:
     async def update(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord:
         raise LookupError(series_id)
 
+    async def settle(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord:
+        raise LookupError(series_id)
+
     async def search(self, query: SeriesListQuery, limit: int) -> tuple[SeriesRecord, ...]:
         return ()
 
@@ -302,6 +305,41 @@ def test_history_prices_the_attempts_and_measures_the_spread() -> None:
     assert estimate.minutes == 1
     assert not estimate.needs_approval
     assert prices.asked == []
+
+
+def test_history_without_a_known_price_does_not_price_the_attempts() -> None:
+    unpriced = {
+        name: tuple(
+            history_row(name, f"case_{index}", index % 2 == 0, "0.001").model_copy(update={"unpriced_calls": 1})
+            for index in range(8)
+        )
+        for name in ("writer", "cheap")
+    }
+    estimator = SeriesEstimator(store=HistoryStore(unpriced), prices=FixedPrices())
+
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+
+    assert (outcome.estimate.usd_source, outcome.estimate.usd) == ("unknown", None)
+    assert outcome.estimate.needs_approval
+
+
+def test_history_prices_the_attempts_from_the_priced_ones_only() -> None:
+    def rows(name: str) -> tuple[AttemptRecord, ...]:
+        priced = tuple(history_row(name, f"case_{index}", True, "0.004") for index in range(4))
+        unpriced = tuple(
+            history_row(name, f"late_{index}", True, "0.001").model_copy(update={"unpriced_calls": 2})
+            for index in range(4)
+        )
+        return (*priced, *unpriced)
+
+    estimator = SeriesEstimator(
+        store=HistoryStore({"writer": rows("writer"), "cheap": rows("cheap")}), prices=FixedPrices()
+    )
+
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+
+    assert outcome.estimate.usd_source == "history"
+    assert outcome.per_attempt_usd == Decimal("0.005")
 
 
 def test_history_of_infrastructure_errors_does_not_price_the_attempts() -> None:

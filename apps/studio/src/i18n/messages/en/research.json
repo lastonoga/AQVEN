@@ -265,7 +265,9 @@
         "spend": "Spend",
         "status": "Status",
         "verdict": "Verdict"
-      }
+      },
+      "lowerBound": "≥ {usd}",
+      "unpriced": "Spend is a lower bound: {count, plural, one {# attempt} other {# attempts}} in {series, plural, one {# series} other {# series}} ran on a model without a known price."
     }
   },
   "series": {
@@ -279,6 +281,7 @@
     "spend": "{usd} of {cap} cap",
     "progressLabel": "Attempts",
     "spendLabel": "Spend",
+    "spendLowerBound": "Lower bound: {count, plural, one {# attempt} other {# attempts}} ran on a model without a known price",
     "stop": "Stop",
     "approve": "Approve spend",
     "actionFailed": "Could not do that: {reason}",

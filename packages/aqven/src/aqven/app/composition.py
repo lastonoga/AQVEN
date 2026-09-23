@@ -10,10 +10,11 @@ from pydantic import SecretStr
 from starlette.types import ASGIApp
 
 from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
-from aqven.app.prices import LazyPriceLookup
+from aqven.app.prices import LazyPriceLookup, SharedPrices
 from aqven.app.runtime import ApplicationLaunch, LocalServer
 from aqven.check import CheckReport
 from aqven.compiler import compile_project
+from aqven.engine.assembly import standard_engine_setup
 from aqven.engine.facade import PlanSource
 from aqven.ir import CompiledProject
 from aqven.loader.roots import project_workspace
@@ -112,7 +113,7 @@ def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> P
 @dataclass(slots=True)
 class ProjectAssembly:
     built: dict[Path, ProjectParts] = field(default_factory=dict[Path, ProjectParts])
-    prices: ModelPrices = field(default_factory=LazyPriceLookup)
+    prices: SharedPrices = field(default_factory=LazyPriceLookup)
 
     def parts(self, root: Path, settings: SettingsStore) -> ProjectParts:
         key = root.resolve()
@@ -230,6 +231,10 @@ class ServerApplicationFactory:
         return assemble_app(launch, self.features, self.extra, self.assembly)
 
 
+def priced_engine_host(assembly: ProjectAssembly, plan_source: PlanSource | None = None) -> DbosEngineHost:
+    return DbosEngineHost(setup=standard_engine_setup(prices=assembly.prices), plan_source=plan_source)
+
+
 def studio_server(
     *,
     features: StudioFeatures | None = None,
@@ -238,5 +243,5 @@ def studio_server(
     assembly = ProjectAssembly()
     return LocalServer(
         application=ServerApplicationFactory(features or StudioFeatures(), assembly=assembly),
-        engine=SeriesEngineHost(DbosEngineHost(plan_source=plan_source), assembly),
+        engine=SeriesEngineHost(priced_engine_host(assembly, plan_source), assembly),
     )

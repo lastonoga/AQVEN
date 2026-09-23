@@ -30,6 +30,7 @@ from aqven.models.rate import ProviderLimiters
 from aqven.models.streams import StreamContext, StreamFirstModel
 from aqven.ports.execution import ExecutionScope
 from aqven.ports.models import ModelFactory, model_provider, provider_env_var
+from aqven.ports.prices import NO_PRICES, CachedPrices
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
 from aqven.runtime.options import ModelCall, ModelRoute
 from aqven.runtime.replay import ProviderFault
@@ -191,6 +192,7 @@ class EngineModelSource:
     keys: ProviderKeys
     limiters: ProviderLimiters | None = None
     budgets: RunBudgets | None = None
+    prices: CachedPrices = NO_PRICES
 
     async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
         spec = scope_run_spec(scope)
@@ -220,6 +222,7 @@ class EngineModelSource:
             concurrency=self._limiter(scope.project, actual),
             budget=run_budget(self.budgets, scope, spec),
             usage_sink=ContextUsageSink(),
+            prices=self.prices,
         )
         guarded = guard_model(provider_model, model_ref=actual, policy=policy)
         return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), actual)

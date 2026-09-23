@@ -251,7 +251,7 @@ const seriesHeadOf = (series: ApiSeriesSummary) => ({
   variants: series.variants.map(ids.variantId),
   status: series.status,
   progress: { done: series.progress.done, total: series.progress.total },
-  spend: { usd: money(series.spend.usd), capUsd: money(series.spend.cap_usd) },
+  spend: { usd: money(series.spend.usd), capUsd: money(series.spend.cap_usd), unpricedAttempts: series.spend.unpriced_attempts },
   verdict: series.verdict,
   waits: series.waits,
   startedAt: ids.isoDateTime(series.started_at),
