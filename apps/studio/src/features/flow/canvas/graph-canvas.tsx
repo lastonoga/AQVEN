@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   Background,
   BackgroundVariant,
@@ -11,10 +12,11 @@ import {
 import { useTranslations } from "use-intl"
 import { absoluteBox, type CanvasGraph } from "../layout"
 import { ContainerNode } from "./container-node"
+import { edgeColors } from "./edge-colors"
 import { FlowEdge } from "./flow-edge"
 import { Legend } from "./legend"
 import { nodePorts } from "./ports"
-import { SelectedNodeContext } from "./selection"
+import { HoveredNodeContext, SelectedNodeContext } from "./selection"
 import { StepNode } from "./step-node"
 import { fitViewOptions, toFlowEdges, toFlowNodes, type CanvasFlowNode } from "./to-flow"
 import { useNodeFocus } from "./use-node-focus"
@@ -41,39 +43,51 @@ function FocusedNode({ graph, selected }: { readonly graph: CanvasGraph; readonl
 
 export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend }: GraphCanvasProps) {
   const t = useTranslations("flow.canvas")
+  const [hovered, setHovered] = useState<string | null>(null)
   const fitOptions = fitViewOptions(graph.nodes)
+  const colors = edgeColors(graph.edges)
   const selectNode: NodeMouseHandler<CanvasFlowNode> = (_event, node) => {
     onSelect(node.id)
   }
+  const enterNode: NodeMouseHandler<CanvasFlowNode> = (_event, node) => {
+    setHovered(node.id)
+  }
+  const leaveNode = (): void => {
+    setHovered(null)
+  }
   return (
     <SelectedNodeContext value={selected}>
-      <ReactFlow
-        aria-label={t("aria")}
-        nodes={toFlowNodes(graph.nodes, nodePorts(graph))}
-        edges={toFlowEdges(graph.edges)}
-        nodeTypes={NODE_TYPES}
-        edgeTypes={EDGE_TYPES}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable
-        elevateNodesOnSelect={false}
-        minZoom={MIN_ZOOM}
-        maxZoom={MAX_ZOOM}
-        fitView
-        fitViewOptions={fitOptions}
-        zoomOnDoubleClick={false}
-        proOptions={PRO_OPTIONS}
-        onNodeClick={selectNode}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={DOT_GAP} size={1} color="var(--border)" bgColor="var(--background-subtle)" />
-        <FocusedNode graph={graph} selected={selected} />
-        <Panel position="top-right" className="m-3.5">
-          <Legend open={legend} onToggle={onToggleLegend} />
-        </Panel>
-        <Panel position="bottom-left" className="m-3">
-          <ZoomControl fitOptions={fitOptions} />
-        </Panel>
-      </ReactFlow>
+      <HoveredNodeContext value={hovered}>
+        <ReactFlow
+          aria-label={t("aria")}
+          nodes={toFlowNodes(graph.nodes, nodePorts(graph), colors)}
+          edges={toFlowEdges(graph.edges, colors)}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable
+          elevateNodesOnSelect={false}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
+          fitView
+          fitViewOptions={fitOptions}
+          zoomOnDoubleClick={false}
+          proOptions={PRO_OPTIONS}
+          onNodeClick={selectNode}
+          onNodeMouseEnter={enterNode}
+          onNodeMouseLeave={leaveNode}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={DOT_GAP} size={1} color="var(--border)" bgColor="var(--background-subtle)" />
+          <FocusedNode graph={graph} selected={selected} />
+          <Panel position="top-right" className="m-3.5">
+            <Legend open={legend} onToggle={onToggleLegend} />
+          </Panel>
+          <Panel position="bottom-left" className="m-3">
+            <ZoomControl fitOptions={fitOptions} />
+          </Panel>
+        </ReactFlow>
+      </HoveredNodeContext>
     </SelectedNodeContext>
   )
 }

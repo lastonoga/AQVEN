@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { CanvasEdge } from "../layout"
-import { colorOf, colorsBySource, FLOW_PALETTE } from "./edge-colors"
+import { colorOf, colorsBySource, DEFAULT_FLOW_COLOR, edgeColors, FLOW_PALETTE } from "./edge-colors"
 
 const flow = (source: string, target: string): CanvasEdge => ({ id: `${source}→${target}`, source, target, variant: "flow" })
 const back = (source: string, target: string): CanvasEdge => ({ id: `${source}⟲${target}`, source, target, variant: "back" })
@@ -21,7 +21,7 @@ describe("colorsBySource", () => {
   })
 
   it("cycles back through the palette once sources outnumber it", () => {
-    const edges = FLOW_PALETTE.map((_, index) => flow(`source-${index}`, "sink"))
+    const edges = FLOW_PALETTE.map((_, index) => flow(`source-${String(index)}`, "sink"))
     edges.push(flow("source-wraps", "sink"))
     const colors = colorsBySource(edges)
     expect(colors.get("source-wraps")).toBe(FLOW_PALETTE[0])
@@ -47,5 +47,24 @@ describe("colorOf", () => {
 
   it("falls back to the first palette color for a source missing from the map", () => {
     expect(colorOf(new Map(), flow("unknown", "sink"))).toBe(FLOW_PALETTE[0])
+  })
+})
+
+describe("edgeColors", () => {
+  it("keys the color map by edge id, not source, so every edge resolves on its own", () => {
+    const first = flow("a", "x")
+    const second = flow("a", "y")
+    const colors = edgeColors([first, second])
+    expect(colors.get(first.id)).toBe(FLOW_PALETTE[0])
+    expect(colors.get(second.id)).toBe(FLOW_PALETTE[0])
+  })
+
+  it("colors a back edge by variant, not by scanning source colors", () => {
+    const loop = back("last", "first")
+    expect(edgeColors([loop]).get(loop.id)).toBe("var(--loop)")
+  })
+
+  it("exposes the fallback used when an edge id is missing from the map", () => {
+    expect(DEFAULT_FLOW_COLOR).toBe(FLOW_PALETTE[0])
   })
 })

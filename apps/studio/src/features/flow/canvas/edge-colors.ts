@@ -17,3 +17,12 @@ export const colorsBySource = (edges: readonly CanvasEdge[]): ReadonlyMap<string
 
 export const colorOf = (colors: ReadonlyMap<string, string>, edge: CanvasEdge): string =>
   edge.variant === "back" ? "var(--loop)" : (colors.get(edge.source) ?? paletteAt(0))
+
+export const DEFAULT_FLOW_COLOR = paletteAt(0)
+
+export const edgeColors = (edges: readonly CanvasEdge[]): ReadonlyMap<string, string> => {
+  const bySource = colorsBySource(edges)
+  const colors = new Map<string, string>()
+  edges.forEach((edge) => colors.set(edge.id, colorOf(bySource, edge)))
+  return colors
+}

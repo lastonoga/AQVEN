@@ -1,9 +1,10 @@
 import { MarkerType, type Edge, type FitViewOptions, type Node } from "@xyflow/react"
 import type { NodeKind } from "@/domain"
 import type { CanvasContainer, CanvasEdge, CanvasNode, CanvasSize, CanvasStep, EdgeVariant } from "../layout"
-import { colorOf, colorsBySource } from "./edge-colors"
+import { DEFAULT_FLOW_COLOR } from "./edge-colors"
 import type { FlowEdgeRenderData } from "./edge-style"
-import { sourceHandleOf, targetHandleOf, type NodePorts } from "./ports"
+import type { NodeDots } from "./handles"
+import { sourceHandleOf, targetHandleOf, type NodePorts, type Port } from "./ports"
 
 export type StepData = {
   readonly kind: NodeKind
@@ -14,7 +15,7 @@ export type StepData = {
   readonly problems: number
   readonly size: CanvasSize
   readonly reversed: boolean
-  readonly ports: NodePorts
+  readonly ports: NodeDots
 }
 
 export type ContainerData = {
@@ -24,7 +25,7 @@ export type ContainerData = {
   readonly problems: number
   readonly size: CanvasSize
   readonly reversed: boolean
-  readonly ports: NodePorts
+  readonly ports: NodeDots
 }
 
 export type StepFlowNode = Node<StepData, "step">
@@ -35,9 +36,15 @@ export type CanvasFlowEdge = Edge<FlowEdgeRenderData, "flow">
 const MARKER_SIZE = 14
 const FIT_PADDING = "32px"
 const FIT_MAX_ZOOM = 1
+const EMPTY_PORTS: NodePorts = { in: [], out: [], bottom: [] }
 
 const edgeData = (variant: EdgeVariant, color: string): FlowEdgeRenderData =>
   variant === "back" ? { variant: "back", label: null, detourY: null, color } : { variant: "flow", label: null, color }
+
+const dotsOf = (ports: NodePorts, colors: ReadonlyMap<string, string>): NodeDots => {
+  const colored = (side: readonly Port[]) => side.map((port) => ({ id: port.id, offset: port.offset, color: colors.get(port.edgeId) ?? DEFAULT_FLOW_COLOR }))
+  return { in: colored(ports.in), out: colored(ports.out), bottom: colored(ports.bottom) }
+}
 
 const placement = (node: CanvasNode): Pick<Node, "id" | "position" | "draggable" | "parentId"> => ({
   id: node.id,
@@ -46,7 +53,7 @@ const placement = (node: CanvasNode): Pick<Node, "id" | "position" | "draggable"
   ...(node.parent === null ? {} : { parentId: node.parent }),
 })
 
-const stepNode = (node: CanvasStep, ports: NodePorts): StepFlowNode => ({
+const stepNode = (node: CanvasStep, ports: NodeDots): StepFlowNode => ({
   ...placement(node),
   width: node.box.width,
   height: node.box.height,
@@ -65,7 +72,7 @@ const stepNode = (node: CanvasStep, ports: NodePorts): StepFlowNode => ({
   },
 })
 
-const containerNode = (node: CanvasContainer, ports: NodePorts): ContainerFlowNode => ({
+const containerNode = (node: CanvasContainer, ports: NodeDots): ContainerFlowNode => ({
   ...placement(node),
   width: node.box.width,
   height: node.box.height,
@@ -82,16 +89,19 @@ const containerNode = (node: CanvasContainer, ports: NodePorts): ContainerFlowNo
   },
 })
 
-export const toFlowNodes = (nodes: readonly CanvasNode[], ports: ReadonlyMap<string, NodePorts>): CanvasFlowNode[] =>
+export const toFlowNodes = (
+  nodes: readonly CanvasNode[],
+  ports: ReadonlyMap<string, NodePorts>,
+  colors: ReadonlyMap<string, string>,
+): CanvasFlowNode[] =>
   nodes.map((node) => {
-    const nodePorts = ports.get(node.id) ?? { in: [], out: [] }
-    return node.role === "step" ? stepNode(node, nodePorts) : containerNode(node, nodePorts)
+    const dots = dotsOf(ports.get(node.id) ?? EMPTY_PORTS, colors)
+    return node.role === "step" ? stepNode(node, dots) : containerNode(node, dots)
   })
 
-export const toFlowEdges = (edges: readonly CanvasEdge[]): CanvasFlowEdge[] => {
-  const colors = colorsBySource(edges)
-  return edges.map((edge) => {
-    const color = colorOf(colors, edge)
+export const toFlowEdges = (edges: readonly CanvasEdge[], colors: ReadonlyMap<string, string>): CanvasFlowEdge[] =>
+  edges.map((edge) => {
+    const color = colors.get(edge.id) ?? DEFAULT_FLOW_COLOR
     return {
       id: edge.id,
       type: "flow",
@@ -105,7 +115,6 @@ export const toFlowEdges = (edges: readonly CanvasEdge[]): CanvasFlowEdge[] => {
       data: edgeData(edge.variant, color),
     }
   })
-}
 
 export const fitViewOptions = (nodes: readonly CanvasNode[]): FitViewOptions<CanvasFlowNode> => ({
   nodes: nodes.filter((node) => node.parent === null).map((node) => ({ id: node.id })),
