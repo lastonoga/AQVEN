@@ -303,8 +303,8 @@ export const FAQ = () => (
 
 const CASE_STUDY_STATS = [
   { value: "1 week → 1 day", label: "to a better workflow" },
-  { value: "~$30", label: "total experiment budget" },
-  { value: "~500", label: "workflow, prompt and model variations tried" },
+  { value: "~$30", label: "for the whole experiment" },
+  { value: "~500", label: "versions of the workflow, prompts and models" },
 ];
 
 export const Testimonial = () => (
@@ -312,26 +312,27 @@ export const Testimonial = () => (
     <div className="mx-auto max-w-3xl">
       <Badge variant="secondary">Why I built this</Badge>
       <h2 className="mt-4 text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-        A week of manual tuning. Then one day and $30.
+        I spent a week tuning it by hand. The next round took a day and $30.
       </h2>
       <div className="mt-8 space-y-4 text-muted-foreground">
         <p>
-          For Tonicc, a face-scan skincare app I built, reliability matters. It&rsquo;s not a
-          medical diagnosis, but a false positive, a confused finding, or a bad recommendation
-          still matters. So the workflow makes roughly 250 model calls per face: different crops,
-          different models, different prompts, cross-checks, validation, adjudication.
+          I built Tonicc, an app that scans your face and suggests skincare. It isn&rsquo;t a
+          medical diagnosis, but getting it wrong still has a cost: a false alarm, a confusing
+          result, the wrong product. So every scan goes through about 250 model calls. It uses
+          different crops, models and prompts, then cross-checks and validates the results, with a
+          final step that decides when they disagree.
         </p>
         <p>
-          Getting there by hand took a week: swapping prompts, swapping models, rerunning tests,
-          reading failures, trying again.
+          The first version took me a week. I&rsquo;d change a prompt, try another model, rerun
+          the tests, read what broke and start again.
         </p>
         <p>
-          For the next iteration, I gave Claude a different job inside AQVEN Studio: research
-          known failure modes for this kind of vision task, generate the riskiest hypothesis
-          about what could be wrong, test it, record what happened, and generate the next one. It
-          ran through roughly 500 workflow, prompt and model variations in about a day, for about
-          $30, and the result was more stable and performed better than the version I&rsquo;d
-          spent a week building by hand.
+          For the next version I handed that loop to Claude inside AQVEN Studio. Its job was to
+          look up how vision tasks like this usually fail and pick the riskiest guess about what
+          was wrong with mine. Then it tested that guess, wrote down what happened and moved on to
+          the next one. In about a day it tried roughly 500 versions of the workflow, prompts and
+          models, for about $30. The result was more stable and worked better than the version
+          I&rsquo;d spent a week on.
         </p>
       </div>
       <div className="mt-10 grid grid-cols-1 gap-6 border-y border-border py-8 sm:grid-cols-3">
@@ -343,7 +344,7 @@ export const Testimonial = () => (
         ))}
       </div>
       <p className="mt-10 text-xl font-medium text-balance md:text-2xl">
-        &ldquo;The model isn&rsquo;t the system. The loop around the model is.&rdquo;
+        &ldquo;The model isn&rsquo;t the system. The loop around it is.&rdquo;
       </p>
       <div className="mt-6 flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-semibold text-foreground">
