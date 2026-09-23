@@ -1,0 +1,17 @@
+We need to produce reply with citations. The reply must be friendly, precise, short. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them – none mention. Must give steps in app first, then reset and re-pairing if chunks describe them – chunks don't describe app steps. So we cannot add app steps. Must state network requirements only from chunks – none mention network. So we cannot add network requirements. So we only give advice from chunks: cut power, check plug, controller hot, unplug, do not switch on until checked, controller replaced under warranty. Also mention store credit 1500 eur (in smallest units). Must not mention customer's name. Must not use exclamation marks or advertising superlatives. Apologise at most once. Use at most 1500 characters. Provide citations referencing chunk ids and quotes. Must include reply.citations array with chunk_id and quote.
+
+We need to mention store credit amount: 1500 eur (in smallest units). The credit amount is 1500 eur. So we say "We have issued a store credit of €15.00" but note that the smallest units is 1500 eur. But the credit amount is 1500 eur. The previous reply said €15.00. That matches 1500 eur. So we can say "We have issued a store credit of €15.00" or "We have issued a store credit of 1500 eur". The instruction: "Credit amount in the smallest units of the currency: 1500 eur." So we should mention 1500 eur. But we can phrase as "€15.00" which is 1500 cents. But to be safe, mention "1500 eur". The instruction: "Name only the amount the decision gives." So we should say "1500 eur". So reply: "We have issued a store credit of 1500 eur." That is fine.
+
+We must cite the chunks: kb_strip0flck and kb_ctrlheat01. Provide quotes.
+
+Let's craft reply:
+
+"Thank you for contacting us. We apologise for the inconvenience. Please unplug the strip immediately as the controller is hot. Do not turn it on until it has been inspected. If the strip flickers near the controller, cut the power and check the controller plug. If the flicker persists, the controller will be replaced under warranty. We have issued a store credit of 1500 eur."
+
+Citations: for hot controller: kb_ctrlheat01 quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." For flicker: kb_strip0flck quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+We need to ensure no exclamation marks. No exclamation. Use period.
+
+Now produce JSON with reply.text and reply.citations array.
+
+Let's craft.

@@ -1,0 +1,24 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." So output scores of best candidate, best_index. Need reason for every criterion. Need decide best.
+
+Let's analyze.
+
+Case: customer reported dented box, strip flickering near controller for three days, controller hot after half hour, safety concern, warranty resolution. Order date irrelevant.
+
+Candidates:
+0: "Thank you for reaching out. We understand your concerns about the flickering and heat. As per our warranty policy, we are issuing a store credit. The credit will be applied to your account shortly. If you have any other questions, please let us know." Citations include kb_strip0flck and kb_ctrlheat01. But text says issuing store credit. Chunks say controller replaced under warranty for flicker; heat says unplug and don't switch on until checked. No chunk supports store credit. Also doesn't instruct unplug/check for heat. It acknowledges concerns but not safety instruction. Grounding: claims store credit unconfirmed; no mention replacement. It cites chunks but text not grounded. Helpful: partially acknowledges but fails safety instruction and gives unsupported resolution. Tone: polite.
+
+1: "Thanks for letting us know about the flickering and heat. We've issued a store credit under warranty. If the controller body is hot to the touch, please unplug the strip and do not switch it on until it has been checked." Citation only heat. Text includes store credit unsupported. It does include safety instruction. But no flicker replacement info. Grounding: store credit unconfirmed; heat instruction grounded. Helpful: safety instruction good, but warranty resolution unsupported and doesn't address flicker replacement. Tone: polite.
+
+Need choose best. Candidate 1 is better because includes safety instruction from chunk. Candidate 0 lacks safety instruction and unsupported store credit. Candidate 1 also unsupported store credit but at least grounded heat. Need score best candidate. Criteria: grounded, helpful, tone. Need score 1-5. Grounded: candidate 1 has one grounded instruction but also unconfirmed store credit. Maybe 2 or 3. Helpful: includes safety but not full resolution; maybe 3. Tone: 4 or 5. Need rationale.
+
+Need ensure "grounding in knowledge base chunks": claims chunks do not confirm count as unconfirmed. Candidate 1's "issued store credit under warranty" not confirmed. So grounded score low. Maybe 2. Helpful: safety instruction is important, but no replacement info and store credit may mislead. Score 3. Tone: polite, appreciative, professional. Score 4 or 5. Need best_index 1.
+
+Need output JSON only. Rationale under 550 chars. Need mention each criterion. Let's craft concise.
+
+Need maybe "best candidate" scores only. The schema requires scores array with 3 items. Need criteria enum: grounded, helpful, tone. Use exact.
+
+Let's write rationale: "Candidate 1 is best: it includes the only confirmed safety step (unplug and do not switch on) from kb_ctrlheat01. However, its store-credit claim is unconfirmed by either chunk, and it omits the flicker replacement guidance from kb_strip0flck. Helpfulness is moderate because it addresses the heat hazard but not the full warranty resolution. Tone is courteous and reassuring." That's under 550. Need maybe "grounded" explicitly. Good.
+
+Scores: grounded 2, helpful 3, tone 4. Or tone 5? Let's decide. Candidate 1 tone: "Thanks for letting us know... We've issued... please unplug..." Polite, clear. No condescension. 5 maybe. But "issued store credit" could be falsely reassuring, but tone criterion separate. Tone is fine. Score 5. But if unsupported claim affects helpfulness not tone. I'd give tone 5. Need maybe grounded 2, helpful 3, tone 5.
+
+Need ensure best_index 1.

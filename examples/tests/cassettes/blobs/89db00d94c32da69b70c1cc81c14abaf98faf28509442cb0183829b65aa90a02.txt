@@ -1,0 +1,18 @@
+We need to produce reply with citations. Must mention store credit amount: 1500 eur in smallest units? Actually credit amount in smallest units: 1500 eur. But we should output amount? The decision: "Issued €15 store credit under warranty for faulty smart lighting product." The credit amount in smallest units: 1500 eur. So we should mention €15. The reply must be <=1500 chars. Citations: up to 6 items. Must reference kb_strip0flck and kb_ctrlheat01. Provide safety instructions: unplug if hot. Provide return instructions? But chunks don't mention return process. So we cannot provide instructions not in chunks. So we must say knowledge base has no answer for return instructions. But we can say "We will arrange for a replacement" maybe? But not in chunks. We cannot add new info. So we should say "We will arrange a replacement" maybe not in chunks. But we cannot add. So we must say knowledge base has no answer for return instructions. So we need to say that. But the user wants instructions. We must say we cannot provide. So we say: "The knowledge base does not contain return instructions." That satisfies. Also mention safety: unplug if hot. Provide flicker steps? The chunks mention cut power and check controller plug. So we can mention that. Also mention network requirements? Not in chunks. So skip. Provide steps in app? Not in chunks. So skip. So reply: Apologise once. Provide store credit. Provide safety. Provide that we will arrange replacement. But we cannot claim. So we say we will arrange replacement but not mention details. That may be okay. But we must not add info not in chunks. But "We will arrange a replacement" is a statement of action, not a claim about policy. It's fine. But we should not mention details. So we can say: "We will arrange for a replacement to be sent to you." That is not in chunks but is a policy action. It's allowed? The instruction: "Never promise what is not in the input: name deadlines, compensation and exceptions only when they appear in it." The decision says store credit, not replacement. So we cannot promise replacement. So we must not. So we must say: "We will process the store credit" and "We will arrange for a replacement" is not in input. So we cannot. So we must say: "We will process the store credit" and "We will arrange for a return" but not mention replacement. But the user wants return instructions. We cannot provide. So we say knowledge base has no answer. So we can say: "We will arrange for the return of the faulty product, but the specific return process is not detailed in the knowledge base." That is okay. We can mention that. So final reply:
+
+- Apology once.
+
+- State store credit €15.
+
+- Safety: unplug if hot.
+
+- Flicker: cut power and check plug.
+
+- Return: we will arrange return but no specific instructions.
+
+Citations: kb_strip0flck for flicker, kb_ctrlheat01 for hot.
+
+We need to include citations for each claim. Provide up to 6 items. We'll include two citations.
+
+We need to output JSON with reply.text and reply.citations array. Let's craft.
+

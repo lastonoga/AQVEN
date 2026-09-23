@@ -1,0 +1,57 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-7fc4209d4f56f9d40705ab2fb6eacbbe3fc6397b0262b4c3fcf643715301faf4",
+  "request_key": "sha256-be0d7648d29100518075d85f583e28e3ed76af8a763024ce23f8794d88a4c4c5",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [],
+  "response": {
+    "parts": [],
+    "usage": {
+      "input_tokens": 1326,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 32,
+      "output_tokens": 183,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T06:57:36.091655Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:57:34Z",
+      "finish_reason": "stop",
+      "downstream_provider": "CoreWeave",
+      "cost": 6.357e-05,
+      "upstream_inference_cost": 6.357e-05,
+      "upstream_inference_prompt_cost": 3.978e-05,
+      "upstream_inference_completions_cost": 2.379e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146654-Uhg5SUMKmaJOeMJbIZhY",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

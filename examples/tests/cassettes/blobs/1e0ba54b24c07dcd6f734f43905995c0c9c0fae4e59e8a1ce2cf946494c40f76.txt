@@ -1,0 +1,24 @@
+We need to produce reply with citations. Must mention store credit €15.00, credit amount 1500 eur. Must not mention store website or outside contact. Must not mention customer's name. Must be en-GB. Must mention safety concerns. Must mention dented box? The chunk doesn't mention dented box. We cannot add facts not in chunks. But we can acknowledge that the box was dented but we don't have policy. We can say we acknowledge. But we must not add unsupported claims. We can say "We understand the box was dented" but that's just acknowledging. That is fine. We must cite chunks for flicker and heat. Also mention safety. Also mention to stop using device. Also mention credit. Also mention Lumen Plus extended warranty policy. Must not mention subscription benefits unless chunks carry them. No chunk about subscription benefits. So no mention. Must not mention store website. Must not mention other contact. Must not mention exclamation marks. Must not promise what is not in input. Must not use exclamation marks. Must not use advertising superlatives.
+
+We need to include citations. Provide up to 6 citations. We have two chunks: kb_strip0flck and kb_ctrlheat01. We can cite both. Provide quote from each. Must keep quote <=300 characters. Provide chunk_id and quote. Provide reply text <=1500 characters.
+
+Let's craft reply:
+
+"Thank you for contacting us. We have reviewed your case. The flickering near the controller and the controller heating up are both covered under warranty. As per the warranty policy, we are issuing a €15.00 store credit (1500 eur). Please stop using the device until a replacement is provided. We understand the box arrived dented and apologise for any inconvenience. The credit will be applied shortly."
+
+We need to reference the chunks: For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We should include those quotes. Must not exceed 300 characters each. Let's extract quotes.
+
+Quote1: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." That's 138 characters.
+
+Quote2: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." That's 112 characters.
+
+We need to include citations array with chunk_id and quote.
+
+Also mention that credit amount in smallest units: 1500 eur. That is not from chunk but from decision. It's fine.
+
+We must not mention exclamation marks. So no exclamation. Use period.
+
+Let's craft final reply.
+

@@ -1,0 +1,23 @@
+We need to produce reply with citations. Must not mention store website or contact outside marketplace. Must mention store credit €15.00. Must not mention ASIN. Must not mention resolution timeline. Must not mention any other info not in chunks. Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot mention app steps. We must rely only on chunks. So we can give safety steps: cut power, check controller plug, if flicker continues replace controller. Also if hot, unplug immediately.
+
+We need to cite chunks: kb_strip0flck for flicker, kb_ctrlheat01 for heat.
+
+We need to output JSON with reply.text and reply.citations array.
+
+Reply text max 1500 chars. Citations up to 6 items. Provide chunk_id and quote.
+
+We must not mention ASIN. Must not mention resolution timeline. Must not mention store website. Must mention store credit amount. Must not mention subscription benefits (none in chunks). Must mention that store credit is issued.
+
+Let's craft reply:
+
+"Thank you for contacting Lumen support. We understand your concerns about the flickering and heat. For safety, please cut the power to the strip and inspect the controller plug. If the flicker persists, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not switch it on until it has been inspected. We have issued a store credit of €15.00 to your account. If you have any further questions, reply here."
+
+Citations: two chunks.
+
+We need to quote relevant text. For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include chunk_id and quote. Provide up to 6 items. We'll provide 2.
+
+Return JSON with reply.text and reply.citations array.
+
+Let's produce.

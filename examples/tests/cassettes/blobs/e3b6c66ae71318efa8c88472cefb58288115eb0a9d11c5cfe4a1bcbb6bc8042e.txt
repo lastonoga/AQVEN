@@ -1,0 +1,34 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." Output schema scores max 3 items, best_index. Need score against three rubric criteria: grounded, helpful, tone. Need decide best candidate. Let's analyze.
+
+Case: customer received strip with dented box, flickering near controller for three days, controller hot after half hour, concerned safety, wants warranty resolution. ASIN not provided.
+
+Candidates:
+0: "Thank you for reaching out. We understand your concerns about the flickering and heat. As per our warranty policy, we are issuing a store credit. The credit will be applied to your account shortly. If you have any other questions, please let us know." Citations: flicker chunk and heat chunk. It acknowledges both, says issuing store credit. But chunks say controller replaced under warranty if flicker comes back; heat says unplug and do not switch on until checked. No chunk supports store credit. Also doesn't instruct unplug/check, doesn't address safety. It claims warranty policy store credit unconfirmed. Grounded? It cites chunks but claim store credit not grounded. It does mention flickering and heat, but no actionable safety instruction. Helpful? Low, because doesn't tell unplug, doesn't resolve warranty per chunks. Tone polite.
+
+1: "We're sorry to hear about the issues with your Lumen Flow Strip 5m. We've issued you store credit as a gesture of goodwill under our warranty policy. If the flickering persists, please cut the power and check the controller plug." Cites flicker chunk only. It also claims store credit unconfirmed. It gives partial instruction for flicker but not heat. It doesn't mention heat at all, despite case. It says if flickering persists, cut power/check plug; but chunk says if flickers near controller, cut power and check plug; if flicker comes back, controller replaced. It says "if flickering persists" maybe okay. But no heat safety. Grounded? Store credit unconfirmed; heat ignored. Helpful? Less than 0? It at least gives one instruction but not heat. Tone: empathetic apology, polite.
+
+Need score best candidate. Which is best? Candidate 0 acknowledges both issues and cites both chunks, but no safety instruction. Candidate 1 acknowledges only flicker, gives instruction, but ignores heat and store credit. Need judge based on rubric. Grounding: both have unconfirmed store credit. Candidate 0's statement "As per our warranty policy, we are issuing a store credit" not in chunks. Candidate 1 same. Candidate 0 cites heat chunk but doesn't instruct unplug; however citation quote supports heat concern but not action. Candidate 1 doesn't cite heat. Grounded maybe candidate 0 more grounded because it at least references both chunks? But claims not confirmed. Need score.
+
+Helpful: Customer wants warranty resolution and safety. Neither provides correct warranty resolution (replacement under warranty) nor safety instruction (unplug and don't switch on). Candidate 0 says store credit will be applied, but unconfirmed and not what chunks say. Candidate 1 says store credit and flicker instruction, but no heat. Which is more helpful? Candidate 1 gives actionable step for flicker, but ignores heat which is more safety-critical. Candidate 0 acknowledges heat but no action. Hmm.
+
+Tone: both polite. Candidate 1 "We're sorry to hear" more empathetic. Candidate 0 "Thank you for reaching out. We understand your concerns" also good. Candidate 1 maybe slightly better tone.
+
+Need maybe best_index 1? Let's think.
+
+The rubric: "grounding in the knowledge base chunks" - claims chunks do not confirm count as unconfirmed. Candidate 0: "issuing a store credit" unconfirmed. Candidate 1: "issued you store credit" unconfirmed. Both have unconfirmed. Candidate 0 also says "As per our warranty policy" but no chunk. Candidate 1 says "gesture of goodwill under our warranty policy" also unconfirmed. Candidate 0's "We understand your concerns about flickering and heat" is grounded in chunks (flicker and heat). Candidate 1's "issues with your Lumen Flow Strip 5m" generic, "If flickering persists, please cut power and check controller plug" grounded in flicker chunk. Candidate 0 doesn't include any instruction from chunks, only acknowledgment. Candidate 1 includes one instruction. Grounding: Candidate 1's actionable instruction is grounded; candidate 0's store credit is ungrounded and no instruction. Candidate 0's acknowledgment of heat is grounded but not action. Candidate 1 ignores heat. Which is more grounded? Need maybe candidate 1 because it uses chunk instruction, but also ungrounded store credit. Candidate 0 uses two chunks as citations but not action. Hmm.
+
+Need score best candidate. Could be candidate 0? Let's evaluate with scores 1-5. Need assign scores for best candidate only. We can choose best_index and scores. Need rationale.
+
+Let's parse exact chunks:
+- Flicker: If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.
+- Heat: If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.
+
+Case: flickering near controller for three days, controller hot after half hour. Safety concern. Warranty resolution.
+
+Correct response should: instruct unplug immediately due to heat, don't switch on until checked; for flicker, cut power/check plug; if flicker comes back, controller replaced under warranty. Maybe ask ASIN? Not in chunks. No store credit.
+
+Candidate 0: "issuing store credit" not supported. It doesn't instruct unplug. It says "credit applied to account" unconfirmed. It acknowledges heat but not safety. Candidate 1: "issued store credit" unconfirmed. It instructs cut power/check plug if flickering persists. But doesn't mention heat. It says "if flickering persists" maybe after store credit? It doesn't tell unplug immediately. It doesn't address hot controller. Candidate 1 is more helpful for flicker but less for heat. Candidate 0 is more helpful for acknowledging heat but no action. Which is best overall? Need decide.
+
+Maybe candidate 0 is better because it addresses both symptoms and cites both chunks, even though it doesn't give instructions. But "helpful" requires usefulness to customer given case. Customer concerned safety; candidate 0 doesn't tell them to unplug, so fails safety. Candidate 1 also fails safety. Candidate 0 at least says "we understand your concerns about flickering and heat" but no resolution. Candidate 1 says "if flickering persists, please cut power and check plug" - that's useful for flicker. But heat is more urgent. Hmm.
+
+Could score candidate 0: grounded 2, helpful 2, tone 4. Candidate 1: grounded 2, helpful 2, tone 4. Need choose best

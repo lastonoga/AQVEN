@@ -1,0 +1,23 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." So output scores for best candidate, best_index. Need reason for every criterion. Need decide best.
+
+We have two candidates. Both cite chunks. Candidate 0: says sorry, issued store credit as goodwill under warranty. If flickering persists, cut power and check controller plug. Citation kb_strip0flck. But chunk says if flicker comes back, controller replaced under warranty. It doesn't mention store credit. Candidate 0 claims "issued you store credit" unconfirmed. Also "if flickering persists" maybe okay but chunk says flickers near controller, cut power and check plug. Candidate 0 doesn't address heat at all, despite customer concerned about hot controller. So less helpful.
+
+Candidate 1: says thanks, issued store credit under warranty. If controller body hot, unplug and do not switch on until checked. Citation kb_ctrlheat01. It addresses heat safety. But also claims store credit unconfirmed. It doesn't address flicker. Customer reported both flickering and heat. Candidate 1 addresses heat but not flicker. Candidate 0 addresses flicker but not heat. Which is better? Need score grounded, helpful, tone.
+
+Grounded: Both include unconfirmed store credit. Candidate 0's flicker instruction is grounded in chunk. Candidate 1's heat instruction grounded. Candidate 0 also says "if flickering persists" but chunk says if flicker comes back after checking plug, controller replaced. Candidate 0 says "if flickering persists, please cut the power and check the controller plug." Actually chunk says if flickers near controller, cut power and check plug. So grounded. Candidate 1 says "we've issued store credit under warranty" unconfirmed. Candidate 0 also unconfirmed. Both have one unconfirmed claim. Candidate 1 doesn't mention flicker, but not claiming unconfirmed. Candidate 0 doesn't mention heat. Grounded maybe equal? Need score best candidate. Candidate 1's unconfirmed store credit is same. Candidate 0's "under our warranty policy" maybe okay? But store credit not in chunks. Candidate 1 "under warranty" also not. Both grounded partially. Need maybe candidate 1 better because safety instruction exactly from chunk and no unsupported flicker? Candidate 0's "if flickering persists" could be slightly off: chunk says if flicker comes back after checking plug, controller replaced. But candidate 0 says if flickering persists, cut power and check plug. That's actually first step, not "persists". But okay.
+
+Helpful: Customer concerned about safety and wants warranty resolution. Candidate 1 directly addresses hot controller safety, tells unplug and not switch on. Candidate 0 addresses flicker but not heat. Since heat is safety concern, candidate 1 more helpful. Candidate 1 also mentions store credit (though unconfirmed) as warranty resolution. Candidate 0 also. Candidate 1 lacks flicker guidance, but heat is more urgent. So best candidate 1.
+
+Tone: Both polite. Candidate 1 "Thanks for letting us know" and "please unplug" good. Candidate 0 "We're sorry to hear" also good. Candidate 1 slightly more supportive. Need score.
+
+Need output JSON with rationale, scores for best candidate (candidate 1) with criteria grounded, helpful, tone. Need scores 1-5. Need decide scores.
+
+Grounded: Candidate 1's heat instruction is directly grounded; but store credit claim unconfirmed. So maybe 3. Helpful: addresses safety and warranty but omits flicker; maybe 4. Tone: 5 or 4. Need be fair.
+
+Need rationale under 550 chars total. One or two sentences per criterion. Need mention best_index 1.
+
+Let's craft rationale: "Grounded: the heat instruction matches kb_ctrlheat01, but the store credit is not supported by either chunk, so only partially grounded. Helpful: it prioritizes the safety concern (hot controller) and gives a clear action, though it omits the flicker guidance. Tone: courteous, reassuring, and appropriately urgent without alarming." That's under 550.
+
+Need scores: grounded 3, helpful 4, tone 5. Or grounded 4? Let's think. Candidate 1 has one unsupported claim "issued store credit under warranty." That's a significant claim. Grounded should be lower. Candidate 0 also same. But best candidate still. Score grounded 3.
+
+Need ensure output only JSON.

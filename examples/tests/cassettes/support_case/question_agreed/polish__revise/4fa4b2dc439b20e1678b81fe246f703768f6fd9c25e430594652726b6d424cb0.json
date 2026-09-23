@@ -1,0 +1,460 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-4fa4b2dc439b20e1678b81fe246f703768f6fd9c25e430594652726b6d424cb0",
+  "request_key": "sha256-896ed002e825d2eb53dd066496e029863997fd5d9abfe37e46321b76dac26657",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 1,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to produce JSON with reply.text and citations. We have two chunks: kb_strip0flck",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and kb_ctrlheat01. The question: \"The customer is asking if the Lumen Glow E27 smart bulb supports 5 GHz Wi-Fi and wants to use it in the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " bedroom.\" The knowledge base chunks do not mention Wi-Fi support. So we must say knowledge base has no answer. Provide instructions: refer to product manual or contact support",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ". Also mention usage in bedroom: no specific info. So reply: \"We don't have info on 5GHz support. Check manual or contact support. For bedroom use, ensure",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Wi-Fi connectivity, etc.\" No compensation. No mention of subscription benefits. No personal data. Citations: we need to cite chunks? But the chunks are about strip flicker and controller heat, not relevant. But we must include citations referencing chunks that support claims. But we are not making claims about those chunks. We could cite them to show we didn't use them? The instruction:",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"Back every claim about policy, deadlines or product features with a reference to the chunk that contains it.\" We are not making claims about policy. We are stating knowledge base has no answer. That is a claim that",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the KB doesn't contain info. We could cite that we didn't find info in chunks. But no chunk covers Wi-Fi. So maybe we can cite that we looked at chunks but they don't mention Wi-Fi. But",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " we need to provide citations. We can include citations referencing the chunks we looked at",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ", but we didn't use them. The schema requires citations array. We can include up to 6 citations.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We can include two citations referencing the two chunks, with quotes that show they don't mention Wi-Fi. But we need to quote",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " up to 300 characters. We can quote the chunk text. For kb_strip0flck: \"If a Flow strip flickers",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\" For",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " kb_ctrlheat01: \"If the controller body is hot to the touch, unplug the strip at once and do not switch it on",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " until it has been checked.\" These quotes show no Wi-Fi info. That satisfies the requirement to back claim that KB has no answer",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ". So we include those citations.\n\nReply text: \"We don't have information in the knowledge base about 5 GHz Wi‑Fi support for the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Lumen Glow E27. Please check the product manual or contact our support team for details. If you plan to use the bulb in the bedroom, ensure it",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is within range of your Wi‑Fi router and that the router is operating on a supported band. If you need help setting it up,",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " let us know.\"\n\nWe should keep within 1500 chars. It's fine.\n\nNow produce JSON.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "$aqven_blob": "sha256-a105ee35e4ffe385d2533c6af1cca9e51d17f455b62a8724e3703cd23d72f5d4"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "text",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"We",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " don’t have information in the knowledge base about 5 GHz Wi‑Fi support for the Lumen Glow E27. Please check the product manual or contact",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " our support team for details. If you plan to use the bulb in the bedroom, ensure it is within range of your Wi‑Fi router and that the router is operating on a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " supported band. If you need help setting it up, let us know.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back,",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " do not switch it on until it has been checked.\"}]} }",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"We don’t have information in the knowledge base about 5 GHz Wi‑Fi support for the Lumen Glow E27. Please check the product manual or contact our support team for details. If you plan to use the bulb in the bedroom, ensure it is within range of your Wi‑Fi router and that the router is operating on a supported band. If you need help setting it up, let us know.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "$aqven_blob": "sha256-a105ee35e4ffe385d2533c6af1cca9e51d17f455b62a8724e3703cd23d72f5d4"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "{\"reply\":{\"text\":\"We don’t have information in the knowledge base about 5 GHz Wi‑Fi support for the Lumen Glow E27. Please check the product manual or contact our support team for details. If you plan to use the bulb in the bedroom, ensure it is within range of your Wi‑Fi router and that the router is operating on a supported band. If you need help setting it up, let us know.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1145,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 608,
+      "output_tokens": 761,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 570,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 570
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T06:53:20.616122Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:53:18Z",
+      "downstream_provider": "Parasail",
+      "finish_reason": "stop",
+      "cost": 0.00014242,
+      "upstream_inference_cost": 0.00014242,
+      "upstream_inference_prompt_cost": 2.827e-05,
+      "upstream_inference_completions_cost": 0.00011415,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146398-Ny4GnPbXrY2OSaTigeUJ",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

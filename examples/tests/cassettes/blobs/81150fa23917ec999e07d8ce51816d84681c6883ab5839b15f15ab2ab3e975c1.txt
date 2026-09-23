@@ -1,0 +1,17 @@
+We need to produce a reply. Must be friendly, precise, short. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them – but chunks don't mention subscription benefits. So no mention of subscription benefits.
+
+We must give steps in the app first, then reset and re-pairing, if chunks describe them. But chunks do not describe app steps or reset. So we cannot provide those steps. We must say that knowledge base has no answer for that. But we should still give the resolution: store credit €15 (1500 eur in smallest units). Must cite chunk(s) for the decision? The decision is not in chunks. But we can cite the chunk about controller heat and flicker to justify the issue. Provide citations for those chunks. So reply: Apologise once. Provide store credit amount. Provide that we will issue 1500 eur store credit. Provide that we can't give app steps because not in KB. Provide that we will send instructions for reset? Not in KB. So we say knowledge base has no answer for that.
+
+We need to include citations: we can cite kb_strip0flck and kb_ctrlheat01. Provide quotes. Must keep reply <=1500 chars. Citations <=6 items. Provide chunk_id and quote.
+
+Let's craft reply:
+
+"Thank you for contacting us. We understand your concerns. As per our warranty policy, we are issuing a €15 store credit (1500 eur in smallest units). The flickering near the controller and the heat issue are covered under warranty. We will process the credit shortly. If you need further assistance, let us know. Thanks."
+
+We need to mention that we can't provide app steps because not in KB. But maybe we can say "The knowledge base does not contain specific app reset steps." That is fine.
+
+Let's include citations: For flickering: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We must cite these. Provide quotes.
+
+Now produce JSON with reply and citations.

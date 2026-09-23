@@ -1,0 +1,13 @@
+**Clarifying visual elements**
+
+I need to be specific about the design: I want flat vector art with a light background, warm accent lighting, and large clear details, without any text or logos. I should show an LED strip along furniture, plus a close-up of the controller and connection. For the advisory steps, I think I can represent warranty information with a shield icon but need to avoid any text, including currency symbols like "€". Instead, maybe a stylized wallet with a glowing coin could work!**Detailing design elements**
+
+I could use a gift card icon without numbers to indicate credit clearly. For the next step, I want to illustrate keeping the strip unplugged until the controller is inspected or replaced—showing a disconnected plug, an unplugged cable, and a controller with a magnifying glass icon, all without text. If flickering returns, I’ll depict a new controller being swapped out with a replacement arrow and shield icon. I’ll maintain the recognizable design of the user's LED strip, featuring alternating yellow segments and a black square controller, using a series of simple pictograms in left-to-right panels.**Creating a refined prompt**
+
+I want to craft a prompt for a flat vector art image featuring four horizontally arranged panels on a light, neutral background with warm accent light and large, clear details, ensuring no text or logos. The user’s LED strip should be recognizable—narrow with yellow segments and a black square controller. 
+
+In Panel 1, I’ll show the LED strip along furniture with heat waves and flicker lines, plus a shield icon for warranty. Panel 2 will include a wallet or gift card icon with a glow to signal store credit, accompanied by a glowing coin. Panel 3 depicts the unplugged strip with a caution accent, while Panel 4 will show the original controller with markings for flicker, but I can’t use a cross symbol.**Refining the image design**
+
+I think I should avoid using any cross symbols since that could be ambiguous. Instead, I can show the new controller on the right with a small shield icon and subtle warm light, plus an arrow indicating the swap. I need to keep the design as flat vector art with simple colors and a warm accent light, ensuring there’s no text, logos, or people, while keeping the user's product recognizable. 
+
+I must also remember the guidelines for the image generation tool. After generating the image, I can't output any text or further comments. The assistant shouldn't say anything extra in the final message after generating the image.

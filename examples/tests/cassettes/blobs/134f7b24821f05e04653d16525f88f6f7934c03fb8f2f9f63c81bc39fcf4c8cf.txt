@@ -1,0 +1,9 @@
+**Designing store credit visuals**
+
+I'm visualizing store credit issuance using simple icons. Maybe a wallet icon with a plus sign or a credit note icon could work. I need to avoid personal details and people, so a generic credit card symbol with a check and an arrow pointing to an account icon feels right. A flat vector art style with a light background and warm accents could be nice. I could also show a credit voucher with sparkles to convey that credit has been issued.**Designing LED strip illustration**
+
+I want to make sure the customer's product is easily recognizable, focusing on an LED strip with a controller. I'll design four panels to illustrate the concept clearly.
+
+In the first panel, I'll show the LED strip along the furniture with flickering yellow light bursts near the controller, using dashed lines for motion. The second panel will depict unplugging, with an arrow and a power symbol indicating a disconnection. Finally, the third panel will illustrate a hot controller with red wavy lines and a crossed-out power icon to signal not to switch it on.**Creating warranty replacement imagery**
+
+For the fourth panel, I want to depict warranty replacement and store credit. I’ll position the old controller on the left with a flicker icon leading to the new controller on the right, featuring a green check or shield. Below that, I’ll illustrate a voucher icon with sparkles to indicate issued credit. I need to keep the colors light with warm accents and ensure no text is included. I’ll use the image_gen tool directly, focusing on flat vector art and clear details while keeping the product recognizable. Then, I’ll output nothing as per the rules.

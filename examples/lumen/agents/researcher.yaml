@@ -3,6 +3,7 @@ kind: "Agent"
 description: "Subagent: researches policies and precedents through the helpdesk MCP server"
 model: "openrouter:mistralai/mistral-nemo"
 output:
+  mode: "prompted"
   strict: false
 mcp_servers:
 - "helpdesk"
