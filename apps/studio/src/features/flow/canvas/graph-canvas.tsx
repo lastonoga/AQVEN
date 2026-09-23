@@ -10,7 +10,7 @@ import {
   type ProOptions,
 } from "@xyflow/react"
 import { useTranslations } from "use-intl"
-import { absoluteBox, type CanvasGraph } from "../layout"
+import { absoluteBox, type CanvasGraph, type CanvasNode } from "../layout"
 import { ContainerNode } from "./container-node"
 import { edgeColors } from "./edge-colors"
 import { FlowEdge } from "./flow-edge"
@@ -29,22 +29,34 @@ export type GraphCanvasProps = {
   readonly legend: boolean
   readonly onSelect: (node: string) => void
   readonly onToggleLegend: () => void
+  readonly dimmed?: ReadonlySet<string>
+  readonly pageScroll?: boolean
 }
 
 const NODE_TYPES = { step: StepNode, container: ContainerNode } satisfies NodeTypes
 const EDGE_TYPES = { flow: FlowEdge } satisfies EdgeTypes
 const PRO_OPTIONS: ProOptions = { hideAttribution: true }
 const DOT_GAP = 24
+const DIMMED_CLASS = "opacity-35"
+const NONE_DIMMED: ReadonlySet<string> = new Set()
+
+const dimNodes = (nodes: CanvasFlowNode[], dimmed: ReadonlySet<string>): CanvasFlowNode[] =>
+  nodes.map((node) => (dimmed.has(node.id) ? { ...node, className: DIMMED_CLASS } : node))
+
+const litNodes = (nodes: readonly CanvasNode[], dimmed: ReadonlySet<string>): readonly CanvasNode[] => {
+  const lit = nodes.filter((node) => !dimmed.has(node.id))
+  return lit.length === 0 ? nodes : lit
+}
 
 function FocusedNode({ graph, selected }: { readonly graph: CanvasGraph; readonly selected: string | null }) {
   useNodeFocus(selected === null ? null : absoluteBox(graph.nodes, selected))
   return null
 }
 
-export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend }: GraphCanvasProps) {
+export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend, dimmed = NONE_DIMMED, pageScroll = false }: GraphCanvasProps) {
   const t = useTranslations("flow.canvas")
   const [hovered, setHovered] = useState<string | null>(null)
-  const fitOptions = fitViewOptions(graph.nodes)
+  const fitOptions = fitViewOptions(litNodes(graph.nodes, dimmed))
   const colors = edgeColors(graph.edges)
   const selectNode: NodeMouseHandler<CanvasFlowNode> = (_event, node) => {
     onSelect(node.id)
@@ -60,7 +72,7 @@ export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend 
       <HoveredNodeContext value={hovered}>
         <ReactFlow
           aria-label={t("aria")}
-          nodes={toFlowNodes(graph.nodes, nodePorts(graph), colors)}
+          nodes={dimNodes(toFlowNodes(graph.nodes, nodePorts(graph), colors), dimmed)}
           edges={toFlowEdges(graph.edges, colors)}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
@@ -73,6 +85,8 @@ export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend 
           fitView
           fitViewOptions={fitOptions}
           zoomOnDoubleClick={false}
+          zoomOnScroll={!pageScroll}
+          preventScrolling={!pageScroll}
           proOptions={PRO_OPTIONS}
           onNodeClick={selectNode}
           onNodeMouseEnter={enterNode}

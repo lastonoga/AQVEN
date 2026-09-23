@@ -42,13 +42,3 @@ export function useSubjectCopy(): SubjectCopy {
     armRange: (arm, range) => t("armRange", { arm, range }),
   }
 }
-
-export function useSubjectDetailCopy(): SubjectCopy {
-  const t = useTranslations("research.experiment.run.subjectText")
-  return {
-    flow: (flow) => t("flow", { flow }),
-    range: (flow, range) => t("range", { flow, range }),
-    arm: (arm) => t("arm", { arm }),
-    armRange: (arm, range) => t("armRange", { arm, range }),
-  }
-}
