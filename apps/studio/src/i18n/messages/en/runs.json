@@ -1,13 +1,25 @@
 {
   "title": "Runs",
-  "empty": "No runs yet",
-  "emptyHint": "Start the flow to record a run",
+  "lists": {
+    "aria": "Runs to list",
+    "flow": {
+      "label": "Flow runs",
+      "empty": "No runs yet",
+      "emptyHint": "Start the flow to record a run",
+      "count": "{count, plural, one {# run in this flow} other {# runs in this flow}}"
+    },
+    "experiment": {
+      "label": "Experiment runs",
+      "empty": "No experiment runs yet",
+      "emptyHint": "The attempts of series on this flow are listed here",
+      "count": "{count, plural, one {# experiment run in this flow} other {# experiment runs in this flow}}"
+    }
+  },
   "listAria": "Runs of this flow",
   "pickerPlaceholder": "Select a run",
   "pickerSelected": "Run {ref}",
   "pickerSearch": "Search runs",
   "pickerSearchPlaceholder": "Search runs, datasets, or nodes...",
-  "runsInFlow": "{count, plural, one {# run in this flow} other {# runs in this flow}}",
   "pickerNoDataset": "No dataset",
   "pickerDataset": "Dataset",
   "pickerCase": "Case",
@@ -87,7 +99,8 @@
     "fork": "forked from {parent}",
     "changed": "The flow changed after this run",
     "timelineAria": "Executions of this run",
-    "series": "attempt of series {series}"
+    "series": "attempt of series {series}",
+    "arm": "arm {arm} of experiment {experiment}"
   },
   "dataset": {
     "label": "Dataset",

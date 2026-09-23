@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
-import type { ApiExecutionAddress, ApiRunError, ApiRunSnapshot, ApiValueRef } from "@/domain"
+import type { ApiExecutionAddress, ApiRunError, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
 import { Heading, RUN_STATUS_TONE, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
@@ -34,6 +34,7 @@ export type RunDetailProps = {
 export type RunHeaderProps = {
   readonly snapshot: ApiRunSnapshot
   readonly live: boolean
+  readonly arm?: ArmFlow | null
   readonly tools?: ReactNode
 }
 
@@ -57,7 +58,16 @@ function HeaderTrailing({ changed, tools }: { readonly changed: boolean; readonl
   )
 }
 
-export function RunHeader({ snapshot, live, tools }: RunHeaderProps) {
+function ArmLine({ arm }: { readonly arm: ArmFlow }) {
+  const t = useTranslations("runs.run")
+  return (
+    <Link to={ROUTE_PATH.experiment} params={{ experimentId: arm.experiment }}>
+      {t("arm", { arm: arm.arm, experiment: arm.experiment })}
+    </Link>
+  )
+}
+
+export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps) {
   const t = useTranslations("runs.run")
   const liveLabel = useTranslations("runs.live")("badge")
   const status = useTranslations("domain.runStatus")
@@ -90,6 +100,8 @@ export function RunHeader({ snapshot, live, tools }: RunHeaderProps) {
             {t("series", { series: runRef(seriesId) })}
           </Link>
         ),
+        arm === null ? null : <ArmLine key="arm" arm={arm} />,
+        arm?.description ?? null,
       ].filter((line) => line !== null)}
       trailing={<HeaderTrailing changed={snapshot.definition_changed} tools={tools} />}
     />

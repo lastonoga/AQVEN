@@ -951,6 +951,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/experiments/{experiment_id}/arms/{arm_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Experiment Arm */
+        get: operations["experiment_arm"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/experiments/{experiment_id}/estimate": {
         parameters: {
             query?: never;
@@ -1351,6 +1368,22 @@ export interface components {
         ApprovalDecision: "allow" | "deny";
         /** @enum {string} */
         ApprovalResolver: "user" | "interrupt" | "session_closed";
+        /** ArmFlowView */
+        ArmFlowView: {
+            /** Experiment Id */
+            experiment_id: string;
+            /** Arm Id */
+            arm_id: string;
+            /** Flow Id */
+            flow_id: string;
+            /** Description */
+            description: string | null;
+            /** Order */
+            order: string[];
+            /** Nodes */
+            nodes: components["schemas"]["NodeSummary"][];
+            schemas: components["schemas"]["FlowSchemas"];
+        };
         /** ArmStepView */
         ArmStepView: {
             /** Node Id */
@@ -6118,6 +6151,10 @@ export interface components {
             end_node?: string | null;
             /** Series Id */
             series_id?: string | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
+            /** Arm Id */
+            arm_id?: string | null;
             /** Execution Id */
             execution_id: string;
             context: components["schemas"]["RunContext"] | null;
@@ -6266,6 +6303,10 @@ export interface components {
             end_node?: string | null;
             /** Series Id */
             series_id?: string | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
+            /** Arm Id */
+            arm_id?: string | null;
         };
         /** RunSuspended */
         RunSuspended: {
@@ -7165,6 +7206,7 @@ export type SchemaApiError = components['schemas']['ApiError'];
 export type SchemaApiErrorCode = components['schemas']['ApiErrorCode'];
 export type SchemaApprovalDecision = components['schemas']['ApprovalDecision'];
 export type SchemaApprovalResolver = components['schemas']['ApprovalResolver'];
+export type SchemaArmFlowView = components['schemas']['ArmFlowView'];
 export type SchemaArmStepView = components['schemas']['ArmStepView'];
 export type SchemaArmView = components['schemas']['ArmView'];
 export type SchemaAssigneeSource = components['schemas']['AssigneeSource'];
@@ -13779,6 +13821,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExperimentDetailView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    experiment_arm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+                arm_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArmFlowView"];
                 };
             };
             /** @description Bad Request */

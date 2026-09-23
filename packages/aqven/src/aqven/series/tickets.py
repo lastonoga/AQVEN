@@ -13,6 +13,7 @@ from aqven.series.model import (
     AttemptRecord,
     AttemptState,
     CaseSnapshot,
+    ExperimentOrigin,
     OutcomeClass,
     RecordModel,
     SeriesId,
@@ -20,7 +21,7 @@ from aqven.series.model import (
     VariantPlanRecord,
 )
 from aqven.series.subjects import SubjectStrategy
-from aqven.spec import FlowId, SeriesSplit, VariantId
+from aqven.spec import ArmId, ExperimentId, FlowId, SeriesSplit, VariantId
 
 EXPERIMENT_MODE: Final = "experiment"
 SUBJECT_ROLE: Final = "subject"
@@ -55,6 +56,7 @@ class AttemptTicket(RecordModel):
         return judge_run_id(self.attempt_id, check_id)
 
     def judge_spec(self, check_id: str) -> RunSpec:
+        subject = self.spec.series
         tag = SeriesTag(
             series_id=self.series_id,
             attempt_id=self.attempt_id,
@@ -63,6 +65,7 @@ class AttemptTicket(RecordModel):
             case_name=self.case_name,
             repeat=self.repeat,
             check_id=check_id,
+            experiment_id=None if subject is None else subject.experiment_id,
         )
         return RunSpec(
             flow_id=self.judges[check_id],
@@ -91,6 +94,15 @@ def judge_flows(record: SeriesRecord) -> Mapping[str, FlowId]:
     return {check.check_id: check.judge.flow_id for check in record.plan.checks if check.judge is not None}
 
 
+def experiment_of(record: SeriesRecord) -> ExperimentId | None:
+    origin = record.origin
+    return origin.experiment_id if isinstance(origin, ExperimentOrigin) else None
+
+
+def arm_of(record: SeriesRecord, variant: VariantPlanRecord) -> ArmId | None:
+    return variant.arm_id or record.plan.subject.arm_id
+
+
 def variant_at(record: SeriesRecord, ordinal: int) -> tuple[VariantPlanRecord, int, int]:
     plan = record.plan
     key = key_of(ordinal, plan.repeats, len(plan.variants))
@@ -116,6 +128,8 @@ def attempt_ticket(
         variant_id=variant.variant_id,
         case_name=case.name,
         repeat=repeat,
+        experiment_id=experiment_of(record),
+        arm_id=arm_of(record, variant),
     )
     prepared = strategy.prepare(variant, case, record.dataset_id, tag, limit_usd_micros)
     return AttemptTicket(

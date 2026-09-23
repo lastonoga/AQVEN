@@ -21,6 +21,7 @@ from aqven.console.series import (
     SeriesCommandRequest,
     SeriesRunner,
     done_lines,
+    failed_lines,
     run_series_command,
     studio_link,
 )
@@ -43,7 +44,7 @@ from aqven.series import (
     VariantAggregates,
     VariantRole,
 )
-from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VariantId, VerdictState
+from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VariantId, VerdictReason, VerdictState
 
 SERIES: Final = SeriesId("01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c")
 MOMENT: Final = datetime(2026, 9, 24, 10, 0, tzinfo=UTC)
@@ -318,8 +319,8 @@ def test_a_done_series_names_its_infrastructure_errors() -> None:
         role=VariantRole.BASELINE,
         cases=4,
         attempts=16,
-        counted=0,
-        infra_errors=16,
+        counted=12,
+        infra_errors=4,
         spend_usd=Decimal(0),
         pass_k=None,
         icc=None,
@@ -333,5 +334,38 @@ def test_a_done_series_names_its_infrastructure_errors() -> None:
     lines = list(done_lines(series, "link"))
 
     assert lines[1] == (
-        "16 attempts of 16 hit infrastructure errors, such as a missing provider key: each attempt run names its error"
+        "4 attempts of 16 hit infrastructure errors, such as a missing provider key: each attempt run names its error"
     )
+
+
+INFRA_FAILURE: Final = (
+    "every attempt hit an infrastructure error (16 of 16); the first one: provider_key_missing: no key"
+)
+INFRA_VERDICT: Final = "No finding: 16 of 16 attempts hit infrastructure errors."
+
+
+def infra_failed() -> SeriesDetailView:
+    verdict = SeriesVerdict(state=VerdictState.INVALID, reason=VerdictReason.INFRA_ERRORS, text=INFRA_VERDICT)
+    failed = detail(SeriesStatus.FAILED, 16)
+    return failed.model_copy(update={"verdict": verdict, "error": INFRA_FAILURE})
+
+
+def test_a_series_failed_by_infrastructure_errors_names_the_error_the_verdict_and_studio() -> None:
+    lines = list(failed_lines(infra_failed(), "link"))
+
+    assert lines == [
+        f"series {SERIES} failed: {INFRA_FAILURE}",
+        f"verdict invalid: {INFRA_VERDICT}",
+        "each attempt run names its error in Studio: link",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_series_failed_by_infrastructure_errors_exits_one() -> None:
+    server = FakeServer(SeriesStatus.RUNNING, iter(((SeriesStatus.FAILED, 16),)))
+
+    code, out, _ = await drive(server)
+
+    assert code == 1
+    assert f"series {SERIES} failed: the engine stopped" in out
+    assert f"each attempt run names its error in Studio: {BASE}/research/series/{SERIES}" in out

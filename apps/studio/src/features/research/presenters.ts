@@ -16,12 +16,14 @@ import type {
   MetricColumn,
   NodeRange,
   NoninferiorQuestion,
+  QuestionKind,
   SeriesSplit,
   SeriesStatus,
   SeriesSummary,
   ThresholdBound,
   ThresholdQuestion,
   VariantAssignment,
+  VariantRole,
   VerdictState,
 } from "@/domain"
 import { ACTIVE_SERIES_STATUSES } from "@/domain"
@@ -140,7 +142,7 @@ export const latestBadge = (latest: LatestSeries | null, copy: Pick<ListCopy, "v
 }
 
 export const seriesText = (summary: Pick<ExperimentSummary, "seriesCount" | "spentUsd">, copy: Pick<ListCopy, "series" | "spent">): string =>
-  joinMeta([copy.series(summary.seriesCount), summary.spentUsd > 0 ? copy.spent(usd(summary.spentUsd, 2)) : null])
+  joinMeta([copy.series(summary.seriesCount), summary.spentUsd > 0 ? copy.spent(usd(summary.spentUsd)) : null])
 
 export const experimentRows = (experiments: readonly ExperimentSummary[], copy: ListCopy): readonly ExperimentRow[] =>
   experiments.map((experiment) => ({
@@ -174,6 +176,8 @@ export const failureModes = (experiments: readonly ExperimentSummary[]): readonl
 
 export const experimentFlows = (flows: readonly string[], experiments: readonly ExperimentSummary[]): readonly string[] =>
   [...new Set([...flows, ...experiments.flatMap((experiment) => (experiment.flow === null ? [] : [experiment.flow]))])].sort()
+
+export const shownRole = (role: VariantRole, question: QuestionKind): VariantRole | null => (question === "look" ? null : role)
 
 export const assignmentRows = (variants: readonly ExperimentVariant[]): readonly AssignmentRow[] =>
   variants.flatMap((variant) =>

@@ -76,6 +76,14 @@ describe("ExperimentScreen: what we run", () => {
     expect(within(run).getByText("regression=yes")).toBeTruthy()
     expect(within(await section("How we measure")).getByText("A look has no primary metric and no guardrails.")).toBeTruthy()
   })
+
+  it("tags no role on the variant of a look", async () => {
+    await renderRoute("/research/experiments/reply_look")
+    const variants = await screen.findByRole("table", { name: "Variants of this experiment" })
+    const [first] = within(variants).getAllByRole("row").slice(1)
+    expect(first?.textContent).toMatch(/^current—/)
+    expect(within(variants).queryByText("other")).toBeNull()
+  })
 })
 
 describe("ExperimentScreen: how we measure", () => {

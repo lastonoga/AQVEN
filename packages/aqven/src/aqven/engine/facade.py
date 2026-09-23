@@ -46,7 +46,7 @@ from aqven.runtime.runs import (
 )
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import IncludePayloads, RunStatus
-from aqven.spec import FlowId, InferenceId, NodeId, RunContextKey
+from aqven.spec import ArmId, ExperimentId, FlowId, InferenceId, NodeId, RunContextKey
 
 QUEUED_DBOS_STATUSES: Final = frozenset({"ENQUEUED", "DELAYED"})
 SETTLED_STATUSES: Final = frozenset({"completed", "failed"})
@@ -144,6 +144,14 @@ def series_of(spec: RunSpec) -> str | None:
     return None if spec.series is None else spec.series.series_id
 
 
+def experiment_of(spec: RunSpec) -> ExperimentId | None:
+    return None if spec.series is None else spec.series.experiment_id
+
+
+def arm_of(spec: RunSpec) -> ArmId | None:
+    return None if spec.series is None else spec.series.arm_id
+
+
 def not_found(run_id: RunId) -> EngineError:
     return EngineError("NOT_FOUND", f"run {run_id} not found")
 
@@ -197,6 +205,8 @@ class RunRecordView:
             start_node=self.call.spec.start_node,
             end_node=self.call.spec.end_node,
             series_id=series_of(self.call.spec),
+            experiment_id=experiment_of(self.call.spec),
+            arm_id=arm_of(self.call.spec),
         )
 
     def snapshot(self) -> RunSnapshot:

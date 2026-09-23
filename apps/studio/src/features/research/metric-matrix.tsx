@@ -1,12 +1,13 @@
 import { useTranslations } from "use-intl"
-import type { MatrixRow, MetricCell, SeriesDetail, StabilityRow } from "@/domain"
+import type { MatrixRow, MetricCell, QuestionKind, SeriesDetail, StabilityRow } from "@/domain"
 import { Empty, Matrix, Surface, Tag, Text, type CellPaint, type MatrixField } from "@/components/studio"
 import { CiWhisker } from "./ci-whisker"
 import { useBuiltinNames } from "./copy"
 import { ResearchSection } from "./layout"
 import { cellAt, matrixColumns, positionOf, STABILITY_ORDER, stabilityShares, whiskerOf, type MatrixColumnView } from "./matrix-model"
 import { directionGlyph, intervalText, marginText, metricName, metricValue } from "./metrics"
-import { CELL_VERDICT_TONE, ROLE_TONE, STABILITY_TONE } from "./tones"
+import { RoleTag } from "./role-tag"
+import { CELL_VERDICT_TONE, STABILITY_TONE } from "./tones"
 
 const VARIANT_WIDTH = 132
 const GATED_WIDTH = 128
@@ -27,18 +28,15 @@ const cellPaint = (cell: MetricCell | undefined): CellPaint => {
   return { accent: CELL_VERDICT_TONE[cell.verdict] }
 }
 
-type VariantCellProps = { readonly row: Pick<MatrixRow, "variant" | "role">; readonly inline?: boolean }
+type VariantCellProps = { readonly row: Pick<MatrixRow, "variant" | "role">; readonly question: QuestionKind; readonly inline?: boolean }
 
-function VariantCell({ row, inline = false }: VariantCellProps) {
-  const t = useTranslations("research.vocabulary.role")
+function VariantCell({ row, question, inline = false }: VariantCellProps) {
   return (
     <div className={inline ? "flex min-w-0 items-center gap-2" : "flex min-w-0 flex-col items-start gap-1"}>
       <Text as="div" role="cell" tone="default" weight="semibold" truncate title={row.variant} className="max-w-full">
         {row.variant}
       </Text>
-      <Tag size="micro" fill="tint" tone={ROLE_TONE[row.role]}>
-        {t(row.role)}
-      </Tag>
+      <RoleTag role={row.role} question={question} />
     </div>
   )
 }
@@ -108,7 +106,7 @@ function useMatrixFields(series: SeriesDetail): readonly MatrixField<MatrixRow>[
   const sub = useColumnSub()
   const views = matrixColumns(series.matrix, series.question)
   return [
-    { id: "variant", label: t("variant"), track: VARIANT_TRACK, render: (row) => <VariantCell row={row} /> },
+    { id: "variant", label: t("variant"), track: VARIANT_TRACK, render: (row) => <VariantCell row={row} question={series.question.kind} /> },
     ...views.map(
       (view): MatrixField<MatrixRow> => ({
         id: view.column.id,
@@ -138,7 +136,7 @@ function useStabilityFields(series: SeriesDetail): readonly MatrixField<Stabilit
   const t = useTranslations("research")
   const roles = new Map(series.matrix.rows.map((row) => [row.variant, row.role]))
   return [
-    { id: "variant", label: t("series.stability.variant"), track: "minmax(200px,0.6fr)", render: (row) => <VariantCell inline row={{ variant: row.variant, role: roles.get(row.variant) ?? "other" }} /> },
+    { id: "variant", label: t("series.stability.variant"), track: "minmax(200px,0.6fr)", render: (row) => <VariantCell inline row={{ variant: row.variant, role: roles.get(row.variant) ?? "other" }} question={series.question.kind} /> },
     ...STABILITY_ORDER.map(
       (kind): MatrixField<StabilityRow> => ({
         id: kind,

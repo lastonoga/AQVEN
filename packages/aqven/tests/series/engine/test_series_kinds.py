@@ -19,7 +19,7 @@ from aqven.ports.engine import RunListQuery
 from aqven.runtime.address import ClientOpId
 from aqven.series.model import AttemptRecord, CheckState, OutcomeClass, SeriesRecord, SeriesStatus
 from aqven.series.views import LookTarget, SeriesListQuery, SeriesStartRequest
-from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VerdictReason, VerdictState
+from aqven.spec import ArmId, DatasetId, ExperimentId, FlowId, SeriesSplit, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
@@ -58,22 +58,28 @@ def test_a_range_series_runs_from_the_recorded_node_outputs(tmp_path: Path) -> N
     assert all(attempt.models == {} for attempt in attempts)
 
 
-async def arm_runs(harness: SeriesHarness) -> tuple[SeriesRecord, tuple[AttemptRecord, ...], set[str]]:
+type RunTags = set[tuple[FlowId, str | None, ExperimentId | None, ArmId | None]]
+
+
+async def arm_runs(harness: SeriesHarness) -> tuple[SeriesRecord, tuple[AttemptRecord, ...], RunTags, RunTags]:
     record, attempts = await finished(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_solo")))
-    page = await DbosEngineFacade(runtime=harness.runtime).list_runs(RunListQuery(mode="experiment"))
-    return record, attempts, {row.flow_id for row in page.items}
+    facade = DbosEngineFacade(runtime=harness.runtime)
+    page = await facade.list_runs(RunListQuery(mode="experiment"))
+    listed = {(row.flow_id, row.series_id, row.experiment_id, row.arm_id) for row in page.items}
+    detail = await facade.get_run(attempts[0].run_id)
+    return record, attempts, listed, {(detail.flow_id, detail.series_id, detail.experiment_id, detail.arm_id)}
 
 
 def test_an_arm_series_runs_the_arm_flow_with_each_variant_agent(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
-        record, attempts, flows = asyncio.run(arm_runs(harness))
+        record, attempts, listed, detail = asyncio.run(arm_runs(harness))
 
     assert record.status is SeriesStatus.DONE
     assert record.flow_id is None
     assert len(attempts) == 8
-    assert flows == {"solo"}
+    assert listed == detail == {("solo", record.series_id, "triage_solo", "solo")}
     assert {attempt.variant_id: attempt.models["answer"] for attempt in attempts} == {
         "writer": f"openai:{WRITER_NAME}",
         "cheap": f"openai:{CHEAP_NAME}",
@@ -122,15 +128,23 @@ def test_code_changed_during_a_series_makes_it_invalid(tmp_path: Path) -> None:
     assert (record.verdict.state, record.verdict.reason) == (VerdictState.INVALID, VerdictReason.INPUTS_CHANGED)
 
 
-def test_a_scorer_that_raises_turns_the_attempt_into_an_infrastructure_error(tmp_path: Path) -> None:
+def test_a_series_whose_every_attempt_hit_an_infrastructure_error_fails(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
         record, attempts = asyncio.run(
             finished(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_broken")))
         )
+        analysed = [source.status for source in harness.analyst.inputs]
 
-    assert record.status is SeriesStatus.DONE
+    assert record.status is SeriesStatus.FAILED
+    assert record.finished_at is not None
+    assert SeriesStatus.FAILED in analysed
+    assert SeriesStatus.DONE not in analysed
+    assert record.verdict is None
+    assert record.error is not None
+    assert record.error.startswith("every attempt hit an infrastructure error (1 of 1); the first one: ")
+    assert "the scorer broke" in record.error
     assert [attempt.outcome for attempt in attempts] == [OutcomeClass.INFRA_ERROR]
     assert attempts[0].error_message is not None and "the scorer broke" in attempts[0].error_message
     assert attempts[0].cost_usd > 0

@@ -1,5 +1,5 @@
 from aqven.loader.aliases import Alias, is_bare
-from aqven.loader.index import EntityKey, EntityKind, ProjectIndex, Reference, build_index
+from aqven.loader.index import EntityKey, EntityKind, ProjectIndex, Reference, build_index, scoped
 from aqven.loader.layout import (
     NODE_ID_SEPARATOR,
     PROJECT_FILE,
@@ -55,6 +55,7 @@ __all__ = [
     "YamlDocument",
     "YamlPath",
     "build_index",
+    "scoped",
     "code_file_parts",
     "code_file_ref",
     "entity_id",

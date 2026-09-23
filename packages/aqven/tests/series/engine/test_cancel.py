@@ -5,10 +5,18 @@ from typing import Final
 
 import pytest
 from series_fixture import write_project
-from series_harness import ScriptedLabels, ScriptedModels, SeriesHarness, series_engine
+from series_harness import ScriptedLabels, ScriptedModels, SeriesHarness, series_engine, wait_until
 
 from aqven.series.model import AttemptState, SeriesId, SeriesRecord, SeriesStatus
-from aqven.series.views import SeriesCancelRequest, SeriesGetRequest, SeriesStartRequest, SeriesSummaryView
+from aqven.series.views import (
+    SeriesCancelRequest,
+    SeriesEvent,
+    SeriesFinishedEvent,
+    SeriesGetRequest,
+    SeriesStartRequest,
+    SeriesStatusEvent,
+    SeriesSummaryView,
+)
 from aqven.server.errors import ApiFailure
 from aqven.spec import ExperimentId, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
@@ -19,6 +27,7 @@ SLOW_SECONDS: Final = 0.4
 SETTLE_SECONDS: Final = 1.5
 QUIET_SECONDS: Final = 2.0
 WAIT_SECONDS: Final = 60.0
+FOLLOW_SECONDS: Final = 30.0
 
 
 def slow_models() -> ScriptedModels:
@@ -60,6 +69,37 @@ def test_cancelling_a_series_awaiting_approval_starts_nothing(tmp_path: Path) ->
     assert attempts == 0
     assert published == []
     assert repeated.code == "SERIES_STATE_CONFLICT"
+
+
+async def follow_cancelled(harness: SeriesHarness) -> tuple[list[SeriesEvent], list[SeriesEvent], SeriesSummaryView]:
+    started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    live: list[SeriesEvent] = []
+
+    async def follow() -> None:
+        async for event in harness.service.events(started.series_id, 0):
+            live.append(event)
+
+    following = asyncio.create_task(follow())
+    await wait_until(lambda: len(live) == 1, WAIT_SECONDS)
+    cancelled = await harness.service.cancel(SeriesCancelRequest(series_id=started.series_id))
+    await asyncio.wait_for(following, FOLLOW_SECONDS)
+    replayed = [event async for event in harness.service.events(started.series_id, 0)]
+    return live, replayed, cancelled
+
+
+def test_cancelling_a_series_awaiting_approval_ends_its_events_with_the_finish(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels()) as harness:
+        live, replayed, cancelled = asyncio.run(follow_cancelled(harness))
+
+    assert cancelled.status is SeriesStatus.CANCELLED
+    assert [event.seq for event in live] == [1, 2]
+    waiting, finish = live
+    assert isinstance(waiting, SeriesStatusEvent) and waiting.status is SeriesStatus.AWAITING_APPROVAL
+    assert isinstance(finish, SeriesFinishedEvent)
+    assert (finish.status, finish.verdict) == (SeriesStatus.CANCELLED, VerdictState.INVALID)
+    assert replayed == live
 
 
 async def finished_rows(harness: SeriesHarness, series_id: SeriesId) -> int:

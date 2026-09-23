@@ -148,9 +148,13 @@ def row_line(row: MatrixRow, columns: Sequence[MetricColumn]) -> str:
     return f"  {row.variant_id} ({row.role}): {cells}"
 
 
-def verdict_lines(series: SeriesDetailView) -> Iterator[str]:
+def verdict_sentence(series: SeriesDetailView) -> Iterator[str]:
     if series.verdict is not None:
         yield f"verdict {series.verdict.state}: {series.verdict.text}"
+
+
+def verdict_lines(series: SeriesDetailView) -> Iterator[str]:
+    yield from verdict_sentence(series)
     columns = series.matrix.columns
     yield from (row_line(row, columns) for row in series.matrix.rows)
     if series.finding_path is not None:
@@ -178,6 +182,8 @@ def cancelled_lines(series: SeriesDetailView, link: str) -> Iterator[str]:
 
 def failed_lines(series: SeriesDetailView, link: str) -> Iterator[str]:
     yield f"series {series.series_id} failed: {series.error or 'no error text'}"
+    yield from verdict_sentence(series)
+    yield f"each attempt run names its error in Studio: {link}"
 
 
 def approval_reason(series: SeriesDetailView) -> str:

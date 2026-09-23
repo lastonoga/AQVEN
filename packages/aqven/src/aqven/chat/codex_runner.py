@@ -86,9 +86,7 @@ class CodexSessionRunner:
             asyncio.get_running_loop(),
             self._file_details,
         )
-        self._emitter.emit(
-            (turn_started(client_op_id, text, session_agent(self._session)), status_changed("thinking"))
-        )
+        self._emitter.emit((turn_started(client_op_id, text, session_agent(self._session)), status_changed("thinking")))
         self._delivery = asyncio.create_task(self._run(text))
         return turn_id
 

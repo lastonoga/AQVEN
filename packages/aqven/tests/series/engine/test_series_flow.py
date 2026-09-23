@@ -6,6 +6,8 @@ from typing import Final
 from series_fixture import DEV_CASES, write_project
 from series_harness import CHEAP_NAME, WRITER_NAME, ScriptedModels, SeriesHarness, series_engine, settled
 
+from aqven.engine import DbosEngineFacade
+from aqven.runtime.runs import RunSnapshot
 from aqven.series.analysis import ScipySeriesAnalyst
 from aqven.series.events import SeriesEventLog
 from aqven.series.model import (
@@ -137,3 +139,21 @@ def test_the_scipy_analyst_finalizes_the_series_with_a_matrix_and_a_verdict(tmp_
     assert (record.verdict.state, record.verdict.reason) == (VerdictState.SIGNAL, VerdictReason.DEV_SPLIT)
     assert [row.variant_id for row in record.analysis.matrix.rows] == ["writer", "cheap"]
     assert result.series.matrix == record.analysis.matrix
+
+
+async def subject_and_judge_runs(harness: SeriesHarness) -> tuple[str, RunSnapshot, RunSnapshot]:
+    result, attempts, _ = await run_agents_series(harness)
+    facade = DbosEngineFacade(runtime=harness.runtime)
+    judged = next(check.judge_run_id for check in attempts[0].checks if check.judge_run_id is not None)
+    return result.series.series_id, await facade.get_run(attempts[0].run_id), await facade.get_run(judged)
+
+
+def test_subject_and_judge_runs_name_their_series_and_experiment(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels()) as harness:
+        series_id, subject, judge = asyncio.run(subject_and_judge_runs(harness))
+
+    assert (subject.series_id, subject.experiment_id, subject.arm_id) == (series_id, EXPERIMENT, None)
+    assert (judge.series_id, judge.experiment_id, judge.arm_id) == (series_id, EXPERIMENT, None)
+    assert subject.flow_id == "triage"

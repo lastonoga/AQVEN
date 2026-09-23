@@ -19,6 +19,8 @@ import { RunDetail, RunHeader, RunOverview } from "./run-detail"
 import { RunDataset } from "./run-dataset"
 import type { RunComparison } from "./run-diff"
 import { RunDiffView } from "./run-diff-view"
+import { listSearch, runListOf, type RunList } from "./run-list"
+import { RunListChoice } from "./run-list-choice"
 import { RunNodeNavigator } from "./run-node-navigator"
 import { PresentationProvider } from "./presentation-state"
 import { callDetail, traceOf } from "./run-trace"
@@ -112,8 +114,9 @@ const compareStateOf = (compare: RunId | null, comparison: RunComparison | null,
 const stepActionFor = (snapshot: ApiRunSnapshot, nodes: readonly ApiNode[]) => (step: string) =>
   <CompareAgentsButton step={step} snapshot={snapshot} nodes={nodes} />
 
-const addressSearch = (runId: RunId, address: ApiExecutionAddress, tab: CallSheetTab, stage: string | null) => ({
+const addressSearch = (runId: RunId, list: RunList, address: ApiExecutionAddress, tab: CallSheetTab, stage: string | null) => ({
   run: runId,
+  ...listSearch(list),
   ...(stage === null ? {} : { stage }),
   node: ids.nodeId(address.node_id),
   ...(address.branch_key === null ? {} : { branch: address.branch_key }),
@@ -139,6 +142,7 @@ export function RunsScreen(): JSX.Element {
   const { snapshot, events, blobs, following } = useLiveRun({ snapshot: loaded.snapshot, events: loaded.events, blobs: loaded.blobs })
   const search = runsRouteApi.useSearch()
   const compareId = search.compare ?? null
+  const list = runListOf(search)
   const tab = search.tab ?? "output"
   const focusedStage = search.stage ?? null
   const params = runsRouteApi.useParams()
@@ -153,16 +157,16 @@ export function RunsScreen(): JSX.Element {
 
   const openCall = (address: ApiExecutionAddress, row: RowKey): void => {
     if (runId === null) return
-    void navigate({ to: ROUTE_PATH.runs, params, search: addressSearch(runId, address, ROW_TAB[row], focusedStage), resetScroll: false })
+    void navigate({ to: ROUTE_PATH.runs, params, search: addressSearch(runId, list, address, ROW_TAB[row], focusedStage), resetScroll: false })
   }
 
   const changeTab = (next: CallSheetTab): void => {
     if (runId === null || execution === null) return
-    void navigate({ to: ROUTE_PATH.runs, params, search: addressSearch(runId, execution.address, next, focusedStage), resetScroll: false })
+    void navigate({ to: ROUTE_PATH.runs, params, search: addressSearch(runId, list, execution.address, next, focusedStage), resetScroll: false })
   }
 
   const closeSheet = (): void => {
-    void navigate({ to: ROUTE_PATH.runs, params, search: runId === null ? {} : { run: runId, ...(focusedStage === null ? {} : { stage: focusedStage }) }, resetScroll: false })
+    void navigate({ to: ROUTE_PATH.runs, params, search: runId === null ? listSearch(list) : { run: runId, ...listSearch(list), ...(focusedStage === null ? {} : { stage: focusedStage }) }, resetScroll: false })
   }
 
   const focusStage = (stage: string | null): void => {
@@ -184,7 +188,7 @@ export function RunsScreen(): JSX.Element {
     void navigate({
       to: ROUTE_PATH.runs,
       params,
-      search: { run: runId, ...(focusedStage === null ? {} : { stage: focusedStage }), ...(compare === null ? {} : { compare }) },
+      search: { run: runId, ...listSearch(list), ...(focusedStage === null ? {} : { stage: focusedStage }), ...(compare === null ? {} : { compare }) },
       resetScroll: false,
     })
   }
@@ -219,7 +223,12 @@ export function RunsScreen(): JSX.Element {
               },
             },
       ]}
-      selector={<RunsStrip runs={runs} selected={runId} />}
+      selector={(
+        <>
+          <RunListChoice flowId={params.flowId} list={list} />
+          <RunsStrip runs={runs} selected={runId} list={list} />
+        </>
+      )}
       aside={starting || snapshot === null ? undefined : <RunDataset key={snapshot.run_id} snapshot={snapshot} blobs={blobs} />}
       detail={starting || snapshot === null ? undefined : (
         <RunHeader

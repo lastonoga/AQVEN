@@ -1,7 +1,9 @@
 import type {
   AgentRef,
+  ArmFlow,
   ApiAgentRef,
   ApiArm,
+  ApiArmFlow,
   ApiSeriesAttempt,
   ApiCaseSelection,
   ApiCheck,
@@ -331,3 +333,11 @@ export const seriesEventOf = (event: ApiSeriesEvent): SeriesEvent => {
   if (event.type === "series_finished") return { kind: "finished", seq: event.seq, status: event.status, verdict: event.verdict }
   return { kind: "attempt", seq: event.seq, done: event.done, total: event.total, spendUsd: money(event.spend_usd) }
 }
+
+export const armFlowOf = (view: ApiArmFlow): ArmFlow => ({
+  experiment: ids.experimentId(view.experiment_id),
+  arm: ids.armId(view.arm_id),
+  description: view.description,
+  nodes: view.nodes,
+  schemas: view.schemas,
+})

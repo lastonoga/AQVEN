@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Final, assert_never
 
 from aqven.check.datasets import selected_cases
-from aqven.loader import NODE_ID_SEPARATOR, LoadedExperiment, LoadedFlow, LoadedProject
+from aqven.loader import NODE_ID_SEPARATOR, LoadedExperiment, LoadedFlow, LoadedProject, scoped
 from aqven.loader.layout import EXPERIMENT_NOTES
 from aqven.ports.engine import MAX_PAGE_LIMIT
 from aqven.runtime.address import RequestModel
@@ -36,10 +36,14 @@ from aqven.series.views import (
     VariantView,
 )
 from aqven.server.errors import ApiFailure, not_found
+from aqven.server.resources import ArmFlowView
 from aqven.server.views.common import loaded_project, page_of
+from aqven.server.views.flows import loaded_flow_schemas
+from aqven.server.views.nodes import flow_node_summaries
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import (
     AgentId,
+    ArmId,
     CompareQuestion,
     DatasetFile,
     DatasetId,
@@ -397,6 +401,23 @@ def loaded_experiment(state: WorkspaceState, experiment_id: str) -> LoadedExperi
     if loaded is None:
         raise not_found(f"experiment {experiment_id} is not in the project")
     return loaded
+
+
+def arm_flow(state: WorkspaceState, experiment_id: str, arm_id: str) -> ArmFlowView:
+    loaded = loaded_experiment(state, experiment_id)
+    arm = loaded.arms.get(ArmId(arm_id))
+    if arm is None:
+        raise not_found(f"arm {arm_id} is not in experiment {experiment_id}")
+    source = arm.source
+    return ArmFlowView(
+        experiment_id=loaded.experiment_id,
+        arm_id=ArmId(arm_id),
+        flow_id=arm.flow_id,
+        description=None if source is None else source.spec.description,
+        order=() if source is None else tuple(source.spec.order),
+        nodes=flow_node_summaries(state, arm, scoped(loaded.experiment_id, arm_id)),
+        schemas=loaded_flow_schemas(state, arm),
+    )
 
 
 @dataclass(frozen=True, slots=True)

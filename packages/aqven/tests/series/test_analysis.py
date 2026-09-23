@@ -432,6 +432,8 @@ def test_rules_fire_in_order() -> None:
 
     everything = replace(broken, status=SeriesStatus.CANCELLED, stop=StopCause.BUDGET_CUT, inputs_changed=True)
     assert verdict_of(ANALYST.analyze(everything)) == (VerdictState.INVALID, VerdictReason.CANCELLED)
+    failed = replace(everything, status=SeriesStatus.FAILED)
+    assert verdict_of(ANALYST.analyze(failed)) == (VerdictState.INVALID, VerdictReason.INFRA_ERRORS)
     budget = replace(everything, status=SeriesStatus.DONE)
     assert verdict_of(ANALYST.analyze(budget)) == (VerdictState.INVALID, VerdictReason.BUDGET_CUT)
     changed = replace(budget, stop=StopCause.COMPLETED)
@@ -455,6 +457,23 @@ def test_invalid_texts_count_attempts() -> None:
     assert cancelled.verdict.text == "No finding: cancelled after 24 of 24 attempts."
     assert budget.verdict is not None
     assert budget.verdict.text == "No finding: the spend cap stopped the series after 24 of 24 attempts."
+
+
+def test_a_series_failed_by_infrastructure_errors_names_them_whatever_stopped_it() -> None:
+    base = noninferior_source()
+    errors = tuple(
+        attempt(variant, f"broken_{index}", outcome=OutcomeClass.INFRA_ERROR, passed=None)
+        for variant in (GPT, MISTRAL)
+        for index in range(3)
+    )
+
+    analysis = ANALYST.analyze(
+        replace(base, attempts=errors, status=SeriesStatus.FAILED, stop=StopCause.BUDGET_CUT, inputs_changed=True)
+    )
+
+    assert verdict_of(analysis) == (VerdictState.INVALID, VerdictReason.INFRA_ERRORS)
+    assert analysis.verdict is not None
+    assert analysis.verdict.text == "No finding: 6 of 6 attempts hit infrastructure errors."
 
 
 def test_infra_errors_at_the_limit_do_not_invalidate() -> None:

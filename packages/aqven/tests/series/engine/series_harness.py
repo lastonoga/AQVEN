@@ -159,6 +159,7 @@ def stub_verdict(source: AnalysisInput) -> SeriesVerdict | None:
         return None
     rules: tuple[tuple[bool, VerdictState, VerdictReason | None], ...] = (
         (source.status is SeriesStatus.CANCELLED, VerdictState.INVALID, VerdictReason.CANCELLED),
+        (source.status is SeriesStatus.FAILED, VerdictState.INVALID, VerdictReason.INFRA_ERRORS),
         (source.stop is StopCause.BUDGET_CUT, VerdictState.INVALID, VerdictReason.BUDGET_CUT),
         (source.inputs_changed, VerdictState.INVALID, VerdictReason.INPUTS_CHANGED),
         (source.split is SeriesSplit.DEV, VerdictState.SIGNAL, VerdictReason.DEV_SPLIT),

@@ -165,5 +165,10 @@ def infra_errors_text(errors: int, done: int) -> str:
     return f"No finding: {errors} of {done} attempts hit infrastructure errors."
 
 
+def infra_failure_text(attempts: int, first_error: str | None) -> str:
+    first = "" if first_error is None else f"; the first one: {first_error}"
+    return f"every attempt hit an infrastructure error ({attempts} of {attempts}){first}"
+
+
 def no_data_text() -> str:
     return "No finding: the primary metric has no data."

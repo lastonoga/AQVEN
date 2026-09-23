@@ -144,11 +144,14 @@ def flow_ir(state: WorkspaceState, flow_id: str) -> FlowIr:
 
 
 def flow_schemas(state: WorkspaceState, flow_id: str) -> FlowSchemas:
-    flow = loaded_flow(state, flow_id)
+    return loaded_flow_schemas(state, loaded_flow(state, flow_id))
+
+
+def loaded_flow_schemas(state: WorkspaceState, flow: LoadedFlow) -> FlowSchemas:
     models = type_models(loaded_project(state))
     source = flow.source
     return FlowSchemas(
-        flow_id=flow_id,
+        flow_id=flow.flow_id,
         input=ref_schema(models, None if source is None else source.spec.input),
         output=ref_schema(models, None if source is None else source.spec.output),
         context=context_keys(state, flow),

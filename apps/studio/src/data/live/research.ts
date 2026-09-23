@@ -1,5 +1,7 @@
 import type {
   ApiSeriesEvent,
+  ArmFlow,
+  ArmId,
   DatasetId,
   ExperimentDetail,
   ExperimentFilter,
@@ -20,6 +22,7 @@ import * as ids from "@/data/ids"
 import { isRecord, subscribeEvents, type Unsubscribe } from "@/lib/sse"
 import { everyPage, MAX_PAGE } from "./paging"
 import {
+  armFlowOf,
   caseRowOf,
   estimateOf,
   experimentDetailOf,
@@ -33,6 +36,7 @@ import {
 export type ResearchSource = {
   readonly experiments: (filter?: ExperimentFilter) => Promise<readonly ExperimentSummary[]>
   readonly experiment: (id: ExperimentId) => Promise<ExperimentDetail>
+  readonly armFlow: (id: ExperimentId, arm: ArmId) => Promise<ArmFlow>
   readonly estimate: (id: ExperimentId, request: LaunchRequest) => Promise<LaunchEstimate>
   readonly startSeries: (id: ExperimentId, request: LaunchRequest) => Promise<SeriesId>
   readonly approveSeries: (id: SeriesId) => Promise<SeriesSummary>
@@ -82,6 +86,8 @@ export const research: ResearchSource = {
   },
   experiment: async (id) =>
     experimentDetailOf(unwrap(await api.GET("/api/experiments/{experiment_id}", { params: { path: { experiment_id: id } } }))),
+  armFlow: async (id, arm) =>
+    armFlowOf(unwrap(await api.GET("/api/experiments/{experiment_id}/arms/{arm_id}", { params: { path: { experiment_id: id, arm_id: arm } } }))),
   estimate: async (id, request) =>
     estimateOf(unwrap(await api.POST("/api/experiments/{experiment_id}/estimate", { params: { path: { experiment_id: id } }, body: launchBody(request) }))),
   startSeries: async (id, request) => {

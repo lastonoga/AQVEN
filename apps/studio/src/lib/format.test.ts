@@ -41,11 +41,21 @@ describe("format", () => {
     expect(joinMeta(["a", "", null, "b", undefined])).toBe("a · b")
   })
 
-  it("formats usd with the requested fraction digits", () => {
-    expect(usd(0.4187)).toBe("$0.4187")
-    expect(usd(0.11, 2)).toBe("$0.11")
-    expect(usd(0.003, 3)).toBe("$0.003")
-    expect(usd(0.01)).toBe("$0.0100")
+  it("formats usd from a cent up with two decimals", () => {
+    expect(usd(0)).toBe("$0.00")
+    expect(usd(0.01)).toBe("$0.01")
+    expect(usd(0.11)).toBe("$0.11")
+    expect(usd(0.4187)).toBe("$0.42")
+    expect(usd(1.844)).toBe("$1.84")
+    expect(usd(1234.5)).toBe("$1,234.50")
+  })
+
+  it("formats usd below a cent with two significant digits", () => {
+    expect(usd(0.00096)).toBe("$0.00096")
+    expect(usd(0.000184)).toBe("$0.00018")
+    expect(usd(0.003)).toBe("$0.003")
+    expect(usd(0.0099)).toBe("$0.0099")
+    expect(usd(0.0000123)).toBe("$0.000012")
   })
 
   it("formats seconds with fixed digits", () => {
