@@ -97,6 +97,17 @@ def in_step() -> bool:
     return DBOS.step_id is not None
 
 
+class NullOutputSink:
+    async def append(self, attempt: int, part: OutputPart, delta: str) -> None:
+        return None
+
+    async def discard(self, attempt: int, cause: AttemptCauseKind) -> None:
+        return None
+
+    async def flush(self) -> None:
+        return None
+
+
 @dataclass(slots=True)
 class BatchedOutputSink:
     run_id: RunId

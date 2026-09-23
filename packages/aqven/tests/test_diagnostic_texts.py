@@ -46,6 +46,64 @@ def test_new_codes_have_severity_message_and_hint(code: DiagnosticCode, severity
     assert code in DIAGNOSTIC_TEXTS
 
 
+EXPERIMENT_FILE: Final = "experiments/reply_quality/experiment.yaml"
+EXPERIMENT_VALUES: Final = {
+    "experiment": "reply_quality",
+    "arm": "critic",
+    "arms": "revise_only",
+    "folder": "experiments/reply_quality",
+    "problem": "question names variant gpt, which is not declared under variants",
+    "fix": "declare it or name one of: base, mistral",
+    "metric": "accuracy",
+    "checks": "critique, promises",
+    "metrics": "success_rate, cost_usd",
+    "check": "critique",
+    "target": "critique_planted",
+    "name": "late_parcel",
+    "first": "0",
+    "dataset": "support_case_cases",
+    "tags": "lang=en",
+    "planned": "80",
+    "selected": "12",
+    "case": "late_parcel",
+    "wanted": "expected_output with the fields category",
+    "ref": "$in.locale",
+    "field": "locale",
+    "side": "$in, the input CaseRequest of flow support_case",
+    "fields": "customer, message",
+    "judge": "critique",
+    "finding": "01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c.yaml",
+}
+
+
+@pytest.mark.parametrize(
+    ("code", "severity"),
+    [
+        (DiagnosticCode.E_ARM_UNKNOWN, Severity.ERROR),
+        (DiagnosticCode.E_RANGE_INVALID, Severity.ERROR),
+        (DiagnosticCode.E_VARIANT_INVALID, Severity.ERROR),
+        (DiagnosticCode.E_METRIC_UNKNOWN, Severity.ERROR),
+        (DiagnosticCode.E_EXPERIMENT_UNKNOWN, Severity.ERROR),
+        (DiagnosticCode.E_DATASET_MISMATCH, Severity.ERROR),
+        (DiagnosticCode.E_CASE_DUPLICATE, Severity.ERROR),
+        (DiagnosticCode.E_CASES_EMPTY, Severity.ERROR),
+        (DiagnosticCode.E_EXPECTED_MISSING, Severity.ERROR),
+        (DiagnosticCode.W_PLAN_EXCEEDS_CASES, Severity.WARNING),
+        (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, Severity.WARNING),
+        (DiagnosticCode.E_CHECK_PATH_UNKNOWN, Severity.ERROR),
+        (DiagnosticCode.W_JUDGE_INPUT_UNBOUND, Severity.WARNING),
+        (DiagnosticCode.E_FINDING_TAMPERED, Severity.ERROR),
+        (DiagnosticCode.W_FINDINGS_STALE, Severity.WARNING),
+    ],
+)
+def test_experiment_codes_have_severity_message_and_hint(code: DiagnosticCode, severity: Severity) -> None:
+    item = templated_diagnostic(code, EXPERIMENT_FILE, ("question",), EXPERIMENT_VALUES)
+
+    assert item.severity is severity
+    assert item.message and "{" not in item.message
+    assert item.hint and "{" not in item.hint
+
+
 def test_missing_extra_names_the_install_command() -> None:
     item = templated_diagnostic(DiagnosticCode.E_PROVIDER_EXTRA_MISSING, AGENT_FILE, ("model",), VALUES)
 

@@ -7,7 +7,7 @@ description: One example, three moves — see the graph, find the cause, verify 
 
 You will have opened the same project from the quickstart in your browser, looked at its graph, run
 a case that exposes a real gap in how it handles a customer's wording, traced that run down to the
-exact node responsible, and seen what a green gate on the project's evals actually tells you before
+exact node responsible, and seen what a series of the project's experiments actually tells you before
 you ship a fix.
 
 ## Before you start
@@ -64,15 +64,18 @@ one specific field, on one specific node, that you can go fix.
 ## 3. Test: verify the fix
 
 Fixing that one node's prompt so it recognizes "gets hot" as overheating is easy. Knowing the fix didn't
-quietly break something else is the harder part — that's what the evals screen is for.
+quietly break something else is the harder part. That's what experiments and series are for.
 
-An eval runs your flow's node against a saved set of representative cases, scores every result, and
-compares the whole batch to a baseline you've already shipped. The result isn't just a score: it's a
-decision. A green gate means every metric that matters was checked against that baseline with real
-statistical tests, not eyeballed — the answers are as good as or better than what's already live, and
-nothing you agreed to protect (grounding in real sources, promises the reply makes lining up with the
-actual resolution, cost) got worse. That decision is what tells you the fix is safe to ship, not just
-that it fixed the one case you happened to test by hand.
+An experiment is a file that writes the question down before any data: which flow or range of nodes
+runs, on which saved cases, with which checks, and what counts as good. For example: "the reply keeps
+its promises within the decision on more than 97% of attempts, with a margin of 0.01." A series runs it:
+every selected case, for every variant, several times, each attempt an ordinary run you can open like
+the one above. The result isn't just a score, it's a verdict. `confirmed` means the 95% interval cleared
+the bound by more than the margin you declared. `refuted` means the effect is within the margin or
+reversed. `inconclusive` means there aren't enough cases to tell. Iterate on the working (`dev`) half of
+the cases. When the fix is done, run one series on the held-out half. That series writes a finding into
+the project, and that finding is what tells you the fix is safe to ship, not just that it fixed the one
+case you happened to test by hand.
 
 ## What's next
 

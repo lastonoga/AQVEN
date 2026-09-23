@@ -25,6 +25,9 @@ The names below come from `aqven.__all__`. Import them from `aqven`. Signatures 
 - `async def resume(self, run_id: 'RunId', request: 'ResumeRequest') -> 'ResumeResult'`
 - `async def fork(self, run_id: 'RunId', request: 'ForkRequest') -> 'RunForked'`
 - `async def cancel(self, run_id: 'RunId', reason: 'str') -> 'RunStatus'`
+- `async def series_start(self, request: 'SeriesStartRequest') -> 'SeriesStarted'`
+- `async def series_get(self, series_id: 'SeriesId', wait_seconds: 'int' = 0, include_cases: 'bool' = False) -> 'SeriesGetResult'`
+- `async def series_cancel(self, series_id: 'SeriesId', reason: 'str | None' = None) -> 'SeriesSummaryView'`
 - `async def upload_blob(self, data: 'bytes', media_type: 'str', name: 'str | None' = None) -> 'MediaValue'`
 - `async def download_blob(self, media: 'MediaValue') -> 'bytes'`
 - `async def run_events(self, run_id: 'RunId', *, after_seq: 'int' = 0) -> 'AsyncIterator[RunEvent]'`
@@ -310,7 +313,7 @@ NewType creates simple unique types with almost zero runtime overhead.
 
 ## create_app
 
-`def create_app(root: 'Path', facade: 'EngineFacade', settings: 'SettingsStore', extra_routers: 'Sequence[APIRouter]' = (), *, options: 'ServerOptions | None' = None, extensions: 'ServerExtensions | None' = None, blobs: 'BlobFiles | None' = None, workspace: 'ProjectWorkspace | None' = None, services: 'StudioServices | None' = None) -> 'FastAPI'`
+`def create_app(root: 'Path', facade: 'EngineFacade', settings: 'SettingsStore', extra_routers: 'Sequence[APIRouter]' = (), *, options: 'ServerOptions | None' = None, extensions: 'ServerExtensions | None' = None, blobs: 'BlobFiles | None' = None, workspace: 'ProjectWorkspace | None' = None, series: 'SeriesJobs | None' = None) -> 'FastAPI'`
 
 ## create_local_app
 

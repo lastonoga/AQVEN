@@ -13,7 +13,7 @@ from aqven.console.project_template import SHOWCASE_TEMPLATE, TEMPLATE_SUFFIX, T
 
 AQVEN_PACKAGE: Final = Path(__file__).resolve().parents[2]
 REPO_ROOT: Final = AQVEN_PACKAGE.parents[1]
-SYNC_SCRIPT: Final = REPO_ROOT / "scripts" / "sync_templates.py"
+SYNC_SCRIPT: Final = REPO_ROOT / "tools" / "sync_templates.py"
 EXAMPLE_ROOT: Final = REPO_ROOT / "examples"
 RUN_SECONDS: Final = 600
 PACKAGE: Final = "media_shop"
@@ -126,7 +126,6 @@ def test_showcase_project_imports_its_generated_models(created: Path) -> None:
     assert completed.stdout.split() == ["CaseRequest", "CaseOutcome"]
 
 
-@pytest.mark.skipif(not SYNC_SCRIPT.is_file(), reason="the repository layout with scripts/ is not available")
 def test_template_stays_in_sync_with_the_example() -> None:
     completed = run_python(REPO_ROOT, str(SYNC_SCRIPT), "--check")
 
@@ -134,7 +133,6 @@ def test_template_stays_in_sync_with_the_example() -> None:
     assert "in sync" in completed.stdout
 
 
-@pytest.mark.skipif(not SYNC_SCRIPT.is_file(), reason="the repository layout with scripts/ is not available")
 def test_sync_reports_an_example_change_that_is_not_in_the_template(tmp_path: Path) -> None:
     example = tmp_path / "showcase"
     templates = tmp_path / "templates"

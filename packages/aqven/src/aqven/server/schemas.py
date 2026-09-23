@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 from aqven.ports.chat import ChatEvent
 from aqven.runtime.address import JsonObject, ResourceModel
 from aqven.runtime.events import RunEvent
+from aqven.series.views import SeriesEvent
 from aqven.server.spec_channel import SpecEvent
 from aqven.spec import SCHEMA_DIALECT, NodeSpec, SpecKind, TypeSpec, editor_schema, schema_path
 
@@ -31,12 +32,14 @@ class EventSchemas(ResourceModel):
     spec: dict[str, JsonObject]
     run: dict[str, JsonObject]
     chat: dict[str, JsonObject]
+    series: dict[str, JsonObject]
 
 
 class EventCatalog(ResourceModel):
     spec: list[SpecEvent] = Field(description=CHANNEL_ANCHOR)
     run: list[RunEvent] = Field(description=CHANNEL_ANCHOR)
     chat: list[ChatEvent] = Field(description=CHANNEL_ANCHOR)
+    series: list[SeriesEvent] = Field(description=CHANNEL_ANCHOR)
     schemas: EventSchemas
 
 
@@ -78,12 +81,13 @@ def event_schemas() -> EventSchemas:
         spec=tagged_schemas(SpecEvent.__value__, EVENT_TAG),
         run=tagged_schemas(RunEvent.__value__, EVENT_TAG),
         chat=tagged_schemas(ChatEvent.__value__, EVENT_TAG),
+        series=tagged_schemas(SeriesEvent.__value__, EVENT_TAG),
     )
 
 
 @cache
 def event_catalog() -> EventCatalog:
-    return EventCatalog(spec=[], run=[], chat=[], schemas=event_schemas())
+    return EventCatalog(spec=[], run=[], chat=[], series=[], schemas=event_schemas())
 
 
 def spec_variants(kind: SpecKind) -> dict[str, JsonObject]:

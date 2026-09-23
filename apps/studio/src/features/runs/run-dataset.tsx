@@ -10,15 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BlobText } from "@/features/call-sheet"
 import { valueCell } from "@/features/trace"
 import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
+import { datasetItemOf } from "./expected"
 
 type DatasetData = {
   readonly summary: ApiDatasetSummary
-}
-
-const sourceOf = (itemId: string): { datasetId: string; caseName: string } | null => {
-  const separator = itemId.indexOf("/")
-  if (separator <= 0 || separator === itemId.length - 1) return null
-  return { datasetId: itemId.slice(0, separator), caseName: itemId.slice(separator + 1) }
 }
 
 function ValuePanel({ title, value, empty }: { readonly title: string; readonly value: unknown; readonly empty: string }) {
@@ -115,7 +110,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   const [selectedCase, setSelectedCase] = useState<ApiDatasetCase | null>(null)
   const [selectedCaseError, setSelectedCaseError] = useState(false)
   const [error, setError] = useState(false)
-  const source = snapshot.dataset_item_id === null || snapshot.dataset_item_id === undefined ? null : sourceOf(snapshot.dataset_item_id)
+  const source = datasetItemOf(snapshot.dataset_item_id)
   const datasetId = source?.datasetId ?? ""
   const caseName = source?.caseName ?? ""
   const changeOpen = (next: boolean): void => {
@@ -131,7 +126,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   useEffect(() => {
     if (!open || datasetId.length === 0) return
     let active = true
-    void api.evals.dataset(datasetId).then((summary) => {
+    void api.datasets.detail(datasetId).then((summary) => {
       if (active) setData({ summary })
     }).catch(() => {
       if (active) setError(true)
@@ -142,7 +137,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   useEffect(() => {
     if (!open || datasetId.length === 0 || caseName.length === 0) return
     let active = true
-    void api.evals.datasetCase(datasetId, caseName).then(
+    void api.datasets.caseDetail(datasetId, caseName).then(
       (item) => { if (active) setSelectedCase(item) },
       () => { if (active) setSelectedCaseError(true) },
     )
@@ -197,7 +192,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
             </Tabs>
             <div className="flex justify-end border-t border-border px-5 py-3">
               <Button asChild variant="outline" size="sm">
-                <Link to={ROUTE_PATH.datasets} params={params} search={{ dataset: datasetId, case: caseName }}>
+                <Link to={ROUTE_PATH.cases} params={params} search={{ dataset: datasetId, case: caseName }}>
                   {t("openPage")}<ArrowUpRight aria-hidden className="size-3.5" />
                 </Link>
               </Button>

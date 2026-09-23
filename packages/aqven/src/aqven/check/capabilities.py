@@ -67,10 +67,6 @@ def _usages(context: CheckContext) -> Iterator[Usage]:
             for index, subagent in enumerate(source.spec.subagents or ())
         ),
         *(
-            (source.path, ("agent",), source.spec.inference, source.spec.agent)
-            for source in context.project.evals.values()
-        ),
-        *(
             (use.file, (*use.path, "agent"), use.ref.inference, use.ref.agent)
             for use in evaluator_uses(context)
             if use.ref.inference is not None and use.ref.agent is not None

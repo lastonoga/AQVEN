@@ -10,19 +10,21 @@ export type StageStatus = {
   readonly unavailableReason?: string | null
 }
 
+export type StageRangeLabels = {
+  readonly selectOnlyNode: (nodeId: string) => string
+  readonly moveRange: string
+  readonly moveRangeHint: string
+  readonly startNode: string
+  readonly endNode: string
+}
+
 export type StageRangeTimelineProps = {
   readonly order: readonly string[]
   readonly range: readonly [number, number]
   readonly onRangeChange: (next: readonly [number, number]) => void
   readonly stageStatus?: ((nodeId: string, currentEndNode: string | undefined) => StageStatus | null) | undefined
   readonly rangeAvailable?: boolean | null | undefined
-  readonly labels: {
-    readonly selectOnlyNode: (nodeId: string) => string
-    readonly moveRange: string
-    readonly moveRangeHint: string
-    readonly startNode: string
-    readonly endNode: string
-  }
+  readonly labels: StageRangeLabels
   readonly testIdPrefix?: string
 }
 

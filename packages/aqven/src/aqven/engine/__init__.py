@@ -13,6 +13,7 @@ from aqven.engine.extensions import (
 )
 from aqven.engine.facade import DbosEngineFacade, PlanSource, stored_run_call
 from aqven.engine.interpreter import NodeScope, run_branch, run_flow
+from aqven.engine.launching import settled_record, start_run_workflow
 from aqven.engine.lifecycle import EngineLifecycle, EngineSetup, ExtensionsFactory, build_runtime
 from aqven.engine.loading import CodeLoader
 from aqven.engine.local import (
@@ -25,7 +26,7 @@ from aqven.engine.local import (
 from aqven.engine.plans import PlanMissing, PlanRegistry, PlanStore
 from aqven.engine.protocol import EXECUTOR_PROTOCOL_VERSION, RUN_EVENTS_STREAM
 from aqven.engine.reader import RunEventLog
-from aqven.engine.request import RunRecord, RunSpec, RunUsageTotals, run_spec_of
+from aqven.engine.request import RunRecord, RunSpec, RunUsageTotals, SeriesTag, run_spec_of
 from aqven.engine.runtime import EngineRuntime, RunOverrides, ToolServices, active_runtime
 from aqven.engine.steps import StepIsolated
 from aqven.engine.values import RefUnresolved
@@ -67,6 +68,7 @@ __all__ = [
     "RunRecord",
     "RunSpec",
     "RunUsageTotals",
+    "SeriesTag",
     "StepIsolated",
     "StreamEventSink",
     "ToolServices",
@@ -80,6 +82,8 @@ __all__ = [
     "run_branch",
     "run_flow",
     "run_spec_of",
+    "settled_record",
     "shutdown_local_engines",
+    "start_run_workflow",
     "stored_run_call",
 ]

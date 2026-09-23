@@ -8,8 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useRelativeTime } from "@/i18n/format"
 import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
 import { runRows, type RunRow } from "./presenters"
+import { listSearch, type RunList } from "./run-list"
 
-export type RunsStripProps = { readonly runs: readonly ApiRun[]; readonly selected: RunId | null }
+export type RunsStripProps = { readonly runs: readonly ApiRun[]; readonly selected: RunId | null; readonly list: RunList }
 
 const VISIBLE_NODE_LIMIT = 3
 
@@ -20,7 +21,7 @@ const datasetParts = (itemId: string | null | undefined): { readonly dataset: st
   return { dataset: itemId.slice(0, separator), caseName: itemId.slice(separator + 1) }
 }
 
-function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect: (id: RunId) => void }) {
+export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect: (id: RunId) => void }) {
   const t = useTranslations("runs")
   const status = useTranslations("domain.runStatus")
   const mode = useTranslations("domain.runMode")
@@ -69,19 +70,19 @@ function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect:
   )
 }
 
-export function RunsStrip({ runs, selected }: RunsStripProps) {
+export function RunsStrip({ runs, selected, list }: RunsStripProps) {
   const t = useTranslations("runs")
   const status = useTranslations("domain.runStatus")
   const now = useNow()
   const navigate = useNavigate()
   const params = runsRouteApi.useParams()
   const [open, setOpen] = useState(false)
-  if (runs.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
+  if (runs.length === 0) return <Empty title={t(`lists.${list}.empty`)} hint={t(`lists.${list}.emptyHint`)} />
   const rows = runRows(runs, selected, now)
   const current = rows.find((row) => row.selected)
   const choose = (id: RunId): void => {
     setOpen(false)
-    void navigate({ to: ROUTE_PATH.runs, params, search: { run: id }, resetScroll: false })
+    void navigate({ to: ROUTE_PATH.runs, params, search: { run: id, ...listSearch(list) }, resetScroll: false })
   }
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -101,7 +102,7 @@ export function RunsStrip({ runs, selected }: RunsStripProps) {
       <PopoverContent align="start" className="dark w-[28rem] max-w-[calc(100vw-2rem)] gap-0 p-1">
         <PickerCommand label={t("pickerSearch")} filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
           <CommandInput placeholder={t("pickerSearchPlaceholder")} />
-          <PickerCount>{t("runsInFlow", { count: runs.length })}</PickerCount>
+          <PickerCount>{t(`lists.${list}.count`, { count: runs.length })}</PickerCount>
           <CommandList label={t("listAria")} className="max-h-[min(60vh,32rem)]">
             <CommandEmpty>{t("noMatches")}</CommandEmpty>
             {rows.map((row) => <RunOption key={row.id} row={row} onSelect={choose} />)}

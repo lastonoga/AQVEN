@@ -1,0 +1,9 @@
+from lumen.types import IntentBallot
+
+
+def settle(words: IntentBallot, evidence: IntentBallot) -> IntentBallot:
+    return max((words, evidence), key=_confidence)
+
+
+def _confidence(ballot: IntentBallot) -> float:
+    return ballot.confidence

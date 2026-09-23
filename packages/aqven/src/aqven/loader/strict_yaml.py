@@ -15,6 +15,7 @@ from ruamel.yaml.tokens import (
     AnchorToken,
     CommentToken,
     DirectiveToken,
+    FlowMappingEndToken,
     FlowMappingStartToken,
     FlowSequenceEndToken,
     FlowSequenceStartToken,
@@ -39,7 +40,14 @@ TOKEN_VIOLATIONS: Final[Mapping[type[Token], tuple[DiagnosticCode, str]]] = {
         DiagnosticCode.E_YAML_FLOW_STYLE,
         "nonempty flow-style lists are forbidden: use block style",
     ),
-    FlowMappingStartToken: (DiagnosticCode.E_YAML_FLOW_STYLE, "flow-style mappings {} are forbidden: use block style"),
+    FlowMappingStartToken: (
+        DiagnosticCode.E_YAML_FLOW_STYLE,
+        "nonempty flow-style mappings are forbidden: use block style",
+    ),
+}
+EMPTY_FLOW: Final[Mapping[type[Token], type[Token]]] = {
+    FlowSequenceStartToken: FlowSequenceEndToken,
+    FlowMappingStartToken: FlowMappingEndToken,
 }
 
 
@@ -135,14 +143,14 @@ def _token_violations(tokens: Iterable[object], file: str) -> tuple[Diagnostic, 
     token_diagnostics = [
         _token_diagnostic(token, file)
         for index, token in enumerate(typed)
-        if type(token) in TOKEN_VIOLATIONS
-        and not (
-            isinstance(token, FlowSequenceStartToken)
-            and index + 1 < len(typed)
-            and isinstance(typed[index + 1], FlowSequenceEndToken)
-        )
+        if type(token) in TOKEN_VIOLATIONS and not _empty_flow(typed, index)
     ]
     return (*comment_diagnostics, *token_diagnostics)
+
+
+def _empty_flow(tokens: Sequence[Token], index: int) -> bool:
+    closing = EMPTY_FLOW.get(type(tokens[index]))
+    return closing is not None and index + 1 < len(tokens) and isinstance(tokens[index + 1], closing)
 
 
 def _token_diagnostic(token: Token, file: str) -> Diagnostic:

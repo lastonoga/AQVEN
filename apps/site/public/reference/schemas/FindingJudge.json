@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "description": "A judge check behind the finding: its inference, its agent and the experiment that validated it.\n\nA judge without ``validated_by`` produces a signal, not a finding.",
+  "properties": {
+    "agent": {
+      "title": "Agent",
+      "type": "string"
+    },
+    "check": {
+      "title": "Check",
+      "type": "string"
+    },
+    "inference": {
+      "title": "Inference",
+      "type": "string"
+    },
+    "validated_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validated By"
+    }
+  },
+  "required": [
+    "check",
+    "inference",
+    "agent"
+  ],
+  "title": "FindingJudge",
+  "type": "object"
+}

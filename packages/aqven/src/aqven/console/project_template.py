@@ -128,7 +128,7 @@ TEMPLATES: Final[Mapping[str, ProjectTemplate]] = {
     ),
     SHOWCASE_TEMPLATE: PackageDataTemplate(
         name=SHOWCASE_TEMPLATE,
-        description="the lumen example: two flows with every node kind, human waits, tools, evals and main.py",
+        description="the lumen example: two flows with every node kind, human waits, tools, experiments and main.py",
     ),
     HELLO_TEMPLATE: PackageDataTemplate(
         name=HELLO_TEMPLATE,

@@ -55,7 +55,8 @@ my_project/
       triage.node.yaml
       triage.prompt.md
       triage.py
-  evals/                     datasets and scored cases
+  datasets/                  cases a flow runs on
+  experiments/               variants, checks and a question over the cases
 ```
 
 That layout is the reason a coding agent — Claude Code, Codex, Cursor — can read the system before editing it,
@@ -72,8 +73,6 @@ Define → Validate → Test → Run → Evaluate → Learn → Improve
 | `aqven check` | validates the project and simulates every flow **without network access or tokens** |
 | `aqven run` | runs a flow locally and streams run events as they happen |
 | `aqven dev` | project server plus Studio: canvas, runs, datasets, human review |
-| `aqven eval` | runs an eval over its dataset, scores every case, compares against a baseline |
-| `aqven optimize` | optimizes a prompt with GEPA |
 | `aqven serve` | HTTP API and MCP server, without a browser |
 | `aqven mcp` | MCP over stdio, so a coding agent can inspect and edit the project |
 

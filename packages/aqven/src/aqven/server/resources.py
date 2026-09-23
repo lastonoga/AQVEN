@@ -10,8 +10,11 @@ from aqven.runtime.address import ResourceModel, RunId
 from aqven.runtime.vocabulary import RunStatus
 from aqven.spec import (
     AgentSpec,
+    ArmId,
     DynamicLimits,
     EnumValue,
+    ExperimentId,
+    FlowId,
     FlowSpec,
     InferenceSpec,
     NodeKind,
@@ -27,11 +30,12 @@ type FileKind = Literal[
     "Flow",
     "Node",
     "Dataset",
-    "Eval",
+    "Experiment",
     "Inference",
     "Agent",
     "Tool",
     "McpServer",
+    "Finding",
     "prompt",
     "code",
     "lock",
@@ -168,6 +172,16 @@ class NodeSummary(ResourceModel):
     problems_count: Count
     upstream: tuple[str, ...]
     downstream: tuple[str, ...]
+
+
+class ArmFlowView(ResourceModel):
+    experiment_id: ExperimentId
+    arm_id: ArmId
+    flow_id: FlowId
+    description: str | None
+    order: tuple[str, ...]
+    nodes: tuple[NodeSummary, ...]
+    schemas: FlowSchemas
 
 
 class NodeBindingView(ResourceModel):

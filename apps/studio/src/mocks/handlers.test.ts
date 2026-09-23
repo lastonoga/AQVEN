@@ -50,10 +50,10 @@ describe("mock engine coherence", () => {
   })
 
   it("offers complete flow cases and resolves their run context", async () => {
-    const datasets = await liveSources.evals.datasets()
+    const datasets = await liveSources.datasets.list()
     const dataset = datasets.find((item) => item.dataset_id === "support_case_cases")
     expect(dataset?.flow_id).toBe("support_case")
-    const cases = await liveSources.evals.datasetCases("support_case_cases")
+    const cases = await liveSources.datasets.cases("support_case_cases")
     expect(cases).toHaveLength(3)
     const started = await liveSources.run.start({
       flow_id: flowId("support_case"),
@@ -85,15 +85,15 @@ describe("mock engine coherence", () => {
   })
 
   it("creates a flow dataset that appears in the catalogue", async () => {
-    const draft = await liveSources.evals.draftDataset(flowId("support_case"))
+    const draft = await liveSources.datasets.draft(flowId("support_case"))
     expect(draft.flow).toBe("support_case")
-    const created = await liveSources.evals.createDataset({
+    const created = await liveSources.datasets.create({
       dataset_id: "mock_created_cases",
       flow_id: flowId("support_case"),
       cases: draft.cases,
     })
     expect(created.dataset_id).toBe("mock_created_cases")
-    expect((await liveSources.evals.datasetCases("mock_created_cases"))).toHaveLength(1)
+    expect((await liveSources.datasets.cases("mock_created_cases"))).toHaveLength(1)
   })
 
   it("generates a demo dataset through the assistant route", async () => {
@@ -104,7 +104,7 @@ describe("mock engine coherence", () => {
       text: "Create the project dataset file datasets/mock_generated_cases.yaml for flow support_case.\nGenerate 2 distinct, realistic cases for these scenarios: damaged item",
       client_op_id: crypto.randomUUID(),
     })
-    const datasets = await liveSources.evals.datasets()
+    const datasets = await liveSources.datasets.list()
     expect(datasets.find((item) => item.dataset_id === "mock_generated_cases")?.cases).toBe(2)
   })
 
@@ -117,7 +117,7 @@ describe("mock engine coherence", () => {
         total_estimate: 2,
       })
     }))
-    const cases = await liveSources.evals.datasetCases("paged")
+    const cases = await liveSources.datasets.cases("paged")
     expect(cases.map((item) => item.name)).toEqual(["first", "second"])
   })
 })

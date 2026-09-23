@@ -50,12 +50,13 @@ from a terminal, while watching every command, file edit, and tool call as it ha
 ### Example
 
 Open the [showcase](/start/quickstart/) project's `support_case` flow and its chat panel. Start a new thread, leave approval
-mode on **Manual**, and ask: "Add a `promises` scorer to the `reply_quality` eval." The agent reads the
-eval file, then proposes writing the change — because the thread is in Manual mode, an Allow/Deny bar
-appears on that edit before anything is written. Click **Allow**, and the diff lands in the file.
+mode on **Manual**, and ask: "Add a `not_empty` check on the reply text to the `reply_look` experiment."
+The agent reads `experiments/reply_look/experiment.yaml`, then proposes writing the change. Because the
+thread is in Manual mode, an Allow/Deny bar appears on that edit before anything is written. Click
+**Allow**, and the diff lands in the file.
 
 Now open the model menu and switch approval mode to **Trust** without starting a new thread. Ask it to
-run `{{CLI_COMMAND}} check` to confirm the eval file is still valid. This time no approval bar appears —
+run `{{CLI_COMMAND}} check` to confirm the experiment file is still valid. This time no approval bar appears —
 the mode change applied to the thread you already had open, so the same thread that just asked
 permission now runs the command on its own and shows you the exit code.
 
@@ -66,7 +67,7 @@ permission now runs the command on its own and shows you the exit code.
 - [How to check Studio's settings](/studio/settings/) — where the chat backend is chosen and switched.
 - [How to check a project before committing](/engine/check/) — the command the example asks the agent
   to run.
-- [How to read an eval and its gate](/studio/evals/) — where a scorer you asked the agent to add actually
-  shows up.
+- [How to read research in Studio](/studio/research/) — where a check you asked the agent to add shows
+  up once a series scores it.
 - [How to read a workflow's graph](/studio/understand-the-graph/) — the canvas the chat panel sits next
   to.

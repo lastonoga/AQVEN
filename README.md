@@ -143,7 +143,7 @@ Every part of an AI workflow, as files in your project.
 | **Providers** | 28 model providers through [Pydantic AI](https://ai.pydantic.dev/) — OpenAI, Anthropic, Google, OpenRouter, Mistral, DeepSeek, Groq, Together AI, and more |
 | **Tools** | Python functions or MCP servers, with declared `read` / `write` / `external` effects |
 | **Human review** | A workflow step that waits on a person, with a timeout and a default |
-| **Datasets and evals** | Real cases, scored, so a change is proven before it ships |
+| **Datasets and experiments** | Real cases and experiments that compare variants on them, so a change is proven before it ships |
 | **Durable execution** | Built on [DBOS](https://www.dbos.dev/) — a run survives a crash and resumes where it left off |
 
 → [Full documentation](https://aqvenstudio.com)

@@ -1,0 +1,94 @@
+{
+  "additionalProperties": false,
+  "description": "A point estimate with its 95 % interval, as the series computed it on the holdout cases.\n\n``method`` names the interval (``wilson``, ``paired_t`` and so on); ``p_adjusted`` is the Benjamini\u2013Hochberg\nvalue over the primary cells of the series. ``cases`` and ``attempts`` count the data behind the estimate.",
+  "properties": {
+    "attempts": {
+      "minimum": 0,
+      "title": "Attempts",
+      "type": "integer"
+    },
+    "cases": {
+      "minimum": 0,
+      "title": "Cases",
+      "type": "integer"
+    },
+    "high": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "High"
+    },
+    "low": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Low"
+    },
+    "method": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Method"
+    },
+    "p_adjusted": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P Adjusted"
+    },
+    "p_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P Value"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "value",
+    "low",
+    "high",
+    "method",
+    "cases",
+    "attempts"
+  ],
+  "title": "FindingEstimate",
+  "type": "object"
+}

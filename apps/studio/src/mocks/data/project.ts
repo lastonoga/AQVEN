@@ -1437,28 +1437,6 @@ export const liveFiles: readonly ApiFileEntry[] = [
     "last_good_content_hash": null
   },
   {
-    "path": "evals/support_case/reply_cases.yaml",
-    "kind": "Dataset",
-    "file_hash": "sha256-961c45ede752337892779fb1ef83ce078360d6db715a1606ad56fc267b646fa5",
-    "size_bytes": 5613,
-    "mtime_ns": 1789650348058047200,
-    "parse_status": "ok",
-    "sync_state": "ok",
-    "problems_count": 0,
-    "last_good_content_hash": null
-  },
-  {
-    "path": "evals/support_case/reply_quality.yaml",
-    "kind": "Eval",
-    "file_hash": "sha256-5d04db55b055d09f488cf38c00f1143b7f11e8fa32800de7db548d24193eaff5",
-    "size_bytes": 1525,
-    "mtime_ns": 1789663760111853300,
-    "parse_status": "ok",
-    "sync_state": "ok",
-    "problems_count": 0,
-    "last_good_content_hash": null
-  },
-  {
     "path": "flows/judge_panel/flow.yaml",
     "kind": "Flow",
     "file_hash": "sha256-695c47fefc5617a4c48a6eff6fb8cf0cfaf3bef86a75a95bbbf64f4cb4bbbd52",

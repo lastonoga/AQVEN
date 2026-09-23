@@ -22,7 +22,7 @@ screen when a result isn't what you expected), and
 submit something, not just read).
 
 **Test** covers proving a fix actually helped: [how to work with datasets](/studio/datasets/) and
-[how to read an eval and its gate](/studio/evals/).
+[how to read research](/studio/research/), the experiments and the series that answer them.
 
 **Chat & settings** covers the rest of the app: [how to use the AI chat in Studio](/studio/chat/) and
 [how to check Studio's settings](/studio/settings/).

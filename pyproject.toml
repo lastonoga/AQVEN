@@ -5,7 +5,7 @@ required-version = ">=0.12.15"
 members = ["packages/*", "examples"]
 
 [dependency-groups]
-dev = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.7", "pyright==1.1.414"]
+dev = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.7", "pyright==1.1.414", "scipy-stubs==1.18.1.1"]
 
 [tool.ruff]
 target-version = "py314"

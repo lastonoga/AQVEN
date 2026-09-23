@@ -14,8 +14,25 @@ TRIAGE: Final = "flows/support_case/nodes/triage/triage.node.yaml"
 REVISE: Final = "flows/support_case/nodes/polish/revise"
 JUDGES: Final = "flows/judge_panel/nodes/judges"
 RESEARCH_POLICY: Final = "agents/resolver/research_policy.inference.yaml"
+NONINFERIOR: Final = "experiments/reply_noninferior_mistral/experiment.yaml"
+PANEL_AGENTS: Final = "experiments/judge_panel_agents/experiment.yaml"
+INTENT_SPLIT: Final = "experiments/intent_split_long_messages/experiment.yaml"
+REPLY_LOOK: Final = "experiments/reply_look/experiment.yaml"
+OVERPROMISE: Final = "experiments/reply_overpromise_risk/experiment.yaml"
+SUPPORT_CASES: Final = "datasets/support_case_cases.yaml"
 SHADOWING_PROMPT: Final[Breakage] = (RESEARCH_POLICY, "out:\n", 'prompt: "@root/fragments/untrusted_input.md"\nout:\n')
 UNBOUND_MESSAGE: Final[Breakage] = (TRIAGE, '- name: "message"\n  from: "$prepare.out.message"\n', "")
+PLAN_BEYOND_CASES: Final[Breakage] = (NONINFERIOR, "  cases: 12\n", "  cases: 40\n")
+INFERENCE_TYPED_CHECK: Final[Breakage] = (
+    NONINFERIOR,
+    'code.support_case:reply_keeps_resolution"',
+    'code.support_case:promises_match_resolution"',
+)
+UNBOUND_JUDGE_INPUT: Final[Breakage] = (
+    "flows/support_case/nodes/polish/critique.inference.yaml",
+    'in:\n- name: "summary"',
+    'in:\n- name: "remark"\n  type: "Text"\n  description: "A remark"\n  maxLength: 200\n- name: "summary"',
+)
 BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_INPUT_UNBOUND": UNBOUND_MESSAGE,
     "E_PII_PROVIDER": ("aqven.yaml", "allows_pii: true", "allows_pii: false"),
@@ -37,27 +54,41 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_POLICY_PARAMS": (f"{JUDGES}/judges.node.yaml", "min_agree: 2", "min_agree: 5"),
     "E_CODE_NOT_FOUND": ("flows/support_case/nodes/tally/tally.node.yaml", 'run: "tally"', 'run: "count_votes"'),
     "E_CODE_REF_UNRESOLVED": (
-        "evals/support_case/reply_quality.yaml",
-        'code.support_case:promises_match_resolution"',
-        'code.support_case:promises_match_reply"',
+        NONINFERIOR,
+        'code.support_case:reply_keeps_resolution"',
+        'code.support_case:reply_keeps_decision"',
     ),
+    "E_CHECK_PATH_UNKNOWN": (OVERPROMISE, 'locale: "$in.customer.locale"', 'locale: "$in.locale"'),
     "E_ALIAS_UNKNOWN": ("tools/search_kb.yaml", 'run: "@root.', 'run: "@lumen.'),
     "E_TYPE_CONSTRAINT_MISMATCH": (
         "flows/support_case/nodes/case_form/case_form.py",
         'type="DeliveryDamage",',
         'type="DeliveryDamage", enum=["crushed_box", "broken_item", "missing_item"],',
     ),
-    "E_UNKNOWN_KEY": (
-        "evals/support_case/reply_cases.yaml",
-        'kind: "Dataset"\n',
-        'kind: "Dataset"\nname: "reply_cases"\n',
+    "E_UNKNOWN_KEY": (SUPPORT_CASES, 'kind: "Dataset"\n', 'kind: "Dataset"\nname: "support_case_cases"\n'),
+    "E_AGENT_UNKNOWN": (NONINFERIOR, 'polish__revise: "mistral"', 'polish__revise: "claude"'),
+    "E_VARIANT_INVALID": (NONINFERIOR, 'polish__revise: "mistral"', 'prepare: "mistral"'),
+    "E_ARM_UNKNOWN": (INTENT_SPLIT, 'arm: "two_step"', 'arm: "three_step"'),
+    "E_METRIC_UNKNOWN": (PANEL_AGENTS, 'primary: "winner"', 'primary: "accuracy"'),
+    "E_DATASET_MISMATCH": (PANEL_AGENTS, 'dataset: "judge_panel_cases"', 'dataset: "support_case_cases"'),
+    "E_CASE_DUPLICATE": (
+        "datasets/judge_panel_cases.yaml",
+        'name: "panel_bulb_router_close"',
+        'name: "panel_strip_heat_clear"',
     ),
+    "E_RANGE_INVALID": (REPLY_LOOK, 'to: "polish"', 'to: "panel"'),
+    "E_CASES_EMPTY": (REPLY_LOOK, 'regression: "yes"', 'regression: "maybe"'),
+    "E_EXPERIMENT_UNKNOWN": (
+        REPLY_LOOK,
+        'validated_by: "critique_planted_defects"',
+        'validated_by: "critique_calibration"',
+    ),
+    "E_EXPECTED_MISSING": (SUPPORT_CASES, '  expected_output:\n    intent: "defect"\n', ""),
 }
 
 PENDING_COMMANDS: Final = (
     ("plan",),
     ("build",),
-    ("optimize", "--eval", "reply_quality"),
 )
 
 
@@ -84,6 +115,27 @@ def test_broken_copy_reports_code(aqven_project_root: Path, tmp_path: Path, code
 def test_prompt_beside_explicit_path_is_shadowed(aqven_project_root: Path, tmp_path: Path) -> None:
     copy = broken_copy(aqven_project_root, tmp_path, *SHADOWING_PROMPT)
     assert "W_PROMPT_SHADOWED" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_plan_beyond_selected_cases_warns(aqven_project_root: Path, tmp_path: Path) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *PLAN_BEYOND_CASES)
+    assert "W_PLAN_EXCEEDS_CASES" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_check_typed_for_the_revise_inference_warns_on_the_polish_range(
+    aqven_project_root: Path, tmp_path: Path
+) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *INFERENCE_TYPED_CHECK)
+    report = check_project(copy)
+    assert report.errors == ()
+    assert {(item.code.value, item.file) for item in report.warnings} == {("W_CHECK_CONTEXT_MISMATCH", NONINFERIOR)}
+
+
+def test_judge_input_outside_the_polish_range_scope_warns(aqven_project_root: Path, tmp_path: Path) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *UNBOUND_JUDGE_INPUT)
+    warned = {(item.code.value, item.file) for item in check_project(copy).warnings}
+    assert ("W_JUDGE_INPUT_UNBOUND", NONINFERIOR) in warned
+    assert ("W_JUDGE_INPUT_UNBOUND", REPLY_LOOK) in warned
 
 
 def test_cli_check_exit_codes(aqven_project_root: Path, tmp_path: Path) -> None:

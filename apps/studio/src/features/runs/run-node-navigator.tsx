@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "use-intl"
 import { Dot, EXECUTION_STATUS_TONE, Text, type Tone } from "@/components/studio"
@@ -20,6 +20,7 @@ type RunNodeNavigatorProps = {
   readonly trace: TraceRun
   readonly focusedStage: string | null
   readonly onFocusStage: (stage: string | null) => void
+  readonly stepAction?: (step: string) => ReactNode
 }
 
 const SCROLL_OFFSET = 64
@@ -30,7 +31,7 @@ const scrollToNode = (node: NavNode): void => {
   document.getElementById(node.anchor)?.scrollIntoView({ block: "start", behavior: "auto" })
 }
 
-export function RunNodeNavigator({ trace, focusedStage, onFocusStage }: RunNodeNavigatorProps) {
+export function RunNodeNavigator({ trace, focusedStage, onFocusStage, stepAction }: RunNodeNavigatorProps) {
   const t = useTranslations("runs.navigation")
   const status = useTranslations("domain.executionStatus")
   const pending = useTranslations("runs.execution")("pending")
@@ -204,7 +205,10 @@ export function RunNodeNavigator({ trace, focusedStage, onFocusStage }: RunNodeN
         <Button type="button" variant="outline" size="icon-sm" aria-label={t("previous")} disabled={previous === null} onClick={() => { if (previous !== null) jumpTo(previous) }}><ChevronLeft aria-hidden /></Button>
         <Button type="button" variant="outline" size="icon-sm" aria-label={t("next")} disabled={next === null} onClick={() => { if (next !== null) jumpTo(next) }}><ChevronRight aria-hidden /></Button>
       </div>
-      <div className="ml-auto shrink-0"><PresentationModeSwitch /></div>
+      <div className="ml-auto flex shrink-0 items-center gap-2.5">
+        {current === null || stepAction === undefined ? null : stepAction(current.name)}
+        <PresentationModeSwitch />
+      </div>
     </nav>
   )
 }

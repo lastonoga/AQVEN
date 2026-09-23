@@ -7,7 +7,6 @@
         "type",
         "prompt",
         "dataset",
-        "eval",
         "field",
         "inference",
         "agent",

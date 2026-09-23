@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "TagName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Which cases the experiment runs: a dataset, optionally filtered by case tags.\n\nA case is selected when every tag listed here has the same value on the case.",
+  "properties": {
+    "dataset": {
+      "title": "Dataset",
+      "type": "string"
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/TagName"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tags"
+    }
+  },
+  "required": [
+    "dataset"
+  ],
+  "title": "CaseSelection",
+  "type": "object"
+}

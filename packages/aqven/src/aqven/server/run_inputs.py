@@ -51,9 +51,7 @@ def require_range_boundary(state: WorkspaceState, request: RunStartRequest) -> N
     if not isinstance(request.input, dict):
         raise ApiFailure("INPUT_INVALID", "a node range needs an input record")
     context = request.context.model_dump(mode="json", exclude_none=True) if request.context else {}
-    missing = range_missing(
-        flow, request.start_node, request.end_node, request.input, context, request.node_outputs
-    )
+    missing = range_missing(flow, request.start_node, request.end_node, request.input, context, request.node_outputs)
     if missing:
         details = "; ".join(f"{item.reference}: {item.reason}" for item in missing)
         raise ApiFailure("INPUT_INVALID", f"node range is missing boundary data: {details}")

@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The cascade's escalation step: a stronger model decides the intent from the triage alone, with no perspective set"
+inference: "ballot"
+agent: "deepseek"
+in:
+- name: "summary"
+  from: "$triage.out.summary"
+- name: "observations"
+  from: "$triage.out.observations"
+- name: "safety_risk"
+  from: "$triage.out.safety_risk"

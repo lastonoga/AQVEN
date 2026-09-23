@@ -1,0 +1,16 @@
+from typing import Final
+
+from aqven.policies import EvalContext, NoParams, Verdict
+from lumen.types import PanelOutcome, PanelRequest
+
+ACCEPTABLE_SCORE: Final = 3
+NO_SCORES: Final = 0
+
+
+def weakest_criterion(
+    value: PanelOutcome, context: EvalContext[PanelRequest, PanelOutcome], params: NoParams
+) -> Verdict:
+    weakest = min((item.score for item in value.verdict.verdict.scores), default=NO_SCORES)
+    passed = weakest >= ACCEPTABLE_SCORE
+    reason = f"the winner scores {weakest} of 5 on its weakest criterion, below {ACCEPTABLE_SCORE}"
+    return Verdict(passed=passed, score=float(weakest), reason=None if passed else reason)

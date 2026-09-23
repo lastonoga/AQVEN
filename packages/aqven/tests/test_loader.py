@@ -23,6 +23,8 @@ from aqven.loader import (
 )
 from aqven.spec import (
     AgentId,
+    ArmId,
+    ExperimentId,
     FlowId,
     HumanNodeSpec,
     InferenceId,
@@ -79,6 +81,9 @@ ENTITY_IDS: Final[Mapping[str, tuple[str, SpecKind | None]]] = {
     "money.yaml": ("money", None),
     "support/quick/flow.py": ("quick", SpecKind.FLOW),
     "support/quick.inference.py": ("quick", SpecKind.INFERENCE),
+    "experiments/reply_quality/experiment.yaml": ("reply_quality", SpecKind.EXPERIMENT),
+    "experiments/reply_quality/experiment.md": ("experiment", None),
+    "experiments/reply_quality/arms/revise_only/flow.yaml": ("revise_only", SpecKind.FLOW),
 }
 
 INCLUDES: Final[Mapping[str, tuple[tuple[str, ...], str, tuple[str, ...]]]] = {
@@ -118,6 +123,20 @@ out:
   type: "Text"
   description: "Заметка"
   maxLength: 200
+"""
+
+
+EXPERIMENT: Final = """apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A quick look at the audit arm"
+subject:
+  arm: "audit"
+cases:
+  dataset: "triage"
+variants:
+- id: "base"
+question:
+  kind: "look"
 """
 
 
@@ -191,6 +210,16 @@ def test_empty_flow_sequence_is_allowed_as_the_only_empty_list_spelling() -> Non
 
     _, nonempty_problems = read_strict_yaml('a: ["value"]\n', "aqven.yaml")
     assert any(problem.code == DiagnosticCode.E_YAML_FLOW_STYLE for problem in nonempty_problems)
+
+
+def test_empty_flow_mapping_is_allowed_as_the_only_empty_mapping_spelling() -> None:
+    document, problems = read_strict_yaml('agents: {}\nmodels:\n- "openai:gpt-5.4-mini"\n', "finding.yaml")
+
+    assert document is not None and not problems
+    assert document.data == {"agents": {}, "models": ["openai:gpt-5.4-mini"]}
+
+    _, nonempty_problems = read_strict_yaml('agents: {revise: "mistral"}\n', "finding.yaml")
+    assert [problem.code for problem in nonempty_problems] == [DiagnosticCode.E_YAML_FLOW_STYLE]
 
 
 @pytest.mark.parametrize("path", list(ENTITY_IDS), ids=list(ENTITY_IDS))
@@ -491,3 +520,80 @@ def test_dynamic_limits_errors_get_their_own_code() -> None:
     assert {item.code for item in problems} == {DiagnosticCode.E_DYNAMIC_LIMITS}
     assert ("out", 0, "limits", "max_depth") in {item.path for item in problems}
     assert all(item.path[0] == "out" for item in problems)
+
+
+def with_experiment(root: Path, folder: str) -> None:
+    write(root, f"{folder}/experiment.yaml", EXPERIMENT)
+    write(root, f"{folder}/arms/audit/flow.yaml", (root / "triage/flow.yaml").read_text(encoding="utf-8"))
+    write(root, f"{folder}/arms/audit/nodes/note.yaml", NOTE_NODE)
+
+
+def test_experiment_takes_its_id_notes_and_arms_from_its_folder(shop: Path) -> None:
+    with_experiment(shop, "experiments/audit_look")
+    write(shop, "experiments/audit_look/experiment.md", "Why the audit arm is worth a look.\n")
+
+    result = load_project(shop)
+
+    assert result.diagnostics == ()
+    project = result.project
+    assert project is not None
+    experiment = project.experiments[ExperimentId("audit_look")]
+    assert (experiment.folder, experiment.source.path) == (
+        "experiments/audit_look",
+        "experiments/audit_look/experiment.yaml",
+    )
+    assert experiment.notes == "Why the audit arm is worth a look.\n"
+    assert set(experiment.arms) == {ArmId("audit")}
+    assert set(experiment.arms[ArmId("audit")].nodes) == {NodeId("note")}
+    assert experiment.arm_folder(ArmId("audit")) == "experiments/audit_look/arms/audit"
+    assert set(project.flows) == {FlowId("triage")}
+
+
+def test_experiment_without_notes_or_arms_loads(shop: Path) -> None:
+    write(shop, "experiments/audit_look/experiment.yaml", EXPERIMENT)
+
+    project = load_project(shop).project
+
+    assert project is not None
+    experiment = project.experiments[ExperimentId("audit_look")]
+    assert (experiment.notes, dict(experiment.arms)) == (None, {})
+
+
+def test_same_arm_name_in_two_experiments_does_not_collide(shop: Path) -> None:
+    with_experiment(shop, "experiments/audit_look")
+    with_experiment(shop, "experiments/audit_again")
+
+    result = load_project(shop)
+
+    assert result.diagnostics == ()
+    project = result.project
+    assert project is not None
+    folders = {key: experiment.arms[ArmId("audit")].folder for key, experiment in project.experiments.items()}
+    assert folders == {
+        ExperimentId("audit_look"): "experiments/audit_look/arms/audit",
+        ExperimentId("audit_again"): "experiments/audit_again/arms/audit",
+    }
+    assert FlowId("audit") not in project.flows
+
+
+def test_arms_folder_without_experiment_file_holds_project_flows(shop: Path) -> None:
+    with_experiment(shop, "experiments/audit_look")
+    (shop / "experiments/audit_look/experiment.yaml").unlink()
+
+    project = load_project(shop).project
+
+    assert project is not None
+    assert project.experiments == {}
+    assert project.flows[FlowId("audit")].folder == "experiments/audit_look/arms/audit"
+
+
+def test_invalid_experiment_file_still_owns_its_arms(shop: Path) -> None:
+    with_experiment(shop, "experiments/audit_look")
+    replace(shop, "experiments/audit_look/experiment.yaml", 'kind: "look"', 'kind: "glance"')
+
+    result = load_project(shop)
+
+    assert codes(result) == {DiagnosticCode.E_SPEC_INVALID}
+    assert result.project is not None
+    assert result.project.experiments == {}
+    assert FlowId("audit") not in result.project.flows

@@ -1,0 +1,626 @@
+{
+  "$defs": {
+    "CaseSelection": {
+      "additionalProperties": false,
+      "description": "Which cases the experiment runs: a dataset, optionally filtered by case tags.\n\nA case is selected when every tag listed here has the same value on the case.",
+      "properties": {
+        "dataset": {
+          "title": "Dataset",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "propertyNames": {
+                "$ref": "#/$defs/TagName"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tags"
+        }
+      },
+      "required": [
+        "dataset"
+      ],
+      "title": "CaseSelection",
+      "type": "object"
+    },
+    "CompareQuestion": {
+      "additionalProperties": false,
+      "description": "Is ``candidate`` better than ``baseline`` on ``primary`` by more than ``margin``, on the same cases.",
+      "properties": {
+        "baseline": {
+          "title": "Baseline",
+          "type": "string"
+        },
+        "candidate": {
+          "title": "Candidate",
+          "type": "string"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetricDirection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "guardrails": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Guardrail"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guardrails"
+        },
+        "kind": {
+          "const": "compare",
+          "title": "Kind",
+          "type": "string"
+        },
+        "margin": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Margin",
+          "type": "number"
+        },
+        "primary": {
+          "$ref": "#/$defs/MetricName"
+        }
+      },
+      "required": [
+        "kind",
+        "baseline",
+        "candidate",
+        "primary"
+      ],
+      "title": "CompareQuestion",
+      "type": "object"
+    },
+    "ExperimentCheck": {
+      "additionalProperties": false,
+      "description": "A detector scored on every attempt: a built-in, a ``module:function`` or a judge inference with its agent.\n\n``validated_by`` names the experiment that measured this judge on planted defects; a judge without it\nproduces signals, not evidence.",
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "inference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inference"
+        },
+        "kind": {
+          "$ref": "#/$defs/MetricKind"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run"
+        },
+        "use": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Use"
+        },
+        "validated_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validated By"
+        },
+        "with": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "With"
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "title": "ExperimentCheck",
+      "type": "object"
+    },
+    "ExperimentPlan": {
+      "additionalProperties": false,
+      "description": "The default size of a series: how many cases and how many repeats per case.\n\nThese are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the\nrecommended size next to them. ``cases`` unset means every selected case.",
+      "properties": {
+        "cases": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cases"
+        },
+        "repeats": {
+          "default": 1,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Repeats",
+          "type": "integer"
+        }
+      },
+      "title": "ExperimentPlan",
+      "type": "object"
+    },
+    "ExperimentSubject": {
+      "additionalProperties": false,
+      "description": "What the experiment runs: a project flow, an arm of this experiment, or a range of top-level nodes.\n\nExactly one of ``flow`` and ``arm`` is set. ``from`` and ``to`` narrow the run to a contiguous range of\ntop-level nodes; nodes before the range take their outputs from the case ``node_outputs``.",
+      "properties": {
+        "arm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arm"
+        },
+        "flow": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Flow"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To"
+        }
+      },
+      "title": "ExperimentSubject",
+      "type": "object"
+    },
+    "Guardrail": {
+      "additionalProperties": false,
+      "description": "A metric that must not get worse than the baseline by more than ``margin``.\n\n``relative`` reads ``margin`` as a share of the baseline value, so 0.2 allows the candidate 20 % worse.",
+      "properties": {
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetricDirection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "margin": {
+          "minimum": 0,
+          "title": "Margin",
+          "type": "number"
+        },
+        "metric": {
+          "$ref": "#/$defs/MetricName"
+        },
+        "relative": {
+          "default": false,
+          "title": "Relative",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "metric",
+        "margin"
+      ],
+      "title": "Guardrail",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "LookQuestion": {
+      "additionalProperties": false,
+      "description": "Run the cases and show them side by side, with no statistical verdict.",
+      "properties": {
+        "kind": {
+          "const": "look",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "LookQuestion",
+      "type": "object"
+    },
+    "MetricDirection": {
+      "enum": [
+        "higher_is_better",
+        "lower_is_better"
+      ],
+      "title": "MetricDirection",
+      "type": "string"
+    },
+    "MetricKind": {
+      "enum": [
+        "binary",
+        "ordinal",
+        "continuous"
+      ],
+      "title": "MetricKind",
+      "type": "string"
+    },
+    "MetricName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "NoninferiorQuestion": {
+      "additionalProperties": false,
+      "description": "Is ``candidate`` not worse than ``baseline`` on ``primary`` by more than ``margin``, on the same cases.",
+      "properties": {
+        "baseline": {
+          "title": "Baseline",
+          "type": "string"
+        },
+        "candidate": {
+          "title": "Candidate",
+          "type": "string"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetricDirection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "guardrails": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Guardrail"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guardrails"
+        },
+        "kind": {
+          "const": "noninferior",
+          "title": "Kind",
+          "type": "string"
+        },
+        "margin": {
+          "exclusiveMinimum": 0,
+          "title": "Margin",
+          "type": "number"
+        },
+        "primary": {
+          "$ref": "#/$defs/MetricName"
+        }
+      },
+      "required": [
+        "kind",
+        "baseline",
+        "candidate",
+        "primary",
+        "margin"
+      ],
+      "title": "NoninferiorQuestion",
+      "type": "object"
+    },
+    "Question": {
+      "discriminator": {
+        "mapping": {
+          "compare": "#/$defs/CompareQuestion",
+          "look": "#/$defs/LookQuestion",
+          "noninferior": "#/$defs/NoninferiorQuestion",
+          "threshold": "#/$defs/ThresholdQuestion"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/LookQuestion"
+        },
+        {
+          "$ref": "#/$defs/ThresholdQuestion"
+        },
+        {
+          "$ref": "#/$defs/CompareQuestion"
+        },
+        {
+          "$ref": "#/$defs/NoninferiorQuestion"
+        }
+      ]
+    },
+    "TagName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "ThresholdQuestion": {
+      "additionalProperties": false,
+      "description": "Is ``metric`` below or above a value by more than ``margin``, for one variant or each variant.\n\nExactly one of ``below`` and ``above`` is set.",
+      "properties": {
+        "above": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Above"
+        },
+        "below": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Below"
+        },
+        "kind": {
+          "const": "threshold",
+          "title": "Kind",
+          "type": "string"
+        },
+        "margin": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Margin",
+          "type": "number"
+        },
+        "metric": {
+          "$ref": "#/$defs/MetricName"
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variant"
+        }
+      },
+      "required": [
+        "kind",
+        "metric"
+      ],
+      "title": "ThresholdQuestion",
+      "type": "object"
+    },
+    "VariantSpec": {
+      "additionalProperties": false,
+      "description": "One variant of the subject: agents assigned to LLM nodes, another arm, or the subject as written.\n\n``agents`` maps a node id of the subject (or of ``arm``) to an agent id; nodes not listed keep their own agent.\nA variant never names a bare model: an agent carries the model, its settings and the output mode.",
+      "properties": {
+        "agents": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agents"
+        },
+        "arm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arm"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,62}$",
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "VariantSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "An experiment: subject \u00d7 variants \u00d7 cases \u00d7 checks \u00d7 question.\n\nThe question picks the statistic and the verdict. Evals, agent comparisons, regressions, judge validation\nand risky hypotheses are all experiments that differ only in their question and variants.",
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "cases": {
+      "$ref": "#/$defs/CaseSelection"
+    },
+    "checks": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ExperimentCheck"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Checks"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "failure_mode": {
+      "anyOf": [
+        {
+          "pattern": "^[a-z][a-z0-9_]{0,62}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Mode"
+    },
+    "kind": {
+      "const": "Experiment",
+      "title": "Kind",
+      "type": "string"
+    },
+    "plan": {
+      "$ref": "#/$defs/ExperimentPlan"
+    },
+    "question": {
+      "$ref": "#/$defs/Question"
+    },
+    "subject": {
+      "$ref": "#/$defs/ExperimentSubject"
+    },
+    "variants": {
+      "items": {
+        "$ref": "#/$defs/VariantSpec"
+      },
+      "minItems": 1,
+      "title": "Variants",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "description",
+    "subject",
+    "cases",
+    "variants",
+    "question"
+  ],
+  "title": "ExperimentSpec",
+  "type": "object"
+}

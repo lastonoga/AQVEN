@@ -158,6 +158,7 @@ class NodeFinished(RunEventBase):
     tokens_in: Annotated[int, Field(ge=0)]
     tokens_out: Annotated[int, Field(ge=0)]
     latency_ms: Annotated[int, Field(ge=0)]
+    wait_ms: Annotated[int, Field(ge=0)] = 0
     model: str | None
     cache_hit: bool
     degraded: bool

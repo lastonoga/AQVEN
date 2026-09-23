@@ -1,13 +1,17 @@
+import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
-import type { ApiExecutionAddress, ApiHumanWait, ApiRunError, ApiRunSnapshot, ApiValueRef } from "@/domain"
+import type { ApiExecutionAddress, ApiRunError, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
 import { Heading, RUN_STATUS_TONE, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
 import { joinMeta, runRef } from "@/lib/format"
-import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
-import { isBinaryMedia, StageTimeline, valueCell, type RowKey, type TraceRun } from "@/features/trace"
+import { ROUTE_PATH } from "@/lib/routes"
+import { isBinaryMedia, StageTimeline, valueCell, type RowKey, type TraceRun, type ValueCell } from "@/features/trace"
 import type { BlobText } from "@/features/call-sheet"
+import { WaitsInline } from "@/features/review"
+import type { ExpectedCase } from "./expected"
+import { ExpectedVsActual } from "./expected-view"
 import {
   costText,
   doneCount,
@@ -22,8 +26,16 @@ export type RunDetailProps = {
   readonly snapshot: ApiRunSnapshot
   readonly blobs: readonly BlobText[]
   readonly trace: TraceRun
+  readonly expected: ExpectedCase
   readonly selectedKey: string | null
   readonly onOpenCall: (address: ApiExecutionAddress, row: RowKey) => void
+}
+
+export type RunHeaderProps = {
+  readonly snapshot: ApiRunSnapshot
+  readonly live: boolean
+  readonly arm?: ArmFlow | null
+  readonly tools?: ReactNode
 }
 
 type MetricCard = {
@@ -34,20 +46,43 @@ type MetricCard = {
   readonly badge: TagSpec | null
 }
 
-export function RunHeader({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
+const liveTag = (label: string): TagSpec => ({ children: label, tone: "primary", fill: "solid" })
+
+function HeaderTrailing({ changed, tools }: { readonly changed: boolean; readonly tools: ReactNode }) {
   const t = useTranslations("runs.run")
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {changed ? <Tag size="sm" tone="warning">{t("changed")}</Tag> : null}
+      {tools}
+    </div>
+  )
+}
+
+function ArmLine({ arm }: { readonly arm: ArmFlow }) {
+  const t = useTranslations("runs.run")
+  return (
+    <Link to={ROUTE_PATH.experiment} params={{ experimentId: arm.experiment }}>
+      {t("arm", { arm: arm.arm, experiment: arm.experiment })}
+    </Link>
+  )
+}
+
+export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps) {
+  const t = useTranslations("runs.run")
+  const liveLabel = useTranslations("runs.live")("badge")
   const status = useTranslations("domain.runStatus")
   const mode = useTranslations("domain.runMode")
   const origin = useTranslations("domain.specOrigin")
   const relative = useRelativeTime("long")
-  const params = runsRouteApi.useParams()
   const lineage = snapshot.lineage
+  const seriesId = snapshot.series_id ?? null
   return (
     <Heading
       size="page"
       title={t("title", { ref: runRef(snapshot.run_id) })}
       tags={[
         { children: status(snapshot.status), tone: RUN_STATUS_TONE[snapshot.status] },
+        ...(live ? [liveTag(liveLabel)] : []),
         { children: mode(snapshot.mode), tone: "neutral", fill: "outline" },
       ]}
       below={[
@@ -56,12 +91,19 @@ export function RunHeader({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
           t("spec", { origin: origin(snapshot.spec_version.origin), hash: shortHash(snapshot.content_hash) }),
         ]),
         lineage === null ? null : (
-          <Link key="lineage" to={ROUTE_PATH.runs} params={params} search={{ run: ids.runId(lineage.parent_run_id) }}>
+          <Link key="lineage" to={ROUTE_PATH.run} params={{ runId: ids.runId(lineage.parent_run_id) }}>
             {t("fork", { parent: runRef(lineage.parent_run_id) })}
           </Link>
         ),
+        seriesId === null ? null : (
+          <Link key="series" to={ROUTE_PATH.series} params={{ seriesId: ids.seriesId(seriesId) }}>
+            {t("series", { series: runRef(seriesId) })}
+          </Link>
+        ),
+        arm === null ? null : <ArmLine key="arm" arm={arm} />,
+        arm?.description ?? null,
       ].filter((line) => line !== null)}
-      trailing={snapshot.definition_changed ? <Tag size="sm" tone="warning">{t("changed")}</Tag> : null}
+      trailing={<HeaderTrailing changed={snapshot.definition_changed} tools={tools} />}
     />
   )
 }
@@ -116,26 +158,12 @@ function RunMetrics({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
   )
 }
 
-function WaitsPanel({ waits }: { readonly waits: readonly ApiHumanWait[] }) {
-  const t = useTranslations("runs.waits")
-  const kind = useTranslations("domain.waitKind")
-  const relative = useRelativeTime("long")
-  if (waits.length === 0) return null
+function RunWaits({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
+  if (!snapshot.waits.some((wait) => wait.state === "waiting")) return null
   return (
-    <TitledPanel size="block" title={t("title")} className="mb-3.5">
-      <div className="flex flex-col divide-y divide-border">
-        {waits.map((wait) => (
-          <div key={`${wait.address.node_id}-${String(wait.attempt)}`} className="px-2.75 py-2">
-            <Text role="cell" tone="default">
-              {t("row", { node: wait.address.node_id, kind: kind(wait.wait_kind), assignee: wait.assignee })}
-            </Text>
-            <Text as="div" role="hint" tone="neutral">
-              {joinMeta([t("deadline", { when: relative(ids.isoDateTime(wait.deadline_at)) }), t("attempt", { attempt: wait.attempt })])}
-            </Text>
-          </div>
-        ))}
-      </div>
-    </TitledPanel>
+    <div className="mb-3.5">
+      <WaitsInline runId={ids.runId(snapshot.run_id)} flowId={ids.flowId(snapshot.flow_id)} />
+    </div>
   )
 }
 
@@ -157,16 +185,32 @@ function RunError({ error }: { readonly error: ApiRunError }) {
   )
 }
 
-function RunOutput({ output, blobs }: { readonly output: ApiValueRef | null; readonly blobs: readonly BlobText[] }) {
+type RunOutputProps = {
+  readonly output: ApiValueRef | null
+  readonly blobs: readonly BlobText[]
+  readonly expected: ExpectedCase
+}
+
+function ActualOutput({ cell }: { readonly cell: ValueCell | null }) {
   const t = useTranslations("runs.outcome")
   const common = useTranslations("common")
+  if (cell === null) return <Text as="p" role="hint" tone="neutral" className="p-2.5">{t("noOutput")}</Text>
+  return (
+    <div className="min-w-0 p-2.5">
+      {cell.incomplete ? <Text as="p" role="hint" tone="warning">{common("previewOnly")}</Text> : null}
+      <StructuredValue value={isBinaryMedia(cell.ref) ? cell.ref : cell.value} media={cell.media} mediaOnly={isBinaryMedia(cell.ref)} />
+    </div>
+  )
+}
+
+function RunOutput({ output, blobs, expected }: RunOutputProps) {
+  const t = useTranslations("runs.outcome")
+  const empty = output === null && expected.kind === "none"
   const cell = valueCell(output, output?.kind === "blob" ? blobs.find((blob) => blob.blobId === output.blob_id)?.text : undefined)
   return (
-    <TitledPanel size="block" title={t("output")} empty={output === null ? t("noOutput") : undefined}>
-      <div className="min-w-0 p-2.5">
-        {cell?.incomplete === true ? <Text as="p" role="hint" tone="warning">{common("previewOnly")}</Text> : null}
-        {cell === null ? null : <StructuredValue value={isBinaryMedia(cell.ref) ? cell.ref : cell.value} media={cell.media} mediaOnly={isBinaryMedia(cell.ref)} />}
-      </div>
+    <TitledPanel size="block" title={t("output")} empty={empty ? t("noOutput") : undefined}>
+      <ActualOutput cell={cell} />
+      <ExpectedVsActual expected={expected} actual={cell?.value} />
     </TitledPanel>
   )
 }
@@ -175,17 +219,17 @@ export function RunOverview({ snapshot }: { readonly snapshot: ApiRunSnapshot })
   return (
     <div className="min-w-0">
       <RunMetrics snapshot={snapshot} />
-      <WaitsPanel waits={snapshot.waits} />
+      <RunWaits snapshot={snapshot} />
       {snapshot.error === null ? null : <RunError error={snapshot.error} />}
     </div>
   )
 }
 
-export function RunDetail({ snapshot, blobs, trace, selectedKey, onOpenCall }: RunDetailProps) {
+export function RunDetail({ snapshot, blobs, trace, expected, selectedKey, onOpenCall }: RunDetailProps) {
   return (
     <div className="min-w-0">
       <StageTimeline trace={trace} selected={selectedKey} onOpenCall={onOpenCall} />
-      <RunOutput output={snapshot.output_ref} blobs={blobs} />
+      <RunOutput output={snapshot.output_ref} blobs={blobs} expected={expected} />
     </div>
   )
 }

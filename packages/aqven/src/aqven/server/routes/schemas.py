@@ -14,12 +14,13 @@ from aqven.server.schemas import (
 )
 from aqven.spec import SpecKind
 
-EVENTS_SUMMARY: Final = "JSON Schema of every event of the spec, run and chat channels"
+EVENTS_SUMMARY: Final = "JSON Schema of every event of the spec, run, chat and series channels"
 EVENTS_DESCRIPTION: Final = (
-    "A schema document, not a stream: schemas.spec, schemas.run and schemas.chat map an event type "
-    "to the JSON Schema of that event. The spec, run and chat arrays stay empty and exist only so the "
-    "generated client can name each channel union. Live events arrive on GET /api/events/spec, "
-    "GET /api/runs/{run_id}/events and GET /api/chat/sessions/{session_id}/events."
+    "A schema document, not a stream: schemas.spec, schemas.run, schemas.chat and schemas.series map an "
+    "event type to the JSON Schema of that event. The spec, run, chat and series arrays stay empty and exist "
+    "only so the generated client can name each channel union. Live events arrive on GET /api/events/spec, "
+    "GET /api/runs/{run_id}/events, GET /api/chat/sessions/{session_id}/events and "
+    "GET /api/series/{series_id}/events."
 )
 CATALOG_SUMMARY: Final = "JSON Schema of every definition kind for the editor"
 CATALOG_DESCRIPTION: Final = (

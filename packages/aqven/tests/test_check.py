@@ -38,7 +38,7 @@ TICKET: Final = "triage/types/triage_ticket.yaml"
 STEM: Final = "triage/classify"
 PARTIAL: Final = f"{STEM}.partials/customer.md"
 TONES: Final = f"{STEM}.variants/tone"
-PENDING: Final = ("fmt", "plan", "build", "optimize")
+PENDING: Final = ("fmt", "plan", "build")
 
 
 @dataclass(frozen=True, slots=True)
@@ -1199,10 +1199,7 @@ def test_registry_problem_is_reported(shop: Path, file: str, old: str, new: str,
     assert expected in found(report)
 
 
-EVAL_FILE: Final = "triage/quality/triage.yaml"
-DATASET_FILE: Final = "triage/quality/cases/triage.yaml"
-GRADE: Final = "triage/quality/grade.inference.yaml"
-
+LABELS_FILE: Final = "triage/quality/cases/labels.yaml"
 TRIAGE_DATASET: Final = """apiVersion: "aqven/v1"
 kind: "Dataset"
 cases:
@@ -1222,205 +1219,18 @@ cases:
     category: "delivery"
 """
 
-GRADE_INFERENCE: Final = """apiVersion: "aqven/v1"
-kind: "Inference"
-description: "Оценка выбора очереди судьёй"
-in:
-- name: "ticket"
-  type: "TriageTicket"
-  description: "Обращение"
-- name: "category"
-  type: "TriageCategory"
-  description: "Выбранная очередь"
-out:
-- name: "rationale"
-  type: "Text"
-  description: "Обоснование оценки"
-  maxLength: 300
-- name: "score"
-  type: "Int"
-  description: "Оценка от 1 до 5"
-  minimum: 1
-  maximum: 5
-"""
-
-TRIAGE_EVAL: Final = """apiVersion: "aqven/v1"
-kind: "Eval"
-description: "Качество сортировки обращений"
-inference: "classify"
-agent: "writer"
-dataset: "triage"
-scorers:
-- id: "accuracy"
-  kind: "ordinal"
-  inference: "grade"
-  agent: "writer"
-- id: "rationale_short"
-  kind: "binary"
-  run: "fixture_shop.triage.classify:rationale_is_short"
-- id: "rationale_present"
-  kind: "binary"
-  use: "not_empty"
-  with:
-    field: "$out.rationale"
-gate:
-  baseline: "production"
-  repeats: 3
-  min_dataset: 200
-  min_discordant: 25
-  families:
-    primary:
-    - "accuracy"
-    safety:
-    - "rationale_present"
-  alpha_primary: 0.05
-  q_secondary: 0.1
-  alpha_safety: 0.05
-  ni_margin: 0.02
-  bootstrap:
-    method: "BCa"
-    resamples: 10000
-    seed: 20260916
-  max_dropped_ratio: 0.05
-  judge_admission:
-    min_weighted_kappa: 0.7
-    min_krippendorff_alpha: 0.8
-    calibration_dataset: "triage"
-  actions:
-    pass: "release"
-    warn: "require_approval"
-    block: "reject"
-    gate_unavailable: "reject"
-optimization:
-  engine: "gepa"
-  objective: "accuracy"
-  train_split: "train"
-  dev_split: "dev"
-  reflection_agent: "writer"
-  max_metric_calls: 100
-  max_repairs: 1
-  stop_score: 0.9
-"""
-
-
-def with_eval(root: Path) -> None:
-    write(root, DATASET_FILE, TRIAGE_DATASET)
-    write(root, EVAL_FILE, TRIAGE_EVAL)
-    write(root, GRADE, GRADE_INFERENCE)
-    write(root, "triage/quality/grade.prompt.md", "Оцени по шкале от 1 до 5, верно ли выбрана очередь обращения.\n")
-    generate_types(root)
-
-
-def test_eval_scorers_reuse_evaluator_references(shop: Path) -> None:
-    with_eval(shop)
-
-    assert check_project(shop).diagnostics == ()
-
-
-@pytest.mark.parametrize(
-    ("file", "old", "new", "expected", "path"),
-    [
-        (
-            EVAL_FILE,
-            'calibration_dataset: "triage"',
-            'calibration_dataset: "labels"',
-            DiagnosticCode.E_DATASET_UNKNOWN,
-            ("gate", "judge_admission", "calibration_dataset"),
-        ),
-        (
-            EVAL_FILE,
-            '  inference: "grade"\n  agent: "writer"',
-            '  inference: "grade"\n  agent: "judge"',
-            DiagnosticCode.E_AGENT_UNKNOWN,
-            ("scorers", 0, "agent"),
-        ),
-        (
-            EVAL_FILE,
-            'inference: "grade"',
-            'inference: "classify"',
-            DiagnosticCode.E_CHECK_PARAMS,
-            ("scorers", 0, "inference"),
-        ),
-        (GRADE, 'name: "category"', 'name: "queue"', DiagnosticCode.E_CHECK_PARAMS, ("scorers", 0, "inference")),
-        (
-            EVAL_FILE,
-            '  agent: "writer"\n- id: "rationale_short"',
-            '  agent: "writer"\n  with:\n    scale: 5\n- id: "rationale_short"',
-            DiagnosticCode.E_SPEC_INVALID,
-            ("scorers", 0),
-        ),
-        (EVAL_FILE, 'use: "not_empty"', 'use: "accuracy"', DiagnosticCode.E_POLICY_UNKNOWN, ("scorers", 2, "use")),
-        (
-            EVAL_FILE,
-            'field: "$out.rationale"',
-            'field: "$out.reason"',
-            DiagnosticCode.E_CHECK_PARAMS,
-            ("scorers", 2, "with"),
-        ),
-        (
-            EVAL_FILE,
-            'reflection_agent: "writer"',
-            'reflection_agent: "critic"',
-            DiagnosticCode.E_AGENT_UNKNOWN,
-            ("optimization", "reflection_agent"),
-        ),
-        (EVAL_FILE, 'inference: "classify"', 'inference: "sort"', DiagnosticCode.E_INFERENCE_UNKNOWN, ("inference",)),
-        (EVAL_FILE, 'block: "reject"', 'block: "release"', DiagnosticCode.E_GATE_POLICY, ("gate", "actions", "block")),
-        (
-            DATASET_FILE,
-            'category: "delivery"',
-            'category: "returns"',
-            DiagnosticCode.E_SPEC_INVALID,
-            ("cases", 0, "expected_output"),
-        ),
-    ],
-    ids=[
-        "calibration_dataset",
-        "judge_agent",
-        "judge_without_score",
-        "judge_input_by_name",
-        "judge_with_params",
-        "scorer_builtin_unknown",
-        "scorer_params_path",
-        "reflection_agent",
-        "inference",
-        "gate_policy",
-        "dataset_value",
-    ],
-)
-def test_eval_problem_is_reported(
-    shop: Path, file: str, old: str, new: str, expected: DiagnosticCode, path: tuple[str | int, ...]
-) -> None:
-    with_eval(shop)
-    replace(shop, file, old, new)
-
-    report = check_project(shop)
-
-    assert (file if file == DATASET_FILE else EVAL_FILE, path) in diagnostics_of(report, expected)
-
-
-def test_code_prompt_cannot_be_optimized(shop: Path) -> None:
-    with_eval(shop)
-    (shop / PROMPT).unlink()
-    replace(shop, INFERENCE, "examples:\n", 'prompt: "fixture_shop.triage.code:summarize"\nexamples:\n')
-
-    assert (EVAL_FILE, ("optimization",)) in diagnostics_of(check_project(shop), DiagnosticCode.E_OPTIMIZATION_TARGET)
-
 
 def test_dataset_id_is_the_file_name_and_name_is_not_a_key(shop: Path) -> None:
-    with_eval(shop)
-    labels = "triage/quality/cases/labels.yaml"
-    (shop / DATASET_FILE).rename(shop / labels)
+    write(shop, LABELS_FILE, TRIAGE_DATASET)
 
-    renamed = check_project(shop)
+    loaded = check_project(shop)
 
-    assert renamed.project is not None
-    assert set(renamed.project.datasets) == {"labels"}
-    assert (EVAL_FILE, ("dataset",)) in diagnostics_of(renamed, DiagnosticCode.E_DATASET_UNKNOWN)
+    assert loaded.project is not None
+    assert set(loaded.project.datasets) == {"labels"}
 
-    replace(shop, labels, 'kind: "Dataset"\n', 'kind: "Dataset"\nname: "labels"\n')
+    replace(shop, LABELS_FILE, 'kind: "Dataset"\n', 'kind: "Dataset"\nname: "labels"\n')
 
-    assert diagnostics_of(check_project(shop), DiagnosticCode.E_UNKNOWN_KEY) == [(labels, ("name",))]
+    assert diagnostics_of(check_project(shop), DiagnosticCode.E_UNKNOWN_KEY) == [(LABELS_FILE, ("name",))]
 
 
 FORM_FILE: Final = "triage/form.py"
@@ -1996,9 +1806,7 @@ def test_cli_usage_errors(argv: list[str]) -> None:
 
 @pytest.mark.parametrize("command", PENDING)
 def test_cli_engine_commands_are_not_implemented(shop: Path, command: str, capsys: pytest.CaptureFixture[str]) -> None:
-    extra: Mapping[str, list[str]] = {"optimize": ["--eval", "triage"]}
-
-    code = main([command, str(shop), *extra.get(command, [])])
+    code = main([command, str(shop)])
 
     assert code == 2
     assert f"aqven {command}: {NOT_IMPLEMENTED}" in capsys.readouterr().err
@@ -2056,7 +1864,7 @@ def test_cli_command_table_is_complete() -> None:
         "serve",
         "dev",
         "mcp",
-        "eval",
+        "series",
         *PENDING,
     }
 

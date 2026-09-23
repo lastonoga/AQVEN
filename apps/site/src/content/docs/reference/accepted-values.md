@@ -7,6 +7,16 @@ description: Generated enums from the AQVEN Python package.
 
 These values come from enum classes in `aqven.spec.names`.
 
+## CellVerdict
+
+| Value |
+| --- |
+| `pass` |
+| `fail` |
+| `unclear` |
+| `reference` |
+| `none` |
+
 ## Effect
 
 | Value |
@@ -15,14 +25,6 @@ These values come from enum classes in `aqven.spec.names`.
 | `write` |
 | `external` |
 
-## GateAction
-
-| Value |
-| --- |
-| `release` |
-| `require_approval` |
-| `reject` |
-
 ## LoopStopReason
 
 | Value |
@@ -30,6 +32,13 @@ These values come from enum classes in `aqven.spec.names`.
 | `policy` |
 | `max_iter` |
 | `budget` |
+
+## MetricDirection
+
+| Value |
+| --- |
+| `higher_is_better` |
+| `lower_is_better` |
 
 ## MetricKind
 
@@ -138,6 +147,25 @@ These values come from enum classes in `aqven.spec.names`.
 | `locale` |
 | `tenant_id` |
 
+## SeriesMetric
+
+| Value |
+| --- |
+| `success_rate` |
+| `cost_usd` |
+| `cost_of_pass` |
+| `latency_p50_ms` |
+| `latency_p95_ms` |
+| `schema_valid_first_try` |
+| `infra_error_rate` |
+
+## SeriesSplit
+
+| Value |
+| --- |
+| `dev` |
+| `holdout` |
+
 ## SpecKind
 
 | Value |
@@ -147,11 +175,12 @@ These values come from enum classes in `aqven.spec.names`.
 | `Flow` |
 | `Node` |
 | `Dataset` |
-| `Eval` |
+| `Experiment` |
 | `Inference` |
 | `Agent` |
 | `Tool` |
 | `McpServer` |
+| `Finding` |
 
 ## TrustLevel
 
@@ -169,4 +198,30 @@ These values come from enum classes in `aqven.spec.names`.
 | `union` |
 | `id` |
 | `value` |
+
+## VerdictReason
+
+| Value |
+| --- |
+| `below_mde` |
+| `uninformative` |
+| `no_discordance` |
+| `compute_confounded` |
+| `inputs_changed` |
+| `infra_errors` |
+| `no_data` |
+| `budget_cut` |
+| `cancelled` |
+| `dev_split` |
+| `judge_not_validated` |
+
+## VerdictState
+
+| Value |
+| --- |
+| `confirmed` |
+| `refuted` |
+| `inconclusive` |
+| `invalid` |
+| `signal` |
 

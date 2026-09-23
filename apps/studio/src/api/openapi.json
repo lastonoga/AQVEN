@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AQVEN Studio API",
-    "version": "0.0.0"
+    "version": "0.0.2"
   },
   "paths": {
     "/api/ready": {
@@ -579,11 +579,12 @@
     },
     "/api/flows": {
       "get": {
+        "summary": "List Flows",
         "operationId": "flow_list",
         "parameters": [
           {
-            "in": "query",
             "name": "status",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -598,8 +599,8 @@
             }
           },
           {
-            "in": "query",
             "name": "cursor",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -614,28 +615,28 @@
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_FlowSummary_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -728,34 +729,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Flows",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}": {
       "get": {
+        "summary": "Get Flow",
         "operationId": "flow_get",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -848,34 +849,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/spec": {
       "get": {
+        "summary": "Get Flow Spec",
         "operationId": "flow_spec",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowSpecView"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -968,26 +969,26 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Spec",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/ir": {
       "get": {
+        "summary": "Get Flow Ir",
         "operationId": "flow_ir",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           },
           {
-            "in": "header",
             "name": "if-none-match",
+            "in": "header",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1004,14 +1005,14 @@
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowIr"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1104,34 +1105,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Ir",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/schemas": {
       "get": {
+        "summary": "Get Flow Schemas",
         "operationId": "flow_schemas",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowSchemas"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1224,7 +1225,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Schemas",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -1620,32 +1620,33 @@
     },
     "/api/flows/{flow_id}/nodes": {
       "get": {
+        "summary": "List Nodes",
         "operationId": "flow_nodes",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/NodeSummary"
                   },
-                  "title": "Response Flow Nodes",
-                  "type": "array"
+                  "title": "Response Flow Nodes"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1738,43 +1739,43 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Nodes",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/nodes/{node_id}": {
       "get": {
+        "summary": "Get Node",
         "operationId": "flow_node",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           },
           {
-            "in": "path",
             "name": "node_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Node Id",
-              "type": "string"
+              "type": "string",
+              "title": "Node Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NodeDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1867,7 +1868,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Node",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -2441,11 +2441,12 @@
     },
     "/api/types": {
       "get": {
+        "summary": "List Types",
         "operationId": "type_list",
         "parameters": [
           {
-            "in": "query",
             "name": "cursor",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -2460,28 +2461,28 @@
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_TypeSummary_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -2574,34 +2575,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Types",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/types/{type_id}": {
       "get": {
+        "summary": "Get Type",
         "operationId": "type_get",
         "parameters": [
           {
-            "in": "path",
             "name": "type_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Type Id",
-              "type": "string"
+              "type": "string",
+              "title": "Type Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TypeDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -2694,7 +2695,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Type",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -3395,51 +3395,52 @@
     },
     "/api/runs/{run_id}/events/log": {
       "get": {
+        "summary": "Run Event Log",
         "operationId": "run_event_log",
         "parameters": [
           {
-            "in": "path",
             "name": "run_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Run Id",
-              "type": "string"
+              "type": "string",
+              "title": "Run Id"
             }
           },
           {
-            "in": "query",
             "name": "after_seq",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 0,
+              "type": "integer",
               "minimum": 0,
-              "title": "After Seq",
-              "type": "integer"
+              "default": 0,
+              "title": "After Seq"
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_RunEvent_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -3532,7 +3533,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Run Event Log",
         "x-aqven-operation": "run_events"
       }
     },
@@ -4557,8 +4557,8 @@
     },
     "/api/schemas/events": {
       "get": {
-        "summary": "JSON Schema of every event of the spec, run and chat channels",
-        "description": "A schema document, not a stream: schemas.spec, schemas.run and schemas.chat map an event type to the JSON Schema of that event. The spec, run and chat arrays stay empty and exist only so the generated client can name each channel union. Live events arrive on GET /api/events/spec, GET /api/runs/{run_id}/events and GET /api/chat/sessions/{session_id}/events.",
+        "summary": "JSON Schema of every event of the spec, run, chat and series channels",
+        "description": "A schema document, not a stream: schemas.spec, schemas.run, schemas.chat and schemas.series map an event type to the JSON Schema of that event. The spec, run, chat and series arrays stay empty and exist only so the generated client can name each channel union. Live events arrive on GET /api/events/spec, GET /api/runs/{run_id}/events, GET /api/chat/sessions/{session_id}/events and GET /api/series/{series_id}/events.",
         "operationId": "event_catalog",
         "responses": {
           "200": {
@@ -6257,265 +6257,6 @@
         "x-aqven-rest-only": "secrets stay outside MCP"
       }
     },
-    "/api/evals": {
-      "get": {
-        "summary": "List Evals",
-        "operationId": "eval_list",
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Cursor"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Page_EvalSummary_"
-                }
-              }
-            }
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
-      }
-    },
-    "/api/evals/{eval_id}": {
-      "get": {
-        "summary": "Get Eval",
-        "operationId": "eval_get",
-        "parameters": [
-          {
-            "name": "eval_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Eval Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvalSummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
-      }
-    },
     "/api/datasets": {
       "get": {
         "summary": "List Datasets",
@@ -6652,7 +6393,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
+        "x-aqven-rest-only": "dataset catalogue read from the project files"
       },
       "post": {
         "summary": "Save Dataset",
@@ -7069,7 +6810,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
+        "x-aqven-rest-only": "dataset catalogue read from the project files"
       }
     },
     "/api/datasets/{dataset_id}/case-names": {
@@ -7249,7 +6990,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
+        "x-aqven-rest-only": "dataset catalogue read from the project files"
       }
     },
     "/api/datasets/{dataset_id}/cases/{case_name}": {
@@ -7378,185 +7119,41 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval catalogue read from the project files"
+        "x-aqven-rest-only": "dataset catalogue read from the project files"
       }
     },
-    "/api/dataset-batches": {
+    "/api/datasets/{dataset_id}/cases/from-run": {
       "post": {
-        "operationId": "dataset_batch_start",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DatasetBatchStartRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetBatchRecord"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Start Dataset Batch",
-        "x-aqven-operation": "dataset_batch_start"
-      },
-      "get": {
-        "summary": "List Dataset Batches",
-        "operationId": "dataset_batch_list",
+        "summary": "Draft Case From Run",
+        "operationId": "case_from_run",
         "parameters": [
           {
-            "name": "flow_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flow Id"
-            }
-          },
-          {
             "name": "dataset_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Dataset Id"
             }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Cursor"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseFromRunRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_DatasetBatchRecord_"
+                  "$ref": "#/components/schemas/CaseDraft"
                 }
               }
             }
@@ -7652,307 +7249,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "flow dataset batch history"
-      }
-    },
-    "/api/dataset-batches/{batch_id}": {
-      "get": {
-        "operationId": "dataset_batch_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "batch_id",
-            "required": true,
-            "schema": {
-              "title": "Batch Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetBatchRecord"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Get Dataset Batch",
-        "x-aqven-operation": "dataset_batch_get"
-      }
-    },
-    "/api/dataset-batches/{batch_id}/cases": {
-      "get": {
-        "summary": "List Dataset Batch Cases",
-        "operationId": "dataset_batch_cases",
-        "parameters": [
-          {
-            "name": "batch_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Batch Id"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Cursor"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Page_DatasetBatchCase_"
-                }
-              }
-            }
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "x-aqven-rest-only": "flow dataset batch case results"
+        "x-aqven-rest-only": "a case draft; the agent writes the dataset file"
       }
     },
     "/api/datasets/draft": {
@@ -8432,29 +7729,98 @@
         "x-aqven-rest-only": "import CSV cases and public media into a flow dataset"
       }
     },
-    "/api/eval-runs": {
-      "post": {
-        "operationId": "eval_run_start",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EvalRunRequest"
-              }
+    "/api/experiments": {
+      "get": {
+        "summary": "List Experiments",
+        "operationId": "experiment_list",
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Flow Id"
             }
           },
-          "required": true
-        },
+          {
+            "name": "question",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/QuestionKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Question"
+            }
+          },
+          {
+            "name": "failure_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Failure Mode"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
         "responses": {
-          "202": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EvalRunAccepted"
+                  "$ref": "#/components/schemas/Page_ExperimentSummaryView_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -8547,15 +7913,512 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Start Eval Run",
-        "x-aqven-operation": "eval_run_start"
-      },
+        "x-aqven-rest-only": "experiment catalogue read from the project files"
+      }
+    },
+    "/api/experiments/{experiment_id}": {
       "get": {
-        "summary": "List Eval Runs",
-        "operationId": "eval_run_list",
+        "summary": "Get Experiment",
+        "operationId": "experiment_get",
         "parameters": [
           {
-            "name": "eval_id",
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentDetailView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "experiment catalogue read from the project files"
+      }
+    },
+    "/api/experiments/{experiment_id}/arms/{arm_id}": {
+      "get": {
+        "summary": "Get Experiment Arm",
+        "operationId": "experiment_arm",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "arm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Arm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArmFlowView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "arm nodes and schemas for the Studio run view, read from the project files"
+      }
+    },
+    "/api/experiments/{experiment_id}/estimate": {
+      "post": {
+        "summary": "Estimate Series",
+        "operationId": "series_estimate",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LaunchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesEstimate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "the estimate comes back from series_start on MCP"
+      }
+    },
+    "/api/series": {
+      "post": {
+        "summary": "Start Series",
+        "operationId": "series_start",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeriesStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesStarted"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-operation": "series_start"
+      },
+      "get": {
+        "summary": "List Series",
+        "operationId": "series_list",
+        "parameters": [
+          {
+            "name": "experiment_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -8567,7 +8430,23 @@
                   "type": "null"
                 }
               ],
-              "title": "Eval Id"
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "flow_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Flow Id"
             }
           },
           {
@@ -8577,7 +8456,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "$ref": "#/components/schemas/SeriesStatus"
                 },
                 {
                   "type": "null"
@@ -8621,7 +8500,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_EvalRunRecord_"
+                  "$ref": "#/components/schemas/Page_SeriesSummaryView_"
                 }
               }
             }
@@ -8717,169 +8596,43 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval run history in the project database"
+        "x-aqven-rest-only": "series history for Studio"
       }
     },
-    "/api/eval-runs/{eval_run_id}": {
+    "/api/series/{series_id}": {
       "get": {
-        "operationId": "eval_run_get",
+        "summary": "Get Series",
+        "operationId": "series_get",
         "parameters": [
           {
-            "in": "path",
-            "name": "eval_run_id",
-            "required": true,
-            "schema": {
-              "title": "Eval Run Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvalRunRecord"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Forbidden"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Precondition Failed"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          },
-          "423": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Locked"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Get Eval Run",
-        "x-aqven-operation": "eval_run_get"
-      }
-    },
-    "/api/eval-runs/{eval_run_id}/cases": {
-      "get": {
-        "summary": "List Eval Cases",
-        "operationId": "eval_run_cases",
-        "parameters": [
-          {
-            "name": "eval_run_id",
+            "name": "series_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Eval Run Id"
+              "title": "Series Id"
             }
           },
           {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Cursor"
-            }
-          },
-          {
-            "name": "limit",
+            "name": "wait_seconds",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
+              "maximum": 50,
+              "minimum": 0,
+              "default": 0,
+              "title": "Wait Seconds"
+            }
+          },
+          {
+            "name": "include_cases",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Cases"
             }
           }
         ],
@@ -8889,7 +8642,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_CaseRecord_"
+                  "$ref": "#/components/schemas/SeriesGetResult"
                 }
               }
             }
@@ -8985,33 +8738,58 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "eval run history in the project database"
+        "x-aqven-operation": "series_get"
       }
     },
-    "/api/eval-runs/{eval_run_id}/gate": {
+    "/api/series/{series_id}/cases": {
       "get": {
-        "operationId": "eval_gate",
+        "summary": "List Series Cases",
+        "operationId": "series_cases",
         "parameters": [
           {
+            "name": "series_id",
             "in": "path",
-            "name": "eval_run_id",
             "required": true,
             "schema": {
-              "title": "Eval Run Id",
-              "type": "string"
+              "type": "string",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "failures",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Failures"
+            }
+          },
+          {
+            "name": "divergent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Divergent"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GateReport"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeriesCaseRow"
+                  },
+                  "title": "Response Series Cases"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -9104,8 +8882,427 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Eval Gate",
-        "x-aqven-operation": "eval_gate"
+        "x-aqven-rest-only": "per-case rows for Studio, holdout included"
+      }
+    },
+    "/api/series/{series_id}/events": {
+      "get": {
+        "summary": "Series Events",
+        "operationId": "series_events",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "after_seq",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After Seq"
+            }
+          },
+          {
+            "name": "last-event-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {
+                "itemSchema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "retry": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "sse transport"
+      }
+    },
+    "/api/series/{series_id}/approve": {
+      "post": {
+        "summary": "Approve Series",
+        "operationId": "series_approve",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesSummaryView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "spend is approved by a human"
+      }
+    },
+    "/api/series/{series_id}/cancel": {
+      "post": {
+        "summary": "Cancel Series",
+        "operationId": "series_cancel",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SeriesCancelBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesSummaryView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-operation": "series_cancel"
       }
     },
     "/api/chat/status": {
@@ -10808,6 +11005,24 @@
         "type": "object",
         "title": "AgentOutputSpec"
       },
+      "AgentRefView": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_id",
+          "model"
+        ],
+        "title": "AgentRefView"
+      },
       "AgentSpec": {
         "properties": {
           "apiVersion": {
@@ -11098,6 +11313,7 @@
           "NOT_WAITING",
           "RUN_TIMED_OUT",
           "RUN_STATE_CONFLICT",
+          "SERIES_STATE_CONFLICT",
           "CHAT_STATE_CONFLICT",
           "PROMPT_IS_CODE",
           "LOCK_BUSY",
@@ -11123,12 +11339,148 @@
           "session_closed"
         ]
       },
+      "ArmFlowView": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "type": "string",
+            "title": "Arm Id"
+          },
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Order"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeSummary"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "schemas": {
+            "$ref": "#/components/schemas/FlowSchemas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "arm_id",
+          "flow_id",
+          "description",
+          "order",
+          "nodes",
+          "schemas"
+        ],
+        "title": "ArmFlowView"
+      },
+      "ArmStepView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NodeKind"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentRefView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "kind",
+          "agent",
+          "description"
+        ],
+        "title": "ArmStepView"
+      },
+      "ArmView": {
+        "properties": {
+          "arm_id": {
+            "type": "string",
+            "title": "Arm Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ArmStepView"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "arm_id",
+          "description",
+          "steps"
+        ],
+        "title": "ArmView"
+      },
       "AssigneeSource": {
         "type": "string",
         "enum": [
           "setting",
           "os_user"
         ]
+      },
+      "AssignmentView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentRefView"
+          },
+          "overridden": {
+            "type": "boolean",
+            "title": "Overridden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "agent",
+          "overridden"
+        ],
+        "title": "AssignmentView"
       },
       "Attempt": {
         "properties": {
@@ -11304,6 +11656,178 @@
           "no_structured_output",
           "feature_unsupported"
         ]
+      },
+      "AttemptFinishedEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "attempt_finished",
+            "title": "Type",
+            "default": "attempt_finished"
+          },
+          "attempt_id": {
+            "type": "string",
+            "title": "Attempt Id"
+          },
+          "ordinal": {
+            "type": "integer",
+            "title": "Ordinal"
+          },
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "case_name": {
+            "type": "string",
+            "title": "Case Name"
+          },
+          "repeat": {
+            "type": "integer",
+            "title": "Repeat"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/OutcomeClass"
+          },
+          "passed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passed"
+          },
+          "cost_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Usd"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "spend_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spend Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "series_id",
+          "attempt_id",
+          "ordinal",
+          "variant_id",
+          "case_name",
+          "repeat",
+          "run_id",
+          "outcome",
+          "passed",
+          "cost_usd",
+          "done",
+          "total",
+          "spend_usd"
+        ],
+        "title": "AttemptFinishedEvent"
+      },
+      "AttemptOutcome": {
+        "type": "string",
+        "enum": [
+          "passed",
+          "failed",
+          "error",
+          "waiting",
+          "running"
+        ],
+        "title": "AttemptOutcome"
+      },
+      "AttemptView": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "repeat": {
+            "type": "integer",
+            "title": "Repeat"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AttemptOutcome"
+          },
+          "failed_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Checks"
+          },
+          "usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Usd"
+          },
+          "latency_ms": {
+            "type": "integer",
+            "title": "Latency Ms"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "variant_id",
+          "repeat",
+          "passed",
+          "outcome",
+          "failed_checks",
+          "usd",
+          "latency_ms"
+        ],
+        "title": "AttemptView"
       },
       "BlobMeta": {
         "properties": {
@@ -11799,97 +12323,118 @@
         "type": "object",
         "title": "CapabilityOverride"
       },
-      "CaseRecord": {
+      "CaseDraft": {
         "properties": {
-          "case_name": {
+          "dataset_id": {
             "type": "string",
-            "title": "Case Name"
+            "title": "Dataset Id"
           },
-          "run_index": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Run Index"
+          "case": {
+            "$ref": "#/components/schemas/DatasetCase"
           },
-          "seed": {
-            "type": "integer",
-            "title": "Seed"
-          },
-          "status": {
-            "$ref": "#/components/schemas/CaseStatus"
-          },
-          "run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Run Id"
-          },
-          "output": {
-            "$ref": "#/components/schemas/JsonValue"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
-          "cost_usd": {
+          "yaml": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Usd",
-            "default": "0"
-          },
-          "tokens_in": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Tokens In",
-            "default": 0
-          },
-          "tokens_out": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Tokens Out",
-            "default": 0
-          },
-          "latency_ms": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Latency Ms",
-            "default": 0
-          },
-          "scores": {
-            "items": {
-              "$ref": "#/components/schemas/ScoreRecord"
-            },
-            "type": "array",
-            "title": "Scores",
-            "default": []
+            "title": "Yaml"
           }
         },
         "type": "object",
         "required": [
-          "case_name",
-          "run_index",
-          "seed",
-          "status"
+          "dataset_id",
+          "case",
+          "yaml"
         ],
-        "title": "CaseRecord"
+        "title": "CaseDraft"
       },
-      "CaseStatus": {
+      "CaseFromRunRequest": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "CaseFromRunRequest"
+      },
+      "CaseSelectionView": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tags"
+          },
+          "selected": {
+            "type": "integer",
+            "title": "Selected"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "splits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/SeriesSplit"
+            },
+            "type": "object",
+            "title": "Splits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "flow_id",
+          "tags",
+          "selected",
+          "total",
+          "splits"
+        ],
+        "title": "CaseSelectionView"
+      },
+      "CellVerdict": {
         "type": "string",
         "enum": [
-          "ok",
-          "failed"
-        ]
+          "pass",
+          "fail",
+          "unclear",
+          "reference",
+          "none"
+        ],
+        "title": "CellVerdict"
       },
       "ChangeKind": {
         "type": "string",
@@ -13286,6 +13831,12 @@
             "minimum": 0,
             "title": "Tokens Out"
           },
+          "thinking_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Thinking Tokens",
+            "default": 0
+          },
           "cache_read_tokens": {
             "type": "integer",
             "minimum": 0,
@@ -13307,11 +13858,6 @@
               }
             ],
             "title": "Cost Usd"
-          },
-          "thinking_tokens": {
-            "minimum": 0,
-            "title": "Thinking Tokens",
-            "type": "integer"
           }
         },
         "type": "object",
@@ -13423,6 +13969,86 @@
         ],
         "title": "CheckOutcome"
       },
+      "CheckSourceView": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "builtin",
+              "code",
+              "judge"
+            ],
+            "title": "Kind"
+          },
+          "use": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fields",
+            "default": []
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "inference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentRefView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "validated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validated By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "CheckSourceView"
+      },
       "CheckSpec": {
         "properties": {
           "use": {
@@ -13505,6 +14131,27 @@
           "on_fail"
         ],
         "title": "CheckSpec"
+      },
+      "CheckView": {
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "title": "Check Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CheckSourceView"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check_id",
+          "kind",
+          "source"
+        ],
+        "title": "CheckView"
       },
       "CodeEvaluator": {
         "properties": {
@@ -15428,6 +16075,72 @@
           }
         }
       },
+      "Contrast": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "guardrail"
+            ],
+            "title": "Role"
+          },
+          "baseline": {
+            "type": "string",
+            "title": "Baseline"
+          },
+          "candidate": {
+            "type": "string",
+            "title": "Candidate"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MetricDirection"
+          },
+          "margin": {
+            "type": "number",
+            "title": "Margin"
+          },
+          "relative": {
+            "type": "boolean",
+            "title": "Relative"
+          },
+          "margin_abs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin Abs"
+          },
+          "difference": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/CellVerdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "role",
+          "baseline",
+          "candidate",
+          "direction",
+          "margin",
+          "relative",
+          "margin_abs",
+          "difference",
+          "verdict"
+        ],
+        "title": "Contrast"
+      },
       "Count": {
         "type": "integer",
         "minimum": 0
@@ -15831,247 +16544,6 @@
         ],
         "title": "DataPolicy"
       },
-      "DatasetBatchCase": {
-        "properties": {
-          "case_name": {
-            "type": "string",
-            "title": "Case Name"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Run Id"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
-          "cost_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Usd",
-            "default": "0"
-          }
-        },
-        "type": "object",
-        "required": [
-          "case_name",
-          "status"
-        ],
-        "title": "DatasetBatchCase"
-      },
-      "DatasetBatchRecord": {
-        "properties": {
-          "batch_id": {
-            "type": "string",
-            "title": "Batch Id"
-          },
-          "flow_id": {
-            "type": "string",
-            "title": "Flow Id"
-          },
-          "dataset_id": {
-            "type": "string",
-            "title": "Dataset Id"
-          },
-          "dataset_file_hash": {
-            "type": "string",
-            "title": "Dataset File Hash"
-          },
-          "case_names": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Case Names"
-          },
-          "selected_nodes": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Selected Nodes"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/RunMode"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "running",
-              "completed",
-              "failed"
-            ],
-            "title": "Status"
-          },
-          "started_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Started At"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          },
-          "start_node": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Node"
-          },
-          "end_node": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "End Node"
-          },
-          "cases_total": {
-            "type": "integer",
-            "title": "Cases Total"
-          },
-          "cases_completed": {
-            "type": "integer",
-            "title": "Cases Completed",
-            "default": 0
-          },
-          "cases_failed": {
-            "type": "integer",
-            "title": "Cases Failed",
-            "default": 0
-          },
-          "cost_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Usd",
-            "default": "0"
-          }
-        },
-        "type": "object",
-        "required": [
-          "batch_id",
-          "flow_id",
-          "dataset_id",
-          "dataset_file_hash",
-          "case_names",
-          "selected_nodes",
-          "mode",
-          "status",
-          "started_at",
-          "cases_total"
-        ],
-        "title": "DatasetBatchRecord"
-      },
-      "DatasetBatchStartRequest": {
-        "properties": {
-          "flow_id": {
-            "type": "string",
-            "title": "Flow Id"
-          },
-          "dataset_id": {
-            "type": "string",
-            "title": "Dataset Id"
-          },
-          "case_names": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "maxItems": 5000,
-            "minItems": 1,
-            "title": "Case Names"
-          },
-          "selected_nodes": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Selected Nodes"
-          },
-          "start_node": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Node"
-          },
-          "end_node": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "End Node"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/RunMode",
-            "default": "live"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "flow_id",
-          "dataset_id",
-          "case_names"
-        ],
-        "title": "DatasetBatchStartRequest"
-      },
       "DatasetCase": {
         "properties": {
           "name": {
@@ -16123,6 +16595,20 @@
               }
             ],
             "title": "Metadata"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
           },
           "expected_output": {
             "$ref": "#/components/schemas/JsonValue"
@@ -16334,14 +16820,6 @@
             "type": "object",
             "title": "Splits",
             "default": {}
-          },
-          "used_by": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Used By",
-            "default": []
           }
         },
         "type": "object",
@@ -16371,6 +16849,18 @@
           "value"
         ],
         "title": "DefaultOnTimeout"
+      },
+      "DegenerateReason": {
+        "type": "string",
+        "enum": [
+          "no_data",
+          "too_few_cases",
+          "too_few_attempts",
+          "no_discordance",
+          "uninformative",
+          "numeric"
+        ],
+        "title": "DegenerateReason"
       },
       "Diagnostic": {
         "properties": {
@@ -16549,8 +17039,6 @@
           "E_FLOW_RECURSION",
           "E_MCP_SERVER_UNKNOWN",
           "E_DATASET_UNKNOWN",
-          "E_GATE_POLICY",
-          "E_OPTIMIZATION_TARGET",
           "E_PROVIDER_EXTRA_MISSING",
           "E_PROVIDER_NO_STREAMING",
           "E_PROVIDER_FACTORY_INVALID",
@@ -16561,6 +17049,17 @@
           "E_SIM_PROMPT_RENDER",
           "E_SIM_OUTPUT_INVALID",
           "E_SIM_RUN_FAILED",
+          "E_ARM_UNKNOWN",
+          "E_RANGE_INVALID",
+          "E_VARIANT_INVALID",
+          "E_METRIC_UNKNOWN",
+          "E_EXPERIMENT_UNKNOWN",
+          "E_DATASET_MISMATCH",
+          "E_CASE_DUPLICATE",
+          "E_CASES_EMPTY",
+          "E_EXPECTED_MISSING",
+          "E_CHECK_PATH_UNKNOWN",
+          "E_FINDING_TAMPERED",
           "W_PROMPT_SHADOWED",
           "W_GENERATED_STALE",
           "W_OUTPUT_MODE_RESOLVED",
@@ -16568,7 +17067,11 @@
           "W_SIM_NODE_UNREACHED",
           "W_PROMPT_VALUE_UNREADABLE",
           "W_TOOL_ARG_UNREACHABLE",
-          "W_CONTEXT_KEY_UNUSED"
+          "W_CONTEXT_KEY_UNUSED",
+          "W_PLAN_EXCEEDS_CASES",
+          "W_CHECK_CONTEXT_MISMATCH",
+          "W_JUDGE_INPUT_UNBOUND",
+          "W_FINDINGS_STALE"
         ],
         "title": "DiagnosticCode"
       },
@@ -17084,326 +17587,116 @@
         ],
         "title": "EscalateOnTimeout"
       },
-      "EvalRunAccepted": {
+      "Estimate": {
         "properties": {
-          "eval_run_id": {
-            "type": "string",
-            "title": "Eval Run Id"
-          },
-          "eval_id": {
-            "type": "string",
-            "title": "Eval Id"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "poll": {
-            "type": "string",
-            "title": "Poll"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "eval_run_id",
-          "eval_id",
-          "status",
-          "poll"
-        ],
-        "title": "EvalRunAccepted"
-      },
-      "EvalRunRecord": {
-        "properties": {
-          "eval_run_id": {
-            "type": "string",
-            "title": "Eval Run Id"
-          },
-          "eval_id": {
-            "type": "string",
-            "title": "Eval Id"
-          },
-          "dataset_id": {
-            "type": "string",
-            "title": "Dataset Id"
-          },
-          "inference": {
-            "type": "string",
-            "title": "Inference"
-          },
-          "agent": {
-            "type": "string",
-            "title": "Agent"
-          },
-          "status": {
-            "$ref": "#/components/schemas/EvalRunStatus"
-          },
-          "spec_hash": {
-            "type": "string",
-            "title": "Spec Hash",
-            "default": ""
-          },
-          "started_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Started At"
-          },
-          "finished_at": {
+          "value": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Finished At"
+            "title": "Value"
           },
-          "repeats": {
-            "type": "integer",
-            "minimum": 1,
-            "title": "Repeats",
-            "default": 1
-          },
-          "seeds": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Seeds",
-            "default": []
-          },
-          "cases_total": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Cases Total",
-            "default": 0
-          },
-          "cases_ok": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Cases Ok",
-            "default": 0
-          },
-          "cases_failed": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Cases Failed",
-            "default": 0
-          },
-          "dropped_cases": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Dropped Cases",
-            "default": []
-          },
-          "cost_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Usd",
-            "default": "0"
-          },
-          "tokens_in": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Tokens In",
-            "default": 0
-          },
-          "tokens_out": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Tokens Out",
-            "default": 0
-          },
-          "scorers": {
-            "items": {
-              "$ref": "#/components/schemas/ScorerSummary"
-            },
-            "type": "array",
-            "title": "Scorers",
-            "default": []
-          },
-          "baseline_run_id": {
+          "low": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Baseline Run Id"
+            "title": "Low"
           },
-          "deltas": {
-            "items": {
-              "$ref": "#/components/schemas/ScorerDelta"
-            },
-            "type": "array",
-            "title": "Deltas",
-            "default": []
-          },
-          "gate": {
+          "high": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/GateReport"
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StatMethod"
               },
               {
                 "type": "null"
               }
             ]
           },
-          "notes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Notes",
-            "default": []
-          },
-          "error": {
+          "p_value": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Error"
+            "title": "P Value"
+          },
+          "p_adjusted": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Adjusted"
+          },
+          "cases": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Cases"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Attempts"
+          },
+          "degenerate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DegenerateReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
-          "eval_run_id",
-          "eval_id",
-          "dataset_id",
-          "inference",
-          "agent",
-          "status",
-          "started_at"
+          "value",
+          "low",
+          "high",
+          "method",
+          "cases",
+          "attempts"
         ],
-        "title": "EvalRunRecord"
+        "title": "Estimate"
       },
-      "EvalRunRequest": {
-        "properties": {
-          "eval_id": {
-            "type": "string",
-            "title": "Eval Id"
-          },
-          "dataset_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dataset Id"
-          },
-          "baseline_run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Baseline Run Id"
-          },
-          "repeats": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 20,
-                "minimum": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Repeats"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "eval_id"
-        ],
-        "title": "EvalRunRequest"
-      },
-      "EvalRunStatus": {
+      "EstimateReason": {
         "type": "string",
         "enum": [
-          "running",
-          "completed",
-          "failed"
-        ]
-      },
-      "EvalSummary": {
-        "properties": {
-          "eval_id": {
-            "type": "string",
-            "title": "Eval Id"
-          },
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
-          "file_hash": {
-            "type": "string",
-            "title": "File Hash"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "inference": {
-            "type": "string",
-            "title": "Inference"
-          },
-          "agent": {
-            "type": "string",
-            "title": "Agent"
-          },
-          "dataset": {
-            "type": "string",
-            "title": "Dataset"
-          },
-          "scorers": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Scorers"
-          },
-          "has_gate": {
-            "type": "boolean",
-            "title": "Has Gate"
-          },
-          "has_optimization": {
-            "type": "boolean",
-            "title": "Has Optimization"
-          }
-        },
-        "type": "object",
-        "required": [
-          "eval_id",
-          "path",
-          "file_hash",
-          "description",
-          "inference",
-          "agent",
-          "dataset",
-          "scorers",
-          "has_gate",
-          "has_optimization"
+          "look",
+          "wide",
+          "enough",
+          "no_margin",
+          "no_history",
+          "short_of_cases"
         ],
-        "title": "EvalSummary"
+        "title": "EstimateReason"
       },
       "EventCatalog": {
         "properties": {
@@ -17431,6 +17724,14 @@
             "title": "Chat",
             "description": "Empty at runtime: the array exists so the generated client can name the channel union. The JSON Schema of every event lives in schemas."
           },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesEvent"
+            },
+            "type": "array",
+            "title": "Series",
+            "description": "Empty at runtime: the array exists so the generated client can name the channel union. The JSON Schema of every event lives in schemas."
+          },
           "schemas": {
             "$ref": "#/components/schemas/EventSchemas"
           }
@@ -17440,6 +17741,7 @@
           "spec",
           "run",
           "chat",
+          "series",
           "schemas"
         ],
         "title": "EventCatalog"
@@ -17470,6 +17772,13 @@
             },
             "type": "object",
             "title": "Chat"
+          },
+          "series": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonObject"
+            },
+            "type": "object",
+            "title": "Series"
           }
         },
         "type": "object",
@@ -17477,7 +17786,8 @@
           "dialect",
           "spec",
           "run",
-          "chat"
+          "chat",
+          "series"
         ],
         "title": "EventSchemas"
       },
@@ -17873,6 +18183,346 @@
           "suspended",
           "cancelled"
         ]
+      },
+      "ExperimentDetailView": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/SubjectView"
+          },
+          "failure_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Mode"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "series_count": {
+            "type": "integer",
+            "title": "Series Count"
+          },
+          "spent_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spent Usd"
+          },
+          "question_detail": {
+            "$ref": "#/components/schemas/QuestionView"
+          },
+          "arms": {
+            "items": {
+              "$ref": "#/components/schemas/ArmView"
+            },
+            "type": "array",
+            "title": "Arms"
+          },
+          "cases": {
+            "$ref": "#/components/schemas/CaseSelectionView"
+          },
+          "variant_details": {
+            "items": {
+              "$ref": "#/components/schemas/VariantView"
+            },
+            "type": "array",
+            "title": "Variant Details"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/CheckView"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/MetricColumn"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/ExperimentPlan"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "files": {
+            "$ref": "#/components/schemas/ExperimentFilesView"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "description",
+          "flow_id",
+          "subject",
+          "failure_mode",
+          "question",
+          "variants",
+          "baseline",
+          "candidate",
+          "latest",
+          "series_count",
+          "spent_usd",
+          "question_detail",
+          "arms",
+          "cases",
+          "variant_details",
+          "checks",
+          "metrics",
+          "plan",
+          "notes",
+          "files"
+        ],
+        "title": "ExperimentDetailView"
+      },
+      "ExperimentFilesView": {
+        "properties": {
+          "spec": {
+            "type": "string",
+            "title": "Spec"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spec",
+          "notes"
+        ],
+        "title": "ExperimentFilesView"
+      },
+      "ExperimentOrigin": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "experiment",
+            "title": "Kind",
+            "default": "experiment"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "experiment_id"
+        ],
+        "title": "ExperimentOrigin"
+      },
+      "ExperimentPlan": {
+        "properties": {
+          "cases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Repeats",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ExperimentPlan",
+        "description": "The default size of a series: how many cases and how many repeats per case.\n\nThese are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the\nrecommended size next to them. ``cases`` unset means every selected case."
+      },
+      "ExperimentSummaryView": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/SubjectView"
+          },
+          "failure_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Mode"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "series_count": {
+            "type": "integer",
+            "title": "Series Count"
+          },
+          "spent_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spent Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "description",
+          "flow_id",
+          "subject",
+          "failure_mode",
+          "question",
+          "variants",
+          "baseline",
+          "candidate",
+          "latest",
+          "series_count",
+          "spent_usd"
+        ],
+        "title": "ExperimentSummaryView"
       },
       "FailOnTimeout": {
         "properties": {
@@ -18305,11 +18955,12 @@
           "Flow",
           "Node",
           "Dataset",
-          "Eval",
+          "Experiment",
           "Inference",
           "Agent",
           "Tool",
           "McpServer",
+          "Finding",
           "prompt",
           "code",
           "lock",
@@ -18923,268 +19574,32 @@
         ],
         "title": "ForkRequest"
       },
-      "GateDecision": {
-        "type": "string",
-        "enum": [
-          "PASS",
-          "WARN",
-          "BLOCK",
-          "GATE_UNAVAILABLE"
-        ],
-        "title": "GateDecision"
-      },
-      "GateFamily": {
-        "type": "string",
-        "enum": [
-          "primary",
-          "secondary",
-          "safety"
-        ]
-      },
-      "GateReport": {
+      "GuardrailView": {
         "properties": {
-          "decision": {
-            "$ref": "#/components/schemas/GateDecision"
-          },
-          "reason_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason Code"
-          },
-          "spec_a_hash": {
+          "metric": {
             "type": "string",
-            "title": "Spec A Hash"
+            "title": "Metric"
           },
-          "spec_b_hash": {
-            "type": "string",
-            "title": "Spec B Hash"
+          "direction": {
+            "$ref": "#/components/schemas/MetricDirection"
           },
-          "gate_config_hash": {
-            "type": "string",
-            "title": "Gate Config Hash"
+          "margin": {
+            "type": "number",
+            "title": "Margin"
           },
-          "seeds": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Seeds"
-          },
-          "repeats": {
-            "type": "integer",
-            "minimum": 1,
-            "title": "Repeats"
-          },
-          "per_test": {
-            "items": {
-              "$ref": "#/components/schemas/GateTestResult"
-            },
-            "type": "array",
-            "title": "Per Test"
-          },
-          "dropped_cases": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Dropped Cases"
-          },
-          "content_hash": {
-            "type": "string",
-            "title": "Content Hash"
+          "relative": {
+            "type": "boolean",
+            "title": "Relative"
           }
         },
-        "additionalProperties": false,
         "type": "object",
         "required": [
-          "decision",
-          "reason_code",
-          "spec_a_hash",
-          "spec_b_hash",
-          "gate_config_hash",
-          "seeds",
-          "repeats",
-          "per_test",
-          "dropped_cases",
-          "content_hash"
+          "metric",
+          "direction",
+          "margin",
+          "relative"
         ],
-        "title": "GateReport"
-      },
-      "GateTestResult": {
-        "properties": {
-          "node_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Node Id"
-          },
-          "scorer_id": {
-            "type": "string",
-            "title": "Scorer Id"
-          },
-          "family": {
-            "$ref": "#/components/schemas/GateFamily"
-          },
-          "n": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "N"
-          },
-          "n_discordant": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "N Discordant"
-          },
-          "n_ties": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "N Ties"
-          },
-          "delta": {
-            "type": "number",
-            "title": "Delta"
-          },
-          "ci_lo": {
-            "type": "number",
-            "title": "Ci Lo"
-          },
-          "ci_hi": {
-            "type": "number",
-            "title": "Ci Hi"
-          },
-          "p_raw": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1,
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "P Raw"
-          },
-          "p_adj": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1,
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "P Adj"
-          },
-          "q_adj": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1,
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Q Adj"
-          },
-          "method": {
-            "type": "string",
-            "title": "Method"
-          },
-          "dz": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dz"
-          },
-          "wins": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Wins"
-          },
-          "losses": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Losses"
-          },
-          "ties": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Ties"
-          },
-          "noise_floor": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Noise Floor"
-          },
-          "verdict": {
-            "$ref": "#/components/schemas/GateDecision"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "node_id",
-          "scorer_id",
-          "family",
-          "n",
-          "n_discordant",
-          "n_ties",
-          "delta",
-          "ci_lo",
-          "ci_hi",
-          "p_raw",
-          "p_adj",
-          "q_adj",
-          "method",
-          "dz",
-          "wins",
-          "losses",
-          "ties",
-          "noise_floor",
-          "verdict"
-        ],
-        "title": "GateTestResult"
+        "title": "GuardrailView"
       },
       "HumanAnswerStatus": {
         "properties": {
@@ -20117,6 +20532,90 @@
         ],
         "title": "JudgeEvaluator"
       },
+      "LatestSeries": {
+        "properties": {
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "on",
+          "status",
+          "verdict"
+        ],
+        "title": "LatestSeries"
+      },
+      "LaunchRequest": {
+        "properties": {
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit",
+            "default": "dev"
+          },
+          "cases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cases"
+          },
+          "repeats": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeats"
+          },
+          "cap_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LaunchRequest"
+      },
       "Limits": {
         "properties": {
           "requests": {
@@ -20384,6 +20883,112 @@
           "detail"
         ],
         "title": "LoginStatus"
+      },
+      "LookOrigin": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "look",
+            "title": "Kind",
+            "default": "look"
+          },
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "case_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Case Names"
+          },
+          "start_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Node"
+          },
+          "end_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Node"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "flow_id",
+          "dataset_id",
+          "case_names"
+        ],
+        "title": "LookOrigin"
+      },
+      "LookTarget": {
+        "properties": {
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "case_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Case Names"
+          },
+          "start_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Node"
+          },
+          "end_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Node"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "flow_id",
+          "dataset_id",
+          "case_names"
+        ],
+        "title": "LookTarget"
       },
       "LoopExited": {
         "properties": {
@@ -20807,6 +21412,31 @@
         ],
         "title": "MapNodeSpec"
       },
+      "MatrixRow": {
+        "properties": {
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/VariantRole"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/MetricCell"
+            },
+            "type": "array",
+            "title": "Cells"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant_id",
+          "role",
+          "cells"
+        ],
+        "title": "MatrixRow"
+      },
       "McpToolSource": {
         "properties": {
           "kind": {
@@ -20921,6 +21551,125 @@
           "prompt"
         ]
       },
+      "MetricCell": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/CellVerdict"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StatMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "low",
+          "high",
+          "verdict",
+          "method",
+          "cases"
+        ],
+        "title": "MetricCell"
+      },
+      "MetricColumn": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "role": {
+            "$ref": "#/components/schemas/MetricRole"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MetricDirection"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/MetricUnit"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "relative": {
+            "type": "boolean",
+            "title": "Relative"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "role",
+          "direction",
+          "unit",
+          "margin",
+          "relative"
+        ],
+        "title": "MetricColumn"
+      },
+      "MetricDirection": {
+        "type": "string",
+        "enum": [
+          "higher_is_better",
+          "lower_is_better"
+        ],
+        "title": "MetricDirection"
+      },
       "MetricKind": {
         "type": "string",
         "enum": [
@@ -20929,6 +21678,27 @@
           "continuous"
         ],
         "title": "MetricKind"
+      },
+      "MetricRole": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "guardrail",
+          "check",
+          "builtin"
+        ],
+        "title": "MetricRole"
+      },
+      "MetricUnit": {
+        "type": "string",
+        "enum": [
+          "rate",
+          "score",
+          "ordinal",
+          "usd",
+          "ms"
+        ],
+        "title": "MetricUnit"
       },
       "MissingRangeData": {
         "properties": {
@@ -22092,6 +22862,12 @@
             "minimum": 0,
             "title": "Latency Ms"
           },
+          "wait_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Wait Ms",
+            "default": 0
+          },
           "model": {
             "anyOf": [
               {
@@ -22872,6 +23648,19 @@
         ],
         "title": "OpenRouterRouting"
       },
+      "OutcomeClass": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "model_fail",
+          "schema_invalid",
+          "refusal",
+          "infra_error",
+          "budget_cut",
+          "cancelled"
+        ],
+        "title": "OutcomeClass"
+      },
       "OutcomePolicy": {
         "type": "string",
         "enum": [
@@ -23051,47 +23840,6 @@
           "output_json"
         ]
       },
-      "Page_CaseRecord_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/CaseRecord"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
-          },
-          "total_estimate": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Estimate"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "next_cursor",
-          "total_estimate"
-        ],
-        "title": "Page[CaseRecord]"
-      },
       "Page_ChatSession_": {
         "properties": {
           "items": {
@@ -23132,88 +23880,6 @@
           "total_estimate"
         ],
         "title": "Page[ChatSession]"
-      },
-      "Page_DatasetBatchCase_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/DatasetBatchCase"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
-          },
-          "total_estimate": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Estimate"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "next_cursor",
-          "total_estimate"
-        ],
-        "title": "Page[DatasetBatchCase]"
-      },
-      "Page_DatasetBatchRecord_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/DatasetBatchRecord"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
-          },
-          "total_estimate": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Estimate"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "next_cursor",
-          "total_estimate"
-        ],
-        "title": "Page[DatasetBatchRecord]"
       },
       "Page_DatasetCase_": {
         "properties": {
@@ -23297,11 +23963,11 @@
         ],
         "title": "Page[DatasetSummary]"
       },
-      "Page_EvalRunRecord_": {
+      "Page_ExperimentSummaryView_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/EvalRunRecord"
+              "$ref": "#/components/schemas/ExperimentSummaryView"
             },
             "type": "array",
             "title": "Items"
@@ -23336,48 +24002,7 @@
           "next_cursor",
           "total_estimate"
         ],
-        "title": "Page[EvalRunRecord]"
-      },
-      "Page_EvalSummary_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/EvalSummary"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
-          },
-          "total_estimate": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Estimate"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "next_cursor",
-          "total_estimate"
-        ],
-        "title": "Page[EvalSummary]"
+        "title": "Page[ExperimentSummaryView]"
       },
       "Page_FileEntry_": {
         "properties": {
@@ -23583,6 +24208,47 @@
           "total_estimate"
         ],
         "title": "Page[RunSummary]"
+      },
+      "Page_SeriesSummaryView_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesSummaryView"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total_estimate": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Estimate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor",
+          "total_estimate"
+        ],
+        "title": "Page[SeriesSummaryView]"
       },
       "Page_TypeSummary_": {
         "properties": {
@@ -25102,6 +25768,25 @@
           "openai_compatible"
         ]
       },
+      "ProviderLimits": {
+        "properties": {
+          "rpm": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProviderLimits"
+      },
       "ProviderNameField": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9_-]{0,62}$"
@@ -25184,6 +25869,16 @@
                 "type": "null"
               }
             ]
+          },
+          "limits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderLimits"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -25197,6 +25892,131 @@
       "ProviderText": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+      },
+      "QuestionKind": {
+        "type": "string",
+        "enum": [
+          "look",
+          "threshold",
+          "compare",
+          "noninferior"
+        ]
+      },
+      "QuestionView": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "bound": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "above",
+                  "below"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bound"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricDirection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "relative": {
+            "type": "boolean",
+            "title": "Relative",
+            "default": false
+          },
+          "guardrails": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailView"
+            },
+            "type": "array",
+            "title": "Guardrails",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "QuestionView"
       },
       "ReadyState": {
         "properties": {
@@ -25216,6 +26036,33 @@
           "engine_version"
         ],
         "title": "ReadyState"
+      },
+      "Recommendation": {
+        "properties": {
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/EstimateReason"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cases",
+          "repeats",
+          "reason",
+          "text"
+        ],
+        "title": "Recommendation"
       },
       "RecordType": {
         "properties": {
@@ -25985,6 +26832,39 @@
             ],
             "title": "End Node"
           },
+          "series_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
+          },
           "execution_id": {
             "type": "string",
             "title": "Execution Id"
@@ -26529,6 +27409,39 @@
               }
             ],
             "title": "End Node"
+          },
+          "series_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
           }
         },
         "type": "object",
@@ -26584,161 +27497,6 @@
           "address"
         ],
         "title": "RunSuspended"
-      },
-      "ScoreRecord": {
-        "properties": {
-          "scorer_id": {
-            "type": "string",
-            "title": "Scorer Id"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/MetricKind"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "passed": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Passed"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "cost_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Usd",
-            "default": "0"
-          }
-        },
-        "type": "object",
-        "required": [
-          "scorer_id",
-          "kind",
-          "value"
-        ],
-        "title": "ScoreRecord"
-      },
-      "ScorerDelta": {
-        "properties": {
-          "scorer_id": {
-            "type": "string",
-            "title": "Scorer Id"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/MetricKind"
-          },
-          "n": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "N"
-          },
-          "baseline_mean": {
-            "type": "number",
-            "title": "Baseline Mean"
-          },
-          "candidate_mean": {
-            "type": "number",
-            "title": "Candidate Mean"
-          },
-          "delta": {
-            "type": "number",
-            "title": "Delta"
-          },
-          "wins": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Wins"
-          },
-          "losses": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Losses"
-          },
-          "ties": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Ties"
-          }
-        },
-        "type": "object",
-        "required": [
-          "scorer_id",
-          "kind",
-          "n",
-          "baseline_mean",
-          "candidate_mean",
-          "delta",
-          "wins",
-          "losses",
-          "ties"
-        ],
-        "title": "ScorerDelta"
-      },
-      "ScorerSummary": {
-        "properties": {
-          "scorer_id": {
-            "type": "string",
-            "title": "Scorer Id"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/MetricKind"
-          },
-          "n": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "N"
-          },
-          "mean": {
-            "type": "number",
-            "title": "Mean"
-          },
-          "pass_rate": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pass Rate"
-          },
-          "minimum": {
-            "type": "number",
-            "title": "Minimum"
-          },
-          "maximum": {
-            "type": "number",
-            "title": "Maximum"
-          }
-        },
-        "type": "object",
-        "required": [
-          "scorer_id",
-          "kind",
-          "n",
-          "mean",
-          "minimum",
-          "maximum"
-        ],
-        "title": "ScorerSummary"
       },
       "ScriptedAnswer": {
         "properties": {
@@ -26903,6 +27661,1012 @@
           "set"
         ],
         "title": "SecretStatus"
+      },
+      "SeriesCancelBody": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SeriesCancelBody"
+      },
+      "SeriesCaseRow": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "split": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tags"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/VariantTally"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Usd"
+          },
+          "failing": {
+            "type": "boolean",
+            "title": "Failing"
+          },
+          "divergent": {
+            "type": "boolean",
+            "title": "Divergent"
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/AttemptView"
+            },
+            "type": "array",
+            "title": "Attempts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "split",
+          "tags",
+          "variants",
+          "usd",
+          "failing",
+          "divergent",
+          "attempts"
+        ],
+        "title": "SeriesCaseRow"
+      },
+      "SeriesDetailView": {
+        "properties": {
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SeriesOrigin"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/SeriesProgress"
+          },
+          "spend": {
+            "$ref": "#/components/schemas/SeriesSpend"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waits": {
+            "type": "integer",
+            "title": "Waits"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "question_detail": {
+            "$ref": "#/components/schemas/QuestionView"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/CheckView"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "matrix": {
+            "$ref": "#/components/schemas/SeriesMatrix"
+          },
+          "stability": {
+            "items": {
+              "$ref": "#/components/schemas/StabilityRow"
+            },
+            "type": "array",
+            "title": "Stability"
+          },
+          "contrasts": {
+            "items": {
+              "$ref": "#/components/schemas/Contrast"
+            },
+            "type": "array",
+            "title": "Contrasts"
+          },
+          "thresholds": {
+            "items": {
+              "$ref": "#/components/schemas/ThresholdCell"
+            },
+            "type": "array",
+            "title": "Thresholds"
+          },
+          "aggregates": {
+            "items": {
+              "$ref": "#/components/schemas/VariantAggregates"
+            },
+            "type": "array",
+            "title": "Aggregates"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/SeriesEstimate"
+          },
+          "needs_approval": {
+            "type": "boolean",
+            "title": "Needs Approval"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "finding_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finding Path"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "origin",
+          "flow_id",
+          "dataset_id",
+          "question",
+          "on",
+          "cases",
+          "repeats",
+          "variants",
+          "status",
+          "progress",
+          "spend",
+          "verdict",
+          "waits",
+          "started_at",
+          "finished_at",
+          "question_detail",
+          "checks",
+          "matrix",
+          "stability",
+          "contrasts",
+          "thresholds",
+          "aggregates",
+          "estimate",
+          "needs_approval",
+          "approved_by",
+          "finding_path",
+          "error"
+        ],
+        "title": "SeriesDetailView"
+      },
+      "SeriesEstimate": {
+        "properties": {
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "variants": {
+            "type": "integer",
+            "title": "Variants"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          },
+          "usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd"
+          },
+          "usd_source": {
+            "type": "string",
+            "enum": [
+              "history",
+              "prices",
+              "unknown"
+            ],
+            "title": "Usd Source"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          },
+          "half_width": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half Width"
+          },
+          "mde": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mde"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "spread": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spread"
+          },
+          "spread_source": {
+            "type": "string",
+            "enum": [
+              "history",
+              "prior",
+              "none"
+            ],
+            "title": "Spread Source"
+          },
+          "icc": {
+            "type": "number",
+            "title": "Icc"
+          },
+          "recommended": {
+            "$ref": "#/components/schemas/Recommendation"
+          },
+          "below_recommended": {
+            "type": "boolean",
+            "title": "Below Recommended"
+          },
+          "needs_approval": {
+            "type": "boolean",
+            "title": "Needs Approval"
+          },
+          "project_cap_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Project Cap Usd"
+          },
+          "cap_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cap Usd"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "on",
+          "cases",
+          "repeats",
+          "variants",
+          "attempts",
+          "available",
+          "usd",
+          "usd_source",
+          "minutes",
+          "half_width",
+          "mde",
+          "margin",
+          "spread",
+          "spread_source",
+          "icc",
+          "recommended",
+          "below_recommended",
+          "needs_approval",
+          "project_cap_usd",
+          "cap_usd"
+        ],
+        "title": "SeriesEstimate"
+      },
+      "SeriesEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SeriesStatusEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AttemptFinishedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/SeriesFinishedEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "attempt_finished": "#/components/schemas/AttemptFinishedEvent",
+            "series_finished": "#/components/schemas/SeriesFinishedEvent",
+            "series_status": "#/components/schemas/SeriesStatusEvent"
+          }
+        }
+      },
+      "SeriesFinishedEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "series_finished",
+            "title": "Type",
+            "default": "series_finished"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "series_id",
+          "status",
+          "verdict"
+        ],
+        "title": "SeriesFinishedEvent"
+      },
+      "SeriesGetResult": {
+        "properties": {
+          "series": {
+            "$ref": "#/components/schemas/SeriesDetailView"
+          },
+          "cases": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SeriesCaseRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cases"
+          },
+          "hidden_cases": {
+            "type": "integer",
+            "title": "Hidden Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series",
+          "cases",
+          "hidden_cases"
+        ],
+        "title": "SeriesGetResult"
+      },
+      "SeriesMatrix": {
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/MetricColumn"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/MatrixRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "rows"
+        ],
+        "title": "SeriesMatrix"
+      },
+      "SeriesOrigin": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ExperimentOrigin"
+          },
+          {
+            "$ref": "#/components/schemas/LookOrigin"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "experiment": "#/components/schemas/ExperimentOrigin",
+            "look": "#/components/schemas/LookOrigin"
+          }
+        }
+      },
+      "SeriesProgress": {
+        "properties": {
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "done",
+          "total"
+        ],
+        "title": "SeriesProgress"
+      },
+      "SeriesSpend": {
+        "properties": {
+          "usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Usd"
+          },
+          "cap_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cap Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "usd",
+          "cap_usd"
+        ],
+        "title": "SeriesSpend"
+      },
+      "SeriesSplit": {
+        "type": "string",
+        "enum": [
+          "dev",
+          "holdout"
+        ],
+        "title": "SeriesSplit"
+      },
+      "SeriesStartRequest": {
+        "properties": {
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit",
+            "default": "dev"
+          },
+          "cases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cases"
+          },
+          "repeats": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeats"
+          },
+          "cap_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Usd"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "look": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LookTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "client_op_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ulid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SeriesStartRequest"
+      },
+      "SeriesStarted": {
+        "properties": {
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SeriesOrigin"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/SeriesProgress"
+          },
+          "spend": {
+            "$ref": "#/components/schemas/SeriesSpend"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waits": {
+            "type": "integer",
+            "title": "Waits"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/SeriesEstimate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "origin",
+          "flow_id",
+          "dataset_id",
+          "question",
+          "on",
+          "cases",
+          "repeats",
+          "variants",
+          "status",
+          "progress",
+          "spend",
+          "verdict",
+          "waits",
+          "started_at",
+          "finished_at",
+          "estimate"
+        ],
+        "title": "SeriesStarted"
+      },
+      "SeriesStatus": {
+        "type": "string",
+        "enum": [
+          "awaiting_approval",
+          "running",
+          "waiting_human",
+          "done",
+          "cancelled",
+          "failed"
+        ],
+        "title": "SeriesStatus"
+      },
+      "SeriesStatusEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "series_status",
+            "title": "Type",
+            "default": "series_status"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "series_id",
+          "status"
+        ],
+        "title": "SeriesStatusEvent"
+      },
+      "SeriesSummaryView": {
+        "properties": {
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SeriesOrigin"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/SeriesProgress"
+          },
+          "spend": {
+            "$ref": "#/components/schemas/SeriesSpend"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waits": {
+            "type": "integer",
+            "title": "Waits"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "origin",
+          "flow_id",
+          "dataset_id",
+          "question",
+          "on",
+          "cases",
+          "repeats",
+          "variants",
+          "status",
+          "progress",
+          "spend",
+          "verdict",
+          "waits",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "SeriesSummaryView"
+      },
+      "SeriesVerdict": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/VerdictState"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "reason",
+          "text"
+        ],
+        "title": "SeriesVerdict"
       },
       "SettingDeleted": {
         "properties": {
@@ -27140,11 +28904,12 @@
           "Flow",
           "Node",
           "Dataset",
-          "Eval",
+          "Experiment",
           "Inference",
           "Agent",
           "Tool",
-          "McpServer"
+          "McpServer",
+          "Finding"
         ],
         "title": "SpecKind"
       },
@@ -27294,6 +29059,78 @@
         ],
         "title": "SpecVersionInfo"
       },
+      "Stability": {
+        "properties": {
+          "always": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Always"
+          },
+          "never": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Never"
+          },
+          "flaky": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Flaky"
+          }
+        },
+        "type": "object",
+        "required": [
+          "always",
+          "never",
+          "flaky"
+        ],
+        "title": "Stability"
+      },
+      "StabilityRow": {
+        "properties": {
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "always": {
+            "type": "integer",
+            "title": "Always"
+          },
+          "never": {
+            "type": "integer",
+            "title": "Never"
+          },
+          "flaky": {
+            "type": "integer",
+            "title": "Flaky"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant_id",
+          "always",
+          "never",
+          "flaky"
+        ],
+        "title": "StabilityRow"
+      },
+      "StatMethod": {
+        "type": "string",
+        "enum": [
+          "wilson",
+          "kish_wilson",
+          "beta_binomial",
+          "t_case_means",
+          "bca_case_means",
+          "bootstrap_ratio",
+          "bootstrap_quantile",
+          "exact_sign",
+          "paired_t",
+          "paired_bca",
+          "paired_bootstrap_ratio",
+          "paired_bootstrap_quantile"
+        ],
+        "title": "StatMethod"
+      },
       "StructuredMode": {
         "type": "string",
         "enum": [
@@ -27331,6 +29168,75 @@
           "inference"
         ],
         "title": "SubagentSpec"
+      },
+      "SubjectKind": {
+        "type": "string",
+        "enum": [
+          "flow",
+          "range",
+          "arm"
+        ],
+        "title": "SubjectKind"
+      },
+      "SubjectView": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SubjectKind"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
+          },
+          "from_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Node"
+          },
+          "to_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Node"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "flow_id",
+          "arm_id",
+          "from_node",
+          "to_node"
+        ],
+        "title": "SubjectView"
       },
       "SwitchCase": {
         "properties": {
@@ -27477,6 +29383,51 @@
           "failed",
           "cancelled"
         ]
+      },
+      "ThresholdCell": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "bound": {
+            "type": "string",
+            "enum": [
+              "above",
+              "below"
+            ],
+            "title": "Bound"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "margin": {
+            "type": "number",
+            "title": "Margin"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/CellVerdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "variant_id",
+          "bound",
+          "threshold",
+          "margin",
+          "estimate",
+          "verdict"
+        ],
+        "title": "ThresholdCell"
       },
       "TimeoutPolicy": {
         "oneOf": [
@@ -27734,6 +29685,10 @@
         ],
         "title": "TypeSummary"
       },
+      "Ulid": {
+        "type": "string",
+        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+      },
       "UnionType": {
         "properties": {
           "apiVersion": {
@@ -27978,9 +29933,120 @@
         ],
         "title": "ValueType"
       },
+      "VariantAggregates": {
+        "properties": {
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/VariantRole"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "counted": {
+            "type": "integer",
+            "title": "Counted"
+          },
+          "infra_errors": {
+            "type": "integer",
+            "title": "Infra Errors"
+          },
+          "spend_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spend Usd"
+          },
+          "pass_k": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass K"
+          },
+          "icc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icc"
+          },
+          "stability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Stability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metrics": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Estimate"
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "runtime_checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Estimate"
+            },
+            "type": "object",
+            "title": "Runtime Checks"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant_id",
+          "role",
+          "cases",
+          "attempts",
+          "counted",
+          "infra_errors",
+          "spend_usd",
+          "pass_k",
+          "icc",
+          "stability",
+          "metrics",
+          "runtime_checks",
+          "models"
+        ],
+        "title": "VariantAggregates"
+      },
       "VariantRef": {
         "type": "string",
         "pattern": "^([a-z][a-z0-9_]{0,62}|(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md)$"
+      },
+      "VariantRole": {
+        "type": "string",
+        "enum": [
+          "baseline",
+          "candidate",
+          "other"
+        ],
+        "title": "VariantRole"
       },
       "VariantSlot": {
         "properties": {
@@ -28014,6 +30080,108 @@
           "cases"
         ],
         "title": "VariantSlot"
+      },
+      "VariantTally": {
+        "properties": {
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "passed": {
+            "type": "integer",
+            "title": "Passed"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "failed_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Checks"
+          },
+          "usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant_id",
+          "passed",
+          "total",
+          "failed_checks",
+          "usd"
+        ],
+        "title": "VariantTally"
+      },
+      "VariantView": {
+        "properties": {
+          "variant_id": {
+            "type": "string",
+            "title": "Variant Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/VariantRole"
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentView"
+            },
+            "type": "array",
+            "title": "Assignments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant_id",
+          "arm_id",
+          "role",
+          "assignments"
+        ],
+        "title": "VariantView"
+      },
+      "VerdictReason": {
+        "type": "string",
+        "enum": [
+          "below_mde",
+          "uninformative",
+          "no_discordance",
+          "compute_confounded",
+          "inputs_changed",
+          "infra_errors",
+          "no_data",
+          "budget_cut",
+          "cancelled",
+          "dev_split",
+          "judge_not_validated"
+        ],
+        "title": "VerdictReason"
+      },
+      "VerdictState": {
+        "type": "string",
+        "enum": [
+          "confirmed",
+          "refuted",
+          "inconclusive",
+          "invalid",
+          "signal"
+        ],
+        "title": "VerdictState"
       },
       "WaitKind": {
         "type": "string",

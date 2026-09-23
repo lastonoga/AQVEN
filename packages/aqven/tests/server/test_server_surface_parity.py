@@ -4,17 +4,18 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings, copy_fixture
+from pydantic import JsonValue
+from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs
+from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings
 
-from aqven.evals import EvalRunId
 from aqven.runtime.runs import RunStartRequest
+from aqven.series import SeriesCancelRequest, SeriesStartRequest
 from aqven.server import ServerOptions, create_app
 from aqven.server.errors import ApiFailure
-from aqven.server.mcp.eval_tools import EvalRunLookup, EvalTools
+from aqven.server.mcp.catalog import tool_error
 from aqven.server.mcp.run_tools import RunTools
-from aqven.server.views.dataset_batches import DatasetBatchStartRequest
+from aqven.server.mcp.series_tools import SeriesTools
 from aqven.server.views.runs import RunStartService
-from aqven.server.views.services import StudioServices
 from aqven.server.workspace import ProjectWorkspace
 
 BODY = {"flow_id": "intake", "mode": "live", "input": {"text": "parity"}}
@@ -66,70 +67,65 @@ def test_the_catalog_carries_the_shared_service_into_run_start(
 
 
 @pytest.fixture
-def eval_project(tmp_path: Path) -> Path:
-    return copy_fixture("evals/eval_shop", tmp_path)
+def shared_jobs() -> FakeSeriesJobs:
+    return FakeSeriesJobs()
 
 
 @pytest.fixture
-def shared_services() -> StudioServices:
-    return StudioServices()
-
-
-@pytest.fixture
-def shared_client(
-    eval_project: Path,
+def series_client(
+    server_project: Path,
     server_engine: FakeEngine,
     server_settings: MemorySettings,
     server_options: ServerOptions,
-    shared_services: StudioServices,
+    shared_jobs: FakeSeriesJobs,
 ) -> Iterator[TestClient]:
-    app = create_app(eval_project, server_engine, server_settings, options=server_options, services=shared_services)
+    app = create_app(server_project, server_engine, server_settings, options=server_options, series=shared_jobs)
     with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
         yield client
 
 
-def test_a_batch_started_over_mcp_is_the_batch_the_route_polls(
-    shared_client: TestClient, shared_services: StudioServices
+def mcp_code(operation: str, error: Exception) -> str:
+    return tool_error(error, operation).code
+
+
+def rest_code(body: JsonValue) -> JsonValue:
+    assert isinstance(body, dict)
+    return body["code"]
+
+
+def test_an_unknown_experiment_is_not_found_on_both_surfaces(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
 ) -> None:
-    created = shared_client.post(
-        "/api/datasets",
-        json={
-            "dataset_id": "shared_cases",
-            "flow_id": "intake",
-            "cases": [{"name": "first", "inputs": {"text": "first input"}}],
-        },
-    )
-    assert created.status_code == 200
-    tools = EvalTools(shared_services)
+    over_http = series_client.post("/api/series", json={"experiment_id": "nothing"})
+    tools = SeriesTools(shared_jobs)
 
-    started = asyncio.run(
-        tools.start_batch(
-            DatasetBatchStartRequest.model_validate(
-                {"flow_id": "intake", "dataset_id": "shared_cases", "case_names": ["first"], "mode": "dryrun"}
-            )
-        )
-    )
-
-    over_http = shared_client.get(f"/api/dataset-batches/{started.batch_id}")
-    assert over_http.status_code == 200
-    assert over_http.json()["batch_id"] == started.batch_id
-    assert over_http.json()["cases_total"] == 1
-
-
-def test_an_unknown_eval_run_fails_the_same_way_on_both_surfaces(
-    shared_client: TestClient, shared_services: StudioServices
-) -> None:
-    missing = EvalRunId("01a0aa21-0000-0000-0000-000000000000")
-    over_http = shared_client.get(f"/api/eval-runs/{missing}")
-    with pytest.raises(ApiFailure) as failure:
-        asyncio.run(EvalTools(shared_services).get_eval(EvalRunLookup(eval_run_id=missing)))
+    with pytest.raises(ApiFailure) as over_mcp:
+        asyncio.run(tools.start(SeriesStartRequest.model_validate({"experiment_id": "nothing"})))
 
     assert over_http.status_code == 404
-    assert failure.value.code == "NOT_FOUND"
-    assert failure.value.message == over_http.json()["message"]
+    assert rest_code(over_http.json()) == mcp_code("series_start", over_mcp.value) == "NOT_FOUND"
 
 
-def test_the_services_holder_is_the_one_the_routes_filled(
-    shared_client: TestClient, shared_services: StudioServices
+def test_cancelling_a_finished_series_conflicts_on_both_surfaces(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
 ) -> None:
-    assert shared_services.eval_jobs().context.workspace.root == shared_services.batch_jobs().context.workspace.root
+    over_http = series_client.post(f"/api/series/{DONE_ID}/cancel", json={"reason": "late"})
+    tools = SeriesTools(shared_jobs)
+
+    with pytest.raises(ApiFailure) as over_mcp:
+        asyncio.run(tools.cancel(SeriesCancelRequest(series_id=DONE_ID, reason="late")))
+
+    assert over_http.status_code == 409
+    assert rest_code(over_http.json()) == mcp_code("series_cancel", over_mcp.value) == "SERIES_STATE_CONFLICT"
+
+
+def test_series_start_answers_the_same_on_both_surfaces(series_client: TestClient, shared_jobs: FakeSeriesJobs) -> None:
+    over_http = series_client.post("/api/series", json={"experiment_id": "reply_quality"})
+    over_mcp = asyncio.run(
+        SeriesTools(shared_jobs).start(SeriesStartRequest.model_validate({"experiment_id": "reply_quality"}))
+    )
+
+    assert over_http.status_code == 201
+    assert over_mcp.model_dump(mode="json") == over_http.json()
+    assert over_mcp.series_id == SERIES_ID
+    assert [actor.kind for _, actor in shared_jobs.starts] == ["human", "agent"]

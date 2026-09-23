@@ -262,3 +262,69 @@ def test_params_models_reject_unknown_keys() -> None:
         control.QuorumParams.model_validate({"min_ok": 2, "on_error": "retry"})
     with pytest.raises(ValidationError):
         evaluators.MaxWordsParams.model_validate({"field": REPLY_TEXT, "max": 220, "min": 1})
+
+
+CALM_TRIAGE: Final = Triage(summary="Мерцает", tone="calm", observations=[Observation(key="flicker")])
+
+
+def expecting(expected: object) -> EvalContext[BaseModel, object]:
+    return EvalContext[BaseModel, object](inputs=INPUTS, expected_output=expected)
+
+
+@pytest.mark.parametrize(
+    ("expected", "fields", "passed", "reason"),
+    [
+        ({"summary": "Мерцает", "tone": "calm"}, None, True, None),
+        ({"summary": "Мерцает", "tone": "urgent"}, None, False, "fields differ from expected_output: tone"),
+        ({"summary": "Гаснет", "tone": "calm"}, ["tone"], True, None),
+        ({"tone": "calm"}, ["tone", "summary"], False, "expected_output lacks the fields summary"),
+        ({"tone": "calm", "summary": None}, ["tone", "summary"], False, "fields differ from expected_output: summary"),
+        ({"observations": [{"key": "flicker"}]}, None, True, None),
+        ({"observations": [{"key": "heat"}]}, None, False, "fields differ from expected_output: observations"),
+        ("calm", None, False, "the output differs from expected_output"),
+        ("calm", ["tone"], False, "expected_output is not an object with the fields tone"),
+        (None, None, False, evaluators.NO_EXPECTED_OUTPUT),
+        (None, ["tone"], False, evaluators.NO_EXPECTED_OUTPUT),
+    ],
+    ids=[
+        "every_expected_field",
+        "field_differs",
+        "chosen_fields_only",
+        "chosen_field_missing_in_expected",
+        "chosen_field_expected_null",
+        "nested_json_equal",
+        "nested_json_differs",
+        "not_a_record",
+        "chosen_fields_of_a_non_object",
+        "no_expected_output",
+        "no_expected_output_for_chosen_fields",
+    ],
+)
+def test_expected_compares_the_output_with_the_expected_output(
+    expected: object, fields: list[str] | None, passed: bool, reason: str | None
+) -> None:
+    verdict = evaluators.expected(CALM_TRIAGE, expecting(expected), evaluators.ExpectedParams(fields=fields))
+
+    assert (verdict.passed, verdict.reason) == (passed, reason)
+
+
+def test_missing_expected_output_counts_as_a_failed_attempt() -> None:
+    verdict = evaluators.expected(CALM_TRIAGE, expecting(None), evaluators.ExpectedParams(fields=["tone"]))
+
+    assert verdict.passed is False
+
+
+def test_expected_reads_a_model_as_the_expected_output() -> None:
+    same = Triage(summary="Мерцает", tone="calm", observations=[Observation(key="flicker")])
+
+    verdict = evaluators.expected(CALM_TRIAGE, expecting(same), evaluators.ExpectedParams())
+
+    assert verdict == Verdict(passed=True)
+
+
+def test_expected_is_a_builtin_evaluator_with_field_names() -> None:
+    assert builtin(Slot.EVALUATOR, "expected") is evaluators.expected
+    with pytest.raises(ValidationError):
+        evaluators.ExpectedParams.model_validate({"fields": []})
+    with pytest.raises(ValidationError):
+        evaluators.ExpectedParams.model_validate({"fields": ["$out.tone"]})

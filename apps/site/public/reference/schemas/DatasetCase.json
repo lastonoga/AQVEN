@@ -60,6 +60,21 @@
       ],
       "default": null,
       "title": "Node Outputs"
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tags"
     }
   },
   "required": [

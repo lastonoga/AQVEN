@@ -36,7 +36,6 @@ def decline_request(method: str, params: JsonObject | None) -> JsonObject:
     return {"decision": "decline"}
 
 
-
 def chat_model(entry: object) -> ChatModel:
     identifier = str(getattr(entry, "id", "") or getattr(entry, "model", ""))
     supported = cast(tuple[object, ...], getattr(entry, "supported_reasoning_efforts", ()) or ())
@@ -83,9 +82,7 @@ class CodexAgentBackend:
         return "codex"
 
     async def models(self) -> ChatModelCatalog:
-        config = codex_config(
-            self._project_root, self._mcp_url, self._runtime.mcp_token.get_secret_value(), "default"
-        )
+        config = codex_config(self._project_root, self._mcp_url, self._runtime.mcp_token.get_secret_value(), "default")
 
         def probe() -> tuple[ChatModel, ...]:
             client = self._runtime.client_factory(config, decline_request)
@@ -105,9 +102,7 @@ class CodexAgentBackend:
         return ChatModelCatalog(backend=self.kind, models=models, accepts_any_model=True, detail=None)
 
     async def login_status(self) -> LoginStatus:
-        config = codex_config(
-            self._project_root, self._mcp_url, self._runtime.mcp_token.get_secret_value(), "default"
-        )
+        config = codex_config(self._project_root, self._mcp_url, self._runtime.mcp_token.get_secret_value(), "default")
 
         def probe() -> LoginStatus:
             client = self._runtime.client_factory(config, decline_request)

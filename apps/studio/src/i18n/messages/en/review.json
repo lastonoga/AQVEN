@@ -1,13 +1,13 @@
 {
-  "title": "Human review",
-  "subtitle": "steps that wait for a person before the run continues",
-  "filter": {
-    "labelAria": "Queue filter",
-    "all": "All",
-    "overdue": "Overdue"
+  "inline": {
+    "title": "Waiting for a person",
+    "labelAria": "Steps waiting for a person",
+    "count": "{count, plural, one {# step} other {# steps}}",
+    "loading": "Loading the step…",
+    "failed": "Could not load the waiting steps: {reason}",
+    "detailFailed": "Could not load this step: {reason}"
   },
   "queue": {
-    "labelAria": "Review queue",
     "run": "run {run}",
     "assignee": "assigned to {assignee}",
     "attempt": "attempt {attempt}"

@@ -1,0 +1,18 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent from two ballots: the product's own normalization and parsing, a ballot on the customer's words, a ballot on the evidence, and the more confident of the two"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$settle.out.rationale"
+- name: "intent"
+  from: "$settle.out.intent"
+- name: "confidence"
+  from: "$settle.out.confidence"
+order:
+- "prepare"
+- "triage"
+- "words"
+- "evidence"
+- "settle"

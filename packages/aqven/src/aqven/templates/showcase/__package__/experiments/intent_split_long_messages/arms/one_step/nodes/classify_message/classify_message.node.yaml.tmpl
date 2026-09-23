@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "A cheap open model reads the whole message and decides the intent"
+agent: "llama"
+in:
+- name: "message"
+  from: "$input.message"
+- name: "product"
+  from: "$input.product"

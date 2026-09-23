@@ -1,0 +1,42 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A single DeepSeek judge answers at least 1.5 s faster at the median than the three-judge panel, picks the expected winner at most 0.1 less often and fails no more runs"
+failure_mode: "panel_wrong_winner"
+subject:
+  flow: "judge_panel"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "panel"
+- id: "single_judge"
+  arm: "single_judge"
+- id: "single_judge_qwen"
+  arm: "single_judge"
+  agents:
+    judge: "qwen"
+checks:
+- id: "winner"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "winner"
+question:
+  kind: "compare"
+  baseline: "panel"
+  candidate: "single_judge"
+  primary: "latency_p50_ms"
+  direction: "lower_is_better"
+  margin: 1500
+  guardrails:
+  - metric: "winner"
+    margin: 0.1
+  - metric: "success_rate"
+    margin: 0.05
+  - metric: "infra_error_rate"
+    direction: "lower_is_better"
+    margin: 0.02
+    relative: false
+plan:
+  cases: 8
+  repeats: 3

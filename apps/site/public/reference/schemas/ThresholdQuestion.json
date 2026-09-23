@@ -1,0 +1,68 @@
+{
+  "$defs": {
+    "MetricName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Is ``metric`` below or above a value by more than ``margin``, for one variant or each variant.\n\nExactly one of ``below`` and ``above`` is set.",
+  "properties": {
+    "above": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Above"
+    },
+    "below": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Below"
+    },
+    "kind": {
+      "const": "threshold",
+      "title": "Kind",
+      "type": "string"
+    },
+    "margin": {
+      "default": 0.0,
+      "minimum": 0,
+      "title": "Margin",
+      "type": "number"
+    },
+    "metric": {
+      "$ref": "#/$defs/MetricName"
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Variant"
+    }
+  },
+  "required": [
+    "kind",
+    "metric"
+  ],
+  "title": "ThresholdQuestion",
+  "type": "object"
+}

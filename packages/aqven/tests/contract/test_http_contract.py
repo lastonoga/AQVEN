@@ -88,7 +88,8 @@ def test_openapi_and_event_schemas_describe_the_contract(live: LiveServer) -> No
     assert document["openapi"].startswith("3.1")
     assert document["paths"]["/api/runs"]["post"]["operationId"] == "run_start"
     assert document["paths"]["/api/runs/{run_id}/events"]["get"]["operationId"] == "run_events"
-    assert set(catalog) == {"spec", "run", "chat", "schemas"}
+    assert set(catalog) == {"spec", "run", "chat", "series", "schemas"}
+    assert set(catalog["schemas"]["series"]) == {"series_status", "attempt_finished", "series_finished"}
     assert set(catalog["schemas"]["run"]) >= {"run_started", SUSPENSION, "run_finished"}
     assert catalog["schemas"]["run"][SUSPENSION]["properties"]["type"]["const"] == SUSPENSION
     run_event = document["components"]["schemas"]["RunEvent"]

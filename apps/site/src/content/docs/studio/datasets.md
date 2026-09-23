@@ -1,24 +1,25 @@
 ---
 title: How to work with datasets in Studio
-description: Browse and search saved cases, add new ones by CSV import or AI generation, then run one case or a whole batch and read the results.
+description: Browse and search saved cases, add new ones by CSV import or AI generation, run one case, and hand many cases to an experiment.
 ---
 
 ## When you need this
 
 Use this when you want to run a flow against more than one made-up input: a set of saved, realistic
 cases you can rerun the same way after every change, instead of retyping test input by hand each time.
-This is the "Test" step of [the engineering loop](/concepts/engineering-loop/) — datasets are what you
-run before you trust a fix.
+This is the "Test" step of [the engineering loop](/concepts/engineering-loop/): datasets are the cases
+an experiment runs before you trust a fix.
 
 ## Steps
 
-- Open a flow and click **Datasets** in its tab bar, alongside Runs, Nodes, and Evals — it's a normal
-  tab, not a screen you have to find another way.
+- Open a flow and click **Datasets** in its tab bar, alongside Nodes and Runs. It's a normal tab, not a
+  screen you have to find another way.
 - The picker at the top lists every dataset in the project, searchable by ID. It shows each dataset's
-  case count and whether it belongs to this flow or is an inference-only dataset used by an eval.
+  case count and whether it belongs to this flow. A dataset bound to no flow feeds an experiment's arm
+  instead, so its cases can't be run from this page.
 - Below the picker is the case table: one row per case, 25 per page, with a column for every field the
   cases actually use — flow input, run context, metadata, expected output, and which upstream node
-  outputs a case supplies as a fixture. A search box narrows the table by case content; you can select
+  outputs a case supplies as a fixture. A search box narrows the table by case name; you can select
   the cases on the current page, or select every case matching the search across the whole dataset, not
   just what's on screen.
 - **There's no in-place edit of a saved case.** To change what a dataset contains, create a new dataset
@@ -42,33 +43,29 @@ run before you trust a fix.
   node to run just that stage — the same range picker used for a [manual run](/studio/investigate-a-run/).
   Studio checks live whether the case, or every selected case, has what that range needs, and fades out
   starting points that don't.
-- **Start run** runs only the open case and takes you to its run on the Runs screen. **Run N selected
-  cases** — enabled once you've checked at least one case and the range is available for all of them —
-  starts a batch instead, and the page switches to tracking it.
-- A batch's progress shows under **Grouped runs**: past batches for this dataset, by short ID and case
-  count, plus the one you just started. Select one to see it update every couple of seconds — status,
-  completed and failed counts against the total, cost so far, which stages it ran, and the exact dataset
-  version it ran against — and a per-case results table below that, one row per case with its status and
-  a link to its own run, searchable and filterable by status. What a batch like this feeds into — a
-  scored eval with a pass/warn/block gate against a baseline — is [how to work with evals](/studio/evals/).
+- **Start run** runs the open case and takes you to its run on the Runs screen.
+- **Many cases at once are an experiment's job, not this page's.** An experiment selects cases from a
+  dataset by their `tags`, and a series runs every selected case for every variant, several times. The
+  server splits every dataset into working (`dev`) and held-out (`holdout`) cases by a hash of the case
+  name. That split is what lets a series on the held-out cases decide, while series on the working
+  cases are for searching. See [how to read research in Studio](/studio/research/).
 
 ### Example
 
-Open the `support_case` flow's Datasets tab and pick `support_case_cases` from the picker — it has
-three cases: `strip_flicker_credit`, `bulb_app_offline_advice`, and `lamp_crushed_box_reship`. Search
-for `flicker` and only `strip_flicker_credit` remains; open it and the case table shows its full input,
-including the photo and invoice it attached.
+Open the `support_case` flow's Datasets tab and pick `support_case_cases` from the picker. It has twelve
+cases, among them `strip_flicker_credit`, `bulb_app_offline_advice` and `lamp_crushed_box_reship`. Search
+for `flicker` and only `strip_flicker_credit` and `candle_flicker_credit` remain. Open the first, and the
+case table shows its full input, including the photo and invoice it attached.
 
-Check `strip_flicker_credit` and `lamp_crushed_box_reship`, leave the range at the full flow, and click
-**Run 2 selected cases**. Studio starts a batch and switches to it: the progress line climbs from
-`0 completed · 0 failed · 2 total` toward `2 completed · 0 failed · 2 total`, and the results table
-below fills in a status and a run link for each case as it finishes.
+Leave the range at the full flow and click **Start run**. Studio starts a run of that one case and opens
+it on the Runs screen. To run all of these cases, for two agents, several times, write an experiment that
+selects this dataset and run it as a series.
 
 ## See also
 
 - [The engineering loop](/concepts/engineering-loop/) — why a saved, representative set of cases is
   what makes a fix's Test step mean something.
-- [How to work with evals in Studio](/studio/evals/) — what happens to a batch once it's scored against
-  a baseline.
-- [How to investigate a run](/studio/investigate-a-run/) — where **Start run** and a batch's per-case
-  links take you next, including the same range picker used here.
+- [How to read research in Studio](/studio/research/): the experiments that run these cases as a
+  series, with a verdict.
+- [How to investigate a run](/studio/investigate-a-run/): where **Start run** takes you next, including
+  the same range picker used here.

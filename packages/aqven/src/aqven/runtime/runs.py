@@ -9,7 +9,7 @@ from aqven.runtime.human import HumanWait, ScriptedAnswer
 from aqven.runtime.options import RunContext
 from aqven.runtime.values import ValueRef
 from aqven.runtime.vocabulary import ForkBase, LineageRelation, PromptSource, RunMode, RunStatus, SpecOrigin
-from aqven.spec import AgentId, FlowId, Limits, NodeId
+from aqven.spec import AgentId, ArmId, ExperimentId, FlowId, Limits, NodeId
 
 WORKING_COPY = "working"
 
@@ -90,6 +90,9 @@ class RunSummary(ResourceModel):
     selected_nodes: tuple[NodeId, ...] | None = None
     start_node: NodeId | None = None
     end_node: NodeId | None = None
+    series_id: str | None = None
+    experiment_id: ExperimentId | None = None
+    arm_id: ArmId | None = None
 
 
 class SpecVersionInfo(ResourceModel):

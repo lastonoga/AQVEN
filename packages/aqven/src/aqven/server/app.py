@@ -13,23 +13,24 @@ from starlette.types import ASGIApp
 from aqven.app.access import AccessGuard, AccessPolicy, local_access_policy, new_access_token
 from aqven.ports.engine import EngineFacade
 from aqven.ports.settings import SettingsStore
+from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles, DirectoryBlobStore
 from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
 from aqven.server.routes.blobs import build_blobs_router
-from aqven.server.routes.evals import build_evals_router
+from aqven.server.routes.datasets import build_datasets_router
 from aqven.server.routes.events import build_events_router
 from aqven.server.routes.fallback import build_fallback_router
 from aqven.server.routes.flows import build_flows_router
 from aqven.server.routes.meta import build_meta_router
 from aqven.server.routes.project import build_project_router
+from aqven.server.routes.research import build_research_router
 from aqven.server.routes.runs import build_runs_router
 from aqven.server.routes.schemas import build_schemas_router
 from aqven.server.routes.settings import build_settings_router
 from aqven.server.security import QueryTokenScrubber
 from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, watch_project
 from aqven.server.static import StudioBundle, default_studio, mount_studio
-from aqven.server.views.services import StudioServices
 from aqven.server.workspace import ProjectCompiler, ProjectWorkspace
 
 API_TITLE: Final = "AQVEN Studio API"
@@ -129,7 +130,7 @@ def build_lifespan(
     return lifespan
 
 
-def core_routers(context: ServerContext, services: StudioServices | None = None) -> tuple[APIRouter, ...]:
+def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
     return (
         build_meta_router(context),
         build_project_router(context),
@@ -139,7 +140,8 @@ def core_routers(context: ServerContext, services: StudioServices | None = None)
         build_schemas_router(),
         build_blobs_router(context),
         build_settings_router(context),
-        build_evals_router(context, services),
+        build_datasets_router(context),
+        build_research_router(context),
     )
 
 
@@ -153,7 +155,7 @@ def create_app(
     extensions: ServerExtensions | None = None,
     blobs: BlobFiles | None = None,
     workspace: ProjectWorkspace | None = None,
-    services: StudioServices | None = None,
+    series: SeriesJobs | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
@@ -167,6 +169,7 @@ def create_app(
         environ=chosen.environ,
         engine_version=engine_version(),
         mcp_url=chosen.mcp_url,
+        series=series,
     )
     app = FastAPI(
         title=API_TITLE,
@@ -178,7 +181,7 @@ def create_app(
     )
     setattr(app.state, CONTEXT_ATTRIBUTE, context)
     install_error_handlers(app)
-    included = (*core_routers(context, services), *extra_routers) if chosen.serve_api else tuple(extra_routers)
+    included = (*core_routers(context), *extra_routers) if chosen.serve_api else tuple(extra_routers)
     for router in included:
         app.include_router(router)
     app.include_router(build_fallback_router())

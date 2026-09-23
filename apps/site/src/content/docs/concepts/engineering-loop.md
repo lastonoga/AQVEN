@@ -40,23 +40,30 @@ step name that could mean any of several different runs inside the same executio
 Once you know what to change, the harder question is whether the change is actually safe. Fixing the
 one example you happened to see doesn't answer that — it only proves you fixed that one case.
 
-That's what a saved, representative set of cases is for. Instead of testing a fix against a single
-anecdote, you run it against every case you've already decided matters, and compare the whole batch to
-a baseline you've already shipped. A green result means every metric you care about — accuracy,
-whether the answer stays grounded in real sources, cost, whatever you've set as a gate — held up or
-improved against that baseline, checked with a real statistical test rather than eyeballed. That's the
-difference between "I fixed the one case I saw" and "I tested this against everything I said mattered,"
-and it's what tells you the fix is safe to ship, not just that it fixed one specific case.
+That's what a saved, representative set of cases is for, and an experiment that states the question
+before you look at any result. Which flow or range of nodes runs, on which cases, with which checks,
+and what counts as good: "better than the current agent by at least 0.05", or "not worse by more than
+0.05, and no more than 20% dearer per passing answer". A series then runs every case for every variant,
+several times, and reports a verdict from a 95% interval against the margin you wrote down: confirmed,
+refuted, or inconclusive when there isn't enough data to tell. Nothing is eyeballed, and the margin
+can't be moved after you've seen the numbers.
+
+The cases are split in half. The working half is for searching: run it as often as you like, and it
+gives you signals, not answers. The held-out half is for deciding: one series when the change is done.
+That series writes a finding into the project, and the project's `FINDINGS.md` collects every finding so
+far. That's the difference between "I fixed the one case I saw" and "I tested this against everything I
+said mattered," and it's what tells you the fix is safe to ship.
 
 ## How this shapes what you do
 
 This loop isn't abstract. [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/)
 walks through it by hand, on AQVEN's own example project: opening the graph to understand it, tracing a
-wrong answer to the one step responsible even though it's buried inside a loop, and checking a green
-gate before shipping the fix.
+wrong answer to the one step responsible even though it's buried inside a loop, and checking the fix
+with a series before shipping it.
 
-Building and running the saved cases and comparisons that make the Test step real — datasets and
-evals — has its own how-to content, coming with [Studio](/studio/).
+The saved cases and the series that make the Test step real have their own how-to pages:
+[datasets in Studio](/studio/datasets/), [research in Studio](/studio/research/), and
+[experiments and series as an agent](/mcp-cli/experiments-and-series/).
 
 ## See also
 

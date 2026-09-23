@@ -38,14 +38,11 @@ node (6)
   intake.reply   flows/intake/nodes/reply.node.yaml
   intake.stamp   flows/intake/nodes/stamp.node.yaml
 dataset (1)
-  notes  evals/intake/notes.yaml
-eval (1)
-  reply_quality  evals/intake/reply_quality.yaml"""
+  notes  datasets/notes.yaml"""
 
 REPLY_REFS: Final = """inference:reply
 definition: flows/intake/nodes/reply.inference.yaml
-referenced by (4):
-  eval:reply_quality  evals/intake/reply_quality.yaml:4 inference
+referenced by (3):
   node:audit.recheck  flows/audit/nodes/recheck.node.yaml:5 inference
   node:intake.again   flows/intake/nodes/again.node.yaml:5 inference
   node:intake.reply   flows/intake/nodes/reply.node.yaml inference (by convention)
