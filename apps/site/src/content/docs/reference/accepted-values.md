@@ -15,14 +15,6 @@ These values come from enum classes in `aqven.spec.names`.
 | `write` |
 | `external` |
 
-## GateAction
-
-| Value |
-| --- |
-| `release` |
-| `require_approval` |
-| `reject` |
-
 ## LoopStopReason
 
 | Value |
@@ -166,7 +158,6 @@ These values come from enum classes in `aqven.spec.names`.
 | `Flow` |
 | `Node` |
 | `Dataset` |
-| `Eval` |
 | `Experiment` |
 | `Inference` |
 | `Agent` |

@@ -10,11 +10,6 @@ The project MCP operations below are discovered from the AQVEN package source. E
 | Tool |
 | --- |
 | `aqven_check` |
-| `dataset_batch_get` |
-| `dataset_batch_start` |
-| `eval_gate` |
-| `eval_run_get` |
-| `eval_run_start` |
 | `flow_patch` |
 | `prompt_preview` |
 | `pyright_check` |

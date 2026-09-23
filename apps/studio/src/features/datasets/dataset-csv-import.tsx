@@ -184,13 +184,13 @@ export function DatasetCsvImport({ flowId, onClose }: { readonly flowId: FlowId;
 
   useEffect(() => {
     let active = true
-    void api.evals.datasetCsvTemplate(flowId).then((result) => {
+    void api.datasets.csvTemplate(flowId).then((result) => {
       if (active) setTemplate(result)
     }).catch((reason: unknown) => {
       if (active) setTemplateError(errorText(reason))
     })
     return () => { active = false }
-  }, [api.evals, flowId])
+  }, [api.datasets, flowId])
 
   const check = async (): Promise<void> => {
     if (!inputReady || busy !== null) return
@@ -199,7 +199,7 @@ export function DatasetCsvImport({ flowId, onClose }: { readonly flowId: FlowId;
     setPreview(null)
     const revision = inputRevision.current
     try {
-      const result = await api.evals.previewDatasetCsv(flowId, id, file)
+      const result = await api.datasets.previewCsv(flowId, id, file)
       if (inputRevision.current === revision) setPreview(result)
     } catch (reason) {
       if (inputRevision.current === revision) setError(errorText(reason))
@@ -213,11 +213,11 @@ export function DatasetCsvImport({ flowId, onClose }: { readonly flowId: FlowId;
     setBusy("creating")
     setError(null)
     try {
-      const imported = await api.evals.importDatasetCsv(flowId, id, file)
+      const imported = await api.datasets.importCsv(flowId, id, file)
       setCreated(imported)
       const [saved, names] = await Promise.all([
-        api.evals.dataset(imported.dataset_id),
-        api.evals.datasetCaseNames(imported.dataset_id, null, null),
+        api.datasets.detail(imported.dataset_id),
+        api.datasets.caseNames(imported.dataset_id, null, null),
       ])
       if (saved.cases !== preview.row_count || names.length !== preview.row_count) {
         throw new Error(t("csvSavedMismatch", { expected: preview.row_count, actual: names.length }))

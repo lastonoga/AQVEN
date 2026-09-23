@@ -131,7 +131,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   useEffect(() => {
     if (!open || datasetId.length === 0) return
     let active = true
-    void api.evals.dataset(datasetId).then((summary) => {
+    void api.datasets.detail(datasetId).then((summary) => {
       if (active) setData({ summary })
     }).catch(() => {
       if (active) setError(true)
@@ -142,7 +142,7 @@ export function RunDataset({ snapshot, blobs }: { readonly snapshot: ApiRunSnaps
   useEffect(() => {
     if (!open || datasetId.length === 0 || caseName.length === 0) return
     let active = true
-    void api.evals.datasetCase(datasetId, caseName).then(
+    void api.datasets.caseDetail(datasetId, caseName).then(
       (item) => { if (active) setSelectedCase(item) },
       () => { if (active) setSelectedCaseError(true) },
     )

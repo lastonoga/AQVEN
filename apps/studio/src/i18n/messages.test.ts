@@ -18,8 +18,6 @@ const NAMESPACES = [
   "trace",
   "callSheet",
   "review",
-  "tests",
-  "testDetail",
   "setup",
   "project",
 ]

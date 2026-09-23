@@ -8,7 +8,6 @@ export const ROUTE_PATH = {
   runs: "/flows/$flowId/runs",
   datasets: "/flows/$flowId/datasets",
   review: "/flows/$flowId/review",
-  evals: "/flows/$flowId/evals",
   settings: "/settings",
   setup: "/setup",
 } as const
@@ -23,6 +22,5 @@ export const nodesRouteApi = getRouteApi(ROUTE_ID.nodes)
 export const runsRouteApi = getRouteApi(ROUTE_ID.runs)
 export const datasetsRouteApi = getRouteApi(ROUTE_ID.datasets)
 export const reviewRouteApi = getRouteApi(ROUTE_ID.review)
-export const evalsRouteApi = getRouteApi(ROUTE_ID.evals)
 export const settingsRouteApi = getRouteApi(ROUTE_ID.settings)
 export const setupRouteApi = getRouteApi(ROUTE_ID.setup)

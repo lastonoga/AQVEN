@@ -1,4 +1,3 @@
-import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
@@ -95,7 +94,7 @@ def test_a_missing_context_key_becomes_a_422_naming_the_key() -> None:
     assert failure.error("run_start").problems == (problem,)
 
 
-def test_dataset_range_preview_and_batch_use_case_output_fixture(
+def test_dataset_range_preview_and_case_run_use_case_output_fixture(
     context_client: TestClient, server_engine: FakeEngine
 ) -> None:
     created = context_client.post(
@@ -131,11 +130,11 @@ def test_dataset_range_preview_and_batch_use_case_output_fixture(
     assert any(item["case_name"] == "missing" and "classify" in item["reference"] for item in route_only["missing"])
 
     rejected = context_client.post(
-        "/api/dataset-batches",
+        "/api/runs",
         json={
             "flow_id": "triage",
-            "dataset_id": "slice_cases",
-            "case_names": ["ready", "missing"],
+            "mode": "dryrun",
+            "dataset_item_id": "slice_cases/missing",
             "start_node": "route",
             "end_node": "route",
         },
@@ -145,28 +144,19 @@ def test_dataset_range_preview_and_batch_use_case_output_fixture(
     assert "$classify.out" in rejected.json()["message"]
 
     started = context_client.post(
-        "/api/dataset-batches",
+        "/api/runs",
         json={
             "flow_id": "triage",
-            "dataset_id": "slice_cases",
-            "case_names": ["ready"],
+            "mode": "dryrun",
+            "dataset_item_id": "slice_cases/ready",
             "start_node": "route",
             "end_node": "route",
-            "mode": "dryrun",
         },
     )
-    assert started.status_code == 202, started.text
-    assert started.json()["start_node"] == "route"
-    assert started.json()["end_node"] == "route"
-    batch = context_client.get(f"/api/dataset-batches/{started.json()['batch_id']}").json()
-    for _ in range(100):
-        if batch["status"] != "running":
-            break
-        time.sleep(0.05)
-        batch = context_client.get(f"/api/dataset-batches/{started.json()['batch_id']}").json()
-    assert batch["status"] == "completed"
+    assert started.status_code == 201, started.text
     assert server_engine.started[-1].node_outputs == {"classify": {"category": "billing"}}
     assert (server_engine.started[-1].start_node, server_engine.started[-1].end_node) == ("route", "route")
+    assert server_engine.started_dataset_items[-1] == "slice_cases/ready"
 
     full = context_client.post(
         "/api/runs",

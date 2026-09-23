@@ -28,7 +28,6 @@ from aqven.console.command import (
     add_format_argument,
     not_implemented,
 )
-from aqven.console.evals import EvalCommand
 from aqven.console.formats import EventFormat
 from aqven.console.models import ModelsCommand
 from aqven.console.new import NewCommand
@@ -317,10 +316,6 @@ def _build_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--out", metavar="DIR")
 
 
-def _eval_options(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--eval", required=True, metavar="EVAL_ID")
-
-
 DEV_HELP: Final = "start the project server, watch project files and open Studio in the browser"
 
 COMMANDS: Final[Mapping[str, Command]] = {
@@ -341,8 +336,6 @@ COMMANDS: Final[Mapping[str, Command]] = {
     "models": ModelsCommand(),
     "secrets": SecretsCommand(),
     "prompt": PromptCommand(),
-    "eval": EvalCommand(),
-    "optimize": PendingCommand("optimize", "optimize a prompt with GEPA", _eval_options),
 }
 
 

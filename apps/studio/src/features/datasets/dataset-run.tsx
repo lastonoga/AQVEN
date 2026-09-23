@@ -16,7 +16,6 @@ type DatasetRunProps = {
   readonly flowId: FlowId
   readonly dataset: ApiDatasetSummary
   readonly caseItem: ApiDatasetCase
-  readonly selectedCases: readonly string[]
   readonly order: readonly string[]
 }
 
@@ -30,16 +29,14 @@ const missingText = (missing: readonly RangeMissing[]): string | null => {
   return missing.map((item) => `${item.case_name}: ${item.reference}${item.reason ? ` — ${item.reason}` : ""}`).join("; ")
 }
 
-function useRangePreview(flowId: FlowId, datasetId: string, caseNames: readonly string[] | null): PreviewResult | null {
+function useRangePreview(flowId: FlowId, datasetId: string, caseName: string): PreviewResult | null {
   const { api } = datasetsRouteApi.useRouteContext()
-  const namesKey = caseNames === null ? null : caseNames.join("\u0000")
-  const key = namesKey === null ? null : [flowId, datasetId, namesKey].join("\u0001")
+  const key = [flowId, datasetId, caseName].join("\u0001")
   const [result, setResult] = useState<PreviewResult | null>(null)
 
   useEffect(() => {
-    if (key === null || namesKey === null) return
     let active = true
-    void api.flow.datasetRange(flowId, datasetId, namesKey.split("\u0000")).then(
+    void api.flow.datasetRange(flowId, datasetId, [caseName]).then(
       (preview) => {
         if (active) setResult({ key, preview, error: null })
       },
@@ -48,64 +45,45 @@ function useRangePreview(flowId: FlowId, datasetId: string, caseNames: readonly 
       },
     )
     return () => { active = false }
-  }, [api, flowId, datasetId, key, namesKey])
+  }, [api, flowId, datasetId, caseName, key])
 
-  return key !== null && result?.key === key ? result : null
+  return result?.key === key ? result : null
 }
 
-export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: DatasetRunProps) {
+export function DatasetRun({ flowId, dataset, caseItem, order }: DatasetRunProps) {
   const { api } = datasetsRouteApi.useRouteContext()
   const params = datasetsRouteApi.useParams()
   const navigate = useNavigate()
   const t = useTranslations("datasets")
   const [range, setRange] = useState<readonly [number, number]>(() => [0, Math.max(0, order.length - 1)])
-  const [pending, setPending] = useState<"case" | "batch" | null>(null)
+  const [pending, setPending] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
-  const caseResult = useRangePreview(flowId, dataset.dataset_id, [caseItem.name])
-  const batchResult = useRangePreview(flowId, dataset.dataset_id, selectedCases.length > 0 ? selectedCases : null)
-  const activeResult = selectedCases.length > 0 ? batchResult : caseResult
-  const preview = activeResult?.preview ?? null
+  const result = useRangePreview(flowId, dataset.dataset_id, caseItem.name)
+  const preview = result?.preview ?? null
   const startNode = order[range[0]]
   const endNode = order[range[1]]
   const activeRange = rangeAt(preview, startNode, endNode)
-  const caseRange = rangeAt(caseResult?.preview ?? null, startNode, endNode)
-  const batchRange = rangeAt(batchResult?.preview ?? null, startNode, endNode)
   const markedNodes = order.slice(range[0], range[1] + 1)
 
-  const start = async (kind: "case" | "batch"): Promise<void> => {
-    if (pending !== null || startNode === undefined || endNode === undefined) return
-    if (kind === "case" && caseRange?.available !== true) return
-    if (kind === "batch" && (selectedCases.length === 0 || batchRange?.available !== true)) return
-    setPending(kind)
+  const start = async (): Promise<void> => {
+    if (pending || startNode === undefined || endNode === undefined || activeRange?.available !== true) return
+    setPending(true)
     setFailure(null)
     try {
-      if (kind === "batch") {
-        const batch = await api.evals.startDatasetBatch({
-          flow_id: flowId,
-          dataset_id: dataset.dataset_id,
-          case_names: [...selectedCases],
-          selected_nodes: null,
-          start_node: startNode,
-          end_node: endNode,
-          mode: "live",
-        })
-        void navigate({ to: ROUTE_PATH.datasets, params, search: { dataset: dataset.dataset_id, batch: batch.batch_id }, resetScroll: false })
-      } else {
-        const started = await api.run.start({
-          flow_id: flowId,
-          at: "working",
-          mode: "live",
-          dataset_item_id: `${dataset.dataset_id}/${caseItem.name}`,
-          selected_nodes: null,
-          start_node: startNode,
-          end_node: endNode,
-        })
-        void navigate({ to: ROUTE_PATH.runs, params, search: { run: ids.runId(started.run_id) } })
-      }
+      const started = await api.run.start({
+        flow_id: flowId,
+        at: "working",
+        mode: "live",
+        dataset_item_id: `${dataset.dataset_id}/${caseItem.name}`,
+        selected_nodes: null,
+        start_node: startNode,
+        end_node: endNode,
+      })
+      void navigate({ to: ROUTE_PATH.runs, params, search: { run: ids.runId(started.run_id) } })
     } catch (reason) {
       setFailure(reason instanceof Error ? reason.message : t("startFailed"))
     } finally {
-      setPending(null)
+      setPending(false)
     }
   }
 
@@ -115,7 +93,7 @@ export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: 
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <Text as="div" role="label">{t("rangeLabel")}</Text>
           <Text as="p" role="hint" tone="neutral">
-            {selectedCases.length > 0 ? t("rangeForCases", { count: selectedCases.length }) : t("rangeForCase", { name: caseItem.name })}
+            {t("rangeForCase", { name: caseItem.name })}
           </Text>
         </div>
         {order.length === 0 ? <Text as="p" role="hint" tone="neutral">{t("noStages")}</Text> : <StageRangeTimeline
@@ -144,23 +122,17 @@ export function DatasetRun({ flowId, dataset, caseItem, selectedCases, order }: 
         <Text as="p" role="hint" tone="neutral">{t("rangeLegend")}</Text>
         <div className="space-y-1.5">
           <Text as="p" role="meta" weight="medium">{startNode === undefined || endNode === undefined ? t("noStages") : t("selectedRange", { start: startNode, end: endNode, count: markedNodes.length })}</Text>
-          {preview === null ? <Text as="p" role="hint" tone="neutral">{activeResult?.error ?? t("loadingRange")}</Text> : activeRange?.available !== true ? (
+          {preview === null ? <Text as="p" role="hint" tone="neutral">{result?.error ?? t("loadingRange")}</Text> : activeRange?.available !== true ? (
             <Text as="p" role="hint" tone="warning">{t("rangeUnavailable", { detail: missingText(activeRange?.missing ?? []) ?? t("rangeMissingGeneric") })}</Text>
           ) : (
             <Text as="p" role="hint" tone="neutral">{t("rangeOnly")}</Text>
           )}
-          {selectedCases.length > 0 && caseRange?.available === false ? (
-            <Text as="p" role="hint" tone="warning">{t("caseUnavailable", { detail: missingText(caseRange.missing) ?? t("rangeMissingGeneric") })}</Text>
-          ) : null}
         </div>
         {failure === null ? null : <Text as="p" role="hint" tone="destructive">{failure}</Text>}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={() => { void start("batch") }} disabled={batchRange?.available !== true || pending !== null || selectedCases.length === 0}>
+          <Button type="button" onClick={() => { void start() }} disabled={activeRange?.available !== true || pending}>
             <Play aria-hidden className="size-3.5" />
-            {pending === "batch" ? t("starting") : t("runSelected", { count: selectedCases.length })}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => { void start("case") }} disabled={caseRange?.available !== true || pending !== null}>
-            {pending === "case" ? t("starting") : t("start")}
+            {pending ? t("starting") : t("start")}
           </Button>
         </div>
       </div>

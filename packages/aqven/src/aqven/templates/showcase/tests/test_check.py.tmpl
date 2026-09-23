@@ -43,7 +43,7 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_POLICY_PARAMS": (f"{JUDGES}/judges.node.yaml", "min_agree: 2", "min_agree: 5"),
     "E_CODE_NOT_FOUND": ("flows/support_case/nodes/tally/tally.node.yaml", 'run: "tally"', 'run: "count_votes"'),
     "E_CODE_REF_UNRESOLVED": (
-        "evals/support_case/reply_quality.yaml",
+        NONINFERIOR,
         'code.support_case:promises_match_resolution"',
         'code.support_case:promises_match_reply"',
     ),
@@ -53,11 +53,7 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
         'type="DeliveryDamage",',
         'type="DeliveryDamage", enum=["crushed_box", "broken_item", "missing_item"],',
     ),
-    "E_UNKNOWN_KEY": (
-        "evals/support_case/reply_cases.yaml",
-        'kind: "Dataset"\n',
-        'kind: "Dataset"\nname: "reply_cases"\n',
-    ),
+    "E_UNKNOWN_KEY": (SUPPORT_CASES, 'kind: "Dataset"\n', 'kind: "Dataset"\nname: "support_case_cases"\n'),
     "E_AGENT_UNKNOWN": (NONINFERIOR, 'polish__revise: "mistral"', 'polish__revise: "claude"'),
     "E_VARIANT_INVALID": (NONINFERIOR, 'polish__revise: "mistral"', 'prepare: "mistral"'),
     "E_ARM_UNKNOWN": (INTENT_SPLIT, 'arm: "two_step"', 'arm: "three_step"'),
@@ -81,7 +77,6 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
 PENDING_COMMANDS: Final = (
     ("plan",),
     ("build",),
-    ("optimize", "--eval", "reply_quality"),
 )
 
 

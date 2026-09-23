@@ -100,11 +100,6 @@ def test_local_server_defaults_to_no_auth_with_explicit_token_opt_in(
     assert protected_options.require_auth is True
 
 
-def test_optimize_stays_a_stub_while_eval_needs_a_project(tmp_path: Path) -> None:
-    assert main(["optimize", str(tmp_path), "--eval", "quality"]) == 2
-    assert main(["eval", str(tmp_path), "--eval", "quality"]) == 1
-
-
 def test_dev_opens_studio_in_the_browser_and_studio_is_its_alias() -> None:
     dev = COMMANDS["dev"]
     studio = COMMANDS["studio"]

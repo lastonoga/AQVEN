@@ -11,11 +11,9 @@ import review from "./messages/en/review.json"
 import runs from "./messages/en/runs.json"
 import setup from "./messages/en/setup.json"
 import shell from "./messages/en/shell.json"
-import testDetail from "./messages/en/testDetail.json"
 import trace from "./messages/en/trace.json"
-import tests from "./messages/en/tests.json"
 
-const en = { common, domain, shell, chat, flow, nodes, datasets, runs, trace, callSheet, review, tests, testDetail, setup, project }
+const en = { common, domain, shell, chat, flow, nodes, datasets, runs, trace, callSheet, review, setup, project }
 
 export type Messages = typeof en
 

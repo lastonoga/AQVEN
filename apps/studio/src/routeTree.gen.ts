@@ -17,7 +17,6 @@ import { Route as FlowsFlowIdRouteRouteImport } from './routes/flows/$flowId/rou
 import { Route as FlowsFlowIdIndexRouteImport } from './routes/flows/$flowId/index'
 import { Route as FlowsFlowIdCanvasRouteImport } from './routes/flows/$flowId/canvas'
 import { Route as FlowsFlowIdDatasetsRouteImport } from './routes/flows/$flowId/datasets'
-import { Route as FlowsFlowIdEvalsRouteImport } from './routes/flows/$flowId/evals'
 import { Route as FlowsFlowIdNodesRouteImport } from './routes/flows/$flowId/nodes'
 import { Route as FlowsFlowIdReviewRouteImport } from './routes/flows/$flowId/review'
 import { Route as FlowsFlowIdRunsRouteImport } from './routes/flows/$flowId/runs'
@@ -62,11 +61,6 @@ const FlowsFlowIdDatasetsRoute = FlowsFlowIdDatasetsRouteImport.update({
   path: '/datasets',
   getParentRoute: () => FlowsFlowIdRouteRoute,
 } as any)
-const FlowsFlowIdEvalsRoute = FlowsFlowIdEvalsRouteImport.update({
-  id: '/evals',
-  path: '/evals',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
-} as any)
 const FlowsFlowIdNodesRoute = FlowsFlowIdNodesRouteImport.update({
   id: '/nodes',
   path: '/nodes',
@@ -91,7 +85,6 @@ export interface FileRoutesByFullPath {
   '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
   '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
   '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
   '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
   '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
   '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
@@ -104,7 +97,6 @@ export interface FileRoutesByTo {
   '/setup': typeof SetupRoute
   '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
   '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
   '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
   '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
   '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
@@ -119,7 +111,6 @@ export interface FileRoutesById {
   '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
   '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
   '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
   '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
   '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
   '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
@@ -135,7 +126,6 @@ export interface FileRouteTypes {
     | '/flows/$flowId'
     | '/flows/$flowId/canvas'
     | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
     | '/flows/$flowId/nodes'
     | '/flows/$flowId/review'
     | '/flows/$flowId/runs'
@@ -148,7 +138,6 @@ export interface FileRouteTypes {
     | '/setup'
     | '/flows/$flowId/canvas'
     | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
     | '/flows/$flowId/nodes'
     | '/flows/$flowId/review'
     | '/flows/$flowId/runs'
@@ -162,7 +151,6 @@ export interface FileRouteTypes {
     | '/flows/$flowId'
     | '/flows/$flowId/canvas'
     | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
     | '/flows/$flowId/nodes'
     | '/flows/$flowId/review'
     | '/flows/$flowId/runs'
@@ -235,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlowsFlowIdDatasetsRouteImport
       parentRoute: typeof FlowsFlowIdRouteRoute
     }
-    '/flows/$flowId/evals': {
-      id: '/flows/$flowId/evals'
-      path: '/evals'
-      fullPath: '/flows/$flowId/evals'
-      preLoaderRoute: typeof FlowsFlowIdEvalsRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
-    }
     '/flows/$flowId/nodes': {
       id: '/flows/$flowId/nodes'
       path: '/nodes'
@@ -269,7 +250,6 @@ declare module '@tanstack/react-router' {
 interface FlowsFlowIdRouteRouteChildren {
   FlowsFlowIdCanvasRoute: typeof FlowsFlowIdCanvasRoute
   FlowsFlowIdDatasetsRoute: typeof FlowsFlowIdDatasetsRoute
-  FlowsFlowIdEvalsRoute: typeof FlowsFlowIdEvalsRoute
   FlowsFlowIdNodesRoute: typeof FlowsFlowIdNodesRoute
   FlowsFlowIdReviewRoute: typeof FlowsFlowIdReviewRoute
   FlowsFlowIdRunsRoute: typeof FlowsFlowIdRunsRoute
@@ -279,7 +259,6 @@ interface FlowsFlowIdRouteRouteChildren {
 const FlowsFlowIdRouteRouteChildren: FlowsFlowIdRouteRouteChildren = {
   FlowsFlowIdCanvasRoute: FlowsFlowIdCanvasRoute,
   FlowsFlowIdDatasetsRoute: FlowsFlowIdDatasetsRoute,
-  FlowsFlowIdEvalsRoute: FlowsFlowIdEvalsRoute,
   FlowsFlowIdNodesRoute: FlowsFlowIdNodesRoute,
   FlowsFlowIdReviewRoute: FlowsFlowIdReviewRoute,
   FlowsFlowIdRunsRoute: FlowsFlowIdRunsRoute,

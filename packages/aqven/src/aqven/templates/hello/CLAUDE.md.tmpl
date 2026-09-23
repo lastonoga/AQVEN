@@ -10,7 +10,8 @@ fetches the project for you, on purpose.
 | Check after every edit | `aqven_check`; for code also `pyright_check` and `pytest_run` |
 | See what a prompt really sends | `prompt_preview` |
 | Run and watch | `run_start`, then `run_get` and `run_events`; also `run_list`, `run_get_node`, `run_resume`, `run_fork`, `run_cancel` |
-| Datasets and evals | `dataset_batch_start`, `dataset_batch_get`, `eval_run_start`, `eval_run_get`, `eval_gate` |
+| Try one dataset case | `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"` |
+| Experiments | no tool yet: write `experiments/<id>/experiment.yaml` and validate it with `aqven_check`; series arrive with the next engine step |
 
 `flow_patch` takes `expects[{path, file_hash}]`: `"sha256-"` plus the sha256 of the current bytes of every file the
 operations touch. Compute it yourself from the file you just read.

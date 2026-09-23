@@ -24,7 +24,6 @@ type RenameKind = Literal[
     "type",
     "prompt",
     "dataset",
-    "eval",
     "field",
     "inference",
     "agent",

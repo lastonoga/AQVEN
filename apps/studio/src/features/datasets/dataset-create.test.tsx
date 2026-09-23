@@ -19,7 +19,6 @@ describe("CreateDataset", () => {
         file_hash: "sha256-test",
         cases: 1,
         splits: {},
-        used_by: [],
       }, { status: 201 })
     }))
 

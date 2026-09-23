@@ -58,38 +58,6 @@ describe("DatasetRun", () => {
     expect(started).toMatchObject({ start_node: "triage", end_node: "finalize", selected_nodes: null })
   })
 
-  it("checks batch availability against every selected case without disabling a valid single-case run", async () => {
-    let batchStarted = false
-    server.use(
-      http.post(`${API_BASE}/flows/:flowId/dataset-range`, async ({ request }) => {
-        const body: unknown = await request.json()
-        const caseNames = typeof body === "object" && body !== null && "case_names" in body && Array.isArray(body.case_names)
-          ? body.case_names.filter((name): name is string => typeof name === "string") : []
-        return HttpResponse.json(rangePreview(caseNames))
-      }),
-      http.post(`${API_BASE}/dataset-batches`, () => {
-        batchStarted = true
-        return HttpResponse.json({}, { status: 202 })
-      }),
-    )
-
-    await renderRoute("/flows/support_case/datasets?dataset=support_case_cases&case=bulb_app_offline_advice")
-    const start = await screen.findByRole("slider", { name: "Start node" })
-    await waitFor(() => { expect(screen.getByRole("button", { name: "Start run" })).not.toHaveProperty("disabled", true) })
-    fireEvent.keyDown(start, { key: "ArrowRight" })
-    await waitFor(() => { expect(start.getAttribute("aria-valuetext")).toBe("triage") })
-    const cases = screen.getByRole("table", { name: "Cases" })
-    fireEvent.click(within(cases).getByRole("checkbox", { name: "Select bulb_app_offline_advice" }))
-    fireEvent.click(within(cases).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
-
-    const batch = await screen.findByRole("button", { name: "Run 2 selected cases" })
-    await waitFor(() => { expect(batch).toHaveProperty("disabled", true) })
-    expect(screen.getByRole("button", { name: "Start run" })).not.toHaveProperty("disabled", true)
-    expect(screen.getByText(/No saved prepare output/u)).toBeTruthy()
-    fireEvent.click(batch)
-    expect(batchStarted).toBe(false)
-  })
-
   it("reaches a single middle stage even when every intermediate range is unavailable", async () => {
     server.use(http.post(`${API_BASE}/flows/:flowId/dataset-range`, () => HttpResponse.json({
       order,

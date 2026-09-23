@@ -3,7 +3,6 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from aqven.spec.common import SpecModel
-from aqven.spec.evals import ScorerSpec
 from aqven.spec.names import (
     NAME_PATTERN,
     AgentId,
@@ -12,9 +11,11 @@ from aqven.spec.names import (
     ExperimentId,
     FlowId,
     MetricDirection,
+    MetricKind,
     NodeId,
     VariantId,
 )
+from aqven.spec.policy import EvaluatorRef
 
 MAX_REPEATS = 20
 
@@ -65,7 +66,14 @@ class VariantSpec(SpecModel):
     agents: dict[NodeId, AgentId] | None = None
 
 
-class ExperimentCheck(ScorerSpec):
+class CheckMetric(SpecModel):
+    """The metric a check produces: ``id`` names it in questions, ``kind`` says how its values read."""
+
+    id: str
+    kind: MetricKind
+
+
+class ExperimentCheck(EvaluatorRef, CheckMetric):
     """A detector scored on every attempt: a built-in, a ``module:function`` or a judge inference with its agent.
 
     ``validated_by`` names the experiment that measured this judge on planted defects; a judge without it

@@ -31,7 +31,7 @@ from aqven.spec import (
     CodeNodeSpec,
     DynamicLimits,
     EscalateOnTimeout,
-    EvalSpec,
+    ExperimentSpec,
     FieldDecl,
     FieldSpec,
     FieldSpecTypeIssue,
@@ -748,37 +748,26 @@ def test_other_documents_validate() -> None:
     )
     assert isinstance(panel, FlowSpec)
     assert len(panel.requires or ()) == 3
-    evaluation = SPEC_MODEL_BY_KIND[SpecKind.EVAL].validate_python(
+    experiment = SPEC_MODEL_BY_KIND[SpecKind.EXPERIMENT].validate_python(
         document(
-            "Eval",
-            inference="write_reply",
-            agent="gpt",
-            dataset="write_reply",
-            scorers=[
+            "Experiment",
+            subject={"flow": "support_case"},
+            cases={"dataset": "write_reply"},
+            variants=[{"id": "baseline"}],
+            checks=[
                 {"id": "cost", "kind": "continuous", "use": "cost_usd"},
                 {"id": "groundedness", "kind": "ordinal", "inference": "judge_groundedness", "agent": "deepseek"},
                 {"id": "citations", "kind": "binary", "run": "lumen.code.evaluators:citations_resolve"},
             ],
-            optimization={
-                "engine": "gepa",
-                "objective": "groundedness",
-                "train_split": "train",
-                "dev_split": "dev",
-                "reflection_agent": "claude",
-                "max_metric_calls": 400,
-                "max_repairs": 1,
-                "stop_score": 0.92,
-            },
+            question={"kind": "look"},
         )
     )
-    assert isinstance(evaluation, EvalSpec)
-    assert [tuple(scorer.model_dump(by_alias=True, exclude_none=True)) for scorer in evaluation.scorers] == [
+    assert isinstance(experiment, ExperimentSpec)
+    assert [tuple(check.model_dump(by_alias=True, exclude_none=True)) for check in experiment.checks or ()] == [
         ("id", "kind", "use"),
         ("id", "kind", "inference", "agent"),
         ("id", "kind", "run"),
     ]
-    assert evaluation.optimization is not None
-    assert evaluation.optimization.limits is None
 
 
 def test_model_strings_parse_into_provider_and_name() -> None:

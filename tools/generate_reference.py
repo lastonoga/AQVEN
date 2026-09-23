@@ -41,7 +41,7 @@ GROUPS = {
     "agents": ("Agent specification", "aqven.spec.agent"),
     "tools": ("Tool specification", "aqven.spec.tool"),
     "types": ("Type specifications", "aqven.spec.types"),
-    "evaluations": ("Datasets and evaluations", "aqven.spec.evals"),
+    "datasets": ("Datasets", "aqven.spec.datasets"),
     "experiments": ("Experiments", "aqven.spec.experiments"),
     "policies": ("Policies and limits", "aqven.spec.policy"),
     "common": ("Common limits and constraints", "aqven.spec.common"),

@@ -97,8 +97,6 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_FLOW_RECURSION` | `error` | — |
 | `E_MCP_SERVER_UNKNOWN` | `error` | — |
 | `E_DATASET_UNKNOWN` | `error` | — |
-| `E_GATE_POLICY` | `error` | — |
-| `E_OPTIMIZATION_TARGET` | `error` | — |
 | `E_PROVIDER_EXTRA_MISSING` | `error` | model {model} needs provider {provider}, which is not installed |
 | `E_PROVIDER_NO_STREAMING` | `error` | model {model}: provider {provider} does not support streaming, and aqven streams every model request |
 | `E_PROVIDER_FACTORY_INVALID` | `error` | provider {provider}: {problem} |

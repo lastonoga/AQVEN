@@ -101,11 +101,11 @@ SITES: Final[Mapping[str, tuple[SpecKind, str, JsonValue, JsonValue]]] = {
         {"run": "@here.functions:start_clip", "wait": {"poll": "poll_clip"}},
         {"run": "shop.tools.functions:start_clip", "wait": {"poll": "@root/tools/clip.py:poll_clip"}},
     ),
-    "eval": (
-        SpecKind.EVAL,
-        "evals/quality.yaml",
-        {"scorers": [{"run": "@intake.evaluators:grounded"}, {"use": "cost_usd"}]},
-        {"scorers": [{"run": "shop.flows.intake.evaluators:grounded"}, {"use": "cost_usd"}]},
+    "experiment": (
+        SpecKind.EXPERIMENT,
+        "experiments/quality/experiment.yaml",
+        {"checks": [{"run": "@intake.evaluators:grounded"}, {"use": "cost_usd"}]},
+        {"checks": [{"run": "shop.flows.intake.evaluators:grounded"}, {"use": "cost_usd"}]},
     ),
     "agent": (
         SpecKind.AGENT,

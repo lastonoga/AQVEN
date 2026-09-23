@@ -4,8 +4,7 @@
     "nodes": "Nodes",
     "datasets": "Datasets",
     "runs": "Runs",
-    "review": "Review",
-    "evals": "Evals"
+    "review": "Review"
   },
   "nodeKind": {
     "llm": "LLM",
