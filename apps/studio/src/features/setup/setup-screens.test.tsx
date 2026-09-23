@@ -141,7 +141,7 @@ describe("Settings", () => {
   it("connects external agents through aqven mcp and upgrades through the package manager", async () => {
     await renderRoute("/settings?section=mcp")
     expect(await screen.findByText(liveProject.mcp_url ?? "")).toBeTruthy()
-    expect(screen.getByText("claude mcp add --scope project aqven -- uv run aqven mcp")).toBeTruthy()
+    expect(screen.getByText(`claude mcp add aqven -- uv run --directory ${liveProject.root} aqven mcp`)).toBeTruthy()
     await renderRoute("/settings?section=updates")
     expect(await screen.findByText("uv lock --upgrade-package aqven && uv sync")).toBeTruthy()
   })

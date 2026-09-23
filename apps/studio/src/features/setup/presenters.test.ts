@@ -33,10 +33,19 @@ describe("setup presenters", () => {
 
   it("connects external agents through aqven mcp in the project environment", () => {
     const commands = mcpCommands("/Users/you/Projects/lumen")
-    expect(commands.claudeCode).toBe("claude mcp add --scope project aqven -- uv run aqven mcp")
+    expect(commands.claudeCode).toBe("claude mcp add aqven -- uv run --directory /Users/you/Projects/lumen aqven mcp")
     expect(JSON.parse(commands.stdio)).toEqual({
       mcpServers: { aqven: { command: "uv", args: ["run", "--directory", "/Users/you/Projects/lumen", "aqven", "mcp"] } },
     })
+  })
+
+  it("quotes a project path the shell would otherwise split", () => {
+    expect(mcpCommands("/Users/you/My Projects/lumen").claudeCode).toBe(
+      "claude mcp add aqven -- uv run --directory '/Users/you/My Projects/lumen' aqven mcp",
+    )
+    expect(mcpCommands("/Users/you/it's/lumen").claudeCode).toBe(
+      "claude mcp add aqven -- uv run --directory '/Users/you/it'\\''s/lumen' aqven mcp",
+    )
   })
 
   it("upgrades the engine through the package manager of the project", () => {
