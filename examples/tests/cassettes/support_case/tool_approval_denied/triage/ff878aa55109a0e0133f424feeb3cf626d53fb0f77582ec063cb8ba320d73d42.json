@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-ff878aa55109a0e0133f424feeb3cf626d53fb0f77582ec063cb8ba320d73d42",
+  "request_key": "sha256-5f940841ce9dcc04cc374139c6126101ddac0aefaf99d791228d725c8cd531c3",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "triage",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_1nCfiXiDJJA3y7QDC4ff",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_1nCfiXiDJJA3y7QDC4ff",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"observations\":[{\"key\":\"package_damaged\",\"value\":\"The box arrived dented.\"},{\"key\":\"flicker\",\"value\":\"The strip has been flickering near the controller for three days.\"},{\"value\":\"The controller is hot to the touch after half an hour of use.\",\"key\":\"overheating\"}],\"summary\":\"The customer received a Lumen Flow Strip 5 m with a dented box. The light strip has been flickering near the controller for three days, and the controller overheats after half an hour of use. The customer is concerned about leaving it switched on and requests a warranty resolution. The ASIN was not provided.\",\"safety_risk\":true,\"intake_extra\":{\"return_reason\":\"defective\",\"asin\":null},\"category\":\"light_strip\"}",
+        "tool_call_id": "tool_final_result_1nCfiXiDJJA3y7QDC4ff",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"package_damaged\",\"value\":\"The box arrived dented.\"},{\"key\":\"flicker\",\"value\":\"The strip has been flickering near the controller for three days.\"},{\"value\":\"The controller is hot to the touch after half an hour of use.\",\"key\":\"overheating\"}],\"summary\":\"The customer received a Lumen Flow Strip 5 m with a dented box. The light strip has been flickering near the controller for three days, and the controller overheats after half an hour of use. The customer is concerned about leaving it switched on and requests a warranty resolution. The ASIN was not provided.\",\"safety_risk\":true,\"intake_extra\":{\"return_reason\":\"defective\",\"asin\":null},\"category\":\"light_strip\"}",
+        "tool_call_id": "tool_final_result_1nCfiXiDJJA3y7QDC4ff",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"package_damaged\",\"value\":\"The box arrived dented.\"},{\"key\":\"flicker\",\"value\":\"The strip has been flickering near the controller for three days.\"},{\"value\":\"The controller is hot to the touch after half an hour of use.\",\"key\":\"overheating\"}],\"summary\":\"The customer received a Lumen Flow Strip 5 m with a dented box. The light strip has been flickering near the controller for three days, and the controller overheats after half an hour of use. The customer is concerned about leaving it switched on and requests a warranty resolution. The ASIN was not provided.\",\"safety_risk\":true,\"intake_extra\":{\"return_reason\":\"defective\",\"asin\":null},\"category\":\"light_strip\"}",
+        "tool_call_id": "tool_final_result_1nCfiXiDJJA3y7QDC4ff",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1570,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 133,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-23T06:56:10.041915Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:56:07Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0002102,
+      "upstream_inference_cost": 0.0002102,
+      "upstream_inference_prompt_cost": 0.000157,
+      "upstream_inference_completions_cost": 5.32e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146567-XVPe7Stu3bTJ5dTtmN4b",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

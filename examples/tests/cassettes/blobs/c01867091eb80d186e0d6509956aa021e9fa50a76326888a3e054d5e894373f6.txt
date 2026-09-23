@@ -1,0 +1,49 @@
+It returned credit_id and amount 1500? That seems odd. It gave amount 1500. Maybe the system decided to issue €15.00? But we requested 2000. The system might have capped it to 1500? But the policy says up to €20. But maybe the order total is 5990 minor units, so 20 euros is 2000 minor units. But the system gave 1500 minor units (€15). Maybe there's a policy that limits to 15? But we didn't see that. The policy says up to €20. But maybe there's a rule that credit cannot exceed 25% of order total? 25% of 59.90 is 14.975. So 15 is close. So maybe the system applied that. But we need to decide. The policy says up to €20. But the system gave 1500. We need to decide resolution. The policy ID is 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34. We need to output resolution.action: store_credit. resolution.summary: something. resolution.credit.amount_minor: 1500? Or 2000? The tool returned 1500. But the instruction says "Issue store credit with the issue_store_credit tool only within the amount the policy allows, and never above the order total." So we should issue the amount returned by the tool. The tool returned 1500. So we should use that. The policy says up to €20. But the tool gave 1500. So we should trust the tool. So resolution.credit.amount_minor: 1500. currency: eur. The policy ID: 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34.
+
+We need to output resolution: { action: "store_credit", summary: "...", credit: { amount_minor: 1500, currency: "eur" } }.
+
+We need to name the policy. The output fields: resolution: The decision taken, naming the policy. Allowed values of PolicyId: 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34: Store credit under warranty.
+
+So we need to output something like:
+
+{
+  "resolution": {
+    "action": "store_credit",
+    "summary": "Issue store credit of €15.00 under the Store credit under warranty policy.",
+    "policy_id": "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34",
+    "credit": {
+      "amount_minor": 1500,
+      "currency": "eur"
+    }
+  }
+}
+
+But the output format specified: resolution.action, resolution.summary, resolution.credit.amount_minor, resolution.credit.currency. So we need to output those fields. The policy ID is not explicitly required in output? The instruction says "Output fields: - resolution: The decision taken, naming the policy Allowed values of PolicyId: ...". So we need to include policy ID. But the output format earlier says resolution.action, resolution.summary, resolution.credit.amount_minor, resolution.credit.currency. But maybe we need to include policy ID as part of resolution. Let's follow the instruction: "Output fields: - resolution: The decision taken, naming the policy". So resolution should include policy ID. So we can output:
+
+{
+  "resolution": {
+    "action": "store_credit",
+    "summary": "Issue store credit of €15.00 under the Store credit under warranty policy.",
+    "policy_id": "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34",
+    "credit": {
+      "amount_minor": 1500,
+      "currency": "eur"
+    }
+  }
+}
+
+But the earlier output limits: resolution.action: one of "store_credit", "replacement", "reship", "advice". resolution.summary: at most 400 characters. resolution.credit.amount_minor: from 0 to 1000000000. resolution.credit.currency: one of "eur", "usd", "gbp". So we need to output those fields. The policy ID is not part of those fields. But the instruction says "Output fields: - resolution: The decision taken, naming the policy". So maybe resolution is an object containing action, summary, policy_id, credit. But the earlier output limits mention resolution.action, resolution.summary, resolution.credit.amount_minor, resolution.credit.currency. So we need to include those. Let's produce:
+
+{
+  "resolution": {
+    "action": "store_credit",
+    "summary": "Issue store credit of €15.00 under the Store credit under warranty policy.",
+    "policy_id": "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34",
+    "credit": {
+      "amount_minor": 1500,
+      "currency": "eur"
+    }
+  }
+}
+
+That should satisfy.

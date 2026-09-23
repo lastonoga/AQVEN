@@ -1,0 +1,1365 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-445e88b6fd77cca29503fdb6292ae9a56b7140847f68fc5f208fa59669658c68",
+  "request_key": "sha256-de0c80ad415dfa799069cfb316a8e48088259d36ff0cac51431355af234e4581",
+  "model_ref": "openrouter:mistralai/mistral-nemo",
+  "site": {
+    "address": {
+      "node_id": "polish__critique",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "**",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ration",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ale",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**:",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " reply",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " correctly",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " references",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " relevant",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " knowledge",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " base",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " chunks",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " (",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "kb",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_st",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "rip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "0",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "fl",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ck",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " kb",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_ctrl",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "heat",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "0",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "1",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ")",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " provides",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " clear",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " instructions",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customer",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " based",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " on",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " these",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " chunks",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " It",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " also",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " agrees",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " decision",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " contact",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " support",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " further",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " assistance",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " However",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " does",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " address",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customer",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "'s",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " concern",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " about",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " leaving",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " switched",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " on",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " which",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " blocking",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " remark",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".\n\n",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "score",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**:",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "0",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "6",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " (",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "The",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " reply",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mostly",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accurate",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " helpful",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " but",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " misses",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " crucial",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customer",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " concern",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".)\n\n",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "block",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ing",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**:\n",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "Please",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " contact",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " support",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " further",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " assistance",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " does",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " address",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customer",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "'s",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " concern",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " about",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " leaving",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " switched",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " on",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "**rationale**: The reply correctly references the relevant knowledge base chunks (kb_strip0flck, kb_ctrlheat01) and provides clear instructions to the customer based on these chunks. It also agrees with the decision to contact support for further assistance. However, it does not address the customer's concern about leaving the light strip switched on, which is a blocking remark.\n\n**score**: 0.6 (The reply is mostly accurate and helpful, but it misses a crucial customer concern.)\n\n**blocking**:\n- \"Please contact support for further assistance\" does not address the customer's concern about leaving the light strip switched on.",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "**rationale**: The reply correctly references the relevant knowledge base chunks (kb_strip0flck, kb_ctrlheat01) and provides clear instructions to the customer based on these chunks. It also agrees with the decision to contact support for further assistance. However, it does not address the customer's concern about leaving the light strip switched on, which is a blocking remark.\n\n**score**: 0.6 (The reply is mostly accurate and helpful, but it misses a crucial customer concern.)\n\n**blocking**:\n- \"Please contact support for further assistance\" does not address the customer's concern about leaving the light strip switched on.",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 895,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 129,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "mistralai/mistral-nemo",
+    "timestamp": "2026-09-23T06:57:56.610044Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:57:55Z",
+      "downstream_provider": "DekaLLM",
+      "finish_reason": "stop",
+      "cost": 1.998e-05,
+      "upstream_inference_cost": 1.998e-05,
+      "upstream_inference_prompt_cost": 1.611e-05,
+      "upstream_inference_completions_cost": 3.87e-06,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146675-jMQzFyr3KQoI6IUFvfQA",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

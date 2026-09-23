@@ -1,0 +1,13 @@
+We need to score candidates blind. The case: customer asks if Lumen Glow E27 smart bulb is compatible with 5 GHz Wi-Fi and wants to use it in bedroom. The candidates are about Lumen Flow Strip issues, flickering, heat, store credit. They don't address Wi-Fi compatibility. So helpfulness is low. Grounding: they cite chunks about flickering and heat, which are relevant to the content of their reply but not to the customer's question. The question is about Wi-Fi compatibility. So the content is irrelevant. So grounded? They are grounded in the knowledge base chunks they cite, but those chunks are not relevant to the question. So grounded score maybe 3? The panel had one giving grounded 5, but that seems wrong because they didn't address the Wi-Fi question. The second panel gave grounded 3. So we should give grounded 3. Helpful: they don't answer the Wi-Fi question, so helpful 1. Tone: polite, so maybe 4? The panel gave 3. But tone is not wrong. I'd give 4. Best candidate? Both are similar. Candidate 1 is more comprehensive but still irrelevant. Candidate 2 is shorter. Which is better? The panel gave best_index 0 in both. But we need to decide. Since both are equally irrelevant, but candidate 1 gives more info about flickering and heat, but still irrelevant. So maybe candidate 1 is slightly better. So best_index 0.
+
+Thus scores: grounded 3, helpful 1, tone 4. Rationale: short sentences per criterion, total under 550 chars. Let's craft.
+
+We need to output JSON with fields: rationale, scores, best_index. The scores array must have objects with criterion and score. The rationale must be under 550 chars. Let's write.
+
+Rationale: "Grounded: cites relevant chunks but those are not about Wi‑Fi, so partial grounding. Helpful: does not answer Wi‑Fi compatibility, so minimal. Tone: polite and apologetic, acceptable." That's 3 sentences. Count chars: about 140. Good.
+
+Scores: array of objects: {criterion:"grounded",score:3}, {criterion:"helpful",score:1}, {criterion:"tone",score:4}.
+
+best_index: 0.
+
+Return via function.

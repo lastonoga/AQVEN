@@ -1,0 +1,35 @@
+We need to write reply. Must be friendly, precise, short. Use chunks for citations. The decision: store credit €15. Must mention amount only. Must not mention store website or outside contact. Must not mention personal data. Language en-GB. Provide steps in app first, then reset and re-pairing if chunks describe them. But chunks do not describe app steps. Only mention network requirements if chunks describe them. They don't. So we cannot give steps. So we just say we have issued credit. Apologise at most once. No exclamation marks. Provide citations referencing chunks. We need to cite kb_strip0flck and kb_ctrlheat01. Provide quotes. Must keep reply <=1500 chars. Citations <=6 items. Provide chunk_id and quote. Quote up to 300 chars.
+
+We should mention that the flicker and heat are covered under warranty, we have issued store credit. Provide amount. Provide reference to chunks. No mention of ASIN. No mention of store website. No mention of contact outside marketplace. No mention of subscription benefits because not in chunks. So final reply: "Thank you for contacting us. We understand your concerns. As per our warranty policy, we have issued a €15 store credit (1500 eur in smallest units). The flicker near the controller and the controller heating are covered under warranty. Please note that the controller should be unplugged if hot. The credit will be applied shortly." Provide citations.
+
+Citations: from kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." Quote maybe: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include citations referencing these. Provide chunk_id and quote.
+
+We must not mention the store website or outside contact. So we just say credit will be applied.
+
+We must not mention personal data. No name.
+
+We must not mention subscription benefits. So no mention.
+
+We must not use exclamation marks. So no exclamation.
+
+We can use period. Apologise at most once. We can apologise: "We apologise for any inconvenience." That's one apology.
+
+We must not mention network requirements because chunks don't have them.
+
+We must not mention app steps because chunks don't provide them.
+
+Thus final reply.
+
+Let's craft.
+
+Reply text: "Thank you for contacting us. We apologise for the inconvenience caused by the flickering and heating of your Lumen Flow Strip 5 m. As per our warranty policy, we have issued a €15 store credit (1500 eur in the smallest units) to your account. The flicker near the controller and the controller becoming hot are covered under warranty. Please remember to unplug the strip if the controller feels hot until it has been inspected. The credit will be applied shortly."
+
+Citations: two items.
+
+We need to quote up to 300 chars each. Provide chunk_id and quote.
+
+Ok.

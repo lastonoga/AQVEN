@@ -1,0 +1,21 @@
+We need answer JSON only. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." So output scores of best candidate. Need decide best.
+
+We have two candidates. Both cite same chunks. Candidate 0: advises cut power and check controller plug; if flickering persists, controller replaced under warranty. Heat: unplug at once and don't switch on until checked. Issues store credit €15. Candidate 1: similar but adds "As a Lumen Plus subscriber, you're covered under our warranty" and app reset/re-pairing steps not in chunks. Also store credit €15 under Lumen Plus warranty. Candidate 1 includes ungrounded claims: Lumen Plus subscriber status, app reset steps, €15 store credit under warranty. Candidate 0 also issues store credit €15 ungrounded. Both have ungrounded store credit. Candidate 1 has more ungrounded. Need score grounded, helpful, tone. Best likely candidate 0 because more grounded, less hallucinated. Need assess.
+
+Grounded: Candidate 0 accurately follows chunks for flicker and heat; store credit not grounded. Candidate 1 includes same plus ungrounded app reset and Lumen Plus warranty. So candidate 0 more grounded. Score maybe 4? Since includes ungrounded store credit, not fully grounded. Candidate 1 score 2 or 3. Need score best candidate only. Helpful: Candidate 0 gives clear safety and warranty resolution, but store credit ungrounded maybe helpful if true? But not grounded. Candidate 1 more detailed but includes ungrounded steps. Candidate 0 is concise and actionable. Score 4. Tone: both polite, empathetic. Candidate 0 "We are sorry" "Thank you for your understanding" professional. Candidate 1 also polite. Candidate 0 maybe slightly better? Score 5 or 4. Need best_index 0.
+
+Need rationale under 550 chars total. One or two sentences per criterion. Need include reasoning for every criterion. Then scores. Ensure JSON only. Need no markdown. Let's craft.
+
+Need maybe mention panel null no dispute. Not necessary.
+
+Need ensure rationale maxLength 600? User says under 550 total. We'll keep short.
+
+Let's write:
+
+"Grounded: Candidate 0 follows both chunks for flicker and heat; the €15 credit is ungrounded. Candidate 1 adds ungrounded Lumen Plus/app reset details, so 0 is more faithful. Helpful: Candidate 0 gives clear safety steps and warranty replacement path; concise and actionable, though credit claim is unsupported. Tone: Both are polite and empathetic; candidate 0 is professional and reassuring without overpromising."
+
+Need scores: grounded 4, helpful 4, tone 5? Maybe tone 4? Let's decide. Candidate 0 tone: "We are sorry to hear" "Thank you for your understanding" good. Score 5. But "We have issued a store credit" ungrounded could affect helpfulness not tone. Tone 5.
+
+Need output JSON with rationale, scores array, best_index. Scores criteria enum: grounded, helpful, tone. Order arbitrary. Use "grounded":4, "helpful":4, "tone":5. Need best_index 0.
+
+Need ensure no extra text.

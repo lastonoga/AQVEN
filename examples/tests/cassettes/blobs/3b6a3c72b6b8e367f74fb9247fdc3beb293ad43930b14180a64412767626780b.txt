@@ -1,0 +1,27 @@
+We need to produce a reply following constraints: friendly, precise, short, no exclamation marks, no mention of store website or contact outside marketplace. Use only knowledge base chunks. Must cite chunks. Must mention store credit amount €15. Must mention dented box or safety concern? The chunks don't mention dented box. The knowledge base chunks only talk about flicker and heat. The customer's safety concern is about heat. We can mention that the heat is a safety issue and we advise to unplug. The dented box is not covered by chunks, but we can say we acknowledge the dented box but cannot provide further info. But we must not add facts not in chunks. We can mention that we acknowledge the dented box but cannot provide further info. But is that allowed? The instruction: "If the chunks do not answer the question, say plainly that the knowledge base has no answer, and do not fill the gap with guesses." The question: "The customer is concerned about safety and wants a warranty resolution." We can answer with safety steps. The dented box is not in chunks, so we cannot provide a solution. We can say "We note the dented box; the knowledge base does not provide additional guidance." That is allowed. We must not mention store website or contact outside marketplace. We must mention subscription benefits only if chunks carry them. They don't. So no subscription mention.
+
+We need to include citations. We need to cite kb_strip0flck and kb_ctrlheat01. We need to include chunk quotes. Provide up to 6 citations. We can provide two citations. Each citation includes chunk_id and quote. Quote must be <=300 chars. Provide the reply text and citations array.
+
+We need to output JSON with fields reply.text and reply.citations. The reply.text must be <=1500 characters. The citations array must be <=6 items.
+
+We must not use exclamation marks. Avoid exclamation. Use polite language. Apologise at most once. We can apologise for the inconvenience. That's fine.
+
+We must mention store credit amount €15. Provide credit in smallest units: 1500 eur. But we need to mention amount in the reply. The credit amount in the smallest units is 1500 eur. But we can mention €15. The credit amount in smallest units is 1500 eur. We can mention that the credit has been issued. We can mention that it will be applied. No mention of store website.
+
+We must give steps in app first, then reset and re-pairing if chunks describe them. The chunks do not describe app steps. So we cannot mention app steps. So we just give safety steps.
+
+We must state network requirements only from chunks. The chunks don't mention network requirements. So we cannot mention network requirements.
+
+Thus reply: Apologise, mention flicker and heat steps, mention dented box acknowledgement, mention store credit, mention safety. Provide citations.
+
+Let's craft reply:
+
+"Thank you for reaching out. I'm sorry to hear about the issues with your Lumen Flow Strip 5 m. The flickering near the controller and the heat you described are covered under warranty. Please cut the power, check the controller plug, and if the flicker persists, the controller will be replaced. If the controller is hot, unplug the strip immediately and do not turn it on until it has been inspected. We have issued a store credit of €15 (1500 eur) to your account. We also note the dented box; the knowledge base does not provide further guidance on that. If you have any further questions, let us know."
+
+Citations: kb_strip0flck quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+kb_ctrlheat01 quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to ensure no exclamation marks. The reply above has no exclamation marks. Good.
+
+Now produce JSON.

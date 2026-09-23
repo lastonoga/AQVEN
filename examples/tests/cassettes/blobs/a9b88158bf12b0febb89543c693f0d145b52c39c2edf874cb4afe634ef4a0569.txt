@@ -1,0 +1,33 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." So output scores of best candidate. Need decide best.
+
+Let's analyze.
+
+Case: customer reported dented box, strip flickering near controller for three days, controller hot after half hour, safety concern, warranty resolution. Order date irrelevant.
+
+Candidates:
+
+0: Says sorry, recommends unplugging immediately due to controller overheating. For flickering near controller, check controller plug after cutting power. If persists, controller replaced under warranty. Issued store credit €15.00. Citations: kb_strip0flck and kb_ctrlheat01. It includes unplug due to heat, check plug, replacement. Store credit not in chunks. Is that unconfirmed? It is a claim not confirmed by chunks. But maybe not harmful? Need groundedness: claims must rely on chunks. Store credit is unconfirmed. Also "controller will be replaced under warranty" matches chunk. "unplugging immediately due to controller overheating" matches chunk. "check controller plug after cutting power" matches chunk. Good except store credit.
+
+1: Sorry, issued €15 store credit as gesture under extended warranty policy. First try resetting/re-pairing through app. If flickering persists, cut power and check plug. If issue remains, replacement under warranty. Safety priority. Citations only kb_strip0flck. It includes reset/re-pairing not in chunks (unconfirmed). Store credit not in chunks. It omits controller heat instruction (unplug at once and don't switch on until checked), despite case mentions hot controller. It says safety priority but doesn't address heat. Less grounded and less helpful.
+
+Need score best candidate. Candidate 0 is better. Need scores: grounded, helpful, tone. Need maybe grounded 4? Because store credit unconfirmed. Candidate 0 grounded mostly but includes unconfirmed store credit. Candidate 1 has more unconfirmed and omits heat. Best candidate 0. Scores: grounded 4, helpful 5? It addresses safety and warranty, but store credit unconfirmed maybe not helpful? It is helpful. Tone 5? "We are sorry", "Thank you for understanding" polite. Could be 4? Need decide.
+
+Need rationale under 550 chars total, one or two sentences per criterion. Need mention panel null no dispute. Need output JSON only.
+
+Let's craft rationale concise.
+
+Need ensure "grounded" score for best candidate. Candidate 0 grounded: It accurately follows both chunks for heat and flicker; however, the €15 store credit is not supported by chunks, so not full 5. Score 4.
+
+Helpful: It directly addresses safety (unplug) and warranty replacement, plus troubleshooting. Score 5. Maybe store credit unconfirmed but not harmful. Candidate 1 less helpful because ignores heat. Score 5.
+
+Tone: Empathetic, professional, safety-first. Score 5.
+
+Need maybe "best_index": 0.
+
+Need output JSON with rationale, scores array with criteria. Need no markdown. Ensure maxLength 600. Let's count roughly.
+
+Rationale: "Candidate 0 is grounded in both chunks: it instructs unplugging for heat and checking the plug for flicker, with warranty replacement. The €15 store credit is not confirmed by the chunks, so groundedness is not perfect. It is the most helpful because it addresses the safety concern and gives a clear warranty path; candidate 1 omits the heat warning and adds unconfirmed app reset. Tone is empathetic, professional, and safety-focused." That's ~370 chars. Good.
+
+Need scores: [{"criterion":"grounded","score":4},{"criterion":"helpful","score":5},{"criterion":"tone","score":5}]
+
+Need ensure "best_index": 0.

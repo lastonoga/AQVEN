@@ -1,0 +1,13 @@
+We need to write a reply to the customer. The customer asks if Lumen Glow E27 smart bulb is compatible with 5 GHz Wi-Fi and wants to use it in bedroom. The knowledge base chunks are about Flow strip flicker and controller heat. They don't mention Wi-Fi compatibility. So we must say knowledge base has no answer. But we can give general advice: steps in app, reset, re-pairing, network requirements only from chunks. But chunks don't mention network requirements. So we cannot add network requirements. We can give steps in app? But chunks don't mention app steps. So we cannot. We can say knowledge base has no answer. We can mention that we can't confirm compatibility. We can suggest contacting support. No compensation. No mention of subscription benefits because chunks don't mention them. So reply: "I’m sorry, but the knowledge base does not contain information about compatibility with 5 GHz Wi‑Fi. If you need further assistance, let us know." That's basically previous reply. But we need to add maybe suggestion to check the app for network settings? But we cannot claim that. We can say "You can check the app for network settings, but the KB doesn't specify." That might be okay? But we must not add facts not in chunks. The chunks don't mention app. So we cannot say that. We can say "The knowledge base does not cover Wi‑Fi compatibility." That's it. No more. We can add that the bulb is used in bedroom but no info. So final reply: short, polite, no exclamation, no promises. Provide citations: none? But we need citations? The output requires reply.citations array. But if no chunk used, we can leave empty? The spec: reply.citations: at most 6 items. If none, we can leave empty array. That is allowed. So reply.text: the message. reply.citations: [].
+
+We must ensure reply.text <=1500 chars. It's fine.
+
+We must not mention personal data. No name. Good.
+
+We must not mention subscription benefits. Good.
+
+We must not promise refund. Good.
+
+We must not mention network requirements. Good.
+
+Thus final.

@@ -1,0 +1,4266 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-8026717ba4727fd17b0f78fa4f6a620ef0afbc33b35c088895daaeb4b07f4e43",
+  "request_key": "sha256-ffe01d65eedb30cb62bb2000c4564d68d98b7e789a77df1921ed26b95cd8cc46",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " remove",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mention",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " reply",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " says",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " cannot",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " issue",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " at",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " this",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " time",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " but",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " you",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " can",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " contact",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " support",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " further",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " assistance",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".\"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " That",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " fine",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ":",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " does",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " promise",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " But",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " previous",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " version",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " had",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " promise",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " removed",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " But",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " validation",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " still",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " says",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " promises",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Maybe",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " phrase",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " cannot",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " issue",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " at",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " this",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " time",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "\"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " considered",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " promise",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "?",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Actually",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " statement",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " inability",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " But",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " maybe",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " system",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " expects",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " no",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mention",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " at",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " all",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Let's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " remove",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " that",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " sentence",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " entirely",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Also",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ensure",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " no",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mention",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Also",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ensure",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " we",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " don't",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mention",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "\"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " at",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " all",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " reply",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " only",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " give",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " advice",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " So",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " remove",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " that",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " sentence",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Also",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " keep",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " rest",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Ensure",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " no",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " mention",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Also",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " keep",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " citations",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Let's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " produce",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " final",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to remove mention of store credit. The reply says \"We cannot issue store credit at this time, but you can contact support for further assistance.\" That is fine: it does not promise store credit. But the previous version had a promise of store credit. We removed it. But the validation still says it promises store credit. Maybe the phrase \"We cannot issue store credit at this time\" is considered a promise? Actually it's a statement of inability. But maybe the system expects no mention of store credit at all. Let's remove that sentence entirely. Also ensure no mention of store credit. Also ensure we don't mention \"credit\" at all. The reply should only give advice. So remove that sentence. Also keep the rest. Ensure no mention of store credit. Also keep citations. Let's produce final.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "text",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "reply",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":{\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "text",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "Thank",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " you",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " for",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " reaching",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " out",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " We",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " understand",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " flick",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ering",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " near",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " overheating",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " concern",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " Please",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " cut",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " power",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " to",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " inspect",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " plug",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " If",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " flick",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "er",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " persists",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " is",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " covered",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " under",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " warranty",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " will",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " be",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " replaced",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " If",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " feels",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " hot",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " unplug",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " immediately",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " do",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " not",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " turn",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " on",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " until",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " has",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " been",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " inspected",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " For",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " further",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " assistance",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " please",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " contact",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " support",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".\",\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "cit",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ations",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":[",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "{\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "chunk",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "_id",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "kb",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "_strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "0",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "fl",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ck",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\",\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "quote",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "If",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " a",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " Flow",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " flick",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ers",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " near",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " cut",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " power",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " check",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " plug",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " If",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " flick",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "er",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " comes",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " back",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " is",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " replaced",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " under",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " warranty",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "},{\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "chunk",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "_id",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "kb",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "_ctrl",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "heat",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "01",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\",\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "quote",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "\":\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "If",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " controller",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " body",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " is",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " hot",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " to",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " touch",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ",",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " unplug",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " strip",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " at",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " once",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " and",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " do",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " not",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " switch",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " on",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " until",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " it",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " has",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " been",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " checked",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ".\"",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "}",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "]}",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " }",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"Thank you for reaching out. We understand the flickering near the controller and the overheating concern. Please cut the power to the strip and inspect the controller plug. If the flicker persists, the controller is covered under warranty and will be replaced. If the controller feels hot, unplug it immediately and do not turn it on until it has been inspected. For further assistance, please contact support.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "We need to remove mention of store credit. The reply says \"We cannot issue store credit at this time, but you can contact support for further assistance.\" That is fine: it does not promise store credit. But the previous version had a promise of store credit. We removed it. But the validation still says it promises store credit. Maybe the phrase \"We cannot issue store credit at this time\" is considered a promise? Actually it's a statement of inability. But maybe the system expects no mention of store credit at all. Let's remove that sentence entirely. Also ensure no mention of store credit. Also ensure we don't mention \"credit\" at all. The reply should only give advice. So remove that sentence. Also keep the rest. Ensure no mention of store credit. Also keep citations. Let's produce final.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "{\"reply\":{\"text\":\"Thank you for reaching out. We understand the flickering near the controller and the overheating concern. Please cut the power to the strip and inspect the controller plug. If the flicker persists, the controller is covered under warranty and will be replaced. If the controller feels hot, unplug it immediately and do not turn it on until it has been inspected. For further assistance, please contact support.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1577,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 347,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T06:57:43.380135Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:57:42Z",
+      "downstream_provider": "AkashML",
+      "finish_reason": "stop",
+      "cost": 6.624e-05,
+      "upstream_inference_cost": 6.624e-05,
+      "upstream_inference_prompt_cost": 3.154e-05,
+      "upstream_inference_completions_cost": 3.47e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146662-Vx5xcitJnWjCGiF8sOjR",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

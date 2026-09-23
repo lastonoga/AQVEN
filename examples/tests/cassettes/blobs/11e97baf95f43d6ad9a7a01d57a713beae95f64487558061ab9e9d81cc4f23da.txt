@@ -1,0 +1,11 @@
+We must not promise replacement. The decision says no compensation, but says "Please contact our support team for further assistance with a replacement or reship of the faulty light strip." The decision says no compensation, but says to contact support for further assistance with replacement or reship. That is allowed? The instruction: "Decision: there is no compensation, the reply is advice from the knowledge base. Do not promise a refund, credit or replacement." So we cannot promise replacement. We can say "Please contact our support team for further assistance with a replacement or reship" but that might be interpreted as promising. Better to say "Please contact our support team for further assistance." That is safe. So remove mention of replacement or reship. Just say contact support team for further assistance.
+
+Also we need to mention that support lead declined store credit. But we can mention that. But we must not promise replacement. So we can say "The store credit has been declined. Please contact our support team for further assistance." That is fine.
+
+Thus reply: "Thank you for reaching out. For the flickering near the controller, please cut the power and check the controller plug. If the flicker returns, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. We apologise for the inconvenience. The store credit has been declined. Please contact our support team for further assistance."
+
+We must not mention store website. Good.
+
+Citations same.
+
+Let's produce.

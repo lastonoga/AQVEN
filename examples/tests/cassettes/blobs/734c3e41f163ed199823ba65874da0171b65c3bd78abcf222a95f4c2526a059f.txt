@@ -1,0 +1,11 @@
+We need to produce JSON with reply.text and citations. The reply should be friendly, precise, short, no exclamation marks, no mention of store website or outside contact. Mention store credit amount €15 (1500 in smallest units). Provide steps in app first, then reset and re-pairing if chunks describe them. But the chunks don't describe app steps. So we cannot mention them. We can only rely on chunks about flicker and heat. So we can say: cut power, check plug, controller hot, unplug. Provide store credit. Cite chunks. Also mention that under warranty the controller will be replaced. Use citations: kb_strip0flck for flicker, kb_ctrlheat01 for heat. Provide text up to 1500 chars. Citations up to 6. Provide chunk_id and quote. Use quotes from chunks. Let's craft reply.
+
+Text: "We have issued a €15 store credit to your account. The credit will be applied shortly. Regarding the flickering near the controller, please cut the power and check the controller plug. If the flicker persists, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. If you need further assistance, let us know."
+
+Citations: two items.
+
+We need to quote relevant parts. For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include chunk_id and quote. Ensure quote <=300 chars. Provide both citations.
+
+Return JSON.

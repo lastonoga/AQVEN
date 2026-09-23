@@ -1,0 +1,281 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-fbcf371c6b3b762baa6825edbfd7567e4f7d83959a0ab5676619a739051e6caf",
+  "request_key": "sha256-456bcbc2ca6e68ec237bcf200828042bf0f600ca3be68cfd01de4d008bd3f684",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 1,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to fix the reply: The decision says store credit of €15 issued. The credit amount in",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " smallest units is 1500 eur. The reply should name the amount from the decision, which is €15. The earlier reply said \"store credit of 1500 eur (",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "the €15 credit in the smallest currency units)\". That might be considered naming an amount not in the decision? The decision says \"store credit of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " €15\". So we should mention €15, not 1500 eur. The credit amount in smallest units is 1500 eur but we should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not mention that? The instruction: \"Name only the amount the decision gives.\" So we should say \"store credit of €15\". So remove the 1500 eur mention. Also we need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to keep citations. Also we need to ensure we don't mention any other amounts. So revise text accordingly. Also we need to keep the safety steps. Also no mention of store website or contact",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " outside marketplace. That's fine. Also no exclamation marks. No advertising superlatives. We have no exclamation marks. Good.\n\nLet's produce JSON.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to fix the reply: The decision says store credit of €15 issued. The credit amount in smallest units is 1500 eur. The reply should name the amount from the decision, which is €15. The earlier reply said \"store credit of 1500 eur (the €15 credit in the smallest currency units)\". That might be considered naming an amount not in the decision? The decision says \"store credit of €15\". So we should mention €15, not 1500 eur. The credit amount in smallest units is 1500 eur but we should not mention that? The instruction: \"Name only the amount the decision gives.\" So we should say \"store credit of €15\". So remove the 1500 eur mention. Also we need to keep citations. Also we need to ensure we don't mention any other amounts. So revise text accordingly. Also we need to keep the safety steps. Also no mention of store website or contact outside marketplace. That's fine. Also no exclamation marks. No advertising superlatives. We have no exclamation marks. Good.\n\nLet's produce JSON.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "text",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"We understand your concern about the flickering and the hot controller. Please follow these safety steps:\\n1. Cut the power to the strip and inspect the controller plug.\\",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "n2. If the flicker returns, the controller will be replaced under warranty.\\n3. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " inspected.\\n\\nAs a result, we are issuing a store credit of €15. The credit will be applied shortly.\",\"citations\":[{\"chunk_id\":\"kb_strip0fl",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " switch it on until it has been checked.\"}]} }",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"We understand your concern about the flickering and the hot controller. Please follow these safety steps:\\n1. Cut the power to the strip and inspect the controller plug.\\n2. If the flicker returns, the controller will be replaced under warranty.\\n3. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected.\\n\\nAs a result, we are issuing a store credit of €15. The credit will be applied shortly.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "We need to fix the reply: The decision says store credit of €15 issued. The credit amount in smallest units is 1500 eur. The reply should name the amount from the decision, which is €15. The earlier reply said \"store credit of 1500 eur (the €15 credit in the smallest currency units)\". That might be considered naming an amount not in the decision? The decision says \"store credit of €15\". So we should mention €15, not 1500 eur. The credit amount in smallest units is 1500 eur but we should not mention that? The instruction: \"Name only the amount the decision gives.\" So we should say \"store credit of €15\". So remove the 1500 eur mention. Also we need to keep citations. Also we need to ensure we don't mention any other amounts. So revise text accordingly. Also we need to keep the safety steps. Also no mention of store website or contact outside marketplace. That's fine. Also no exclamation marks. No advertising superlatives. We have no exclamation marks. Good.\n\nLet's produce JSON.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "{\"reply\":{\"text\":\"We understand your concern about the flickering and the hot controller. Please follow these safety steps:\\n1. Cut the power to the strip and inspect the controller plug.\\n2. If the flicker returns, the controller will be replaced under warranty.\\n3. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected.\\n\\nAs a result, we are issuing a store credit of €15. The credit will be applied shortly.\",\"citations\":[{\"chunk_id\":\"kb_strip0flck\",\"quote\":\"If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty.\"},{\"chunk_id\":\"kb_ctrlheat01\",\"quote\":\"If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked.\"}]} }",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1470,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 608,
+      "output_tokens": 432,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 226,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 226
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T07:07:04.562586Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T07:07:02Z",
+      "downstream_provider": "Parasail",
+      "finish_reason": "stop",
+      "cost": 0.00010282,
+      "upstream_inference_cost": 0.00010282,
+      "upstream_inference_prompt_cost": 3.802e-05,
+      "upstream_inference_completions_cost": 6.48e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790147222-pV3cxEzJZiFEjQcXunzg",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

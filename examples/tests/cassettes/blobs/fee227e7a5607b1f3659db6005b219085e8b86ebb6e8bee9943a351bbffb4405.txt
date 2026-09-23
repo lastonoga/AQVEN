@@ -1,0 +1,30 @@
+We need answer JSON. Need evaluate candidates. Need reason under 550 chars total. Need scores best candidate. Need decide best index.
+
+We have case: customer received dented box, strip flickering near controller for 3 days, controller hot after 30 min, concerned leaving on, requests warranty resolution. ASIN not provided.
+
+Chunks: flicker near controller: cut power and check controller plug. If flicker comes back, controller replaced under warranty. Heat: unplug strip at once and do not switch on until checked.
+
+Candidates:
+0: "Thank you... As per warranty policy, we are issuing a store credit. The credit will be applied to your account shortly." Cites both chunks. But chunks do not mention store credit. It says controller replaced under warranty, not store credit. Also doesn't instruct cut power/unplug/check. It acknowledges concerns but no safety instruction. Grounding: store credit unconfirmed; no mention of replacement. Helpful: not helpful because doesn't address safety or actual remedy per KB. Tone polite.
+
+1: "We're sorry... We've issued you store credit as gesture of goodwill under warranty policy. If flickering persists, please cut power and check controller plug." Cites flicker chunk. Also store credit unconfirmed. It does instruct cut power/check plug, but only "if flickering persists" whereas KB says if flickers near controller, cut power and check plug. It doesn't address hot controller at all, despite chunk. It says issued store credit, unconfirmed. Tone empathetic.
+
+Need score best candidate. Both have unconfirmed store credit. Candidate 1 at least includes some KB instruction and apology. Candidate 0 cites heat but doesn't act on it; store credit. Candidate 1 more helpful? Need grounded: both have unconfirmed store credit. Candidate 1's "if flickering persists, cut power and check controller plug" is grounded in chunk, but "if persists" maybe okay? Actually chunk says if flickers near controller, cut power and check plug. Candidate 1 says if flickering persists, cut power and check plug. It doesn't mention heat. Candidate 0 cites heat but text doesn't instruct unplug. It says "understand concerns about flickering and heat" but no action. Candidate 0's store credit unconfirmed. Candidate 1's store credit unconfirmed. Candidate 1 has one grounded instruction. Candidate 0 has no grounded instruction? It cites chunks but text doesn't include their instructions. So candidate 1 better.
+
+Need scores for best candidate (index 1) on grounded, helpful, tone. Need maybe grounded score low because store credit unconfirmed and missing heat. Helpful moderate? Tone good. Need assign 1-5. Let's think.
+
+Rubric: grounded in knowledge base chunks. Candidate 1: "store credit" not in chunks; "if flickering persists, cut power and check controller plug" grounded. But missing heat safety. So grounded maybe 2 or 3. Since a key claim unconfirmed and missing relevant chunk. I'd score 2? Need calibrate. Candidate 0: store credit unconfirmed, no instructions, so grounded 1. Candidate 1: partially grounded, but unconfirmed store credit. Score 2.
+
+Helpful: Candidate 1 gives some actionable step for flicker but not heat; store credit may be what customer wants but unconfirmed. It doesn't address hot controller safety. Helpful maybe 2. Tone: empathetic apology, polite, "we're sorry" and "please" -> 4 or 5. Need best_index 1.
+
+Need rationale under 550 chars total. One or two sentences per criterion. Need mention best candidate scores. Output JSON only. Need ensure rationale maxLength 600. We'll write concise.
+
+Need maybe include "best candidate is 1" in rationale? The output has best_index. But rationale can mention.
+
+Let's craft:
+
+"Grounded: Candidate 1 repeats the KB flicker instruction, but its store credit is unconfirmed and it omits the mandatory unplug/do-not-switch-on advice for the hot controller. Helpful: It gives one actionable step for flicker, yet fails the safety-critical heat response and offers an unsupported remedy, so only partially useful. Tone: Empathetic, apologetic, and polite, with no pressure or blame."
+
+Need scores: grounded 2, helpful 2, tone 4. Is tone 4? Yes.
+
+Need ensure no extra text. JSON.

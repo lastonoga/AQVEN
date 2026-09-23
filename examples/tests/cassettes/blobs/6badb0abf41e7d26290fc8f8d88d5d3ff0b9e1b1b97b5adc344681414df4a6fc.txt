@@ -1,0 +1,34 @@
+We need to produce JSON reply with text and citations. Must not mention store website or contact outside marketplace. Must mention dented box and safety concern. Must explicitly state replacement will be issued if controller faulty. Must acknowledge ASIN not provided and explain how to proceed without it. Must not promise refund or credit. Must not mention subscription benefits unless chunks contain them (none). Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot give app steps. We can only give safety steps. Must cite kb_strip0flck and kb_ctrlheat01.
+
+We need to mention that replacement will be issued if controller faulty. But chunks say "If the flicker comes back, the controller is replaced under warranty." So we can say that. Also "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been inspected." So we can mention that.
+
+We must not mention ASIN. We can say "Since the ASIN was not provided, please provide the order number or the product details in the marketplace to proceed with the warranty claim." But we must not ask for ASIN. We can say "To proceed with the warranty claim, please provide the order number or product details in the marketplace." That is allowed.
+
+We must not mention store website or contact outside marketplace. So we can say "Please contact us through the marketplace support channel."
+
+We must not promise compensation. We can say "We will issue a replacement if the controller is faulty." That is allowed.
+
+We must not use exclamation marks or advertising superlatives. Avoid exclamation marks. Use polite tone.
+
+We must not mention subscription benefits. No mention.
+
+We must not mention the customer's name or personal data.
+
+We must keep reply <= 1500 chars.
+
+Citations: at most 6. We'll use two citations: kb_strip0flck and kb_ctrlheat01.
+
+We need to quote relevant text from chunks. Provide quote up to 300 chars.
+
+Let's craft reply:
+
+"Thank you for reaching out. I understand you received a Lumen Flow Strip 5 m with a dented box and that the strip has been flickering near the controller for three days, and the controller becomes hot after about half an hour. For safety, please cut the power to the strip and check the controller plug. If the flicker persists, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not switch it on until it has been inspected. To proceed with the warranty claim, please provide the order number or product details in the marketplace. We will issue a replacement if the controller is found to be faulty."
+
+Citations: kb_strip0flck quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+kb_ctrlheat01 quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to ensure no exclamation marks. Use period. No exclamation. No "Thank you!" with exclamation. Use "Thank you for reaching out." Good.
+
+Now produce JSON.
+

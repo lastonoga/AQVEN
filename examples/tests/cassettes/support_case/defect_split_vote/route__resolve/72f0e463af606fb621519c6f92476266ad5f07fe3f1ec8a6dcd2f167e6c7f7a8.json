@@ -1,0 +1,2782 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-72f0e463af606fb621519c6f92476266ad5f07fe3f1ec8a6dcd2f167e6c7f7a8",
+  "request_key": "sha256-dc2ea53eec3f4a026a6c79c23e4d21011ac81719650371bed5eff99541f0853a",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "route__resolve",
+      "branch_key": "defect",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " decide",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " lookup",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " get",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " purchase",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " date",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " delivery",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " date",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " total",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " line",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " items",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Then",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " check",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " if",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " within",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " period",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "?",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Extended",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "?",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " policy",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " says",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " L",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "umen",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Plus",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customers",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " receive",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " up",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " €",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "20",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " faulty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " product",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " within",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " period",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " confirm",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " total",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "?",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " amount",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " be",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " within",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " policy",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " limit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " exceed",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " total",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " issue",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " use",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " issue",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " tool",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " But",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " we",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " must",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " first",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " find",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Then",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " issue",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " policy",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ID",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "3",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "f",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "6",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "c",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "2",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "1",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "e",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "8",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "b",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "4",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "d",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "4",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "c",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "7",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "9",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "e",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "21",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "5",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "d",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "0",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "f",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "7",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "b",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "8",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "6",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "c",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "34",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".\n\n",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " decide",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " amount",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " don't",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " have",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " total",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " We",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " lookup",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Let's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " call",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " lookup",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " order",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "_id",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "L",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "UM",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "202",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "609",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "03",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "\".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to decide store credit. Need to lookup order to get purchase date, delivery date, total, line items. Then check if within warranty period? Extended warranty? The policy says Lumen Plus customers receive store credit up to €20 for faulty product within warranty period. We need to confirm order total? The amount of credit should be within policy limit and not exceed order total. We need to issue store credit. Need to use issue_store_credit tool. But we must first find order. Then issue credit. The policy ID is 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34.\n\nWe need to decide amount. We don't have order total. We need to lookup order. Let's call lookup_order with order_id \"LUM-20260903\".",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "tool-call",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "lookup_order",
+        "args": "",
+        "tool_call_id": "call_3747818A48B64B78BCA025A5",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"order_id\":\"LUM-20260903\"}",
+        "tool_call_id": "call_3747818A48B64B78BCA025A5",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "tool_name": "lookup_order",
+        "args": "{\"order_id\":\"LUM-20260903\"}",
+        "tool_call_id": "call_3747818A48B64B78BCA025A5",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": "We need to decide store credit. Need to lookup order to get purchase date, delivery date, total, line items. Then check if within warranty period? Extended warranty? The policy says Lumen Plus customers receive store credit up to €20 for faulty product within warranty period. We need to confirm order total? The amount of credit should be within policy limit and not exceed order total. We need to issue store credit. Need to use issue_store_credit tool. But we must first find order. Then issue credit. The policy ID is 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34.\n\nWe need to decide amount. We don't have order total. We need to lookup order. Let's call lookup_order with order_id \"LUM-20260903\".",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "tool_name": "lookup_order",
+        "args": "{\"order_id\":\"LUM-20260903\"}",
+        "tool_call_id": "call_3747818A48B64B78BCA025A5",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1278,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 206,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 176,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 176
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T07:05:33.396290Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T07:05:31Z",
+      "downstream_provider": "Darkbloom",
+      "finish_reason": "tool_calls",
+      "cost": 4.1544e-05,
+      "upstream_inference_cost": 4.1544e-05,
+      "upstream_inference_prompt_cost": 2.3004e-05,
+      "upstream_inference_completions_cost": 1.854e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790147131-ZZvv7CcmWahtRaOASJWg",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-fd1c89a0cf2212ba584fb8c694107c505f7eade4351d3a60ca613e49b4c233ea",
+  "request_key": "sha256-eaeac269f5f6186eeadbc7b7ed66168a1fb75bfa0cf71253112585f7845f31d3",
+  "model_ref": "openrouter:google/gemini-3.1-flash-lite-image",
+  "site": {
+    "address": {
+      "node_id": "illustrate",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-74042f3fa31a2edf600889c4a99ce8fda025e58c9e70aafd7370dc54c6c3bf5d"
+          },
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "367328"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "",
+        "id": null,
+        "signature": {
+          "$aqven_blob": "sha256-9a93bb5ac01045418f2a11b0761946d91b02fdc07b6a3d5c5f1773c01335b82b"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "google-gemini-v1",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": "file",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "",
+        "id": null,
+        "signature": {
+          "$aqven_blob": "sha256-9a93bb5ac01045418f2a11b0761946d91b02fdc07b6a3d5c5f1773c01335b82b"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "google-gemini-v1",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-74042f3fa31a2edf600889c4a99ce8fda025e58c9e70aafd7370dc54c6c3bf5d"
+          },
+          "media_type": "image/jpeg",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "367328"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      {
+        "content": "",
+        "id": null,
+        "signature": {
+          "$aqven_blob": "sha256-9a93bb5ac01045418f2a11b0761946d91b02fdc07b6a3d5c5f1773c01335b82b"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "google-gemini-v1",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1382,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 1120,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 1120
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-3.1-flash-lite-image",
+    "timestamp": "2026-09-23T07:07:07.292480Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T07:07:01Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0339455,
+      "upstream_inference_cost": 0.0339455,
+      "upstream_inference_prompt_cost": 0.0003455,
+      "upstream_inference_completions_cost": 0.0336,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790147221-oPGG6KHH5xPcVpXA9qGC",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

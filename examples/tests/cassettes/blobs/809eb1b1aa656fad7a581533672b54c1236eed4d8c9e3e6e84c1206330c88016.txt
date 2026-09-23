@@ -1,0 +1,11 @@
+We need to produce reply with citations. Must mention store credit amount: 1500 eur. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them; they don't. Must give steps in app first, then reset/re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot add them. We must only rely on chunks. The chunks only talk about flicker and heat. So we can give advice: cut power, check controller plug, if flicker continues replace controller under warranty. Also if hot, unplug and do not switch on until checked. We must not mention network requirements because chunks don't mention them. So we can't add. We must not mention any other facts. So reply: Apologise once. Provide store credit amount. Provide steps. Provide citations.
+
+We need to include citations referencing chunk ids. We have two chunks: kb_strip0flck and kb_ctrlheat01. Provide quotes. Must be at most 1500 characters. Provide up to 6 citations. We'll use both chunks. Provide quotes: from kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to mention store credit: 1500 eur. Provide that. Also mention that the credit is issued. Provide steps: cut power, check plug, if flicker continues controller replaced. Also if hot, unplug and do not switch on until checked. No mention of app steps. No mention of network. No mention of subscription benefits. No mention of store website. Good.
+
+We must not promise any other resolution. So we can say we are issuing store credit. Provide amount. Provide steps. Apologise once. Let's craft.
+
+We need to include citations. Provide reply.text and reply.citations array. Each citation has chunk_id and quote. Provide up to 6 items. We'll use 2 citations.
+
+Let's craft reply.

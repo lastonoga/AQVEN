@@ -1,0 +1,13 @@
+We need to output JSON with keys reply and citations. The reply should be an object? The schema says reply.text and reply.citations. Actually output fields: reply: The reply text and the chunk quotes it relies on. Allowed values of KbChunkId: etc. Output limits: reply.text: at most 1500 characters; reply.citations: at most 6 items. So we need to output JSON with keys reply.text and reply.citations. Let's do that.
+
+Also need to ensure no exclamation marks. Remove exclamation. Ensure no exclamation. The reply text has no exclamation. Good.
+
+Let's produce JSON: { "reply": { "text": "...", "citations": [ ... ] } }
+
+Let's craft reply text: "Thank you for contacting us. We have reviewed your case. The flickering near the controller and the controller heating up are both covered under warranty. As per the warranty policy, we are issuing a €15.00 store credit (1500 eur). Please stop using the device until a replacement is provided. We understand the box arrived dented and apologise for any inconvenience. The credit will be applied shortly."
+
+Check for exclamation: none. Good.
+
+Now citations array with chunk_id and quote.
+
+Let's produce final.
