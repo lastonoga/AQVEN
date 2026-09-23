@@ -1,0 +1,7 @@
+We need to produce reply: friendly, precise, short. Mention store credit €20. Provide steps in app first, then reset and re-pairing if chunks describe them. But chunks only talk about flicker and heat. They don't give steps in app or reset. So we cannot provide those steps. We must say knowledge base has no answer for those steps. But we can mention that the issue is covered under warranty and we are issuing store credit. Also mention that the controller is overheating, so unplug. Provide the steps from chunks: cut power, check plug, if flicker persists replace controller. Also if hot, unplug and don't switch on until checked. Provide citations. Use chunk ids: kb_strip0flck and kb_ctrlheat01. Provide quotes. Must not mention store website or contact outside marketplace. No personal data. Language en-GB. Output fields: reply.text and reply.citations array. Max 1500 chars. Citations up to 6 items. Provide chunk_id and quote. Use quotes from chunks. Let's craft reply.
+
+Reply: "We’ve issued a €20 store credit (2000 cents) for the faulty product. The flickering and overheating you’re experiencing are covered under warranty. Please cut power and check the controller plug; if the flicker continues, the controller will be replaced. If the controller feels hot, unplug immediately and do not turn it on until it has been inspected. The store credit will be applied shortly. If you need further assistance, let us know."
+
+Citations: two chunks. Provide quotes.
+
+Ensure quotes <=300 chars. Provide chunk_id. Ok.

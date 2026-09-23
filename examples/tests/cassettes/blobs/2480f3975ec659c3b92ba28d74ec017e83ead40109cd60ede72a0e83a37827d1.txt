@@ -1,0 +1,40 @@
+We need to produce JSON with reply text and citations. The reply must mention store credit of €15. The credit amount in smallest units: 1500 eur. Must not mention store website or outside contact. Must mention subscription benefits only if chunks carry them; chunks don't mention subscription. So no subscription mention.
+
+Need to give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps or reset. So we can't mention them. We must say knowledge base has no answer for that. But we can mention that the flicker near controller and heat are addressed by warranty. We must reference the chunks: kb_strip0flck and kb_ctrlheat01.
+
+We must keep reply short, friendly, precise. Apologise at most once. No exclamation marks. Use en-GB.
+
+We must include citations: two citations referencing the chunks. Provide quotes.
+
+We need to include store credit amount: 1500 eur. Must mention that credit is issued.
+
+We must not mention store website or outside contact.
+
+We must not mention customer's name or email.
+
+We must not mention subscription benefits.
+
+We must not add facts not in chunks.
+
+Thus reply: "We have issued a store credit of €15 (1500 eur) under warranty for the faulty product. The flickering near the controller and the heat issue are covered by warranty. Please keep the unit safe until it is inspected. If you need further assistance, let us know." Provide citations.
+
+We need to include citations referencing the chunk quotes. Provide quote from kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." Provide quote from kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to produce JSON with reply.text and citations array.
+
+Let's craft reply text: "We have issued a store credit of €15 (1500 eur) under warranty for the faulty product. The flickering near the controller and the heat issue are covered by warranty. Please keep the unit safe until it is inspected. If you need further assistance, let us know."
+
+We need to keep within 1500 characters. It's fine.
+
+Now citations: two items.
+
+We need to include quote strings up to 300 characters. Provide the exact quotes from chunks.
+
+First chunk: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+Second chunk: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We must ensure quotes are within 300 characters. They are.
+
+Now produce JSON.
+

@@ -1,0 +1,15 @@
+{
+  "reply": {
+    "text": "We're sorry to hear about the issues you're experiencing with your Lumen Flow Strip 5m. As a Lumen Plus subscriber, you're covered under our warranty. Here's how to troubleshoot the flickering and heat issues:\n\n1. **Flickering**: Unplug the strip, check the controller plug, and plug it back in. If it persists, follow our app's reset and re-pairing steps (App > More > Troubleshoot > Reset Device).\n\n2. **Heat**: If the controller is hot, unplug the strip immediately and do not switch it on until it's been checked.\n\nWe've issued you €15 store credit under our Lumen Plus warranty for the faulty product. You can use this towards your next purchase. If the issues persist, please let us know.\n\nReference: kb_strip0flck, kb_ctrlheat01",
+    "citations": [
+      {
+        "chunk_id": "kb_strip0flck",
+        "quote": "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+      },
+      {
+        "chunk_id": "kb_ctrlheat01",
+        "quote": "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+      }
+    ]
+  }
+}

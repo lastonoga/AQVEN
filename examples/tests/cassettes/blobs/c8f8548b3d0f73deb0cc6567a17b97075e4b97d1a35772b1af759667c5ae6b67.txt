@@ -1,0 +1,63 @@
+We need to produce a reply with citations. The reply should mention store credit €15, amount in smallest units: 1500 eur. Must not mention store website or contact outside marketplace. Must not mention customer's personal data. Must be friendly, precise, short. Must not promise anything not in input. Must not use exclamation marks or advertising superlatives. Apologise at most once. Must reference knowledge base chunks for claims about policy, deadlines, product features. The knowledge base chunks are:
+
+- kb_strip0flck: Flow strip flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+- kb_ctrlheat01: Controller heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to mention that the store credit is issued under Lumen Plus warranty policy for defective product. The credit amount is 1500 eur. We should mention that the customer can use the credit. We should not mention the store website or contact outside marketplace. We should not mention personal data. We should not mention the customer's name or email. We should mention subscription benefits only if chunks carry them. The chunks do not mention subscription benefits. So we should not mention them.
+
+We need to give steps in the app first, then reset and re-pairing, if chunks describe them. But the chunks do not describe app steps, reset, re-pairing, network requirements. So we cannot mention them. So we should not mention app steps.
+
+We need to mention network requirements only from chunks. The chunks do not mention network requirements. So we cannot mention them.
+
+Thus we should only give the store credit info and reference the chunks about flicker and heat. Also we can mention the safety advice: cut power, check plug, unplug if hot. That is from chunks. We should not mention anything else.
+
+We should keep the apology at most once. We can apologize for the inconvenience. We should not use exclamation marks or advertising superlatives.
+
+We need to produce JSON with reply.text and reply.citations. The reply.citations array should contain up to 6 items. Each citation has chunk_id and quote.
+
+We need to include the chunk quotes. We need to keep each quote at most 300 characters. The quotes are short.
+
+We need to reference the chunks for the claims about flicker and heat. Also maybe for the store credit? The store credit is from policy, but not in chunks. The policy is not in chunks. We cannot claim policy from chunks. But we can still mention store credit. The policy is not in chunks, but we can still mention it because it's the decision. The policy is not in chunks, but we can mention it because it's the decision. The instructions say: "Never promise what is not in the input: name deadlines, compensation and exceptions only when they appear in it." The decision is in the input: "Store credit of €15 issued under Lumen Plus warranty policy for the defective smart lighting product." So we can mention that. We don't need to cite a chunk for that.
+
+We need to mention the amount in smallest units: 1500 eur. So we can say: "We have issued a store credit of €15 (1500 eur) to your account."
+
+We need to mention the safety steps: cut power, check plug, unplug if hot. That is from chunks. So we should cite those.
+
+We should not mention the customer's name. We should not mention the store website or contact outside marketplace. We should not mention subscription benefits. We should not mention app steps or reset or network requirements.
+
+We should keep the reply short, friendly, precise. No exclamation marks. No advertising superlatives. Apologise once.
+
+Let's draft the reply:
+
+"Thank you for contacting us. We apologise for the inconvenience caused by the flickering and heat of your Lumen Flow Strip 5 m. We have issued a store credit of €15 (1500 eur) to your account under the Lumen Plus warranty policy. For safety, please cut the power and check the controller plug; if the flicker persists, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not switch it on until it has been inspected. Your credit will be available for future purchases."
+
+We need to cite the chunks:
+
+- For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." (kb_strip0flck)
+
+- For heat: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." (kb_ctrlheat01)
+
+We need to include citations array with chunk_id and quote. We need to keep quotes within 300 characters. They are short.
+
+We need to ensure reply.text <= 1500 characters. It's fine.
+
+We need to ensure reply.citations <= 6 items. We have 2 items.
+
+We need to ensure we don't mention any other facts not in chunks. We didn't mention app steps or network requirements. Good.
+
+We didn't mention subscription benefits. Good.
+
+We didn't mention personal data. Good.
+
+We didn't mention store website or contact outside marketplace. Good.
+
+We apologized once. Good.
+
+We didn't use exclamation marks. Good.
+
+We didn't use advertising superlatives. Good.
+
+We referenced the chunks. Good.
+
+Now produce JSON with reply.text and reply.citations.

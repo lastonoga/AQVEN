@@ -1,0 +1,376 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-9906a799cc7626d558f980e97cf528b06e73ea15f1874c312256c040be3da621",
+  "request_key": "sha256-868d4d53d32ab5cb6567922ad28558ee123ed6b7c1b1cede4835cf07c2a65997",
+  "model_ref": "openrouter:deepseek/deepseek-v4-flash-0731",
+  "site": {
+    "address": {
+      "node_id": "intent__escalate",
+      "branch_key": "split",
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": " ",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": " ",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": "thinking",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "We",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": "text",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " need answer JSON. Need reason. Observations include package",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " dented, flicker, overheating safety hazard.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " Summary: customer received dented box, strip flick",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": "ering near controller, controller overheats, concerned leaving",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " on, requests warranty resolution. Need classify intent among",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " defect/delivery/question. Likely defect because",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " product malfunction/overheating after delivery, warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " resolution. Dented box could be delivery but main",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " issue is defect/safety. Need rationale <=300",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ". Confidence maybe",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": " 0.8. Need output JSON only.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "{\n  \"rationale\": \"The main issue",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is the strip flickering and the controller overheating after",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " use, which indicates a product malfunction and safety hazard",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ". The dented box alone is secondary; the",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " customer requests a warranty resolution for the defective unit.\",\n",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "  \"intent\": \"defect\",\n ",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"confidence\": 0.9\n}",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "We need answer JSON. Need reason. Observations include package dented, flicker, overheating safety hazard. Summary: customer received dented box, strip flickering near controller, controller overheats, concerned leaving on, requests warranty resolution. Need classify intent among defect/delivery/question. Likely defect because product malfunction/overheating after delivery, warranty resolution. Dented box could be delivery but main issue is defect/safety. Need rationale <=300. Confidence maybe 0.8. Need output JSON only.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": " {\n  \"rationale\": \"The main issue is the strip flickering and the controller overheating after use, which indicates a product malfunction and safety hazard. The dented box alone is secondary; the customer requests a warranty resolution for the defective unit.\",\n  \"intent\": \"defect\",\n  \"confidence\": 0.9\n}",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      {
+        "content": "We need answer JSON. Need reason. Observations include package dented, flicker, overheating safety hazard. Summary: customer received dented box, strip flickering near controller, controller overheats, concerned leaving on, requests warranty resolution. Need classify intent among defect/delivery/question. Likely defect because product malfunction/overheating after delivery, warranty resolution. Dented box could be delivery but main issue is defect/safety. Need rationale <=300. Confidence maybe 0.8. Need output JSON only.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      }
+    ],
+    "usage": {
+      "input_tokens": 853,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 802,
+      "output_tokens": 175,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 104,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 104
+    },
+    "model_name": "deepseek/deepseek-v4-flash-0731",
+    "timestamp": "2026-09-23T06:56:12.010277Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:56:10Z",
+      "downstream_provider": "OpenInference",
+      "finish_reason": "stop",
+      "cost": 0.000147946,
+      "upstream_inference_cost": 0.000147946,
+      "upstream_inference_prompt_cost": 7.946e-06,
+      "upstream_inference_completions_cost": 0.00014,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146570-zFoeGiO0TZTQVOB04XrF",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

@@ -4,7 +4,7 @@ description: "Decides a warranty case: order, case history, policy through a sub
 model: "openrouter:openai/gpt-oss-20b"
 settings:
   temperature: 0.2
-  max_tokens: 4000
+  max_tokens: 6000
 output:
   mode: "native"
   strict: false

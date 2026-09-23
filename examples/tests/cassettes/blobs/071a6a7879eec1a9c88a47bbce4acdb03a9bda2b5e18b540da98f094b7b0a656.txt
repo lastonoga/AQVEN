@@ -1,0 +1,9 @@
+We don't see any repeat defect for same product? The ticket is about "Flow controller runs hot". Not exactly flickering. So no conflict.
+
+We need to issue store credit. Use issue_store_credit tool. Provide amount string? The tool expects amount: string. But the instructions say pass amount as object with amount_minor and currency? Wait: The tool signature: issue_store_credit: { amount: string, customer_id: string, order_id: string }. But earlier instruction: "Issue store credit with the issue_store_credit tool only within the amount the policy allows, and never above the order total. Pass its amount argument as an object with amount_minor (an integer in the smallest currency unit) and currency, never as a bare number or string." That seems contradictory: tool expects string but we must pass object? The instruction says pass amount argument as an object. So maybe the tool expects string but we need to pass JSON string? The tool signature says amount: string. But we can pass JSON stringified object. Let's do that: amount: '{"amount_minor":2000,"currency":"eur"}'. That is a string. That satisfies tool signature. We'll do that.
+
+Now we need to produce final JSON with resolution: action store_credit, summary, credit: Money object, policy: policy ID.
+
+We need to include credit amount_minor: 2000, currency: "eur". Summary: something like "Issue €20 store credit for faulty smart lighting product under warranty." Must be <=400 chars.
+
+Let's produce final JSON.

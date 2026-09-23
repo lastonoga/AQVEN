@@ -1,0 +1,21 @@
+We need to produce a reply per guidelines. The reply should be friendly, precise, short, no exclamation marks, no advertising superlatives. Apologise at most once. Provide store credit amount €15. Provide steps for app control, reset, re-pairing if chunks describe them. But the chunks do not mention app steps. They only mention flicker near controller: cut power, check plug, replace controller under warranty. And controller heat: unplug, don't switch on until checked. No app steps. So we cannot mention app steps. We must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them; they don't. So no subscription mention.
+
+We need to cite the chunks used. We have two chunks: kb_strip0flck and kb_ctrlheat01. We'll cite them.
+
+We need to output JSON with fields: reply.text and reply.citations. Each citation has chunk_id and quote. Must be at most 1500 characters. Provide store credit amount in smallest units: 1500 eur. But we should mention €15 in text. The credit amount in smallest units is 1500 eur. We can mention that credit is €15. The reply should mention that credit is applied. No mention of store website. No mention of personal data. No exclamation marks. No advertising superlatives. Apologise at most once. We can apologise for the inconvenience. Provide steps: cut power, check plug, controller replaced under warranty. Also mention unplug if hot. Provide that credit is applied. Provide that we will check. No mention of app steps because not in chunks.
+
+We must also mention that the credit is within policy limit of up to €20 and does not exceed order total. But we can't mention policy limit unless chunk contains it. The chunk does not mention policy limit. So we cannot mention that. We can just say we are issuing store credit of €15.
+
+We need to include citations. For the flicker chunk: quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat chunk: quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to keep reply short. Let's draft:
+
+"Thank you for contacting us. We apologise for the inconvenience. The flickering near the controller and the heat you described are covered under warranty. Please cut the power, check the controller plug, and if the flicker persists the controller will be replaced. If the controller is hot, unplug it immediately and do not turn it on until it has been inspected. We have issued a store credit of €15 (1500 eur) to your account. The credit will be applied shortly. If you have any further questions, let us know."
+
+We should not mention "If you have any further questions" maybe okay. No exclamation marks. No mention of store website. No mention of subscription benefits. Good.
+
+Citations: two.
+
+We need to output JSON with reply.text and reply.citations. Ensure reply.text <=1500 characters. It's fine.
+
+Now produce final.

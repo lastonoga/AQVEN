@@ -6,4 +6,5 @@ settings:
   temperature: 0
   max_tokens: 1500
 output:
+  mode: "prompted"
   strict: false

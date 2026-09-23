@@ -1,0 +1,6 @@
+We need to decide a warranty case for a smart lighting product. The customer is a subscriber with extended warranty. We need to apply extended terms from policies. The policy given: "Store credit under warranty: Lumen Plus customers receive store credit of up to €20 for a faulty product within the warranty period." The policy ID is 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34.
+
+We need to find the order first with lookup_order tool. Order number: LUM-20260903. We need purchase date, delivery date, total, line items. Then check if within warranty period. Also check if extended warranty applies. The customer is a subscriber with extended warranty. We need to apply extended terms. But we only have policy for store credit up to €20. We need to see if order total is less than €20? We need to get order total. Let's call lookup_order.
+
+Also check past cases with find_tickets. But we don't know if there are any. But we can call find_tickets. It might return something. But we need to decide. The policy says up to €20 store credit. So we can issue store credit up to €20. We need to ensure not above order total. So we need order total. Let's call lookup_order.
+

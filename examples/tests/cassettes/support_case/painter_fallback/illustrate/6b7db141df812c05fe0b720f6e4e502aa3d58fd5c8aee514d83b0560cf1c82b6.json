@@ -1,0 +1,7401 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-6b7db141df812c05fe0b720f6e4e502aa3d58fd5c8aee514d83b0560cf1c82b6",
+  "request_key": "sha256-7c3ea9573da11af93e985fdcb5216ed6a0942ec9e397235ac521dbfd17de87ce",
+  "model_ref": "openrouter:openai/gpt-5-image-mini",
+  "site": {
+    "address": {
+      "node_id": "illustrate",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "**Clarifying visual elements**\n\nI",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " be",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " specific",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " about",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " design",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ":",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " want",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flat",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " vector",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " art",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " background",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warm",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accent",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " lighting",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " large",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " clear",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " details",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " without",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " any",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " logos",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " show",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " an",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " LED",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " along",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " furniture",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " plus",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " close",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-up",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " connection",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " For",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " advisory",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " steps",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " think",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " can",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " represent",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " information",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shield",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " but",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " avoid",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " any",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " including",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " currency",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " symbols",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " like",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \"",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "€",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "\".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Instead",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " maybe",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " styl",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ized",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " wallet",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " glowing",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " coin",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " could",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " work",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "!",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**Detailing design elements**\n\nI",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " could",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " use",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " gift",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " card",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " without",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " numbers",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " indicate",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " clearly",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " For",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " next",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " step",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " want",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " illustrate",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " keeping",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " unplug",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ged",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " until",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " is",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " inspected",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " replaced",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "—",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "show",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ing",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " disconnected",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " plug",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " an",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " unplug",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ged",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " cable",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " magn",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ifying",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " glass",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " all",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " without",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " If",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flick",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ering",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " returns",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’ll",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " depict",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " new",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " being",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " swapped",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " out",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " replacement",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " arrow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shield",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’ll",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " maintain",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " recognizable",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " design",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " user's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " LED",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " featuring",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " alternating",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " yellow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " segments",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " black",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " square",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " using",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " series",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " of",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " simple",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " pict",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ograms",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " in",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " left",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "-right",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " panels",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**Creating a refined prompt**\n\nI",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " want",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " craft",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " prompt",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flat",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " vector",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " art",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " image",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " featuring",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " four",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " horizontally",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " arranged",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " panels",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " on",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " neutral",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " background",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warm",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accent",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " large",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " clear",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " details",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ensuring",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " no",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " logos",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " user",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’s",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " LED",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " be",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " recognizable",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "—",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "n",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "arrow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " yellow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " segments",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " black",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " square",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \n\nIn",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Panel",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " 1",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’ll",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " show",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " LED",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " along",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " furniture",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " heat",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " waves",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flick",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "er",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " lines",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " plus",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shield",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warranty",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Panel",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " 2",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " will",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " include",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " wallet",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " gift",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " card",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " glow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " signal",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " store",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " credit",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accompanied",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " by",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " glowing",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " coin",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Panel",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " 3",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " depicts",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " unplug",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "ged",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " strip",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " caution",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accent",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " while",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Panel",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " 4",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " will",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " show",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " original",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " markings",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flick",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "er",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " but",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " can",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’t",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " use",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " cross",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " symbol",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "**Refining the image design**\n\nI",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " think",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " should",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " avoid",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " using",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " any",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " cross",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " symbols",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " since",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " that",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " could",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " be",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ambiguous",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " Instead",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " can",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " show",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " new",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " controller",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " on",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " right",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " small",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shield",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " icon",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " subtle",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warm",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " plus",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " an",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " arrow",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " indicating",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " swap",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " need",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " to",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " keep",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " design",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " as",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " flat",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " vector",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " art",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " simple",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " colors",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " a",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " warm",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " accent",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " light",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " ensuring",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " there",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "’s",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " no",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " logos",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " people",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " while",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " keeping",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " user's",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " product",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " recognizable",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " \n\nI",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " must",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " also",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " remember",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " guidelines",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " image",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " generation",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " tool",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " After",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " generating",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " image",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ",",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " I",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " can't",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " output",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " any",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " text",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " or",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " further",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " comments",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " The",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " assistant",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " shouldn't",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " say",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " anything",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " extra",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " in",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " final",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " message",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " after",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " generating",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " the",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " image",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": ".",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "$aqven_blob": "sha256-20da5432367ffd6b7d9bed7d73d203f5aa788fcc4169794738fff52d0e44dc9f"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "thinking",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "",
+        "id": "rs_0a3224c81a781800016ab37964a5fc87d1bc39686eb46e6e56",
+        "signature": {
+          "$aqven_blob": "sha256-819454f970a08d8a90186a5a7d9f2d78e087d48977857d6efc6684b52eaf73b6"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 1,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "",
+        "id": "rs_0a3224c81a781800016ab37964a5fc87d1bc39686eb46e6e56",
+        "signature": {
+          "$aqven_blob": "sha256-819454f970a08d8a90186a5a7d9f2d78e087d48977857d6efc6684b52eaf73b6"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 1,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "file",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 2,
+      "part": {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-9d3f5ab8f4dadfe3206a5b6a08de073be9d6871cd8e7bc36d57f5f2fe09e05e1"
+          },
+          "media_type": "image/png",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "bf581f"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "$aqven_blob": "sha256-20da5432367ffd6b7d9bed7d73d203f5aa788fcc4169794738fff52d0e44dc9f"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 0,
+          "type": "reasoning.summary"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "",
+        "id": "rs_0a3224c81a781800016ab37964a5fc87d1bc39686eb46e6e56",
+        "signature": {
+          "$aqven_blob": "sha256-819454f970a08d8a90186a5a7d9f2d78e087d48977857d6efc6684b52eaf73b6"
+        },
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "openai-responses-v1",
+          "index": 1,
+          "type": "reasoning.encrypted"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": {
+          "data": {
+            "$aqven_blob": "sha256-9d3f5ab8f4dadfe3206a5b6a08de073be9d6871cd8e7bc36d57f5f2fe09e05e1"
+          },
+          "media_type": "image/png",
+          "vendor_metadata": null,
+          "kind": "binary",
+          "identifier": "bf581f"
+        },
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "file"
+      }
+    ],
+    "usage": {
+      "input_tokens": 3689,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 6070,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1472,
+        "image_tokens": 4175
+      },
+      "cost": null,
+      "output_reasoning_tokens": 1472
+    },
+    "model_name": "openai/gpt-5-image-mini",
+    "timestamp": "2026-09-23T07:02:04.009831Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T07:01:55Z",
+      "downstream_provider": "OpenAI",
+      "finish_reason": "completed",
+      "cost": 0.0464125,
+      "upstream_inference_cost": 0.0464125,
+      "upstream_inference_prompt_cost": 0.0092225,
+      "upstream_inference_completions_cost": 0.03719,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146915-2Q4KmyxdNKAf3AL5w158",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}
