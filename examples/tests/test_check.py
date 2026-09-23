@@ -22,7 +22,7 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_MODALITY_UNSUPPORTED": (TRIAGE, 'agent: "gemini"', 'agent: "mistral"'),
     "E_SOURCE_CONFLICT": (TRIAGE, 'agent: "gemini"', 'inference: "triage"\nagent: "gemini"'),
     "E_STRICT_UNSUPPORTED": ("agents/llama.yaml", "strict: false", "strict: true"),
-    "E_TEXT_OUTPUT": ("agents/gpt.yaml", "output:\n", 'output:\n  mode: "text"\n'),
+    "E_TEXT_OUTPUT": ("agents/gpt.yaml", 'mode: "prompted"', 'mode: "text"'),
     "E_PROMPT_VARIABLE_UNDECLARED": (
         f"{REVISE}.prompt.md",
         "{{ output_format }}",

@@ -1,0 +1,21 @@
+We need to produce reply with citations. Must mention store credit €15.00. Must not mention store website or contact outside marketplace. Must not mention customer's name, email, personal data. Must be en-GB. Must include steps in app first, then reset and re-pairing if chunks describe them. But chunks don't mention app steps. So we cannot add them. Must rely only on chunks. So we can only mention flicker and heat steps. Must mention dented box check. Must mention safety concerns. Must mention warranty resolution process and timeline will be communicated. Must ask for ASIN. Must not mention store website. Must not mention contact outside marketplace. Must not mention subscription benefits. Must not mention any other policy. Must keep reply <=1500 chars. Must include citations referencing chunk ids and quotes.
+
+We need to include citations array with up to 6 items. Provide chunk_id and quote. Use quotes from chunks. For dented box check, no chunk. So cannot cite. But we can say "Please check the dented box for any signs of damage or tampering." No citation needed.
+
+We need to mention store credit amount. Provide store credit 1500 eur in smallest units. But reply text should mention €15.00. The citation for store credit? Not in chunks. So no citation. But we can still include. It's fine.
+
+We need to mention that warranty resolution process will be communicated. Ask for ASIN. Provide steps: cut power, check controller plug, unplug if hot. Provide that controller will be replaced under warranty if flicker persists. Provide that we will inspect product for safety. Provide that we will issue store credit.
+
+Citations: we need to cite the two chunks. Provide quotes: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." and "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to keep reply <=1500 chars. Let's craft.
+
+Reply text:
+
+"Thank you for contacting us. We’re sorry for the inconvenience. Please check the dented box for any signs of damage or tampering. For safety, cut the power to the strip and check the controller plug. If the flicker continues, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not switch it on until it has been inspected. Our warranty team will review the unit and confirm it is safe to use before any replacement or repair. We will also issue a store credit of €15.00 (1500 eur) to your account. Please provide the ASIN of your Flow Strip so we can process the warranty claim quickly. We will keep you updated on the resolution timeline. If you have any further questions, reply here."
+
+Citations: two items.
+
+We must format output JSON with reply.text and reply.citations array. Each citation has chunk_id and quote.
+
+Let's produce.

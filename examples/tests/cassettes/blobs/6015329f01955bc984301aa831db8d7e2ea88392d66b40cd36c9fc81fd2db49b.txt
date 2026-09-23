@@ -1,0 +1,11 @@
+We need to output a tool call to functions.final_result with the reply object. The reply object must have fields: reply.text and reply.citations. The structure: {"reply": {"text":"...", "citations":[...]}}. Ensure citations array up to 6 items. Each citation: chunk_id and quote. Must not exceed 300 chars quote. Must be <=1500 chars total reply.text. Also we need to mention the store credit amount: €15. The credit amount in smallest units: 1500 eur. But we should mention only the amount: €15. The decision: "Issue €15 store credit for faulty smart lighting product under extended warranty, within policy limits." So we mention €15. The credit amount in smallest units: 1500 eur. But we don't need to mention that. The reply must not mention store website or contact outside marketplace. We must not mention personal data. We must not mention subscription benefits because chunks don't mention them. We must give steps in app first, then reset and re-pairing if chunks describe them. But chunks do not describe app steps. So we cannot provide them. We should say we do not have specific app reset steps. We must include citations referencing the chunks that mention flickering and heat. We must not mention any other policy. We must not promise anything not in input. We must not use exclamation marks. We can use one apology at most. We didn't use apology. It's fine.
+
+We need to produce a tool call: functions.final_result with reply object. Ensure JSON correct. Let's craft.
+
+Reply text: "Thank you for reaching out. We understand your concerns about the flickering and heat. As per our warranty policy, we are issuing a €15 store credit. The credit will be applied to your account shortly. We do not have specific app reset steps in the knowledge base. If you have any other questions, please let us know."
+
+Citations: two citations as before.
+
+Check length: text length ~ 200 chars. Good.
+
+Now produce tool call.

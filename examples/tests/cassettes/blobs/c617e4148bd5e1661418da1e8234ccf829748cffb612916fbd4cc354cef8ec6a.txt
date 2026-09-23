@@ -1,0 +1,43 @@
+We need to produce a JSON object with reply: text and citations. The reply must be friendly, precise, short, no exclamation marks, no mention of store website or contact outside marketplace. No personal data. Language en-GB. Must mention subscription benefits only if chunks carry them; we have no subscription benefits in chunks. So we don't mention.
+
+We need to give advice from knowledge base: For flicker near controller: cut power, check controller plug. If flicker comes back, controller replaced under warranty. For overheating: unplug strip at once and do not switch on until checked.
+
+We should advise steps: cut power, check plug, if flicker persists, controller replacement under warranty. Also mention overheating: unplug immediately, do not switch on until checked. No compensation promised. No store credit. No mention of refund. Just advice.
+
+We need citations: from kb_strip0flck and kb_ctrlheat01. Provide quotes.
+
+We need to keep reply text <=1500 chars, citations <=6 items. Provide chunk_id and quote.
+
+We need to not mention store website or contact outside marketplace. So just say "Please contact support for further assistance" is allowed? The instruction says "We are unable to issue store credit at this time. Please contact support for further assistance." That is allowed. But we must not mention store website. So "Please contact support" is fine.
+
+We need to not promise refund. So we just give advice.
+
+We need to not mention subscription benefits. So no mention.
+
+We need to mention network requirements only from chunks. There are no network requirements in chunks. So we skip.
+
+We need to give steps in the app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we skip.
+
+Thus reply: "Thank you for contacting us. We see that your Lumen Flow Strip 5 m is flickering near the controller and the controller is overheating. Please follow these steps: ..."
+
+We need to cite the chunks: For flicker: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For overheating: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to keep quotes <=300 chars. Provide them.
+
+Let's craft reply text:
+
+"Thank you for reaching out. We understand the flickering near the controller and the overheating concern. Please cut the power to the strip and inspect the controller plug. If the flicker persists, the controller is covered under warranty and will be replaced. If the controller feels hot, unplug it immediately and do not turn it on until it has been inspected. We cannot issue store credit at this time, but you can contact support for further assistance."
+
+We need to ensure no exclamation marks. Use period. No exclamation. No mention of store website. No mention of subscription benefits. Good.
+
+Now citations: two items.
+
+Citation 1: chunk_id kb_strip0flck, quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+Citation 2: chunk_id kb_ctrlheat01, quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to ensure quotes <=300 chars. They are less.
+
+Now produce JSON.
+
+Check schema: reply: {text:..., citations: [ ... ]}. Ensure no extra keys. Output exactly JSON.

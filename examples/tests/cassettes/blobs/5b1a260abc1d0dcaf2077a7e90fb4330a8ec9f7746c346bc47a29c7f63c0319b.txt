@@ -1,0 +1,45 @@
+We need to produce reply text and citations. Must be <=1500 chars. Must mention store credit amount €15. Must mention warranty resolution. Must not mention store website or external contact. Must not mention personal data. Must use en-GB. Must reference knowledge base chunks for steps. Provide citations. Must not exceed 6 citations. Provide chunk_id and quote. Must not use exclamation marks or advertising superlatives. Apologise at most once. We can apologise once. Provide steps: app steps first? The chunks don't mention app steps. The instruction says: "Advice for this lamp kind: The lamp is smart, connected over Wi-Fi and controlled from the Lumen app. Give the steps in the app first, then the reset and re-pairing, if the chunks describe them. State network requirements only from the chunks." But the chunks don't mention app steps or network requirements. So we cannot add them. We must say that knowledge base has no answer for app steps. But we can still give steps from chunks: cut power, check plug, replace controller if flicker persists; unplug if hot. We cannot mention app steps because not in chunks. So we should say that the knowledge base does not cover app steps. But the instruction says "Give the steps in the app first, then the reset and re-pairing, if the chunks describe them." Since chunks don't describe them, we cannot provide. So we should say that the knowledge base does not provide app steps. But we might still provide the steps from chunks. That is acceptable.
+
+We must mention warranty resolution and store credit amount. Must not mention store website. Must not mention personal data. Must not use exclamation marks. Must not use advertising superlatives.
+
+We need citations: from kb_strip0flck and kb_ctrlheat01. Provide quotes. Each quote <=300 chars. Provide up to 6 citations. We'll use 2 citations.
+
+We need to output JSON with reply.text and reply.citations. The reply.text must be a string. The citations array must contain objects with chunk_id and quote.
+
+We must not exceed 1500 characters. Let's craft reply.
+
+Reply text:
+
+"Thank you for contacting us about your Lumen Flow Strip 5 m. We understand your concerns.
+
+To address the flickering and heat issues, please follow the steps in the knowledge base:
+
+1. Cut the power to the strip and check that the controller plug is secure. If the flicker continues, the controller will be replaced under warranty. (kb_strip0flck)
+2. If the controller feels hot to the touch, unplug the strip immediately and do not switch it on until it has been inspected. (kb_ctrlheat01)
+
+We have issued a store credit of €15 to your account under the Lumen Plus warranty policy. This credit will be available for future purchases.
+
+We apologise for the inconvenience and thank you for your patience."
+
+We need to ensure no exclamation marks. Remove exclamation. Also no "thank you" with exclamation. Use period.
+
+Let's rewrite:
+
+"Thank you for contacting us about your Lumen Flow Strip 5 m. We understand your concerns.
+
+To address the flickering and heat issues, please follow the steps in the knowledge base:
+
+1. Cut the power to the strip and check that the controller plug is secure. If the flicker continues, the controller will be replaced under warranty. (kb_strip0flck)
+2. If the controller feels hot to the touch, unplug the strip immediately and do not switch it on until it has been inspected. (kb_ctrlheat01)
+
+We have issued a store credit of €15 to your account under the Lumen Plus warranty policy. This credit will be available for future purchases.
+
+We apologise for the inconvenience and thank you for your patience."
+
+We need to ensure no exclamation marks. The phrase "thank you for your patience" has no exclamation. Good.
+
+Now citations: Provide chunk_id and quote. For kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to quote exactly. Provide quotes <=300 chars. Good.
+
+Now produce JSON.

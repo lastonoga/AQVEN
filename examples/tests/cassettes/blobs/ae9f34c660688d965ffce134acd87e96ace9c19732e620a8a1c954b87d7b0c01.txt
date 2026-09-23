@@ -1,0 +1,73 @@
+We need to output JSON with reply text and citations. The reply must be friendly, precise, short, no exclamation marks, no mention of store website or outside contact. Mention store credit amount €15, but in smallest units: 1500 eur. So we say "€15 store credit" but mention amount? The instruction: "Name only the amount the decision gives." So we should say "€15" or "15 euros"? The credit amount in the smallest units of the currency: 1500 eur. That is the amount in cents? Actually 1500 eur means 15 euros? Wait 1500 eur is 1500 euros? The instruction: "Credit amount in the smallest units of the currency: 1500 eur." That seems contradictory: 1500 eur is 1500 euros, not cents. But maybe they mean 1500 cents = 15 euros. The previous reply used €15. So we should say €15. The instruction: "Name only the amount the decision gives." So we say "€15". Also mention that the credit has been issued.
+
+Need to address safety concern, dented box. Use knowledge base chunks: Flow strip flicker chunk: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." Also controller heat chunk: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We also need to give steps in the app first, then reset and re-pairing, if chunks describe them. But chunks do not describe app steps. So we cannot mention app steps. So we only give hardware steps.
+
+We must not mention store website or outside contact. No exclamation marks. Apologise at most once. We can apologise for the dented box. We need to mention safety. We need to mention that the controller will be replaced under warranty if flicker persists.
+
+We need to cite the chunks. Provide citations array with chunk_id and quote. We can include two citations: one for flicker, one for heat. Provide quotes up to 300 chars.
+
+We need to keep reply text <=1500 chars. That's fine.
+
+We need to not mention any personal data. No name, email.
+
+We need to not mention subscription benefits because chunks don't mention them.
+
+We need to not mention store website or outside contact.
+
+We need to not use exclamation marks. So no "!" at all.
+
+We need to not use advertising superlatives.
+
+We need to not mention any policy or deadlines beyond what chunks say.
+
+We need to mention that the credit has been issued. We can say "We have issued a €15 store credit to your account." That is fine.
+
+We need to address safety: "If the controller is hot, unplug immediately and do not turn on until inspected."
+
+We need to address dented box: "We apologise for the dented box you received."
+
+We need to mention that the controller will be replaced if flicker persists.
+
+We need to mention that the strip is smart, but we don't have app steps. So we skip that.
+
+We need to mention that the strip is connected over Wi-Fi and controlled from Lumen app. But we don't have steps. We can say "For app control, use the Lumen app." But we don't have instructions. So we can say "You can use the Lumen app to control the strip." But that might be considered a claim not supported by chunks. The instruction: "Give the steps in the app first, then the reset and re-pairing, if the chunks describe them." Since chunks don't describe them, we cannot give steps. So we should not mention app steps. We can just say "If you need to reset, follow the app instructions." But that might be guess. Better to not mention app steps.
+
+Thus reply: Apology for dented box, safety instructions, flicker instructions, credit. Cite chunks.
+
+Let's craft reply:
+
+"Thank you for letting us know. We apologise for the dented box and for the flickering and heating you have experienced. Please cut the power to the strip and check the controller plug. If the flicker continues, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. We have issued a €15 store credit to your account."
+
+We need to ensure no exclamation marks. No exclamation. Use period.
+
+Citations: For flicker: chunk kb_strip0flck quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." For heat: chunk kb_ctrlheat01 quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include both citations. The quote length is under 300 chars.
+
+We need to ensure reply text <=1500 chars. It's fine.
+
+We need to ensure no mention of store website or outside contact. We didn't.
+
+We need to ensure no exclamation marks. We didn't.
+
+We need to ensure no advertising superlatives. We didn't.
+
+We need to ensure we didn't mention subscription benefits. We didn't.
+
+We need to ensure we didn't mention any policy or deadlines beyond chunks. We didn't.
+
+We need to ensure we didn't mention any personal data. We didn't.
+
+We need to ensure we didn't mention any other data. We didn't.
+
+We need to ensure we didn't mention the store credit amount in cents. We said €15. That is fine.
+
+We need to ensure we didn't mention "store credit amount in the smallest units of the currency: 1500 eur." That is just instruction. We can just say €15.
+
+We need to ensure we didn't mention any other things.
+
+We need to output JSON with "reply" object containing "text" and "citations". The schema: reply: {text: string, citations: array}. Citations array items: {chunk_id, quote}. Must be <=6 items.
+
+Let's produce JSON.

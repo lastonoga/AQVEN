@@ -1,0 +1,17 @@
+We need to write reply to customer. The case: customer asks if Lumen Glow E27 smart bulb is compatible with 5 GHz Wi-Fi and wants to use it in bedroom. Need to give advice from knowledge base. The knowledge base chunks are about Flow strip flicker and controller heat. They don't mention Wi-Fi compatibility. So we must say knowledge base has no answer. Also mention no compensation. Must be friendly, precise, short, no exclamation marks, no advertising superlatives. Apologise at most once. Use citations referencing chunks. But we have no chunk about Wi-Fi. So we cannot cite. We should say no answer. But we can refer to the chunks for other advice? The question is about Wi-Fi compatibility. The KB doesn't cover that. So we should say knowledge base has no answer. Also we can give general steps for app, reset, re-pairing? The instructions say: "Advice for this lamp kind: The lamp is smart, connected over Wi-Fi and controlled from the Lumen app. Give the steps in the app first, then the reset and re-pairing, if the chunks describe them. State network requirements only from the chunks." But the chunks don't describe network requirements. So we cannot provide network requirements. We cannot give steps because chunks don't describe them. So we must say knowledge base has no answer.
+
+We must not mention compensation. We must not promise refund. So reply: "I’m sorry, but the knowledge base does not contain information about Wi‑Fi compatibility for the Lumen Glow E27. If you need further assistance, please contact support." Provide citations? We could cite that we have no chunk. But we can still include citations? The instruction: "Back every claim about policy, deadlines or product features with a reference to the chunk that contains it. If the chunks do not answer the question, say plainly that the knowledge base has no answer, and do not fill the gap with guesses." So we should not provide citations because no chunk. But we might still include empty citations? The output format requires reply.citations array. But we can leave empty? The spec says reply.citations: at most 6 items. It doesn't say must have at least one. So we can leave empty array. But we need to output JSON? The output fields: reply: The reply text and the chunk quotes it relies on. So reply is an object with text and citations. So we need to produce JSON with reply.text and reply.citations. Provide citations array empty.
+
+We must ensure reply.text <=1500 characters. It's fine.
+
+We must not mention personal data. No name. Just generic.
+
+Let's craft reply:
+
+"Thank you for your question. The knowledge base does not contain information about whether the Lumen Glow E27 is compatible with 5 GHz Wi‑Fi. If you need further assistance, please let us know."
+
+We can add "We recommend checking the product manual or contacting support for detailed compatibility information." But that might be guess. But it's general. It's not a claim. It's a suggestion. It's safe.
+
+We should not mention compensation. No apology? We can apologize once: "I’m sorry, but I don’t have that information." That is one apology.
+
+Let's produce final.

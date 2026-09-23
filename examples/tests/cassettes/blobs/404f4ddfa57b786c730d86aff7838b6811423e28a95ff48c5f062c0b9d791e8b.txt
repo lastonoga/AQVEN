@@ -1,0 +1,73 @@
+We need to produce JSON with reply text and citations. Must mention store credit amount 1500 eur. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them; chunks don't mention subscription benefits. So no mention.
+
+Need to give steps in app first, then reset and re-pairing if chunks describe them. The chunks do not describe app steps or reset. So we cannot mention them. We must only rely on chunks. So we can say: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If flicker returns, controller replaced under warranty." Also mention hot controller: unplug immediately. Also mention store credit. Provide citations for each chunk used.
+
+We must not mention store website or contact outside marketplace. So we can say "Your account will be credited with 1500 eur." No mention of store.
+
+We must not mention personal data. No mention of name.
+
+We must keep reply short but precise. Provide citations: two chunks. Provide quotes.
+
+We must ensure reply text <=1500 chars. Citations <=6.
+
+We need to include chunk ids and quotes. Provide quotes from chunks.
+
+Chunk kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+Chunk kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We can quote those.
+
+We need to mention store credit amount 1500 eur. Provide that.
+
+We should not mention any other policies.
+
+We should not mention subscription benefits.
+
+We should not mention store website.
+
+We should not mention contact outside marketplace.
+
+We should not mention exclamation marks or advertising superlatives. So no exclamation marks. Use period.
+
+We should not promise what is not in input. So we cannot mention app steps or reset. So we just give the steps from chunks.
+
+We need to ensure we don't mention "store" maybe we can say "Your account will receive a credit of 1500 eur." That is fine.
+
+We need to produce JSON object with reply: {text: "...", citations: [...]}
+
+Let's craft reply text:
+
+"Thank you for contacting us. The flickering near the controller indicates a possible controller issue. Please cut the power and check the controller plug. If the flicker returns, the controller will be replaced under warranty. The hot controller should be unplugged immediately and not switched on until it has been inspected. As a result of the defect, a store credit of 1500 eur has been issued to your account."
+
+We must not use exclamation marks. No exclamation. Use period.
+
+Check for exclamation: none.
+
+We need to ensure no mention of store website. We mention "store credit" but not store website. That's fine.
+
+We need to ensure no mention of contact outside marketplace. We didn't mention.
+
+We need to ensure no mention of subscription benefits. We didn't.
+
+We need to ensure no mention of personal data. We didn't.
+
+We need to ensure no mention of "ASIN" or "product" etc. We mention product type but not ASIN.
+
+We need to ensure we cite both chunks.
+
+We need to ensure quotes are <=300 chars. Let's craft quotes:
+
+Quote from kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+Quote from kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include these quotes.
+
+We need to ensure citations array has two items.
+
+Now produce JSON.
+
+Check that reply text length <=1500. It's short.
+
+Let's produce final JSON.

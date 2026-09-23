@@ -1,0 +1,11 @@
+We need to produce JSON with reply text and citations. The reply should be friendly, precise, short, no exclamation marks, no mention of store website or contact outside marketplace. No mention of customer's name, email. Language en-GB. Should mention subscription benefits only if chunks carry them – they don't. So no subscription mention. Should give steps in app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps. So we cannot give steps. We can mention that the knowledge base says to cut power and check controller plug, if flicker persists replace under warranty. Also if controller hot, unplug and do not switch on until checked. We should advise them to contact support for replacement or further assistance. No compensation. No promise of refund. No store credit. So reply: Apologise once. Provide instructions. Cite chunks. Provide up to 6 citations. We'll use both chunks. Provide quotes.
+
+We need to include citations array with chunk_id and quote. Each quote up to 300 chars. Provide both citations. The text up to 1500 chars. Let's craft.
+
+Reply text: "Thank you for contacting us. We understand your concerns about the flickering and heat. Please follow these steps: 1. Cut the power to the strip and check the controller plug. If the flickering continues, the controller will be replaced under warranty. 2. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. For a replacement or further assistance, please contact our support team through the marketplace. We appreciate your patience."
+
+We need to reference the chunks. Provide two citations. The quotes: from kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+Make sure no exclamation marks. No mention of store website. No mention of subscription. No mention of store credit. No promise of refund. Apologise once: "We apologise for the inconvenience." That's one apology. Good.
+
+Now produce JSON.

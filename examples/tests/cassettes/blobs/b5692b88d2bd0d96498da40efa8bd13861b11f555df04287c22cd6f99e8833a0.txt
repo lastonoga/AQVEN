@@ -1,0 +1,11 @@
+We need to match the decision: store credit of €15 issued under warranty. The reply should name the amount: €15. The previous reply said "€15 (1500 eur)". That is okay but maybe the decision says "store credit of €15" so we should say "€15". The credit amount in smallest units is 1500 eur but we don't need to mention that. The reply should not mention "1500 eur" maybe. Just say €15. Also we need to ensure we don't mention store website or contact outside marketplace. We should mention only marketplace return process. Also we need to ensure we don't mention personal data. The reply should be short. Also we need to keep citations. The citations are fine. Let's rewrite.
+
+Also we need to ensure we don't mention "store credit of €15 (1500 eur)" but just "€15". Also we need to not mention "credit amount in smallest units" because that wasn't in decision. The decision says "store credit of €15 issued under warranty for faulty product." So we should say "store credit of €15". Also we need to mention that the credit can be used to return or exchange. The knowledge base doesn't contain return instructions, so we say "please follow the marketplace return process and apply the credit when you place the return order." That is fine.
+
+We need to ensure we don't mention "store website" or "contact outside marketplace". We didn't. Good.
+
+We need to ensure we don't mention "credit amount in smallest units of the currency: 1500 eur" because that's not in decision. So remove that.
+
+Also we need to keep citations referencing kb_strip0flck and kb_ctrlheat01. Should we include both? Yes. The reply references the flickering and heat issues.
+
+Let's produce JSON.

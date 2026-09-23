@@ -1,0 +1,15 @@
+We need to produce JSON with reply text and citations. Must mention store credit amount: 1500 eur (smallest units). Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them; none mention subscription. Must give steps for app first, then reset and re-pairing if chunks describe them. But chunks don't describe app steps or reset. So we cannot add that. Must only rely on chunks. So reply will say: flicker near controller, cut power, check plug; if flicker returns replace controller under warranty. Also controller hot, unplug immediately. Then mention store credit of €15 (1500 eur). Provide citations for each chunk. Provide no other info. Must not mention store website. Must be friendly, precise, short. No exclamation marks. Apologise at most once. We can apologise for inconvenience. Let's craft reply.
+
+Text: "Thank you for contacting us. We’re sorry to hear about the flickering and heat. Please cut the power and check the controller plug. If the flicker returns, the controller will be replaced under warranty. If the controller is hot, unplug the strip immediately and do not turn it on until it has been inspected. As a result, we are issuing a store credit of €15 (1500 eur) for this order. The credit will be applied shortly."
+
+Citations: two citations: one for flicker chunk, one for heat chunk. Provide quotes.
+
+We need to include chunk_id and quote. Quote must be <=300 chars. Provide relevant excerpt.
+
+From kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." That's 140 chars.
+
+From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." That's 110 chars.
+
+We need to include both citations.
+
+Return JSON.

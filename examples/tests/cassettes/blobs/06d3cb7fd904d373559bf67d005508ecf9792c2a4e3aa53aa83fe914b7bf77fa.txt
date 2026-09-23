@@ -1,0 +1,22 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." So output scores of best candidate. Need decide best.
+
+We have case: strip flickering near controller for 3 days, controller hot after half hour, safety concern, warranty resolution. Chunks: flicker -> cut power check plug, if flicker comes back controller replaced under warranty. Heat -> unplug at once and do not switch on until checked.
+
+Candidates:
+0: "Thank you... We understand concerns... As per warranty policy, we are issuing a store credit. The credit will be applied... questions..." Cites both chunks. But chunks do not mention store credit. Warranty says controller replaced under warranty, not store credit. Also doesn't instruct immediate unplug/check for heat, nor cut power/check plug. It acknowledges concerns but gives ungrounded store credit. Grounded? Claims store credit unconfirmed. Helpful? Not helpful because doesn't address safety instructions, and offers unsupported resolution. Tone polite.
+
+1: "We're sorry... We've issued you store credit as gesture of goodwill under warranty policy. If flickering persists, please cut power and check controller plug." Cites flicker chunk. Also store credit ungrounded. It does include flicker instruction but not heat unplug instruction. It says "if flickering persists" but case says flickering for three days, so should cut power/check plug now. Also no heat safety. Tone empathetic. Grounded? Store credit unconfirmed; flicker instruction grounded. Helpful? Partially, but misses heat safety and gives ungrounded credit. Tone okay.
+
+Need score best candidate. Both have ungrounded store credit. Candidate 0 cites both chunks but doesn't use them in text? It says "As per warranty policy, issuing store credit" not in chunks. Candidate 1 includes flicker instruction but not heat. Which is better? Need judge grounded, helpful, tone. Candidate 1 is more helpful because it at least tells cut power/check plug, but still misses heat. Candidate 0 is less helpful, no actionable safety. Candidate 1 tone "We're sorry" better. So best likely 1. Need scores: grounded maybe 2? Helpful 2? Tone 4? Need rationale.
+
+Need ensure "grounding in knowledge base chunks": claims chunks do not confirm count unconfirmed. Candidate 1: "issued store credit" unconfirmed. "If flickering persists, cut power and check plug" grounded. But "issued store credit" is a major claim. Also "under warranty policy" maybe not confirmed. So grounded low, maybe 2. Candidate 0: "issuing store credit" unconfirmed, no actionable grounded instructions. Grounded 1? But it cites chunks but text doesn't reflect them. Need score best candidate only. We can score candidate 1: grounded 2, helpful 2, tone 4. Or grounded 3? Let's think.
+
+Rubric criteria: grounded, helpful, tone. Need score 1-5. Candidate 1 has one grounded instruction but also ungrounded store credit. Since a claim chunks do not confirm counts as unconfirmed, however plausible. It has both. Grounded maybe 2 (partially grounded but significant unconfirmed). Helpful: It addresses flicker but not heat/safety. Customer concerned safety, wants warranty resolution. It gives store credit (unconfirmed) and flicker instruction. It doesn't tell unplug due to heat. So helpful 2. Tone: empathetic, polite, "We're sorry", "gesture of goodwill" maybe okay. Tone 4.
+
+Need rationale under 550 chars total. One or two sentences per criterion. Need mention best index. Output JSON only. Need no markdown.
+
+Let's craft rationale: "Candidate 1 is grounded only for the flicker instruction; the store credit is not supported by the chunks, and the heat-related unplug/check instruction is omitted. It is somewhat helpful because it gives one actionable step, but it fails to address the hot controller safety concern and offers an unconfirmed resolution. Tone is empathetic and courteous." That's under 550. Need scores array with criteria. best_index 1.
+
+Need ensure "scores" max 3 items. Use criteria enum: grounded, helpful, tone. Score values.
+
+Let's final.

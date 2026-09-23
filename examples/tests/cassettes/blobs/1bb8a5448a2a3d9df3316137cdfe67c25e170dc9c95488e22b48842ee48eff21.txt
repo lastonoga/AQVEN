@@ -1,0 +1,35 @@
+We need to produce reply text with citations. Must be friendly, precise, short. No exclamation marks, no advertising superlatives, no mention of store website or outside contact. Must mention subscription benefits only if chunks carry them – they don't. Must give steps in app first, then reset/re-pairing if chunks describe them – chunks don't describe app steps. So we cannot mention app steps. Just give steps from chunks: cut power, check plug, if flicker returns replace controller under warranty; if hot, unplug and don't turn on until checked. Also mention that support lead declined store credit; contact support team for replacement/reship. Apologise at most once. Avoid mention of customer's name etc. Provide citations referencing chunks. Provide reply field with text and citations array.
+
+We need to include citations for each claim. We have two chunks: kb_strip0flck and kb_ctrlheat01. We'll cite accordingly.
+
+We must not promise refund, credit, replacement. But we can say contact support team for further assistance with replacement or reship. That is allowed. The decision says no compensation. But we can say contact support for replacement or reship. That's fine.
+
+We need to keep apology once. We'll apologise once.
+
+We need to keep reply <=1500 chars. Citations <=6 items.
+
+Let's craft reply:
+
+"Thank you for reaching out. For the flickering near the controller, please cut the power and check the controller plug. If the flicker returns, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. We apologise for the inconvenience. Please contact our support team for assistance with a replacement or reship of the faulty light strip."
+
+Citations: first claim from kb_strip0flck, second claim from kb_ctrlheat01. Also mention that support lead declined store credit? That is not a claim from chunk. We can mention that store credit declined but we can say contact support. That is fine.
+
+We need to include citations array. Each citation includes chunk_id and quote. We'll quote relevant lines.
+
+Let's craft quotes:
+
+From kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+We need to include these quotes.
+
+We must not mention store website or outside contact. Just "contact our support team".
+
+We must not mention subscription benefits. No.
+
+Ok.
+
+Return JSON with reply.text and reply.citations array.
+
+Let's produce.

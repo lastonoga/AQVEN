@@ -1,0 +1,11 @@
+We need to produce JSON with reply.text and citations. Must be <=1500 chars. Must reference chunks. We have two chunks: kb_strip0flck and kb_ctrlheat01. We need to cite them appropriately. The reply should mention store credit 1500 eur. Must not mention store website or contact outside marketplace. Must mention subscription benefits only if chunks carry them – they don't. Must give steps in app first, then reset and re-pairing, if chunks describe them. But chunks don't describe app steps. So we cannot mention app steps. We can only give steps from chunks: cut power, check controller plug, if flicker persists replace controller under warranty; if hot, unplug immediately and do not switch on until checked. Also ask for ASIN. Also mention store credit. Also address concern about leaving strip switched on: advise not to leave on until checked. Provide citations for each claim. So we need citations for flicker chunk and heat chunk. Also store credit not from chunk. So we can have 2 citations. Must include chunk_id and quote. Provide quote up to 300 chars. Let's craft reply.
+
+Text: "Thank you for reaching out. The flickering near the controller and the hot controller suggest a controller fault. Please cut the power and check the controller plug; if the flicker returns, the controller will be replaced under warranty. If the controller is hot, unplug the strip immediately and do not switch it on until it has been inspected. To process the warranty replacement we need the ASIN of the unit. As a result of the defect, a store credit of 1500 EUR has been issued to your account."
+
+Citations: for flicker chunk: quote: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty." chunk_id kb_strip0flck.
+
+For heat chunk: quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked." chunk_id kb_ctrlheat01.
+
+We need to ensure citations array with two items. Ensure text <=1500 chars. It's fine.
+
+Return JSON.

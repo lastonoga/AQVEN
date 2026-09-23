@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-65537368fcfefa1deb4767e3a32b2bf6a1fa9f4ec39f58ce30e3a01226eac4cf",
+  "request_key": "sha256-64c345dbbdf82f062dede9da7929a6545a422cd8152c1a8318524d01e426d6ba",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "record__extract",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_ZLOLDr858QBnQeMLBW8g",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_ZLOLDr858QBnQeMLBW8g",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"record\":{\"kind\":\"question\",\"order_id\":null,\"topic\":\"Does the Lumen Glow E27 smart bulb support 5 GHz Wi-Fi?\"}}",
+        "tool_call_id": "tool_final_result_ZLOLDr858QBnQeMLBW8g",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"question\",\"order_id\":null,\"topic\":\"Does the Lumen Glow E27 smart bulb support 5 GHz Wi-Fi?\"}}",
+        "tool_call_id": "tool_final_result_ZLOLDr858QBnQeMLBW8g",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"record\":{\"kind\":\"question\",\"order_id\":null,\"topic\":\"Does the Lumen Glow E27 smart bulb support 5 GHz Wi-Fi?\"}}",
+        "tool_call_id": "tool_final_result_ZLOLDr858QBnQeMLBW8g",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 342,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 28,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-23T06:52:57.943135Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:52:57Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 4.54e-05,
+      "upstream_inference_cost": 4.54e-05,
+      "upstream_inference_prompt_cost": 3.42e-05,
+      "upstream_inference_completions_cost": 1.12e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146377-dTFUq87pCj0ehDO4m0yF",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

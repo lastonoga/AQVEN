@@ -1,0 +1,52 @@
+We need to produce a reply text with citations. Must mention store credit amount: 1500 eur (smallest units). Must not mention store website or contact outside marketplace. Must not mention customer's personal data. Must mention subscription benefits only if chunks carry them – they don't. Must give steps in app first, then reset and re-pairing if chunks describe them. But chunks do not describe app steps. So we cannot provide steps. We must say knowledge base has no answer. But the user wants advice for this lamp kind: "The lamp is smart, connected over Wi-Fi and controlled from the Lumen app. Give the steps in the app first, then the reset and re-pairing, if the chunks describe them. State network requirements only from the chunks." The chunks don't describe network requirements or steps. So we must say knowledge base has no answer. But we can still give the store credit info and safety advice from chunks. We must not mention store website. Must not mention personal data. Must be friendly, precise, short. Apologise at most once. No exclamation marks. No advertising superlatives. Must cite chunks. We can cite kb_strip0flck and kb_ctrlheat01. We need to keep reply <=1500 chars. Citations <=6 items. Each quote <=300 chars.
+
+We need to mention that the store credit is 1500 eur. We need to mention that the credit is issued. We can mention that the controller is hot, so unplug. Also flickering near controller, cut power and check plug. If flicker returns, controller replaced under warranty. That is from kb_strip0flck. Also from kb_ctrlheat01: If controller body is hot, unplug and do not switch on until checked.
+
+We need to mention that we cannot provide app steps because not in chunks. We can say "The knowledge base does not provide app steps or network requirements." That is allowed.
+
+We should not mention "store website" or "outside marketplace". We can mention "your account" for credit.
+
+We need to mention that the credit amount is 1500 eur (smallest units). Provide that.
+
+We should not mention subscription benefits because not in chunks.
+
+Ok. Let's craft reply.
+
+Reply text:
+
+"Thank you for contacting us. We have issued a store credit of 1500 eur to your account for the defective Lumen Flow Strip 5 m. Please note that the credit will be applied shortly. For safety, if the strip flickers near the controller, cut the power and check the controller plug; if the flicker returns, the controller will be replaced under warranty. If the controller feels hot, unplug the strip immediately and do not turn it on until it has been inspected. The knowledge base does not contain specific app steps or network requirements for this product, so we cannot provide those details at this time. If you have further questions, please let us know."
+
+Citations: kb_strip0flck quote about flicker and replacement; kb_ctrlheat01 quote about hot controller.
+
+We need to ensure no exclamation marks. Use period. Apologise at most once: we didn't apologize. It's fine.
+
+We need to ensure no mention of store website or contact outside marketplace. We mention "your account" but that's fine.
+
+We need to ensure no mention of personal data. No mention of name.
+
+Ok. Provide citations. Let's format.
+
+We need to include reply.citations array. Each item with chunk_id and quote.
+
+We need to ensure quote <=300 chars. Let's extract relevant quotes.
+
+From kb_strip0flck: "If a Flow strip flickers near the controller, cut the power and check the controller plug. If the flicker comes back, the controller is replaced under warranty."
+
+From kb_ctrlheat01: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked."
+
+Ok.
+
+Now produce JSON-like output? The instruction says Output fields: - reply: The reply text and the chunk quotes it relies on. So we need to output something like:
+
+{
+  "reply": {
+    "text": "...",
+    "citations": [...]
+  }
+}
+
+But the instruction says Output fields: - reply: The reply text and the chunk quotes it relies on. Allowed values of KbChunkId: ... So likely we need to output a JSON object with reply.text and reply.citations. Let's follow that.
+
+We need to keep reply.text <=1500 chars. It's fine.
+
+Let's produce final.

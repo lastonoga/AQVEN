@@ -1,0 +1,15 @@
+We need to decide a warranty case for a smart lighting product. The customer is a subscriber with an extended warranty: apply extended terms from policies. But we have only one policy: Store credit under warranty: Lumen Plus customers receive store credit of up to €20 for a faulty product within the warranty period.
+
+We need to check order details: order number LUM-20260903. Use lookup_order. Then check purchase date, delivery date, total, line items. Also check if within warranty period. We need to know warranty period. Not provided. But we have extended warranty: apply extended terms from policies. But we don't have policy details for extended warranty. The policy says up to €20 store credit for faulty product within warranty period. Extended warranty might extend period? But we don't have details. We might assume extended warranty extends period but still store credit up to €20. So we can issue store credit up to €20. But we need to ensure not above order total. We need order total. Let's call lookup_order.
+
+Also check customer's past cases with find_tickets. If repeat defect of same product or compensation already given, changes decision. We need to check if they had previous case. Use find_tickets. But find_tickets tool likely returns tickets. We need to parse. Let's call find_tickets. But we need to filter by customer id? The tool signature find_tickets() no parameters. It might return all tickets. We need to filter. But we don't know the format. We'll just call find_tickets and see.
+
+We also need to check if the symptom is flickering. No safety hazard. So we can issue store credit. The policy: 3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34.
+
+We need to decide amount. Up to €20. But we need to check order total. Let's assume order total is less than €20? We need to get order total. Let's call lookup_order.
+
+We also need to check if within warranty period. We need purchase date and delivery date. We need to know warranty period. Not provided. But maybe extended warranty extends period. We might assume it's within warranty period. But we should check. The policy says "within the warranty period". We need to confirm. Without policy details, we might assume it's within. But we might need to check if purchase date is within last 12 months? Not sure. But we can assume it's within.
+
+We also need to check if the customer had previous compensation. Use find_tickets. If they had store credit already, maybe we cannot give again? But policy says up to €20 for faulty product within warranty period. If they had previous store credit for same product, maybe we can't give again. But we need to check.
+
+Let's call lookup_order.

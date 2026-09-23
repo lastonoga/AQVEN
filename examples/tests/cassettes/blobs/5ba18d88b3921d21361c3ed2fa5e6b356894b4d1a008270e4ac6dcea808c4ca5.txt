@@ -1,0 +1,31 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." Output schema scores max 3 items. Need score best candidate on grounded, helpful, tone. Need choose best_index.
+
+Need analyze.
+
+Case: customer received strip with dented box, flickering near controller for 3 days, controller hot after half hour, concerned safety, wants warranty resolution. ASIN not provided.
+
+Chunks:
+- flicker: cut power and check controller plug. If flicker comes back, controller replaced under warranty.
+- heat: if controller hot, unplug at once and do not switch on until checked.
+
+Candidate 0: "Thank you for reaching out. We understand your concerns about the flickering and heat. As per our warranty policy, we are issuing a store credit. The credit will be applied to your account shortly. If you have any other questions, please let us know." Cites both chunks. But chunks do not mention store credit. It says controller replaced under warranty, not store credit. Also doesn't instruct safety actions (cut power/unplug) despite citing. It acknowledges concerns but no safety guidance. Grounded? It says "as per warranty policy, issuing store credit" unconfirmed. It also says "flickering and heat" confirmed by case. But store credit not grounded. Helpful? Not helpful because doesn't tell to unplug/check, and store credit may not be warranted. Tone polite.
+
+Candidate 1: "We're sorry to hear about the issues with your Lumen Flow Strip 5m. We've issued you store credit as a gesture of goodwill under our warranty policy. If the flickering persists, please cut the power and check the controller plug." Cites flicker chunk. It also says store credit unconfirmed. It gives partial safety instruction but only if flickering persists; heat requires unplug at once and do not switch on until checked. It doesn't address heat. It says "issued store credit" unconfirmed. Helpful? Somewhat but incomplete and potentially wrong. Tone empathetic.
+
+Need choose best. Both have unconfirmed store credit. Candidate 0 addresses both flicker and heat but no actionable safety. Candidate 1 addresses flicker action but not heat, and says store credit. Which is better? Need score best candidate. Need maybe candidate 0? Let's compare grounded: Candidate 0 cites both chunks but its main action (store credit) not grounded. Candidate 1 also store credit ungrounded, and only cites flicker. Both grounded poor. Candidate 0 at least mentions heat and flicker, but no safety instructions. Candidate 1 gives one safety instruction but not heat. Helpfulness: Candidate 1 tells cut power/check plug if flickering persists, but heat is more urgent and unaddressed. Candidate 0 no instructions. Candidate 1 more helpful? It also says store credit, which may be false. Candidate 0 says store credit too. Candidate 1's "if flickering persists" is odd because flickering already persists; should cut power now. Candidate 0 says "we understand concerns" but no action. Hmm.
+
+Tone: both polite. Candidate 1 "We're sorry" empathetic. Candidate 0 "Thank you" professional. Both fine.
+
+Need maybe best_index 1? Need score. Let's think rubric: grounded in knowledge base chunks. Candidate 1's only grounded claim is "If flickering persists, cut power and check controller plug" (though "persists" not exactly; chunk says if flickers, cut power and check plug). It also says store credit unconfirmed. Candidate 0's "flickering and heat" are case facts, not chunks; "warranty policy store credit" unconfirmed. Candidate 0 doesn't include any chunk-derived instruction. So candidate 1 is more grounded because it includes at least one chunk instruction. Candidate 0 cites chunks but doesn't use them. So candidate 1 best.
+
+Need scores: grounded, helpful, tone. Need assign 1-5. Candidate 1 grounded: It includes one correct instruction from chunk, but also unconfirmed store credit and no heat instruction. Maybe 2. Helpful: It addresses flicker but not heat safety; store credit may be unhelpful. Maybe 2. Tone: empathetic and polite, 4. Need maybe grounded 2, helpful 2, tone 4. Candidate 0 maybe grounded 1, helpful 1, tone 3. So best 1.
+
+Need rationale under 550 chars total. Need one or two sentences per criterion. Need mention panel null? No need. Need output JSON only. Need ensure rationale maxLength 600. We'll write concise.
+
+Need maybe "best_index": 1. Scores array with criteria "grounded", "helpful", "tone". Need order? Any. Use all three.
+
+Need be careful: "scores: Scores of the best candidate, one per rubric criterion" So only best candidate scores. Good.
+
+Need rationale: "Candidate 1 is grounded only in the flicker chunk's instruction to cut power/check plug; its store-credit claim is unconfirmed and it omits the heat chunk's unplug/do-not-switch-on directive. It is more helpful than candidate 0 because it gives at least one actionable safety step, but it still fails to address the urgent heat hazard and offers an unsupported remedy. Tone is empathetic and professional, though slightly presumptive in announcing credit." That's about 400 chars. Need maybe under 550. Good.
+
+Need ensure no markdown.

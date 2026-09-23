@@ -1,0 +1,335 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-f4469783f4762ae5eb3d5c422d79b788a79f6e5cfd84a63d23b5f36685f2f7e2",
+  "request_key": "sha256-9d3f088478d13ac82b5e90916bec79f5208b77352aac3f04edc8940eddba05dc",
+  "model_ref": "openrouter:openai/gpt-oss-20b",
+  "site": {
+    "address": {
+      "node_id": "polish__revise",
+      "branch_key": null,
+      "iteration": 0,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "content": "We need to produce JSON with reply.text and citations. We have knowledge base chunks: kb_strip0flck and",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " kb_ctrlheat01. But the question: \"The customer is asking if the Lumen Glow E27 smart bulb supports 5 GHz Wi-Fi and wants to use",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " it in the bedroom.\" The previous reply says it only supports 2.4 GHz. That is presumably correct but not in chunks. The chunks are about flicker and",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " heat, not Wi-Fi. The instruction: \"If the chunks do not answer the question, say plainly that the knowledge base has no answer, and do not fill the gap",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " with guesses.\" So we cannot say it supports 2.4 only because that is not in chunks. We must say knowledge base has no answer. Also we need to give steps",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " for app, reset, re-pairing if chunks describe them. They don't. So we cannot provide those steps. So reply: \"The knowledge base does",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " not contain information about Wi-Fi band support for the Lumen Glow E27. We recommend checking the product manual or contacting support for that detail.\" No compensation. No mention of subscription",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " benefits. No personal data. Provide citations? We need citations referencing chunks. But we have no relevant chunk. The schema requires citations array, but maybe we can provide empty array",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "? The schema says citations is required, but can be empty? It says \"citations\": {\"items\": {\"$ref\": \"#/$defs",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": "/Citation\"}, \"maxItems\": 6, \"type\": \"array\"}. It doesn't say minItems. So empty array is allowed. So we can",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " provide empty citations. That is fine.\n\nThus reply.text: \"I’m sorry, but the knowledge base does not contain information about whether the Lumen Glow E27 supports",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " 5 GHz Wi‑Fi. For details on Wi‑Fi compatibility and how to set up the bulb in your bedroom, please refer to the product manual or contact our",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "content_delta": " support team.\" No exclamation marks. Apologise once. No mention of compensation. No mention of subscription benefits. No personal data. That's it.",
+        "signature_delta": null,
+        "provider_name": null,
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_delta_kind": "thinking"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "content": {
+          "$aqven_blob": "sha256-d5d466c7b66f948c35c911bce9a96957ffbc9d36824080dfbda213f01c022e85"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      "next_part_kind": "text",
+      "event_kind": "part_end"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"I’m sorry, but the knowledge base does not contain information about whether the Lumen Glow E27 supports 5 GHz Wi‑Fi",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "previous_part_kind": "thinking",
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": null,
+      "tool_call_id": null,
+      "event_kind": "final_result"
+    },
+    {
+      "index": 1,
+      "delta": {
+        "content_delta": ". For details on Wi‑Fi compatibility and how to set up the bulb in your bedroom, please refer to the product manual or contact our support team.\",\"citations\":[]}}",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "text"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 1,
+      "part": {
+        "content": "{\"reply\":{\"text\":\"I’m sorry, but the knowledge base does not contain information about whether the Lumen Glow E27 supports 5 GHz Wi‑Fi. For details on Wi‑Fi compatibility and how to set up the bulb in your bedroom, please refer to the product manual or contact our support team.\",\"citations\":[]}}",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "content": {
+          "$aqven_blob": "sha256-d5d466c7b66f948c35c911bce9a96957ffbc9d36824080dfbda213f01c022e85"
+        },
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "{\"reply\":{\"text\":\"I’m sorry, but the knowledge base does not contain information about whether the Lumen Glow E27 supports 5 GHz Wi‑Fi. For details on Wi‑Fi compatibility and how to set up the bulb in your bedroom, please refer to the product manual or contact our support team.\",\"citations\":[]}}",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 992,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 64,
+      "output_tokens": 506,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 425,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 425
+    },
+    "model_name": "openai/gpt-oss-20b",
+    "timestamp": "2026-09-23T06:53:01.130966Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:52:58Z",
+      "downstream_provider": "Parasail",
+      "finish_reason": "stop",
+      "cost": 0.00010502,
+      "upstream_inference_cost": 0.00010502,
+      "upstream_inference_prompt_cost": 2.912e-05,
+      "upstream_inference_completions_cost": 7.59e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146378-miZASKLFgcFRdtDT9IpD",
+    "finish_reason": "stop",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}

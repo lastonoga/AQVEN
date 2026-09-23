@@ -1,0 +1,28 @@
+We need answer JSON. Need evaluate candidates. Need rationale under 550 chars total. Need scores for best candidate only? User says "give the best candidate its scores and name its index." Output schema scores max 3 items, best_index. Need score best candidate on grounded, helpful, tone. Need decide best.
+
+Let's analyze.
+
+Case: customer received strip with dented box. Strip flickering near controller for three days, controller hot after half hour. Concerned safety, wants warranty resolution. ASIN not provided.
+
+Chunks:
+- flicker: cut power and check controller plug. If flicker comes back, controller replaced under warranty.
+- heat: if controller hot, unplug at once and do not switch on until checked.
+
+Candidates:
+0: "Thank you for reaching out. We understand your concerns about the flickering and heat. As per our warranty policy, we are issuing a store credit. The credit will be applied to your account shortly. If you have any other questions, please let us know." Cites both chunks. But chunks don't mention store credit. It acknowledges concerns but doesn't instruct safety actions (unplug, don't switch on) nor check plug. It says issuing store credit, unconfirmed by chunks. Grounded? It cites chunks but claims store credit not grounded. Also "as per warranty policy" not in chunks. So grounded low.
+
+1: "We're sorry to hear about the issues with your Lumen Flow Strip 5m. We've issued you store credit as a gesture of goodwill under our warranty policy. If the flickering persists, please cut the power and check the controller plug." Cites flicker chunk. It includes store credit unconfirmed. It gives safety instruction for flicker but not heat. It says "if flickering persists" but case says flickering for three days, so should cut power/check plug now. It doesn't address hot controller/unplug. Grounded partially: flicker instruction grounded, store credit ungrounded. Helpful? Less helpful than 0? It at least gives one actionable step, but misses heat safety. Tone: empathetic, okay.
+
+Need choose best. Both have ungrounded store credit. Candidate 0 acknowledges both issues but no actionable safety. Candidate 1 gives one action but misses heat. Which is better? Need score best candidate. Need maybe candidate 1 is better because it includes grounded instruction from chunk. But it also says "we've issued store credit" as if done, ungrounded. Candidate 0 also says issuing store credit. Candidate 1 has "gesture of goodwill" maybe not grounded. Candidate 0 "as per warranty policy" maybe false. Candidate 1 "If flickering persists" is weird because it persists; should cut power and check plug. But at least includes. Candidate 0 no safety instructions, so less helpful and less grounded? Both grounded low. Tone both polite. Candidate 1 more personalized and apologetic. Candidate 0 generic. So best likely 1.
+
+Need score best candidate on three criteria. Need grounded score: maybe 2? It cites flicker chunk and includes that instruction, but store credit unconfirmed and doesn't address heat. Grounded in KB: partially grounded but includes unsupported claim. Score 2. Helpful: addresses flicker but not heat safety; store credit may be desired but unsupported. Score 2 or 3? It gives one actionable step but misses critical safety. Maybe 2. Tone: polite, empathetic, "We're sorry" -> 4. Need maybe candidate 0 tone also polite but less personal. Best index 1.
+
+Need rationale under 550 chars total. Need one or two sentences per criterion. Let's craft concise.
+
+Need ensure JSON only. No markdown. Use double quotes. "scores": [{"criterion":"grounded","score":2}, {"criterion":"helpful","score":2}, {"criterion":"tone","score":4}], "best_index":1.
+
+Need rationale: "Candidate 1 is best: it includes the grounded flicker instruction, but both candidates assert store credit without KB support and neither addresses the hot-controller unplug warning. Helpfulness is limited because the safety-critical heat step is missing and the flicker advice is conditional though flickering is ongoing. Tone is courteous and apologetic, slightly warmer than candidate 0." Need under 550. Good.
+
+Need maybe mention candidate 0? Fine.
+
+Let's ensure no extra text.
