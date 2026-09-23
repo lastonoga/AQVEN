@@ -15,6 +15,7 @@ from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, active_runtime
 from aqven.ir import IrHash, IrLookupError
 from aqven.runtime.address import RunId
 from aqven.runtime.runs import Page
+from aqven.series.bound import BoundPlan, largest_case
 from aqven.series.estimate import CatalogRunSampler, EstimateOutcome, EstimatePlan, SeriesEstimator
 from aqven.series.events import SeriesEventLog
 from aqven.series.ids import new_series_id
@@ -192,6 +193,18 @@ def estimate_plan(planned: PlannedSeries) -> EstimatePlan:
         base=planned.base,
         cases_sha256=planned.snapshot.cases_sha256,
         warnings=planned.choice.warnings,
+        bound=bound_plan(planned),
+    )
+
+
+def bound_plan(planned: PlannedSeries) -> BoundPlan:
+    return BoundPlan(
+        base=planned.base,
+        projects={build.record.variant_id: build.plan for build in planned.variants},
+        judges=planned.judges.plan,
+        checks=planned.checks,
+        case=largest_case(planned.cases),
+        subject=planned.draft.subject,
     )
 
 
@@ -342,7 +355,7 @@ class SeriesService:
     async def _estimated(self, planned: PlannedSeries, request_cap: Decimal | None) -> EstimateOutcome:
         runtime = optional_runtime()
         sampler = None if runtime is None else CatalogRunSampler(DbosEngineFacade(runtime=runtime))
-        estimator = SeriesEstimator(store=self.services.store, sampler=sampler)
+        estimator = SeriesEstimator(store=self.services.store, prices=self.services.prices, sampler=sampler)
         return await estimator.estimate(estimate_plan(planned), request_cap, await self._cap(), await self._workers())
 
     async def _cap(self) -> Decimal:

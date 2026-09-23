@@ -13,6 +13,7 @@ from pydantic_ai.messages import ModelMessage, ModelRequest, UserPromptPart
 from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, DeltaToolCall, DeltaToolCalls, FunctionModel
 from series_fixture import CHEAP_MODEL, CRITIC_MODEL, WRITER_MODEL
+from series_prices import FixedPrices
 
 from aqven.engine.assembly import standard_engine_setup
 from aqven.engine.lifecycle import EngineLifecycle
@@ -30,7 +31,7 @@ from aqven.series.model import (
     SeriesVerdict,
     StopCause,
 )
-from aqven.series.ports import SeriesAnalyst
+from aqven.series.ports import ModelPrices, SeriesAnalyst
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
 from aqven.series.views import SeriesGetRequest, SeriesGetResult
@@ -206,12 +207,18 @@ class SeriesHarness:
 
 @contextmanager
 def series_engine(
-    root: Path, models: ScriptedModels, settings: MemorySettings | None = None, real: SeriesAnalyst | None = None
+    root: Path,
+    models: ScriptedModels,
+    settings: MemorySettings | None = None,
+    real: SeriesAnalyst | None = None,
+    prices: ModelPrices | None = None,
 ) -> Generator[SeriesHarness]:
     chosen = settings or MemorySettings()
     analyst = StubAnalyst()
     findings = RecordingFindings()
-    services = build_series_services(root, ProjectWorkspace(root), chosen, real or analyst, findings, "test")
+    workspace = ProjectWorkspace(root)
+    known = FixedPrices() if prices is None else prices
+    services = build_series_services(root, workspace, chosen, real or analyst, findings, known, "test")
     SERIES_SLOT.install(services)
     standard = standard_engine_setup(
         factories=FixedModels(models.mapping()), environ=offline_environment(), settings=chosen

@@ -97,11 +97,12 @@ function Recommendation({ experiment, estimate }: { readonly experiment: Experim
 function EstimateFigures({ estimate }: { readonly estimate: LaunchEstimate }) {
   const t = useTranslations("research.experiment.launch")
   const spend = estimate.usd === null ? t("noEstimate") : usd(estimate.usd)
+  const source = estimate.usd === null ? null : t(`usdSource.${estimate.usdSource}`)
   const time = estimate.minutes === null ? t("noEstimate") : t("minutes", { count: estimate.minutes })
   return (
     <section aria-label={t("estimateAria")} className="flex flex-wrap items-end gap-x-8 gap-y-3">
       <Stat variant="stacked" label={t("attempts")} value={String(estimate.attempts)} />
-      <Stat variant="stacked" label={t("spend")} value={spend} />
+      <Stat variant="stacked" label={t("spend")} value={spend} trail={source} />
       <Stat variant="stacked" label={t("time")} value={time} />
       <Text role="hint" tone="neutral">
         {joinMeta([

@@ -89,7 +89,7 @@ function MetricStat({ label, badge, value, note, hint }: StatProps) {
   )
 }
 
-function StackedStat({ label, value }: StatProps) {
+function StackedStat({ label, value, trail }: StatProps) {
   return (
     <div className="flex flex-col gap-0.75">
       <Text role="hint" tone="neutral" className="leading-none">
@@ -97,6 +97,11 @@ function StackedStat({ label, value }: StatProps) {
       </Text>
       <Text role="item" weight="semibold">
         {value}
+        {hasContent(trail) ? (
+          <Text role="hint" tone="neutral" weight="normal" className="ml-1.5">
+            {trail}
+          </Text>
+        ) : null}
       </Text>
     </div>
   )

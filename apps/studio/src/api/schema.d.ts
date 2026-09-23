@@ -6482,7 +6482,7 @@ export interface components {
              * Usd Source
              * @enum {string}
              */
-            usd_source: "history" | "prices" | "unknown";
+            usd_source: "history" | "prices" | "bound" | "unknown";
             /** Minutes */
             minutes: number | null;
             /** Half Width */

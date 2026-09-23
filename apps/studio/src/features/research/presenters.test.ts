@@ -80,6 +80,7 @@ const estimate = (fields: Partial<LaunchEstimate>): LaunchEstimate => ({
   variants: 2,
   attempts: 72,
   usd: 0.91,
+  usdSource: "prices",
   minutes: 2,
   available: 12,
   halfWidth: 0.12,
