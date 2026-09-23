@@ -22,6 +22,7 @@ from aqven.console.series import (
     SeriesRunner,
     done_lines,
     failed_lines,
+    progress_line,
     run_series_command,
     started_line,
     studio_link,
@@ -378,3 +379,15 @@ def test_an_upper_bound_estimate_is_named_in_the_started_line() -> None:
 
     assert "estimate $2.40 (upper bound), cap $3.00" in started_line(running.model_copy(update={"estimate": bounded}))
     assert "estimate $2.40, cap $3.00" in started_line(running)
+
+
+def test_the_progress_line_calls_a_spend_with_unpriced_attempts_a_lower_bound() -> None:
+    running = detail(SeriesStatus.RUNNING, 4)
+    bounded = running.model_copy(
+        update={"spend": SeriesSpend(usd=Decimal("0.20"), cap_usd=Decimal("3.00"), unpriced_attempts=3)}
+    )
+
+    assert progress_line(running) == "4/16 attempts, $0.20 of $3.00, status running"
+    assert progress_line(bounded) == (
+        "4/16 attempts, at least $0.20 (3 attempts on a model without a known price) of $3.00, status running"
+    )

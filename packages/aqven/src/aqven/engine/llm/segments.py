@@ -1,9 +1,8 @@
-from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import Field, JsonValue
 
-from aqven.ports.execution import NodeUsage
+from aqven.ports.execution import NodeUsage, combined_usage
 from aqven.runtime.address import JsonObject, ResourceModel
 from aqven.runtime.executions import AttemptCause, CheckOutcome, ModelErrorDetails
 from aqven.runtime.human import ToolApprovalDecision
@@ -89,10 +88,4 @@ class SegmentState(ResourceModel):
 
 
 def add_usage(left: NodeUsage, right: NodeUsage) -> NodeUsage:
-    return NodeUsage(
-        cost_usd=Decimal(left.cost_usd) + Decimal(right.cost_usd),
-        tokens_in=left.tokens_in + right.tokens_in,
-        tokens_out=left.tokens_out + right.tokens_out,
-        requests=left.requests + right.requests,
-        tool_calls=left.tool_calls + right.tool_calls,
-    )
+    return combined_usage((left, right))

@@ -11,6 +11,8 @@ from aqven.app.workers import InvalidWorkerCount, configured_workers
 from aqven.engine.errors import EngineNotLaunched
 from aqven.engine.facade import DbosEngineFacade
 from aqven.engine.loading import CodeLoader
+from aqven.engine.plans import PlanRegistry
+from aqven.engine.prices import plan_models
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, active_runtime
 from aqven.ir import IrHash, IrLookupError
 from aqven.runtime.address import RunId
@@ -47,6 +49,7 @@ from aqven.series.presenter import (
     shown_status,
     started_view,
     summary_view,
+    unpriced_attempts,
 )
 from aqven.series.protocol import APPROVAL_TOPIC, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
 from aqven.series.services import SeriesServices
@@ -218,6 +221,16 @@ def wanted_row(row: SeriesCaseRow, query: SeriesCasesQuery) -> bool:
     return (not query.failures or row.failing) and (not query.divergent or row.divergent)
 
 
+def recorded_hashes(record: SeriesRecord) -> tuple[IrHash, ...]:
+    judges = () if record.plan.judge_ir_hash is None else (IrHash(record.plan.judge_ir_hash),)
+    return (*(IrHash(variant.ir_hash) for variant in record.plan.variants), *judges)
+
+
+def recorded_models(record: SeriesRecord, plans: PlanRegistry) -> tuple[str, ...]:
+    found = (plans.find(ir_hash) for ir_hash in recorded_hashes(record))
+    return tuple(dict.fromkeys(model for plan in found if plan is not None for model in plan_models(plan)))
+
+
 def optional_runtime() -> EngineRuntime | None:
     return RUNTIME_SLOT.current
 
@@ -253,6 +266,7 @@ class SeriesService:
         series_id = new_series_id(request.client_op_id)
         existing = await self.services.store.series(series_id)
         if existing is not None:
+            await self._warm(existing)
             await launch_series(series_id)
             return await self._started(existing)
         runtime = launched_runtime()
@@ -261,6 +275,7 @@ class SeriesService:
         record = series_record(series_id, planned, outcome, utc_now())
         created = await self.services.store.create(record, planned.cases)
         current = record if created else await self._record(series_id)
+        await self._warm(current)
         await launch_series(series_id)
         return await self._started(current)
 
@@ -303,6 +318,7 @@ class SeriesService:
             raise state_conflict(record, "approved")
         message = ApprovalMessage(approved_by=actor.id).model_dump(mode="json")
         key = APPROVAL_KEY.format(series_id=series_id)
+        await self._warm(record)
         await DBOS.send_async(series_id, message, topic=APPROVAL_TOPIC, idempotency_key=key)
         change = SeriesChange(status=SeriesStatus.RUNNING, approved_by=actor.id, approved_at=utc_now())
         updated = await self.services.store.update(series_id, change)
@@ -330,12 +346,18 @@ class SeriesService:
         if closing is not None:
             yield closing
 
+    async def _warm(self, record: SeriesRecord) -> None:
+        runtime = optional_runtime()
+        if runtime is None:
+            return
+        await runtime.services.prices.warm(recorded_models(record, runtime.plans))
+
     async def _mark_cancelled(self, record: SeriesRecord) -> SeriesRecord:
         attempts = await self.services.store.attempts(record.series_id)
         change = SeriesChange(
             status=SeriesStatus.CANCELLED, finished_at=utc_now(), verdict=cancelled_verdict(record, attempts)
         )
-        return await self.services.store.update(record.series_id, change)
+        return await self.services.store.settle(record.series_id, change)
 
     async def _closing(self, series_id: SeriesId, last: SeriesEvent | None, after_seq: int) -> SeriesEvent | None:
         if isinstance(last, SeriesFinishedEvent):
@@ -387,7 +409,7 @@ class SeriesService:
         if change.status is SeriesStatus.CANCELLED:
             attempts = await self.services.store.attempts(series_id)
             change = change.model_copy(update={"verdict": cancelled_verdict(record, attempts)})
-        return await self.services.store.update(series_id, change)
+        return await self.services.store.settle(series_id, change)
 
     async def _waits(self, record: SeriesRecord, attempts: Sequence[AttemptRecord], waiting: frozenset[RunId]) -> int:
         if record.status is not SeriesStatus.RUNNING:
@@ -401,6 +423,7 @@ class SeriesService:
             done=finished_count(attempts),
             spend=await self.services.store.spend(record.series_id),
             waits=await self._waits(record, attempts, waiting),
+            unpriced=unpriced_attempts(attempts),
         )
 
     async def _summary(self, record: SeriesRecord, waiting: frozenset[RunId]) -> SeriesSummaryView:

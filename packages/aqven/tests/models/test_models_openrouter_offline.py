@@ -136,7 +136,7 @@ def test_openrouter_record_then_replay_without_network(tmp_path: Path) -> None:
     assert recorded_deltas >= 1
     assert KEY not in written
     assert "thinking about France" in written
-    assert str(log.entries[0].provider_cost) == "0.00002"
+    assert (str(log.entries[0].cost), log.entries[0].cost_source) == ("0.00002", "provider")
     assert log.entries[0].usage.input_tokens == 50
 
 

@@ -96,7 +96,7 @@ def report(label: str, log: UsageLog) -> None:
     for entry in log.entries:
         print(
             f"LIVE {label}: model={entry.model_name} input={entry.usage.input_tokens} "
-            f"output={entry.usage.output_tokens} provider_cost={entry.provider_cost} estimated={entry.estimated_cost}"
+            f"output={entry.usage.output_tokens} cost={entry.cost} cost_source={entry.cost_source}"
         )
 
 

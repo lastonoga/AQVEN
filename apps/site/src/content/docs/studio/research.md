@@ -40,6 +40,11 @@ server.
   spend**. That button is the only way a series above the cap runs: an agent over MCP can start a series,
   but it can't approve one. **Stop** cancels a series. Queued attempts never start, and calls already
   running finish and are paid for.
+- **Spend counts every call it can price, and says when it can't.** A call's cost comes from the
+  provider's own report, then the provider's price list (OpenRouter's public model list), then the
+  `genai-prices` table. A call none of them prices is unknown, not free. When some attempts ran on such a
+  model, the series page says the spend is a lower bound and how many attempts it leaves out, and the
+  experiment's series history marks that spend with ≥.
 - **The verdict comes first, as a sentence.** A finished series shows its verdict: confirmed, refuted,
   inconclusive, invalid, or a signal. The sentence is the one the server wrote, the same text an agent
   quotes. A look has no verdict, and a series on working (`dev`) cases gives at most a signal. Only a

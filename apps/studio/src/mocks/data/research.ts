@@ -46,6 +46,7 @@ export type SeriesSeed = {
   readonly cellVerdict: CellVerdict
   readonly waiting: Readonly<Record<string, string>>
   readonly errorEvery: number
+  readonly unpriced: number
 }
 
 export type SeriesState = SeriesSeed & { readonly approvedBy: string | null }
@@ -139,6 +140,7 @@ const seed = (fields: Partial<SeriesSeed> & Pick<SeriesSeed, "id" | "on" | "stat
   cellVerdict: "pass",
   waiting: {},
   errorEvery: 0,
+  unpriced: 0,
   ...fields,
 })
 
@@ -236,6 +238,7 @@ const SEEDS: readonly SeriesSeed[] = [
     startedAt: "2026-09-19T11:02:31Z",
     finishedAt: "2026-09-19T11:14:07Z",
     passRates: { one_step: 0.7, two_step: 0.78 },
+    unpriced: 6,
     cellVerdict: "unclear",
     verdict: { state: "inconclusive", reason: "uninformative", text: "Not clear whether two_step beats one_step on intent: the interval -0.06 to 0.22 spans the 0.05 margin." },
   }),
@@ -556,7 +559,7 @@ export const summaryOf = (series: SeriesState): ApiSeriesSummary => {
     variants: variantsOf(series).map((variant) => variant.id),
     status: series.status,
     progress: { done: doneOf(series), total: totalOf(series) },
-    spend: { usd: money(sumUsd(attempts)), cap_usd: CAP_USD },
+    spend: { usd: money(sumUsd(attempts)), cap_usd: CAP_USD, unpriced_attempts: series.unpriced },
     verdict: series.verdict,
     waits: attempts.filter((attempt) => attempt.outcome === WAITING_OUTCOME).length,
     started_at: series.startedAt,

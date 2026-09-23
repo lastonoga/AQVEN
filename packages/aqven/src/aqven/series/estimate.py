@@ -438,8 +438,12 @@ class VariantFacts:
     bound: tuple[TokenBound, ...] | None = None
 
 
+def priced_attempt(attempt: AttemptRecord) -> bool:
+    return counted(attempt) and attempt.unpriced_calls == 0
+
+
 def recorded_usd(history: Sequence[AttemptRecord]) -> Decimal | None:
-    return mean_decimal([attempt.cost_usd + attempt.check_cost_usd for attempt in history if counted(attempt)])
+    return mean_decimal([attempt.cost_usd + attempt.check_cost_usd for attempt in history if priced_attempt(attempt)])
 
 
 def sampled_nodes(variant: VariantPlanRecord, sample: FlowSample | None) -> tuple[tuple[str, NodeSample], ...]:

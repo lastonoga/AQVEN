@@ -79,6 +79,17 @@ describe("SeriesScreen header and verdict", () => {
     expect(screen.queryByText("live")).toBeNull()
   })
 
+  it("calls the spend a lower bound when attempts ran on a model without a known price", async () => {
+    await renderRoute(seriesPath("splitInconclusive"))
+    expect(await screen.findByText("Lower bound: 6 attempts ran on a model without a known price")).toBeTruthy()
+  })
+
+  it("says nothing about a lower bound when every attempt was priced", async () => {
+    await renderRoute(seriesPath("noninferiorHoldout"))
+    expect(await screen.findByText("36 of 36 attempts")).toBeTruthy()
+    expect(screen.queryByText(/Lower bound/)).toBeNull()
+  })
+
   it("states the verdict with the differences behind it and where the finding was written", async () => {
     await renderRoute(seriesPath("noninferiorHoldout"))
     const verdict = await region("Verdict")

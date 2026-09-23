@@ -95,6 +95,8 @@ export const nodeFinished = (runId: string, seq: number, nodeId: string): ApiRun
   cache_hit: false,
   degraded: false,
   checks_failed: 0,
+  cost_source: "provider",
+  unpriced_calls: 0,
 })
 
 export const runFinished = (runId: string, seq: number): ApiRunEvent => ({

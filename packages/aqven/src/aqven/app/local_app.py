@@ -18,9 +18,10 @@ from aqven.app.composition import (
     SeriesEngineHost,
     StudioFeatures,
     assemble_app,
+    priced_engine_host,
     project_workspace,
 )
-from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
+from aqven.app.engine_host import EngineHost, EngineLaunch
 from aqven.app.environment import RuntimeSettings, runtime_settings
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.runtime import ApplicationLaunch
@@ -237,7 +238,7 @@ def create_local_app(
     store = open_settings_store(project, studio)
     engine = DeferredEngine()
     assembly = ProjectAssembly()
-    host = SeriesEngineHost(chosen.engine or DbosEngineHost(), assembly)
+    host = SeriesEngineHost(chosen.engine or priced_engine_host(assembly), assembly)
     launch = ApplicationLaunch(
         project_root=project.root,
         data_dir=studio.directory,

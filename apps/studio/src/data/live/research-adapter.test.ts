@@ -133,6 +133,11 @@ describe("research adapter", () => {
     expect(detail.spend.usd).toBeCloseTo(Number(api.spend.usd), 6)
   })
 
+  it("carries how many attempts of a series ran on a model without a known price", () => {
+    expect(seriesDetailOf(seriesOf(RESEARCH_SERIES.noninferiorHoldout)).spend.unpricedAttempts).toBe(0)
+    expect(seriesSummaryOf(seriesOf(RESEARCH_SERIES.splitInconclusive)).spend.unpricedAttempts).toBe(6)
+  })
+
   it("maps case rows with their split and attempts with the error of the attempt", () => {
     const rows = rowsOf(RESEARCH_SERIES.panelFailed).map(caseRowOf)
     const attempts = rows.flatMap((row) => row.attempts)

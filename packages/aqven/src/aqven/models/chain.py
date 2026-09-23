@@ -23,6 +23,7 @@ from aqven.models.outcome import OutcomeGateModel
 from aqven.models.redaction import RedactingModel, RedactionPolicy
 from aqven.models.usage import DiscardUsage, UsageSink
 from aqven.ports.models import ModelFactory, model_provider, provider_env_var
+from aqven.ports.prices import NO_PRICES, CachedPrices
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
 from aqven.runtime.options import CassetteConfig
 
@@ -46,6 +47,7 @@ class CallPolicy:
     backoff: BackoffPolicy = field(default_factory=BackoffPolicy)
     backoff_sleep: Sleep | None = None
     usage_sink: UsageSink = field(default_factory=DiscardUsage)
+    prices: CachedPrices = NO_PRICES
 
 
 def cassette_policy(
@@ -69,6 +71,7 @@ def guard_model(provider_model: Model, *, model_ref: str, policy: CallPolicy) ->
         concurrency=policy.concurrency,
         budget=policy.budget,
         usage_sink=policy.usage_sink,
+        prices=policy.prices,
     )
     cassette = CassetteModel(limited, model_ref=model_ref, policy=policy.cassettes, usage_sink=policy.usage_sink)
     redacting = RedactingModel(cassette, policy=policy.redaction)
@@ -142,4 +145,5 @@ def with_secret(policy: CallPolicy, secret: SecretStr) -> CallPolicy:
         backoff=policy.backoff,
         backoff_sleep=policy.backoff_sleep,
         usage_sink=policy.usage_sink,
+        prices=policy.prices,
     )

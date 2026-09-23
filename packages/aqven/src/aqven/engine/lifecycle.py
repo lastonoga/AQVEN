@@ -15,10 +15,12 @@ from aqven.engine.executors.tool import McpCaller, ToolsetMcpCaller
 from aqven.engine.extensions import EngineExtensions
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry, PlanStore
+from aqven.engine.prices import GracefulPrices
 from aqven.engine.protocol import DBOS_LOG_LEVEL
 from aqven.engine.registry import CoreExecutors, build_executors, throttled_executors
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, OverrideBook, ToolServices
 from aqven.engine.throttle import WorkerPool
+from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.address import JsonObject
 
@@ -46,6 +48,7 @@ class EngineSetup:
     state_dir: Path | None = None
     max_parallel: int | None = None
     workflows: tuple[HostWorkflow, ...] = ()
+    prices: PriceCache = NO_PRICES
 
 
 def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
@@ -56,6 +59,7 @@ def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
         overrides=OverrideBook(),
         settings=setup.settings,
         environ=setup.environ,
+        prices=GracefulPrices(setup.prices),
     )
     extensions = setup.extensions(services)
     pool = None if setup.max_parallel is None else WorkerPool(setup.max_parallel)

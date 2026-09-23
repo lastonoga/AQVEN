@@ -13,6 +13,7 @@ from aqven.engine.assembly import ModelFactories, ProjectModelFactories, standar
 from aqven.engine.lifecycle import EngineSetup
 from aqven.ir import AgentModel, CompiledProject
 from aqven.ports.models import ModelFactory, provider_key_variables
+from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.runtime.options import ModelRoute
 
 OFFLINE_KEY: Final = "aqven-offline-key"
@@ -55,9 +56,12 @@ class EngineSession:
     def standard(self) -> None:
         self.configure(standard_engine_setup(state_dir=self.state_dir, environ=self.environ))
 
-    def models(self, models: Mapping[str, Model]) -> None:
+    def models(self, models: Mapping[str, Model], prices: PriceCache = NO_PRICES) -> None:
         setup = standard_engine_setup(
-            factories=FixedModels(models), state_dir=self.state_dir, environ=offline_environment(self.environ)
+            factories=FixedModels(models),
+            state_dir=self.state_dir,
+            environ=offline_environment(self.environ),
+            prices=prices,
         )
         self.configure(setup)
 

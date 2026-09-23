@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final, Self
 
 from aqven.series.model import (
+    TERMINAL_STATUSES,
     AttemptRecord,
     CaseSnapshot,
     ExperimentOrigin,
@@ -283,8 +284,17 @@ def changed_fields(change: SeriesChange) -> Mapping[str, object]:
     return {name: value for name, value in fields.items() if value is not None}
 
 
+type RecordChange = Callable[[SeriesRecord, SeriesChange], SeriesRecord]
+
+
 def changed_record(record: SeriesRecord, change: SeriesChange) -> SeriesRecord:
     return record.model_copy(update=dict(changed_fields(change)))
+
+
+def settled_record(record: SeriesRecord, change: SeriesChange) -> SeriesRecord:
+    if record.status in TERMINAL_STATUSES:
+        return record
+    return changed_record(record, change)
 
 
 def decimal_sum(rows: Sequence[tuple[str, str]]) -> Decimal:
@@ -314,7 +324,10 @@ class SqliteSeriesStore:
         return await asyncio.to_thread(self._series, series_id)
 
     async def update(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord:
-        return await asyncio.to_thread(self._update, series_id, change)
+        return await asyncio.to_thread(self._write, series_id, change, changed_record)
+
+    async def settle(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord:
+        return await asyncio.to_thread(self._write, series_id, change, settled_record)
 
     async def search(self, query: SeriesListQuery, limit: int) -> tuple[SeriesRecord, ...]:
         return await asyncio.to_thread(self._search, query, limit)
@@ -360,13 +373,13 @@ class SqliteSeriesStore:
             row: tuple[str] | None = connection.execute(FIND_SERIES, (series_id,)).fetchone()
         return None if row is None else SeriesRecord.model_validate_json(row[0])
 
-    def _update(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord:
+    def _write(self, series_id: SeriesId, change: SeriesChange, apply: RecordChange) -> SeriesRecord:
         with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
             row: tuple[str] | None = connection.execute(FIND_SERIES, (series_id,)).fetchone()
             if row is None:
                 raise SeriesMissing(series_id)
-            updated = changed_record(SeriesRecord.model_validate_json(row[0]), change)
+            updated = apply(SeriesRecord.model_validate_json(row[0]), change)
             row_values = (stored_status(updated.status).value, stamp(updated.finished_at), updated.model_dump_json())
             connection.execute(UPDATE_SERIES, (*row_values, series_id))
         return updated

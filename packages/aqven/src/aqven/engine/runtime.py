@@ -15,6 +15,7 @@ from aqven.engine.plans import PlanRegistry
 from aqven.models.limiter import UsageBudget
 from aqven.models.usage import usd_of_micros
 from aqven.ports.execution import NodeExecutors
+from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.address import RunId
 from aqven.runtime.steps import BlobStore
@@ -78,6 +79,7 @@ class ToolServices:
     settings: SettingsStore | None
     environ: Mapping[str, str] = field(repr=False)
     budgets: RunBudgets = field(default_factory=RunBudgets)
+    prices: PriceCache = NO_PRICES
 
     @property
     def package(self) -> str:

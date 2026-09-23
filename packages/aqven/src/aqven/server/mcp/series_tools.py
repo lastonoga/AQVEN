@@ -25,7 +25,8 @@ SERIES_GET_DESCRIPTION: Final = (
     "the series is done, cancelled, failed, awaiting approval or waiting for a human, or the time runs out. "
     "A series is failed when every attempt hit an infrastructure error, such as a missing provider key, and error "
     "names the first one; it stays done when at least one attempt was counted. "
-    "include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
+    "spend.unpriced_attempts counts attempts that ran on a model without a known price: above 0, spend.usd is a "
+    "lower bound. include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
 )
 SERIES_CANCEL_DESCRIPTION: Final = (
     "Stops a series: queued attempts never start, model calls already running finish and are paid; no finding is "

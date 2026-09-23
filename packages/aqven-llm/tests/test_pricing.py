@@ -380,3 +380,64 @@ def test_cost_bills_cached_tokens_as_input_without_a_cached_price() -> None:
 
     assert price.cost(tokens_in=1000, tokens_out=0, cached_in=400) == Decimal("0.002")
     assert price.cost(tokens_in=10, tokens_out=0, cached_in=50) == Decimal("0.00002")
+
+
+def test_cached_is_empty_until_warm_fills_it_from_the_provider_source() -> None:
+    wire = ModelsWire()
+    lookup = build_price_lookup(wire.client(), factories=PRICE_SOURCE_FACTORIES)
+    llama = f"openrouter:{LLAMA}"
+
+    before = lookup.cached(llama)
+    asyncio.run(lookup.warm([llama, f"openrouter:{SONNET}", llama]))
+
+    assert before is None
+    cached = lookup.cached(llama)
+    assert cached is not None
+    assert cached.source == "openrouter"
+    assert lookup.cached(f"openrouter:{SONNET}") is not None
+    assert wire.calls == 1
+
+
+def test_warm_leaves_the_genai_fallback_out_of_the_table() -> None:
+    lookup = build_price_lookup(ModelsWire(offline=True).client(), factories=PRICE_SOURCE_FACTORIES)
+
+    asyncio.run(lookup.warm([f"openrouter:{LLAMA}", "openai:gpt-4o-mini"]))
+
+    assert lookup.cached(f"openrouter:{LLAMA}") is None
+    assert lookup.cached("openai:gpt-4o-mini") is None
+    assert asyncio.run(lookup.price("openai:gpt-4o-mini")) is not None
+
+
+def test_warm_keeps_an_earlier_price_when_the_source_later_fails() -> None:
+    wire = ModelsWire()
+    clock = FakeClock()
+    lookup = PriceLookup({"openrouter": openrouter(wire, clock)}, fallback=no_fallback)
+    llama = f"openrouter:{LLAMA}"
+
+    async def warm_twice() -> None:
+        await lookup.warm([llama])
+        wire.offline = True
+        clock.advance(TTL)
+        await lookup.warm([llama])
+
+    asyncio.run(warm_twice())
+
+    assert wire.calls == 2
+    assert lookup.cached(llama) is not None
+
+
+def test_warm_skips_unknown_models_malformed_references_and_failing_sources() -> None:
+    lookup = PriceLookup({ACME: ExplodingPrices(), "openrouter": AcmePrices("openrouter")}, fallback=no_fallback)
+
+    asyncio.run(lookup.warm([ACME_MODEL, "not-a-reference", "openrouter:", "openrouter:missing", "openrouter:tiny-1"]))
+
+    assert lookup.warmed == {"openrouter:tiny-1": ACME_PRICE}
+    assert lookup.cached(ACME_MODEL) is None
+
+
+def test_provider_price_asks_only_the_registered_source() -> None:
+    lookup = PriceLookup({ACME: AcmePrices()}, fallback=lambda provider: AcmePrices(provider))
+
+    assert asyncio.run(lookup.provider_price(ACME_MODEL)) == ACME_PRICE
+    assert asyncio.run(lookup.provider_price("other:tiny-1")) is None
+    assert asyncio.run(lookup.price("other:tiny-1")) == ACME_PRICE

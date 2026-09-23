@@ -251,7 +251,7 @@ export type SeriesVerdict = { readonly state: VerdictState; readonly reason: Ver
 
 export type SeriesProgress = { readonly done: number; readonly total: number }
 
-export type SeriesSpend = { readonly usd: number; readonly capUsd: number }
+export type SeriesSpend = { readonly usd: number; readonly capUsd: number; readonly unpricedAttempts: number }
 
 type SeriesHead = {
   readonly id: SeriesId
