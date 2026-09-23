@@ -20,7 +20,7 @@ build-backend = "uv_build"
 module-root = ""
 module-name = "__package__"
 source-exclude = [".aqven", ".env", ".env.example"]
-wheel-exclude = [".aqven", ".env", ".env.example"]
+wheel-exclude = [".aqven", ".env", ".env.example", "__package__/experiments"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -114,9 +114,7 @@ def test_inference_display_template_requires_exactly_one_source() -> None:
         with pytest.raises(ValidationError):
             InferenceSpec.model_validate({**base, "display": {"output": declaration}})
     with pytest.raises(ValidationError):
-        InferenceSpec.model_validate(
-            {**base, "display": {"output": {"template": "@flow/reply.display.liquid"}}}
-        )
+        InferenceSpec.model_validate({**base, "display": {"output": {"template": "@flow/reply.display.liquid"}}})
     for declaration in ({}, {"run": "shop.formatters:show", "template": "reply.display.liquid"}):
         with pytest.raises(ValidationError):
             CompiledDisplayFormatter.model_validate(declaration)
@@ -157,8 +155,7 @@ def test_display_check_rejects_invalid_root_and_missing_literal_partial(tmp_path
     shutil.copytree(Path(__file__).parent / "fixtures" / "standard_shop", root)
     inference = root / "flows/intake/nodes/reply/reply.inference.yaml"
     inference.write_text(
-        inference.read_text(encoding="utf-8")
-        + '\ndisplay:\n  output:\n    template: "@root/reply.display.liquid"\n',
+        inference.read_text(encoding="utf-8") + '\ndisplay:\n  output:\n    template: "@root/reply.display.liquid"\n',
         encoding="utf-8",
     )
     (root / "reply.display.liquid").write_text(source, encoding="utf-8")
@@ -209,9 +206,9 @@ def test_display_bare_code_ref_resolves_from_inference_folder(tmp_path: Path) ->
     code = folder / "reply.py"
     code.write_text(
         code.read_text(encoding="utf-8")
-        + '\ndef format_value(value, context):\n'
-        + '    from aqven.runtime.presentation import DisplayDocument, DisplaySection\n'
-        + '    return DisplayDocument(root=DisplaySection(children=()))\n',
+        + "\ndef format_value(value, context):\n"
+        + "    from aqven.runtime.presentation import DisplayDocument, DisplaySection\n"
+        + "    return DisplayDocument(root=DisplaySection(children=()))\n",
         encoding="utf-8",
     )
     report = check_project(root)

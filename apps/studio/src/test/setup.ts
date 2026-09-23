@@ -1,6 +1,7 @@
 import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest"
 import { server } from "@/mocks/node"
+import { resetResearchMocks } from "@/mocks/research"
 
 configure({ asyncUtilTimeout: 10_000 })
 
@@ -34,6 +35,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   server.resetHandlers()
+  resetResearchMocks()
 })
 
 afterAll(() => {

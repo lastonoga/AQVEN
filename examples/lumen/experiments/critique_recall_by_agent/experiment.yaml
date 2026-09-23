@@ -1,0 +1,36 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Each candidate critic agent stops more than 80% of replies with a planted defect, by a score below the approval threshold or a blocking remark"
+failure_mode: "judge_misses_defect"
+subject:
+  arm: "critic"
+cases:
+  dataset: "planted_defect_replies"
+  tags:
+    planted: "yes"
+variants:
+- id: "deepseek"
+- id: "qwen"
+  agents:
+    critique: "qwen"
+- id: "llama"
+  agents:
+    critique: "llama"
+checks:
+- id: "blocked"
+  kind: "binary"
+  run: "@root.experiments.critique_recall_by_agent.checks:blocked"
+- id: "rationale_brief"
+  kind: "binary"
+  use: "max_words"
+  with:
+    field: "$out.rationale"
+    max: 100
+question:
+  kind: "threshold"
+  metric: "blocked"
+  above: 0.8
+  margin: 0.05
+plan:
+  cases: 8
+  repeats: 3

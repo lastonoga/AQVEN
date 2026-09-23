@@ -37,7 +37,9 @@ ToolId = NewType("ToolId", str)
 ModelString = NewType("ModelString", str)
 McpServerId = NewType("McpServerId", str)
 DatasetId = NewType("DatasetId", str)
-EvalId = NewType("EvalId", str)
+ExperimentId = NewType("ExperimentId", str)
+ArmId = NewType("ArmId", str)
+VariantId = NewType("VariantId", str)
 SecretRef = NewType("SecretRef", str)
 ProviderName = NewType("ProviderName", str)
 CodeRef = NewType("CodeRef", str)
@@ -53,11 +55,12 @@ class SpecKind(StrEnum):
     FLOW = "Flow"
     NODE = "Node"
     DATASET = "Dataset"
-    EVAL = "Eval"
+    EXPERIMENT = "Experiment"
     INFERENCE = "Inference"
     AGENT = "Agent"
     TOOL = "Tool"
     MCP_SERVER = "McpServer"
+    FINDING = "Finding"
 
 
 class NodeKind(StrEnum):
@@ -164,10 +167,54 @@ class MetricKind(StrEnum):
     CONTINUOUS = "continuous"
 
 
-class GateAction(StrEnum):
-    RELEASE = "release"
-    REQUIRE_APPROVAL = "require_approval"
-    REJECT = "reject"
+class MetricDirection(StrEnum):
+    HIGHER_IS_BETTER = "higher_is_better"
+    LOWER_IS_BETTER = "lower_is_better"
+
+
+class SeriesMetric(StrEnum):
+    SUCCESS_RATE = "success_rate"
+    COST_USD = "cost_usd"
+    COST_OF_PASS = "cost_of_pass"
+    LATENCY_P50_MS = "latency_p50_ms"
+    LATENCY_P95_MS = "latency_p95_ms"
+    SCHEMA_VALID_FIRST_TRY = "schema_valid_first_try"
+    INFRA_ERROR_RATE = "infra_error_rate"
+
+
+class SeriesSplit(StrEnum):
+    DEV = "dev"
+    HOLDOUT = "holdout"
+
+
+class VerdictState(StrEnum):
+    CONFIRMED = "confirmed"
+    REFUTED = "refuted"
+    INCONCLUSIVE = "inconclusive"
+    INVALID = "invalid"
+    SIGNAL = "signal"
+
+
+class VerdictReason(StrEnum):
+    BELOW_MDE = "below_mde"
+    UNINFORMATIVE = "uninformative"
+    NO_DISCORDANCE = "no_discordance"
+    COMPUTE_CONFOUNDED = "compute_confounded"
+    INPUTS_CHANGED = "inputs_changed"
+    INFRA_ERRORS = "infra_errors"
+    NO_DATA = "no_data"
+    BUDGET_CUT = "budget_cut"
+    CANCELLED = "cancelled"
+    DEV_SPLIT = "dev_split"
+    JUDGE_NOT_VALIDATED = "judge_not_validated"
+
+
+class CellVerdict(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    UNCLEAR = "unclear"
+    REFERENCE = "reference"
+    NONE = "none"
 
 
 class PromptLevel(IntEnum):

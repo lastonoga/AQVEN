@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { redirectToLanding } from "@/routes/-landing"
+import { createFileRoute, redirect } from "@tanstack/react-router"
+import { ROUTE_PATH } from "@/lib/routes"
 
 export const Route = createFileRoute("/")({
-  beforeLoad: ({ context }) => redirectToLanding(context),
+  beforeLoad: () => {
+    throw redirect({ to: ROUTE_PATH.flows })
+  },
 })

@@ -84,6 +84,16 @@ type Resolution = Resolved | Unresolved
 type RootHandler = Callable[[Scope, Ref], Resolution]
 type Side = Literal["in", "out"]
 
+
+@dataclass(frozen=True, slots=True)
+class EvaluatedRecords:
+    in_: object | None
+    out: object | None
+
+    def side(self, side: Side) -> object | None:
+        return self.in_ if side == "in" else self.out
+
+
 INFERENCE_ROOTS: Final[Mapping[RefRoot, Side]] = {RefRoot.IN: "in", RefRoot.OUT: "out"}
 
 UNTYPED: Final = Resolved(annotation=None, nodes=())
@@ -138,17 +148,23 @@ class RefResolver:
         return self._walk(head, ref.steps, text)
 
     def resolve_inference(self, scope: InferenceScope, text: str) -> Resolution:
+        return self.resolve_evaluated(self.inference_records(scope.inference_id), text)
+
+    def resolve_evaluated(self, records: EvaluatedRecords, text: str) -> Resolution:
         try:
             ref = parse_ref(text)
         except RefSyntaxError as error:
             return Unresolved(DiagnosticCode.E_REF_SYNTAX, f"path {text}: {error.reason}")
         side = INFERENCE_ROOTS.get(ref.root)
         if side is None:
-            return Unresolved(DiagnosticCode.E_REF_SCOPE, f"path {text}: in an inference the root is $in or $out")
-        head = Resolved(self.inference_record(scope.inference_id, side), ())
+            return Unresolved(DiagnosticCode.E_REF_SCOPE, f"path {text}: the root is $in or $out")
+        head = Resolved(records.side(side), ())
         if head.annotation is None:
             return head
         return self._walk(head, ref.steps, text)
+
+    def inference_records(self, inference_id: str | None) -> EvaluatedRecords:
+        return EvaluatedRecords(self.inference_record(inference_id, "in"), self.inference_record(inference_id, "out"))
 
     def inference_record(self, inference_id: str | None, side: Side) -> object | None:
         loaded = self.graph.project.inferences.get(InferenceId(inference_id)) if inference_id is not None else None

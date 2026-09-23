@@ -1,0 +1,38 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A DeepSeek tie-break picks the expected winner more often than the gpt tie-break, at most 30% dearer per correct pick"
+failure_mode: "panel_wrong_winner"
+subject:
+  flow: "judge_panel"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "gpt_tie_break"
+- id: "deepseek_tie_break"
+  agents:
+    decide__tie_break: "deepseek"
+checks:
+- id: "winner"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "winner"
+question:
+  kind: "compare"
+  baseline: "gpt_tie_break"
+  candidate: "deepseek_tie_break"
+  primary: "winner"
+  margin: 0.05
+  guardrails:
+  - metric: "cost_of_pass"
+    direction: "lower_is_better"
+    margin: 0.3
+    relative: true
+  - metric: "latency_p95_ms"
+    direction: "lower_is_better"
+    margin: 0.5
+    relative: true
+plan:
+  cases: 8
+  repeats: 3

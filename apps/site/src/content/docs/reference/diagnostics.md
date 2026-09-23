@@ -97,8 +97,6 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_FLOW_RECURSION` | `error` | — |
 | `E_MCP_SERVER_UNKNOWN` | `error` | — |
 | `E_DATASET_UNKNOWN` | `error` | — |
-| `E_GATE_POLICY` | `error` | — |
-| `E_OPTIMIZATION_TARGET` | `error` | — |
 | `E_PROVIDER_EXTRA_MISSING` | `error` | model {model} needs provider {provider}, which is not installed |
 | `E_PROVIDER_NO_STREAMING` | `error` | model {model}: provider {provider} does not support streaming, and aqven streams every model request |
 | `E_PROVIDER_FACTORY_INVALID` | `error` | provider {provider}: {problem} |
@@ -109,6 +107,17 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_SIM_PROMPT_RENDER` | `error` | simulated run of flow {flow} (pass {pass}): node {address} cannot build its prompt: {message} |
 | `E_SIM_OUTPUT_INVALID` | `error` | simulated run of flow {flow} (pass {pass}): node {address} returned an output its schema rejects: {message} |
 | `E_SIM_RUN_FAILED` | `error` | simulated run of flow {flow} (pass {pass}) did not finish: {code}: {message} |
+| `E_ARM_UNKNOWN` | `error` | arm {arm} is not an arm of experiment {experiment}; its arms: {arms} |
+| `E_RANGE_INVALID` | `error` | experiment {experiment}: {problem} |
+| `E_VARIANT_INVALID` | `error` | experiment {experiment}: {problem} |
+| `E_METRIC_UNKNOWN` | `error` | experiment {experiment}: metric {metric} is neither a check id of the experiment nor a series metric |
+| `E_EXPERIMENT_UNKNOWN` | `error` | check {check}: validated_by names experiment {target}, which does not exist in the project |
+| `E_DATASET_MISMATCH` | `error` | experiment {experiment}: {problem} |
+| `E_CASE_DUPLICATE` | `error` | case name {name} is already taken by cases[{first}] of dataset {dataset} |
+| `E_CASES_EMPTY` | `error` | experiment {experiment}: tags {tags} select no case of dataset {dataset} |
+| `E_EXPECTED_MISSING` | `error` | experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem} |
+| `E_CHECK_PATH_UNKNOWN` | `error` | experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side} |
+| `E_FINDING_TAMPERED` | `error` | finding {finding} of experiment {experiment}: {problem} |
 | `W_PROMPT_SHADOWED` | `warning` | — |
 | `W_GENERATED_STALE` | `warning` | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |
@@ -117,3 +126,7 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_PROMPT_VALUE_UNREADABLE` | `warning` | — |
 | `W_TOOL_ARG_UNREACHABLE` | `warning` | — |
 | `W_CONTEXT_KEY_UNUSED` | `warning` | — |
+| `W_PLAN_EXCEEDS_CASES` | `warning` | experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases |
+| `W_CHECK_CONTEXT_MISMATCH` | `warning` | experiment {experiment}: check {check}: {problem} |
+| `W_JUDGE_INPUT_UNBOUND` | `warning` | experiment {experiment}: judge {judge} of check {check} needs input {field}, which no document of its scope carries in {target} |
+| `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |

@@ -10,21 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectRouteRouteImport } from './routes/_project/route'
 import { Route as DemoRouteImport } from './routes/demo'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
-import { Route as FlowsFlowIdRouteRouteImport } from './routes/flows/$flowId/route'
-import { Route as FlowsFlowIdIndexRouteImport } from './routes/flows/$flowId/index'
-import { Route as FlowsFlowIdCanvasRouteImport } from './routes/flows/$flowId/canvas'
-import { Route as FlowsFlowIdDatasetsRouteImport } from './routes/flows/$flowId/datasets'
-import { Route as FlowsFlowIdEvalsRouteImport } from './routes/flows/$flowId/evals'
-import { Route as FlowsFlowIdNodesRouteImport } from './routes/flows/$flowId/nodes'
-import { Route as FlowsFlowIdReviewRouteImport } from './routes/flows/$flowId/review'
-import { Route as FlowsFlowIdRunsRouteImport } from './routes/flows/$flowId/runs'
+import { Route as ProjectSettingsRouteImport } from './routes/_project/settings'
+import { Route as ProjectFlowsIndexRouteImport } from './routes/_project/flows/index'
+import { Route as ProjectFlowsFlowIdRouteRouteImport } from './routes/_project/flows/$flowId/route'
+import { Route as ProjectResearchIndexRouteImport } from './routes/_project/research/index'
+import { Route as ProjectRunsRunIdRouteImport } from './routes/_project/runs/$runId'
+import { Route as ProjectFlowsFlowIdIndexRouteImport } from './routes/_project/flows/$flowId/index'
+import { Route as ProjectFlowsFlowIdCanvasRouteImport } from './routes/_project/flows/$flowId/canvas'
+import { Route as ProjectFlowsFlowIdCasesRouteImport } from './routes/_project/flows/$flowId/cases'
+import { Route as ProjectFlowsFlowIdRunsRouteImport } from './routes/_project/flows/$flowId/runs'
+import { Route as ProjectResearchExperimentsExperimentIdRouteImport } from './routes/_project/research/experiments/$experimentId'
+import { Route as ProjectResearchSeriesSeriesIdRouteImport } from './routes/_project/research/series/$seriesId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectRouteRoute = ProjectRouteRouteImport.update({
+  id: '/_project',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -32,149 +39,175 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FlowsFlowIdRouteRoute = FlowsFlowIdRouteRouteImport.update({
+const ProjectSettingsRoute = ProjectSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ProjectRouteRoute,
+} as any)
+const ProjectFlowsIndexRoute = ProjectFlowsIndexRouteImport.update({
+  id: '/flows/',
+  path: '/flows/',
+  getParentRoute: () => ProjectRouteRoute,
+} as any)
+const ProjectFlowsFlowIdRouteRoute = ProjectFlowsFlowIdRouteRouteImport.update({
   id: '/flows/$flowId',
   path: '/flows/$flowId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ProjectRouteRoute,
 } as any)
-const FlowsFlowIdIndexRoute = FlowsFlowIdIndexRouteImport.update({
+const ProjectResearchIndexRoute = ProjectResearchIndexRouteImport.update({
+  id: '/research/',
+  path: '/research/',
+  getParentRoute: () => ProjectRouteRoute,
+} as any)
+const ProjectRunsRunIdRoute = ProjectRunsRunIdRouteImport.update({
+  id: '/runs/$runId',
+  path: '/runs/$runId',
+  getParentRoute: () => ProjectRouteRoute,
+} as any)
+const ProjectFlowsFlowIdIndexRoute = ProjectFlowsFlowIdIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
+  getParentRoute: () => ProjectFlowsFlowIdRouteRoute,
 } as any)
-const FlowsFlowIdCanvasRoute = FlowsFlowIdCanvasRouteImport.update({
-  id: '/canvas',
-  path: '/canvas',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
+const ProjectFlowsFlowIdCanvasRoute =
+  ProjectFlowsFlowIdCanvasRouteImport.update({
+    id: '/canvas',
+    path: '/canvas',
+    getParentRoute: () => ProjectFlowsFlowIdRouteRoute,
+  } as any)
+const ProjectFlowsFlowIdCasesRoute = ProjectFlowsFlowIdCasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
+  getParentRoute: () => ProjectFlowsFlowIdRouteRoute,
 } as any)
-const FlowsFlowIdDatasetsRoute = FlowsFlowIdDatasetsRouteImport.update({
-  id: '/datasets',
-  path: '/datasets',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
-} as any)
-const FlowsFlowIdEvalsRoute = FlowsFlowIdEvalsRouteImport.update({
-  id: '/evals',
-  path: '/evals',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
-} as any)
-const FlowsFlowIdNodesRoute = FlowsFlowIdNodesRouteImport.update({
-  id: '/nodes',
-  path: '/nodes',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
-} as any)
-const FlowsFlowIdReviewRoute = FlowsFlowIdReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
-} as any)
-const FlowsFlowIdRunsRoute = FlowsFlowIdRunsRouteImport.update({
+const ProjectFlowsFlowIdRunsRoute = ProjectFlowsFlowIdRunsRouteImport.update({
   id: '/runs',
   path: '/runs',
-  getParentRoute: () => FlowsFlowIdRouteRoute,
+  getParentRoute: () => ProjectFlowsFlowIdRouteRoute,
 } as any)
+const ProjectResearchExperimentsExperimentIdRoute =
+  ProjectResearchExperimentsExperimentIdRouteImport.update({
+    id: '/research/experiments/$experimentId',
+    path: '/research/experiments/$experimentId',
+    getParentRoute: () => ProjectRouteRoute,
+  } as any)
+const ProjectResearchSeriesSeriesIdRoute =
+  ProjectResearchSeriesSeriesIdRouteImport.update({
+    id: '/research/series/$seriesId',
+    path: '/research/series/$seriesId',
+    getParentRoute: () => ProjectRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
-  '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
-  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
-  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
-  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
-  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
-  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
-  '/flows/$flowId/': typeof FlowsFlowIdIndexRoute
+  '/settings': typeof ProjectSettingsRoute
+  '/flows/$flowId': typeof ProjectFlowsFlowIdRouteRouteWithChildren
+  '/runs/$runId': typeof ProjectRunsRunIdRoute
+  '/flows/': typeof ProjectFlowsIndexRoute
+  '/research/': typeof ProjectResearchIndexRoute
+  '/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
+  '/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
+  '/flows/$flowId/runs': typeof ProjectFlowsFlowIdRunsRoute
+  '/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
+  '/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
+  '/flows/$flowId/': typeof ProjectFlowsFlowIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
-  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
-  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
-  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
-  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
-  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
-  '/flows/$flowId': typeof FlowsFlowIdIndexRoute
+  '/settings': typeof ProjectSettingsRoute
+  '/runs/$runId': typeof ProjectRunsRunIdRoute
+  '/flows': typeof ProjectFlowsIndexRoute
+  '/research': typeof ProjectResearchIndexRoute
+  '/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
+  '/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
+  '/flows/$flowId/runs': typeof ProjectFlowsFlowIdRunsRoute
+  '/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
+  '/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
+  '/flows/$flowId': typeof ProjectFlowsFlowIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_project': typeof ProjectRouteRouteWithChildren
   '/demo': typeof DemoRoute
-  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
-  '/flows/$flowId': typeof FlowsFlowIdRouteRouteWithChildren
-  '/flows/$flowId/canvas': typeof FlowsFlowIdCanvasRoute
-  '/flows/$flowId/datasets': typeof FlowsFlowIdDatasetsRoute
-  '/flows/$flowId/evals': typeof FlowsFlowIdEvalsRoute
-  '/flows/$flowId/nodes': typeof FlowsFlowIdNodesRoute
-  '/flows/$flowId/review': typeof FlowsFlowIdReviewRoute
-  '/flows/$flowId/runs': typeof FlowsFlowIdRunsRoute
-  '/flows/$flowId/': typeof FlowsFlowIdIndexRoute
+  '/_project/settings': typeof ProjectSettingsRoute
+  '/_project/flows/$flowId': typeof ProjectFlowsFlowIdRouteRouteWithChildren
+  '/_project/runs/$runId': typeof ProjectRunsRunIdRoute
+  '/_project/flows/': typeof ProjectFlowsIndexRoute
+  '/_project/research/': typeof ProjectResearchIndexRoute
+  '/_project/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
+  '/_project/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
+  '/_project/flows/$flowId/runs': typeof ProjectFlowsFlowIdRunsRoute
+  '/_project/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
+  '/_project/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
+  '/_project/flows/$flowId/': typeof ProjectFlowsFlowIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/demo'
-    | '/settings'
     | '/setup'
+    | '/settings'
     | '/flows/$flowId'
+    | '/runs/$runId'
+    | '/flows/'
+    | '/research/'
     | '/flows/$flowId/canvas'
-    | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
-    | '/flows/$flowId/nodes'
-    | '/flows/$flowId/review'
+    | '/flows/$flowId/cases'
     | '/flows/$flowId/runs'
+    | '/research/experiments/$experimentId'
+    | '/research/series/$seriesId'
     | '/flows/$flowId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/demo'
-    | '/settings'
     | '/setup'
+    | '/settings'
+    | '/runs/$runId'
+    | '/flows'
+    | '/research'
     | '/flows/$flowId/canvas'
-    | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
-    | '/flows/$flowId/nodes'
-    | '/flows/$flowId/review'
+    | '/flows/$flowId/cases'
     | '/flows/$flowId/runs'
+    | '/research/experiments/$experimentId'
+    | '/research/series/$seriesId'
     | '/flows/$flowId'
   id:
     | '__root__'
     | '/'
+    | '/_project'
     | '/demo'
-    | '/settings'
     | '/setup'
-    | '/flows/$flowId'
-    | '/flows/$flowId/canvas'
-    | '/flows/$flowId/datasets'
-    | '/flows/$flowId/evals'
-    | '/flows/$flowId/nodes'
-    | '/flows/$flowId/review'
-    | '/flows/$flowId/runs'
-    | '/flows/$flowId/'
+    | '/_project/settings'
+    | '/_project/flows/$flowId'
+    | '/_project/runs/$runId'
+    | '/_project/flows/'
+    | '/_project/research/'
+    | '/_project/flows/$flowId/canvas'
+    | '/_project/flows/$flowId/cases'
+    | '/_project/flows/$flowId/runs'
+    | '/_project/research/experiments/$experimentId'
+    | '/_project/research/series/$seriesId'
+    | '/_project/flows/$flowId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProjectRouteRoute: typeof ProjectRouteRouteWithChildren
   DemoRoute: typeof DemoRoute
-  SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
-  FlowsFlowIdRouteRoute: typeof FlowsFlowIdRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -186,18 +219,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_project': {
+      id: '/_project'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProjectRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo': {
       id: '/demo'
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setup': {
@@ -207,94 +240,136 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/flows/$flowId': {
-      id: '/flows/$flowId'
+    '/_project/settings': {
+      id: '/_project/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof ProjectSettingsRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
+    '/_project/flows/': {
+      id: '/_project/flows/'
+      path: '/flows'
+      fullPath: '/flows/'
+      preLoaderRoute: typeof ProjectFlowsIndexRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
+    '/_project/flows/$flowId': {
+      id: '/_project/flows/$flowId'
       path: '/flows/$flowId'
       fullPath: '/flows/$flowId'
-      preLoaderRoute: typeof FlowsFlowIdRouteRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ProjectFlowsFlowIdRouteRouteImport
+      parentRoute: typeof ProjectRouteRoute
     }
-    '/flows/$flowId/': {
-      id: '/flows/$flowId/'
+    '/_project/research/': {
+      id: '/_project/research/'
+      path: '/research'
+      fullPath: '/research/'
+      preLoaderRoute: typeof ProjectResearchIndexRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
+    '/_project/runs/$runId': {
+      id: '/_project/runs/$runId'
+      path: '/runs/$runId'
+      fullPath: '/runs/$runId'
+      preLoaderRoute: typeof ProjectRunsRunIdRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
+    '/_project/flows/$flowId/': {
+      id: '/_project/flows/$flowId/'
       path: '/'
       fullPath: '/flows/$flowId/'
-      preLoaderRoute: typeof FlowsFlowIdIndexRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
+      preLoaderRoute: typeof ProjectFlowsFlowIdIndexRouteImport
+      parentRoute: typeof ProjectFlowsFlowIdRouteRoute
     }
-    '/flows/$flowId/canvas': {
-      id: '/flows/$flowId/canvas'
+    '/_project/flows/$flowId/canvas': {
+      id: '/_project/flows/$flowId/canvas'
       path: '/canvas'
       fullPath: '/flows/$flowId/canvas'
-      preLoaderRoute: typeof FlowsFlowIdCanvasRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
+      preLoaderRoute: typeof ProjectFlowsFlowIdCanvasRouteImport
+      parentRoute: typeof ProjectFlowsFlowIdRouteRoute
     }
-    '/flows/$flowId/datasets': {
-      id: '/flows/$flowId/datasets'
-      path: '/datasets'
-      fullPath: '/flows/$flowId/datasets'
-      preLoaderRoute: typeof FlowsFlowIdDatasetsRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
+    '/_project/flows/$flowId/cases': {
+      id: '/_project/flows/$flowId/cases'
+      path: '/cases'
+      fullPath: '/flows/$flowId/cases'
+      preLoaderRoute: typeof ProjectFlowsFlowIdCasesRouteImport
+      parentRoute: typeof ProjectFlowsFlowIdRouteRoute
     }
-    '/flows/$flowId/evals': {
-      id: '/flows/$flowId/evals'
-      path: '/evals'
-      fullPath: '/flows/$flowId/evals'
-      preLoaderRoute: typeof FlowsFlowIdEvalsRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
-    }
-    '/flows/$flowId/nodes': {
-      id: '/flows/$flowId/nodes'
-      path: '/nodes'
-      fullPath: '/flows/$flowId/nodes'
-      preLoaderRoute: typeof FlowsFlowIdNodesRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
-    }
-    '/flows/$flowId/review': {
-      id: '/flows/$flowId/review'
-      path: '/review'
-      fullPath: '/flows/$flowId/review'
-      preLoaderRoute: typeof FlowsFlowIdReviewRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
-    }
-    '/flows/$flowId/runs': {
-      id: '/flows/$flowId/runs'
+    '/_project/flows/$flowId/runs': {
+      id: '/_project/flows/$flowId/runs'
       path: '/runs'
       fullPath: '/flows/$flowId/runs'
-      preLoaderRoute: typeof FlowsFlowIdRunsRouteImport
-      parentRoute: typeof FlowsFlowIdRouteRoute
+      preLoaderRoute: typeof ProjectFlowsFlowIdRunsRouteImport
+      parentRoute: typeof ProjectFlowsFlowIdRouteRoute
+    }
+    '/_project/research/experiments/$experimentId': {
+      id: '/_project/research/experiments/$experimentId'
+      path: '/research/experiments/$experimentId'
+      fullPath: '/research/experiments/$experimentId'
+      preLoaderRoute: typeof ProjectResearchExperimentsExperimentIdRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
+    '/_project/research/series/$seriesId': {
+      id: '/_project/research/series/$seriesId'
+      path: '/research/series/$seriesId'
+      fullPath: '/research/series/$seriesId'
+      preLoaderRoute: typeof ProjectResearchSeriesSeriesIdRouteImport
+      parentRoute: typeof ProjectRouteRoute
     }
   }
 }
 
-interface FlowsFlowIdRouteRouteChildren {
-  FlowsFlowIdCanvasRoute: typeof FlowsFlowIdCanvasRoute
-  FlowsFlowIdDatasetsRoute: typeof FlowsFlowIdDatasetsRoute
-  FlowsFlowIdEvalsRoute: typeof FlowsFlowIdEvalsRoute
-  FlowsFlowIdNodesRoute: typeof FlowsFlowIdNodesRoute
-  FlowsFlowIdReviewRoute: typeof FlowsFlowIdReviewRoute
-  FlowsFlowIdRunsRoute: typeof FlowsFlowIdRunsRoute
-  FlowsFlowIdIndexRoute: typeof FlowsFlowIdIndexRoute
+interface ProjectFlowsFlowIdRouteRouteChildren {
+  ProjectFlowsFlowIdCanvasRoute: typeof ProjectFlowsFlowIdCanvasRoute
+  ProjectFlowsFlowIdCasesRoute: typeof ProjectFlowsFlowIdCasesRoute
+  ProjectFlowsFlowIdRunsRoute: typeof ProjectFlowsFlowIdRunsRoute
+  ProjectFlowsFlowIdIndexRoute: typeof ProjectFlowsFlowIdIndexRoute
 }
 
-const FlowsFlowIdRouteRouteChildren: FlowsFlowIdRouteRouteChildren = {
-  FlowsFlowIdCanvasRoute: FlowsFlowIdCanvasRoute,
-  FlowsFlowIdDatasetsRoute: FlowsFlowIdDatasetsRoute,
-  FlowsFlowIdEvalsRoute: FlowsFlowIdEvalsRoute,
-  FlowsFlowIdNodesRoute: FlowsFlowIdNodesRoute,
-  FlowsFlowIdReviewRoute: FlowsFlowIdReviewRoute,
-  FlowsFlowIdRunsRoute: FlowsFlowIdRunsRoute,
-  FlowsFlowIdIndexRoute: FlowsFlowIdIndexRoute,
+const ProjectFlowsFlowIdRouteRouteChildren: ProjectFlowsFlowIdRouteRouteChildren =
+  {
+    ProjectFlowsFlowIdCanvasRoute: ProjectFlowsFlowIdCanvasRoute,
+    ProjectFlowsFlowIdCasesRoute: ProjectFlowsFlowIdCasesRoute,
+    ProjectFlowsFlowIdRunsRoute: ProjectFlowsFlowIdRunsRoute,
+    ProjectFlowsFlowIdIndexRoute: ProjectFlowsFlowIdIndexRoute,
+  }
+
+const ProjectFlowsFlowIdRouteRouteWithChildren =
+  ProjectFlowsFlowIdRouteRoute._addFileChildren(
+    ProjectFlowsFlowIdRouteRouteChildren,
+  )
+
+interface ProjectRouteRouteChildren {
+  ProjectSettingsRoute: typeof ProjectSettingsRoute
+  ProjectFlowsFlowIdRouteRoute: typeof ProjectFlowsFlowIdRouteRouteWithChildren
+  ProjectRunsRunIdRoute: typeof ProjectRunsRunIdRoute
+  ProjectFlowsIndexRoute: typeof ProjectFlowsIndexRoute
+  ProjectResearchIndexRoute: typeof ProjectResearchIndexRoute
+  ProjectResearchExperimentsExperimentIdRoute: typeof ProjectResearchExperimentsExperimentIdRoute
+  ProjectResearchSeriesSeriesIdRoute: typeof ProjectResearchSeriesSeriesIdRoute
 }
 
-const FlowsFlowIdRouteRouteWithChildren =
-  FlowsFlowIdRouteRoute._addFileChildren(FlowsFlowIdRouteRouteChildren)
+const ProjectRouteRouteChildren: ProjectRouteRouteChildren = {
+  ProjectSettingsRoute: ProjectSettingsRoute,
+  ProjectFlowsFlowIdRouteRoute: ProjectFlowsFlowIdRouteRouteWithChildren,
+  ProjectRunsRunIdRoute: ProjectRunsRunIdRoute,
+  ProjectFlowsIndexRoute: ProjectFlowsIndexRoute,
+  ProjectResearchIndexRoute: ProjectResearchIndexRoute,
+  ProjectResearchExperimentsExperimentIdRoute:
+    ProjectResearchExperimentsExperimentIdRoute,
+  ProjectResearchSeriesSeriesIdRoute: ProjectResearchSeriesSeriesIdRoute,
+}
+
+const ProjectRouteRouteWithChildren = ProjectRouteRoute._addFileChildren(
+  ProjectRouteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProjectRouteRoute: ProjectRouteRouteWithChildren,
   DemoRoute: DemoRoute,
-  SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
-  FlowsFlowIdRouteRoute: FlowsFlowIdRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

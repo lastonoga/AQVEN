@@ -1,8 +1,11 @@
 import asyncio
+from decimal import Decimal
 
 from llm_harness import (
+    PRICED_NAME,
     SCHEMA,
     Chunk,
+    SettledCosts,
     agent,
     answer_inference,
     answer_node,
@@ -14,7 +17,7 @@ from llm_harness import (
     retry_texts,
     tool_call,
 )
-from pydantic import JsonValue
+from pydantic import BaseModel, JsonValue
 
 from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.llm import OUTPUT_TOOL_NAME
@@ -27,6 +30,7 @@ from aqven.ir import (
     JudgeEvaluator,
     TemplatePrompt,
 )
+from aqven.policies import NoParams
 from aqven.ports.execution import NodeFailed, NodeSucceeded
 from aqven.runtime.events import RUN_EVENT_ADAPTER, InferenceChecksCaptured
 from aqven.runtime.values import InlineValue
@@ -142,6 +146,43 @@ def test_flag_check_passes_value_and_counts_failure() -> None:
     assert RUN_EVENT_ADAPTER.validate_json(captured[0].model_dump_json()) == captured[0]
 
 
+def not_a_verdict(value: BaseModel, context: object, params: NoParams) -> bool:
+    return True
+
+
+def test_a_check_that_returns_no_verdict_fails_the_node_as_invalid_code() -> None:
+    inference = answer_inference(checks=(_code_check(OnFail.RETRY),))
+    code: dict[str, object] = {CHECK_REF: not_a_verdict}
+    bed = llm_bed([_answer("good news", "out-1")], answer_node(), [agent()], [inference], RUN_INPUT, code=code)
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeFailed)
+    assert outcome.error.code == "code_invalid"
+    assert outcome.error.message == f"evaluator {CHECK_REF} did not return a Verdict"
+
+
+def test_a_passed_judge_check_carries_no_feedback() -> None:
+    check = CompiledCheck(
+        name="grounded",
+        evaluator=JudgeEvaluator(inference=InferenceId("grade"), agent=AgentId("critic")),
+        on_fail=OnFail.FLAG,
+        threshold=0.5,
+    )
+    turns = [
+        _answer("first", "out-1"),
+        [tool_call(OUTPUT_TOOL_NAME, '{"rationale": "well grounded", "score": 0.9}', "judge-1")],
+    ]
+    inference = answer_inference(checks=(check,))
+    bed = llm_bed(turns, answer_node(), [agent(), agent("critic")], [inference, _grade_inference()], RUN_INPUT)
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    captured = [event for event in bed.scope.events.emitted if isinstance(event, InferenceChecksCaptured)]
+    assert isinstance(outcome, NodeSucceeded)
+    assert [(item.check, item.passed, item.feedback) for item in captured[0].checks] == [("grounded", True, None)]
+
+
 def test_builtin_evaluator_retries_until_value_fits() -> None:
     check = CompiledCheck(
         name="short",
@@ -191,6 +232,64 @@ def test_judge_check_runs_nested_inference_and_retries_below_threshold() -> None
     assert request_texts(bed.scripted.seen[1][0])[-1].startswith("where is my order? => first")
     assert any("ungrounded" in text for text in retry_texts(bed.scripted.seen[2][0]))
     assert bed.scope.output.discards() == [(1, "schema_invalid")]
+
+
+def _grade_inference() -> CompiledInference:
+    return CompiledInference(
+        inference_id=InferenceId("grade"),
+        description="grading",
+        input_fields=(field_ir("question", "Text"), field_ir("reply", "Text")),
+        output_fields=(field_ir("rationale", "Text"), field_ir("score", "Float")),
+        input_schema=SCHEMA,
+        output_schema=SCHEMA,
+        prompt=TemplatePrompt(level=2, template="{{ question }} => {{ reply }}\n{{ output_format }}"),
+    )
+
+
+def test_the_nested_judge_of_a_check_is_paid_by_the_node() -> None:
+    check = CompiledCheck(
+        name="grounded",
+        evaluator=JudgeEvaluator(inference=InferenceId("grade"), agent=AgentId("critic")),
+        on_fail=OnFail.RETRY,
+        threshold=0.5,
+    )
+    turns = [
+        _answer("first", "out-1"),
+        [tool_call(OUTPUT_TOOL_NAME, '{"rationale": "ungrounded", "score": 0.2}', "judge-1")],
+        _answer("second", "out-2"),
+        [tool_call(OUTPUT_TOOL_NAME, '{"rationale": "good", "score": 0.9}', "judge-2")],
+    ]
+    costs = SettledCosts()
+    inference = answer_inference(checks=(check,))
+    bed = llm_bed(
+        turns,
+        answer_node(),
+        [agent(), agent("critic")],
+        [inference, _grade_inference()],
+        RUN_INPUT,
+        models=costs.priced,
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeSucceeded)
+    assert len(costs.seen) == 4
+    assert outcome.usage.cost_usd == costs.total()
+    assert outcome.usage.cost_usd > Decimal(0)
+
+
+def test_a_node_failed_by_invalid_json_keeps_its_cost_and_the_model_that_answered() -> None:
+    broken = [tool_call(OUTPUT_TOOL_NAME, '{"reply": ', "out-1")]
+    costs = SettledCosts()
+    bed = llm_bed([broken, broken], answer_node(), [agent()], [answer_inference()], RUN_INPUT, models=costs.priced)
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeFailed)
+    assert len(costs.seen) == 2
+    assert outcome.usage.cost_usd == costs.total()
+    assert outcome.usage.cost_usd > Decimal(0)
+    assert outcome.model == PRICED_NAME
 
 
 def test_allowed_set_narrows_schema_to_enum_and_retries_violation() -> None:

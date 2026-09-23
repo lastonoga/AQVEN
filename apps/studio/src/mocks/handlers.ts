@@ -1,11 +1,12 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiDatasetBatch, ApiDatasetBatchCase, ApiDatasetCase, ApiDatasetSummary, ApiRun, ApiRunSnapshot } from "@/domain"
+import type { ApiDatasetCase, ApiDatasetSummary, ApiRun, ApiRunSnapshot } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveChatSessions, liveChatStatus } from "./data/chat"
-import { liveDatasetCases, liveDatasets, liveEvalCases, liveEvalGates, liveEvalRuns, liveEvals } from "./data/evals"
+import { liveDatasetCases, liveDatasets } from "./data/datasets"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
 import { liveFiles, liveFlowDetails, liveFlows, liveProject, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
+import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
 const LATENCY_MS = 20
 const NOT_FOUND = 404
@@ -15,11 +16,9 @@ const createdDatasets: ApiDatasetSummary[] = []
 const createdDatasetCases = new Map<string, readonly ApiDatasetCase[]>()
 const startedRuns: ApiRun[] = []
 const startedSnapshots = new Map<string, ApiRunSnapshot>()
-const startedBatches: ApiDatasetBatch[] = []
-const startedBatchCases = new Map<string, readonly ApiDatasetBatchCase[]>()
 
 const runSnapshot = (runId: string): ApiRunSnapshot | undefined => {
-  const recorded = startedSnapshots.get(runId) ?? liveRunSnapshots[runId]
+  const recorded = startedSnapshots.get(runId) ?? liveRunSnapshots[runId] ?? researchRunSnapshot(runId, liveRunSnapshots[COMPLETED_RUN_ID])
   if (recorded !== undefined) return recorded
   const summary = liveRuns.find((run) => run.run_id === runId)
   if (summary === undefined) return undefined
@@ -82,6 +81,28 @@ const notFound = (op: string, message: string): Response =>
     { status: NOT_FOUND },
   )
 
+const inputInvalid = (op: string, message: string): Response =>
+  HttpResponse.json(
+    { ok: false, op, code: "INPUT_INVALID", message, problems: [], candidates: [], conflict: null, retry_after_ms: null },
+    { status: UNPROCESSABLE },
+  )
+
+const inlineValue = (ref: ApiRunSnapshot["input_ref"]): unknown => (ref?.kind === "inline" ? ref.value : null)
+
+const draftCaseOf = (snapshot: ApiRunSnapshot): ApiDatasetCase => ({
+  name: `${snapshot.flow_id}_${snapshot.run_id.slice(0, 8)}`,
+  inputs: inlineValue(snapshot.input_ref) ?? {},
+  context: snapshot.context ?? null,
+  node_outputs: {
+    ...(snapshot.node_outputs ?? {}),
+    ...Object.fromEntries(snapshot.executions.filter((execution) => execution.status === "ok" && execution.output_ref?.kind === "inline").map((execution) => [execution.address.node_id, inlineValue(execution.output_ref)])),
+  },
+  expected_output: null,
+})
+
+const draftYaml = (draft: ApiDatasetCase): string =>
+  [`name: ${draft.name}`, `inputs: ${JSON.stringify(draft.inputs)}`, `node_outputs: ${JSON.stringify(draft.node_outputs)}`, "expected_output: null"].join("\n")
+
 const page = <T>(items: readonly T[]) => ({ items, next_cursor: null, total_estimate: items.length })
 
 const namePage = <T extends { readonly name?: string; readonly case_name?: string }>(items: readonly T[], url: URL) => {
@@ -120,10 +141,15 @@ const earliestDeadline = (run: ApiRun): number => Math.min(Number.POSITIVE_INFIN
 
 const isOverdue = (run: ApiRun): boolean => earliestDeadline(run) < Date.now()
 
+const EXPERIMENT_MODE = "experiment"
+
+const matchesMode = (run: ApiRun, mode: string | null): boolean => (mode === null ? run.mode !== EXPERIMENT_MODE : run.mode === mode)
+
 const matchesRun = (run: ApiRun, url: URL): boolean => {
   const flowId = url.searchParams.get("flow_id")
   const status = url.searchParams.get("status")
   const overdue = url.searchParams.get("overdue")
+  if (!matchesMode(run, url.searchParams.get("mode"))) return false
   if (flowId !== null && run.flow_id !== flowId) return false
   if (overdue === "true" && !isOverdue(run)) return false
   return status === null || run.status === status
@@ -216,6 +242,8 @@ const rangeOrder = (flowId: string, start: string | null, end: string | null): r
 }
 
 export const handlers = [
+  ...researchHandlers,
+
   http.get(`${API_BASE}/ready`, () => HttpResponse.json({ status: "ready", detail: null })),
 
   http.get(`${API_BASE}/project`, () => served(liveProject)),
@@ -336,7 +364,8 @@ export const handlers = [
 
   http.get(`${API_BASE}/runs`, ({ request }) => {
     const url = new URL(request.url)
-    return served(page(sortedRuns([...startedRuns, ...liveRuns].filter((run) => matchesRun(run, url)), url)))
+    const runs: readonly ApiRun[] = [...startedRuns, ...liveRuns, ...researchRuns(liveRunSnapshots[COMPLETED_RUN_ID])]
+    return served(page(sortedRuns(runs.filter((run) => matchesRun(run, url)), url)))
   }),
 
   http.post(`${API_BASE}/runs`, async ({ request }) => {
@@ -415,9 +444,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/runs/:runId/presentation`, async ({ params, request }) => {
     const runId = text(params, "runId")
-    if (startedSnapshots.get(runId) === undefined && liveRunSnapshots[runId] === undefined) {
-      return notFound("run_presentation", `run ${runId} is unknown`)
-    }
+    if (runSnapshot(runId) === undefined) return notFound("run_presentation", `run ${runId} is unknown`)
     const body: unknown = await request.json()
     const values: unknown[] = isRecord(body) && Array.isArray(body["targets"]) ? body["targets"] : []
     const targets = values.filter((target) => isRecord(target) && isRecord(target["address"]) &&
@@ -458,18 +485,24 @@ export const handlers = [
     return asset === undefined ? served(`blob ${blobId}`) : HttpResponse.redirect(new URL(asset, request.url).href)
   }),
 
-  http.get(`${API_BASE}/evals`, () => served(page(liveEvals))),
-
-  http.get(`${API_BASE}/evals/:evalId`, ({ params }) => {
-    const found = liveEvals.find((item) => item.eval_id === text(params, "evalId"))
-    return found === undefined ? notFound("eval_get", `eval ${text(params, "evalId")} is not in the project`) : served(found)
-  }),
-
   http.get(`${API_BASE}/datasets`, () => served(page([...liveDatasets, ...createdDatasets]))),
 
   http.get(`${API_BASE}/datasets/:datasetId`, ({ params }) => {
     const found = [...liveDatasets, ...createdDatasets].find((item) => item.dataset_id === text(params, "datasetId"))
     return found === undefined ? notFound("dataset_get", `dataset ${text(params, "datasetId")} is not in the project`) : served(found)
+  }),
+
+  http.post(`${API_BASE}/datasets/:datasetId/cases/from-run`, async ({ params, request }) => {
+    const datasetId = text(params, "datasetId")
+    const dataset = [...liveDatasets, ...createdDatasets].find((item) => item.dataset_id === datasetId)
+    if (dataset === undefined) return notFound("case_from_run", `dataset ${datasetId} is not in the project`)
+    const body: unknown = await request.json()
+    const runId = isRecord(body) && typeof body["run_id"] === "string" ? body["run_id"] : ""
+    const snapshot = runSnapshot(runId)
+    if (snapshot === undefined) return notFound("case_from_run", `run ${runId} not found`)
+    if (dataset.flow_id !== snapshot.flow_id) return inputInvalid("case_from_run", `run ${runId} belongs to flow ${snapshot.flow_id}, not ${dataset.flow_id ?? "no flow"}`)
+    const draft = draftCaseOf(snapshot)
+    return served({ dataset_id: datasetId, case: draft, yaml: draftYaml(draft) })
   }),
 
   http.get(`${API_BASE}/datasets/:datasetId/cases`, ({ params, request }) => {
@@ -494,61 +527,6 @@ export const handlers = [
     const cases = createdDatasetCases.get(datasetId) ?? liveDatasetCases[datasetId]
     const found = cases?.find((item) => item.name === caseName)
     return found === undefined ? notFound("dataset_case_get", `case ${caseName} is not in dataset ${datasetId}`) : served(found)
-  }),
-
-  http.post(`${API_BASE}/dataset-batches`, async ({ request }) => {
-    const body: unknown = await request.json()
-    if (!isRecord(body) || typeof body["dataset_id"] !== "string" || typeof body["flow_id"] !== "string" || !Array.isArray(body["case_names"])) {
-      return HttpResponse.json({ message: "Invalid batch request" }, { status: UNPROCESSABLE })
-    }
-    const dataset = [...liveDatasets, ...createdDatasets].find((item) => item.dataset_id === body["dataset_id"])
-    if (dataset === undefined) return notFound("dataset_batch_start", "Dataset is missing")
-    const names = body["case_names"].filter((name): name is string => typeof name === "string")
-    const batchId = crypto.randomUUID()
-    const record: ApiDatasetBatch = {
-      batch_id: batchId,
-      flow_id: body["flow_id"],
-      dataset_id: dataset.dataset_id,
-      dataset_file_hash: dataset.file_hash,
-      case_names: names,
-      selected_nodes: Array.isArray(body["selected_nodes"]) ? body["selected_nodes"].filter((name): name is string => typeof name === "string") : null,
-      start_node: typeof body["start_node"] === "string" ? body["start_node"] : null,
-      end_node: typeof body["end_node"] === "string" ? body["end_node"] : null,
-      mode: "dryrun",
-      status: "completed",
-      started_at: new Date().toISOString(),
-      finished_at: new Date().toISOString(),
-      cases_total: names.length,
-      cases_completed: names.length,
-      cases_failed: 0,
-      cost_usd: "0",
-    }
-    startedBatches.unshift(record)
-    startedBatchCases.set(batchId, names.map((caseName) => ({ case_name: caseName, status: "completed", run_id: COMPLETED_RUN_ID, error: null, cost_usd: "0" })))
-    return HttpResponse.json(record, { status: 202 })
-  }),
-
-  http.get(`${API_BASE}/dataset-batches`, ({ request }) => {
-    const url = new URL(request.url)
-    const records = startedBatches.filter((item) => item.flow_id === url.searchParams.get("flow_id") && item.dataset_id === url.searchParams.get("dataset_id"))
-    return served(page(records))
-  }),
-
-  http.get(`${API_BASE}/dataset-batches/:batchId`, ({ params }) => {
-    const id = text(params, "batchId")
-    const found = startedBatches.find((item) => item.batch_id === id)
-    return found === undefined ? notFound("dataset_batch_get", `batch ${id} is not in the project`) : served(found)
-  }),
-
-  http.get(`${API_BASE}/dataset-batches/:batchId/cases`, ({ params, request }) => {
-    const id = text(params, "batchId")
-    const rows = startedBatchCases.get(id)
-    if (rows === undefined) return notFound("dataset_batch_cases", `batch ${id} is not in the project`)
-    const url = new URL(request.url)
-    const query = (url.searchParams.get("search") ?? "").toLocaleLowerCase()
-    const status = url.searchParams.get("status")
-    const filtered = rows.filter((item) => item.case_name.toLocaleLowerCase().includes(query) && (status === null || item.status === status)).sort((a, b) => a.case_name.localeCompare(b.case_name))
-    return served(namePage(filtered, url))
   }),
 
   http.post(`${API_BASE}/datasets/draft`, async ({ request }) => {
@@ -595,32 +573,10 @@ export const handlers = [
       file_hash: "sha256-demo-created-dataset",
       cases: cases.length,
       splits,
-      used_by: [],
     }
     createdDatasets.push(summary)
     createdDatasetCases.set(datasetId, cases)
     return HttpResponse.json(summary)
-  }),
-
-  http.get(`${API_BASE}/eval-runs`, ({ request }) => {
-    const evalId = new URL(request.url).searchParams.get("eval_id")
-    return served(page(evalId === null ? liveEvalRuns : liveEvalRuns.filter((item) => item.eval_id === evalId)))
-  }),
-
-  http.get(`${API_BASE}/eval-runs/:evalRunId`, ({ params }) => {
-    const found = liveEvalRuns.find((item) => item.eval_run_id === text(params, "evalRunId"))
-    return found === undefined ? notFound("eval_run_get", `eval run ${text(params, "evalRunId")} is unknown`) : served(found)
-  }),
-
-  http.get(`${API_BASE}/eval-runs/:evalRunId/cases`, ({ params }) => {
-    const rows = liveEvalCases[text(params, "evalRunId")]
-    return rows === undefined ? notFound("eval_run_cases", `eval run ${text(params, "evalRunId")} is unknown`) : served(page(rows))
-  }),
-
-  http.get(`${API_BASE}/eval-runs/:evalRunId/gate`, ({ params }) => {
-    const gate = liveEvalGates[text(params, "evalRunId")]
-    if (gate === undefined) return notFound("eval_gate", `eval run ${text(params, "evalRunId")} is unknown`)
-    return gate.report === null ? notFound("eval_gate", gate.message) : served(gate.report)
   }),
 
   http.get(`${API_BASE}/chat/status`, () => served(liveChatStatus)),
@@ -678,7 +634,6 @@ export const handlers = [
           file_hash: "sha256-demo-generated-dataset",
           cases: cases.length,
           splits: { unassigned: cases.length },
-          used_by: [],
         })
         createdDatasetCases.set(datasetId, cases)
       }

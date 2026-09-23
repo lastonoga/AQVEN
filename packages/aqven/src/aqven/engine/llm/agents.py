@@ -1,7 +1,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import Final
+from typing import Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, JsonValue, ValidationError
 from pydantic_ai import Agent, DeferredToolRequests
@@ -31,7 +30,7 @@ from aqven.engine.llm.streaming import drain_events
 from aqven.engine.llm.tools import McpServers, ToolsetBuilder
 from aqven.ir import CompiledInference, TemplatePrompt
 from aqven.ir.nodes import OutputMode
-from aqven.models.usage import response_cost_usd
+from aqven.models.usage import usd_of_micros
 from aqven.policies.paths import read
 from aqven.ports.execution import ExecutionScope
 from aqven.runtime.address import JsonObject
@@ -48,7 +47,16 @@ MEDIA_MODALITIES: Final[Mapping[str, Modality]] = {
     "application": Modality.DOCUMENT,
     "text": Modality.DOCUMENT,
 }
-USD_MICROS: Final = Decimal(1_000_000)
+
+
+@runtime_checkable
+class LimitedScope(Protocol):
+    @property
+    def run_limits(self) -> Limits | None: ...
+
+
+def scope_limits(scope: ExecutionScope) -> Limits | None:
+    return scope.run_limits if isinstance(scope, LimitedScope) else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,7 +164,7 @@ class InferenceAgents:
         )
         built.output_validator(OutputGuard(self.code, self))
         deps = RunDeps(scope, inference, values, normalized, shaped, attempt_offset)
-        limits = (project.limits, agent.limits, call.limits)
+        limits = (project.limits, agent.limits, call.limits, scope_limits(scope))
         return PreparedRun(
             agent=built,
             deps=deps,
@@ -197,12 +205,11 @@ class InferenceAgents:
 
 def usage_limits(limits: Iterable[Limits | None]) -> UsageLimits:
     present = [item for item in limits if item is not None]
-    usd_micros = _smallest(item.usd_micros for item in present)
     return UsageLimits(
         request_limit=_smallest(item.requests for item in present) or DEFAULT_REQUEST_LIMIT,
         tool_calls_limit=_smallest(item.tool_calls for item in present),
         total_tokens_limit=_smallest(item.tokens for item in present),
-        cost_limit=Decimal(usd_micros) / USD_MICROS if usd_micros is not None else None,
+        cost_limit=usd_of_micros(_smallest(item.usd_micros for item in present)),
     )
 
 
@@ -213,11 +220,6 @@ def model_settings(spec: ModelSettingsSpec | None) -> ModelSettings | None:
     if spec.provider_options is not None:
         settings["extra_body"] = spec.provider_options
     return settings
-
-
-def response_cost(messages: Iterable[ModelMessage]) -> Decimal:
-    responses = (message for message in messages if isinstance(message, ModelResponse))
-    return sum((response_cost_usd(response) for response in responses), Decimal(0))
 
 
 def response_count(messages: Iterable[ModelMessage]) -> int:

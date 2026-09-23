@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "The critic's decision on a reply: send or block, with the score and the blocking remarks behind it"
+fields:
+- name: "verdict"
+  type: "ReplyVerdict"
+  description: "Whether the reply may go to the customer as it is"
+- name: "score"
+  type: "Score"
+  description: "The critic's score of the reply"
+- name: "blocking"
+  type: "Text[]"
+  description: "Blocking remarks that have to be fixed"
+  maxLength: 200
+  maxItems: 5

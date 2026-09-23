@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import { http, HttpResponse } from "msw"
 import { API_BASE } from "@/api/client"
 import { server } from "@/mocks/node"
-import { liveDatasets } from "@/mocks/data/evals"
+import { liveDatasets } from "@/mocks/data/datasets"
 import { COMPLETED_RUN_ID, FAILED_RUN_ID, liveExecutionDetails, liveRunSnapshots, liveRuns } from "@/mocks/data/runs"
 import { renderRoute } from "@/test/render-route"
 import { TEST_NOW } from "@/test/clock"
@@ -58,11 +58,11 @@ describe("RunsScreen", () => {
     expect(router.state.location.search).toEqual({ run: FAILED_RUN_ID, stage: "search_kb|||" })
   })
 
-  it("opens datasets to start a reusable run", async () => {
+  it("opens cases to start a reusable run", async () => {
     const router = await renderRoute(RUNS)
     fireEvent.click(await screen.findByRole("button", { name: "Start a run" }))
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/flows/support_case/datasets")
+      expect(router.state.location.pathname).toBe("/flows/support_case/cases")
     })
   })
 
@@ -93,7 +93,7 @@ describe("RunsScreen", () => {
   })
 
   it("opens the newest run when clicking Runs in the top navigation", async () => {
-    const router = await renderRoute("/flows/support_case/nodes")
+    const router = await renderRoute("/flows/support_case/canvas")
     const navigation = await screen.findByRole("navigation", { name: "Flow views" })
     fireEvent.click(within(navigation).getByRole("link", { name: "Runs" }))
     const newest = flowRuns[0]

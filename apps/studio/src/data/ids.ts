@@ -1,8 +1,12 @@
 import type {
   AgentId,
+  ArmId,
   BlobId,
   ChatSessionId,
+  CheckId,
   ContentHash,
+  DatasetId,
+  ExperimentId,
   FilePath,
   FlowId,
   InferenceId,
@@ -10,8 +14,10 @@ import type {
   NodeId,
   ProjectRoot,
   RunId,
+  SeriesId,
   SettingKey,
   TypeId,
+  VariantId,
 } from "@/domain"
 
 export const flowId = (raw: string): FlowId => raw as FlowId
@@ -27,5 +33,11 @@ export const filePath = (raw: string): FilePath => raw as FilePath
 export const settingKey = (raw: string): SettingKey => raw as SettingKey
 export const isoDateTime = (raw: string): IsoDateTime => raw as IsoDateTime
 export const projectRoot = (raw: string): ProjectRoot => raw as ProjectRoot
+export const experimentId = (raw: string): ExperimentId => raw as ExperimentId
+export const seriesId = (raw: string): SeriesId => raw as SeriesId
+export const variantId = (raw: string): VariantId => raw as VariantId
+export const armId = (raw: string): ArmId => raw as ArmId
+export const checkId = (raw: string): CheckId => raw as CheckId
+export const datasetId = (raw: string): DatasetId => raw as DatasetId
 
 export const clientOpId = (): string => globalThis.crypto.randomUUID()

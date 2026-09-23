@@ -41,7 +41,9 @@ GROUPS = {
     "agents": ("Agent specification", "aqven.spec.agent"),
     "tools": ("Tool specification", "aqven.spec.tool"),
     "types": ("Type specifications", "aqven.spec.types"),
-    "evaluations": ("Datasets and evaluations", "aqven.spec.evals"),
+    "datasets": ("Datasets", "aqven.spec.datasets"),
+    "experiments": ("Experiments", "aqven.spec.experiments"),
+    "findings": ("Findings", "aqven.spec.findings"),
     "policies": ("Policies and limits", "aqven.spec.policy"),
     "common": ("Common limits and constraints", "aqven.spec.common"),
     "media": ("Media and dynamic values", "aqven.spec.builtins"),
@@ -122,17 +124,11 @@ def machine_independent(text: str) -> str:
     return text.replace(sys.executable, "sys.executable")
 
 
-def default_text(
-    model: type[BaseModel], alias: str, schema_field: dict[str, Any]
-) -> str:
+def default_text(model: type[BaseModel], alias: str, schema_field: dict[str, Any]) -> str:
     if "default" in schema_field:
         return repr(schema_field["default"])
     field = next(
-        (
-            field
-            for field in model.model_fields.values()
-            if (field.alias or field.validation_alias) == alias
-        ),
+        (field for field in model.model_fields.values() if (field.alias or field.validation_alias) == alias),
         None,
     )
     if field is None:
@@ -187,10 +183,7 @@ def spec_page(title: str, module_name: str) -> tuple[str, dict[str, str]]:
         "run `{{CLI_COMMAND}} check` on a complete project.\n\n"
     )
     schemas = {
-        model.__name__: json.dumps(
-            model.model_json_schema(by_alias=True), indent=2, sort_keys=True
-        )
-        + "\n"
+        model.__name__: json.dumps(model.model_json_schema(by_alias=True), indent=2, sort_keys=True) + "\n"
         for model in models
     }
     return header + "\n".join(model_section(model) for model in models), schemas
@@ -248,11 +241,7 @@ def api_page() -> str:
                         )
                     )
                     for field_name, field in properties.items():
-                        default = (
-                            "—"
-                            if field_name in required
-                            else clean(default_text(value, field_name, field))
-                        )
+                        default = "—" if field_name in required else clean(default_text(value, field_name, field))
                         lines.append(
                             f"| `{field_name}` | `{clean(type_text(field, schema.get('$defs', {})))}` | {'Yes' if field_name in required else 'No'} | `{default}` |"
                         )
@@ -264,44 +253,34 @@ def api_page() -> str:
                     for field in fields:
                         default = (
                             "—"
-                            if field.default is dataclasses.MISSING
-                            and field.default_factory is dataclasses.MISSING
+                            if field.default is dataclasses.MISSING and field.default_factory is dataclasses.MISSING
                             else "factory"
                             if field.default_factory is not dataclasses.MISSING
                             else repr(field.default)
                         )
-                        lines.append(
-                            f"| `{field.name}` | `{clean(field.type)}` | `{clean(default)}` |"
-                        )
+                        lines.append(f"| `{field.name}` | `{clean(field.type)}` | `{clean(default)}` |")
                     lines.append("")
             for method_name, method in public_methods(value):
                 try:
-                    signature = inspect.signature(
-                        method, annotation_format=annotationlib.Format.STRING
-                    )
-                except (TypeError, ValueError):
+                    signature = inspect.signature(method, annotation_format=annotationlib.Format.STRING)
+                except TypeError, ValueError:
                     continue
                 prefix = (
-                    "async def"
-                    if inspect.iscoroutinefunction(method)
-                    or inspect.isasyncgenfunction(method)
-                    else "def"
+                    "async def" if inspect.iscoroutinefunction(method) or inspect.isasyncgenfunction(method) else "def"
                 )
                 lines.append(machine_independent(f"- `{prefix} {method_name}{signature}`"))
             lines.append("")
         elif callable(value):
             try:
                 prefix = "async def" if inspect.iscoroutinefunction(value) else "def"
-                signature = inspect.signature(
-                    value, annotation_format=annotationlib.Format.STRING
-                )
+                signature = inspect.signature(value, annotation_format=annotationlib.Format.STRING)
                 lines.extend(
                     (
                         machine_independent(f"`{prefix} {name}{signature}`"),
                         "",
                     )
                 )
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 pass
         summary = (value.__doc__ or "").split("\n\n", 1)[0].replace("\n", " ")
         if summary and len(summary) < 400 and not summary.startswith(f"{name}("):
@@ -323,11 +302,7 @@ def enums_page() -> str:
         "",
     ]
     for name, value in sorted(vars(module).items()):
-        if (
-            not inspect.isclass(value)
-            or not issubclass(value, enum.Enum)
-            or value.__module__ != module.__name__
-        ):
+        if not inspect.isclass(value) or not issubclass(value, enum.Enum) or value.__module__ != module.__name__:
             continue
         lines.extend((f"## {name}", "", "| Value |", "| --- |"))
         lines.extend(f"| `{member.value}` |" for member in value)
@@ -379,19 +354,14 @@ def builtins_page() -> tuple[str, dict[str, str]]:
             )
         )
         for name, function in members.items():
-            signature = inspect.signature(
-                function, annotation_format=annotationlib.Format.STRING
-            )
+            signature = inspect.signature(function, annotation_format=annotationlib.Format.STRING)
             lines.append(f"| `{name}` | `{machine_independent(clean(f'{function.__name__}{signature}'))}` |")
         lines.append("")
     lines.extend(("## `with` parameter models", ""))
     models = policy_param_models()
     lines.extend(model_section(model) for model in models)
     schemas = {
-        model.__name__: json.dumps(
-            model.model_json_schema(by_alias=True), indent=2, sort_keys=True
-        )
-        + "\n"
+        model.__name__: json.dumps(model.model_json_schema(by_alias=True), indent=2, sort_keys=True) + "\n"
         for model in models
     }
     return "\n".join(lines) + "\n", schemas
@@ -451,19 +421,14 @@ def authoring_api_page() -> str:
         "describe_annotation",
     ):
         value = getattr(module, name)
-        signature = inspect.signature(
-            value, annotation_format=annotationlib.Format.STRING
-        )
+        signature = inspect.signature(value, annotation_format=annotationlib.Format.STRING)
         lines.extend((f"## {name}", "", machine_independent(f"`def {name}{signature}`"), ""))
     for name in ("Inference", "Flow", "BuiltNode", "BuilderError"):
         value = getattr(module, name)
         lines.extend((f"## {name}", "", f"`class {name}` · `{value.__module__}`", ""))
         if dataclasses.is_dataclass(value):
             lines.extend(("| Field | Type |", "| --- | --- |"))
-            lines.extend(
-                f"| `{field.name}` | `{clean(field.type)}` |"
-                for field in dataclasses.fields(value)
-            )
+            lines.extend(f"| `{field.name}` | `{clean(field.type)}` |" for field in dataclasses.fields(value))
             lines.append("")
     return "\n".join(lines)
 
@@ -609,9 +574,7 @@ def outputs() -> dict[Path, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--check", action="store_true", help="fail if generated files differ"
-    )
+    parser.add_argument("--check", action="store_true", help="fail if generated files differ")
     args = parser.parse_args()
     stale: list[Path] = []
     generated = outputs()
@@ -629,9 +592,7 @@ def main() -> int:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
     if stale:
-        print(
-            "Generated reference is stale:\n" + "\n".join(str(path) for path in stale)
-        )
+        print("Generated reference is stale:\n" + "\n".join(str(path) for path in stale))
         return 1
     print("Reference is current" if args.check else "Reference generated")
     return 0

@@ -8,6 +8,7 @@ from aqven.codegen import (
     GENERATED_MODULE,
     GENERATED_TYPES,
     TYPES_PACKAGE_INIT,
+    ArmStepShape,
     GeneratedTypes,
     InferenceShape,
     ShapeOwner,
@@ -112,5 +113,8 @@ def _owner_site(project: LoadedProject, owner: ShapeOwner) -> tuple[str, str]:
             return project.tools[tool_id].path, f"tool {tool_id}"
         case StepShape(flow_id=flow_id, node_id=node_id):
             return project.flows[flow_id].nodes[node_id].path, f"code node {flow_id}.{node_id}"
+        case ArmStepShape(experiment_id=experiment_id, arm_id=arm_id, node_id=node_id):
+            node = project.experiments[experiment_id].arms[arm_id].nodes[node_id]
+            return node.path, f"code node {node_id} of arm {arm_id} in experiment {experiment_id}"
         case _:
             assert_never(owner)

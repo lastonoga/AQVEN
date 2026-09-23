@@ -1,0 +1,32 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "The panel's pick step: takes the winning draft from the single verdict, with no tie-break and no spread between judges"
+run: "@root.flows.judge_panel.nodes.pick.pick:pick"
+in:
+- name: "candidates"
+  type: "ReplyDraft[]"
+  description: "Reply drafts"
+  maxItems: 3
+  from: "$input.candidates"
+- name: "verdict"
+  type: "JudgeVerdict"
+  description: "The single judge's verdict"
+  from: "$judge.out"
+- name: "tie_broken"
+  type: "Bool"
+  description: "Always false: a single judge has nobody to disagree with"
+  value: false
+- name: "spread"
+  type: "Float"
+  description: "Always zero: there is no score spread with one judge"
+  minimum: 0
+  maximum: 4
+  value: 0
+out:
+- name: "winner"
+  type: "ReplyDraft"
+  description: "Winning draft"
+- name: "verdict"
+  type: "PanelVerdict"
+  description: "The single verdict in the panel's result shape"

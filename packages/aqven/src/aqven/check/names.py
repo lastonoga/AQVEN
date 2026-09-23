@@ -45,7 +45,6 @@ def _sources(context: CheckContext) -> Iterator[tuple[str, BaseModel]]:
     project = context.project
     yield project.project.path, project.project.spec
     yield from ((source.path, source.spec) for source in project.types.values())
-    yield from ((source.path, source.spec) for source in project.evals.values())
     yield from ((source.path, source.spec) for source in project.agents.values())
     yield from ((source.path, source.spec) for source in project.tools.values())
     yield from ((source.path, source.spec) for source in project.mcp_servers.values())

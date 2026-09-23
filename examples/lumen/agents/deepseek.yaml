@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Intent cascade escalation, DeepSeek-family panel judge and the grounding judge in evals"
+description: "Intent cascade escalation, DeepSeek-family panel judge and the reply critic in experiments"
 model: "openrouter:deepseek/deepseek-v4-flash-0731"
 settings:
   temperature: 0

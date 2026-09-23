@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "description": "One variant of the subject: agents assigned to LLM nodes, another arm, or the subject as written.\n\n``agents`` maps a node id of the subject (or of ``arm``) to an agent id; nodes not listed keep their own agent.\nA variant never names a bare model: an agent carries the model, its settings and the output mode.",
+  "properties": {
+    "agents": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agents"
+    },
+    "arm": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Arm"
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "title": "Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "title": "VariantSpec",
+  "type": "object"
+}

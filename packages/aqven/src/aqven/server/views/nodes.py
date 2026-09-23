@@ -269,8 +269,11 @@ def node_summary(state: WorkspaceState, flow_id: str, node_id: str, source: Sour
 
 
 def node_summaries(state: WorkspaceState, flow_id: str) -> tuple[NodeSummary, ...]:
-    flow = loaded_flow(state, flow_id)
-    return tuple(node_summary(state, flow_id, node_id, source) for node_id, source in ordered_nodes(flow))
+    return flow_node_summaries(state, loaded_flow(state, flow_id), flow_id)
+
+
+def flow_node_summaries(state: WorkspaceState, flow: LoadedFlow, scope: str) -> tuple[NodeSummary, ...]:
+    return tuple(node_summary(state, scope, node_id, source) for node_id, source in ordered_nodes(flow))
 
 
 def compiled_node(state: WorkspaceState, flow_id: str, node_id: str) -> CompiledNode | None:

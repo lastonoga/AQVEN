@@ -26,7 +26,7 @@ LUMEN_BLOBS_FIXTURE = Path(__file__).resolve().parent / "fixtures/lumen_blobs"
 
 @pytest.fixture
 def csv_project(tmp_path: Path) -> Path:
-    return copy_fixture("evals/eval_shop", tmp_path)
+    return copy_fixture("dataset_shop", tmp_path)
 
 
 @pytest.fixture
@@ -307,9 +307,7 @@ def test_root_expected_output_json_column_is_imported(csv_client: TestClient) ->
 def test_invalid_header_does_not_shift_later_column_values(csv_client: TestClient) -> None:
     content = "name,bad header,text\nfirst,ignored,actual input\n"
     preview = upload(csv_client, "/api/datasets/import-csv/preview", content)
-    draft = dataset_csv.parse_csv(
-        content.encode(), frozenset(), frozenset(), frozenset(), frozenset({"inputs.text"})
-    )
+    draft = dataset_csv.parse_csv(content.encode(), frozenset(), frozenset(), frozenset(), frozenset({"inputs.text"}))
 
     assert preview.status_code == 200
     assert preview.json()["ready"] is False

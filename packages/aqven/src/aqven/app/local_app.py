@@ -12,7 +12,14 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from aqven.app.access import AccessGuard, local_access_policy, new_access_token
 from aqven.app.access import AccessPolicy as LocalAccessPolicy
-from aqven.app.composition import ApplicationParts, StudioFeatures, assemble_app, project_workspace
+from aqven.app.composition import (
+    ApplicationParts,
+    ProjectAssembly,
+    SeriesEngineHost,
+    StudioFeatures,
+    assemble_app,
+    project_workspace,
+)
 from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
 from aqven.app.environment import RuntimeSettings, runtime_settings
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
@@ -229,7 +236,8 @@ def create_local_app(
     plan = app_plan(project.root, chosen, environ)
     store = open_settings_store(project, studio)
     engine = DeferredEngine()
-    host = chosen.engine or DbosEngineHost()
+    assembly = ProjectAssembly()
+    host = SeriesEngineHost(chosen.engine or DbosEngineHost(), assembly)
     launch = ApplicationLaunch(
         project_root=project.root,
         data_dir=studio.directory,
@@ -244,7 +252,7 @@ def create_local_app(
     extra = ApplicationParts(
         lifespans=(engine_lifespan(host, engine, EngineLaunch(project.root, studio.directory, store)),)
     )
-    app = assemble_app(launch, plan.features, extra)
+    app = assemble_app(launch, plan.features, extra, assembly)
     if chosen.access is not None:
         app.add_middleware(AccessMiddleware, access=chosen.access)
     return app

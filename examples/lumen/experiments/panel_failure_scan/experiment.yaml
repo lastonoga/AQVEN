@@ -1,0 +1,75 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Where the judge panel goes wrong: every case with the winner's grounding, length and privacy, the shape of the verdict, its weakest criterion, cost and time, for the gpt tie-break and a Mistral one"
+subject:
+  flow: "judge_panel"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "gpt_tie_break"
+- id: "mistral_tie_break"
+  agents:
+    decide__tie_break: "mistral"
+checks:
+- id: "quotes_in_chunks"
+  kind: "binary"
+  use: "citations_in_sources"
+  with:
+    citations: "$out.winner.citations"
+    sources: "$in.chunks"
+    id: "chunk_id"
+    quote: "quote"
+    text: "text"
+- id: "cites_known_chunks"
+  kind: "binary"
+  use: "ids_in_allowed_set"
+  with:
+    field: "$out.winner.citations[*].chunk_id"
+    allowed: "$in.chunks[*].chunk_id"
+- id: "winner_within_length"
+  kind: "binary"
+  use: "max_words"
+  with:
+    field: "$out.winner.text"
+    max: 220
+- id: "winner_without_contacts"
+  kind: "binary"
+  use: "no_pii"
+  with:
+    fields:
+    - "$out.winner.text"
+    detectors:
+    - "email"
+    - "phone"
+    - "card_number"
+- id: "rationale_written"
+  kind: "binary"
+  use: "not_empty"
+  with:
+    field: "$out.verdict.verdict.rationale"
+- id: "rationale_names_criteria"
+  kind: "binary"
+  use: "regex"
+  with:
+    field: "$out.verdict.verdict.rationale"
+    pattern: "(?i)\\b(ground|helpful|tone)"
+- id: "one_score_per_criterion"
+  kind: "binary"
+  use: "unique_items"
+  with:
+    field: "$out.verdict.verdict.scores"
+    key: "criterion"
+- id: "weakest_criterion"
+  kind: "ordinal"
+  run: "@root.experiments.panel_failure_scan.checks:weakest_criterion"
+- id: "panel_cost"
+  kind: "continuous"
+  use: "cost_usd"
+- id: "panel_latency"
+  kind: "continuous"
+  use: "latency_ms"
+question:
+  kind: "look"
+plan:
+  cases: 8
+  repeats: 1

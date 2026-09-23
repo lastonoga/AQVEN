@@ -7,6 +7,7 @@ from typing import Final
 from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 
 from aqven.models.backoff import Sleep
+from aqven.models.waits import record_wait
 from aqven.spec import ProviderName, ProviderSpec
 
 SECONDS_PER_MINUTE: Final = 60.0
@@ -26,7 +27,9 @@ class RateLimiter(AbstractConcurrencyLimiter):
         self._next_free: float | None = None
 
     async def acquire(self, source: str) -> None:
-        await self.sleep(await self._reserve())
+        delay = await self._reserve()
+        await self.sleep(delay)
+        record_wait(delay)
 
     def release(self) -> None:
         return None

@@ -1,13 +1,18 @@
 import asyncio
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from llm_harness import (
+    EXPIRED_APPROVAL,
     MODELS,
     SCHEMA,
     FakeScope,
     MemorySecrets,
+    OrderId,
     RecordingToolContexts,
+    RefundOut,
     ScriptedApprovals,
+    SettledCosts,
     agent,
     answer_inference,
     answer_node,
@@ -36,6 +41,7 @@ from aqven.engine.llm.tools import ToolsetBuilder
 from aqven.ir import CodeToolSource, CompiledInference, CompiledMcpServer, CompiledTool, TemplatePrompt
 from aqven.ports.execution import NodeFailed, NodeSucceeded
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
+from aqven.runtime.steps import ToolContext
 from aqven.spec import (
     AgentId,
     CodeRef,
@@ -58,6 +64,7 @@ ORDER_SCHEMA: dict[str, JsonValue] = {
 LOOKUP_REF = CodeRef("shop.tools:lookup_order")
 REFUND_REF = CodeRef("shop.tools:issue_refund")
 FINAL = '{"reply": "done", "confidence": 1}'
+REFUND_DOWN = "the refund desk is down"
 
 
 def _tool(tool_id: str, run: CodeRef, effect: Effect) -> CompiledTool:
@@ -218,6 +225,80 @@ def test_denied_approval_returns_denial_to_the_model_without_running_the_tool() 
     assert bed.steps.calls == []
     assert tool_returns(bed.scripted.seen[1][0]) == ["operator refused"]
     assert len(bed.steps.segments) == 2
+
+
+async def broken_refund(ctx: ToolContext, order_id: OrderId) -> RefundOut:
+    raise RuntimeError(REFUND_DOWN)
+
+
+def test_an_expired_approval_keeps_the_cost_paid_before_it() -> None:
+    costs = SettledCosts()
+    bed = llm_bed(
+        [[tool_call("issue_refund", '{"order_id": "LUM-1"}', "call-9")]],
+        answer_node(),
+        [agent(tools=(ToolId("issue_refund"),), approval=_approval())],
+        [answer_inference()],
+        RUN_INPUT,
+        tools=[_tool("issue_refund", REFUND_REF, Effect.WRITE)],
+        code={REFUND_REF: refund_issuer([])},
+        expire=True,
+        models=costs.priced,
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeFailed)
+    assert (outcome.error.code, outcome.error.message) == ("HUMAN_TIMED_OUT", EXPIRED_APPROVAL)
+    assert len(costs.seen) == 1
+    assert outcome.usage.cost_usd == costs.total()
+    assert outcome.usage.cost_usd > Decimal(0)
+    assert outcome.usage.requests == 1
+
+
+def test_a_tool_that_raises_after_approval_keeps_the_cost_paid_before_it() -> None:
+    costs = SettledCosts()
+    bed = llm_bed(
+        [[tool_call("issue_refund", '{"order_id": "LUM-1"}', "call-9")]],
+        answer_node(),
+        [agent(tools=(ToolId("issue_refund"),), approval=_approval())],
+        [answer_inference()],
+        RUN_INPUT,
+        tools=[_tool("issue_refund", REFUND_REF, Effect.WRITE)],
+        code={REFUND_REF: broken_refund},
+        models=costs.priced,
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeFailed)
+    assert outcome.error.code == "NODE_ERROR"
+    assert REFUND_DOWN in outcome.error.message
+    assert [call.tool_call_id for call in bed.steps.calls] == ["call-9"]
+    assert outcome.usage.cost_usd == costs.total()
+    assert outcome.usage.cost_usd > Decimal(0)
+
+
+def test_a_resumed_segment_that_fails_pays_for_every_segment() -> None:
+    costs = SettledCosts()
+    broken = [tool_call(OUTPUT_TOOL_NAME, '{"reply": ', "out-1")]
+    bed = llm_bed(
+        [[tool_call("issue_refund", '{"order_id": "LUM-1"}', "call-9")], broken, broken],
+        answer_node(),
+        [agent(tools=(ToolId("issue_refund"),), approval=_approval())],
+        [answer_inference()],
+        RUN_INPUT,
+        tools=[_tool("issue_refund", REFUND_REF, Effect.WRITE)],
+        code={REFUND_REF: refund_issuer([])},
+        models=costs.priced,
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeFailed)
+    assert outcome.error.code == "MODEL_RETRIES_EXHAUSTED"
+    assert len(costs.seen) == 3
+    assert outcome.usage.cost_usd == costs.total()
+    assert outcome.usage.requests == 3
 
 
 def test_subagent_is_a_tool_that_runs_its_own_inference() -> None:

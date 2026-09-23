@@ -1,0 +1,38 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "mistral in the revision step of the polish loop is not worse than gpt by the critic's score, and a passing reply costs at most 20% more"
+failure_mode: "reply_quality"
+subject:
+  flow: "support_case"
+  from: "polish"
+  to: "polish"
+cases:
+  dataset: "support_case_cases"
+variants:
+- id: "gpt"
+- id: "mistral"
+  agents:
+    polish__revise: "mistral"
+checks:
+- id: "critique"
+  kind: "continuous"
+  inference: "critique"
+  agent: "deepseek"
+  validated_by: "critique_planted_defects"
+- id: "promises"
+  kind: "binary"
+  run: "@root.code.support_case:reply_keeps_resolution"
+question:
+  kind: "noninferior"
+  baseline: "gpt"
+  candidate: "mistral"
+  primary: "critique"
+  margin: 0.05
+  guardrails:
+  - metric: "cost_of_pass"
+    direction: "lower_is_better"
+    margin: 0.2
+    relative: true
+plan:
+  cases: 12
+  repeats: 3

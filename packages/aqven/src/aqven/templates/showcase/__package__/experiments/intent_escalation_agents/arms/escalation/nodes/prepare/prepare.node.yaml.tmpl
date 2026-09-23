@@ -1,0 +1,30 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "The support flow's own normalization: case text, channel, category signals, marketplace intake fields and voting perspectives"
+run: "@root.flows.support_case.nodes.prepare.prepare:prepare"
+in:
+- name: "request"
+  type: "CaseRequest"
+  description: "The whole customer case"
+  from: "$input"
+out:
+- name: "message"
+  type: "Text"
+  description: "Case text with normalized whitespace"
+  maxLength: 4000
+- name: "channel"
+  type: "Channel"
+  description: "Channel the case came from"
+- name: "signals"
+  type: "SignalDef[]"
+  description: "Observation signals allowed for the product category"
+  maxItems: 20
+- name: "intake_fields"
+  type: "FieldSpec[]"
+  description: "Intake fields the marketplace requires"
+  maxItems: 10
+- name: "perspectives"
+  type: "VotePerspective[]"
+  description: "Perspectives for the independent intent ballots"
+  maxItems: 3

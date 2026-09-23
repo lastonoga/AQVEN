@@ -1,0 +1,399 @@
+import json
+from collections.abc import Iterator
+from decimal import Decimal
+from pathlib import Path
+from typing import Final
+
+import pytest
+from fastapi.testclient import TestClient
+from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs
+from server_fakes import AUTH, RUN_ID, SERVER_BASE, FakeEngine, MemorySettings, copy_fixture, node_execution
+from sse_frames import parse_frames
+
+from aqven.runtime.address import node_address
+from aqven.runtime.values import InlineValue
+from aqven.series.split import splits_of
+from aqven.server import ServerOptions, create_app
+from aqven.spec import DatasetId, SeriesSplit
+
+EXPERIMENT: Final = "reply_quality"
+DATASET: Final = "intake_cases"
+CASE_NAMES: Final = ("question", "refund", "warranty", "delay")
+
+INTAKE_CASES: Final = """apiVersion: "aqven/v1"
+kind: "Dataset"
+flow: "intake"
+cases:
+- name: "question"
+  inputs:
+    text: "Where is my order?"
+  tags:
+    topic: "orders"
+- name: "refund"
+  inputs:
+    text: "How do I get a refund?"
+  tags:
+    topic: "money"
+- name: "warranty"
+  inputs:
+    text: "Is the lamp under warranty?"
+  tags:
+    topic: "orders"
+- name: "delay"
+  inputs:
+    text: "Why is my parcel late?"
+  tags:
+    topic: "orders"
+"""
+
+WRITER_ALT: Final = """apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Answers customer questions in two short sentences"
+model: "openai:gpt-5.4-nano"
+"""
+
+EXPERIMENT_YAML: Final = """apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "the nano writer answers as often as the mini writer and costs less"
+failure_mode: "reply_quality"
+subject:
+  flow: "intake"
+cases:
+  dataset: "intake_cases"
+  tags:
+    topic: "orders"
+variants:
+- id: "base"
+- id: "alt"
+  agents:
+    reply: "writer_alt"
+checks:
+- id: "short"
+  kind: "binary"
+  use: "max_words"
+  with:
+    field: "$out.text"
+    max: 30
+- id: "tone"
+  kind: "continuous"
+  inference: "reply"
+  agent: "writer"
+question:
+  kind: "compare"
+  baseline: "base"
+  candidate: "alt"
+  primary: "success_rate"
+  margin: 0.05
+  guardrails:
+  - metric: "cost_usd"
+    margin: 0.2
+    relative: true
+plan:
+  cases: 2
+  repeats: 2
+"""
+
+
+ARM: Final = "brief"
+
+ARM_FLOW: Final = """apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Draft an answer, then polish it"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$polish.out.answer"
+order:
+- "draft"
+- "polish"
+"""
+
+ARM_DRAFT: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Draft the answer"
+inference: "reply"
+agent: "writer"
+in:
+- name: "question"
+  from: "$input.text"
+"""
+
+ARM_POLISH: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Polish the draft"
+inference: "reply"
+agent: "writer_alt"
+in:
+- name: "question"
+  from: "$draft.out.answer"
+"""
+
+ARM_FILES: Final = {"flow.yaml": ARM_FLOW, "nodes/draft.node.yaml": ARM_DRAFT, "nodes/polish.node.yaml": ARM_POLISH}
+
+
+@pytest.fixture
+def research_project(tmp_path: Path) -> Path:
+    root = copy_fixture("dataset_shop", tmp_path)
+    (root / "datasets" / "intake_cases.yaml").write_text(INTAKE_CASES, encoding="utf-8")
+    (root / "agents" / "writer_alt.yaml").write_text(WRITER_ALT, encoding="utf-8")
+    folder = root / "experiments" / EXPERIMENT
+    folder.mkdir(parents=True)
+    (folder / "experiment.yaml").write_text(EXPERIMENT_YAML, encoding="utf-8")
+    (folder / "experiment.md").write_text("Why the nano writer might be enough.\n", encoding="utf-8")
+    for relative, text in ARM_FILES.items():
+        target = folder / "arms" / ARM / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    return root
+
+
+@pytest.fixture
+def series_jobs() -> FakeSeriesJobs:
+    return FakeSeriesJobs()
+
+
+@pytest.fixture
+def research_client(
+    research_project: Path,
+    server_engine: FakeEngine,
+    server_settings: MemorySettings,
+    server_options: ServerOptions,
+    series_jobs: FakeSeriesJobs,
+) -> Iterator[TestClient]:
+    app = create_app(research_project, server_engine, server_settings, options=server_options, series=series_jobs)
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        yield client
+
+
+@pytest.fixture
+def bare_client(
+    research_project: Path, server_engine: FakeEngine, server_settings: MemorySettings, server_options: ServerOptions
+) -> Iterator[TestClient]:
+    app = create_app(research_project, server_engine, server_settings, options=server_options)
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        yield client
+
+
+def test_experiment_list_carries_the_question_and_the_series_history(research_client: TestClient) -> None:
+    body = research_client.get("/api/experiments").json()
+    [row] = body["items"]
+
+    assert (row["experiment_id"], row["question"], row["flow_id"]) == (EXPERIMENT, "compare", "intake")
+    assert (row["baseline"], row["candidate"], row["variants"]) == ("base", "alt", ["base", "alt"])
+    assert row["subject"] == {"kind": "flow", "flow_id": "intake", "arm_id": None, "from_node": None, "to_node": None}
+    assert (row["series_count"], Decimal(row["spent_usd"])) == (2, Decimal("0.14"))
+    assert row["latest"]["series_id"] == DONE_ID
+    assert research_client.get("/api/experiments", params={"question": "threshold"}).json()["items"] == []
+    assert len(research_client.get("/api/experiments", params={"flow_id": "intake"}).json()["items"]) == 1
+
+
+def test_experiment_detail_resolves_variants_checks_columns_and_cases(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}").json()
+
+    assert body["question_detail"]["kind"] == "compare"
+    assert body["question_detail"]["direction"] == "higher_is_better"
+    assert body["question_detail"]["guardrails"] == [
+        {"metric": "cost_usd", "direction": "lower_is_better", "margin": 0.2, "relative": True}
+    ]
+    columns = [(column["metric"], column["role"], column["unit"]) for column in body["metrics"]]
+    assert columns[:4] == [
+        ("success_rate", "primary", "rate"),
+        ("cost_usd", "guardrail", "usd"),
+        ("short", "check", "rate"),
+        ("tone", "check", "score"),
+    ]
+    assert [metric for metric, role, _ in columns if role == "builtin"] == [
+        "cost_of_pass",
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "schema_valid_first_try",
+        "infra_error_rate",
+    ]
+    alt = body["variant_details"][1]
+    assert (alt["variant_id"], alt["role"]) == ("alt", "candidate")
+    assert alt["assignments"] == [
+        {"node_id": "reply", "agent": {"agent_id": "writer_alt", "model": "openai:gpt-5.4-nano"}, "overridden": True}
+    ]
+    sources = {check["check_id"]: check["source"] for check in body["checks"]}
+    assert (sources["short"]["kind"], sources["short"]["use"]) == ("builtin", "max_words")
+    assert (sources["tone"]["kind"], sources["tone"]["agent"]["agent_id"]) == ("judge", "writer")
+    ordered = ("question", "warranty", "delay")
+    expected = splits_of("dataset_shop", DatasetId(DATASET), list(ordered))
+    counts = {split.value: sum(1 for value in expected.values() if value is split) for split in SeriesSplit}
+    assert body["cases"] == {
+        "dataset_id": DATASET,
+        "flow_id": "intake",
+        "tags": {"topic": "orders"},
+        "selected": 3,
+        "total": 4,
+        "splits": counts,
+    }
+    assert body["files"] == {
+        "spec": f"experiments/{EXPERIMENT}/experiment.yaml",
+        "notes": f"experiments/{EXPERIMENT}/experiment.md",
+    }
+    assert body["notes"] == "Why the nano writer might be enough.\n"
+    assert body["plan"] == {"cases": 2, "repeats": 2}
+
+
+def test_an_arm_serves_its_nodes_and_schemas_for_the_run_view(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}/arms/{ARM}").json()
+
+    assert (body["experiment_id"], body["arm_id"], body["flow_id"]) == (EXPERIMENT, ARM, ARM)
+    assert (body["description"], body["order"]) == ("Draft an answer, then polish it", ["draft", "polish"])
+    nodes = {node["node_id"]: node for node in body["nodes"]}
+    assert list(nodes) == ["draft", "polish"]
+    assert (nodes["draft"]["kind"], nodes["draft"]["agent"], nodes["draft"]["inference"]) == ("llm", "writer", "reply")
+    assert nodes["polish"]["path"] == f"experiments/{EXPERIMENT}/arms/{ARM}/nodes/polish.node.yaml"
+    assert (nodes["draft"]["downstream"], nodes["polish"]["upstream"]) == (["polish"], ["draft"])
+    schemas = body["schemas"]
+    assert schemas["flow_id"] == ARM
+    assert schemas["input"]["required"] == ["text"]
+    assert sorted(schemas["nodes"]) == ["draft", "polish"]
+    assert "answer" in schemas["nodes"]["draft"]["out"]["properties"]
+
+
+@pytest.mark.parametrize(
+    "path", [f"/api/experiments/{EXPERIMENT}/arms/nothing", f"/api/experiments/nothing/arms/{ARM}"]
+)
+def test_an_unknown_arm_is_not_found(research_client: TestClient, path: str) -> None:
+    response = research_client.get(path)
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_an_unknown_experiment_is_not_found(research_client: TestClient) -> None:
+    response = research_client.get("/api/experiments/nothing")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_estimate_and_start_go_through_the_series_service(
+    research_client: TestClient, series_jobs: FakeSeriesJobs
+) -> None:
+    estimate = research_client.post(f"/api/experiments/{EXPERIMENT}/estimate", json={"on": "holdout", "cases": 3})
+    started = research_client.post("/api/series", json={"experiment_id": EXPERIMENT, "repeats": 2})
+
+    assert estimate.status_code == 200
+    assert estimate.json()["on"] == "holdout"
+    assert series_jobs.estimates[0][1].cases == 3
+    assert started.status_code == 201
+    assert started.json()["series_id"] == SERIES_ID
+    assert started.json()["estimate"]["attempts"] == 16
+    request, actor = series_jobs.starts[0]
+    assert (request.repeats, actor.kind) == (2, "human")
+
+
+def test_start_requires_exactly_one_origin(research_client: TestClient) -> None:
+    response = research_client.post("/api/series", json={"on": "dev"})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "REQUEST_INVALID"
+
+
+def test_series_get_passes_the_wait_and_the_case_rows(research_client: TestClient, series_jobs: FakeSeriesJobs) -> None:
+    body = research_client.get(f"/api/series/{SERIES_ID}", params={"wait_seconds": 5, "include_cases": True}).json()
+    too_long = research_client.get(f"/api/series/{SERIES_ID}", params={"wait_seconds": 51})
+
+    assert body["series"]["progress"] == {"done": 4, "total": 16}
+    assert body["cases"] == []
+    assert (series_jobs.gets[0].wait_seconds, series_jobs.gets[0].include_cases) == (5, True)
+    assert too_long.status_code == 422
+    assert research_client.get("/api/series/missing").status_code == 404
+
+
+def test_series_list_and_cases(research_client: TestClient, series_jobs: FakeSeriesJobs) -> None:
+    listed = research_client.get("/api/series", params={"status": "done", "experiment_id": EXPERIMENT}).json()
+    cases = research_client.get(f"/api/series/{SERIES_ID}/cases", params={"failures": True})
+
+    assert [row["series_id"] for row in listed["items"]] == [DONE_ID]
+    assert series_jobs.queries[-1].status == "done"
+    assert (cases.status_code, cases.json()) == (200, [])
+
+
+def test_series_events_stream_until_the_series_finishes(research_client: TestClient) -> None:
+    with research_client.stream("GET", f"/api/series/{SERIES_ID}/events") as response:
+        text = response.read().decode()
+        content_type = response.headers["content-type"]
+    frames = parse_frames(text)
+
+    assert content_type.startswith("text/event-stream")
+    assert [frame.id for frame in frames] == ["1", "2", "3"]
+    assert [frame.event for frame in frames] == ["series_status", "attempt_finished", "series_finished"]
+    assert json.loads(frames[1].data or "{}")["spend_usd"] == "0.004"
+
+
+def test_series_events_resume_from_the_cursor(research_client: TestClient, series_jobs: FakeSeriesJobs) -> None:
+    resumed = parse_frames(
+        research_client.get(
+            f"/api/series/{SERIES_ID}/events", params={"after_seq": 0}, headers={"Last-Event-ID": "2"}
+        ).text
+    )
+    missing = research_client.get("/api/series/missing/events")
+
+    assert [frame.id for frame in resumed] == ["3"]
+    assert series_jobs.event_reads == [2]
+    assert (missing.status_code, missing.json()["code"]) == (404, "NOT_FOUND")
+
+
+def test_approve_and_cancel_follow_the_series_state(research_client: TestClient, series_jobs: FakeSeriesJobs) -> None:
+    approve = research_client.post(f"/api/series/{SERIES_ID}/approve")
+    cancel = research_client.post(f"/api/series/{SERIES_ID}/cancel", json={"reason": "wrong cases"})
+    bare_cancel = research_client.post(f"/api/series/{SERIES_ID}/cancel")
+    finished = research_client.post(f"/api/series/{DONE_ID}/cancel", json={})
+
+    assert (approve.status_code, approve.json()["code"]) == (409, "SERIES_STATE_CONFLICT")
+    assert (cancel.status_code, cancel.json()["status"]) == (200, "cancelled")
+    assert bare_cancel.status_code == 200
+    assert [request.reason for request in series_jobs.cancels] == ["wrong cases", None]
+    assert (finished.status_code, finished.json()["code"]) == (409, "SERIES_STATE_CONFLICT")
+
+
+def test_without_the_series_service_the_catalogue_reads_and_series_are_not_runnable(bare_client: TestClient) -> None:
+    [row] = bare_client.get("/api/experiments").json()["items"]
+    started = bare_client.post("/api/series", json={"experiment_id": EXPERIMENT})
+
+    assert (row["series_count"], row["latest"]) == (0, None)
+    assert (started.status_code, started.json()["code"]) == (409, "NOT_RUNNABLE")
+
+
+def test_case_from_run_drafts_a_case_without_writing_the_dataset(
+    research_client: TestClient, server_engine: FakeEngine, research_project: Path
+) -> None:
+    reply = node_execution(node_address("reply")).model_copy(
+        update={"output_ref": InlineValue(value={"answer": "Tomorrow.", "mood": "calm"})}
+    )
+    server_engine.runs[RUN_ID] = server_engine.runs[RUN_ID].model_copy(
+        update={"input_ref": InlineValue(value={"text": "Where is it?"}), "executions": (reply,), "order": ("reply",)}
+    )
+    before = (research_project / "datasets" / "intake_cases.yaml").read_bytes()
+
+    body = research_client.post(f"/api/datasets/{DATASET}/cases/from-run", json={"run_id": RUN_ID}).json()
+
+    assert body["case"]["name"] == f"intake_{RUN_ID[:8]}"
+    assert body["case"]["inputs"] == {"text": "Where is it?"}
+    assert body["case"]["node_outputs"] == {"reply": {"answer": "Tomorrow.", "mood": "calm"}}
+    assert body["case"]["expected_output"] is None
+    assert body["yaml"].startswith('name: "intake_')
+    assert "{}" not in body["yaml"]
+    assert (research_project / "datasets" / "intake_cases.yaml").read_bytes() == before
+
+
+def test_case_from_run_refuses_another_flow_and_unknown_runs(
+    research_client: TestClient, server_engine: FakeEngine
+) -> None:
+    server_engine.runs[RUN_ID] = server_engine.runs[RUN_ID].model_copy(
+        update={"input_ref": InlineValue(value={"text": "a"})}
+    )
+    other_flow = research_client.post("/api/datasets/reply_cases/cases/from-run", json={"run_id": RUN_ID})
+    unknown = research_client.post(f"/api/datasets/{DATASET}/cases/from-run", json={"run_id": "missing"})
+    named = research_client.post(f"/api/datasets/{DATASET}/cases/from-run", json={"run_id": RUN_ID, "name": "mine"})
+
+    assert (other_flow.status_code, other_flow.json()["code"]) == (422, "INPUT_INVALID")
+    assert (unknown.status_code, unknown.json()["code"]) == (404, "NOT_FOUND")
+    assert named.json()["case"]["name"] == "mine"

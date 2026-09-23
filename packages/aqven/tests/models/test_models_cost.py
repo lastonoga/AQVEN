@@ -3,11 +3,19 @@ from decimal import Decimal
 from typing import Final
 
 from pydantic import JsonValue
-from pydantic_ai.messages import ModelMessage, ModelRequest, ModelResponse, TextPart, UserPromptPart
+from pydantic_ai.messages import ModelResponse, TextPart
 from pydantic_ai.usage import RequestUsage
 
-from aqven.engine.llm.agents import response_cost
-from aqven.models.usage import CASSETTE_METADATA_KEY, response_cost_usd
+from aqven.models.callsite import CallSite
+from aqven.models.usage import (
+    CASSETTE_METADATA_KEY,
+    NODE_USAGE,
+    ContextUsageSink,
+    live_cost,
+    node_usage_log,
+    replay_cost,
+    response_cost_usd,
+)
 
 MOMENT: Final = datetime(2026, 9, 17, tzinfo=UTC)
 PRICED_MODEL: Final = "gpt-4o"
@@ -79,11 +87,31 @@ def test_a_malformed_provider_cost_falls_back_to_genai_prices() -> None:
     assert response_cost_usd(image_response(True)) == Decimal(0)
 
 
-def test_node_cost_sums_the_responses_of_a_conversation() -> None:
-    messages: list[ModelMessage] = [
-        ModelRequest(parts=[UserPromptPart("draw a cat")]),
-        image_response(0.0337),
-        image_response(0.0216),
-    ]
+SITE: Final = CallSite(address=None, attempt=1)
 
-    assert response_cost(messages) == IMAGE_COST + Decimal("0.0216")
+
+def test_node_usage_log_sums_every_settled_request_of_the_node() -> None:
+    sink = ContextUsageSink()
+
+    with node_usage_log() as log:
+        sink.record(live_cost(SITE, IMAGE_MODEL, image_response(0.0337)))
+        sink.record(live_cost(SITE, IMAGE_MODEL, image_response(0.0216)))
+
+    assert log.total_cost() == IMAGE_COST + Decimal("0.0216")
+    assert NODE_USAGE.get() is None
+
+
+def test_node_usage_log_counts_a_replayed_request_as_free() -> None:
+    replayed = image_response(0.0337)
+
+    with node_usage_log() as log:
+        ContextUsageSink().record(replay_cost(SITE, IMAGE_MODEL, replayed, replayed.usage))
+
+    assert log.total_cost() == Decimal(0)
+    assert len(log.entries) == 1
+
+
+def test_context_usage_sink_outside_a_node_records_nothing() -> None:
+    ContextUsageSink().record(live_cost(SITE, IMAGE_MODEL, image_response(0.0337)))
+
+    assert NODE_USAGE.get() is None

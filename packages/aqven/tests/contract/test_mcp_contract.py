@@ -19,6 +19,8 @@ TIMEOUT: Final = 60.0
 EXPECTED_TOOLS: Final = frozenset(
     {"aqven_check", "prompt_preview", "flow_patch", "run_start", "pyright_check", "pytest_run"}
 )
+SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel"})
+PROJECT_SERVER_TOOLS: Final = 16
 
 
 def structured(result: CallToolResult) -> dict[str, JsonValue]:
@@ -48,7 +50,8 @@ async def test_any_mcp_client_uses_the_streamable_http_endpoint(live: LiveServer
         checked = await client.call_tool("aqven_check", {})
         started = await client.call_tool("run_start", {"flow_id": FLOW_ID, "mode": "live", "input": {"text": "a note"}})
 
-    assert {tool.name for tool in listed.tools} >= EXPECTED_TOOLS
+    assert {tool.name for tool in listed.tools} >= EXPECTED_TOOLS | SERIES_TOOLS
+    assert len(listed.tools) == PROJECT_SERVER_TOOLS
     assert structured(checked)["errors"] == 0
     assert structured(started)["run_id"]
     assert live.engine.started[0].flow_id == FLOW_ID
@@ -64,5 +67,6 @@ async def test_any_mcp_client_uses_the_same_tools_over_stdio(tmp_path: Path) -> 
         started = await client.call_tool("run_start", {"flow_id": FLOW_ID, "mode": "live", "input": {"text": "a note"}})
 
     assert {tool.name for tool in listed.tools} >= EXPECTED_TOOLS
+    assert {tool.name for tool in listed.tools}.isdisjoint(SERIES_TOOLS)
     assert structured(checked)["ok"] is True
     assert structured(started)["run_id"]

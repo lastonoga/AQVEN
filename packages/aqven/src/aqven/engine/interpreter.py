@@ -16,7 +16,7 @@ from aqven.engine.addressing import (
     child_workflow_id,
     prefixed_node_id,
 )
-from aqven.engine.events import BatchedOutputSink, BufferedEventSink, EventSink, StreamEventSink
+from aqven.engine.events import BatchedOutputSink, BufferedEventSink, EventSink, NullOutputSink, StreamEventSink
 from aqven.engine.failures import failure_of, run_error
 from aqven.engine.forking import root_run_id
 from aqven.engine.overrides import override_outcome
@@ -44,6 +44,7 @@ from aqven.ir import (
     flow_hash,
     node_kind,
 )
+from aqven.models.waits import metered
 from aqven.ports.execution import (
     ChildEntry,
     EventStamp,
@@ -61,7 +62,7 @@ from aqven.runtime.events import NodeFinished, NodeStarted, RunEvent, RunFinishe
 from aqven.runtime.overrides import override_for
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import FinishedExecutionStatus, RunMode
-from aqven.spec import FlowId, NodeId, NodeKind
+from aqven.spec import FlowId, Limits, NodeId, NodeKind
 
 BRANCH_KINDS: Final = frozenset({NodeKind.PARALLEL, NodeKind.MAP})
 USAGE_KINDS: Final = frozenset({NodeKind.LLM, NodeKind.CODE, NodeKind.TOOL, NodeKind.HUMAN})
@@ -171,6 +172,10 @@ class NodeScope:
     def run_spec(self) -> RunSpec:
         return self.state.spec
 
+    @property
+    def run_limits(self) -> Limits | None:
+        return self.state.spec.limits
+
     def resolve(self, ref: str) -> JsonValue:
         sources = RefSources(
             flow_input=self.flow_frame.flow_input,
@@ -214,7 +219,7 @@ class NodeScope:
             address=address,
             chain=chain,
             frame=frame,
-            output=BatchedOutputSink(run_id=self.state.run_id, address=address),
+            output=output_sink(self.state.spec, self.state.run_id, address),
         )
 
     def _bound(self, binding: CompiledBinding) -> JsonValue:
@@ -262,6 +267,12 @@ class NodeScope:
         if self.launches_branches:
             return await launch_branch(self, node, chain, frame, overlay)
         return await run_node(replace(self.scope_for(node, chain, frame), overlay=overlay))
+
+
+def output_sink(spec: RunSpec, run_id: RunId, address: ExecutionAddress) -> OutputSink:
+    if not spec.output_deltas:
+        return NullOutputSink()
+    return BatchedOutputSink(run_id=run_id, address=address)
 
 
 def entered_chain(chain: tuple[AddressContext, ...], entered: AddressContext) -> tuple[AddressContext, ...]:
@@ -314,6 +325,7 @@ class NodeFinishedBuilder:
     outcome: NodeOutcome
     attempt: int
     latency_ms: int
+    wait_ms: int = 0
 
     def __call__(self, stamp: EventStamp) -> RunEvent:
         outcome = self.outcome
@@ -334,6 +346,7 @@ class NodeFinishedBuilder:
             tokens_in=usage.tokens_in if usage is not None else 0,
             tokens_out=usage.tokens_out if usage is not None else 0,
             latency_ms=self.latency_ms,
+            wait_ms=min(self.wait_ms, self.latency_ms),
             model=outcome.model if isinstance(outcome, NodeSucceeded | NodeFailed) else None,
             cache_hit=succeeded.cache_hit if succeeded is not None else False,
             degraded=succeeded.degraded if succeeded is not None else False,
@@ -361,10 +374,11 @@ async def run_node(scope: NodeScope) -> NodeOutcome:
     await node_boundary(scope.address.model_dump(mode="json"), attempt)
     await state.events.emit(NodeStartedBuilder(scope.address, node_kind(node), attempt))
     started = time.monotonic()
-    outcome = await guarded_execute(replace(scope, attempt=attempt), node)
+    with metered() as waited:
+        outcome = await guarded_execute(replace(scope, attempt=attempt), node)
     record_outcome(scope, node, outcome)
     latency = int((time.monotonic() - started) * MILLISECONDS)
-    await state.events.emit(NodeFinishedBuilder(scope.address, outcome, attempt, latency))
+    await state.events.emit(NodeFinishedBuilder(scope.address, outcome, attempt, latency, waited.milliseconds))
     return outcome
 
 
@@ -384,7 +398,7 @@ async def run_flow_nodes(state: RunState, frame: FlowFrame, chain: tuple[Address
         address=anchor,
         chain=chain,
         frame=ScopeFrame(),
-        output=BatchedOutputSink(run_id=state.run_id, address=anchor),
+        output=output_sink(state.spec, state.run_id, anchor),
     )
     selected = state.spec.selected_nodes if not frame.prefix else None
     ranged = not frame.prefix and state.spec.start_node is not None and state.spec.end_node is not None
@@ -503,7 +517,7 @@ async def execute_branch(runtime: EngineRuntime, ir_hash: IrHash, ticket: Branch
         address=address,
         chain=chain,
         frame=ScopeFrame.model_validate(ticket.frame),
-        output=BatchedOutputSink(run_id=state.run_id, address=address),
+        output=output_sink(state.spec, state.run_id, address),
         overlay=ticket.overlay,
     )
     outcome = await run_node(scope)
@@ -631,5 +645,9 @@ async def interpret(runtime: EngineRuntime, ir_hash: IrHash, flow_input: JsonObj
 
 @DBOS.workflow(name=RUN_FLOW_WORKFLOW)
 async def run_flow(ir_hash: str, flow_input: JsonObject, spec: JsonObject) -> JsonObject:
-    record = await interpret(active_runtime(), IrHash(ir_hash), flow_input, RunSpec.model_validate(spec))
+    runtime = active_runtime()
+    try:
+        record = await interpret(runtime, IrHash(ir_hash), flow_input, RunSpec.model_validate(spec))
+    finally:
+        runtime.services.budgets.discard(RunId(DBOS.workflow_id or ""))
     return record.model_dump(mode="json")

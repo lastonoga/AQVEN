@@ -1,0 +1,30 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Writing the reply, three drafts and the judge panel from the case node_outputs, stays under one cent per case for each drafting line-up on long cases outside the regression set"
+subject:
+  flow: "support_case"
+  from: "drafts"
+  to: "panel"
+cases:
+  dataset: "support_case_cases"
+  tags:
+    length: "long"
+    regression: "no"
+variants:
+- id: "three_families"
+- id: "mistral_only"
+  agents:
+    drafts__gpt: "mistral"
+    drafts__gemini: "mistral"
+- id: "gemini_only"
+  agents:
+    drafts__gpt: "gemini"
+    drafts__mistral: "gemini"
+question:
+  kind: "threshold"
+  metric: "cost_usd"
+  below: 0.01
+  margin: 0
+plan:
+  cases: 4
+  repeats: 3

@@ -6,6 +6,7 @@ import pytest
 
 from aqven.engine.registry import throttled_executors
 from aqven.engine.throttle import WorkerPool
+from aqven.models.waits import metered
 from aqven.ports.execution import ExecutionScope, NodeExecutor, NodeExecutors, NodeOutcome, NodeSucceeded
 
 CONTROL_KINDS = ("parallel", "map", "switch", "loop", "call")
@@ -113,3 +114,35 @@ async def test_a_leaf_that_fails_gives_its_slot_back() -> None:
     await run(throttled.code)
 
     assert "stop:code" in fakes.log
+
+
+@pytest.mark.asyncio
+async def test_a_leaf_queued_for_a_slot_reports_the_queue_time_as_a_wait() -> None:
+    fakes = Fakes()
+    gate = asyncio.Event()
+    executors = fakes.executors(llm=fakes.executor("holder", gate))
+    throttled = throttled_executors(executors, WorkerPool(1))
+
+    async def queued() -> int:
+        with metered() as meter:
+            await run(throttled.code)
+        return meter.milliseconds
+
+    holder = asyncio.create_task(run(throttled.llm))
+    await asyncio.sleep(0)
+    waiting = asyncio.create_task(queued())
+    await asyncio.sleep(0.2)
+    gate.set()
+    await holder
+
+    assert await waiting >= 150
+
+
+@pytest.mark.asyncio
+async def test_a_leaf_with_a_free_slot_reports_no_wait() -> None:
+    throttled = throttled_executors(Fakes().executors(), WorkerPool(1))
+
+    with metered() as meter:
+        await run(throttled.code)
+
+    assert meter.milliseconds < 50

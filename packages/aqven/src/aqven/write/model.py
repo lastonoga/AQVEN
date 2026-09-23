@@ -14,7 +14,7 @@ SLOT_TARGET_PATTERN: Final = r"^[a-z][a-z0-9_]{0,62}(__[a-z][a-z0-9_]{0,62})*\.[
 SPEC_PATH_PATTERN: Final = r"^(flow|nodes/[a-z][a-z0-9_]*|inferences/[a-z][a-z0-9_]*)(/[A-Za-z0-9_-]+)+$"
 
 type ActorKind = Literal["human", "agent", "fs", "git", "system"]
-type WriteOperation = Literal["flow_patch", "prompt_save"]
+type WriteOperation = Literal["flow_patch", "prompt_save", "files_write"]
 type Ulid = Annotated[ClientOpId, Field(pattern=ULID_PATTERN)]
 type EntityName = Annotated[str, Field(pattern=NAME_PATTERN)]
 type NodeRef = Annotated[str, Field(pattern=NODE_REF_PATTERN)]
@@ -128,6 +128,13 @@ class PromptSaveRequest(RequestModel):
     node_id: NodeRef
     expects: list[ExpectedFile] = Field(min_length=1, max_length=1)
     client_op_id: Ulid
+
+
+class FilesWriteRequest(RequestModel):
+    expects: list[ExpectedFile] = Field(min_length=1)
+    files: dict[ProjectPath, str]
+    client_op_id: Ulid
+    intent: str | None = None
 
 
 class DraftWrite(RequestModel):

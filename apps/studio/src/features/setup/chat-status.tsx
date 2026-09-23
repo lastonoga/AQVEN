@@ -19,7 +19,7 @@ const statusRows = (status: ApiChatStatus, t: Translator<"setup.agent">): readon
   { key: t("detail"), value: status.detail ?? t("none") },
 ]
 
-export function ChatStatusPanel({ selectable = false }: { readonly selectable?: boolean }) {
+export function ChatStatusPanel({ selectable = false, title }: { readonly selectable?: boolean; readonly title?: string }) {
   const t = useTranslations("setup.agent")
   const { api } = useRouter().options.context
   const { backend, error: backendError, retry } = useChatBackend()
@@ -54,7 +54,7 @@ export function ChatStatusPanel({ selectable = false }: { readonly selectable?: 
     </Button>
   )
   return (
-    <TitledPanel size="section" title={t("title")} below={[t("description")]} trailing={recheck}>
+    <TitledPanel size="section" title={title ?? t("title")} below={[t("description")]} trailing={recheck}>
       {selectable ? (
         <div className="flex flex-col gap-2 border-b border-border px-3 py-3">
           <ChatBackendSwitch />

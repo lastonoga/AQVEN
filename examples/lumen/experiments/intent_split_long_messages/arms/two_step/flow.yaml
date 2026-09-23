@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent in two calls to a cheap open model: the message is condensed to what the customer needs first, then the intent is decided from that summary"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$classify_summary.out.rationale"
+- name: "intent"
+  from: "$classify_summary.out.intent"
+- name: "confidence"
+  from: "$classify_summary.out.confidence"
+order:
+- "condense_message"
+- "classify_summary"

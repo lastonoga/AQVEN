@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "description": "Hashes of everything the series ran on: the experiment file, the dataset, the cases, the code and the judges.\n\nA later series with different hashes measured something else, so the finding does not speak for it.",
+  "properties": {
+    "cases_sha256": {
+      "title": "Cases Sha256",
+      "type": "string"
+    },
+    "code_sha256": {
+      "title": "Code Sha256",
+      "type": "string"
+    },
+    "dataset_sha256": {
+      "title": "Dataset Sha256",
+      "type": "string"
+    },
+    "experiment_sha256": {
+      "title": "Experiment Sha256",
+      "type": "string"
+    },
+    "judges": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Judges",
+      "type": "object"
+    }
+  },
+  "required": [
+    "experiment_sha256",
+    "dataset_sha256",
+    "cases_sha256",
+    "code_sha256"
+  ],
+  "title": "FindingInputs",
+  "type": "object"
+}

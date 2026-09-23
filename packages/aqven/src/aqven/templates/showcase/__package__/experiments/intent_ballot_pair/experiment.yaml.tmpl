@@ -1,0 +1,37 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A second intent ballot on the evidence, settled by confidence, gets the intent of a long message right more often than one ballot, with at most 5 points fewer outputs valid on the first try"
+failure_mode: "intent_misread"
+subject:
+  arm: "single"
+cases:
+  dataset: "long_customer_messages"
+variants:
+- id: "single"
+- id: "pair"
+  arm: "pair"
+- id: "pair_qwen"
+  arm: "pair"
+  agents:
+    words: "qwen"
+    evidence: "qwen"
+checks:
+- id: "intent"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "intent"
+question:
+  kind: "compare"
+  baseline: "single"
+  candidate: "pair"
+  primary: "intent"
+  direction: "higher_is_better"
+  margin: 0.05
+  guardrails:
+  - metric: "schema_valid_first_try"
+    margin: 0.05
+plan:
+  cases: 12
+  repeats: 3

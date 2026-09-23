@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Reads the critique as the polish loop does: the reply may go out when the score reaches the approval threshold and nothing blocks it"
+run: "verdict"
+in:
+- name: "critique"
+  type: "Critique"
+  description: "The critic's score and blocking remarks"
+  from: "$critique.out"
+out:
+- name: "verdict"
+  type: "ReplyVerdict"
+  description: "Whether the reply may go to the customer as it is"

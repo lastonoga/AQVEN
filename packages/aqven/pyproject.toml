@@ -32,6 +32,8 @@ dependencies = [
     "rfc8785==0.1.4",
     "watchfiles==1.2.0",
     "genai-prices==0.1.7",
+    "scipy==1.18.1",
+    "numpy==2.5.3",
     "opentelemetry-sdk==1.44.0",
     "opentelemetry-exporter-otlp-proto-http==1.44.0",
     "claude-agent-sdk==0.2.154",

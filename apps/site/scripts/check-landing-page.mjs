@@ -27,7 +27,7 @@ const requiredMarkers = [
   "Know an edit helped, before you ship it.",
   "Fix a bug once. It stays fixed.",
   "No surprise on the bill.",
-  "gate: pass",
+  "holdout: confirmed",
   "angry_refund_request",
   "collect_orders.node.yaml",
   "def collect_orders(queue_id: QueueId)",

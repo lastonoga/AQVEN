@@ -1,5 +1,6 @@
 import type { ApiChatApprovalReply, ApiChatEvent, ChatSessionId } from "@/domain"
 import { API_BASE } from "@/api/client"
+import { isRecord, subscribeEvents, type Unsubscribe } from "@/lib/sse"
 import { CHAT_EVENT_TYPES } from "./chat-events"
 
 export type ChatTransport = {
@@ -15,43 +16,16 @@ export type ChatCalls = {
   readonly interrupt: (sessionId: ChatSessionId) => Promise<unknown>
 }
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> => typeof value === "object" && value !== null
-
 const isChatEvent = (value: unknown): value is ApiChatEvent =>
   isRecord(value) && typeof value["seq"] === "number" && typeof value["type"] === "string" && CHAT_EVENT_TYPES.includes(value["type"])
 
-const messageText = (event: Event): string | null => {
-  if (!(event instanceof MessageEvent)) return null
-  const data: unknown = event.data
-  return typeof data === "string" ? data : null
-}
-
-const readChatEvent = (event: Event): ApiChatEvent | null => {
-  const raw = messageText(event)
-  if (raw === null) return null
-  const parsed: unknown = JSON.parse(raw)
-  return isChatEvent(parsed) ? parsed : null
-}
+const chatEventOf = (value: unknown): ApiChatEvent | null => (isChatEvent(value) ? value : null)
 
 export const chatEventsUrl = (sessionId: ChatSessionId, afterSeq: number): string =>
   `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events?after_seq=${String(afterSeq)}`
 
-const noSubscription = (): void => undefined
-
-const subscribeToEvents = (sessionId: ChatSessionId, afterSeq: number, onEvent: (event: ApiChatEvent) => void): (() => void) => {
-  if (typeof EventSource === "undefined") return noSubscription
-  const source = new EventSource(chatEventsUrl(sessionId, afterSeq))
-  const receive = (message: Event): void => {
-    const event = readChatEvent(message)
-    if (event !== null) onEvent(event)
-  }
-  CHAT_EVENT_TYPES.forEach((type) => {
-    source.addEventListener(type, receive)
-  })
-  return () => {
-    source.close()
-  }
-}
+const subscribeToEvents = (sessionId: ChatSessionId, afterSeq: number, onEvent: (event: ApiChatEvent) => void): Unsubscribe =>
+  subscribeEvents({ url: chatEventsUrl(sessionId, afterSeq), types: CHAT_EVENT_TYPES, read: chatEventOf, onEvent })
 
 export const chatTransport = (calls: ChatCalls): ChatTransport => ({
   subscribe: subscribeToEvents,

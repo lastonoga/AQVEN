@@ -1,0 +1,13 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "One judge instead of the panel: the tie-break inference scores the candidates blind, and the panel's own pick step turns its verdict into the winner"
+input: "PanelRequest"
+output: "PanelOutcome"
+returns:
+- name: "winner"
+  from: "$pick.out.winner"
+- name: "verdict"
+  from: "$pick.out.verdict"
+order:
+- "judge"
+- "pick"

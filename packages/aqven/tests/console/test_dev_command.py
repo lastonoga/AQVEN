@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 
 from aqven.app.access import ACCESS_TOKEN_PARAMETER
-from aqven.app.composition import StudioFeatures, studio_server
+from aqven.app.composition import SeriesEngineHost, StudioFeatures, studio_server
 from aqven.app.engine_host import DbosEngineHost
 from aqven.app.instance import bind_loopback, bound_port
 from aqven.app.locations import ProjectState
@@ -79,7 +79,8 @@ def test_dev_serves_the_project_watches_files_and_opens_studio_at_the_expected_u
     [server] = captured.servers
     assert record is not None
     assert features is not None and features.watch
-    assert isinstance(server.engine, DbosEngineHost)
+    assert isinstance(server.engine, SeriesEngineHost)
+    assert isinstance(server.engine.inner, DbosEngineHost)
     parts = urlsplit(url)
     assert (parts.scheme, parts.hostname, parts.port) == ("http", LOOPBACK, record.port)
     if expects_token:

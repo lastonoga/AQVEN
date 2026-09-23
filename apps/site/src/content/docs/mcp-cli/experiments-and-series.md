@@ -1,0 +1,152 @@
+---
+title: How to run experiments and series as an agent
+description: Write an experiment file, start a series with series_start, wait for its verdict with series_get, and stop one with series_cancel.
+---
+
+## When you need this
+
+You're connected to a project over MCP and need a number you can act on: whether a failure stays rare
+enough, whether a change or another agent is better, whether a cheaper agent is not worse. The question
+lives in an experiment file, `experiments/<experiment_id>/experiment.yaml`. A **series** runs that
+experiment live: every selected case, for every variant, `repeats` times. Every attempt is an ordinary
+run with its own trace, and every attempt calls the models and costs money. Three tools cover it:
+`series_start`, `series_get` and `series_cancel`.
+
+## Steps
+
+- **Write the experiment first, then run `aqven_check`.** There is no tool that creates an experiment:
+  it is a file, and you write it like any other. `aqven_check` validates the subject and its range, the
+  variants' agents, the dataset and its tag filter, the checks and the fields they read, the metric
+  names and `validated_by`. A series refuses to start on a project with errors, or when a case can't run
+  for a variant. It fails with `NOT_RUNNABLE` and one problem per case and variant, before a single model
+  call.
+- **`series_start`** takes exactly one of `experiment_id` or `look` (below), plus `on` (`dev` or
+  `holdout`, `dev` by default) and, optionally, `cases`, `repeats` (at most 20), `cap_usd` and a
+  `client_op_id`. It returns at once with the series summary and the `estimate`: attempts, dollars,
+  minutes, the expected interval half-width and the recommended number of cases. Sending the same
+  `client_op_id` again returns the same series instead of starting a second one.
+- **The status after `series_start` is `running` or `awaiting_approval`.** A series whose estimate is at
+  or below the project spend cap (the project setting `research.spend_cap_usd`, $1.00 by default)
+  starts by itself, with a cap of 1.25 × the estimate. One whose estimate is above the cap, or unknown
+  because there is no price history yet, waits for a person to approve the spend. There is no MCP tool
+  for approving: tell the user, who approves it in Studio or with `POST /api/series/{series_id}/approve`.
+- **`series_get`** takes a `series_id` and `wait_seconds` (0 to 50). With `wait_seconds` above 0 it
+  holds the answer until the series is `done`, `cancelled`, `failed`, `awaiting_approval` or
+  `waiting_human`, or until the time runs out, and then returns the current snapshot. Call it again
+  until the status settles. The snapshot carries progress, spend against the cap, the per-variant
+  matrix with 95% intervals, and the verdict.
+- **Quote `verdict.text` as it is once the status is `done`.** The server writes that sentence from
+  the interval and the margin declared in the file. Repeat it; don't round the numbers or put them in
+  your own words. While a series is still running, its verdict is provisional.
+- **`include_cases: true`** adds per-case rows to `series_get`, but only for `dev` cases: failing cases
+  first, at most 50, and the rest counted in `hidden_cases`. Holdout cases are never shown to the agent
+  one by one, so a change can't be tuned to them.
+- **`series_cancel`** takes a `series_id` and an optional `reason`. Queued attempts never start. Model
+  calls already running finish and are paid for. No finding is written. Cancelling a series that has
+  already stopped fails with `SERIES_STATE_CONFLICT`.
+
+### `dev` to search, `holdout` to decide
+
+The server splits every dataset in half by a hash of the case `name`, the same way in every clone of the
+project. Iterate on `dev` as often as you need: a series on `dev` gives at most a `signal`, never a
+finding. Run `holdout` once, when the change is done and the question is fixed. A series on `holdout`
+whose verdict is anything but `invalid` writes `experiments/<experiment_id>/findings/<series_id>.yaml`
+once and regenerates `FINDINGS.md` at the module root. Both are generated files, so don't edit them;
+`aqven check` reports an edited finding as `E_FINDING_TAMPERED` and a stale `FINDINGS.md` as
+`W_FINDINGS_STALE`.
+
+| Verdict | Meaning |
+|---|---|
+| `confirmed` | the 95% interval clears the bound, or beats the baseline, by more than the declared margin |
+| `refuted` | the effect is within the margin or reversed |
+| `inconclusive` | the interval is too wide to decide; `below_mde` means more cases would decide it |
+| `signal` | the series ran on `dev`, or the deciding check is a judge without `validated_by` |
+| `invalid` | cancelled, stopped by the spend cap, inputs changed during the series, more than 5% infrastructure errors, or no data |
+
+### A look without an experiment
+
+To see what a flow does on a few named cases, pass `look` instead of `experiment_id`:
+`{"look": {"flow_id": "support_case", "dataset_id": "support_case_cases", "case_names": ["strip_flicker_credit"]}}`.
+Each named case runs once, with no verdict and no finding. `start_node` and `end_node` narrow the runs to
+a range of top-level nodes, and the nodes above the range take their outputs from the case.
+
+### Example
+
+In the [showcase](/start/quickstart/) project, `reply_overpromise_risk` asks whether the `polish` range
+of `support_case` keeps its `promises` check above 0.97 with a margin of 0.01. Start it on two dev cases,
+repeated twice. The responses below are real, trimmed, from AQVEN's example project `lumen` with no
+price history. The showcase template is the same project under your package name, and the salt of the
+split is the package name, so your count of dev cases can differ by one or two. The estimate is unknown,
+so the series waits for approval, and no model has been called:
+
+```json
+{
+  "series_id": "01a0cf56-31c4-72b7-9f32-4d5826a88878",
+  "origin": {"kind": "experiment", "experiment_id": "reply_overpromise_risk"},
+  "question": "threshold",
+  "on": "dev",
+  "cases": 2,
+  "repeats": 2,
+  "variants": ["gpt"],
+  "status": "awaiting_approval",
+  "progress": {"done": 0, "total": 4},
+  "spend": {"usd": "0", "cap_usd": "1.00"},
+  "estimate": {
+    "attempts": 4,
+    "available": 6,
+    "usd": null,
+    "usd_source": "unknown",
+    "half_width": 0.24352108850049436,
+    "margin": 0.01,
+    "recommended": {
+      "cases": 1187,
+      "repeats": 2,
+      "reason": "short_of_cases",
+      "text": "about 1187 cases are needed for a half-width within the 0.01 margin, but only 6 are available"
+    },
+    "below_recommended": true,
+    "needs_approval": true
+  }
+}
+```
+
+The `recommended.text` is the warning to pass on: with six dev cases, no series of this experiment can
+settle a margin that narrow. Cancel the series with `series_cancel`:
+
+```json
+{
+  "series_id": "01a0cf56-31c4-72b7-9f32-4d5826a88878",
+  "status": "cancelled",
+  "progress": {"done": 0, "total": 4},
+  "spend": {"usd": "0", "cap_usd": "1.00"},
+  "verdict": {"state": "invalid", "reason": "cancelled", "text": "No finding: cancelled after 0 of 4 attempts."}
+}
+```
+
+A second `series_cancel` on the same series is a real tool error:
+
+```json
+{
+  "ok": false,
+  "op": "series_cancel",
+  "code": "SERIES_STATE_CONFLICT",
+  "message": "series 01a0cf56-31c4-72b7-9f32-4d5826a88878 is cancelled and cannot be cancelled"
+}
+```
+
+The same series from a terminal is `{{CLI_COMMAND}} series reply_overpromise_risk --cases 2 --repeats 2`.
+It starts the project server if it isn't running, then waits and prints the progress and the verdict.
+It exits with 0 when the series is done, whatever the verdict. It exits with 3, printing a Studio link,
+when the series waits for approval, and with 4 when an attempt waits for a person.
+
+## See also
+
+- [How to start and follow runs as an agent](/mcp-cli/runs/) — every attempt of a series is one of
+  these runs, and `run_get_node` opens any of them.
+- [How to read research in Studio](/studio/research/) — the same experiments and series, read and
+  approved by a person.
+- [How to write a custom evaluator](/engine/custom-evaluator/) — checks an experiment scores on every
+  attempt.
+- [Experiments reference](/reference/experiments/) and [Findings reference](/reference/findings/) — every
+  key of `experiment.yaml` and of a finding file.
+- [The engineering loop](/concepts/engineering-loop/) — why the question is written before the data.

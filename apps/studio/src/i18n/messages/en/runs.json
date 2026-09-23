@@ -1,13 +1,25 @@
 {
   "title": "Runs",
-  "empty": "No runs yet",
-  "emptyHint": "Start the flow to record a run",
+  "lists": {
+    "aria": "Runs to list",
+    "flow": {
+      "label": "Flow runs",
+      "empty": "No runs yet",
+      "emptyHint": "Start the flow to record a run",
+      "count": "{count, plural, one {# run in this flow} other {# runs in this flow}}"
+    },
+    "experiment": {
+      "label": "Experiment runs",
+      "empty": "No experiment runs yet",
+      "emptyHint": "The attempts of series on this flow are listed here",
+      "count": "{count, plural, one {# experiment run in this flow} other {# experiment runs in this flow}}"
+    }
+  },
   "listAria": "Runs of this flow",
   "pickerPlaceholder": "Select a run",
   "pickerSelected": "Run {ref}",
   "pickerSearch": "Search runs",
   "pickerSearchPlaceholder": "Search runs, datasets, or nodes...",
-  "runsInFlow": "{count, plural, one {# run in this flow} other {# runs in this flow}}",
   "pickerNoDataset": "No dataset",
   "pickerDataset": "Dataset",
   "pickerCase": "Case",
@@ -86,7 +98,9 @@
     "spec": "{origin} · {hash}",
     "fork": "forked from {parent}",
     "changed": "The flow changed after this run",
-    "timelineAria": "Executions of this run"
+    "timelineAria": "Executions of this run",
+    "series": "attempt of series {series}",
+    "arm": "arm {arm} of experiment {experiment}"
   },
   "dataset": {
     "label": "Dataset",
@@ -129,12 +143,6 @@
     "nodesNote": "{done} of {total} done",
     "running": "still running",
     "failedNodes": "{count, plural, one {# failed node} other {# failed nodes}}"
-  },
-  "waits": {
-    "title": "Waiting for a person",
-    "row": "{node} · {kind} · assigned to {assignee}",
-    "deadline": "deadline {when}",
-    "attempt": "attempt {attempt}"
   },
   "outcome": {
     "title": "Outcome",
@@ -195,5 +203,93 @@
       "yes": "yes",
       "no": "no"
     }
+  },
+  "live": {
+    "badge": "Live"
+  },
+  "cancel": {
+    "open": "Cancel run",
+    "title": "Cancel this run?",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Why the run is stopped",
+    "keep": "Keep running",
+    "confirm": "Cancel run",
+    "failed": "The run was not cancelled: {reason}"
+  },
+  "compare": {
+    "open": "Compare with…",
+    "change": "Compared with {ref}",
+    "search": "Search runs to compare",
+    "listAria": "Runs to compare with",
+    "count": "{count, plural, one {# other run in this flow} other {# other runs in this flow}}",
+    "noMatches": "No matching runs",
+    "aria": "Run comparison",
+    "title": "{left} compared with {right}",
+    "summary": "{changed, plural, =0 {no differences} one {# of {total} executions differs} other {# of {total} executions differ}}",
+    "stop": "Stop comparing",
+    "missing": "Run {ref} could not be loaded for the comparison.",
+    "run": "Run",
+    "field": "Field",
+    "status": "Status",
+    "model": "Model",
+    "cost": "Cost",
+    "checks": "Checks",
+    "duration": "Duration",
+    "tokens": "Tokens in / out",
+    "input": "Input",
+    "output": "Output",
+    "runOutput": "Run output",
+    "outputSame": "The run outputs are the same",
+    "sameOutputFields": "{count, plural, =0 {no fields are the same} one {# field is the same} other {# fields are the same}}",
+    "sameInput": "{count, plural, one {# input field} other {# input fields}} the same",
+    "sameOutput": "{count, plural, one {# output field} other {# output fields}} the same",
+    "sameNodes": "{count, plural, one {# execution without differences} other {# executions without differences}}",
+    "nodeAria": "Comparison of {node}",
+    "onlyIn": "only in {ref}",
+    "notRun": "not run",
+    "absent": "absent",
+    "noModel": "no model",
+    "noChecks": "no checks",
+    "checkPassed": "{name} passed",
+    "checkFailed": "{name} failed",
+    "failedAttempts": "{count, plural, one {# failed attempt} other {# failed attempts}}"
+  },
+  "expected": {
+    "title": "Expected vs actual",
+    "source": "case {case} of dataset {dataset}",
+    "tableAria": "Expected and actual output fields",
+    "field": "Field",
+    "expected": "Expected",
+    "actual": "Actual",
+    "stateHead": "Result",
+    "root": "value",
+    "absent": "absent",
+    "allMatch": "{count, plural, one {the expected field matches} other {all # expected fields match}}",
+    "summary": "{matched} of {checked} expected fields match",
+    "extra": "{count, plural, one {# more field is only in the actual output and is not checked} other {# more fields are only in the actual output and are not checked}}",
+    "unavailable": "The expected output of case {case} could not be loaded.",
+    "state": {
+      "match": "match",
+      "mismatch": "differs",
+      "missing": "missing",
+      "extra": "not checked"
+    }
+  },
+  "toCases": {
+    "open": "To cases",
+    "title": "Draft a case from this run",
+    "description": "The engine turns the run input, its context and the outputs of its top-level nodes into a dataset case; the chat writes it to the file.",
+    "targetDataset": "The case goes to dataset {dataset}.",
+    "chooseDataset": "Dataset",
+    "targetNew": "Flow {flow} has no dataset yet: the chat creates one and adds this run as its first case.",
+    "loadingDatasets": "Looking for the datasets of this flow…",
+    "drafting": "Drafting the case…",
+    "draftName": "Case {name} for dataset {dataset}",
+    "failed": "Could not draft the case: {reason}",
+    "handoff": "Hand the case to the chat",
+    "close": "Close the case draft"
+  },
+  "compareAgents": {
+    "label": "Compare agents on {node}"
   }
 }
