@@ -22,6 +22,13 @@ const fromCase = (patch: Partial<ApiRunSnapshot> = {}): ApiRunSnapshot => ({
   ...patch,
 })
 
+const passthroughDraft = (body: unknown) =>
+  HttpResponse.json({
+    dataset_id: "support_case_cases",
+    case: { name: "support_case_01a0b104", inputs: {}, node_outputs: { prepare: {} }, expected_output: null },
+    yaml: `name: support_case_01a0b104\ninputs: {}\nnode_outputs:\n  prepare: {}\nrun: ${typeof body === "object" && body !== null && "run_id" in body ? String(body.run_id) : ""}`,
+  })
+
 const sentTexts: string[] = []
 
 const captureChat = (): void => {
@@ -105,24 +112,43 @@ describe("RunsScreen hand-offs", () => {
     captureChat()
   })
 
-  it("drafts a case from the run and hands it to the chat", async () => {
+  it("drafts a case from the run through the engine and hands it to the chat", async () => {
+    const draftRequests: { readonly dataset: unknown; readonly body: unknown }[] = []
     server.use(
+      http.post(`${API_BASE}/datasets/:datasetId/cases/from-run`, async ({ params, request }) => {
+        const body: unknown = await request.json()
+        draftRequests.push({ dataset: params["datasetId"], body })
+        return passthroughDraft(body)
+      }),
       http.get(`${API_BASE}/runs/:runId`, () => HttpResponse.json(fromCase())),
       http.get(CASE_URL, () => HttpResponse.json({ name: "bulb_app_offline_advice", inputs: {} })),
     )
     await renderRoute(RUN_PAGE)
     fireEvent.click(await screen.findByRole("button", { name: "To cases" }))
     const dialog = await screen.findByRole("dialog", { name: "Draft a case from this run" })
-    expect(within(dialog).getByText("The case goes to dataset support_case_cases, where this run came from.")).toBeTruthy()
-    expect(dialog.textContent).toContain("- name: \"run_b56d92\"")
-    expect(dialog.textContent).toContain("  node_outputs:")
-    expect(dialog.textContent).toContain(`    source_run: "${COMPLETED_RUN_ID}"`)
+    expect(await within(dialog).findByText("Case support_case_01a0b104 for dataset support_case_cases")).toBeTruthy()
+    expect(within(dialog).getByText("The case goes to dataset support_case_cases.")).toBeTruthy()
+    expect(dialog.textContent).toContain("name: support_case_01a0b104")
+    expect(dialog.textContent).toContain("node_outputs:")
+    expect(draftRequests).toEqual([{ dataset: "support_case_cases", body: { run_id: COMPLETED_RUN_ID } }])
     fireEvent.click(await enabled(within(dialog).getByRole("button", { name: "Hand the case to the chat" })))
     expect((await within(dialog).findByRole("status")).textContent).toBe("Sent to the chat on the left.")
     expect(sentTexts).toHaveLength(1)
     expect(sentTexts[0]).toContain(`Turn run ${COMPLETED_RUN_ID} of flow support_case into a dataset case.`)
     expect(sentTexts[0]).toContain("datasets/support_case_cases.yaml")
-    expect(sentTexts[0]).toContain("```yaml\ncases:\n- name: \"run_b56d92\"")
+    expect(sentTexts[0]).toContain("```yaml\nname: support_case_01a0b104")
+  })
+
+  it("says why no case can be drafted when the engine refuses the run", async () => {
+    server.use(
+      http.post(`${API_BASE}/datasets/:datasetId/cases/from-run`, () =>
+        HttpResponse.json({ ok: false, op: "case_from_run", code: "INPUT_INVALID", message: "run belongs to another flow", problems: [], retry_after_ms: null }, { status: 422 }),
+      ),
+    )
+    await renderRoute(RUN_PAGE)
+    fireEvent.click(await screen.findByRole("button", { name: "To cases" }))
+    const dialog = await screen.findByRole("dialog", { name: "Draft a case from this run" })
+    expect((await within(dialog).findByRole("alert")).textContent).toBe("Could not draft the case: run belongs to another flow")
   })
 
   it("asks the chat to write an experiment comparing agents on the focused step", async () => {

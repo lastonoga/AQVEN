@@ -33,6 +33,8 @@
       "compute_confounded": "compute confounded",
       "inputs_changed": "inputs changed",
       "infra_errors": "infrastructure errors",
+      "no_data": "no data",
+      "budget_cut": "spend cap reached",
       "cancelled": "cancelled",
       "dev_split": "working cases, a signal not a finding",
       "judge_not_validated": "judge not validated"
@@ -95,7 +97,8 @@
       "passed": "passed",
       "failed": "failed",
       "error": "error",
-      "waiting": "waiting"
+      "waiting": "waiting",
+      "running": "running"
     }
   },
   "question": {
@@ -157,7 +160,7 @@
       },
       "cases": "Cases",
       "variants": "Variants",
-      "casesText": "{dataset} · {selected} of {total} cases",
+      "casesText": "{dataset} · {selected} of {total} cases · {dev} working, {holdout} held out",
       "allCases": "all cases",
       "openCases": "Open the cases",
       "steps": "Steps of arm {arm}",
@@ -198,6 +201,7 @@
       "builtinDetail": "{use} on {fields}",
       "builtinAll": "{use} on the whole output",
       "judgeDetail": "{inference} · {agent} ({model})",
+      "judgeAgentless": "{inference}",
       "validatedBy": "validated by {experiment}",
       "unvalidated": "unvalidated judge",
       "noTrust": "—",
@@ -209,7 +213,7 @@
       "cases": "Cases (N)",
       "repeats": "Repeats (R)",
       "split": "Cases to run on",
-      "casesHint": "1 to {available}",
+      "casesHint": "1 to {available} on {split}",
       "repeatsHint": "1 to {max}",
       "casesInvalid": "N must be a whole number from 1 to {available}",
       "repeatsInvalid": "R must be a whole number from 1 to {max}",
@@ -218,7 +222,9 @@
         "look": "A look has no verdict, so any number of cases works.",
         "wide": "At {cases} cases the expected interval is ±{halfWidth}, wider than the {margin} margin: the verdict will likely be inconclusive. About {recommended} cases are needed.",
         "enough": "At {cases} cases the expected interval is ±{halfWidth}, inside the {margin} margin.",
-        "no_margin": "The question has no margin, so the plan size of {recommended} is used."
+        "no_margin": "The question has no margin, so the plan size of {recommended} is used.",
+        "no_history": "No earlier series to learn the spread from, so the plan size of {recommended} is used.",
+        "short_of_cases": "About {recommended} cases are needed for an interval within the {margin} margin, but only {available} are available: expect a wide interval."
       },
       "estimateAria": "Estimate of this launch",
       "attempts": "Attempts",
@@ -228,13 +234,16 @@
       "variantsNote": "{cases} × {repeats} × {variants, plural, one {# variant} other {# variants}}",
       "estimating": "Estimating…",
       "below": "Fewer cases than recommended ({recommended}): the series can still start, but expect a wide interval.",
-      "belowAvailable": "Fewer cases than recommended ({recommended}), and only {available} are selected: add cases, or start anyway and expect a wide interval.",
-      "approval": "This estimate is above the spend limit: the series will wait for your approval before it runs.",
+      "belowAvailable": "Fewer cases than recommended ({recommended}), and these cases hold only {available}: add cases, or start anyway and expect a wide interval.",
+      "approval": "This estimate is above the {cap} spend cap: the series will wait for your approval before it runs.",
       "start": "Start",
       "approve": "Approve spend",
       "stop": "Stop",
       "active": "{series} · {done} of {total} attempts",
-      "failed": "Could not do that: {reason}"
+      "failed": "Could not do that: {reason}",
+      "noEstimate": "no estimate",
+      "noPrice": "The models of this experiment have no price yet, so the spend cannot be estimated: the series will wait for your approval before it runs.",
+      "cap": "Spend cap {cap}"
     },
     "history": {
       "title": "Series history",
@@ -271,7 +280,17 @@
       "title": "Verdict",
       "look": "A look has no verdict: read the cases below.",
       "pending": "The verdict comes when the series finishes.",
-      "none": "No verdict: the series produced no usable measurement."
+      "none": "No verdict: the series produced no usable measurement.",
+      "error": "The series failed: {error}",
+      "finding": "Finding written to {path}",
+      "approvedBy": "spend approved by {who}",
+      "contrastsAria": "Differences behind the verdict",
+      "contrast": "{metric}: {candidate} − {baseline} = {value}",
+      "contrastInterval": "{metric}: {candidate} − {baseline} = {value} (95% CI {interval}), margin {margin}",
+      "contrastRole": {
+        "primary": "primary",
+        "guardrail": "guardrail"
+      }
     },
     "matrix": {
       "title": "Variants × metrics",
@@ -323,8 +342,9 @@
         "run": "Run"
       },
       "openRun": "Open run {ref}",
-      "armRun": "arm run, no flow page",
-      "none": "—"
-    }
+      "none": "—",
+      "running": "{count} running"
+    },
+    "live": "live"
   }
 }

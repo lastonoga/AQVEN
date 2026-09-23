@@ -1,4 +1,4 @@
-import type { ApiExecutionDetail, ApiJsonObject, FlowId, RunId, SeriesId } from "@/domain"
+import type { ApiExecutionDetail, ApiJsonObject, ApiRun, FlowId, RunId, SeriesId } from "@/domain"
 import { isNotFound } from "@/api/client"
 import * as ids from "@/data/ids"
 import type { RouterContext } from "@/router"
@@ -22,24 +22,33 @@ const orNull = async <T>(load: Promise<T>): Promise<T | null> =>
 
 const isSchema = (value: unknown): value is ApiJsonObject => typeof value === "object" && value !== null && !Array.isArray(value)
 
-const seriesWaitingRuns = async (api: StudioApi, seriesId: SeriesId): Promise<readonly RunId[]> => {
-  const rows = await api.research.seriesCases(seriesId)
-  return rows.flatMap((row) => row.attempts).filter((attempt) => attempt.outcome === "waiting").map((attempt) => attempt.run)
-}
+type RunFilter = Parameters<StudioApi["run"]["list"]>[0]
 
-const targetRuns = async (api: StudioApi, target: WaitsTarget): Promise<readonly RunId[]> => {
-  if (target.runId !== null) return [target.runId]
-  if (target.seriesId !== null) return seriesWaitingRuns(api, target.seriesId)
-  return []
+type WaitQuery = { readonly filter: RunFilter; readonly keep: (run: ApiRun) => boolean }
+
+const SUSPENDED: RunFilter = { status: "suspended", sort: "deadline_at" }
+
+const runQuery = (runId: RunId, flowId: FlowId | null): WaitQuery => ({
+  filter: { ...SUSPENDED, ...(flowId === null ? {} : { flowId }) },
+  keep: (run) => run.run_id === runId,
+})
+
+const seriesQuery = (seriesId: SeriesId): WaitQuery => ({
+  filter: { ...SUSPENDED, mode: "experiment" },
+  keep: (run) => run.series_id === seriesId,
+})
+
+const waitQueryOf = (target: WaitsTarget): WaitQuery | null => {
+  if (target.runId !== null) return runQuery(target.runId, target.flowId)
+  if (target.seriesId !== null) return seriesQuery(target.seriesId)
+  return null
 }
 
 export const loadWaits = async (api: StudioApi, target: WaitsTarget): Promise<readonly ReviewEntry[]> => {
-  const runs = await targetRuns(api, target)
-  if (runs.length === 0) return []
-  const suspended = await api.run.list({ ...(target.flowId === null ? {} : { flowId: target.flowId }), status: "suspended", sort: "deadline_at" })
-  return suspended
-    .filter((run) => runs.includes(ids.runId(run.run_id)))
-    .flatMap((run) => run.waits.filter((wait) => wait.state === "waiting").map((wait) => ({ run, wait })))
+  const query = waitQueryOf(target)
+  if (query === null) return []
+  const suspended = await api.run.list(query.filter)
+  return suspended.filter(query.keep).flatMap((run) => run.waits.filter((wait) => wait.state === "waiting").map((wait) => ({ run, wait })))
 }
 
 const formSchema = async (api: StudioApi, detail: ApiExecutionDetail | null, entry: ReviewEntry): Promise<ApiJsonObject | null> => {

@@ -90,6 +90,7 @@ export const nodeFinished = (runId: string, seq: number, nodeId: string): ApiRun
   tokens_in: 0,
   tokens_out: 0,
   latency_ms: 10,
+  wait_ms: 0,
   model: null,
   cache_hit: false,
   degraded: false,

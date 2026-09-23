@@ -153,7 +153,7 @@ function CaseFacts({ experiment }: { readonly experiment: ExperimentDetail }) {
   return (
     <>
       <Text role="cell" tone="default">
-        {t("casesText", { dataset: cases.dataset, selected: cases.selected, total: cases.total })}
+        {t("casesText", { dataset: cases.dataset, selected: cases.selected, total: cases.total, dev: cases.splits.dev, holdout: cases.splits.holdout })}
       </Text>
       {pairs.length === 0 ? (
         <Tag size="xs" tone="neutral" fill="outline">

@@ -1,43 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router"
-import type { ApiExecutionAddress, ApiNode, ApiPromptDetail, ApiRunEvent, ApiRunSnapshot, FlowId, NodeId, RunId } from "@/domain"
+import type { ApiNode, ApiPromptDetail, ApiRunEvent, FlowId, RunId } from "@/domain"
 import * as ids from "@/data/ids"
 import type { LiveSources } from "@/data/live/sources"
-import { CALL_SHEET_TABS, type CallSheetTab } from "@/features/call-sheet"
-import { datasetItemOf, expectedCaseOf, readRunBlobs, RunsScreen, snapshotRefs, type ExpectedCase, type RunComparison } from "@/features/runs"
-import { parseEnum, parseId, parseIndex, parseText } from "@/lib/search"
+import { readRunBlobs, RunsScreen, snapshotRefs, type RunComparison } from "@/features/runs"
+import { parseId } from "@/lib/search"
 import { loadWhen } from "@/routes/-load"
+import { loadExpected } from "@/routes/-run-load"
+import { addressOf, parseRunAddressSearch, type RunAddressSearch } from "@/routes/-run-search"
 import { optional, searchValidator, type RawSearch } from "@/routes/-search"
 
-type RunsSearch = {
+type RunsSearch = RunAddressSearch & {
   readonly run?: RunId
-  readonly stage?: string
-  readonly node?: NodeId
-  readonly branch?: string
-  readonly iter?: number
-  readonly item?: number
-  readonly tab?: CallSheetTab
   readonly compare?: RunId
 }
 
 const parseRun = parseId(ids.runId)
-const parseNode = parseId(ids.nodeId)
-const parseTab = parseEnum(CALL_SHEET_TABS)
 
 const parseRunsSearch = (raw: RawSearch): RunsSearch => ({
   ...optional("run", parseRun(raw["run"])),
-  ...optional("stage", parseText(raw["stage"])),
-  ...optional("node", parseNode(raw["node"])),
-  ...optional("branch", parseText(raw["branch"])),
-  ...optional("iter", parseIndex(raw["iter"])),
-  ...optional("item", parseIndex(raw["item"])),
-  ...optional("tab", parseTab(raw["tab"])),
+  ...parseRunAddressSearch(raw),
   ...optional("compare", parseRun(raw["compare"])),
 })
-
-const addressOf = (search: RunsSearch): ApiExecutionAddress | null => {
-  if (search.node === undefined) return null
-  return { node_id: search.node, branch_key: search.branch ?? null, iteration: search.iter ?? null, item_index: search.item ?? null }
-}
 
 const promptsOf = async (
   api: LiveSources,
@@ -60,13 +43,6 @@ const comparisonOf = async (api: LiveSources, runId: RunId): Promise<RunComparis
 const loadComparison = async (api: LiveSources, compare: RunId | null, runId: RunId | null): Promise<RunComparison | null> => {
   if (compare === null || compare === runId) return null
   return comparisonOf(api, compare).catch(() => null)
-}
-
-const loadExpected = async (api: LiveSources, snapshot: ApiRunSnapshot | null): Promise<ExpectedCase> => {
-  const item = datasetItemOf(snapshot?.dataset_item_id)
-  if (item === null) return expectedCaseOf(null, null)
-  const found = await api.evals.datasetCase(item.datasetId, item.caseName).catch(() => null)
-  return expectedCaseOf(item, found)
 }
 
 const validateRunsSearch = searchValidator(parseRunsSearch)

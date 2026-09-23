@@ -5,11 +5,11 @@ import { useTranslations } from "use-intl"
 import { SERIES_SPLITS, type ExperimentDetail, type LaunchEstimate, type LaunchRequest, type SeriesSplit, type SeriesSummary } from "@/domain"
 import { Actions, ChoiceGroup, Stat, Surface, Tag, Text, Toolbar, type ActionSpec } from "@/components/studio"
 import { Input } from "@/components/ui/input"
-import { usd } from "@/lib/format"
+import { joinMeta, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { useReasonCopy } from "./copy"
 import { Failure, ResearchSection } from "./layout"
-import { activeSeries, checkLaunch, draftOf, launchReason, MAX_REPEATS, seriesRef, shortfallOf, type LaunchCheck, type LaunchDraft, type LaunchProblem } from "./presenters"
+import { activeSeries, availableOn, checkLaunch, draftOf, launchReason, MAX_REPEATS, plannedCases, seriesRef, shortfallOf, type LaunchCheck, type LaunchDraft, type LaunchProblem } from "./presenters"
 import { SERIES_STATUS_TONE } from "./tones"
 import { useLaunchEstimate, type EstimateState } from "./use-launch-estimate"
 import { useResearchAction, type ResearchAction } from "./use-research-action"
@@ -18,7 +18,7 @@ export type LaunchPanelProps = {
   readonly experiment: ExperimentDetail
   readonly series: readonly SeriesSummary[]
   readonly launch: LaunchRequest
-  readonly estimate: LaunchEstimate
+  readonly estimate: LaunchEstimate | null
 }
 
 type NumberFieldProps = {
@@ -96,16 +96,28 @@ function Recommendation({ experiment, estimate }: { readonly experiment: Experim
 
 function EstimateFigures({ estimate }: { readonly estimate: LaunchEstimate }) {
   const t = useTranslations("research.experiment.launch")
+  const spend = estimate.usd === null ? t("noEstimate") : usd(estimate.usd, 2)
+  const time = estimate.minutes === null ? t("noEstimate") : t("minutes", { count: estimate.minutes })
   return (
     <section aria-label={t("estimateAria")} className="flex flex-wrap items-end gap-x-8 gap-y-3">
       <Stat variant="stacked" label={t("attempts")} value={String(estimate.attempts)} />
-      <Stat variant="stacked" label={t("spend")} value={usd(estimate.usd, 2)} />
-      <Stat variant="stacked" label={t("time")} value={t("minutes", { count: estimate.minutes })} />
+      <Stat variant="stacked" label={t("spend")} value={spend} />
+      <Stat variant="stacked" label={t("time")} value={time} />
       <Text role="hint" tone="neutral">
-        {t("variantsNote", { cases: estimate.request.cases, repeats: estimate.request.repeats, variants: estimate.variants })}
+        {joinMeta([
+          t("variantsNote", { cases: estimate.request.cases, repeats: estimate.request.repeats, variants: estimate.variants }),
+          t("cap", { cap: usd(estimate.capUsd, 2) }),
+        ])}
       </Text>
     </section>
   )
+}
+
+function ApprovalNote({ estimate }: { readonly estimate: LaunchEstimate }) {
+  const t = useTranslations("research.experiment.launch")
+  if (estimate.usd === null) return <Callout tone="neutral">{t("noPrice")}</Callout>
+  if (!estimate.needsApproval) return null
+  return <Callout tone="neutral">{t("approval", { cap: usd(estimate.capUsd, 2) })}</Callout>
 }
 
 function Shortfall({ estimate }: { readonly estimate: LaunchEstimate }) {
@@ -132,7 +144,7 @@ function EstimateBody({ experiment, state }: { readonly experiment: ExperimentDe
       <Recommendation experiment={experiment} estimate={estimate} />
       <EstimateFigures estimate={estimate} />
       <Shortfall estimate={estimate} />
-      {estimate.needsApproval ? <Callout tone="neutral">{t("approval")}</Callout> : null}
+      <ApprovalNote estimate={estimate} />
     </>
   )
 }
@@ -182,10 +194,10 @@ export function LaunchPanel({ experiment, series, launch, estimate }: LaunchPane
   const navigate = useNavigate()
   const action = useResearchAction()
   const [draft, setDraft] = useState<LaunchDraft>(() => draftOf(launch))
-  const available = experiment.cases.selected
+  const available = availableOn(experiment, draft.on)
   const check = checkLaunch(draft, available)
   const request = check.kind === "valid" ? check.request : null
-  const state = useLaunchEstimate(experiment.id, request, estimate)
+  const state = useLaunchEstimate(experiment.id, request, { request: launch, estimate })
   const problems = problemsOf(check)
   const active = activeSeries(series)
   const update = (patch: Partial<LaunchDraft>): void => {
@@ -209,7 +221,7 @@ export function LaunchPanel({ experiment, series, launch, estimate }: LaunchPane
         <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
           <NumberField
             label={t("experiment.launch.cases")}
-            hint={t("experiment.launch.casesHint", { available })}
+            hint={t("experiment.launch.casesHint", { available, split: t(`vocabulary.split.${draft.on}`) })}
             value={draft.cases}
             max={available}
             error={problems.includes("cases") ? t("experiment.launch.casesInvalid", { available }) : null}
@@ -238,7 +250,7 @@ export function LaunchPanel({ experiment, series, launch, estimate }: LaunchPane
               value={draft.on}
               items={SERIES_SPLITS.map((split) => ({ value: split, label: t(`vocabulary.split.${split}`) }))}
               onValueChange={(on) => {
-                update({ on })
+                update({ on, cases: String(plannedCases(experiment, on)) })
               }}
             />
           </div>

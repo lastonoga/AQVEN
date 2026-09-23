@@ -1,4 +1,4 @@
-import type { CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesStatus, VariantId, VariantTally } from "@/domain"
+import type { AttemptOutcome, CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesStatus, VariantId, VariantTally } from "@/domain"
 import type { Tone } from "@/components/studio"
 
 export type VerdictGap = "look" | "pending" | "none"
@@ -38,8 +38,12 @@ export const failedChecksOf = (row: Pick<SeriesCaseRow, "variants">): readonly C
 export const tallyOf = (row: Pick<SeriesCaseRow, "variants">, variant: VariantId): VariantTally | null =>
   row.variants.find((tally) => tally.variant === variant) ?? null
 
-export const waitingOf = (row: Pick<SeriesCaseRow, "attempts">, variant: VariantId): number =>
-  row.attempts.filter((attempt) => attempt.variant === variant && attempt.outcome === "waiting").length
+const PENDING_OUTCOMES: ReadonlySet<AttemptOutcome> = new Set<AttemptOutcome>(["waiting", "running"])
+
+export const isPending = (outcome: AttemptOutcome): boolean => PENDING_OUTCOMES.has(outcome)
+
+export const pendingOf = (row: Pick<SeriesCaseRow, "attempts">, variant: VariantId, outcome: AttemptOutcome): number =>
+  row.attempts.filter((attempt) => attempt.variant === variant && attempt.outcome === outcome).length
 
 export const hasFinished = (row: Pick<SeriesCaseRow, "variants">): boolean => row.variants.some((tally) => tally.total > 0)
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import * as ids from "@/data/ids"
 import { server } from "@/mocks/node"
 import { renderInStudio } from "@/test/render-route"
-import { RESEARCH_FIXTURE_SERIES } from "@/test/research-fixtures"
+import { RESEARCH_SERIES } from "@/mocks/data/research"
 import { approvalExecution, approvalRun, formRun, replyApprovalSchema } from "./test-support"
 import { WaitsInline } from "./waits-inline"
 
@@ -12,6 +12,9 @@ type ResumeCall = { readonly runId: string; readonly body: unknown }
 type RunQuery = Readonly<Record<string, string>>
 
 const SUPPORT_CASE = ids.flowId("support_case")
+const LOOK_SERIES = ids.seriesId(RESEARCH_SERIES.lookWaiting)
+
+const ofSeries = <T extends object>(run: T) => ({ ...run, mode: "experiment", series_id: LOOK_SERIES })
 
 const page = <T,>(items: readonly T[]) => ({ items, next_cursor: null, total_estimate: items.length })
 
@@ -79,12 +82,13 @@ describe("WaitsInline", () => {
     runQueries.length = 0
   })
 
-  it("lists the waits of a series from its waiting attempts and opens the first", async () => {
-    server.use(suspended(approvalRun, formRun), executionDetail())
-    await renderInStudio(<WaitsInline seriesId={RESEARCH_FIXTURE_SERIES.lookWaiting} flowId={SUPPORT_CASE} />)
+  it("lists the waits of a series from the experiment runs of that series and opens the first", async () => {
+    server.use(suspended(ofSeries(approvalRun), ofSeries(formRun), { ...formRun, run_id: "01a0c1ff-0000-7000-8000-0000000000aa", series_id: "another" }), executionDetail())
+    await renderInStudio(<WaitsInline seriesId={LOOK_SERIES} flowId={SUPPORT_CASE} />)
     const section = await waitsSection()
     expect(within(section).getByText("2 steps")).toBeTruthy()
-    expect(runQueries[0]).toMatchObject({ flow_id: "support_case", status: "suspended", sort: "deadline_at" })
+    expect(runQueries[0]).toMatchObject({ mode: "experiment", status: "suspended", sort: "deadline_at" })
+    expect(runQueries[0]?.["flow_id"]).toBeUndefined()
     const rows = within(section).getAllByRole("button", { expanded: true })
     expect(rows.map((row) => row.textContent)).toEqual([
       "past the deadlinerun #b56d92overdue 1 h 19 mroute__resolve · defecttool approval · assigned to support_lead",
@@ -112,8 +116,8 @@ describe("WaitsInline", () => {
   })
 
   it("collapses and expands a wait from its row", async () => {
-    server.use(suspended(approvalRun, formRun), executionDetail())
-    await renderInStudio(<WaitsInline seriesId={RESEARCH_FIXTURE_SERIES.lookWaiting} flowId={SUPPORT_CASE} />)
+    server.use(suspended(ofSeries(approvalRun), ofSeries(formRun)), executionDetail())
+    await renderInStudio(<WaitsInline seriesId={LOOK_SERIES} flowId={SUPPORT_CASE} />)
     const [first] = within(await waitsSection()).getAllByRole("button", { expanded: true })
     fireEvent.click(first ?? document.body)
     expect(within(await waitsSection()).queryAllByRole("button", { expanded: true })).toHaveLength(0)

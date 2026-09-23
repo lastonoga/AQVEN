@@ -18,6 +18,7 @@ function useSourceCopy(): SourceCopy {
     builtin: (use, fields) => t("builtinDetail", { use, fields }),
     builtinAll: (use) => t("builtinAll", { use }),
     judge: (inference, agent, model) => t("judgeDetail", { inference, agent, model }),
+    judgeAgentless: (inference) => t("judgeAgentless", { inference }),
   }
 }
 

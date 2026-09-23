@@ -26,18 +26,19 @@ const experimentIds = async (): Promise<readonly string[]> =>
 describe("ResearchScreen", () => {
   it("lists every experiment with its question, subject, variants, last series and spend", async () => {
     await renderRoute("/research")
-    expect(await experimentIds()).toHaveLength(8)
+    expect(await experimentIds()).toHaveLength(13)
     const row = await rowOf("reply_noninferior_mistral")
     expect(row.textContent).toContain("not worse")
     expect(row.textContent).toContain("support_case · polish")
     expect(row.textContent).toContain("gpt → mistral")
     expect(row.textContent).toContain("confirmedholdout")
-    expect(row.textContent).toContain("2 series · $1.79")
+    expect(row.textContent).toMatch(/2 series · \$0\.\d\d$/)
     expect((await rowOf("intent_split_long_messages")).textContent).toContain("arm one_step")
     expect((await rowOf("critique_planted_defects")).textContent).toContain("signaldev")
     expect((await rowOf("reply_look")).textContent).toContain("no series")
     expect((await rowOf("reply_overpromise_risk")).textContent).toContain("AWAITING APPROVAL")
     expect((await rowOf("intent_escalation_agents")).textContent).toContain("deepseek → qwen, gpt")
+    expect((await rowOf("intent_escalation_agents")).textContent).toContain("arm escalation · escalate")
   })
 
   it("filters by flow, question and failure mode through the address", async () => {
@@ -48,7 +49,12 @@ describe("ResearchScreen", () => {
       expect(router.state.location.search).toEqual({ flow: "judge_panel" })
     })
     await waitFor(async () => {
-      expect(await experimentIds()).toEqual(["Open experiment judge_panel_agents", "Open experiment panel_single_judge"])
+      expect(await experimentIds()).toEqual([
+        "Open experiment judge_panel_agents",
+        "Open experiment panel_aa_noise",
+        "Open experiment panel_failure_scan",
+        "Open experiment panel_single_judge",
+      ])
     })
     fireEvent.change(screen.getByRole("combobox", { name: "Question" }), { target: { value: "compare" } })
     await waitFor(() => {
@@ -60,7 +66,7 @@ describe("ResearchScreen", () => {
     await waitFor(() => {
       expect(router.state.location.search).toEqual({})
     })
-    expect(await experimentIds()).toHaveLength(8)
+    expect(await experimentIds()).toHaveLength(13)
   })
 
   it("offers the failure modes of the project in the filter", async () => {
@@ -68,7 +74,12 @@ describe("ResearchScreen", () => {
     await table()
     const options = within(screen.getByRole("combobox", { name: "Failure mode" })).getAllByRole("option")
     expect(options.map((option) => option.textContent)).toEqual(["all", "intent_misread", "judge_misses_defect", "overpromise", "panel_wrong_winner", "reply_quality"])
-    expect(await experimentIds()).toEqual(["Open experiment critique_planted_defects", "Open experiment reply_overpromise_risk"])
+    expect(await experimentIds()).toEqual([
+      "Open experiment critique_planted_defects",
+      "Open experiment critique_recall_by_agent",
+      "Open experiment reply_overpromise_risk",
+      "Open experiment reply_stage_budget",
+    ])
   })
 
   it("opens an experiment from its row", async () => {

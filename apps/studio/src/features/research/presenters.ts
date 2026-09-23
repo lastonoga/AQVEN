@@ -3,6 +3,7 @@ import type {
   CheckSource,
   CompareQuestion,
   EstimateReason,
+  ExperimentDetail,
   ExperimentFilter,
   ExperimentQuestion,
   ExperimentSubject,
@@ -72,7 +73,13 @@ export type QuestionCopy = {
   readonly builtin: BuiltinNames
 }
 
-type ReasonValues = { readonly cases: number; readonly recommended: number; readonly halfWidth: string; readonly margin: string }
+type ReasonValues = {
+  readonly cases: number
+  readonly recommended: number
+  readonly available: number
+  readonly halfWidth: string
+  readonly margin: string
+}
 
 export type ReasonCopy = { readonly [K in EstimateReason]: (values: ReasonValues) => string }
 
@@ -87,6 +94,7 @@ export type SourceCopy = {
   readonly builtin: (use: string, fields: string) => string
   readonly builtinAll: (use: string) => string
   readonly judge: (inference: string, agent: string, model: string) => string
+  readonly judgeAgentless: (inference: string) => string
 }
 
 export type FilterPatch = { readonly [K in keyof ExperimentFilter]?: ExperimentFilter[K] | null }
@@ -174,7 +182,7 @@ export const assignmentRows = (variants: readonly ExperimentVariant[]): readonly
 
 export const sourceDetail = (source: CheckSource, copy: SourceCopy): string => {
   if (source.kind === "code") return source.ref
-  if (source.kind === "judge") return copy.judge(source.inference, source.agent.id, source.agent.model)
+  if (source.kind === "judge") return source.agent === null ? copy.judgeAgentless(source.inference) : copy.judge(source.inference, source.agent.id, source.agent.model)
   if (source.fields.length === 0) return copy.builtinAll(source.use)
   return copy.builtin(source.use, source.fields.join(LIST_SEPARATOR))
 }
@@ -229,6 +237,7 @@ export const launchReason = (estimate: LaunchEstimate, metrics: readonly MetricC
   return copy[estimate.recommended.reason]({
     cases: estimate.request.cases,
     recommended: estimate.recommended.cases,
+    available: estimate.available,
     halfWidth: estimate.halfWidth === null ? "" : marginText(estimate.halfWidth, unit, relative),
     margin: estimate.margin === null ? "" : marginText(estimate.margin, unit, relative),
   })
@@ -256,6 +265,17 @@ export const shortfallOf = (estimate: LaunchEstimate): "below" | "belowAvailable
   if (!estimate.belowRecommended) return null
   return estimate.recommended.cases > estimate.available ? "belowAvailable" : "below"
 }
+
+export const availableOn = (experiment: Pick<ExperimentDetail, "cases">, on: SeriesSplit): number => experiment.cases.splits[on]
+
+export const plannedCases = (experiment: Pick<ExperimentDetail, "cases" | "plan">, on: SeriesSplit): number =>
+  Math.min(experiment.plan.cases ?? experiment.cases.selected, availableOn(experiment, on))
+
+export const planLaunch = (experiment: Pick<ExperimentDetail, "cases" | "plan">): LaunchRequest => ({
+  on: "dev",
+  cases: plannedCases(experiment, "dev"),
+  repeats: experiment.plan.repeats,
+})
 
 export const draftOf = (request: LaunchRequest): LaunchDraft => ({ on: request.on, cases: String(request.cases), repeats: String(request.repeats) })
 

@@ -3,14 +3,14 @@ import { Link } from "@tanstack/react-router"
 import { ChevronRight } from "lucide-react"
 import { useTranslations } from "use-intl"
 import { cn } from "cn"
-import type { FlowId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, VariantId } from "@/domain"
+import type { SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, VariantId } from "@/domain"
 import { ChoiceLink, ChoiceList, Empty, Matrix, Surface, Tag, Text, type MatrixField } from "@/components/studio"
 import { runRef, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { ResearchSection } from "./layout"
 import { metricValue } from "./metrics"
 import { tagPairs } from "./presenters"
-import { CASE_FILTER_KEYS, failedChecksOf, hasFilter, hasFinished, orderedAttempts, tallyOf, tallyTone, toggledFilter, waitingOf, type CaseFilterKey } from "./series-presenters"
+import { CASE_FILTER_KEYS, failedChecksOf, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, tallyOf, tallyTone, toggledFilter, type CaseFilterKey } from "./series-presenters"
 import { OUTCOME_TONE } from "./tones"
 
 export type SeriesCasesProps = {
@@ -55,22 +55,27 @@ function CaseFilters({ series, filter }: { readonly series: SeriesDetail; readon
   )
 }
 
-function RunCell({ flow, attempt }: { readonly flow: FlowId | null; readonly attempt: SeriesAttempt }) {
+function RunCell({ attempt }: { readonly attempt: SeriesAttempt }) {
   const t = useTranslations("research.series.cases")
   const ref = runRef(attempt.run)
-  if (flow === null) {
-    return (
-      <Text role="cell" tone="neutral" title={t("armRun")}>
-        {ref}
-      </Text>
-    )
-  }
   return (
     <Text role="link" tone="default" asChild>
-      <Link to={ROUTE_PATH.runs} params={{ flowId: flow }} search={{ run: attempt.run }} aria-label={t("openRun", { ref })}>
+      <Link to={ROUTE_PATH.run} params={{ runId: attempt.run }} aria-label={t("openRun", { ref })}>
         {ref}
       </Link>
     </Text>
+  )
+}
+
+function AttemptProblems({ attempt }: { readonly attempt: SeriesAttempt }) {
+  if (attempt.error === null) return <CheckTags checks={attempt.failedChecks} />
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      {attempt.failedChecks.length === 0 ? null : <CheckTags checks={attempt.failedChecks} />}
+      <Text as="div" role="small" tone="destructive" className="wrap-anywhere">
+        {attempt.error}
+      </Text>
+    </div>
   )
 }
 
@@ -93,7 +98,7 @@ function CheckTags({ checks }: { readonly checks: readonly string[] }) {
   )
 }
 
-function useAttemptFields(flow: FlowId | null): readonly MatrixField<SeriesAttempt>[] {
+function useAttemptFields(): readonly MatrixField<SeriesAttempt>[] {
   const t = useTranslations("research")
   return [
     {
@@ -117,22 +122,22 @@ function useAttemptFields(flow: FlowId | null): readonly MatrixField<SeriesAttem
         </Tag>
       ),
     },
-    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(120px,1fr)", render: (attempt) => <CheckTags checks={attempt.failedChecks} /> },
+    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(160px,1.4fr)", render: (attempt) => <AttemptProblems attempt={attempt} /> },
     { id: "usd", label: t("series.cases.attempt.usd"), track: "80px", align: "end", render: (attempt) => <Text role="cell">{usd(attempt.usd, 4)}</Text> },
     {
       id: "latency",
       label: t("series.cases.attempt.latency"),
       track: "80px",
       align: "end",
-      render: (attempt) => <Text role="cell">{attempt.outcome === "waiting" ? EMPTY_MARK : metricValue(attempt.latencyMs, "ms")}</Text>,
+      render: (attempt) => <Text role="cell">{isPending(attempt.outcome) ? EMPTY_MARK : metricValue(attempt.latencyMs, "ms")}</Text>,
     },
-    { id: "run", label: t("series.cases.attempt.run"), track: "96px", render: (attempt) => <RunCell flow={flow} attempt={attempt} /> },
+    { id: "run", label: t("series.cases.attempt.run"), track: "96px", render: (attempt) => <RunCell attempt={attempt} /> },
   ]
 }
 
 function AttemptsTable({ row, series }: { readonly row: SeriesCaseRow; readonly series: SeriesDetail }) {
   const t = useTranslations("research.series.cases")
-  const fields = useAttemptFields(series.flow)
+  const fields = useAttemptFields()
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
@@ -147,24 +152,39 @@ function AttemptsTable({ row, series }: { readonly row: SeriesCaseRow; readonly 
   )
 }
 
+function PendingTag({ row, variant }: { readonly row: SeriesCaseRow; readonly variant: VariantId }) {
+  const t = useTranslations("research.series.cases")
+  const waiting = pendingOf(row, variant, "waiting")
+  const running = pendingOf(row, variant, "running")
+  if (waiting > 0) {
+    return (
+      <Tag size="xs" tone={OUTCOME_TONE.waiting}>
+        {t("waiting", { count: waiting })}
+      </Tag>
+    )
+  }
+  if (running > 0) {
+    return (
+      <Tag size="xs" tone={OUTCOME_TONE.running}>
+        {t("running", { count: running })}
+      </Tag>
+    )
+  }
+  return (
+    <Text role="cell" tone="neutral">
+      {t("noAttempts")}
+    </Text>
+  )
+}
+
 function Tally({ row, variant }: { readonly row: SeriesCaseRow; readonly variant: VariantId }) {
   const t = useTranslations("research.series.cases")
   const tally = tallyOf(row, variant)
-  const waiting = waitingOf(row, variant)
-  if (waiting > 0 && (tally === null || tally.total === 0)) {
-    return (
-      <div className="min-w-0">
-        <Tag size="xs" tone={OUTCOME_TONE.waiting}>
-          {t("waiting", { count: waiting })}
-        </Tag>
-      </div>
-    )
-  }
   if (tally === null || tally.total === 0) {
     return (
-      <Text role="cell" tone="neutral">
-        {t("noAttempts")}
-      </Text>
+      <div className="min-w-0">
+        <PendingTag row={row} variant={variant} />
+      </div>
     )
   }
   return (

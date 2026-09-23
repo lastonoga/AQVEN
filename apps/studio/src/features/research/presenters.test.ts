@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { ExperimentQuestion, LaunchEstimate, MetricColumn } from "@/domain"
 import * as ids from "@/data/ids"
-import { intervalText, marginText, metricName, metricValue } from "./metrics"
+import { intervalText, marginText, metricName, metricValue, signedValue } from "./metrics"
 import {
   activeSeries,
   assignmentRows,
@@ -11,6 +11,8 @@ import {
   guardrailSentences,
   latestBadge,
   launchReason,
+  planLaunch,
+  plannedCases,
   questionSentence,
   shortfallOf,
   sourceDetail,
@@ -46,6 +48,8 @@ const REASON: ReasonCopy = {
   wide: (values) => `wide ${String(values.cases)} ±${values.halfWidth} > ${values.margin}, need ${String(values.recommended)}`,
   enough: (values) => `enough ±${values.halfWidth} < ${values.margin}`,
   no_margin: (values) => `plan ${String(values.recommended)}`,
+  no_history: (values) => `no history, plan ${String(values.recommended)}`,
+  short_of_cases: (values) => `need ${String(values.recommended)} of ${String(values.available)} within ${values.margin}`,
 }
 
 const column = (id: MetricColumn["id"], role: MetricColumn["role"], unit: MetricColumn["unit"], margin: number | null = null, relative = false): MetricColumn => ({
@@ -79,9 +83,10 @@ const estimate = (fields: Partial<LaunchEstimate>): LaunchEstimate => ({
   available: 12,
   halfWidth: 0.12,
   margin: 0.05,
-  recommended: { cases: 65, reason: "wide" },
+  recommended: { cases: 65, repeats: 3, reason: "wide" },
   belowRecommended: true,
   needsApproval: false,
+  capUsd: 1,
   ...fields,
 })
 
@@ -158,14 +163,16 @@ describe("the question in plain words", () => {
 describe("launch", () => {
   it("explains the recommended number of cases by its reason", () => {
     expect(launchReason(estimate({}), METRICS, REASON)).toBe("wide 12 ±0.12 > 0.05, need 65")
-    expect(launchReason(estimate({ halfWidth: 0.04, recommended: { cases: 12, reason: "enough" } }), METRICS, REASON)).toBe("enough ±0.04 < 0.05")
-    expect(launchReason(estimate({ halfWidth: null, margin: null, recommended: { cases: 5, reason: "look" } }), [], REASON)).toBe("look")
-    expect(launchReason(estimate({ recommended: { cases: 8, reason: "no_margin" } }), METRICS, REASON)).toBe("plan 8")
+    expect(launchReason(estimate({ halfWidth: 0.04, recommended: { cases: 12, repeats: 3, reason: "enough" } }), METRICS, REASON)).toBe("enough ±0.04 < 0.05")
+    expect(launchReason(estimate({ halfWidth: null, margin: null, recommended: { cases: 5, repeats: 1, reason: "look" } }), [], REASON)).toBe("look")
+    expect(launchReason(estimate({ recommended: { cases: 8, repeats: 3, reason: "no_margin" } }), METRICS, REASON)).toBe("plan 8")
+    expect(launchReason(estimate({ recommended: { cases: 8, repeats: 3, reason: "no_history" } }), METRICS, REASON)).toBe("no history, plan 8")
+    expect(launchReason(estimate({ available: 6, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } }), METRICS, REASON)).toBe("need 52 of 6 within 0.05")
   })
 
   it("warns below the recommendation and says when the selection is too small for it", () => {
     expect(shortfallOf(estimate({}))).toBe("belowAvailable")
-    expect(shortfallOf(estimate({ recommended: { cases: 10, reason: "wide" }, request: { on: "dev", cases: 8, repeats: 3 } }))).toBe("below")
+    expect(shortfallOf(estimate({ recommended: { cases: 10, repeats: 3, reason: "wide" }, request: { on: "dev", cases: 8, repeats: 3 } }))).toBe("below")
     expect(shortfallOf(estimate({ belowRecommended: false }))).toBeNull()
   })
 
@@ -174,6 +181,16 @@ describe("launch", () => {
     expect(checkLaunch({ on: "dev", cases: "0", repeats: "3" }, 12)).toEqual({ kind: "invalid", problems: ["cases"] })
     expect(checkLaunch({ on: "dev", cases: "13", repeats: "21" }, 12)).toEqual({ kind: "invalid", problems: ["cases", "repeats"] })
     expect(checkLaunch({ on: "dev", cases: "2.5", repeats: "" }, 12)).toEqual({ kind: "invalid", problems: ["cases", "repeats"] })
+  })
+
+  it("plans the launch within the cases the split holds", () => {
+    const experiment = {
+      cases: { dataset: ids.datasetId("support_case_cases"), flow: ids.flowId("support_case"), tags: {}, selected: 12, total: 12, splits: { dev: 6, holdout: 4 } },
+      plan: { cases: 12, repeats: 3 },
+    }
+    expect(planLaunch(experiment)).toEqual({ on: "dev", cases: 6, repeats: 3 })
+    expect(plannedCases(experiment, "holdout")).toBe(4)
+    expect(plannedCases({ ...experiment, plan: { cases: 2, repeats: 1 } }, "dev")).toBe(2)
   })
 
   it("finds the series that is still active", () => {
@@ -201,11 +218,17 @@ describe("what the experiment runs and measures", () => {
   })
 
   it("describes where each check comes from", () => {
-    const copy = { builtin: (use: string, fields: string) => `${use} on ${fields}`, builtinAll: (use: string) => `${use} on all`, judge: (inference: string, agent: string, model: string) => `${inference} by ${agent} (${model})` }
+    const copy = {
+      builtin: (use: string, fields: string) => `${use} on ${fields}`,
+      builtinAll: (use: string) => `${use} on all`,
+      judge: (inference: string, agent: string, model: string) => `${inference} by ${agent} (${model})`,
+      judgeAgentless: (inference: string) => `${inference} by an unknown agent`,
+    }
     expect(sourceDetail({ kind: "builtin", use: "expected", fields: ["intent", "reply"] }, copy)).toBe("expected on intent, reply")
     expect(sourceDetail({ kind: "builtin", use: "expected", fields: [] }, copy)).toBe("expected on all")
     expect(sourceDetail({ kind: "code", ref: "@root.code.support_case:promises" }, copy)).toBe("@root.code.support_case:promises")
     expect(sourceDetail({ kind: "judge", inference: "critique", agent: { id: ids.agentId("deepseek"), model: "m1" }, validatedBy: null }, copy)).toBe("critique by deepseek (m1)")
+    expect(sourceDetail({ kind: "judge", inference: "critique", agent: null, validatedBy: null }, copy)).toBe("critique by an unknown agent")
   })
 })
 
@@ -218,6 +241,8 @@ describe("metric values", () => {
     expect(marginText(0.2, "usd", true)).toBe("20%")
     expect(marginText(0.05, "score", false)).toBe("0.05")
     expect(intervalText(0.75, 0.82, "score")).toBe("0.75–0.82")
+    expect(signedValue(-0.02, "score")).toBe("−0.02")
+    expect(signedValue(0.1, "rate")).toBe("+0.10")
     expect(metricName("infra_error_rate", (metric) => `builtin:${metric}`)).toBe("builtin:infra_error_rate")
     expect(metricName(ids.checkId("critique"), (metric) => `builtin:${metric}`)).toBe("critique")
   })
