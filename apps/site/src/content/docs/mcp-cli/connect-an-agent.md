@@ -5,8 +5,8 @@ description: Connect a coding agent to AQVEN as an MCP server, either through th
 
 ## What you'll have at the end
 
-A coding agent connected to this AQVEN project with the same 18 tools Studio's own chat calls: check
-and test the project, edit a flow's structure, start and follow runs, run datasets and evals, and
+A coding agent connected to this AQVEN project with the same 16 tools Studio's own chat calls: check
+and test the project, edit a flow's structure, start and follow runs, run experiments as series, and
 preview a prompt.
 
 ## Before you start
@@ -31,7 +31,7 @@ claude mcp add --scope project aqven -- uv run aqven mcp
 
 This is the exact command shown in Studio's own **MCP connections** panel (see
 [How to check Studio's settings](/studio/settings/)). Run it once from the project folder in an
-ordinary terminal, and that Claude Code session gets the same 18 tools Studio's chat already calls.
+ordinary terminal, and that Claude Code session gets the same 16 tools Studio's chat already calls.
 
 Any other agent that starts an MCP server over stdio can use `{{CLI_COMMAND}} mcp` the same way —
 point its MCP config at that command, run from the project folder.

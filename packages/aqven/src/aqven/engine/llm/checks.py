@@ -1,28 +1,31 @@
-import inspect
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Final, Protocol, assert_never, get_type_hints
+from typing import Final, Protocol, assert_never
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from pydantic_ai import ModelRetry, RunContext
 from pydantic_ai.usage import RunUsage
 
+from aqven.engine.checking import (
+    CheckDefinition,
+    CheckExecutor,
+    CheckInvalid,
+    CheckResult,
+    CheckSubject,
+    JudgeReply,
+    JudgeRequest,
+    LoaderFunctions,
+)
 from aqven.engine.llm.context import RunDeps
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.failures import CHECK_FAILED, MODEL_SCHEMA_MISMATCH, GuardFailure
 from aqven.engine.llm.ports import CodeLoader
-from aqven.ir import BuiltinEvaluator, CodeEvaluator, CompiledCheck, JudgeEvaluator
-from aqven.ir.common import JsonParams
-from aqven.policies import EvalContext, Slot, Verdict, builtin
-from aqven.policies.paths import number, text
+from aqven.ir import BuiltinEvaluator, CodeEvaluator, CompiledCheck, CompiledEvaluator, JudgeEvaluator
 from aqven.ports.execution import ExecutionScope
 from aqven.runtime.address import JsonObject, Problem
 from aqven.runtime.executions import CheckOutcome
-from aqven.spec import AgentId, InferenceId, OnFail
+from aqven.spec import AgentId, InferenceId, MetricKind, OnFail
 
-SCORE_FIELD: Final = "score"
-RATIONALE_FIELD: Final = "rationale"
-RETURN_HINT: Final = "return"
 RETRY_SEPARATOR: Final = "\n"
 ALLOWED_SET_VIOLATION: Final = "value_not_allowed"
 ALLOWED_SET_ACTION: Final = "tighten the prompt or widen the allowed set"
@@ -82,6 +85,38 @@ def check_failure(outcome: CheckOutcome) -> GuardFailure:
     )
 
 
+def runtime_definition(check: CompiledCheck) -> CheckDefinition:
+    evaluator = check.evaluator
+    match evaluator:
+        case BuiltinEvaluator() | CodeEvaluator():
+            return CheckDefinition(check_id=check.name, kind=MetricKind.BINARY, evaluator=evaluator)
+        case JudgeEvaluator():
+            return CheckDefinition(
+                check_id=check.name, kind=MetricKind.CONTINUOUS, evaluator=evaluator, threshold=check.threshold
+            )
+        case _:
+            assert_never(evaluator)
+
+
+def runtime_feedback(evaluator: CompiledEvaluator, result: CheckResult) -> str | None:
+    if result.passed and isinstance(evaluator, JudgeEvaluator):
+        return None
+    return result.reason
+
+
+@dataclass(frozen=True, slots=True)
+class NestedJudges:
+    nested: NestedInferences
+    scope: ExecutionScope
+    usage: RunUsage
+
+    async def judge(self, request: JudgeRequest) -> JudgeReply:
+        judge = self.scope.project.inference(request.inference)
+        inputs = {field.name: request.document.get(field.name) for field in judge.input_fields}
+        verdict = await self.nested.run(self.scope, request.agent, request.inference, inputs, self.usage)
+        return JudgeReply(output=verdict)
+
+
 @dataclass(frozen=True, slots=True)
 class OutputGuard:
     code: CodeLoader
@@ -97,10 +132,19 @@ class OutputGuard:
         if violations:
             deps.guard_failures[attempt] = allowed_set_failure(violations)
             raise ModelRetry(RETRY_SEPARATOR.join(violations))
+        executor = CheckExecutor(
+            code=LoaderFunctions(self.code), judges=NestedJudges(self.nested, deps.scope, ctx.usage)
+        )
+        subject = CheckSubject(output=output, inputs=deps.inputs, attempt=attempt)
+        judge_document = {**deps.document, **document}
         for check in deps.inference.checks:
-            verdict = await self._verdict(check, output, document, ctx)
+            result = await _checked(executor, runtime_definition(check), subject, judge_document)
             outcome = CheckOutcome(
-                check=check.name, on_fail=check.on_fail, passed=verdict.passed, feedback=verdict.reason, attempt=attempt
+                check=check.name,
+                on_fail=check.on_fail,
+                passed=result.passed,
+                feedback=runtime_feedback(check.evaluator, result),
+                attempt=attempt,
             )
             deps.checks.append(outcome)
             if not outcome.passed:
@@ -108,67 +152,11 @@ class OutputGuard:
             ON_FAIL[check.on_fail](outcome)
         return output
 
-    async def _verdict(
-        self, check: CompiledCheck, output: BaseModel, document: JsonObject, ctx: RunContext[RunDeps]
-    ) -> Verdict:
-        evaluator = check.evaluator
-        context = EvalContext[BaseModel, BaseModel](inputs=ctx.deps.inputs, attempt=ctx.deps.attempt(ctx.run_step))
-        match evaluator:
-            case BuiltinEvaluator():
-                function = builtin(Slot.EVALUATOR, evaluator.use)
-                return await _evaluate(f"use: {evaluator.use}", function, output, context, evaluator.params)
-            case CodeEvaluator():
-                function = self.code.load(evaluator.run)
-                return await _evaluate(evaluator.run, function, output, context, evaluator.params)
-            case JudgeEvaluator():
-                return await self._judge(check, evaluator, document, ctx)
-            case _:
-                assert_never(evaluator)
 
-    async def _judge(
-        self, check: CompiledCheck, evaluator: JudgeEvaluator, document: JsonObject, ctx: RunContext[RunDeps]
-    ) -> Verdict:
-        deps = ctx.deps
-        judge = deps.scope.project.inference(evaluator.inference)
-        known = {**deps.document, **document}
-        inputs = {field.name: known.get(field.name) for field in judge.input_fields}
-        verdict = await self.nested.run(deps.scope, evaluator.agent, evaluator.inference, inputs, ctx.usage)
-        score = number(verdict.get(SCORE_FIELD))
-        if score is None:
-            return Verdict(passed=False, reason=f"judge {evaluator.inference} returned no numeric {SCORE_FIELD}")
-        passed = check.threshold is None or score >= check.threshold
-        reason = text(verdict.get(RATIONALE_FIELD)) or f"{SCORE_FIELD} {score} is below the threshold {check.threshold}"
-        return Verdict(passed=passed, score=score, reason=None if passed else reason)
-
-
-async def _evaluate(
-    label: str,
-    function: object,
-    output: BaseModel,
-    context: EvalContext[BaseModel, BaseModel],
-    params: JsonParams,
-) -> Verdict:
-    if function is None or not callable(function):
-        raise LlmNodeError(LlmFailureCode.CODE_INVALID, f"evaluator {label} is not found or is not a function")
-    arguments = _params(label, function, params)
-    result = function(output, context, arguments)
-    verdict = await result if inspect.isawaitable(result) else result
-    if not isinstance(verdict, Verdict):
-        raise LlmNodeError(LlmFailureCode.CODE_INVALID, f"evaluator {label} did not return a Verdict")
-    return verdict
-
-
-def _params(label: str, function: Callable[..., object], params: JsonParams) -> BaseModel:
-    names = list(inspect.signature(function).parameters)
-    hints = get_type_hints(function)
-    model = hints.get(names[-1]) if names else None
-    if not isinstance(model, type) or not issubclass(model, BaseModel):
-        raise LlmNodeError(
-            LlmFailureCode.CODE_INVALID, f"evaluator {label}: the last parameter is not a parameters model"
-        )
+async def _checked(
+    executor: CheckExecutor, check: CheckDefinition, subject: CheckSubject, judge_document: JsonObject
+) -> CheckResult:
     try:
-        return model.model_validate(params)
-    except ValidationError as error:
-        raise LlmNodeError(
-            LlmFailureCode.CODE_INVALID, f"evaluator {label}: with parameters are invalid: {error}"
-        ) from error
+        return await executor.run(check, subject, judge_document)
+    except CheckInvalid as error:
+        raise LlmNodeError(LlmFailureCode.CODE_INVALID, error.reason) from error

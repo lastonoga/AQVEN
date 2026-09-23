@@ -15,12 +15,12 @@ from pydantic_ai import (
     ToolDenied,
     capture_run_messages,
 )
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ToolCallPart
+from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ModelResponse, ToolCallPart
 from pydantic_ai.run import AgentRunResult
 from pydantic_ai.usage import RunUsage
 
 from aqven.engine.llm.adapters import EnvironmentSecrets, ImportCodeLoader, InlineSteps, UrlMediaLoader
-from aqven.engine.llm.agents import InferenceAgents, InferenceCall, PreparedRun, response_cost, response_count
+from aqven.engine.llm.agents import InferenceAgents, InferenceCall, PreparedRun, response_count
 from aqven.engine.llm.allowed import DEFAULT_MAX_ENUM
 from aqven.engine.llm.dynamic import TypeAnnotations
 from aqven.engine.llm.errors import FAILURE_BY_EXCEPTION, LlmFailureCode, LlmNodeError, abandon_cause, failure_code
@@ -56,6 +56,7 @@ from aqven.engine.llm.telemetry import report_attempt_failure, report_node_failu
 from aqven.engine.llm.tools import ExternalTools, McpServers
 from aqven.ir import CompiledLlmNode
 from aqven.models.declared import declared_model_ref
+from aqven.models.usage import UsageLog, node_usage_log
 from aqven.ports.execution import (
     EventStamp,
     ExecutionScope,
@@ -118,18 +119,24 @@ class LlmSegmentRunner:
         return prepared.deps.shaped.model.model_validate(document)
 
     async def run(self, node: CompiledLlmNode, scope: ExecutionScope, state: SegmentState) -> SegmentResult:
+        with node_usage_log() as log:
+            return await self._guarded(node, scope, state, log)
+
+    async def _guarded(
+        self, node: CompiledLlmNode, scope: ExecutionScope, state: SegmentState, log: UsageLog
+    ) -> SegmentResult:
         usage = RunUsage()
         try:
-            return await self._run(node, scope, state, usage)
+            return await self._run(node, scope, state, usage, log)
         except Exception as error:
             code = failure_code(error, self.failures)
             if code is None:
                 raise
             failed = SegmentFailed(code=code, message=str(error))
-            return SegmentResult(outcome=failed, usage=_node_usage(usage, ()))
+            return SegmentResult(outcome=failed, usage=_node_usage(usage, log))
 
     async def _run(
-        self, node: CompiledLlmNode, scope: ExecutionScope, state: SegmentState, usage: RunUsage
+        self, node: CompiledLlmNode, scope: ExecutionScope, state: SegmentState, usage: RunUsage, log: UsageLog
     ) -> SegmentResult:
         call = InferenceCall(node.agent, node.inference, node.output_mode, node.limits)
         bound = scope.bind(node.inputs)
@@ -178,7 +185,8 @@ class LlmSegmentRunner:
                 await _emit_checks(scope, prepared.deps.checks)
                 if code is None:
                     raise
-                return _failed_segment(scope.address, analysis, error, code, usage)
+                failed = FailedCall(error, code, _last_model(captured[base:]), _node_usage(usage, log))
+                return _failed_segment(scope.address, analysis, failed)
         await sink.flush()
         await _emit_checks(scope, prepared.deps.checks)
         analysis.collect(result.all_messages(), base, state.attempt_offset)
@@ -187,7 +195,7 @@ class LlmSegmentRunner:
         output = await self.output_of(scope, prepared, result.output)
         outcome = _outcome(output, result, prepared, state.attempt_offset + attempts)
         failures = _attempt_failures(scope.address, analysis, exhausted=False)
-        return SegmentResult(outcome=outcome, usage=_node_usage(usage, messages), attempts=attempts, failures=failures)
+        return SegmentResult(outcome=outcome, usage=_node_usage(usage, log), attempts=attempts, failures=failures)
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,7 +232,7 @@ class LlmNodeExecutor:
                         hint=outcome.hint,
                         details=outcome.details,
                     )
-                    return NodeFailed(error=error, usage=usage)
+                    return NodeFailed(error=error, usage=usage, model=outcome.model)
                 case SegmentDeferred():
                     state = await self._resume(node, scope, state, result, outcome)
                 case _:
@@ -312,15 +320,30 @@ def _attempt_failures(
     return failures
 
 
-def _failed_segment(
-    address: ExecutionAddress, analysis: FailureAnalysis, error: Exception, code: LlmFailureCode, usage: RunUsage
-) -> SegmentResult:
+@dataclass(frozen=True, slots=True)
+class FailedCall:
+    error: Exception
+    code: LlmFailureCode
+    model: str | None
+    usage: NodeUsage
+
+
+def _failed_segment(address: ExecutionAddress, analysis: FailureAnalysis, call: FailedCall) -> SegmentResult:
     failures = _attempt_failures(address, analysis, exhausted=True)
-    final = analysis.final_error(error, code, str(error))
+    final = analysis.final_error(call.error, call.code, str(call.error))
     if final.hint is not None:
         report_node_failure(address, final.code, final.message, final.hint, final.details)
-    failed = SegmentFailed(code=final.code, message=final.message, hint=final.hint, details=final.details)
-    return SegmentResult(outcome=failed, usage=_node_usage(usage, ()), failures=failures)
+    failed = SegmentFailed(
+        code=final.code, message=final.message, hint=final.hint, details=final.details, model=call.model
+    )
+    return SegmentResult(outcome=failed, usage=call.usage, failures=failures)
+
+
+def _last_model(messages: Sequence[ModelMessage]) -> str | None:
+    response = next((item for item in reversed(messages) if isinstance(item, ModelResponse)), None)
+    if response is None:
+        return None
+    return declared_model_ref(response) or response.model_name
 
 
 async def _emit_failures(scope: ExecutionScope, failures: Sequence[AttemptFailure]) -> None:
@@ -359,9 +382,7 @@ def _captured_prompt_event(address: ExecutionAddress, prompt: PromptTrace, stamp
     return InferencePromptCaptured(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, prompt=prompt)
 
 
-def _captured_checks_event(
-    address: ExecutionAddress, checks: tuple[CheckOutcome, ...], stamp: EventStamp
-) -> RunEvent:
+def _captured_checks_event(address: ExecutionAddress, checks: tuple[CheckOutcome, ...], stamp: EventStamp) -> RunEvent:
     return InferenceChecksCaptured(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, checks=checks)
 
 
@@ -440,9 +461,9 @@ def _outcome(
     )
 
 
-def _node_usage(usage: RunUsage, messages: Sequence[ModelMessage]) -> NodeUsage:
+def _node_usage(usage: RunUsage, log: UsageLog) -> NodeUsage:
     return NodeUsage(
-        cost_usd=response_cost(messages),
+        cost_usd=log.total_cost(),
         tokens_in=usage.input_tokens,
         tokens_out=usage.output_tokens,
         requests=usage.requests,

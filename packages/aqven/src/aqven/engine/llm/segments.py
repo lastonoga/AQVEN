@@ -60,6 +60,7 @@ class SegmentFailed(ResourceModel):
     message: str
     hint: str | None = None
     details: ModelErrorDetails | None = None
+    model: str | None = None
 
 
 class AttemptFailure(ResourceModel):

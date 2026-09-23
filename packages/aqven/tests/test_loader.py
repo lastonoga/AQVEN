@@ -212,6 +212,16 @@ def test_empty_flow_sequence_is_allowed_as_the_only_empty_list_spelling() -> Non
     assert any(problem.code == DiagnosticCode.E_YAML_FLOW_STYLE for problem in nonempty_problems)
 
 
+def test_empty_flow_mapping_is_allowed_as_the_only_empty_mapping_spelling() -> None:
+    document, problems = read_strict_yaml('agents: {}\nmodels:\n- "openai:gpt-5.4-mini"\n', "finding.yaml")
+
+    assert document is not None and not problems
+    assert document.data == {"agents": {}, "models": ["openai:gpt-5.4-mini"]}
+
+    _, nonempty_problems = read_strict_yaml('agents: {revise: "mistral"}\n', "finding.yaml")
+    assert [problem.code for problem in nonempty_problems] == [DiagnosticCode.E_YAML_FLOW_STYLE]
+
+
 @pytest.mark.parametrize("path", list(ENTITY_IDS), ids=list(ENTITY_IDS))
 def test_ids_come_from_file_name_up_to_the_first_dot_or_the_flow_folder(path: str) -> None:
     assert (entity_id(path), expected_kind(path)) == ENTITY_IDS[path]

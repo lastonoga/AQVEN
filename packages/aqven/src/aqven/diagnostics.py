@@ -120,6 +120,8 @@ class DiagnosticCode(StrEnum):
     E_CASE_DUPLICATE = "E_CASE_DUPLICATE"
     E_CASES_EMPTY = "E_CASES_EMPTY"
     E_EXPECTED_MISSING = "E_EXPECTED_MISSING"
+    E_CHECK_PATH_UNKNOWN = "E_CHECK_PATH_UNKNOWN"
+    E_FINDING_TAMPERED = "E_FINDING_TAMPERED"
     W_PROMPT_SHADOWED = "W_PROMPT_SHADOWED"
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
@@ -129,6 +131,9 @@ class DiagnosticCode(StrEnum):
     W_TOOL_ARG_UNREACHABLE = "W_TOOL_ARG_UNREACHABLE"
     W_CONTEXT_KEY_UNUSED = "W_CONTEXT_KEY_UNUSED"
     W_PLAN_EXCEEDS_CASES = "W_PLAN_EXCEEDS_CASES"
+    W_CHECK_CONTEXT_MISMATCH = "W_CHECK_CONTEXT_MISMATCH"
+    W_JUDGE_INPUT_UNBOUND = "W_JUDGE_INPUT_UNBOUND"
+    W_FINDINGS_STALE = "W_FINDINGS_STALE"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -266,6 +271,30 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_PLAN_EXCEEDS_CASES: DiagnosticText(
         "experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases",
         "add cases to the dataset or lower plan.cases: a series runs each selected case at most once per repeat",
+    ),
+    DiagnosticCode.W_CHECK_CONTEXT_MISMATCH: DiagnosticText(
+        "experiment {experiment}: check {check}: {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_CHECK_PATH_UNKNOWN: DiagnosticText(
+        "experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side}",
+        "name a field of {side}: {fields}",
+    ),
+    DiagnosticCode.W_JUDGE_INPUT_UNBOUND: DiagnosticText(
+        "experiment {experiment}: judge {judge} of check {check} needs input {field}, "
+        "which no document of its scope carries in {target}",
+        "the judge binds inputs by name from $in, the outputs of the top-level nodes, $out and expected_output: "
+        "rename the input or make the field optional",
+    ),
+    DiagnosticCode.E_FINDING_TAMPERED: DiagnosticText(
+        "finding {finding} of experiment {experiment}: {problem}",
+        "a finding is written once by its series and never edited: restore the file from git "
+        "or run a new series on holdout cases",
+    ),
+    DiagnosticCode.W_FINDINGS_STALE: DiagnosticText(
+        "FINDINGS.md does not match the finding files: {problem}",
+        "FINDINGS.md is generated from experiments/*/findings/*.yaml and is not edited by hand: "
+        "restore it from git, the next finding on holdout cases rewrites it",
     ),
 }
 

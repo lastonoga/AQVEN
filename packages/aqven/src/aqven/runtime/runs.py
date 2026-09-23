@@ -90,6 +90,7 @@ class RunSummary(ResourceModel):
     selected_nodes: tuple[NodeId, ...] | None = None
     start_node: NodeId | None = None
     end_node: NodeId | None = None
+    series_id: str | None = None
 
 
 class SpecVersionInfo(ResourceModel):

@@ -39,7 +39,16 @@ from aqven.models.providers import (
 )
 from aqven.models.redaction import PatternRedactor, RedactingModel, RedactionPolicy, TextRedactor
 from aqven.models.streams import RelayedStream, StreamFirstModel, StreamRelay, drain
-from aqven.models.usage import RequestCost, UsageLog, UsageSink, UsageSource, response_cost_usd
+from aqven.models.usage import (
+    NODE_USAGE,
+    ContextUsageSink,
+    RequestCost,
+    UsageLog,
+    UsageSink,
+    UsageSource,
+    node_usage_log,
+    response_cost_usd,
+)
 
 __all__ = [
     "CASSETTE_BEHAVIORS",
@@ -47,6 +56,7 @@ __all__ = [
     "CHAIN_ORDER",
     "LIVE_BEHAVIOR",
     "MODEL_REF_METADATA",
+    "NODE_USAGE",
     "NO_REDACTION",
     "OUTCOME_GATES",
     "AmbiguousReplay",
@@ -61,6 +71,7 @@ __all__ = [
     "CassettePolicy",
     "CassetteRecording",
     "CassetteStore",
+    "ContextUsageSink",
     "DeclaredModel",
     "DirectoryCassetteStore",
     "GuardedModelFactory",
@@ -98,6 +109,7 @@ __all__ = [
     "guard_model",
     "key_variable",
     "is_transient",
+    "node_usage_log",
     "provider_factory",
     "request_key",
     "response_cost_usd",

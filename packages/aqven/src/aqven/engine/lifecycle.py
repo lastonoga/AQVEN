@@ -1,5 +1,5 @@
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import TracebackType
@@ -20,8 +20,10 @@ from aqven.engine.registry import CoreExecutors, build_executors, throttled_exec
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, OverrideBook, ToolServices
 from aqven.engine.throttle import WorkerPool
 from aqven.ports.settings import SettingsStore
+from aqven.runtime.address import JsonObject
 
 type ExtensionsFactory = Callable[[ToolServices], EngineExtensions]
+type HostWorkflow = Callable[..., Awaitable[JsonObject]]
 
 REGISTERED_WORKFLOWS: Final = (interpreter.run_flow, interpreter.run_branch)
 
@@ -43,6 +45,7 @@ class EngineSetup:
     log_level: str = DBOS_LOG_LEVEL
     state_dir: Path | None = None
     max_parallel: int | None = None
+    workflows: tuple[HostWorkflow, ...] = ()
 
 
 def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:

@@ -14,7 +14,7 @@ variants:
 checks:
 - id: "promises"
   kind: "binary"
-  run: "@root.code.support_case:promises_match_resolution"
+  run: "@root.code.support_case:reply_keeps_resolution"
 - id: "critique"
   kind: "continuous"
   inference: "critique"

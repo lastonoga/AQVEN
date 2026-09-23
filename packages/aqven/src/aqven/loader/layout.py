@@ -23,6 +23,8 @@ FLOW_FILES: Final = frozenset({"flow.yaml", "flow.yml", FLOW_BUILDER})
 EXPERIMENT_FILES: Final = frozenset({"experiment.yaml", "experiment.yml"})
 EXPERIMENT_NOTES: Final = "experiment.md"
 ARMS_FOLDER: Final = "arms"
+FINDINGS_FOLDER: Final = "findings"
+FINDINGS_FILE: Final = "FINDINGS.md"
 FOLDER_NAMED_FILES: Final = FLOW_FILES | EXPERIMENT_FILES
 FLOW_PATH_PREFIX: Final = "@flow/"
 ROOT_PATH_PREFIX: Final = "@root/"
@@ -89,6 +91,13 @@ def arm_experiment_folder(flow_folder: str) -> str | None:
     if posixpath.basename(arms) != ARMS_FOLDER:
         return None
     return posixpath.dirname(arms)
+
+
+def finding_experiment_folder(path: str) -> str | None:
+    findings = posixpath.dirname(path)
+    if posixpath.basename(findings) != FINDINGS_FOLDER:
+        return None
+    return posixpath.dirname(findings)
 
 
 def within(path: str, folder: str) -> bool:

@@ -1,5 +1,5 @@
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Mapping, Sequence
 from datetime import date
 from pathlib import Path
 from typing import Annotated, Final
@@ -10,18 +10,21 @@ from aqven.loader.aliases import AliasScope
 from aqven.loader.strict_yaml import read_strict_yaml
 from aqven.preview.samples import sample_document
 from aqven.runtime.address import RequestModel, ResourceModel
+from aqven.runtime.executions import NodeExecution
 from aqven.runtime.options import RunContext
-from aqven.runtime.runs import RunStartRequest
+from aqven.runtime.runs import RunSnapshot, RunStartRequest
+from aqven.runtime.values import InlineValue
+from aqven.series.split import splits_of
+from aqven.series.views import CaseDraft, CaseFromRunRequest
 from aqven.server.errors import ApiFailure, not_found, validation_problems
 from aqven.server.run_inputs import input_adapter
 from aqven.server.views.common import loaded_flow, loaded_project
 from aqven.server.workspace import WorkspaceState
-from aqven.spec import API_VERSION, NAME_PATTERN, DatasetCase, DatasetFile, DatasetId, FlowId
+from aqven.spec import API_VERSION, NAME_PATTERN, DatasetCase, DatasetFile, DatasetId, FlowId, NodeId, SeriesSplit
 from aqven.write import canonical_yaml
 
 DATASET_FOLDER = "datasets"
-SPLIT_KEY: Final = "split"
-UNKNOWN_SPLIT: Final = "unassigned"
+RUN_PREFIX_LENGTH: Final = 8
 
 
 class DatasetDraftRequest(RequestModel):
@@ -43,13 +46,14 @@ class DatasetSummary(ResourceModel):
     splits: dict[str, int] = {}
 
 
-def case_split(case: DatasetCase) -> str:
-    split = (case.metadata or {}).get(SPLIT_KEY)
-    return split if isinstance(split, str) else UNKNOWN_SPLIT
+def case_splits(state: WorkspaceState, dataset_id: str, cases: Sequence[DatasetCase]) -> Mapping[str, SeriesSplit]:
+    package = loaded_project(state).project.spec.package
+    return splits_of(package, DatasetId(dataset_id), [case.name for case in cases])
 
 
-def split_counts(cases: Iterable[DatasetCase]) -> dict[str, int]:
-    return dict(Counter(case_split(case) for case in cases))
+def split_counts(splits: Mapping[str, SeriesSplit]) -> dict[str, int]:
+    counted = Counter(splits.values())
+    return {split.value: counted[split] for split in SeriesSplit}
 
 
 def dataset_summaries(state: WorkspaceState) -> tuple[DatasetSummary, ...]:
@@ -60,7 +64,7 @@ def dataset_summaries(state: WorkspaceState) -> tuple[DatasetSummary, ...]:
             path=source.path,
             file_hash=source.file_hash,
             cases=len(source.spec.cases),
-            splits=split_counts(source.spec.cases),
+            splits=split_counts(case_splits(state, dataset_id, source.spec.cases)),
         )
         for dataset_id, source in sorted(loaded_project(state).datasets.items())
     )
@@ -84,12 +88,12 @@ def filtered_dataset_cases(
     state: WorkspaceState, dataset_id: str, search: str | None, split: str | None
 ) -> tuple[DatasetCase, ...]:
     cases = dataset_cases(state, dataset_id)
+    splits = case_splits(state, dataset_id, cases)
     query = search.casefold().strip() if search is not None else ""
     return tuple(
         case
         for case in cases
-        if (not query or query in case.name.casefold())
-        and (split is None or (case.metadata or {}).get("split", "unassigned") == split)
+        if (not query or query in case.name.casefold()) and (split is None or splits[case.name].value == split)
     )
 
 
@@ -133,6 +137,55 @@ def resolve_dataset_run(state: WorkspaceState, request: RunStartRequest) -> RunS
         cassette_id=request.cassette_id,
         human_answers=request.human_answers,
     )
+
+
+def run_input(snapshot: RunSnapshot) -> JsonValue:
+    reference = snapshot.input_ref
+    if not isinstance(reference, InlineValue):
+        raise ApiFailure("INPUT_INVALID", f"run {snapshot.run_id} has no inline input to copy into a case")
+    return reference.value
+
+
+def top_level_output(snapshot: RunSnapshot, execution: NodeExecution) -> JsonValue | None:
+    address = execution.address
+    nested = (address.branch_key, address.iteration, address.item_index) != (None, None, None)
+    if nested or address.node_id not in snapshot.order or not isinstance(execution.output_ref, InlineValue):
+        return None
+    return execution.output_ref.value
+
+
+def run_node_outputs(snapshot: RunSnapshot) -> dict[NodeId, JsonValue]:
+    produced = ((NodeId(item.address.node_id), top_level_output(snapshot, item)) for item in snapshot.executions)
+    return {**snapshot.node_outputs, **{node: value for node, value in produced if value is not None}}
+
+
+def run_case(snapshot: RunSnapshot, request: CaseFromRunRequest) -> DatasetCase:
+    context = None if snapshot.context is None else snapshot.context.model_dump(mode="json", exclude_none=True)
+    return DatasetCase(
+        name=request.name or f"{snapshot.flow_id}_{snapshot.run_id[:RUN_PREFIX_LENGTH]}",
+        inputs=run_input(snapshot),
+        context=context or None,
+        node_outputs=run_node_outputs(snapshot) or None,
+        expected_output=None,
+    )
+
+
+def case_from_run(
+    state: WorkspaceState, dataset_id: str, snapshot: RunSnapshot, request: CaseFromRunRequest
+) -> CaseDraft:
+    project = loaded_project(state)
+    source = project.datasets.get(DatasetId(dataset_id))
+    if source is None:
+        raise not_found(f"dataset {dataset_id} is not in the project")
+    if source.spec.flow != snapshot.flow_id:
+        holder = f"flow {source.spec.flow}" if source.spec.flow is not None else "no flow"
+        message = f"run {snapshot.run_id} ran flow {snapshot.flow_id}, but dataset {dataset_id} belongs to {holder}"
+        raise ApiFailure("INPUT_INVALID", message)
+    case = run_case(snapshot, request)
+    scope = AliasScope(state.root.name, tuple(flow.folder for flow in project.flows.values()))
+    document = case.model_dump(mode="json", by_alias=True, exclude_none=True)
+    text = canonical_yaml(source.path, document, scope).decode("utf-8")
+    return CaseDraft(dataset_id=DatasetId(dataset_id), case=case, yaml=text)
 
 
 def draft_dataset(state: WorkspaceState, request: DatasetDraftRequest) -> DatasetFile:

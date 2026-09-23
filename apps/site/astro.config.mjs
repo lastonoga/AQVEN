@@ -87,7 +87,7 @@ export default defineConfig({
               ],
             },
             {
-              label: "Datasets & evals",
+              label: "Checks & experiments",
               items: [{ slug: "engine/custom-evaluator" }],
             },
             {
@@ -127,7 +127,7 @@ export default defineConfig({
               label: "Test",
               items: [
                 { slug: "studio/datasets" },
-                { slug: "studio/evals" },
+                { slug: "studio/research" },
               ],
             },
             {
@@ -157,7 +157,7 @@ export default defineConfig({
                 { slug: "mcp-cli/preview-a-prompt" },
                 { slug: "mcp-cli/check-and-test" },
                 { slug: "mcp-cli/runs" },
-                { slug: "mcp-cli/datasets-and-evals" },
+                { slug: "mcp-cli/experiments-and-series" },
               ],
             },
           ],

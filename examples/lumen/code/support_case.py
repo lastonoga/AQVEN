@@ -2,12 +2,28 @@ import re
 from collections.abc import Callable, Iterable, Mapping
 from typing import Final
 
+from pydantic import BaseModel
+
 from aqven.policies import EvalContext, NoParams, Verdict
-from lumen.types import Resolution, ResolutionAction, ReviseIn, ReviseOut
+from lumen.types import ReplyDraft, Resolution, ResolutionAction, ReviseIn, ReviseOut
 
 type PromiseRule = Callable[[str, Resolution], str | None]
 
 MINOR_UNITS_PER_MAJOR: Final = 100
+NODE_OUTPUTS: Final = "node_outputs"
+
+
+class PolishedReply(BaseModel):
+    reply: ReplyDraft
+
+
+class RoutedCase(BaseModel):
+    resolution: Resolution
+
+
+class CaseDecision(BaseModel):
+    route: RoutedCase
+
 
 COMPENSATION_PHRASES: Final = (
     "store credit",
@@ -41,6 +57,12 @@ MINOR_DIGITS: Final = 2
 def promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict:
     text = value.reply.text.lower()
     resolution = context.inputs.resolution
+    return _verdict(rule(text, resolution) for rule in PROMISE_RULES)
+
+
+def reply_keeps_resolution(value: BaseModel, context: EvalContext[BaseModel, BaseModel], params: NoParams) -> Verdict:
+    text = PolishedReply.model_validate(value.model_dump(mode="json")).reply.text.lower()
+    resolution = CaseDecision.model_validate(context.metadata.get(NODE_OUTPUTS)).route.resolution
     return _verdict(rule(text, resolution) for rule in PROMISE_RULES)
 
 

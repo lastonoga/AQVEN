@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, Form, Query, UploadFile
 
 from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT
 from aqven.runtime.runs import Page
+from aqven.series.views import CaseDraft, CaseFromRunRequest
 from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure, not_found
 from aqven.server.views.common import page_of
@@ -13,6 +14,7 @@ from aqven.server.views.datasets import (
     DatasetCreateRequest,
     DatasetDraftRequest,
     DatasetSummary,
+    case_from_run,
     create_dataset,
     dataset_cases,
     dataset_summaries,
@@ -24,6 +26,7 @@ from aqven.spec import NAME_PATTERN, DatasetCase, DatasetFile, FlowId
 
 DATASET_CATALOGUE = "dataset catalogue read from the project files"
 MCP_PENDING = "no MCP tool yet: docs/14-mcp-contract.md names it for a later phase"
+CASE_DRAFT = "a case draft; the agent writes the dataset file"
 
 
 def build_datasets_router(context: ServerContext) -> APIRouter:
@@ -84,6 +87,15 @@ def build_datasets_router(context: ServerContext) -> APIRouter:
         if case is None:
             raise not_found(f"case {case_name} is not in dataset {dataset_id}")
         return case
+
+    @router.post(
+        "/datasets/{dataset_id}/cases/from-run",
+        operation_id="case_from_run",
+        openapi_extra=rest_only(CASE_DRAFT),
+    )
+    async def draft_case_from_run(dataset_id: str, body: CaseFromRunRequest) -> CaseDraft:
+        snapshot = await context.facade.get_run(body.run_id)
+        return case_from_run(await context.workspace.state(), dataset_id, snapshot, body)
 
     @router.post(
         "/datasets/draft",

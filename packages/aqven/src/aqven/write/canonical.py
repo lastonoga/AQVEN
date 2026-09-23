@@ -13,6 +13,7 @@ from aqven.loader.project import (
     AGENT_ADAPTER,
     DATASET_ADAPTER,
     EXPERIMENT_ADAPTER,
+    FINDING_ADAPTER,
     FLOW_ADAPTER,
     INFERENCE_ADAPTER,
     MCP_SERVER_ADAPTER,
@@ -43,6 +44,7 @@ VALIDATORS: Final[Mapping[SpecKind, Validator]] = {
     SpecKind.AGENT: AGENT_ADAPTER.validate_python,
     SpecKind.TOOL: TOOL_ADAPTER.validate_python,
     SpecKind.MCP_SERVER: MCP_SERVER_ADAPTER.validate_python,
+    SpecKind.FINDING: FINDING_ADAPTER.validate_python,
 }
 
 
@@ -80,10 +82,14 @@ def parse_document(path: str, data: bytes) -> JsonObject | None:
     return document.data
 
 
-def canonical_yaml(path: str, data: JsonObject, scope: AliasScope) -> bytes:
+def document_bytes(document: JsonObject) -> bytes:
     stream = io.StringIO()
-    cast("_Emitter", _emitter()).dump(_styled(ordered_document(path, data, scope)), stream)
+    cast("_Emitter", _emitter()).dump(_styled(document), stream)
     return stream.getvalue().encode("utf-8")
+
+
+def canonical_yaml(path: str, data: JsonObject, scope: AliasScope) -> bytes:
+    return document_bytes(ordered_document(path, data, scope))
 
 
 def ordered_document(path: str, data: JsonObject, scope: AliasScope) -> JsonObject:

@@ -86,7 +86,7 @@ gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `para
 | MCP servers | `mcp/<server>.yaml` | `helpdesk` |
 | types | `types/`, with subfolders by type kind: `enums/`, `ids/`, `records/`, `unions/`, `values/` (constrained scalars) | all 49 types of both workflows and the tools |
 | shared prompt fragments | `fragments/<fragment>.md` | `untrusted_input`, `safety_escalation`, `citation_rules`, `brand_voice`, `judge_protocol` |
-| Python used in several places | `code/<module>.py` — several nodes, a node and an experiment, several workflows | `code/support_case.py`: the evaluator `promises_match_resolution` is both a check on the `revise` inference and the `promises` check of three `reply_*` experiments |
+| Python used in several places | `code/<module>.py` — several nodes, a node and an experiment, several workflows | `code/support_case.py`: the promise rules serve the evaluator `promises_match_resolution` (a check on the `revise` inference) and `reply_keeps_resolution` (the `promises` check of three `reply_*` experiments) |
 | datasets | `datasets/<dataset>.yaml` — the cases of a workflow (`flow: <workflow>`) or of an experiment arm | `support_case_cases`, `judge_panel_cases`, `long_customer_messages`, `planted_defect_replies` |
 | experiments | `experiments/<experiment>/experiment.yaml`, notes in `experiment.md`, arms in `arms/<arm>/flow.yaml`, the experiment's own code in `checks.py` | thirteen experiments, one for every question kind (§10) |
 | workflow | `flows/<workflow>/flow.yaml` | `support_case`, `judge_panel` |
@@ -130,7 +130,7 @@ types/
   unions/                                          CaseOrigin, CaseRecord
   values/                                          Score
 fragments/                                         untrusted_input, safety_escalation, citation_rules, brand_voice, judge_protocol
-code/support_case.py                               promises_match_resolution: a check on revise and the promises check of experiments
+code/support_case.py                               promises_match_resolution: a check on revise; reply_keeps_resolution: the promises check of experiments
 datasets/<dataset>.yaml                            kind Dataset: cases with inputs, node_outputs, expected_output and tags
 experiments/<experiment>/                          kind Experiment in experiment.yaml, notes in experiment.md, arms/<arm>/
 flows/
@@ -727,7 +727,7 @@ A function lives in `<id>.py` beside the file of the entity that uses it; Python
 | Module | Reference in the YAML | Functions |
 |---|---|---|
 | `tools/functions.py` | `@root.tools.functions:<function>` on every tool | `async search_kb(ctx, query, category, locale, tenant) -> SearchKbOut`, `async synthesize_voice(ctx, text, locale) -> SynthesizeVoiceOut`, `async start_clip(ctx, image, text, seconds) -> JobHandle`, `async poll_clip(ctx, job) -> JobPoll[RenderClipOut]`, `async lookup_order(ctx, order_id) -> LookupOrderOut`, `async issue_store_credit(ctx, customer_id, order_id, amount) -> IssueStoreCreditOut` |
-| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — in the `checks` of the `revise` inference and in the `promises` check of three `reply_*` experiments | the evaluator `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` |
+| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — in the `checks` of the `revise` inference; `@root.code.support_case:reply_keeps_resolution` — the `promises` check of three `reply_*` experiments | the evaluators `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` and `reply_keeps_resolution(value: BaseModel, context: EvalContext[BaseModel, BaseModel], params: NoParams) -> Verdict`, which reads the reply text from the range output and the decision from `context.metadata["node_outputs"]["route"]` |
 | `support_case`: `prepare/prepare.py` | `prepare` | `prepare(request) -> SupportCasePrepareOut` |
 | `support_case`: `tally/tally.py` | `tally` | `tally(ballots) -> SupportCaseTallyOut` |
 | `support_case`: `case_form/case_form.py` | `case_form` | `case_form(intent) -> SupportCaseCaseFormOut` |
@@ -787,8 +787,13 @@ follows its slot contract (§6.6). **Proposal — not in an ADR** (ADR-0026 §5 
   `intent_ballot_pair`, `intent_escalation_agents`, `critique_planted_defects` and `critique_recall_by_agent` on arms.
   The `critique` judge check (`inference: critique`, `agent: deepseek`) carries
   `validated_by: critique_planted_defects`, the experiment that measures that critic on planted defects; `promises`
-  is `run: @root.code.support_case:promises_match_resolution`, the same function and reference as the `retry` check
-  on `revise`. `aqven check` validates the experiments today; running them as a series is the next engine step.
+  is `run: @root.code.support_case:reply_keeps_resolution`: on the `polish` range `$in` is the flow input
+  `CaseRequest`, not the `revise` inference input, so the evaluator takes the reply from the range output and the
+  decision from the `route` output in `context.metadata["node_outputs"]`, with the same promise rules as the `retry`
+  check `promises_match_resolution` on `revise`. `aqven check` validates the experiments, including the types their
+  checks read (`W_CHECK_CONTEXT_MISMATCH`, `E_CHECK_PATH_UNKNOWN`, `W_JUDGE_INPUT_UNBOUND`); a series runs them on the
+  project server (`series_start`, `aqven series`), and a series on holdout cases writes a finding under
+  `experiments/<experiment>/findings/` and regenerates `FINDINGS.md`.
 
 ## 11. The host and the execution modes
 

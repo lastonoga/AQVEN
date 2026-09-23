@@ -9,16 +9,18 @@ from aqven.runtime.events import RUN_EVENT_TYPES
 from aqven.spec import SCHEMA_DIALECT, NodeKind, SpecKind, write_editor_schemas
 
 SPEC_EVENT_TYPES: Final = {"files_changed", "diagnostics_changed", "resync"}
+SERIES_EVENT_TYPES: Final = {"series_status", "attempt_finished", "series_finished"}
 TYPE_VARIANTS: Final = {"record", "enum", "union", "id", "value"}
-CHANNELS: Final = ("spec", "run", "chat")
+CHANNELS: Final = ("spec", "run", "chat", "series")
 
 
-def test_event_schemas_cover_every_member_of_the_three_unions(server_client: TestClient) -> None:
+def test_event_schemas_cover_every_member_of_the_four_unions(server_client: TestClient) -> None:
     schemas = server_client.get("/api/schemas/events").json()["schemas"]
 
     assert set(schemas["spec"]) == SPEC_EVENT_TYPES
     assert set(schemas["run"]) == set(RUN_EVENT_TYPES)
     assert set(schemas["chat"]) == set(CHAT_EVENT_TYPES)
+    assert set(schemas["series"]) == SERIES_EVENT_TYPES
 
 
 def test_every_event_schema_is_a_self_contained_document_keyed_by_its_type(server_client: TestClient) -> None:
@@ -34,7 +36,7 @@ def test_every_event_schema_is_a_self_contained_document_keyed_by_its_type(serve
 def test_event_catalog_keeps_the_channel_arrays_as_client_type_anchors(server_client: TestClient) -> None:
     body = server_client.get("/api/schemas/events").json()
 
-    assert [body[channel] for channel in CHANNELS] == [[], [], []]
+    assert [body[channel] for channel in CHANNELS] == [[], [], [], []]
     assert body["schemas"]["dialect"] == SCHEMA_DIALECT
     assert body["schemas"]["run"]["node_output_delta"]["properties"]["part_kind"]["$ref"].endswith("OutputPartKind")
 

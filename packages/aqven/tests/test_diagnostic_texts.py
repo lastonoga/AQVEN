@@ -67,6 +67,12 @@ EXPERIMENT_VALUES: Final = {
     "selected": "12",
     "case": "late_parcel",
     "wanted": "expected_output with the fields category",
+    "ref": "$in.locale",
+    "field": "locale",
+    "side": "$in, the input CaseRequest of flow support_case",
+    "fields": "customer, message",
+    "judge": "critique",
+    "finding": "01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c.yaml",
 }
 
 
@@ -83,6 +89,11 @@ EXPERIMENT_VALUES: Final = {
         (DiagnosticCode.E_CASES_EMPTY, Severity.ERROR),
         (DiagnosticCode.E_EXPECTED_MISSING, Severity.ERROR),
         (DiagnosticCode.W_PLAN_EXCEEDS_CASES, Severity.WARNING),
+        (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, Severity.WARNING),
+        (DiagnosticCode.E_CHECK_PATH_UNKNOWN, Severity.ERROR),
+        (DiagnosticCode.W_JUDGE_INPUT_UNBOUND, Severity.WARNING),
+        (DiagnosticCode.E_FINDING_TAMPERED, Severity.ERROR),
+        (DiagnosticCode.W_FINDINGS_STALE, Severity.WARNING),
     ],
 )
 def test_experiment_codes_have_severity_message_and_hint(code: DiagnosticCode, severity: Severity) -> None:

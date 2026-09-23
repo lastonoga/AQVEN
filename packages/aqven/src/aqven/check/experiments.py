@@ -125,6 +125,35 @@ def _range(site: ExperimentSite) -> Iterator[Diagnostic]:
     yield site.problem(DiagnosticCode.E_RANGE_INVALID, ("subject", "from"), problem, "swap from and to")
 
 
+def _variant_ranges(site: ExperimentSite) -> Iterator[Diagnostic]:
+    subject = site.spec.subject
+    if subject.from_ is None or subject.to is None:
+        return
+    for index, variant in enumerate(site.spec.variants):
+        yield from _variant_range(site, index, variant)
+
+
+def _variant_range(site: ExperimentSite, index: int, variant: VariantSpec) -> Iterator[Diagnostic]:
+    subject = site.spec.subject
+    arm = site.loaded.arms.get(variant.arm) if variant.arm is not None else None
+    spec = flow_spec(arm)
+    if spec is None or subject.from_ is None or subject.to is None:
+        return
+    ends = tuple(dict.fromkeys((subject.from_, subject.to)))
+    missing = tuple(node for node in ends if node not in spec.order)
+    reversed_ends = not missing and spec.order.index(subject.from_) > spec.order.index(subject.to)
+    if not missing and not reversed_ends:
+        return
+    ranged = f"the range {subject.from_} to {subject.to}"
+    problem = (
+        f"variant {variant.id} runs arm {variant.arm}, whose top-level nodes lack {', '.join(missing)} of {ranged}"
+        if missing
+        else f"variant {variant.id} runs arm {variant.arm}, where {ranged} is reversed"
+    )
+    fix = f"give arm {variant.arm} the top-level nodes {subject.from_} and {subject.to} in this order"
+    yield site.problem(DiagnosticCode.E_RANGE_INVALID, ("variants", index, "arm"), problem, fix)
+
+
 def _cases(site: ExperimentSite) -> Iterator[Diagnostic]:
     selection = site.spec.cases
     source = site.context.project.datasets.get(selection.dataset)
@@ -380,6 +409,7 @@ def _arm_type(site: ExperimentSite, arm_id: ArmId, arm: LoadedFlow, subject: Flo
 EXPERIMENT_RULES: Final[tuple[ExperimentRule, ...]] = (
     _subject,
     _range,
+    _variant_ranges,
     _cases,
     _variants,
     _checks,

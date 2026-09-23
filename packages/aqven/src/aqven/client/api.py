@@ -32,6 +32,14 @@ from aqven.runtime import (
     RunStatus,
     RunSummary,
 )
+from aqven.series.model import SeriesId
+from aqven.series.views import (
+    SeriesCancelRequest,
+    SeriesGetResult,
+    SeriesStarted,
+    SeriesStartRequest,
+    SeriesSummaryView,
+)
 from aqven.spec import MediaValue
 
 DEFAULT_BASE_URL: Final[str] = "http://127.0.0.1:5180"
@@ -40,6 +48,7 @@ BLOB_FORM_FIELD: Final[str] = "file"
 DEFAULT_BLOB_NAME: Final[str] = "blob"
 BLOB_HASH_PREFIX: Final[str] = "sha256-"
 MEDIA_KEY: Final[str] = "$media"
+SERIES_READ_MARGIN_SECONDS: Final[float] = 10.0
 
 type QueryValue = str | int
 type Query = Mapping[str, QueryValue]
@@ -142,6 +151,23 @@ class AqvenClient:
         result = await self._call(CancelResult, "POST", self._url("runs", run_id, "cancel"), body=body)
         return result.status
 
+    async def series_start(self, request: SeriesStartRequest) -> SeriesStarted:
+        return await self._call(SeriesStarted, "POST", self._url("series"), body=request_body(request))
+
+    async def series_get(
+        self, series_id: SeriesId, wait_seconds: int = 0, include_cases: bool = False
+    ) -> SeriesGetResult:
+        query: dict[str, QueryValue] = {"wait_seconds": wait_seconds, "include_cases": str(include_cases).lower()}
+        base = self._http.timeout
+        timeout = httpx2.Timeout(
+            connect=base.connect, read=wait_seconds + SERIES_READ_MARGIN_SECONDS, write=base.write, pool=base.pool
+        )
+        return await self._call(SeriesGetResult, "GET", self._url("series", series_id), query=query, timeout=timeout)
+
+    async def series_cancel(self, series_id: SeriesId, reason: str | None = None) -> SeriesSummaryView:
+        body = request_body(SeriesCancelRequest(series_id=series_id, reason=reason))
+        return await self._call(SeriesSummaryView, "POST", self._url("series", series_id, "cancel"), body=body)
+
     async def upload_blob(self, data: bytes, media_type: str, name: str | None = None) -> MediaValue:
         upload = {BLOB_FORM_FIELD: (name or DEFAULT_BLOB_NAME, data, media_type)}
         response = await self._http.request("POST", self._url("blobs"), files=upload)
@@ -200,8 +226,10 @@ class AqvenClient:
         *,
         body: JsonValue = None,
         query: Query | None = None,
+        timeout: httpx2.Timeout | None = None,
     ) -> M:
-        response = await self._http.request(method, url, json=body, params=query)
+        chosen = self._http.timeout if timeout is None else timeout
+        response = await self._http.request(method, url, json=body, params=query, timeout=chosen)
         await raise_for_failure(response)
         return model.model_validate_json(response.content)
 

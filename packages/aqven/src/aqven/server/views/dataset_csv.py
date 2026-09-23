@@ -41,16 +41,44 @@ PATH_PART: Final = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
 LOCAL_BLOB_PATH: Final = re.compile(r"^/api/blobs/(sha256-[0-9a-f]{64})$")
 MEDIA_FIELD_NAMES: Final = frozenset(
     {
-        "photo", "image", "audio", "voice", "voice_note", "video",
-        "clip", "invoice", "document", "pdf", "file", "attachment",
+        "photo",
+        "image",
+        "audio",
+        "voice",
+        "voice_note",
+        "video",
+        "clip",
+        "invoice",
+        "document",
+        "pdf",
+        "file",
+        "attachment",
     }
 )
 SAFE_MEDIA_TYPES: Final = frozenset(
     {
-        "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "image/bmp",
-        "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/ogg", "audio/flac",
-        "audio/aac", "audio/mp4", "audio/webm", "video/mp4", "video/webm", "video/ogg",
-        "video/quicktime", "video/mpeg", "application/pdf", "text/plain",
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+        "image/bmp",
+        "audio/mpeg",
+        "audio/mp3",
+        "audio/wav",
+        "audio/x-wav",
+        "audio/ogg",
+        "audio/flac",
+        "audio/aac",
+        "audio/mp4",
+        "audio/webm",
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "video/quicktime",
+        "video/mpeg",
+        "application/pdf",
+        "text/plain",
     }
 )
 FALLBACK_BLOB_ID: Final = "sha256-" + "0" * 64
@@ -273,9 +301,7 @@ def _array_media_cells(row: DraftRow, pattern: str) -> list[MediaCell]:
     def walk(value: object, pending: list[str | None], location: tuple[str | int, ...]) -> None:
         if not pending:
             if isinstance(value, str):
-                label = "inputs" + "".join(
-                    f"[{part}]" if isinstance(part, int) else f".{part}" for part in location
-                )
+                label = "inputs" + "".join(f"[{part}]" if isinstance(part, int) else f".{part}" for part in location)
                 found.append(MediaCell(row.number, label, value, ("inputs", *location)))
             return
         head, *tail = pending
@@ -658,9 +684,7 @@ async def inspect_csv(
     async def resolve(url: str) -> tuple[MediaValue, int | None] | str:
         async with semaphore:
             try:
-                return await _resolve_media(
-                    url, blobs, download=download, reserve=reserve, store_lock=store_lock
-                )
+                return await _resolve_media(url, blobs, download=download, reserve=reserve, store_lock=store_lock)
             except ValueError as error:
                 return str(error)
 

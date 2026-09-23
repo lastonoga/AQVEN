@@ -14,6 +14,7 @@ from aqven.check.datasets import check_datasets
 from aqven.check.display import check_display
 from aqven.check.dynamic import check_dynamic
 from aqven.check.experiments import check_experiments
+from aqven.check.findings import check_findings
 from aqven.check.flows import check_flows
 from aqven.check.generated import check_generated
 from aqven.check.graph import build_graph
@@ -59,6 +60,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_tool_args,
     check_datasets,
     check_experiments,
+    check_findings,
     check_generated,
 )
 PROJECT_OUTPUT_RULES: Final[tuple[CheckRule, ...]] = (check_generated,)
@@ -104,6 +106,7 @@ def _positions(project: LoadedProject) -> Mapping[str, Mapping[YamlPath, Positio
         *project.mcp_servers.values(),
         *(source for inference in project.inferences.values() if (source := inference.source)),
         *(experiment.source for experiment in project.experiments.values()),
+        *(finding for experiment in project.experiments.values() for finding in experiment.findings.values()),
         *(source for flow in _all_flows(project) for source in _flow_sources(flow)),
     )
     return {source.path: source.positions for source in sources}

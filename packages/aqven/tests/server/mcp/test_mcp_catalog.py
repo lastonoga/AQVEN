@@ -3,6 +3,7 @@ from typing import Final
 
 import pytest
 from mcp_support import FakeEngine, call, mcp_client, shop_copy, structured
+from series_fakes import FakeSeriesJobs
 
 from aqven.write.model import FlowPatchRequest, WriteActor, WriteResult
 
@@ -11,7 +12,9 @@ RUNNER_TOOLS: Final = frozenset({"aqven_check", "pyright_check", "pytest_run"})
 RUN_TOOLS: Final = frozenset(
     {"run_start", "run_get", "run_list", "run_get_node", "run_events", "run_resume", "run_fork", "run_cancel"}
 )
-SURFACE: Final = PROJECT_TOOLS | RUNNER_TOOLS | RUN_TOOLS | {"flow_patch"}
+SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel"})
+SURFACE: Final = PROJECT_TOOLS | RUNNER_TOOLS | RUN_TOOLS | SERIES_TOOLS | {"flow_patch"}
+FULL_SURFACE_SIZE: Final = 16
 
 
 async def unused_patch(request: FlowPatchRequest, actor: WriteActor) -> WriteResult:
@@ -20,10 +23,13 @@ async def unused_patch(request: FlowPatchRequest, actor: WriteActor) -> WriteRes
 
 @pytest.mark.asyncio
 async def test_catalog_lists_every_tool_with_schemas(tmp_path: Path) -> None:
-    async with mcp_client(shop_copy(tmp_path), engine=FakeEngine(), patch_flow=unused_patch) as client:
+    async with mcp_client(
+        shop_copy(tmp_path), engine=FakeEngine(), patch_flow=unused_patch, series=FakeSeriesJobs()
+    ) as client:
         listed = await client.list_tools()
     tools = {tool.name: tool for tool in listed.tools}
     assert set(tools) == SURFACE
+    assert len(tools) == FULL_SURFACE_SIZE
     assert all(tool.output_schema is not None for tool in tools.values())
     assert all(tool.annotations is not None and tool.title for tool in tools.values())
     patch_schema = tools["flow_patch"].input_schema
@@ -32,7 +38,7 @@ async def test_catalog_lists_every_tool_with_schemas(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_catalog_without_engine_and_writer_omits_their_tools(tmp_path: Path) -> None:
+async def test_catalog_without_engine_writer_and_series_omits_their_tools(tmp_path: Path) -> None:
     async with mcp_client(shop_copy(tmp_path)) as client:
         listed = await client.list_tools()
     assert {tool.name for tool in listed.tools} == PROJECT_TOOLS | RUNNER_TOOLS

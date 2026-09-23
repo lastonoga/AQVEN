@@ -116,6 +116,8 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_CASE_DUPLICATE` | `error` | case name {name} is already taken by cases[{first}] of dataset {dataset} |
 | `E_CASES_EMPTY` | `error` | experiment {experiment}: tags {tags} select no case of dataset {dataset} |
 | `E_EXPECTED_MISSING` | `error` | experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem} |
+| `E_CHECK_PATH_UNKNOWN` | `error` | experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side} |
+| `E_FINDING_TAMPERED` | `error` | finding {finding} of experiment {experiment}: {problem} |
 | `W_PROMPT_SHADOWED` | `warning` | — |
 | `W_GENERATED_STALE` | `warning` | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |
@@ -125,3 +127,6 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_TOOL_ARG_UNREACHABLE` | `warning` | — |
 | `W_CONTEXT_KEY_UNUSED` | `warning` | — |
 | `W_PLAN_EXCEEDS_CASES` | `warning` | experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases |
+| `W_CHECK_CONTEXT_MISMATCH` | `warning` | experiment {experiment}: check {check}: {problem} |
+| `W_JUDGE_INPUT_UNBOUND` | `warning` | experiment {experiment}: judge {judge} of check {check} needs input {field}, which no document of its scope carries in {target} |
+| `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |

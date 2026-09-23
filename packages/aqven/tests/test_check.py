@@ -1864,6 +1864,7 @@ def test_cli_command_table_is_complete() -> None:
         "serve",
         "dev",
         "mcp",
+        "series",
         *PENDING,
     }
 

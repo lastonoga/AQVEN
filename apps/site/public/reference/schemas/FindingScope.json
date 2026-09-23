@@ -1,0 +1,88 @@
+{
+  "additionalProperties": false,
+  "description": "What the finding covers: the holdout cases of one dataset, their count, the repeats and the time span.\n\n``holdout_looks`` counts the finished holdout series of this experiment on the same cases, this one included;\n``case_names_sha256`` identifies the exact set of cases.",
+  "properties": {
+    "attempts": {
+      "minimum": 1,
+      "title": "Attempts",
+      "type": "integer"
+    },
+    "case_names_sha256": {
+      "title": "Case Names Sha256",
+      "type": "string"
+    },
+    "cases": {
+      "minimum": 1,
+      "title": "Cases",
+      "type": "integer"
+    },
+    "dataset": {
+      "title": "Dataset",
+      "type": "string"
+    },
+    "engine_version": {
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "finished_at": {
+      "format": "date-time",
+      "title": "Finished At",
+      "type": "string"
+    },
+    "holdout_looks": {
+      "minimum": 1,
+      "title": "Holdout Looks",
+      "type": "integer"
+    },
+    "infra_errors": {
+      "minimum": 0,
+      "title": "Infra Errors",
+      "type": "integer"
+    },
+    "repeats": {
+      "minimum": 1,
+      "title": "Repeats",
+      "type": "integer"
+    },
+    "split": {
+      "const": "holdout",
+      "title": "Split",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tags"
+    }
+  },
+  "required": [
+    "split",
+    "dataset",
+    "cases",
+    "repeats",
+    "attempts",
+    "infra_errors",
+    "holdout_looks",
+    "case_names_sha256",
+    "started_at",
+    "finished_at",
+    "engine_version"
+  ],
+  "title": "FindingScope",
+  "type": "object"
+}

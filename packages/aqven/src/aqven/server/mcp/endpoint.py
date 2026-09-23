@@ -10,6 +10,7 @@ from starlette.applications import Starlette
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from aqven.ports.engine import EngineFacade
+from aqven.series.ports import SeriesJobs
 from aqven.server.mcp.catalog import ToolRegistration
 from aqven.server.mcp.check_tools import AqvenCheckTool, RunnerSettings
 from aqven.server.mcp.patch_tools import PatchFlow, PatchTools
@@ -20,6 +21,7 @@ from aqven.server.mcp.project_source import LoaderProjectSource, ProjectSource
 from aqven.server.mcp.pyright_tool import PyrightTool
 from aqven.server.mcp.pytest_tool import PytestTool
 from aqven.server.mcp.run_tools import RunTools
+from aqven.server.mcp.series_tools import SeriesTools
 from aqven.server.security import AccessPolicy, guard_request, reject
 from aqven.server.views.runs import RunStartService
 
@@ -34,7 +36,8 @@ INSTRUCTIONS: Final = (
     "cannot do. Structural and cross-file edits: flow_patch. After every edit: aqven_check, for code also "
     "pyright_check and pytest_run, after a prompt edit also prompt_preview. Runs: run_start, then run_get and "
     "run_events; a run waiting for a human: run_list(status=suspended), run_get_node, run_resume; also run_fork and "
-    "run_cancel."
+    "run_cancel. Experiments: write experiments/<id>/experiment.yaml, run aqven_check, then series_start and "
+    "series_get with wait_seconds; read findings from FINDINGS.md and experiments/<id>/findings."
 )
 
 
@@ -47,6 +50,7 @@ class McpPorts:
     engine: EngineFacade | None = None
     patch_flow: PatchFlow | None = None
     starting: RunStartService | None = None
+    series: SeriesJobs | None = None
 
 
 def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
@@ -54,6 +58,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
     settings = RunnerSettings(paths=ports.paths, runner=ports.runner, python=ports.python)
     runs = RunTools(ports.engine, ports.starting).operations() if ports.engine is not None else ()
     patch = PatchTools(ports.patch_flow).operations() if ports.patch_flow is not None else ()
+    series = SeriesTools(ports.series).operations() if ports.series is not None else ()
     return (
         *PreviewTools(source).operations(),
         *AqvenCheckTool(settings).operations(),
@@ -61,6 +66,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
         *PytestTool(settings).operations(),
         *runs,
         *patch,
+        *series,
     )
 
 

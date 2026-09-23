@@ -208,37 +208,40 @@ export const RunTraceSchematic = () => (
   </div>
 );
 
-const GATE_SCORERS = [
-  { name: "concern_recall", before: 78, after: 92 },
-  { name: "no_invented_concerns", before: 94, after: 100 },
-  { name: "confidence_calibrated", before: 85, after: 81 },
+const SERIES_EDGE = 82;
+const SERIES_CELLS = [
+  { variant: "gpt", low: 86, value: 91, high: 95 },
+  { variant: "mistral", low: 84, value: 89, high: 93 },
 ];
 
-export const EvalGateSchematic = () => (
+export const SeriesVerdictSchematic = () => (
   <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-background-subtle p-4">
-    {GATE_SCORERS.map((scorer) => {
-      const delta = scorer.after - scorer.before;
-      const improved = delta >= 0;
+    <span className="font-mono text-[10px] text-muted-foreground">promises above 0.80, margin 0.02</span>
+    {SERIES_CELLS.map((cell) => {
+      const clears = cell.low > SERIES_EDGE;
       return (
-        <div key={scorer.name} className="flex items-center gap-2">
-          <span className="w-28 shrink-0 truncate font-mono text-[10px] text-muted-foreground">{scorer.name}</span>
+        <div key={cell.variant} className="flex items-center gap-2">
+          <span className="w-28 shrink-0 truncate font-mono text-[10px] text-muted-foreground">{cell.variant}</span>
           <div className="relative h-1.5 flex-1 rounded-full bg-border">
             <div
-              className={cn("absolute inset-y-0 left-0 rounded-full", improved ? "bg-success" : "bg-destructive")}
-              style={{ width: `${scorer.after}%` }}
+              className={cn("absolute inset-y-0 rounded-full", clears ? "bg-success" : "bg-destructive")}
+              style={{ left: `${cell.low}%`, width: `${cell.high - cell.low}%` }}
             />
-            <div className="absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-foreground/60" style={{ left: `${scorer.before}%` }} />
+            <div
+              className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground"
+              style={{ left: `${cell.value}%` }}
+            />
+            <div className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-foreground/60" style={{ left: `${SERIES_EDGE}%` }} />
           </div>
-          <span className={cn("w-9 shrink-0 text-right font-mono text-[10px]", improved ? "text-success" : "text-destructive")}>
-            {improved ? "+" : ""}
-            {delta}
+          <span className={cn("w-9 shrink-0 text-right font-mono text-[10px]", clears ? "text-success" : "text-destructive")}>
+            {(cell.value / 100).toFixed(2)}
           </span>
         </div>
       );
     })}
     <div className="mt-1 flex items-center gap-1.5 self-start rounded-full border border-success/30 bg-success/10 px-2.5 py-1">
       <CircleCheck className="size-3 text-success" aria-hidden="true" />
-      <span className="font-mono text-[10px] text-success">gate: pass</span>
+      <span className="font-mono text-[10px] text-success">holdout: confirmed</span>
     </div>
   </div>
 );

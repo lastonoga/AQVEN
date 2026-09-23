@@ -13,7 +13,7 @@ turn — before you rename it, delete it, or change its shape.
 ## Steps
 
 - `{{CLI_COMMAND}} tree <path>` prints every entity in the project, grouped by kind: `project`, `agent`,
-  `tool`, `mcp_server`, `type`, `inference`, `flow`, `node`, `dataset`, `eval`. Each row is the entity's
+  `tool`, `mcp_server`, `type`, `inference`, `flow`, `node`, `dataset`. Each row is the entity's
   id and the file it's defined in, relative to the project root. A kind with nothing defined in the
   project gets no heading at all.
 - `{{CLI_COMMAND}} refs KIND:ID <path>` looks up one entity by kind and id and prints three things: the
@@ -21,7 +21,7 @@ turn — before you rename it, delete it, or change its shape.
   references itself. Each reference line names the other entity, the file, the line, and the YAML field
   the reference sits in.
 - The kinds `refs` accepts are the same ones `tree` groups by, plus `code` for a Python function a node,
-  tool, or eval calls into. A `code` entity only ever shows up as a target — its "definition" line always
+  tool, or check calls into. A `code` entity only ever shows up as a target — its "definition" line always
   reads `—`, because no YAML file declares it, and that's also why `code` never gets a group in `tree`.
 - For a `node`, you can pass either its full id (`flow_id.node_id`, or `flow_id.parent__child` for a
   node nested inside a group) or just its local name, as long as that name is unique across the project
@@ -57,14 +57,14 @@ untruncated list:
 project (1)
   my_project  aqven.yaml
 agent (9)
-  deepseek    agents/deepseek.yaml           output.mode auto -> tool (profile)
+  deepseek    agents/deepseek.yaml           output.mode prompted -> prompted (declared)
   gemini      agents/gemini.yaml             output.mode auto -> tool (profile)
-  gpt         agents/gpt.yaml                output.mode auto -> tool (profile)
+  gpt         agents/gpt.yaml                output.mode prompted -> prompted (declared)
   llama       agents/llama.yaml              output.mode auto -> tool (profile)
-  mistral     agents/mistral.yaml            output.mode auto -> tool (profile)
+  mistral     agents/mistral.yaml            output.mode prompted -> prompted (declared)
   painter     agents/painter.yaml            output.mode prompted -> prompted (declared)
   qwen        agents/qwen.yaml               output.mode tool -> tool (declared)
-  researcher  agents/researcher.yaml         output.mode auto -> tool (profile)
+  researcher  agents/researcher.yaml         output.mode prompted -> prompted (declared)
   resolver    agents/resolver/resolver.yaml  output.mode native -> native (declared)
 tool (6)
   find_tickets        tools/find_tickets.yaml
@@ -75,23 +75,26 @@ tool (6)
   synthesize_voice    tools/synthesize_voice.yaml
 mcp_server (1)
   helpdesk  mcp/helpdesk.yaml
-type (49)
+type (52)
   Agreement         types/enums/agreement.yaml
   ApprovalDecision  types/enums/approval_decision.yaml
   CascadeTier       types/enums/cascade_tier.yaml
   CaseIntent        types/enums/case_intent.yaml
   CaseOrigin        types/unions/case_origin.yaml
-  ... 44 more types, run it yourself for the full list
-inference (9)
-  ballot           flows/support_case/nodes/vote/ballot.inference.yaml
-  critique         flows/support_case/nodes/polish/critique.inference.yaml
-  extract          flows/support_case/nodes/record/extract.inference.yaml
-  illustrate       flows/support_case/nodes/illustrate/illustrate.inference.yaml
-  research_policy  agents/resolver/research_policy.inference.yaml
-  resolve          flows/support_case/nodes/route/resolve.inference.yaml
-  revise           flows/support_case/nodes/polish/revise.inference.yaml
-  tie_break        flows/judge_panel/nodes/decide/tie_break.inference.yaml
-  triage           flows/support_case/nodes/triage/triage.inference.yaml
+  ... 47 more types, run it yourself for the full list
+inference (12)
+  ballot            flows/support_case/nodes/vote/ballot.inference.yaml
+  classify_message  experiments/intent_split_long_messages/arms/one_step/nodes/classify_message/classify_message.inference.yaml
+  classify_summary  experiments/intent_split_long_messages/arms/two_step/nodes/classify_summary/classify_summary.inference.yaml
+  condense_message  experiments/intent_split_long_messages/arms/two_step/nodes/condense_message/condense_message.inference.yaml
+  critique          flows/support_case/nodes/polish/critique.inference.yaml
+  extract           flows/support_case/nodes/record/extract.inference.yaml
+  illustrate        flows/support_case/nodes/illustrate/illustrate.inference.yaml
+  research_policy   agents/resolver/research_policy.inference.yaml
+  resolve           flows/support_case/nodes/route/resolve.inference.yaml
+  revise            flows/support_case/nodes/polish/revise.inference.yaml
+  tie_break         flows/judge_panel/nodes/decide/tie_break.inference.yaml
+  triage            flows/support_case/nodes/triage/triage.inference.yaml
 flow (2)
   judge_panel   flows/judge_panel/flow.yaml
   support_case  flows/support_case/flow.yaml  run context: date, tenant_id
@@ -102,14 +105,14 @@ node (38)
   judge_panel.judges             flows/judge_panel/nodes/judges/judges.node.yaml
   judge_panel.judges__deepseek   flows/judge_panel/nodes/judges/deepseek.node.yaml
   ... 33 more nodes, run it yourself for the full list
-dataset (5)
-  reply_cases                   evals/support_case/reply_cases.yaml
+dataset (7)
+  judge_panel_cases             datasets/judge_panel_cases.yaml
+  long_customer_messages        datasets/long_customer_messages.yaml
+  planted_defect_replies        datasets/planted_defect_replies.yaml
   support_case_cases            datasets/support_case_cases.yaml
   support_case_csv_review       datasets/support_case_csv_review.yaml
   support_case_csv_ui_demo      datasets/support_case_csv_ui_demo.yaml
   support_case_multimodal_demo  datasets/support_case_multimodal_demo.yaml
-eval (1)
-  reply_quality  evals/support_case/reply_quality.yaml
 ```
 
 An agent row's third column, when present, is its resolved output mode: what you set (or `auto` if you

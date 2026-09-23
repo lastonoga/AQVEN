@@ -24,7 +24,9 @@ lumen/
   code/<module>.py                     Python used from several places
   datasets/<dataset>.yaml              cases: input, expected output and tags; flow: names the flow they feed
   experiments/<experiment>/            experiment.yaml: one quality question over a dataset; experiment.md: notes;
-                                       arms/<arm>/flow.yaml: a small flow only this experiment runs
+                                       arms/<arm>/flow.yaml: a small flow only this experiment runs;
+                                       findings/<series>.yaml: a finding the server wrote, never edit
+  FINDINGS.md                          what the project already knows, generated from the findings, never edit
   flows/<flow>/flow.yaml               flow input, output, returns and node order
   flows/<flow>/nodes/<node>/
     <node>.node.yaml                   step: code, llm, tool, human, switch, parallel, map, loop, call, narrow
@@ -95,7 +97,8 @@ tests/                                 offline tests of the example, at the proj
    first and surface the gap afterward — the answer decides which provider the files reference, so it
    comes first. Once you know, write the key into `.env`, and fetch `llms.txt` to find the provider
    catalog reference page for the real environment variable name and model id format, never guess either.
-9. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases, the simulation cache).
+9. Do not touch `.aqven/`: it holds runtime state (drafts, locks, write transactions, databases with runs and
+   series attempts, the simulation cache).
 10. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
     Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
     a flow takes: `tests/test_support_case.py` replays recorded runs of five scenarios and forces every branch
@@ -165,7 +168,8 @@ finish these two before you do:
   that dataset, with `checks` on what every `llm` node produces — at least the cheap built-in evaluators that fit
   (`expected` against the case's `expected_output`, `not_empty`, `no_pii`, `language`, `max_words`, `regex`,
   `ids_in_allowed_set`; see *The development loop* below before reaching for a judge). Start with
-  `question: {kind: look}` and sharpen it once you know which number decides. An `llm` node no check covers is a
+  `question: {kind: look}`, run it with `series_start` on `dev`, and sharpen the question once you know which number
+  decides. An `llm` node no check covers is a
   step nobody has actually checked, no matter how many times `aqven check` passes.
 
 A flow without cases cannot be measured, and an idea nobody wrote cases for is usually still an idea.
@@ -182,11 +186,13 @@ Both are files, and the question comes before any result.
 |---|---|
 | Whether the wiring is right | `aqven check`: static rules plus a simulated run, no tokens |
 | What the flow does on one real case | `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"`, then `run_get` and `run_events` |
-| How the output looks on a few cases, side by side | an experiment with `question: {kind: look}`: no verdict |
+| How the output looks on a few cases, side by side | an experiment with `question: {kind: look}`, or `series_start` with `look` and named cases: no verdict |
 | Whether a failure stays rare enough | `question: {kind: threshold}` with `metric`, `below` or `above`, and a `margin` |
 | Whether a change or another agent is better | two variants and `question: {kind: compare}` with `baseline`, `candidate`, `primary`, `margin` |
 | Whether a cheaper agent is not worse | `question: {kind: noninferior}`, with `guardrails` on cost or latency |
 | Whether a judge can be trusted | an experiment on cases with planted defects, named in the judge check's `validated_by` |
+
+Every row from `look` down is answered by a series of that experiment: see *Experiments and series* below.
 
 An experiment is `experiments/<experiment_id>/experiment.yaml`; its id is the folder name, and notes for people go
 into `experiment.md` beside it. `lumen/experiments/` has one for every question kind and every kind of variant, so
@@ -213,30 +219,83 @@ start from the closest. Its keys:
   `infra_error_rate`.
 - `plan` — `cases` and `repeats` (at most 20): the series size you recommend, not a limit.
 
-**Series arrive with the next engine step.** Running an experiment — every selected case for every variant, repeated,
-with the statistic its question asks for — is not available yet. Today `aqven check` validates every experiment:
-the subject and its range, the arms, the agents of every variant, the dataset and its tag filter, the references of
-the checks, the metric names, `validated_by`, and an `expected_output` on every case an `expected` check reads. Write
-the experiment anyway: it pins the question before the data. Until series exist, try single cases with `run_start`
-and `dataset_item_id`.
+**`aqven check` validates every experiment** before a series may run it: the subject and its range, the arms, the
+agents of every variant, the dataset and its tag filter, the references of the checks and the fields they read, the
+metric names, `validated_by`, an `expected_output` on every case an `expected` check reads, and the finding files.
+Write the experiment before you look at any number: it pins the question before the data. Then run it as a series
+(*Experiments and series* below); try a single case with `run_start` and `dataset_item_id` when you are hunting a bug.
 
 **2. Then the loop.**
 
 1. `aqven check` first, every time. It is free and finds broken wiring before a single token is spent.
 2. Change **one** thing. Two changes at once and you cannot tell which one moved the number.
-3. Measure with the same cases as last time. A new dataset means a new number, not a better flow.
-4. Read the cases that failed, not the average. The average hides the one input that breaks everything.
+3. Measure with a series on `dev` over the same cases as last time. A new dataset means a new number, not a better
+   flow.
+4. Read the cases that failed (`series_get` with `include_cases: true`), not the average. The average hides the one
+   input that breaks everything.
 5. For a wrong `llm` output, run `prompt_preview` before touching the prompt. An empty or literal placeholder in the
    message means the data wiring is wrong, and no rewording fixes that.
 6. Repeat from 2.
 
 **3. Stop when the question is answered**, not when the output looks nice to you. The metric, its threshold or margin
 and the plan are written in `experiment.yaml` before you look at a result; do not move them afterwards. A handful of
-single-case runs is for finding bugs, not for deciding which agent is better.
+single-case runs is for finding bugs, not for deciding which agent is better. The answer is one series on `holdout`,
+run when the change is done; quote its verdict.
 
 **4. Lock the fix.** A bug you fixed without a case for it comes back. Add the failing input to the dataset with
 `tags` an experiment can select, and, in a project with `tests/`, a scenario test that pins the branch with
 `node_output` so the fix survives the next edit.
+
+## Experiments and series
+
+A series runs an experiment live: every selected case for every variant, `repeats` times, and every attempt is an
+ordinary run with a trace. It runs on the project server, which the `aqven` MCP server and `aqven series` start when
+needed, and every attempt calls the models and costs money.
+
+1. Write or edit `experiments/<experiment_id>/experiment.yaml` and run `aqven check` until it is clean. A series
+   refuses to start (`NOT_RUNNABLE`) on a project with errors, or when a case cannot run for a variant, before a
+   single model call.
+2. `series_start` with `{"experiment_id": "<experiment_id>", "on": "dev"}` (optionally `cases`, `repeats`, `cap_usd`)
+   returns at once with the estimate — dollars, minutes, the recommended number of cases — and the status.
+3. `series_get` with `{"series_id": "<series_id>", "wait_seconds": 50}` until the status settles; after a timeout it
+   returns the current snapshot, so call it again.
+4. Once the status is `done`, quote `verdict.text` as it is. The server writes it from the interval and the margin
+   declared in the file; do not restate the numbers in your own words, round them, or present a `signal` or an
+   `inconclusive` as a result. While a series runs, its verdict is provisional.
+5. `series_cancel` stops a series: queued attempts never start, model calls already running finish and are paid, and
+   no finding is written.
+
+| Status | What it means | What you do |
+|---|---|---|
+| `running` | attempts are running | `series_get` with `wait_seconds` again |
+| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd`, $1.00 by default) or unknown | tell the user: only a person approves the spend, in Studio or with `POST /api/series/<series_id>/approve`; there is no tool for it |
+| `waiting_human` | an attempt reached a `human` node | tell the user; the series continues once the node is answered |
+| `done` | finished; every question except `look` has a `verdict` | quote `verdict.text` |
+| `cancelled`, `failed` | stopped; no finding | read `error` |
+
+**`dev` to search, `holdout` to decide.** The server splits every dataset in half by a hash of the case `name`, the
+same way in every clone of the project. Iterate on `dev` as often as you need: a series on `dev` gives at most a
+`signal`, never a finding, and `include_cases` shows its failing cases. Run `holdout` once, when the change is done and
+the question is fixed: `series_get` never shows holdout cases one by one, and every further look at the holdout cases
+is counted in the finding.
+
+| Verdict | Meaning |
+|---|---|
+| `confirmed` | the 95% interval clears the bound, or beats the baseline, by more than the declared margin |
+| `refuted` | the effect is within the margin or reversed; never read it as "no risk" |
+| `inconclusive` | the interval is too wide to decide; `below_mde` means more cases, not another answer |
+| `signal` | the series ran on `dev`, or the deciding check is a judge without `validated_by` |
+| `invalid` | cancelled, stopped by the spend cap, inputs changed during the series, more than 5% infrastructure errors, or no data |
+
+**Findings.** A series on `holdout` with a verdict other than `invalid` writes
+`experiments/<experiment_id>/findings/<series_id>.yaml` once and regenerates `FINDINGS.md` at the module root. Read
+`FINDINGS.md` before you propose a change: it is what this project already knows, with the cases, repeats and models
+each finding holds for. Never edit either file — a finding carries a hash of its body (`E_FINDING_TAMPERED`) and
+`FINDINGS.md` must match the findings (`W_FINDINGS_STALE`); to revise a finding, run a new series on `holdout`.
+
+A quick look at a few named cases needs no experiment: `series_start` with
+`{"look": {"flow_id": "<flow_id>", "dataset_id": "<dataset_id>", "case_names": ["<case_name>"]}}` runs them once
+each, with no verdict and no finding; `start_node` and `end_node` narrow it to a range of top-level nodes.
 
 ## How to read `aqven check`
 
@@ -273,6 +332,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven generate lumen` | writes `lumen/types.py` |
 | `uv run aqven tree lumen` | entities by kind with their files |
 | `uv run aqven run support_case --root lumen --input lumen/samples/case_request.json` | runs a flow without a server |
+| `uv run aqven series reply_look --path lumen` | runs a series of an experiment on the project server and waits for its verdict; `--on holdout` for a finding; exit code 3 means a person has to approve the spend |
 | `uv run aqven mcp lumen` | MCP over stdio, registered in `.mcp.json` |
 | `uv run python -m lumen` | the same server from the project's own entry point |
 | `uv run pytest` | offline tests |

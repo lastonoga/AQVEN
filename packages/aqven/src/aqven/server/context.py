@@ -5,6 +5,7 @@ from typing import Final
 
 from aqven.ports.engine import EngineFacade
 from aqven.ports.settings import SettingsStore
+from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles
 from aqven.server.spec_channel import SpecEventHub
 from aqven.server.workspace import ProjectWorkspace
@@ -40,3 +41,4 @@ class ServerContext:
     environ: Mapping[str, str]
     engine_version: str
     mcp_url: str | None
+    series: SeriesJobs | None = None
