@@ -32,8 +32,8 @@ describe("Shell", () => {
   it("marks the tab of the matched child route as the current page", async () => {
     await renderRoute(`${FLOWS}/support_case/canvas`)
     const tabs = within(await screen.findByRole("navigation", { name: "Flow views" })).getAllByRole("link")
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["Runs", "Nodes", "Datasets", "Evals"])
-    expect(tabs.map((tab) => tab.getAttribute("aria-current"))).toEqual([null, "page", null, null])
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Runs", "Nodes", "Datasets"])
+    expect(tabs.map((tab) => tab.getAttribute("aria-current"))).toEqual([null, "page", null])
   })
 
   it("links the run badge to the last run on the runs tab", async () => {

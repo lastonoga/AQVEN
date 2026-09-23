@@ -23,7 +23,7 @@ either accepts it (and then an ADR is written) or it changes.
 | O8 | A level 1 or 2 prompt is `<inference>.prompt.md` beside `<inference>.inference.yaml`, picked up by convention (refined by O18, file names by O22) | §3, §6.5 |
 | O9 | The place where an algorithm is chosen is a policy: exactly one of `use: <built-in>` and `run: module:function`, parameters in `with`; built-in and your own are interchangeable | §6.6: `join`, `stop`, `select`, `on_item_error`, evaluators; your own in `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
 | O10 | Prompt variants are declared in `<inference>.inference.yaml` (`variants`: `on`, `cases`, `default`), the files are `<inference>.variants/<slot>/<variant>.md`, and the prompt prints `{{ variants.<slot> }}` | the `lamp_guide` slot on `revise` by `product.lamp_kind`, §6.5 |
-| O11 | Node kinds are separate; an inference check and an eval scorer are one evaluator; `loop` has no iteration block; the fields of control nodes are the same: `body`, `in`, `out` and policies | §4, §6.6, §10 |
+| O11 | Node kinds are separate; an inference check and an experiment check are one evaluator; `loop` has no iteration block; the fields of control nodes are the same: `body`, `in`, `out` and policies | §4, §6.6, §10 |
 | O12 | There is no cache layer: no `determinism`, `ttl_ms`, `ttl_seconds`; no `prepare` hook on nodes; `effect` stays | `code` and `tool` nodes and the tools carry none of those keys, §4, §6.3 |
 | O13 | There is no Connection entity: connectors to data are `code` steps and tools | `tools/functions.py` |
 | O14 | The loader looks for `*.yaml` with `apiVersion: aqven/v1` recursively and sorts them by `kind`; an id is the file name up to the first dot, and for `flow.yaml` it is the folder name (refined by O22) | §3 |
@@ -34,7 +34,7 @@ either accepts it (and then an ADR is written) or it changes.
 | O19 | Layout by role. Types are YAML only, and `aqven generate` writes the Pydantic models into `types.py` at the module root; the place of every kind is O22 | §3, §9 |
 | O20 | Short code references: `<function>` from `<id>.py` beside the declaring file, `@here.`, `@flow.`, `@<flow_id>.`, `@root.`, or a full path; the IR keeps only the absolute path | §3 |
 | O21 | Subfolders by kind when there are many files | `types/enums/`, `ids/`, `records/`, `unions/`, `values/` (O22), §3, §8 |
-| O22 | The standard layout, final for now: one place per kind. At the root — `aqven.yaml`, `agents/<agent>.yaml` (an agent with companion files gets the folder `agents/<agent>/`: `<agent>.yaml`, `<agent>.instructions.md`, the inferences of its subagents), `tools/<tool>.yaml` and `tools/functions.py` (referenced as `@root.tools.functions:<function>`), `mcp/<server>.yaml`, `types/{ids,enums,records,unions,values}/<type>.yaml`, `fragments/<fragment>.md`, `code/<module>.py` (Python used in several places), `evals/<workflow>/`, `flows/<workflow>/flow.yaml`. Every top-level node gets the folder `nodes/<node>/` with `<node>.node.yaml` and its `.inference.yaml`, `.prompt.md`, `.variants/`, `.py`; every descendant of that node, however deep, sits flat in the same folder under the same prefix rule, with no nested folders. `types.py` at the module root (beside the `types/` folder, which has no `__init__.py`, imported as `lumen.types`) holds the models of every type and of the inputs and outputs of every inference (`<Inference>In`, `<Inference>Out`), of every tool with `run` (`<Tool>In`, `<Tool>Out`) and of every `code` step (`<Workflow><Node>In`, `<Workflow><Node>Out`); there are no hand-written copies. An id is the file name up to the first dot; a bare name in `run` means `<id>.py` beside the declaring file, loaded by file path | §3, §8, §9 |
+| O22 | The standard layout, final for now: one place per kind. At the root — `aqven.yaml`, `agents/<agent>.yaml` (an agent with companion files gets the folder `agents/<agent>/`: `<agent>.yaml`, `<agent>.instructions.md`, the inferences of its subagents), `tools/<tool>.yaml` and `tools/functions.py` (referenced as `@root.tools.functions:<function>`), `mcp/<server>.yaml`, `types/{ids,enums,records,unions,values}/<type>.yaml`, `fragments/<fragment>.md`, `code/<module>.py` (Python used in several places), `datasets/<dataset>.yaml`, `experiments/<experiment>/experiment.yaml`, `flows/<workflow>/flow.yaml`. Every top-level node gets the folder `nodes/<node>/` with `<node>.node.yaml` and its `.inference.yaml`, `.prompt.md`, `.variants/`, `.py`; every descendant of that node, however deep, sits flat in the same folder under the same prefix rule, with no nested folders. `types.py` at the module root (beside the `types/` folder, which has no `__init__.py`, imported as `lumen.types`) holds the models of every type and of the inputs and outputs of every inference (`<Inference>In`, `<Inference>Out`), of every tool with `run` (`<Tool>In`, `<Tool>Out`) and of every `code` step (`<Workflow><Node>In`, `<Workflow><Node>Out`); there are no hand-written copies. An id is the file name up to the first dot; a bare name in `run` means `<id>.py` beside the declaring file, loaded by file path | §3, §8, §9 |
 
 ## 2. The scenario
 
@@ -60,17 +60,18 @@ except for the host.
 
 The loader recursively finds every `*.yaml` with `apiVersion: aqven/v1` and sorts them by `kind`; only `aqven.yaml` at
 the root is fixed (O14). **An entity's id is the file name up to the first dot:** `intent.node.yaml` is the node
-`intent`, `revise.inference.yaml` is the inference `revise`, `reply_quality.yaml` is the eval `reply_quality`, and
-`resolver.yaml` is the agent `resolver`. There is one exception — `flow.yaml` (and the builder `flow.py`): a
-workflow's id is the name of its folder. The suffixes `.node.yaml` and `.inference.yaml` are the O22 convention: the
-kind still comes from `kind`, and a suffix that contradicts `kind` is `E_KIND_PATH_MISMATCH`. An id is unique among
-entities of one kind (a duplicate is `E_ID_DUPLICATE`, with both paths). A node belongs to the workflow whose
-`flow.yaml` sits in the nearest folder above it; node folders do not affect ids — the expanded id (`route__resolve`)
-is built from the parent's `body` and `cases`.
+`intent`, `revise.inference.yaml` is the inference `revise`, `support_case_cases.yaml` is the dataset
+`support_case_cases`, and `resolver.yaml` is the agent `resolver`. There are two exceptions — `flow.yaml` (and the
+builder `flow.py`): a workflow's id is the name of its folder; and `experiment.yaml`: an experiment's id is the name
+of its folder. The suffixes `.node.yaml` and `.inference.yaml` are the O22 convention: the kind still comes from
+`kind`, and a suffix that contradicts `kind` is `E_KIND_PATH_MISMATCH`. An id is unique among entities of one kind (a
+duplicate is `E_ID_DUPLICATE`, with both paths). A node belongs to the workflow whose `flow.yaml` sits in the nearest
+folder above it; node folders do not affect ids — the expanded id (`route__resolve`) is built from the parent's `body`
+and `cases`.
 
 **The standard layout: one place per kind (O22).** A kind's folder exists at exactly one level: `types/`,
-`fragments/`, `code/` and `evals/` live only at the module root, and workflows and nodes have none of them. The files
-that belong to an entity sit beside its own file under the same prefix: `<id>.instructions.md`,
+`fragments/`, `code/`, `datasets/` and `experiments/` live only at the module root, and workflows and nodes have
+none of them. The files that belong to an entity sit beside its own file under the same prefix: `<id>.instructions.md`,
 `<id>.inference.yaml`, `<id>.prompt.md`, `<id>.variants/`, `<id>.py`. An agent with no companion files is the single
 file `agents/<agent>.yaml`; an agent with them gets the folder `agents/<agent>/`. Every top-level node of a workflow
 gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `parallel`, `map`, `loop`, and `cases` of
@@ -85,8 +86,9 @@ gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `para
 | MCP servers | `mcp/<server>.yaml` | `helpdesk` |
 | types | `types/`, with subfolders by type kind: `enums/`, `ids/`, `records/`, `unions/`, `values/` (constrained scalars) | all 49 types of both workflows and the tools |
 | shared prompt fragments | `fragments/<fragment>.md` | `untrusted_input`, `safety_escalation`, `citation_rules`, `brand_voice`, `judge_protocol` |
-| Python used in several places | `code/<module>.py` — several nodes, a node and an eval, several workflows | `code/support_case.py`: the evaluator `promises_match_resolution` is both a check on the `revise` inference and a scorer of the `reply_quality` eval |
-| datasets and evals of a workflow | `evals/<workflow>/` | `evals/support_case/reply_cases.yaml`, `reply_quality.yaml` |
+| Python used in several places | `code/<module>.py` — several nodes, a node and an experiment, several workflows | `code/support_case.py`: the evaluator `promises_match_resolution` is both a check on the `revise` inference and the `promises` check of three `reply_*` experiments |
+| datasets | `datasets/<dataset>.yaml` — the cases of a workflow (`flow: <workflow>`) or of an experiment arm | `support_case_cases`, `judge_panel_cases`, `long_customer_messages`, `planted_defect_replies` |
+| experiments | `experiments/<experiment>/experiment.yaml`, notes in `experiment.md`, arms in `arms/<arm>/flow.yaml`, the experiment's own code in `checks.py` | thirteen experiments, one for every question kind (§10) |
 | workflow | `flows/<workflow>/flow.yaml` | `support_case`, `judge_panel` |
 | top-level node | `flows/<workflow>/nodes/<node>/<node>.node.yaml` | `nodes/route/route.node.yaml` |
 | a node's descendant, at any depth | flat in the top-level node's folder: `nodes/<node>/<child>.node.yaml` | `nodes/route/resolve.node.yaml`, `nodes/polish/revise.node.yaml` |
@@ -95,14 +97,14 @@ gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `para
 | generated | `types.py` at the module root — the models of every type and of the inputs and outputs of every inference, tool and `code` step | `aqven generate`, in `.gitignore` |
 
 **A shared inference.** The inference sits beside the node that owns it, under that node's name, and takes its id.
-Other nodes and evals reference it with `inference: <id>`. The owner is the first node in workflow order that uses it
-and whose id does not match the agent's id:
+Other nodes, experiment checks and experiment arms reference it with `inference: <id>`. The owner is the first node
+in workflow order that uses it and whose id does not match the agent's id:
 
 | Inference | File | Who references it with `inference: <id>` |
 |---|---|---|
 | `ballot` | `flows/support_case/nodes/vote/ballot.inference.yaml` | `intent__escalate` |
-| `revise` | `flows/support_case/nodes/polish/revise.inference.yaml` | `drafts__gpt`, `drafts__mistral`, `drafts__gemini`, the `reply_quality` eval |
-| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | the `critique` scorer of the `reply_quality` eval |
+| `revise` | `flows/support_case/nodes/polish/revise.inference.yaml` | `drafts__gpt`, `drafts__mistral`, `drafts__gemini` |
+| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | the `critique` judge check of the `reply_look` and `reply_noninferior_mistral` experiments, the `critique_only` arm |
 | `tie_break` | `flows/judge_panel/nodes/decide/tie_break.inference.yaml` | `judges__deepseek`, `judges__qwen`, `judges__llama`, `decide__tie_break` |
 
 **A subagent inference.** The `research_policy` inference belongs to no node: it is called by a subagent of the
@@ -128,8 +130,9 @@ types/
   unions/                                          CaseOrigin, CaseRecord
   values/                                          Score
 fragments/                                         untrusted_input, safety_escalation, citation_rules, brand_voice, judge_protocol
-code/support_case.py                               promises_match_resolution: a check on revise and a scorer of the reply_quality eval
-evals/support_case/                                reply_cases.yaml — kind Dataset, reply_quality.yaml — kind Eval of the revise inference
+code/support_case.py                               promises_match_resolution: a check on revise and the promises check of experiments
+datasets/<dataset>.yaml                            kind Dataset: cases with inputs, node_outputs, expected_output and tags
+experiments/<experiment>/                          kind Experiment in experiment.yaml, notes in experiment.md, arms/<arm>/
 flows/
   support_case/                                    the case workflow
     flow.yaml                                      kind Flow: input, output, node order
@@ -195,7 +198,7 @@ Conventions (O15, O20):
   accepted by the framework yet (§14). A fragment is static text with no variables. There are no prompt parts in the
   standard: the static parts `brand_voice` and `judge_protocol` are shared fragments, and the part with variables (the
   previous reply and the critique) is inlined in `nodes/polish/revise.prompt.md` under `{% if previous %}`.
-- **Code references (O20).** Every `run`, `wait.poll`, level 3 `prompt`, `checks[].run` and `scorers[].run` reference
+- **Code references (O20).** Every `run`, `wait.poll`, level 3 `prompt` and `checks[].run` reference
   is written in the shortest form that works. The loader resolves it into an absolute reference from the file's
   location; the IR, the hashes and the run records store only the absolute reference, so moving a file changes nothing
   but the resolution.
@@ -207,7 +210,7 @@ Conventions (O15, O20):
   | `@here.<module>:<function>` | a module in the YAML's folder, by import path | — |
   | `@flow.<path>:<function>` | an import path from the workflow folder the YAML sits in | — |
   | `@<flow_id>.<path>:<function>` | an import path from the workflow folder named by its id | — |
-  | `@root.<path>:<function>` | an import path from the package root — shared code in `code/` and `tools/` | tools: `run: "@root.tools.functions:search_kb"`; an evaluator: `run: "@root.code.support_case:promises_match_resolution"` in `revise.inference.yaml` and in the `promises` scorer of the `reply_quality` eval |
+  | `@root.<path>:<function>` | an import path from the package root — shared code in `code/` and `tools/` | tools: `run: "@root.tools.functions:search_kb"`; an evaluator: `run: "@root.code.support_case:promises_match_resolution"` in `revise.inference.yaml` and in the `promises` check of three `reply_*` experiments |
   | `<package>.<module>:<function>` | as written | not in the example YAML; this is how `aqven refs` prints an absolute reference: `lumen.code.support_case:promises_match_resolution` |
 
   Diagnostics: `E_ALIAS_UNKNOWN` (an unknown `@name`), `E_ALIAS_RESERVED` (a workflow id of `here`, `flow` or `root`),
@@ -261,7 +264,7 @@ lives in `<node>.py` beside the node file, referenced by the bare function name:
 | 12 | `panel` | call `judge_panel` | picking the best candidate | calling another workflow with a contract; the judge panel |
 | 13 | `polish` | loop `body [revise, critique]`, `init {revise: [previous ← $panel.out.winner]}`, `max_iter: 3`, `stop [{use: threshold, with {path: $iter.critique.out.score, gte: 0.85}}, {use: stagnation, with {path, window: 1, min_delta: 0.02}}]`, `select {use: best, with {path: $iter.critique.out.score}}` | revision from critique | critic-revise; a single judge; built-in stop and select policies |
 | 13a | `polish/revise` | llm, its own `revise` inference @ `gpt`, `previous: $acc.revise.out.reply`, `critique: $acc.critique.out` | the revision | the same inference the drafts use |
-| 13b | `polish/critique` | llm, its own `critique` inference @ `mistral`, `reply: $revise.out.reply` | scoring grounding, agreement with the decision and completeness | a single judge from another family; the same inference is the eval judge (§10) |
+| 13b | `polish/critique` | llm, its own `critique` inference @ `mistral`, `reply: $revise.out.reply` | scoring grounding, agreement with the decision and completeness | a single judge from another family; the same inference is the experiments' judge (§10) |
 | 14 | `illustrate` | llm, its own `illustrate` inference @ `painter` | the instruction image | Image output; level 3 (`prompt: illustrate_prompt` → `illustrate.py`); a fallback model |
 | 15 | `voice` | tool `synthesize_voice` | the voice version of the reply | Audio output from a tool; `external` plus idempotency |
 | 16 | `clip` | tool `render_clip` | a short clip from the image | Video output; a long-running job with `wait` |
@@ -397,11 +400,11 @@ table. The set of keys is O2; their names are a **proposal — not in an ADR**.
 |---|---|---|---|---|---|
 | `gemini` | `openrouter:google/gemini-2.5-flash-lite` | google | `auto → tool`, strict false, retries 2 | `capabilities.input: [text, image, audio, video, document]`; temperature 0.2 | `triage`, `record__extract`, `drafts__gemini` |
 | `llama` | `openrouter:meta-llama/llama-3.1-8b-instruct` | meta | `auto → tool`, strict false | temperature 0.2 | `vote__ballot`, and in `panel`: `judges__llama` |
-| `mistral` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false, retries 2 | temperature 0.2; formerly the `claude` agent | `drafts__mistral`, `polish__critique`; the eval `reflection_agent` |
+| `mistral` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false, retries 2 | temperature 0.2; formerly the `claude` agent | `drafts__mistral`, `polish__critique`; the candidate reviser of `reply_noninferior_mistral` |
 | `gpt` | `openrouter:openai/gpt-oss-20b` | openai | `auto → tool`, strict false, retries 4 | temperature 0.3, max_tokens 4000 | `drafts__gpt`, `polish__revise`, and in `panel`: `decide__tie_break` |
 | `resolver` | `openrouter:openai/gpt-oss-20b` | openai | `native`, strict false, retries 3 | tools, an MCP tool, a subagent, approval (`fail`), `limits` (requests 12) | `route__resolve` |
 | `researcher` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false | `mcp_servers: [helpdesk]` | the `resolver` subagent |
-| `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` | deepseek | `auto → tool`, strict false | temperature 0 | `intent__escalate`, `judges__deepseek`; the eval judge |
+| `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` | deepseek | `auto → tool`, strict false | temperature 0 | `intent__escalate`, `judges__deepseek`; the critique judge of the experiments |
 | `qwen` | `openrouter:qwen/qwen3-30b-a3b-instruct-2507` | qwen | `tool` explicitly, strict false | temperature 0 | `judges__qwen` |
 | `painter` | `openrouter:google/gemini-3.1-flash-lite-image` | google | `prompted` explicitly, strict false | `fallback_models: [openrouter:openai/gpt-5-image-mini]`; `capabilities {input: [text, image], output: [text, image]}` | `illustrate` |
 
@@ -475,10 +478,10 @@ prefix, and `gemini` and `painter` declare `capabilities` themselves.
 
 An inference's id is the file name up to the first dot. The inference sits beside the node that owns it, under that
 node's name, and takes its id (`triage`, `ballot`, `extract`, `resolve`, `revise`, `critique`, `illustrate`,
-`tie_break`); other nodes and evals name a shared inference with `inference: <id>` (§3). A subagent's inference sits
-in the folder of the agent that calls it (`research_policy` in `agents/resolver/`). Below is a fragment of
-`flows/support_case/nodes/polish/revise.inference.yaml`: the `product` and `chunks` inputs, the output and every key
-except some of the checks.
+`tie_break`); other nodes, experiment checks and arms name a shared inference with `inference: <id>` (§3). A
+subagent's inference sits in the folder of the agent that calls it (`research_policy` in `agents/resolver/`). Below is
+a fragment of `flows/support_case/nodes/polish/revise.inference.yaml`: the `product` and `chunks` inputs, the output
+and every key except some of the checks.
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -546,13 +549,14 @@ explicit path to a `.md`; it is rendered with the same inputs and obeys the same
 and `default` exists as a file, and every file is named (`E_VARIANT_MISSING`, `E_ORPHAN_FILE`); `on` is an enum or
 Text input; an enum is covered by `cases` or there is a `default`, and for `T?` a `default` is required
 (`E_VARIANT_NOT_EXHAUSTIVE`); the variants and the prompt read inputs only, and the prompt prints every slot; the
-`on` selector counts as using that input. A run records the chosen variant per slot, and GEPA optimizes the variant
-files as separate text units. A selection more complex than equality on one input means a level 3 prompt.
+`on` selector counts as using that input. A run records the chosen variant per slot. A selection more complex than
+equality on one input means a level 3 prompt.
 
 **Post-checks are evaluators (O5, O9, O11).** A check is a reference to an evaluator: a built-in `use: <id>` with
 `with`, your own `run: module:function` with an optional `with`, or a judge `inference` + `agent` (the judge's inputs
 bind by name to the `in` and `out` of the inference under review, and the score is the `score` field of its output);
-`on_fail` and an optional `threshold` sit beside it. The same reference without `on_fail` is an eval scorer (§10).
+`on_fail` and an optional `threshold` sit beside it. The same reference without `on_fail`, with an `id` and a
+`kind`, is an experiment check (§10).
 The evaluator contract (`aqven.policies.Evaluator`) is
 `(value: <out model>, context: EvalContext[<in model>, <out model>], params: <with model>) -> Verdict {passed, score?, reason?}`;
 the `in` and `out` models are the generated `<Inference>In` and `<Inference>Out` from `lumen.types` (`ReviseIn`,
@@ -571,7 +575,8 @@ writes a `CheckOutcome` into the execution.
 | `unique_items` | `field` (a list of records), `key` |
 | `ids_in_allowed_set` | `field`, `allowed` |
 | `citations_in_sources` | `citations`, `sources`, `id`, `quote`, `text` |
-| `cost_usd`, `latency_ms` | — (run metrics, for scorers) |
+| `expected` | `fields?[]` — compares the output with the case's `expected_output` (experiment checks) |
+| `cost_usd`, `latency_ms` | — (run metrics, for experiment checks) |
 
 ### 6.6. Policies (O9)
 
@@ -587,7 +592,7 @@ and replay and fork reproduce them.
 | `stop[]` | loop | `(state: LoopState, params) -> Continue \| Stop(reason)`; the loop stops as soon as any policy returns `Stop`; `max_iter` is the structural limit | `threshold {path, gte \| lte}`, `stagnation {path, window, min_delta}` | `polish` uses `threshold` and `stagnation`, `record` uses its own `no_issues {path}` |
 | `select` | loop | `(state: LoopState, params) -> int` — the index of the chosen pass | `last`, `best {path}` | `record` uses `last`, `polish` uses `best` |
 | `on_item_error` | map | `(item: T, error: MapItemError, params) -> Skip \| Fail \| Default[O]` | `skip`, `fail`, `default {value}` | `vote` uses `skip` |
-| `checks[]`, `scorers[]` | inference, eval | an evaluator, §6.5 | §6.5 | §7, §10 |
+| `checks[]` | inference, experiment | an evaluator, §6.5 | §6.5 | §7, §10 |
 
 There is no separate `on_branch_error`: handling branch errors is a parameter of the `join` policy. Checks: the
 reference resolves (`E_POLICY_UNKNOWN`, `E_CODE_REF_UNRESOLVED`), exactly one of `use` and `run` is set, `with`
@@ -616,7 +621,7 @@ The paths in the "Files" column are relative to `flows/support_case/nodes/`, exc
 | `research_policy` (`agents/resolver/research_policy.inference.yaml`, `.prompt.md`) | 1 | `question: Text` (500), `category: ProductCategory` | `answer: Text` (800), `sources: Text[]` (5 × 120) | one block of instruction text with no variables; the prompt sits beside the inference by convention | `researcher` |
 | `revise` (`polish/revise.inference.yaml`, `.prompt.md`, `.variants/`) | 2 | `summary: Text` (600), `customer: Customer`, `locale: Locale`, `channel: Channel`, `product: ProductRef?`, `resolution: Resolution`, `chunks: KbChunk[]` (80), `previous: ReplyDraft?`, `critique: Critique?` | `reply: ReplyDraft` | selection by index over `KbChunkId`; the `lamp_guide` variant slot by `product.lamp_kind`: `revise.variants/lamp_guide/{mains,rechargeable,smart_wifi,smart_zigbee,unknown}.md`, `default: unknown`; checks `citations_in_sources` retry, `max_words {field: $out.reply.text, max: 220}` retry, `no_pii {fields: [$out.reply.text]}` fail, `language {field: $out.reply.text, locale: $in.locale}` flag, `run: @root.code.support_case:promises_match_resolution` retry; the fragments `fragments/brand_voice`, `fragments/citation_rules`, `fragments/untrusted_input`; the previous version and the critique sit under `{% if previous %}` | `gpt`, `mistral`, `gemini` |
 | `tie_break` (`flows/judge_panel/nodes/decide/tie_break.inference.yaml`, `.prompt.md`) | 1 | `summary: Text` (600), `candidates: ReplyDraft[]` (3), `chunks: KbChunk[]` (80), `panel: JudgeVerdict[]?` (3) | `rationale: Text` (600), `scores: CriterionScore[]` (3), `best_index: Int` 0..2 | the reasoning comes before the scores | `deepseek`, `qwen`, `llama`, `gpt` |
-| `critique` (`polish/critique.inference.yaml`, `.prompt.md`, `.py`) | 2 | `summary: Text` (600), `resolution: Resolution`, `chunks: KbChunk[]` (80), `reply: ReplyDraft` | `rationale: Text` (600), `score: Score`, `blocking: Text[]` (5 × 200) — the fields of `Critique` | the fragments `fragments/judge_protocol`, `fragments/citation_rules`, `fragments/untrusted_input`; the check `run: critique_consistent` (`critique.py`) flag; as the judge of the `reply_quality` eval its inputs are found by name and the score is `score` | `mistral`, `deepseek` (eval) |
+| `critique` (`polish/critique.inference.yaml`, `.prompt.md`, `.py`) | 2 | `summary: Text` (600), `resolution: Resolution`, `chunks: KbChunk[]` (80), `reply: ReplyDraft` | `rationale: Text` (600), `score: Score`, `blocking: Text[]` (5 × 200) — the fields of `Critique` | the fragments `fragments/judge_protocol`, `fragments/citation_rules`, `fragments/untrusted_input`; the check `run: critique_consistent` (`critique.py`) flag; as the judge check of the experiments its inputs are found by name and the score is `score` | `mistral`, `deepseek` (experiments) |
 | `illustrate` (`illustrate/illustrate.inference.yaml`, `.py`) | 3 | `text: Text` (1500), `category: ProductCategory`, `photo: Image?` | `image: Image` | `prompt: illustrate_prompt` (`illustrate.py` beside it); the adapter appends the media | `painter` |
 
 Level 2 obeys the rules of ADR-0029 §8: every variable is an input, every input is used, `{{ output_format }}` appears
@@ -722,7 +727,7 @@ A function lives in `<id>.py` beside the file of the entity that uses it; Python
 | Module | Reference in the YAML | Functions |
 |---|---|---|
 | `tools/functions.py` | `@root.tools.functions:<function>` on every tool | `async search_kb(ctx, query, category, locale, tenant) -> SearchKbOut`, `async synthesize_voice(ctx, text, locale) -> SynthesizeVoiceOut`, `async start_clip(ctx, image, text, seconds) -> JobHandle`, `async poll_clip(ctx, job) -> JobPoll[RenderClipOut]`, `async lookup_order(ctx, order_id) -> LookupOrderOut`, `async issue_store_credit(ctx, customer_id, order_id, amount) -> IssueStoreCreditOut` |
-| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — in the `checks` of the `revise` inference and in the `promises` scorer of the `reply_quality` eval | the evaluator `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` |
+| `code/support_case.py` | `@root.code.support_case:promises_match_resolution` — in the `checks` of the `revise` inference and in the `promises` check of three `reply_*` experiments | the evaluator `promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict` |
 | `support_case`: `prepare/prepare.py` | `prepare` | `prepare(request) -> SupportCasePrepareOut` |
 | `support_case`: `tally/tally.py` | `tally` | `tally(ballots) -> SupportCaseTallyOut` |
 | `support_case`: `case_form/case_form.py` | `case_form` | `case_form(intent) -> SupportCaseCaseFormOut` |
@@ -768,19 +773,22 @@ follows its slot contract (§6.6). **Proposal — not in an ADR** (ADR-0026 §5 
   replay load trace. The `clip` and `voice` tools stay `MockTransport` stubs, and the helpdesk MCP stays an
   `McpToolStub`. The engine is stopped after every test: DBOS installs its own thread pool as the event loop's
   default, and anyio closes it at the end of the test.
-- **Evals.** They live in the root `evals/<workflow>/` of the workflow whose inference they score
-  (`evals/support_case/`). The dataset `reply_cases.yaml` (its id is the file name, with no `name` key) holds `revise`
-  inputs (with `product` and a lamp kind) and `metadata.split: train|dev|test`. The eval `reply_quality.yaml` has
-  `inference: revise`, `agent: gpt`, `dataset: reply_cases`, and scorers that are the same evaluator references the
-  checks use (O11): `critique` (continuous) is the judge `inference: critique`, `agent: deepseek` — the same inference
-  the single judge `polish__critique` uses; `citations` (binary) is `use: citations_in_sources` with the same `with`
-  as the `revise` check; `promises` (binary) is `run: @root.code.support_case:promises_match_resolution`, the same
-  function from `code/` and the same reference as the `retry` check; and `cost_usd` is `use: cost_usd`. The gate is as
-  in 13 §8 (`primary: [critique]`, `safety: [citations, promises, cost_usd]`, `min_dataset: 200` → an honest
-  `GATE_UNAVAILABLE` on this example); `optimization {engine: gepa, objective: critique, reflection_agent: mistral,
-  max_metric_calls: 400, stop_score: 0.92}` — GEPA edits `revise.prompt.md` and the files under
-  `revise.variants/lamp_guide/` as separate text units. That an eval targets an inference and agent pair is a
-  **proposal — not in an ADR** (13 §4, ADR-0029 §9).
+- **Experiments (ADR-0047).** An experiment is subject × variants × cases × checks × question, in
+  `experiments/<experiment>/experiment.yaml`, with its id taken from the folder. The subject is a workflow
+  (`flow`), a range of its top-level nodes (`from`, `to`; the nodes above the range take their outputs from the case
+  `node_outputs`), or an arm — a small workflow in `experiments/<experiment>/arms/<arm>/` that only this experiment
+  runs. A variant assigns agents to nodes (`agents: {<node>: <agent>}`) or picks another arm; it never names a bare
+  model. The cases are a dataset in `datasets/`, selected by `tags`; `name` is the case key. The checks are the same
+  evaluator references the inference checks use (O11), plus `id`, `kind` and, on a judge, `validated_by`. The
+  question is `look`, `threshold`, `compare` or `noninferior`; `plan {cases, repeats}` is the recommended series
+  size, not a limit. The example has thirteen experiments: `reply_look`, `reply_overpromise_risk`,
+  `reply_stage_budget` and `reply_noninferior_mistral` on ranges of `support_case`; `judge_panel_agents`,
+  `panel_aa_noise`, `panel_failure_scan` and `panel_single_judge` on `judge_panel`; and `intent_split_long_messages`,
+  `intent_ballot_pair`, `intent_escalation_agents`, `critique_planted_defects` and `critique_recall_by_agent` on arms.
+  The `critique` judge check (`inference: critique`, `agent: deepseek`) carries
+  `validated_by: critique_planted_defects`, the experiment that measures that critic on planted defects; `promises`
+  is `run: @root.code.support_case:promises_match_resolution`, the same function and reference as the `retry` check
+  on `revise`. `aqven check` validates the experiments today; running them as a series is the next engine step.
 
 ## 11. The host and the execution modes
 
@@ -791,7 +799,7 @@ follows its slot contract (§6.6). **Proposal — not in an ADR** (ADR-0026 §5 
 | Any HTTP client | the contract is in `/api/openapi.json` and `/api/schemas/events`, with SSE and `Authorization: Bearer`; the curl examples are in [README.md](README.md); our `AqvenClient` is only a convenience, and its tests live in `packages/aqven/tests/client/` |
 | MCP and Claude Code | `.mcp.json` → `http://127.0.0.1:5180/mcp/`; the tools `run_start`, `run_list`, `run_get_node`, `run_resume`, `run_fork` (23 §13.4) |
 | Studio | `aqven studio lumen` — a server on 127.0.0.1 with a launch token, plus a browser; `aqven dev lumen --dev-origin http://localhost:5173` — Studio development on Vite |
-| CLI | working: `generate`, `check` (which generates the types first), `schema`, `tree` (entities by kind with file paths, output in [README.md](README.md)), `refs KIND:ID` (the definition plus incoming and outgoing references: `refs inference:revise`), `run support_case --root lumen --input lumen/samples/case_request.json --human-answers lumen/samples/answers.json` (a local run with no server, printing events as they appear), `serve`, `studio`, `dev`, `mcp` (the stdio bridge: it takes the project's running server or starts one in the background), and `eval --eval reply_quality`; answering "not implemented" with exit code 2 — `fmt`, `plan`, `build`, `optimize --eval reply_quality` |
+| CLI | working: `generate`, `check` (which generates the types first), `schema`, `tree` (entities by kind with file paths, output in [README.md](README.md)), `refs KIND:ID` (the definition plus incoming and outgoing references: `refs inference:revise`), `run support_case --root lumen --input lumen/samples/case_request.json --human-answers lumen/samples/answers.json` (a local run with no server, printing events as they appear), `serve`, `studio`, `dev`, `mcp` (the stdio bridge: it takes the project's running server or starts one in the background); answering "not implemented" with exit code 2 — `fmt`, `plan`, `build` |
 | pytest with no network | `tests/test_check.py` (negatives, among them `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `E_CODE_NOT_FOUND`, `E_ALIAS_UNKNOWN`) and `tests/test_support_case.py` (`aqven_engine`: the five scenarios of §10 on `replay_strict` cassettes with `ALLOW_MODEL_REQUESTS = False`, `ScriptedHuman`, tool approval and refusal, the `painter` fallback through `provider_fault`, MCP stubs, HTTP tools on `MockTransport`, and a fork). Recording the cassettes takes `AQVEN_LIVE=1` with an OpenRouter key: `record_new` replays what exists and appends what is new, against the agents' own models — there is no test model profile — and each scenario is recorded by its own pytest run |
 
 ```
@@ -808,15 +816,15 @@ The goal is less code: everything the example does not use is removed.
 
 | Module | Change |
 |---|---|
-| `aqven.spec` | New kinds `Inference`, `Agent`, `Tool`, `McpServer` (the modules `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `profiles.py` (the table of §6.4, `parse_model`, `resolve_profile`); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` plus `on_fail` and `threshold`; `ScorerSpec` = `EvaluatorRef` plus `id` and `kind`. `ProjectSpec` loses `defaults`, `models`, `roles` and `mcp_servers`; `ProviderSpec.id` is the provider name. An `llm` node is `inference?` (absent means `<node>.inference.yaml` beside `<node>.node.yaml`) plus `agent` plus bindings; `tool` is `tool` plus bindings; `call` is the called workflow plus bindings (O17). No `determinism` or `ttl_ms` on `code` nodes and tools (O12). One `Limits` instead of `Budget`, `AgentLimits`, `timeout_ms` and `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — with no iteration block, `stop_when`, `stagnation`, `score`, `quorum` or `on_branch_error`; `max_iter` is required. `map` has no `max_items`. Removed: `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, roles and the catalogue, `ToolCallRecord`, `via` projections, shared prompts by key, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. The builder: `Inference` instead of `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
+| `aqven.spec` | New kinds `Inference`, `Agent`, `Tool`, `McpServer` (the modules `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `profiles.py` (the table of §6.4, `parse_model`, `resolve_profile`); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` plus `on_fail` and `threshold`; `ExperimentCheck` = `EvaluatorRef` plus `id`, `kind` and `validated_by`. `ProjectSpec` loses `defaults`, `models`, `roles` and `mcp_servers`; `ProviderSpec.id` is the provider name. An `llm` node is `inference?` (absent means `<node>.inference.yaml` beside `<node>.node.yaml`) plus `agent` plus bindings; `tool` is `tool` plus bindings; `call` is the called workflow plus bindings (O17). No `determinism` or `ttl_ms` on `code` nodes and tools (O12). One `Limits` instead of `Budget`, `AgentLimits`, `timeout_ms` and `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — with no iteration block, `stop_when`, `stagnation`, `score`, `quorum` or `on_branch_error`; `max_iter` is required. `map` has no `max_items`. Removed: `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, roles and the catalogue, `ToolCallRecord`, `via` projections, shared prompts by key, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. The builder: `Inference` instead of `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
 | `aqven.policies` | The slot contracts (`JoinPolicy`, `StopPolicy`, `SelectPolicy`, `ItemErrorPolicy`, `Evaluator`), the decisions (`Wait`, `Done`, `Fail`, `Continue`, `Stop`, `Skip`, `Default`), `EvalContext`, `Verdict`, and the `BUILTINS` registry |
 | `aqven.loader` | Done (O14, O15, O22): the recursive search for `*.yaml` with `apiVersion: aqven/v1`, sorting by `kind`, an id as the file name up to the first dot (the folder name for `flow.yaml`), `E_KIND_PATH_MISMATCH` from the suffix, uniqueness per kind, a node belonging to the nearest `flow.yaml` above it, the implicit `<node>.inference.yaml` beside `<node>.node.yaml`, the texts `<inference>.prompt.md` and `<inference>.variants/<slot>/*.md` by the inference prefix, includes resolved from the file, the inference folder or the root, and a bare name in `run` meaning `<id>.py` beside it, loaded by file path. Done (O17, O18, O20): calling a workflow from a `call` node (`CallNodeSpec.flow`, the `requires` contract on `FlowSpec`); an explicit `prompt` and variant as a path to a `.md`; `W_PROMPT_SHADOWED`; the code reference aliases in `aliases.py`. Left: `@flow/` in `{% include %}` (§14) |
 | `aqven.codegen` | Done (O19, O22): `aqven generate` writes into `types.py` at the module root the type models, `<Inference>In`/`<Inference>Out` for every inference, `<Tool>In`/`<Tool>Out` for every tool with `run`, and `<Workflow><Node>In`/`<Workflow><Node>Out` for every `code` step; `aqven check` generates before checking; `W_GENERATED_STALE`; and the pytest plugin regenerates before conftest |
-| `aqven.check` | `registry` (agents, tools, MCP, providers, fallbacks, subagents, approval), `inferences` (the prompt, variants, examples, allowed sets), `policies` (slot policies and the evaluators of checks and scorers) and `capabilities` (media, strict, PII by agent and fallbacks) instead of `catalog`, `strict`, `media` and `agents`; node bindings are checked against the inputs of the inference, the tool or the called workflow |
+| `aqven.check` | `registry` (agents, tools, MCP, providers, fallbacks, subagents, approval), `inferences` (the prompt, variants, examples, allowed sets), `policies` (slot policies and the evaluators of inference and experiment checks) and `capabilities` (media, strict, PII by agent and fallbacks) instead of `catalog`, `strict`, `media` and `agents`; node bindings are checked against the inputs of the inference, the tool or the called workflow |
 | `aqven.diagnostics` | New: `E_INFERENCE_UNKNOWN`, `E_AGENT_UNKNOWN`, `E_TOOL_UNKNOWN`, `E_INPUT_UNBOUND`, `E_INPUT_UNKNOWN`, `E_CHECK_PARAMS`, `E_EXAMPLE_INVALID`, `E_TEXT_OUTPUT`, `E_APPROVAL_TOOL`, `E_AGENT_RECURSION`, `E_SOURCE_CONFLICT`, `E_VARIANT_MISSING`, `E_VARIANT_NOT_EXHAUSTIVE`, `E_POLICY_UNKNOWN`, `E_POLICY_PARAMS`, `W_PROMPT_SHADOWED` (O18); removed `E_PROMPT_MISPLACED` and `E_PROMPT_AMBIGUOUS` (O18: a path in `prompt` is legal, and a `<inference>.prompt.md` beside it is a warning); `E_COMPONENT_UNKNOWN` and `E_COMPONENT_RECURSION` move to workflows (O17); removed `E_MODEL_ROLE_UNKNOWN`, `E_MODEL_UNKNOWN`, `E_LOOP_UNBOUNDED`, `E_MAP_UNBOUNDED`, `E_APPROVAL_MISSING`, `E_COMPONENT_BINDING`, `E_FLOW_SOURCE_CONFLICT`, and the reserved `W_DYNAMIC_EXCESS`, `W_LOCK_STALE`, `E_PROMPT_BUDGET` |
 | `aqven.runtime` | `NodeExecution.agent`, `.inference`; `CheckOutcome {check, on_fail, passed, feedback, attempt}`; `ForkOverrides.agent` instead of `model_profile`; `ProviderFault.model` is a model string; removed `RecordedToolOutput`, `RawHumanMessage`, `narrowing.py`, `issues.py` |
 | `aqven.testing` | removed `recorded_tool_output`, `ScriptedHuman.raw`, `DirectoryBlobStore`, and the `blob_store` fixture |
-| `aqven.cli`, `aqven.client`, `aqven.evals` | no change in shape; `EvalSpec` is `inference` plus `agent`, and the judge and the reflection model are agents |
+| `aqven.cli`, `aqven.client` | no change in shape; an experiment's judge check and its variants name agents, never bare models |
 
 ## 13. Ownership
 
@@ -825,7 +833,7 @@ Layout by role (O19, O22) makes the owner of a folder the owner of everything in
 | Owner | Paths (from `examples/lumen/`; the project root is `examples/`) |
 |---|---|
 | config | `aqven.yaml`, `types/`, `agents/` (including the folder `agents/resolver/` and the subagent inference), `tools/`, `mcp/` |
-| workflow | `flows/support_case/`, `flows/judge_panel/` — the workflows, their nodes, inferences, prompts, variants and code; plus `fragments/`, `code/`, `evals/` |
+| workflow | `flows/support_case/`, `flows/judge_panel/` — the workflows, their nodes, inferences, prompts, variants and code; plus `fragments/`, `code/`, `datasets/`, `experiments/` |
 | host | `app.py`, `__main__.py`, `samples/`, and at the project root `tests/`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.gitignore`, `pyproject.toml` |
 
 `types.py` at the module root belongs to nobody: `aqven generate` writes it. Other people's files are read only;

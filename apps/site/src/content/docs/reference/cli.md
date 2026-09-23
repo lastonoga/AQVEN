@@ -26,7 +26,5 @@ The command names and help text below come from `aqven.cli.COMMANDS`. Use `uv ru
 | `{{CLI_COMMAND}} models` | model providers of the project | Available |
 | `{{CLI_COMMAND}} secrets` | every secret the project declares, where it comes from and whether it is set | Available |
 | `{{CLI_COMMAND}} prompt` | prompts of llm nodes | Available |
-| `{{CLI_COMMAND}} eval` | run an eval over its dataset, score every case and compare with a baseline run | Available |
-| `{{CLI_COMMAND}} optimize` | optimize a prompt with GEPA | Pending |
 
 Pending commands are registered for future use but return `not implemented`; do not put them in automation. [How to check a project before committing](/engine/check/) shows a working command sequence.

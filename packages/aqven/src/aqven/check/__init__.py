@@ -13,7 +13,6 @@ from aqven.check.control import check_control
 from aqven.check.datasets import check_datasets
 from aqven.check.display import check_display
 from aqven.check.dynamic import check_dynamic
-from aqven.check.evals import check_evals
 from aqven.check.experiments import check_experiments
 from aqven.check.flows import check_flows
 from aqven.check.generated import check_generated
@@ -58,7 +57,6 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_flows,
     check_secrets,
     check_tool_args,
-    check_evals,
     check_datasets,
     check_experiments,
     check_generated,
@@ -101,7 +99,6 @@ def _positions(project: LoadedProject) -> Mapping[str, Mapping[YamlPath, Positio
         project.project,
         *project.types.values(),
         *project.datasets.values(),
-        *project.evals.values(),
         *project.agents.values(),
         *project.tools.values(),
         *project.mcp_servers.values(),

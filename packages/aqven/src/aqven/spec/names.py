@@ -37,7 +37,6 @@ ToolId = NewType("ToolId", str)
 ModelString = NewType("ModelString", str)
 McpServerId = NewType("McpServerId", str)
 DatasetId = NewType("DatasetId", str)
-EvalId = NewType("EvalId", str)
 ExperimentId = NewType("ExperimentId", str)
 ArmId = NewType("ArmId", str)
 VariantId = NewType("VariantId", str)
@@ -56,7 +55,6 @@ class SpecKind(StrEnum):
     FLOW = "Flow"
     NODE = "Node"
     DATASET = "Dataset"
-    EVAL = "Eval"
     EXPERIMENT = "Experiment"
     INFERENCE = "Inference"
     AGENT = "Agent"
@@ -181,12 +179,6 @@ class SeriesMetric(StrEnum):
     LATENCY_P95_MS = "latency_p95_ms"
     SCHEMA_VALID_FIRST_TRY = "schema_valid_first_try"
     INFRA_ERROR_RATE = "infra_error_rate"
-
-
-class GateAction(StrEnum):
-    RELEASE = "release"
-    REQUIRE_APPROVAL = "require_approval"
-    REJECT = "reject"
 
 
 class PromptLevel(IntEnum):

@@ -4,7 +4,7 @@ from typing import Final
 from pydantic import TypeAdapter
 
 from aqven.spec.agent import AgentSpec
-from aqven.spec.evals import DatasetFile, EvalSpec
+from aqven.spec.datasets import DatasetFile
 from aqven.spec.experiments import ExperimentSpec
 from aqven.spec.flow import FlowSpec
 from aqven.spec.inference import InferenceSpec
@@ -21,7 +21,6 @@ type SpecDocument = (
     | FlowSpec
     | NodeSpec
     | DatasetFile
-    | EvalSpec
     | ExperimentSpec
     | InferenceSpec
     | AgentSpec
@@ -35,7 +34,6 @@ SPEC_MODEL_BY_KIND: Final[Mapping[SpecKind, TypeAdapter[SpecDocument]]] = {
     SpecKind.FLOW: TypeAdapter[SpecDocument](FlowSpec),
     SpecKind.NODE: TypeAdapter[SpecDocument](NodeSpec),
     SpecKind.DATASET: TypeAdapter[SpecDocument](DatasetFile),
-    SpecKind.EVAL: TypeAdapter[SpecDocument](EvalSpec),
     SpecKind.EXPERIMENT: TypeAdapter[SpecDocument](ExperimentSpec),
     SpecKind.INFERENCE: TypeAdapter[SpecDocument](InferenceSpec),
     SpecKind.AGENT: TypeAdapter[SpecDocument](AgentSpec),

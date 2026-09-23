@@ -12,7 +12,6 @@ from aqven.loader.aliases import AliasScope, resolve_aliases
 from aqven.loader.project import (
     AGENT_ADAPTER,
     DATASET_ADAPTER,
-    EVAL_ADAPTER,
     EXPERIMENT_ADAPTER,
     FLOW_ADAPTER,
     INFERENCE_ADAPTER,
@@ -39,7 +38,6 @@ VALIDATORS: Final[Mapping[SpecKind, Validator]] = {
     SpecKind.FLOW: FLOW_ADAPTER.validate_python,
     SpecKind.NODE: NODE_ADAPTER.validate_python,
     SpecKind.DATASET: DATASET_ADAPTER.validate_python,
-    SpecKind.EVAL: EVAL_ADAPTER.validate_python,
     SpecKind.EXPERIMENT: EXPERIMENT_ADAPTER.validate_python,
     SpecKind.INFERENCE: INFERENCE_ADAPTER.validate_python,
     SpecKind.AGENT: AGENT_ADAPTER.validate_python,

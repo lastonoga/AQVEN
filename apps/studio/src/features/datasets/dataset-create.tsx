@@ -75,7 +75,7 @@ export function CreateDataset({ flowId, draft }: CreateDatasetProps) {
         return
       }
       try {
-        const datasets = await api.evals.datasets()
+        const datasets = await api.datasets.list()
         if (!active || !datasets.some((item) => item.dataset_id === generatedId)) return
         window.clearInterval(interval)
         void navigate({ to: ROUTE_PATH.datasets, params, search: { dataset: generatedId } })
@@ -132,7 +132,7 @@ export function CreateDataset({ flowId, draft }: CreateDatasetProps) {
     setPending(true)
     setSaveError(null)
     try {
-      const created = await api.evals.createDataset(request)
+      const created = await api.datasets.create(request)
       void navigate({ to: ROUTE_PATH.datasets, params, search: { dataset: created.dataset_id } })
     } catch (reason) {
       setSaveError(reason instanceof Error ? reason.message : String(reason))
@@ -156,7 +156,7 @@ export function CreateDataset({ flowId, draft }: CreateDatasetProps) {
     setGenerateError(null)
     setGeneratedId(null)
     try {
-      const datasets = await api.evals.datasets()
+      const datasets = await api.datasets.list()
       if (datasets.some((item) => item.dataset_id === name)) {
         setGenerateError(t("alreadyExists"))
         return

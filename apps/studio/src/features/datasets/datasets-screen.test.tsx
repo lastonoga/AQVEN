@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { beforeEach, describe, expect, it } from "vitest"
 import { API_BASE } from "@/api/client"
-import { liveDatasets } from "@/mocks/data/evals"
+import { liveDatasets } from "@/mocks/data/datasets"
 import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
 
@@ -50,7 +50,7 @@ describe("DatasetsScreen", () => {
     expect(screen.queryByText("datasets/support_case_cases.yaml")).toBeNull()
     expect(screen.queryByRole("heading", { name: "support_case_cases" })).toBeNull()
     expect(screen.getByRole("heading", { name: "Datasets", level: 1 })).toBeTruthy()
-    expect(screen.getByText("Reusable cases for flow runs and inference evaluations")).toBeTruthy()
+    expect(screen.getByText("Reusable cases for flow runs and experiments")).toBeTruthy()
     expect(screen.getByText("Flow · support_case")).toBeTruthy()
     const create = screen.getByRole("button", { name: "Upload CSV" })
     expect(create.compareDocumentPosition(trigger) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
@@ -64,7 +64,7 @@ describe("DatasetsScreen", () => {
     expect(list.querySelectorAll('[cmdk-item][data-selected="true"]')).toHaveLength(0)
     expect(screen.getByText("2 datasets in project")).toBeTruthy()
     const selectedOption = within(list).getByRole("option", { name: /support_case_cases.*3 cases.*Flow · support_case/u })
-    const otherOption = within(list).getByRole("option", { name: /reply_cases.*3 cases.*Inference evaluation/u })
+    const otherOption = within(list).getByRole("option", { name: /planted_defect_replies.*3 cases.*No flow/u })
     expect(selectedOption.getAttribute("data-checked")).toBe("true")
     expect(selectedOption.className).toContain("data-[checked=true]:bg-[color-mix(in_oklab,var(--popover)_70%,var(--foreground))]")
     expect(otherOption.getAttribute("data-checked")).toBe("false")
@@ -72,19 +72,20 @@ describe("DatasetsScreen", () => {
     const search = screen.getByRole("combobox", { name: "Search datasets" })
     fireEvent.keyDown(search, { key: "ArrowDown" })
     expect(list.querySelectorAll('[cmdk-item][data-selected="true"]')).toHaveLength(1)
-    fireEvent.change(search, { target: { value: "reply_cases" } })
+    fireEvent.change(search, { target: { value: "planted_defect_replies" } })
     expect(within(list).getAllByRole("option")).toHaveLength(1)
-    fireEvent.click(within(list).getByRole("option", { name: /reply_cases/u }))
-    await waitFor(() => { expect(router.state.location.search).toEqual({ dataset: "reply_cases" }) })
-    const nextTrigger = await screen.findByRole("combobox", { name: /Selected dataset reply_cases, 3 cases/u })
-    expect(within(nextTrigger).getByText("reply_cases").parentElement).toBe(nextTrigger)
+    fireEvent.click(within(list).getByRole("option", { name: /planted_defect_replies/u }))
+    await waitFor(() => { expect(router.state.location.search).toEqual({ dataset: "planted_defect_replies" }) })
+    const nextTrigger = await screen.findByRole("combobox", { name: /Selected dataset planted_defect_replies, 3 cases/u })
+    expect(within(nextTrigger).getByText("planted_defect_replies").parentElement).toBe(nextTrigger)
     expect(within(nextTrigger).getByText("3 cases").parentElement).toBe(nextTrigger)
-    expect(screen.queryByRole("heading", { name: "reply_cases" })).toBeNull()
-    expect(screen.getByRole("button", { name: "Open evaluation" })).toBeTruthy()
-    expect(screen.getByText("Inference evaluation")).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "planted_defect_replies" })).toBeNull()
+    expect(screen.getByText("No flow")).toBeTruthy()
+    expect(screen.getByText(/Experiments run its cases through an arm/u)).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "Run this dataset" })).toBeNull()
     fireEvent.click(nextTrigger)
     const nextList = await screen.findByRole("listbox", { name: "Datasets in this project" })
-    const nextSelectedOption = within(nextList).getByRole("option", { name: /reply_cases.*3 cases.*Inference evaluation/u })
+    const nextSelectedOption = within(nextList).getByRole("option", { name: /planted_defect_replies.*3 cases.*No flow/u })
     expect(nextSelectedOption.getAttribute("data-checked")).toBe("true")
     expect(nextSelectedOption.className).toContain("data-[checked=true]:bg-[color-mix(in_oklab,var(--popover)_70%,var(--foreground))]")
   })
@@ -117,12 +118,12 @@ describe("DatasetsScreen", () => {
         imports += 1
         return HttpResponse.json({
           dataset_id: "uploaded_cases", flow_id: "support_case", path: "datasets/uploaded_cases.yaml",
-          file_hash: "sha256-uploaded", cases: 1, splits: {}, used_by: [],
+          file_hash: "sha256-uploaded", cases: 1, splits: {},
         }, { status: 201 })
       }),
       http.get(`${API_BASE}/datasets/uploaded_cases`, () => HttpResponse.json({
         dataset_id: "uploaded_cases", flow_id: "support_case", path: "datasets/uploaded_cases.yaml",
-        file_hash: "sha256-uploaded", cases: 1, splits: {}, used_by: [],
+        file_hash: "sha256-uploaded", cases: 1, splits: {},
       })),
       http.get(`${API_BASE}/datasets/uploaded_cases/cases`, () => HttpResponse.json({
         items: [{ name: "sample_case", inputs: { message: "Hello" }, context: { date: "2026-09-18" } }],
@@ -227,16 +228,9 @@ describe("DatasetsScreen", () => {
     expect(screen.queryByRole("combobox", { name: "Filter by split" })).toBeNull()
     expect(within(cases).queryByRole("columnheader", { name: "Split" })).toBeNull()
     expect(screen.queryByText(/^Split: /u)).toBeNull()
-    const pageSelection = await within(cases).findByRole("checkbox", { name: "Select page" })
-    await waitFor(() => { expect(pageSelection).toHaveProperty("disabled", false) })
-    expect(screen.queryByRole("button", { name: "Select page" })).toBeNull()
-    fireEvent.click(pageSelection)
-    expect(await screen.findByText("3 selected")).toBeTruthy()
-    expect(within(cases).getByRole("checkbox", { name: "Deselect page" })).toHaveProperty("checked", true)
-    fireEvent.click(pageSelection)
-    expect(await screen.findByText("0 selected")).toBeTruthy()
-    fireEvent.click(within(cases).getByRole("checkbox", { name: "Select bulb_app_offline_advice" }))
-    expect(pageSelection).toHaveProperty("indeterminate", true)
+    expect(await within(cases).findByRole("link", { name: "bulb_app_offline_advice" })).toBeTruthy()
+    expect(within(cases).getByRole("link", { name: "lamp_crushed_box_reship" })).toBeTruthy()
+    expect(within(cases).getByRole("link", { name: "strip_flicker_credit" })).toBeTruthy()
   })
 
   it("shows the complete flat case data in one scrollable table with a fixed case column", async () => {
@@ -309,7 +303,6 @@ describe("DatasetsScreen", () => {
       file_hash: "sha256-demo-multimodal",
       cases: 1,
       splits: { demo: 1 },
-      used_by: [],
     }
     const item = {
       name: "flickering_strip_all_media",
@@ -344,24 +337,5 @@ describe("DatasetsScreen", () => {
     const audio = within(audioCell).getByLabelText("voice.wav")
     expect(audio.tagName).toBe("AUDIO")
     expect(audio.hasAttribute("controls")).toBe(true)
-  })
-
-  it("selects cases and keeps their grouped runs available by URL", async () => {
-    const router = await renderRoute("/flows/support_case/datasets?dataset=support_case_cases")
-    const cases = await screen.findByRole("table", { name: "Cases" })
-    fireEvent.click(await within(cases).findByRole("checkbox", { name: "Select bulb_app_offline_advice" }))
-    fireEvent.click(within(cases).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
-    expect(screen.getByText("2 selected")).toBeTruthy()
-
-    const start = await screen.findByRole("button", { name: "Run 2 selected cases" })
-    await waitFor(() => { expect(start).not.toHaveProperty("disabled", true) })
-    fireEvent.click(start)
-
-    await waitFor(() => { expect(router.state.location.search.batch).toBeTruthy() })
-    const results = await screen.findByRole("table", { name: "Grouped run cases" })
-    expect(within(results).getByText("bulb_app_offline_advice")).toBeTruthy()
-    expect(within(results).getByText("strip_flicker_credit")).toBeTruthy()
-    expect(within(results).queryByText("lamp_crushed_box_reship")).toBeNull()
-    expect(screen.getByText("Stages: prepare → finalize")).toBeTruthy()
   })
 })

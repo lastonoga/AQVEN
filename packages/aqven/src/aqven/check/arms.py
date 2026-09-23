@@ -16,7 +16,7 @@ def check_arms(context: CheckContext, rules: Sequence[CheckRule]) -> Iterator[Di
 
 
 def arm_view(context: CheckContext, arms: Mapping[FlowId, LoadedFlow]) -> CheckContext:
-    project = replace(context.project, flows={**context.project.flows, **arms}, experiments={}, evals={}, datasets={})
+    project = replace(context.project, flows={**context.project.flows, **arms}, experiments={}, datasets={})
     graph = build_graph(project)
     return replace(
         context, project=project, graph=graph, refs=RefResolver(graph=graph, type_models=context.type_models)

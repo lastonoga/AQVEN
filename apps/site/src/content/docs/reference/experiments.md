@@ -16,6 +16,15 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 [JSON Schema](/reference/schemas/CaseSelection.json)
 
+## CheckMetric
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | `—` | — |
+| `kind` | `'binary' \| 'ordinal' \| 'continuous'` | Yes | `—` | — |
+
+[JSON Schema](/reference/schemas/CheckMetric.json)
+
 ## CompareQuestion
 
 | YAML field | Type | Required | Default | Constraints |

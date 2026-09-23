@@ -99,7 +99,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
-| `kind` | `'flow' \| 'node' \| 'type' \| 'prompt' \| 'dataset' \| 'eval' \| 'field' \| 'inference' \| 'agent' \| 'tool' \| 'mcp_server'` | Yes | `—` | — |
+| `kind` | `'flow' \| 'node' \| 'type' \| 'prompt' \| 'dataset' \| 'field' \| 'inference' \| 'agent' \| 'tool' \| 'mcp_server'` | Yes | `—` | — |
 | `from` | `string` | Yes | `—` | — |
 | `to` | `string` | Yes | `—` | — |
 | `at` | `string` | Yes | `—` | — |

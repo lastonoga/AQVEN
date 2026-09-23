@@ -46,8 +46,9 @@ The body nodes sit flat in the same `nodes/polish/` folder. `revise.node.yaml` h
 (`revise.inference.yaml`, `revise.prompt.md`, `revise.variants/lamp_guide/`): on the first pass `previous` comes from
 `init`, after that `previous ← $acc.revise.out.reply` and `critique ← $acc.critique.out`. `critique.node.yaml` has its
 own `critique` inference @ `mistral`, and its check `critique_consistent` lives in `critique.py` beside it. The same
-`critique` judges `revise` in the eval `evals/support_case/reply_quality.yaml`, and the evaluator
-`promises_match_resolution` from `code/support_case.py` is at once a check on `revise` and a scorer of that eval.
+`critique` inference, on the `deepseek` agent, is the judge check of the experiments `reply_look` and
+`reply_noninferior_mistral`, and the evaluator `promises_match_resolution` from `code/support_case.py` is at once a
+check on `revise` and a check of those experiments.
 
 ## Layout
 
@@ -76,9 +77,9 @@ lumen/
   mcp/helpdesk.yaml
   types/enums/, ids/, records/, unions/, values/
   fragments/                         brand_voice, citation_rules, judge_protocol, safety_escalation, untrusted_input
-  code/support_case.py               Python used in several places: a check on the revise inference and an eval scorer
-  datasets/                          cases of a flow or an inference
-  evals/support_case/                reply_cases.yaml, reply_quality.yaml
+  code/support_case.py               Python used in several places: a check on the revise inference and in experiments
+  datasets/                          cases of a flow or of an experiment arm: input, expected output, tags
+  experiments/<experiment>/          experiment.yaml, experiment.md, arms/<arm>/ — see Experiments below
   flows/
     support_case/
       flow.yaml
@@ -99,14 +100,14 @@ lumen/
 | What | Where |
 |---|---|
 | The inference of one node | beside the node under its name: `nodes/triage/triage.inference.yaml`, `nodes/record/extract.inference.yaml`, `nodes/route/resolve.inference.yaml`, `nodes/illustrate/illustrate.inference.yaml` |
-| A shared inference | at the first node that owns it, the rest reference it with `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini` and the eval; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — the eval scorer |
+| A shared inference | at the first node that owns it, the rest reference it with `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini`; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — the judge checks of the experiments; the experiment arms reference `triage`, `ballot`, `critique` and `tie_break` the same way |
 | A subagent inference | in the agent's folder: `agents/resolver/research_policy.inference.yaml` |
 | Child nodes | flat in the folder of the top-level node: `nodes/route/resolve.node.yaml`, `flows/judge_panel/nodes/judges/deepseek.node.yaml`; the expanded id is `route__resolve`, `judges__deepseek` |
 | A prompt | `<inference>.prompt.md` beside `<inference>.inference.yaml`; at level 3 it is `prompt: "illustrate_prompt"` from `nodes/illustrate/illustrate.py` |
 | Variants by lamp kind | `flows/support_case/nodes/polish/revise.variants/lamp_guide/` |
 | Prompt fragments | `fragments/` at the root, `{% include "fragments/untrusted_input" %}` from any depth |
 | Policies: built-in `use`, your own `run` | `join`, `stop`, `select`, `on_item_error` in the nodes; your own in `flows/judge_panel/nodes/judges/judges.py`, `flows/support_case/nodes/record/record.py` |
-| Evaluators: checks and scorers | `checks` in `<inference>.inference.yaml`, `scorers` in `evals/support_case/reply_quality.yaml` |
+| Evaluators | `checks` in `<inference>.inference.yaml` at run time, and `checks` in `experiments/<experiment>/experiment.yaml` on every attempt of an experiment |
 | Types | YAML only, under `types/` at the root; the code imports the models of types and of inference inputs and outputs (`ReviseIn`, `ReviseOut`), of tools (`SearchKbOut`) and of `code` steps (`SupportCasePrepareOut`) from `lumen.types` (`from lumen.types import CaseRequest`); a step whose output equals a registry type returns that type (`pick` — `PanelOutcome`, `finalize` — `CaseOutcome`) |
 | Code references | `run: "tally"` — `tally.py` beside `tally.node.yaml`, loaded by file path; `@root.tools.functions:…` and `@root.code.support_case:…` — an import path from the package root; the full path `lumen.code.support_case:promises_match_resolution` works too |
 
@@ -118,14 +119,14 @@ $ uv run aqven tree examples/lumen
 project (1)
   lumen  aqven.yaml
 agent (9)
-  deepseek    agents/deepseek.yaml           output.mode auto -> tool (profile)
+  deepseek    agents/deepseek.yaml           output.mode prompted -> prompted (declared)
   gemini      agents/gemini.yaml             output.mode auto -> tool (profile)
-  gpt         agents/gpt.yaml                output.mode auto -> tool (profile)
+  gpt         agents/gpt.yaml                output.mode prompted -> prompted (declared)
   llama       agents/llama.yaml              output.mode auto -> tool (profile)
-  mistral     agents/mistral.yaml            output.mode auto -> tool (profile)
+  mistral     agents/mistral.yaml            output.mode prompted -> prompted (declared)
   painter     agents/painter.yaml            output.mode prompted -> prompted (declared)
   qwen        agents/qwen.yaml               output.mode tool -> tool (declared)
-  researcher  agents/researcher.yaml         output.mode auto -> tool (profile)
+  researcher  agents/researcher.yaml         output.mode prompted -> prompted (declared)
   resolver    agents/resolver/resolver.yaml  output.mode native -> native (declared)
 tool (6)
   find_tickets        tools/find_tickets.yaml
@@ -136,7 +137,7 @@ tool (6)
   synthesize_voice    tools/synthesize_voice.yaml
 mcp_server (1)
   helpdesk  mcp/helpdesk.yaml
-type (49)
+type (52)
   Agreement         types/enums/agreement.yaml
   ApprovalDecision  types/enums/approval_decision.yaml
   CascadeTier       types/enums/cascade_tier.yaml
@@ -150,6 +151,7 @@ type (49)
   Citation          types/records/citation.yaml
   CriterionScore    types/records/criterion_score.yaml
   Critique          types/records/critique.yaml
+  CritiqueVerdict   types/records/critique_verdict.yaml
   CurrencyCode      types/enums/currency_code.yaml
   Customer          types/records/customer.yaml
   CustomerId        types/ids/customer_id.yaml
@@ -179,6 +181,8 @@ type (49)
   ReplyCriterion    types/enums/reply_criterion.yaml
   ReplyDraft        types/records/reply_draft.yaml
   ReplyMedia        types/records/reply_media.yaml
+  ReplyReview       types/records/reply_review.yaml
+  ReplyVerdict      types/enums/reply_verdict.yaml
   Resolution        types/records/resolution.yaml
   ResolutionAction  types/enums/resolution_action.yaml
   Score             types/values/score.yaml
@@ -186,19 +190,22 @@ type (49)
   SignalKey         types/ids/signal_key.yaml
   SkuId             types/ids/sku_id.yaml
   VotePerspective   types/enums/vote_perspective.yaml
-inference (9)
-  ballot           flows/support_case/nodes/vote/ballot.inference.yaml
-  critique         flows/support_case/nodes/polish/critique.inference.yaml
-  extract          flows/support_case/nodes/record/extract.inference.yaml
-  illustrate       flows/support_case/nodes/illustrate/illustrate.inference.yaml
-  research_policy  agents/resolver/research_policy.inference.yaml
-  resolve          flows/support_case/nodes/route/resolve.inference.yaml
-  revise           flows/support_case/nodes/polish/revise.inference.yaml
-  tie_break        flows/judge_panel/nodes/decide/tie_break.inference.yaml
-  triage           flows/support_case/nodes/triage/triage.inference.yaml
+inference (12)
+  ballot            flows/support_case/nodes/vote/ballot.inference.yaml
+  classify_message  experiments/intent_split_long_messages/arms/one_step/nodes/classify_message/classify_message.inference.yaml
+  classify_summary  experiments/intent_split_long_messages/arms/two_step/nodes/classify_summary/classify_summary.inference.yaml
+  condense_message  experiments/intent_split_long_messages/arms/two_step/nodes/condense_message/condense_message.inference.yaml
+  critique          flows/support_case/nodes/polish/critique.inference.yaml
+  extract           flows/support_case/nodes/record/extract.inference.yaml
+  illustrate        flows/support_case/nodes/illustrate/illustrate.inference.yaml
+  research_policy   agents/resolver/research_policy.inference.yaml
+  resolve           flows/support_case/nodes/route/resolve.inference.yaml
+  revise            flows/support_case/nodes/polish/revise.inference.yaml
+  tie_break         flows/judge_panel/nodes/decide/tie_break.inference.yaml
+  triage            flows/support_case/nodes/triage/triage.inference.yaml
 flow (2)
   judge_panel   flows/judge_panel/flow.yaml
-  support_case  flows/support_case/flow.yaml
+  support_case  flows/support_case/flow.yaml  run context: date, tenant_id
 node (38)
   judge_panel.aggregate          flows/judge_panel/nodes/aggregate/aggregate.node.yaml
   judge_panel.decide             flows/judge_panel/nodes/decide/decide.node.yaml
@@ -238,11 +245,44 @@ node (38)
   support_case.voice             flows/support_case/nodes/voice/voice.node.yaml
   support_case.vote              flows/support_case/nodes/vote/vote.node.yaml
   support_case.vote__ballot      flows/support_case/nodes/vote/ballot.node.yaml
-dataset (1)
-  reply_cases  evals/support_case/reply_cases.yaml
-eval (1)
-  reply_quality  evals/support_case/reply_quality.yaml
+dataset (7)
+  judge_panel_cases             datasets/judge_panel_cases.yaml
+  long_customer_messages        datasets/long_customer_messages.yaml
+  planted_defect_replies        datasets/planted_defect_replies.yaml
+  support_case_cases            datasets/support_case_cases.yaml
+  support_case_csv_review       datasets/support_case_csv_review.yaml
+  support_case_csv_ui_demo      datasets/support_case_csv_ui_demo.yaml
+  support_case_multimodal_demo  datasets/support_case_multimodal_demo.yaml
 ```
+
+## Experiments
+
+An experiment asks one quality question of a subject: a flow, a range of its top-level nodes, or an arm — a small
+flow in `experiments/<experiment>/arms/<arm>/` that only this experiment runs. Its variants swap the agents of nodes
+or swap arms, its cases come from a dataset, selected by tags, and its checks are the same evaluator references an
+inference uses. `plan` is the series size the author recommends, not a limit. `lumen/experiments/` covers every
+question kind:
+
+| Experiment | Subject and variants | Question |
+|---|---|---|
+| `reply_look` | `support_case`, only `polish`, the regression cases | `look`: every case with its checks, no verdict |
+| `reply_overpromise_risk` | `support_case`, only `polish` | `threshold`: `promises` above 0.97 |
+| `reply_stage_budget` | `support_case`, `drafts` to `panel`, three drafting line-ups | `threshold`: `cost_usd` below one cent for each |
+| `reply_noninferior_mistral` | `support_case`, only `polish`; gpt or mistral on `polish__revise` | `noninferior`: `critique` within 0.05, `cost_of_pass` guardrail |
+| `judge_panel_agents` | `judge_panel`; gpt or deepseek on `decide__tie_break` | `compare`: `winner`, cost and latency guardrails |
+| `panel_aa_noise` | `judge_panel`, two identical variants | `compare` with margin 0: the noise floor of panel comparisons |
+| `panel_failure_scan` | `judge_panel`; gpt or mistral on the tie-break | `look`: nine built-in evaluators and its own `weakest_criterion` |
+| `panel_single_judge` | `judge_panel` or the arm `single_judge`, on deepseek or qwen | `compare`: `latency_p50_ms`, with `winner` and failure guardrails |
+| `intent_split_long_messages` | arms `one_step` and `two_step` | `compare`: `intent`, `cost_of_pass` guardrail |
+| `intent_ballot_pair` | arms `single` and `pair` | `compare`: `intent`, `schema_valid_first_try` guardrail |
+| `intent_escalation_agents` | arm `escalation`, only `escalate`, three agents | `noninferior`: `intent` within 0.1 |
+| `critique_planted_defects` | arm `critique_only` on planted defects | `threshold`: the verdict matches the label above 0.85; the `validated_by` of every `critique` judge check |
+| `critique_recall_by_agent` | arm `critic` written in Python (`flow.py`), three critic agents | `threshold`: `blocked` above 0.8 |
+
+`aqven check` validates every experiment: the subject and its range, the arms, the agents of every variant, the
+dataset and its tag filter, the references of the checks, the metric names, `validated_by`, and an `expected_output`
+on every case an `expected` check reads. Running an experiment as a series arrives with the next engine step; one
+case of a dataset runs today through `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"`.
 
 ## Models
 
@@ -299,8 +339,8 @@ scenario is a separate pytest run with an OpenRouter key:
 `AQVEN_LIVE=1 uv run pytest examples/tests/test_support_case.py -k <scenario>`; the `record_new` mode replays what is
 already recorded and appends only the new requests.
 
-`run`, `serve`, `studio`, `dev`, `mcp` and `eval` work; `fmt`, `plan`, `build` and `optimize` still answer "not
-implemented" with exit code 2.
+`run`, `serve`, `studio`, `dev` and `mcp` work; `fmt`, `plan` and `build` still answer "not implemented" with exit
+code 2.
 
 ## Four ways to start it
 

@@ -4,7 +4,6 @@ from typing import Annotated, Final, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, JsonValue, StringConstraints, ValidationError
 
-from aqven.evals.scoring import value_of
 from aqven.policies import (
     BUILTINS,
     BranchResult,
@@ -25,7 +24,7 @@ from aqven.policies import (
     control,
     evaluators,
 )
-from aqven.spec import MapItemError, MetricKind, PiiDetector
+from aqven.spec import MapItemError, PiiDetector
 
 MIRROR: Final = ConfigDict(extra="forbid", frozen=True)
 NO_PARAMS: Final = NoParams()
@@ -312,7 +311,7 @@ def test_expected_compares_the_output_with_the_expected_output(
 def test_missing_expected_output_counts_as_a_failed_attempt() -> None:
     verdict = evaluators.expected(CALM_TRIAGE, expecting(None), evaluators.ExpectedParams(fields=["tone"]))
 
-    assert value_of(MetricKind.BINARY, verdict) == 0.0
+    assert verdict.passed is False
 
 
 def test_expected_reads_a_model_as_the_expected_output() -> None:

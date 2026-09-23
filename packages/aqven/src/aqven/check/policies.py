@@ -99,7 +99,6 @@ class Signature:
 
 class EvaluatorHost(StrEnum):
     INFERENCE_CHECK = "inference_check"
-    EVAL_SCORER = "eval_scorer"
     EXPERIMENT_CHECK = "experiment_check"
 
 
@@ -116,7 +115,6 @@ type ShapeRule = Callable[[CheckContext, PolicySite, BaseModel], Iterator[str]]
 
 CASELESS_HOSTS: Final[Mapping[EvaluatorHost, str]] = {
     EvaluatorHost.INFERENCE_CHECK: "an inference check runs on live requests, which have no case",
-    EvaluatorHost.EVAL_SCORER: "an Eval scorer does not receive the case expected_output",
 }
 CASE_ONLY_HINT: Final = "move the comparison into a check of an experiment, or use a check that reads the output alone"
 
@@ -152,19 +150,8 @@ def evaluator_uses(context: CheckContext) -> Iterator[EvaluatorUse]:
         if (source := loaded.source) is not None
         for index, check in enumerate(source.spec.checks or ())
     )
-    scorers = (
-        EvaluatorUse(
-            source.path,
-            ("scorers", index),
-            scorer,
-            inference_evaluated(context, source.spec.inference),
-            EvaluatorHost.EVAL_SCORER,
-        )
-        for source in context.project.evals.values()
-        for index, scorer in enumerate(source.spec.scorers)
-    )
     experiments = (use for loaded in context.project.experiments.values() for use in _experiment_uses(context, loaded))
-    return iter((*checks, *scorers, *experiments))
+    return iter((*checks, *experiments))
 
 
 def _experiment_uses(context: CheckContext, loaded: LoadedExperiment) -> Iterator[EvaluatorUse]:

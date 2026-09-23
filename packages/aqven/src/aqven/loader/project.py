@@ -40,8 +40,6 @@ from aqven.spec import (
     ArmId,
     DatasetFile,
     DatasetId,
-    EvalId,
-    EvalSpec,
     ExperimentId,
     ExperimentSpec,
     FlowId,
@@ -70,7 +68,6 @@ TYPE_ADAPTER: Final = TypeAdapter[TypeSpec](TypeSpec)
 FLOW_ADAPTER: Final = TypeAdapter(FlowSpec)
 NODE_ADAPTER: Final = TypeAdapter[NodeSpec](NodeSpec)
 DATASET_ADAPTER: Final = TypeAdapter(DatasetFile)
-EVAL_ADAPTER: Final = TypeAdapter(EvalSpec)
 EXPERIMENT_ADAPTER: Final = TypeAdapter(ExperimentSpec)
 INFERENCE_ADAPTER: Final = TypeAdapter(InferenceSpec)
 AGENT_ADAPTER: Final = TypeAdapter(AgentSpec)
@@ -138,7 +135,6 @@ class LoadedProject:
     mcp_servers: Mapping[McpServerId, SourceSpec[McpServerSpec]]
     flows: Mapping[FlowId, LoadedFlow]
     datasets: Mapping[DatasetId, SourceSpec[DatasetFile]]
-    evals: Mapping[EvalId, SourceSpec[EvalSpec]]
     texts: Mapping[str, str]
     invalid_paths: frozenset[str] = frozenset()
     broken_ids: frozenset[str] = frozenset()
@@ -243,7 +239,6 @@ class _Collector:
         default_factory=dict[McpServerId, SourceSpec[McpServerSpec]]
     )
     datasets: dict[DatasetId, SourceSpec[DatasetFile]] = field(default_factory=dict[DatasetId, SourceSpec[DatasetFile]])
-    evals: dict[EvalId, SourceSpec[EvalSpec]] = field(default_factory=dict[EvalId, SourceSpec[EvalSpec]])
     experiments: dict[ExperimentId, SourceSpec[ExperimentSpec]] = field(
         default_factory=dict[ExperimentId, SourceSpec[ExperimentSpec]]
     )
@@ -302,7 +297,6 @@ class _Collector:
             mcp_servers=dict(self.mcp_servers),
             flows=flows,
             datasets=dict(self.datasets),
-            evals=dict(self.evals),
             texts=dict(self.texts),
             invalid_paths=frozenset(self.invalid),
             broken_ids=frozenset(self.broken),
@@ -375,9 +369,6 @@ class _Collector:
     def collect_dataset(self, file: _File, document: YamlDocument, digest: str) -> None:
         source = self._validated(DATASET_ADAPTER, file, document, digest)
         self._register(self.datasets, DatasetId(file.entity), source)
-
-    def collect_eval(self, file: _File, document: YamlDocument, digest: str) -> None:
-        self._register(self.evals, EvalId(file.entity), self._validated(EVAL_ADAPTER, file, document, digest))
 
     def collect_experiment(self, file: _File, document: YamlDocument, digest: str) -> None:
         source = self._validated(EXPERIMENT_ADAPTER, file, document, digest)
@@ -533,7 +524,6 @@ YAML_HANDLERS: Final[Mapping[SpecKind, _YamlHandler]] = {
     SpecKind.FLOW: _Collector.collect_flow,
     SpecKind.NODE: _Collector.collect_node,
     SpecKind.DATASET: _Collector.collect_dataset,
-    SpecKind.EVAL: _Collector.collect_eval,
     SpecKind.EXPERIMENT: _Collector.collect_experiment,
     SpecKind.INFERENCE: _Collector.collect_inference,
     SpecKind.AGENT: _Collector.collect_agent,

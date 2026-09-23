@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { ArrowUpRight, FileUp } from "lucide-react"
+import { FileUp } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ApiDatasetSummary, FlowId } from "@/domain"
 import { Empty, Heading, Page, PageHeader, PickerCommand, PickerCount, PickerOption, PickerTrigger, Text } from "@/components/studio"
-import { Button } from "@/components/ui/button"
 import { CommandEmpty, CommandInput, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { datasetsRouteApi, flowRouteApi, ROUTE_PATH } from "@/lib/routes"
@@ -12,7 +11,6 @@ import { CreateDataset } from "./dataset-create"
 import { DatasetCsvImport } from "./dataset-csv-import"
 import { DatasetRun } from "./dataset-run"
 import { CaseList } from "./case-list"
-import { DatasetBatches } from "./dataset-batches"
 
 function DatasetPicker({ items, selected, flowId }: {
   readonly items: readonly ApiDatasetSummary[]
@@ -66,7 +64,7 @@ function DatasetPicker({ items, selected, flowId }: {
                     <span className="shrink-0 text-xs text-muted-foreground">{t("cases", { count: item.cases })}</span>
                   </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    {item.flow_id == null ? t("inference") : t("forFlow", { flow: item.flow_id })}
+                    {item.flow_id == null ? t("noFlow") : t("forFlow", { flow: item.flow_id })}
                     {item.flow_id === flowId ? ` · ${t("current")}` : ""}
                   </span>
                 </span>
@@ -83,15 +81,8 @@ export function DatasetsScreen() {
   const { datasets, selected, chosenCase, draft } = datasetsRouteApi.useLoaderData()
   const { flow } = flowRouteApi.useLoaderData()
   const { flowId } = datasetsRouteApi.useParams()
-  const params = datasetsRouteApi.useParams()
-  const navigate = useNavigate()
   const t = useTranslations("datasets")
-  const [selection, setSelection] = useState<{ readonly datasetId: string; readonly names: ReadonlySet<string> } | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
-  const selectedNames = selection !== null && selection.datasetId === selected?.dataset_id ? selection.names : new Set<string>()
-  const changeSelection = (names: ReadonlySet<string>): void => {
-    if (selected !== null) setSelection({ datasetId: selected.dataset_id, names })
-  }
 
   if (draft !== null) return <CreateDataset key={flowId} flowId={flowId} draft={draft} />
 
@@ -101,15 +92,10 @@ export function DatasetsScreen() {
       header={<PageHeader
         actions={[{ id: "upload", label: t("new"), variant: "default", icon: FileUp, onClick: () => { setUploadOpen(true) } }]}
         selector={<DatasetPicker items={datasets} selected={selected} flowId={flowId} />}
-        aside={selected !== null && selected.flow_id == null && selected.used_by[0] !== undefined ? (
-          <Button size="sm" variant="outline" onClick={() => { void navigate({ to: ROUTE_PATH.evals, params, search: { eval: selected.used_by[0] ?? "" } }) }}>
-            {t("openEval")}<ArrowUpRight aria-hidden className="size-3.5" />
-          </Button>
-        ) : undefined}
         detail={<Heading
           size="page"
           title={t("title")}
-          tags={selected === null ? [] : [{ children: selected.flow_id == null ? t("inference") : t("forFlow", { flow: selected.flow_id }), tone: "neutral", fill: "outline" }]}
+          tags={selected === null ? [] : [{ children: selected.flow_id == null ? t("noFlow") : t("forFlow", { flow: selected.flow_id }), tone: "neutral", fill: "outline" }]}
           below={[t("subtitle")]}
         />}
       />}
@@ -117,32 +103,11 @@ export function DatasetsScreen() {
       {uploadOpen ? <DatasetCsvImport flowId={flowId} onClose={() => { setUploadOpen(false) }} /> : null}
       {selected === null ? <Empty title={t("empty")} /> : (
         <div className="min-w-0">
-          <CaseList
-            key={selected.dataset_id}
-            dataset={selected}
-            chosen={chosenCase}
-            selected={selectedNames}
-            onToggle={(name) => {
-              const next = new Set(selectedNames)
-              if (next.has(name)) next.delete(name)
-              else next.add(name)
-              changeSelection(next)
-            }}
-            onSetPageSelection={(names, checked) => {
-              const next = new Set(selectedNames)
-              names.forEach((name) => { if (checked) next.add(name); else next.delete(name) })
-              changeSelection(next)
-            }}
-            onSelect={(names) => { changeSelection(new Set([...selectedNames, ...names])) }}
-            onClear={() => { changeSelection(new Set()) }}
-          />
+          <CaseList key={selected.dataset_id} dataset={selected} chosen={chosenCase} />
           {selected.flow_id === flowId && chosenCase !== null ? (
-            <>
-              <DatasetRun key={selected.dataset_id} flowId={flowId} dataset={selected} caseItem={chosenCase} selectedCases={[...selectedNames]} order={flow.order} />
-              <DatasetBatches flowId={flowId} datasetId={selected.dataset_id} />
-            </>
+            <DatasetRun key={selected.dataset_id} flowId={flowId} dataset={selected} caseItem={chosenCase} order={flow.order} />
           ) : null}
-          {selected.flow_id == null ? <Text as="p" role="hint" tone="neutral" className="mt-5">{t("legacy")}</Text> : null}
+          {selected.flow_id == null ? <Text as="p" role="hint" tone="neutral" className="mt-5">{t("noFlowHint")}</Text> : null}
           {selected.flow_id != null && selected.flow_id !== flowId ? <Text as="p" role="hint" tone="neutral" className="mt-5">{t("otherFlow", { flow: selected.flow_id })}</Text> : null}
         </div>
       )}

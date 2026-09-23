@@ -27,7 +27,6 @@ class EntityKind(StrEnum):
     FLOW = "flow"
     NODE = "node"
     DATASET = "dataset"
-    EVAL = "eval"
     CODE = "code"
 
 
@@ -156,14 +155,6 @@ SITES: Final[Mapping[EntityKind, tuple[_Site, ...]]] = {
         (("select", "run"), EntityKind.CODE),
         *FIELD_TYPES,
     ),
-    EntityKind.EVAL: (
-        (("inference",), EntityKind.INFERENCE),
-        (("agent",), EntityKind.AGENT),
-        (("dataset",), EntityKind.DATASET),
-        *_evaluators("scorers"),
-        (("gate", "judge_admission", "calibration_dataset"), EntityKind.DATASET),
-        (("optimization", "reflection_agent"), EntityKind.AGENT),
-    ),
 }
 
 
@@ -190,7 +181,6 @@ def _documents(project: LoadedProject) -> Iterator[_Document]:
         for node_id, node in flow.nodes.items():
             yield _Document(EntityKey(EntityKind.NODE, _qualified(flow, node_id)), node.path, _source(node), flow)
     yield from _registry(EntityKind.DATASET, project.datasets)
-    yield from _registry(EntityKind.EVAL, project.evals)
 
 
 def _registry[K: str, S: BaseModel](kind: EntityKind, table: Mapping[K, SourceSpec[S]]) -> Iterator[_Document]:

@@ -310,7 +310,7 @@ NewType creates simple unique types with almost zero runtime overhead.
 
 ## create_app
 
-`def create_app(root: 'Path', facade: 'EngineFacade', settings: 'SettingsStore', extra_routers: 'Sequence[APIRouter]' = (), *, options: 'ServerOptions | None' = None, extensions: 'ServerExtensions | None' = None, blobs: 'BlobFiles | None' = None, workspace: 'ProjectWorkspace | None' = None, services: 'StudioServices | None' = None) -> 'FastAPI'`
+`def create_app(root: 'Path', facade: 'EngineFacade', settings: 'SettingsStore', extra_routers: 'Sequence[APIRouter]' = (), *, options: 'ServerOptions | None' = None, extensions: 'ServerExtensions | None' = None, blobs: 'BlobFiles | None' = None, workspace: 'ProjectWorkspace | None' = None) -> 'FastAPI'`
 
 ## create_local_app
 

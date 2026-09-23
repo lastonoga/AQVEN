@@ -27,7 +27,6 @@ type FileKind = Literal[
     "Flow",
     "Node",
     "Dataset",
-    "Eval",
     "Experiment",
     "Inference",
     "Agent",

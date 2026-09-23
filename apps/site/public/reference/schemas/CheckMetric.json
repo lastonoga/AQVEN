@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "MetricKind": {
+      "enum": [
+        "binary",
+        "ordinal",
+        "continuous"
+      ],
+      "title": "MetricKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The metric a check produces: ``id`` names it in questions, ``kind`` says how its values read.",
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/MetricKind"
+    }
+  },
+  "required": [
+    "id",
+    "kind"
+  ],
+  "title": "CheckMetric",
+  "type": "object"
+}

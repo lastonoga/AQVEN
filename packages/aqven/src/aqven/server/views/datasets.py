@@ -1,13 +1,15 @@
+from collections import Counter
+from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import Field, JsonValue, TypeAdapter, ValidationError
 
 from aqven.loader.aliases import AliasScope
 from aqven.loader.strict_yaml import read_strict_yaml
 from aqven.preview.samples import sample_document
-from aqven.runtime.address import RequestModel
+from aqven.runtime.address import RequestModel, ResourceModel
 from aqven.runtime.options import RunContext
 from aqven.runtime.runs import RunStartRequest
 from aqven.server.errors import ApiFailure, not_found, validation_problems
@@ -18,6 +20,8 @@ from aqven.spec import API_VERSION, NAME_PATTERN, DatasetCase, DatasetFile, Data
 from aqven.write import canonical_yaml
 
 DATASET_FOLDER = "datasets"
+SPLIT_KEY: Final = "split"
+UNKNOWN_SPLIT: Final = "unassigned"
 
 
 class DatasetDraftRequest(RequestModel):
@@ -28,6 +32,45 @@ class DatasetCreateRequest(RequestModel):
     dataset_id: Annotated[str, Field(pattern=NAME_PATTERN)]
     flow_id: FlowId
     cases: tuple[DatasetCase, ...] = Field(min_length=1)
+
+
+class DatasetSummary(ResourceModel):
+    dataset_id: DatasetId
+    flow_id: FlowId | None = None
+    path: str
+    file_hash: str
+    cases: Annotated[int, Field(ge=0)]
+    splits: dict[str, int] = {}
+
+
+def case_split(case: DatasetCase) -> str:
+    split = (case.metadata or {}).get(SPLIT_KEY)
+    return split if isinstance(split, str) else UNKNOWN_SPLIT
+
+
+def split_counts(cases: Iterable[DatasetCase]) -> dict[str, int]:
+    return dict(Counter(case_split(case) for case in cases))
+
+
+def dataset_summaries(state: WorkspaceState) -> tuple[DatasetSummary, ...]:
+    return tuple(
+        DatasetSummary(
+            dataset_id=dataset_id,
+            flow_id=source.spec.flow,
+            path=source.path,
+            file_hash=source.file_hash,
+            cases=len(source.spec.cases),
+            splits=split_counts(source.spec.cases),
+        )
+        for dataset_id, source in sorted(loaded_project(state).datasets.items())
+    )
+
+
+def dataset_summary(state: WorkspaceState, dataset_id: str) -> DatasetSummary:
+    found = next((row for row in dataset_summaries(state) if row.dataset_id == dataset_id), None)
+    if found is None:
+        raise not_found(f"dataset {dataset_id} is not in the project")
+    return found
 
 
 def dataset_cases(state: WorkspaceState, dataset_id: str) -> tuple[DatasetCase, ...]:

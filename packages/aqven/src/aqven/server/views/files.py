@@ -28,7 +28,6 @@ SPEC_FILE_KINDS: Final[Mapping[SpecKind, FileKind]] = {
     SpecKind.FLOW: "Flow",
     SpecKind.NODE: "Node",
     SpecKind.DATASET: "Dataset",
-    SpecKind.EVAL: "Eval",
     SpecKind.EXPERIMENT: "Experiment",
     SpecKind.INFERENCE: "Inference",
     SpecKind.AGENT: "Agent",
@@ -48,7 +47,6 @@ def spec_paths(project: LoadedProject) -> Iterator[tuple[str, SpecKind]]:
     yield from _paths(SpecKind.TOOL, project.tools.values())
     yield from _paths(SpecKind.MCP_SERVER, project.mcp_servers.values())
     yield from _paths(SpecKind.DATASET, project.datasets.values())
-    yield from _paths(SpecKind.EVAL, project.evals.values())
     yield from _paths(SpecKind.EXPERIMENT, (experiment.source for experiment in project.experiments.values()))
     yield from _paths(SpecKind.INFERENCE, (inference.source for inference in project.inferences.values()))
     flows = (*project.flows.values(), *(arm for item in project.experiments.values() for arm in item.arms.values()))
