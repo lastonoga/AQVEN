@@ -8036,6 +8036,135 @@
         "x-aqven-rest-only": "experiment catalogue read from the project files"
       }
     },
+    "/api/experiments/{experiment_id}/arms/{arm_id}": {
+      "get": {
+        "summary": "Get Experiment Arm",
+        "operationId": "experiment_arm",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "arm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Arm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArmFlowView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "arm nodes and schemas for the Studio run view, read from the project files"
+      }
+    },
     "/api/experiments/{experiment_id}/estimate": {
       "post": {
         "summary": "Estimate Series",
@@ -11209,6 +11338,61 @@
           "interrupt",
           "session_closed"
         ]
+      },
+      "ArmFlowView": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "type": "string",
+            "title": "Arm Id"
+          },
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Order"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeSummary"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "schemas": {
+            "$ref": "#/components/schemas/FlowSchemas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "arm_id",
+          "flow_id",
+          "description",
+          "order",
+          "nodes",
+          "schemas"
+        ],
+        "title": "ArmFlowView"
       },
       "ArmStepView": {
         "properties": {
@@ -26659,6 +26843,28 @@
             ],
             "title": "Series Id"
           },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
+          },
           "execution_id": {
             "type": "string",
             "title": "Execution Id"
@@ -27214,6 +27420,28 @@
               }
             ],
             "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "arm_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arm Id"
           }
         },
         "type": "object",

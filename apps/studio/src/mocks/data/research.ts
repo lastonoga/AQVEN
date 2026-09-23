@@ -1,4 +1,5 @@
 import type {
+  ApiArm,
   ApiSeriesAttempt,
   ApiContrast,
   ApiExperimentDetail,
@@ -49,7 +50,7 @@ export type SeriesSeed = {
 
 export type SeriesState = SeriesSeed & { readonly approvedBy: string | null }
 
-type Attempt = ApiSeriesAttempt & { readonly caseName: string; readonly split: SeriesSplit; readonly ordinal: number }
+export type Attempt = ApiSeriesAttempt & { readonly caseName: string; readonly split: SeriesSplit; readonly ordinal: number }
 
 type Counted = { readonly passed: number; readonly total: number }
 
@@ -286,7 +287,7 @@ const splitOf = (series: SeriesSeed, name: string): SeriesSplit => {
   return CASE_NAMES[dataset]?.holdout.includes(name) === true ? "holdout" : "dev"
 }
 
-const datasetOf = (series: SeriesSeed): string => series.look?.dataset ?? experimentOf(series.experiment)?.cases.dataset_id ?? ""
+export const datasetOf = (series: SeriesSeed): string => series.look?.dataset ?? experimentOf(series.experiment)?.cases.dataset_id ?? ""
 
 const runIdOf = (series: SeriesSeed, ordinal: number): string =>
   `${series.id.slice(0, 24)}${String(ordinal + 1).padStart(4, "0")}${series.id.slice(-8)}`
@@ -663,6 +664,13 @@ export const detailOf = (series: SeriesState): ApiSeriesDetail => {
 export const attemptRun = (states: readonly SeriesState[], runId: string): { readonly series: SeriesState; readonly attempt: Attempt } | null => {
   const found = states.flatMap((series) => attemptsOf(series).filter((attempt) => attempt.run_id === runId).map((attempt) => ({ series, attempt })))
   return found[0] ?? null
+}
+
+export const armOf = (series: SeriesSeed): ApiArm | null => {
+  const experiment = experimentOf(series.experiment)
+  const armId = experiment?.subject.arm_id ?? null
+  if (experiment === null || armId === null) return null
+  return experiment.arms.find((arm) => arm.arm_id === armId) ?? null
 }
 
 export const subjectFlowOf = (series: SeriesSeed): string => {

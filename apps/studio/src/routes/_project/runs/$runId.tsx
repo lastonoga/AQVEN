@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import * as ids from "@/data/ids"
-import { readRunBlobs, RunScreen, snapshotRefs } from "@/features/runs"
+import { listOfMode, listSearch, readRunBlobs, RunScreen, snapshotRefs } from "@/features/runs"
 import { ROUTE_PATH } from "@/lib/routes"
 import { orNotFound } from "@/routes/-api-error"
-import { loadExpected } from "@/routes/-run-load"
+import { loadArm, loadExpected } from "@/routes/-run-load"
 import { addressOf, parseRunAddressSearch } from "@/routes/-run-search"
 import { searchValidator } from "@/routes/-search"
 
@@ -19,17 +19,18 @@ export const Route = createFileRoute("/_project/runs/$runId")({
   loader: async ({ context: { api }, params, deps }) => {
     const [snapshot, flows] = await Promise.all([orNotFound(api.run.snapshot(params.runId)), api.project.flows()])
     if (flows.some((flow) => flow.flow_id === snapshot.flow_id)) {
-      throw redirect({ to: ROUTE_PATH.runs, params: { flowId: ids.flowId(snapshot.flow_id) }, search: { run: params.runId } })
+      throw redirect({ to: ROUTE_PATH.runs, params: { flowId: ids.flowId(snapshot.flow_id) }, search: { run: params.runId, ...listSearch(listOfMode(snapshot.mode)) } })
     }
-    const [events, execution] = await Promise.all([
+    const [events, execution, arm] = await Promise.all([
       api.run.events(params.runId),
       deps.address === null ? null : api.run.execution(params.runId, deps.address, "full"),
+      loadArm(api, snapshot),
     ])
     const [blobs, expected] = await Promise.all([
       readRunBlobs(api.blob, [...snapshotRefs(snapshot), execution?.input_ref ?? null, execution?.output_ref ?? null, execution?.human?.answer_ref ?? null]),
       loadExpected(api, snapshot),
     ])
-    return { snapshot, events, execution, blobs, expected }
+    return { snapshot, events, execution, blobs, expected, arm }
   },
   component: RunScreen,
 })

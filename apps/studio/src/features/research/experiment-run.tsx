@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router"
 import { ArrowUpRight } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ArmStep, CaseSelection, ExperimentArm, ExperimentDetail, FlowId } from "@/domain"
+import type { ArmStep, CaseSelection, ExperimentArm, ExperimentDetail, FlowId, QuestionKind } from "@/domain"
 import { Matrix, NODE_KIND, Tag, Text, TitledPanel, type MatrixField } from "@/components/studio"
 import { ROUTE_PATH } from "@/lib/routes"
 import { useSubjectDetailCopy } from "./copy"
 import { FactList, ResearchSection } from "./layout"
 import { assignmentRows, subjectText, tagPairs, type AssignmentRow } from "./presenters"
-import { ROLE_TONE } from "./tones"
+import { RoleTag } from "./role-tag"
 
 type NumberedStep = ArmStep & { readonly index: number }
 
@@ -70,7 +70,7 @@ function ArmSteps({ arm }: { readonly arm: ExperimentArm }) {
   )
 }
 
-function useVariantFields(): readonly MatrixField<AssignmentRow>[] {
+function useVariantFields(question: QuestionKind): readonly MatrixField<AssignmentRow>[] {
   const t = useTranslations("research")
   return [
     {
@@ -83,9 +83,7 @@ function useVariantFields(): readonly MatrixField<AssignmentRow>[] {
             <Text role="cell" tone="default" weight="semibold" truncate>
               {row.variant.id}
             </Text>
-            <Tag size="micro" fill="tint" tone={ROLE_TONE[row.variant.role]}>
-              {t(`vocabulary.role.${row.variant.role}`)}
-            </Tag>
+            <RoleTag role={row.variant.role} question={question} />
           </div>
         ) : null,
     },
@@ -114,7 +112,7 @@ function useVariantFields(): readonly MatrixField<AssignmentRow>[] {
 
 function VariantsTable({ experiment }: { readonly experiment: ExperimentDetail }) {
   const t = useTranslations("research.experiment.run")
-  const fields = useVariantFields()
+  const fields = useVariantFields(experiment.question.kind)
   return (
     <TitledPanel size="block" title={t("variants")} scroll>
       <Matrix

@@ -1,4 +1,5 @@
 import type { AgentId, ArmId, CheckId, DatasetId, ExperimentId, FilePath, FlowId, IsoDateTime, NodeId, RunId, SeriesId, VariantId } from "./core"
+import type { ApiFlowSchemas, ApiNode } from "./live"
 import type { NodeKind } from "./vocabulary"
 
 export const QUESTION_KINDS = ["look", "threshold", "compare", "noninferior"] as const
@@ -349,3 +350,11 @@ export type SeriesEvent =
   | { readonly kind: "status"; readonly seq: number; readonly status: SeriesStatus }
   | { readonly kind: "attempt"; readonly seq: number; readonly done: number; readonly total: number; readonly spendUsd: number }
   | { readonly kind: "finished"; readonly seq: number; readonly status: SeriesStatus; readonly verdict: VerdictState | null }
+
+export type ArmFlow = {
+  readonly experiment: ExperimentId
+  readonly arm: ArmId
+  readonly description: string | null
+  readonly nodes: readonly ApiNode[]
+  readonly schemas: ApiFlowSchemas
+}

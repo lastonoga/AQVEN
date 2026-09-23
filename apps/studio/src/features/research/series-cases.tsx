@@ -10,7 +10,7 @@ import { ROUTE_PATH } from "@/lib/routes"
 import { ResearchSection } from "./layout"
 import { metricValue } from "./metrics"
 import { tagPairs } from "./presenters"
-import { CASE_FILTER_KEYS, failedChecksOf, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, tallyOf, tallyTone, toggledFilter, type CaseFilterKey } from "./series-presenters"
+import { CASE_FILTER_KEYS, failedChecksOf, hasErrors, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, tallyOf, tallyTone, toggledFilter, type CaseFilterKey } from "./series-presenters"
 import { OUTCOME_TONE } from "./tones"
 
 export type SeriesCasesProps = {
@@ -29,6 +29,8 @@ type CaseRowProps = {
 
 const TALLY_WIDTH = 92
 const ATTEMPTS_MIN_WIDTH = 720
+const ERROR_MIN_WIDTH = 200
+const ERROR_TRACK = `minmax(${String(ERROR_MIN_WIDTH)}px,2fr)`
 const LIST_MIN_WIDTH = 720
 const EMPTY_MARK = "—"
 const TAG_JOIN = " · "
@@ -67,15 +69,18 @@ function RunCell({ attempt }: { readonly attempt: SeriesAttempt }) {
   )
 }
 
-function AttemptProblems({ attempt }: { readonly attempt: SeriesAttempt }) {
-  if (attempt.error === null) return <CheckTags checks={attempt.failedChecks} />
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      {attempt.failedChecks.length === 0 ? null : <CheckTags checks={attempt.failedChecks} />}
-      <Text as="div" role="small" tone="destructive" className="wrap-anywhere">
-        {attempt.error}
+function AttemptError({ attempt }: { readonly attempt: SeriesAttempt }) {
+  if (attempt.error === null) {
+    return (
+      <Text role="cell" tone="neutral">
+        {EMPTY_MARK}
       </Text>
-    </div>
+    )
+  }
+  return (
+    <Text as="div" role="small" tone="destructive" className="wrap-anywhere">
+      {attempt.error}
+    </Text>
   )
 }
 
@@ -98,8 +103,11 @@ function CheckTags({ checks }: { readonly checks: readonly string[] }) {
   )
 }
 
-function useAttemptFields(): readonly MatrixField<SeriesAttempt>[] {
+function useAttemptFields(attempts: readonly SeriesAttempt[]): readonly MatrixField<SeriesAttempt>[] {
   const t = useTranslations("research")
+  const errorFields: readonly MatrixField<SeriesAttempt>[] = hasErrors(attempts)
+    ? [{ id: "error", label: t("series.cases.attempt.error"), track: ERROR_TRACK, render: (attempt) => <AttemptError attempt={attempt} /> }]
+    : []
   return [
     {
       id: "variant",
@@ -122,8 +130,9 @@ function useAttemptFields(): readonly MatrixField<SeriesAttempt>[] {
         </Tag>
       ),
     },
-    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(160px,1.4fr)", render: (attempt) => <AttemptProblems attempt={attempt} /> },
-    { id: "usd", label: t("series.cases.attempt.usd"), track: "80px", align: "end", render: (attempt) => <Text role="cell">{usd(attempt.usd, 4)}</Text> },
+    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(160px,1.4fr)", render: (attempt) => <CheckTags checks={attempt.failedChecks} /> },
+    ...errorFields,
+    { id: "usd", label: t("series.cases.attempt.usd"), track: "80px", align: "end", render: (attempt) => <Text role="cell">{usd(attempt.usd)}</Text> },
     {
       id: "latency",
       label: t("series.cases.attempt.latency"),
@@ -137,14 +146,15 @@ function useAttemptFields(): readonly MatrixField<SeriesAttempt>[] {
 
 function AttemptsTable({ row, series }: { readonly row: SeriesCaseRow; readonly series: SeriesDetail }) {
   const t = useTranslations("research.series.cases")
-  const fields = useAttemptFields()
+  const attempts = orderedAttempts(row.attempts, series.variants)
+  const fields = useAttemptFields(attempts)
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
         orientation="rows"
         label={t("attemptsAria", { name: row.name })}
-        minWidth={ATTEMPTS_MIN_WIDTH}
-        items={orderedAttempts(row.attempts, series.variants)}
+        minWidth={hasErrors(attempts) ? ATTEMPTS_MIN_WIDTH + ERROR_MIN_WIDTH : ATTEMPTS_MIN_WIDTH}
+        items={attempts}
         itemKey={(attempt) => `${attempt.variant}:${String(attempt.repeat)}`}
         fields={fields}
       />
@@ -227,7 +237,7 @@ function CaseRow({ row, series, template, open, onToggle }: CaseRowProps) {
         ))}
         <CheckTags checks={failedChecksOf(row)} />
         <Text role="cell" tone="neutral" className="text-right">
-          {hasFinished(row) ? usd(row.usd, 4) : EMPTY_MARK}
+          {hasFinished(row) ? usd(row.usd) : EMPTY_MARK}
         </Text>
       </button>
       {open ? (

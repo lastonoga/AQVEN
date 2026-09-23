@@ -1,15 +1,12 @@
 import type { Ratio } from "@/domain"
 
-type UsdDigits = 2 | 3 | 4
-
 const LOCALE = "en-US"
 const SECONDS_PER_MINUTE = 60
 const MINUTES_PER_HOUR = 60
 
-const usdFormat = (digits: UsdDigits): Intl.NumberFormat =>
-  new Intl.NumberFormat(LOCALE, { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits })
-
-const USD: Readonly<Record<UsdDigits, Intl.NumberFormat>> = { 2: usdFormat(2), 3: usdFormat(3), 4: usdFormat(4) }
+const CENT = 0.01
+const CENTS_USD = new Intl.NumberFormat(LOCALE, { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const SUB_CENT_USD = new Intl.NumberFormat(LOCALE, { style: "currency", currency: "USD", maximumSignificantDigits: 2 })
 const SCORE = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 3 })
 const SIGNED = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 3, signDisplay: "always" })
 const COUNT = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 })
@@ -33,7 +30,9 @@ export const PAIR_SEPARATOR = " / "
 export const joinMeta = (parts: readonly (string | null | undefined)[]): string =>
   parts.filter((part): part is string => typeof part === "string" && part.length > 0).join(SEPARATOR)
 
-export const usd = (value: number, digits: UsdDigits = 4): string => USD[digits].format(value)
+const isSubCent = (value: number): boolean => value !== 0 && Math.abs(value) < CENT
+
+export const usd = (value: number): string => (isSubCent(value) ? SUB_CENT_USD : CENTS_USD).format(value)
 
 export const seconds = (value: number, digits = 1): string => `${value.toFixed(digits)} s`
 

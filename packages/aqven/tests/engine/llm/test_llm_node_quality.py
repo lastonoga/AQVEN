@@ -1,12 +1,11 @@
 import asyncio
-from dataclasses import dataclass, field
 from decimal import Decimal
 
 from llm_harness import (
-    MODEL,
+    PRICED_NAME,
     SCHEMA,
     Chunk,
-    ScriptedModel,
+    SettledCosts,
     agent,
     answer_inference,
     answer_node,
@@ -19,8 +18,6 @@ from llm_harness import (
     tool_call,
 )
 from pydantic import BaseModel, JsonValue
-from pydantic_ai.models import Model
-from pydantic_ai.models.function import FunctionModel
 
 from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.llm import OUTPUT_TOOL_NAME
@@ -33,7 +30,6 @@ from aqven.ir import (
     JudgeEvaluator,
     TemplatePrompt,
 )
-from aqven.models import CallPolicy, ContextUsageSink, RequestCost, cassette_policy, guard_model
 from aqven.policies import NoParams
 from aqven.ports.execution import NodeFailed, NodeSucceeded
 from aqven.runtime.events import RUN_EVENT_ADAPTER, InferenceChecksCaptured
@@ -41,7 +37,6 @@ from aqven.runtime.values import InlineValue
 from aqven.spec import AgentId, CodeRef, InferenceId, Limits, OnFail, TypeId
 
 RUN_INPUT: dict[str, JsonValue] = {"question": "where is my order?", "product": None}
-PRICED_NAME = "gpt-4o-mini"
 CHECK_REF = CodeRef("shop.checks:no_bad_words")
 POLICIES: list[JsonValue] = [
     {"policy_id": "pol_refund", "title": "Money refund"},
@@ -237,23 +232,6 @@ def test_judge_check_runs_nested_inference_and_retries_below_threshold() -> None
     assert request_texts(bed.scripted.seen[1][0])[-1].startswith("where is my order? => first")
     assert any("ungrounded" in text for text in retry_texts(bed.scripted.seen[2][0]))
     assert bed.scope.output.discards() == [(1, "schema_invalid")]
-
-
-@dataclass(slots=True)
-class SettledCosts:
-    seen: list[RequestCost] = field(default_factory=list[RequestCost])
-
-    def record(self, cost: RequestCost) -> None:
-        self.seen.append(cost)
-        ContextUsageSink().record(cost)
-
-    def total(self) -> Decimal:
-        return sum((entry.cost or Decimal(0) for entry in self.seen), Decimal(0))
-
-    def priced(self, scripted: ScriptedModel) -> Model:
-        model = FunctionModel(stream_function=scripted.stream, model_name=PRICED_NAME)
-        policy = CallPolicy(cassettes=cassette_policy(None), usage_sink=self)
-        return guard_model(model, model_ref=MODEL, policy=policy)
 
 
 def _grade_inference() -> CompiledInference:

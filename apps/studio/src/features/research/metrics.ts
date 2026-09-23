@@ -13,7 +13,7 @@ const UNIT_TEXT: Readonly<Record<MetricUnit, (value: number) => string>> = {
   rate: (value) => fixed(value, 2),
   score: (value) => fixed(value, 2),
   ordinal: (value) => fixed(value, 1),
-  usd: (value) => usd(value, 4),
+  usd,
   ms: (value) => `${fixed(value / MS_PER_SECOND, 2)} s`,
 }
 

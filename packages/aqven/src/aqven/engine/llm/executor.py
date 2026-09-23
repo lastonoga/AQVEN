@@ -19,6 +19,7 @@ from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ModelRe
 from pydantic_ai.run import AgentRunResult
 from pydantic_ai.usage import RunUsage
 
+from aqven.engine.failures import failure_of
 from aqven.engine.llm.adapters import EnvironmentSecrets, ImportCodeLoader, InlineSteps, UrlMediaLoader
 from aqven.engine.llm.agents import InferenceAgents, InferenceCall, PreparedRun, response_count
 from aqven.engine.llm.allowed import DEFAULT_MAX_ENUM
@@ -198,6 +199,15 @@ class LlmSegmentRunner:
         return SegmentResult(outcome=outcome, usage=_node_usage(usage, log), attempts=attempts, failures=failures)
 
 
+@dataclass(slots=True)
+class SpentUsage:
+    usage: NodeUsage = field(default_factory=NodeUsage)
+
+    def add(self, more: NodeUsage) -> NodeUsage:
+        self.usage = add_usage(self.usage, more)
+        return self.usage
+
+
 @dataclass(frozen=True, slots=True)
 class LlmNodeExecutor:
     segments: LlmSegmentRunner
@@ -206,17 +216,20 @@ class LlmNodeExecutor:
     external: ExternalTools
 
     async def execute(self, node: CompiledLlmNode, scope: ExecutionScope) -> NodeOutcome:
+        spent = SpentUsage()
         try:
-            return await self._execute(node, scope)
+            return await self._execute(node, scope, spent)
         except LlmNodeError as error:
-            return NodeFailed(error=RunError(code=error.code, message=error.message, address=scope.address))
+            failed = RunError(code=error.code, message=error.message, address=scope.address)
+            return NodeFailed(error=failed, usage=spent.usage)
+        except Exception as error:
+            return NodeFailed(error=failure_of(error, scope.address).error, usage=spent.usage)
 
-    async def _execute(self, node: CompiledLlmNode, scope: ExecutionScope) -> NodeOutcome:
+    async def _execute(self, node: CompiledLlmNode, scope: ExecutionScope, spent: SpentUsage) -> NodeOutcome:
         state = SegmentState()
-        usage = NodeUsage()
         while True:
             result = await self.steps.segment(scope, state, partial(self.segments.run, node, scope, state))
-            usage = add_usage(usage, result.usage)
+            usage = spent.add(result.usage)
             await _emit_failures(scope, result.failures)
             outcome: SegmentOutcome = result.outcome
             match outcome:

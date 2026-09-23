@@ -1,7 +1,7 @@
 import type { AttemptOutcome, CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesStatus, VariantId, VariantTally } from "@/domain"
 import type { Tone } from "@/components/studio"
 
-export type VerdictGap = "look" | "pending" | "none"
+export type VerdictGap = "look" | "pending" | "failed" | "none"
 
 export type CaseFilterKey = keyof SeriesCaseFilter
 
@@ -23,6 +23,7 @@ export const spendTone = (series: Pick<SeriesDetail, "spend">): Tone => {
 export const verdictGap = (series: Pick<SeriesDetail, "question" | "status">): VerdictGap => {
   if (series.question.kind === "look") return "look"
   if (PENDING_STATUSES.has(series.status)) return "pending"
+  if (series.status === "failed") return "failed"
   return "none"
 }
 
@@ -44,6 +45,8 @@ export const isPending = (outcome: AttemptOutcome): boolean => PENDING_OUTCOMES.
 
 export const pendingOf = (row: Pick<SeriesCaseRow, "attempts">, variant: VariantId, outcome: AttemptOutcome): number =>
   row.attempts.filter((attempt) => attempt.variant === variant && attempt.outcome === outcome).length
+
+export const hasErrors = (attempts: readonly Pick<SeriesAttempt, "error">[]): boolean => attempts.some((attempt) => attempt.error !== null)
 
 export const hasFinished = (row: Pick<SeriesCaseRow, "variants">): boolean => row.variants.some((tally) => tally.total > 0)
 

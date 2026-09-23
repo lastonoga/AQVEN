@@ -15,6 +15,7 @@ import {
   plannedCases,
   questionSentence,
   shortfallOf,
+  shownRole,
   sourceDetail,
   subjectText,
   tagPairs,
@@ -232,11 +233,21 @@ describe("what the experiment runs and measures", () => {
   })
 })
 
+describe("variant roles", () => {
+  it("shows no role for the variant of a look and keeps the role elsewhere", () => {
+    expect(shownRole("other", "look")).toBeNull()
+    expect(shownRole("baseline", "noninferior")).toBe("baseline")
+    expect(shownRole("candidate", "threshold")).toBe("candidate")
+    expect(shownRole("other", "compare")).toBe("other")
+  })
+})
+
 describe("metric values", () => {
   it("formats each unit and relative margins", () => {
     expect(metricValue(0.934, "rate")).toBe("0.93")
     expect(metricValue(3.25, "ordinal")).toBe("3.3")
-    expect(metricValue(0.01346, "usd")).toBe("$0.0135")
+    expect(metricValue(0.01346, "usd")).toBe("$0.01")
+    expect(metricValue(0.00096, "usd")).toBe("$0.00096")
     expect(metricValue(5212, "ms")).toBe("5.21 s")
     expect(marginText(0.2, "usd", true)).toBe("20%")
     expect(marginText(0.05, "score", false)).toBe("0.05")

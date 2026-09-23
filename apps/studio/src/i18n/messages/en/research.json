@@ -281,6 +281,7 @@
       "look": "A look has no verdict: read the cases below.",
       "pending": "The verdict comes when the series finishes.",
       "none": "No verdict: the series produced no usable measurement.",
+      "failed": "No verdict: the series stopped on an error before it could measure.",
       "error": "The series failed: {error}",
       "finding": "Finding written to {path}",
       "approvedBy": "spend approved by {who}",
@@ -337,6 +338,7 @@
         "repeat": "Repeat",
         "outcome": "Outcome",
         "failed": "Failed checks",
+        "error": "Error",
         "usd": "Spend",
         "latency": "Latency",
         "run": "Run"

@@ -45,7 +45,7 @@ function useHistoryFields(): readonly MatrixField<SeriesSummary>[] {
       track: "140px",
       render: (series) => <Text role="cell">{t("series.progress", { done: series.progress.done, total: series.progress.total })}</Text>,
     },
-    { id: "spend", label: t("experiment.history.column.spend"), track: "80px", align: "end", render: (series) => <Text role="cell">{usd(series.spend.usd, 2)}</Text> },
+    { id: "spend", label: t("experiment.history.column.spend"), track: "80px", align: "end", render: (series) => <Text role="cell">{usd(series.spend.usd)}</Text> },
     {
       id: "status",
       label: t("experiment.history.column.status"),

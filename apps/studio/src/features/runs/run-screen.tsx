@@ -1,6 +1,6 @@
 import type { JSX } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import type { ApiExecutionAddress, ApiFlowSchemas, ApiNode, ApiRunSnapshot } from "@/domain"
+import type { ApiExecutionAddress, ApiFlowSchemas, ApiNode, ApiRunSnapshot, ArmFlow } from "@/domain"
 import { Page } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { CallSheet, type CallDetail, type CallSheetTab } from "@/features/call-sheet"
@@ -39,6 +39,10 @@ const ROW_TAB: Readonly<Record<RowKey, CallSheetTab>> = {
 
 const noSchemas = (snapshot: ApiRunSnapshot): ApiFlowSchemas => ({ flow_id: snapshot.flow_id, input: null, output: null, context: [], nodes: {} })
 
+const nodesOf = (arm: ArmFlow | null): readonly ApiNode[] => arm?.nodes ?? NO_NODES
+
+const schemasOf = (arm: ArmFlow | null, snapshot: ApiRunSnapshot): ApiFlowSchemas => arm?.schemas ?? noSchemas(snapshot)
+
 const stageSearch = (stage: string | null): AddressSearch => (stage === null ? {} : { stage })
 
 const addressSearch = (address: ApiExecutionAddress, tab: CallSheetTab, stage: string | null): AddressSearch => ({
@@ -63,14 +67,14 @@ function RunView({ snapshot: loadedSnapshot }: { readonly snapshot: ApiRunSnapsh
   const loaded = runRouteApi.useLoaderData()
   const { snapshot: live, events, blobs, following } = useLiveRun({ snapshot: loadedSnapshot, events: loaded.events, blobs: loaded.blobs })
   const snapshot = live ?? loadedSnapshot
-  const { execution, expected } = loaded
+  const { execution, expected, arm } = loaded
   const search = runRouteApi.useSearch()
   const params = runRouteApi.useParams()
   const navigate = useNavigate({ from: ROUTE_PATH.run })
   const tab = search.tab ?? "output"
   const focusedStage = search.stage ?? null
-  const trace = traceOf(snapshot, NO_NODES, NO_PROMPTS, events, blobs)
-  const detail: CallDetail | null = execution === null ? null : callDetail(execution, trace, NO_PROMPTS, blobs, noSchemas(snapshot))
+  const trace = traceOf(snapshot, nodesOf(arm), NO_PROMPTS, events, blobs)
+  const detail: CallDetail | null = execution === null ? null : callDetail(execution, trace, NO_PROMPTS, blobs, schemasOf(arm, snapshot))
   const selectedKey = execution === null ? null : executionKey(execution.address)
 
   const go = (next: AddressSearch, replace = false): void => {
@@ -95,7 +99,7 @@ function RunView({ snapshot: loadedSnapshot }: { readonly snapshot: ApiRunSnapsh
     <div className="relative h-full min-h-0">
       <Page
         width="xl"
-        header={<RunHeader snapshot={snapshot} live={following} tools={<RunTools snapshot={snapshot} />} />}
+        header={<RunHeader snapshot={snapshot} live={following} arm={arm} tools={<RunTools snapshot={snapshot} />} />}
         beforeSticky={<RunOverview snapshot={snapshot} />}
         sticky={<RunNodeNavigator trace={trace} focusedStage={focusedStage} onFocusStage={focusStage} />}
       >

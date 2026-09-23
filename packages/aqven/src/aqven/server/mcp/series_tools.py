@@ -23,6 +23,8 @@ SERIES_START_DESCRIPTION: Final = (
 SERIES_GET_DESCRIPTION: Final = (
     "Status, spend, per-variant metrics with 95% CI and the verdict of a series. wait_seconds holds the answer until "
     "the series is done, cancelled, failed, awaiting approval or waiting for a human, or the time runs out. "
+    "A series is failed when every attempt hit an infrastructure error, such as a missing provider key, and error "
+    "names the first one; it stays done when at least one attempt was counted. "
     "include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
 )
 SERIES_CANCEL_DESCRIPTION: Final = (

@@ -96,7 +96,7 @@ function Recommendation({ experiment, estimate }: { readonly experiment: Experim
 
 function EstimateFigures({ estimate }: { readonly estimate: LaunchEstimate }) {
   const t = useTranslations("research.experiment.launch")
-  const spend = estimate.usd === null ? t("noEstimate") : usd(estimate.usd, 2)
+  const spend = estimate.usd === null ? t("noEstimate") : usd(estimate.usd)
   const time = estimate.minutes === null ? t("noEstimate") : t("minutes", { count: estimate.minutes })
   return (
     <section aria-label={t("estimateAria")} className="flex flex-wrap items-end gap-x-8 gap-y-3">
@@ -106,7 +106,7 @@ function EstimateFigures({ estimate }: { readonly estimate: LaunchEstimate }) {
       <Text role="hint" tone="neutral">
         {joinMeta([
           t("variantsNote", { cases: estimate.request.cases, repeats: estimate.request.repeats, variants: estimate.variants }),
-          t("cap", { cap: usd(estimate.capUsd, 2) }),
+          t("cap", { cap: usd(estimate.capUsd) }),
         ])}
       </Text>
     </section>
@@ -117,7 +117,7 @@ function ApprovalNote({ estimate }: { readonly estimate: LaunchEstimate }) {
   const t = useTranslations("research.experiment.launch")
   if (estimate.usd === null) return <Callout tone="neutral">{t("noPrice")}</Callout>
   if (!estimate.needsApproval) return null
-  return <Callout tone="neutral">{t("approval", { cap: usd(estimate.capUsd, 2) })}</Callout>
+  return <Callout tone="neutral">{t("approval", { cap: usd(estimate.capUsd) })}</Callout>
 }
 
 function Shortfall({ estimate }: { readonly estimate: LaunchEstimate }) {

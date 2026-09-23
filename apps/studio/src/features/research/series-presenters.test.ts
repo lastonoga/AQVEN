@@ -29,6 +29,7 @@ describe("series header", () => {
     expect(verdictGap(seriesDetail({ question: { kind: "look" }, status: "waiting_human" }))).toBe("look")
     expect(verdictGap(seriesDetail({ status: "running" }))).toBe("pending")
     expect(verdictGap(seriesDetail({ status: "done" }))).toBe("none")
+    expect(verdictGap(seriesDetail({ status: "failed" }))).toBe("failed")
   })
 })
 

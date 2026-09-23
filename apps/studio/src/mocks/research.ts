@@ -1,18 +1,22 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiExperimentDetail, ApiExperimentSummary, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
+import type { ApiArm, ApiArmFlow, ApiExperimentDetail, ApiExperimentSummary, ApiNode, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveDatasets } from "./data/datasets"
 import { liveExperiments } from "./data/experiments"
 import {
+  armOf,
   attemptRun,
+  attemptsOf,
   caseRowsOf,
   CASE_NAMES,
+  datasetOf,
   detailOf,
   estimateFor,
   experimentOf,
   initialSeries,
   subjectFlowOf,
   summaryOf,
+  type Attempt,
   type LaunchBody,
   type LookSeed,
   type SeriesState,
@@ -180,23 +184,73 @@ const cancelled = (series: SeriesState): SeriesState => {
 const seriesEventsBody = (series: SeriesState): string =>
   `event: series_status\ndata: ${JSON.stringify({ seq: 1, at: series.startedAt, series_id: series.id, type: "series_status", status: series.status })}\nid: 1\n\n`
 
+type ArmExecution = ApiRunSnapshot["executions"][number]
+
+const armStepExecution = (step: ApiArm["steps"][number], template: ApiRunSnapshot): readonly ArmExecution[] => {
+  const shape = template.executions.find((execution) => execution.kind === step.kind && execution.address.node_id.indexOf("__") < 0)
+  if (shape === undefined) return []
+  return [{ ...shape, address: { ...shape.address, node_id: step.node_id }, agent: null, inference: null }]
+}
+
+const armTrace = (series: SeriesState, template: ApiRunSnapshot): Pick<ApiRunSnapshot, "order" | "executions"> => {
+  const arm = armOf(series)
+  if (arm === null) return { order: template.order, executions: template.executions }
+  return { order: arm.steps.map((step) => step.node_id), executions: arm.steps.flatMap((step) => armStepExecution(step, template)) }
+}
+
+const armNode = (experimentId: string, arm: ApiArm, step: ApiArm["steps"][number], index: number): ApiNode => ({
+  node_id: step.node_id,
+  local_id: step.node_id,
+  parent: null,
+  kind: step.kind,
+  path: `experiments/${experimentId}/arms/${arm.arm_id}/nodes/${step.node_id}.node.yaml`,
+  file_hash: "",
+  agent: step.agent?.agent_id ?? null,
+  inference: step.kind === "llm" ? step.node_id : null,
+  prompt_level: null,
+  code_ref: null,
+  problems_count: 0,
+  upstream: arm.steps.slice(0, index).map((item) => item.node_id),
+  downstream: arm.steps.slice(index + 1).map((item) => item.node_id),
+})
+
+const armFlowOf = (experiment: ApiExperimentDetail, arm: ApiArm): ApiArmFlow => ({
+  experiment_id: experiment.experiment_id,
+  arm_id: arm.arm_id,
+  flow_id: arm.arm_id,
+  description: arm.description,
+  order: arm.steps.map((step) => step.node_id),
+  nodes: arm.steps.map((step, index) => armNode(experiment.experiment_id, arm, step, index)),
+  schemas: { flow_id: arm.arm_id, input: null, output: null, context: [], nodes: {} },
+})
+
+const attemptSnapshot = (series: SeriesState, attempt: Attempt, template: ApiRunSnapshot): ApiRunSnapshot => ({
+  ...template,
+  ...armTrace(series, template),
+  experiment_id: series.experiment,
+  arm_id: armOf(series)?.arm_id ?? null,
+  run_id: attempt.run_id,
+  execution_id: attempt.run_id,
+  started_at: series.startedAt,
+  flow_id: subjectFlowOf(series),
+  mode: "experiment",
+  status: attempt.outcome === "passed" || attempt.outcome === "failed" ? "completed" : "failed",
+  series_id: series.id,
+  dataset_item_id: `${datasetOf(series)}/${attempt.caseName}`,
+  cost_usd: attempt.usd,
+  lineage: null,
+  waits: [],
+})
+
 export const researchRunSnapshot = (runId: string, template: ApiRunSnapshot | undefined): ApiRunSnapshot | undefined => {
   const found = attemptRun(states, runId)
   if (found === null || template === undefined) return undefined
-  const { series, attempt } = found
-  return {
-    ...template,
-    run_id: runId,
-    execution_id: runId,
-    flow_id: subjectFlowOf(series),
-    mode: "experiment",
-    status: attempt.outcome === "passed" || attempt.outcome === "failed" ? "completed" : "failed",
-    series_id: series.id,
-    dataset_item_id: `${detailOf(series).dataset_id}/${attempt.caseName}`,
-    cost_usd: attempt.usd,
-    lineage: null,
-    waits: [],
-  }
+  return attemptSnapshot(found.series, found.attempt, template)
+}
+
+export const researchRuns = (template: ApiRunSnapshot | undefined): readonly ApiRunSnapshot[] => {
+  if (template === undefined) return []
+  return [...states].sort(byStart).flatMap((series) => attemptsOf(series).map((attempt) => attemptSnapshot(series, attempt, template)))
 }
 
 export const researchHandlers = [
@@ -208,6 +262,13 @@ export const researchHandlers = [
   http.get(`${API_BASE}/experiments/:experimentId`, ({ params }) => {
     const experiment = experimentOf(text(params, "experimentId"))
     return experiment === null ? failure(NOT_FOUND, "experiment_get", "NOT_FOUND", `experiment ${text(params, "experimentId")} not found`) : served(detailOfExperiment(experiment))
+  }),
+
+  http.get(`${API_BASE}/experiments/:experimentId/arms/:armId`, ({ params }) => {
+    const experiment = experimentOf(text(params, "experimentId"))
+    const arm = experiment?.arms.find((item) => item.arm_id === text(params, "armId"))
+    if (experiment === null || arm === undefined) return failure(NOT_FOUND, "experiment_arm", "NOT_FOUND", `arm ${text(params, "armId")} not found`)
+    return served(armFlowOf(experiment, arm))
   }),
 
   http.post(`${API_BASE}/experiments/:experimentId/estimate`, async ({ params, request }) => {

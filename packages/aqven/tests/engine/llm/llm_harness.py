@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, 
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated, Final, NewType
 
 import httpx2
@@ -21,6 +22,7 @@ from aqven.engine.llm import (
     ToolCallResult,
     llm_node_executor,
 )
+from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import SegmentWork, ToolCallWork
 from aqven.ir import (
     AgentModel,
@@ -40,6 +42,7 @@ from aqven.ir import (
     TemplatePrompt,
 )
 from aqven.ir.nodes import OutputMode
+from aqven.models import CallPolicy, ContextUsageSink, RequestCost, cassette_policy, guard_model
 from aqven.policies import NoParams, Verdict
 from aqven.ports.execution import (
     ChildEntry,
@@ -81,6 +84,8 @@ AT: Final = datetime(2026, 9, 17, 12, 0, tzinfo=UTC)
 NODE: Final = NodeId("answer")
 FLOW: Final = FlowId("support")
 MODEL: Final = ModelString("openrouter:openai/gpt-oss-20b")
+PRICED_NAME: Final = "gpt-4o-mini"
+EXPIRED_APPROVAL: Final = "the approval was not answered in time"
 
 PolicyId = NewType("PolicyId", str)
 type PolicyIdField = Annotated[PolicyId, StringConstraints(pattern="^pol_[a-z]+$")]
@@ -310,10 +315,13 @@ class RecordingToolContexts:
 @dataclass(slots=True)
 class ScriptedApprovals:
     approve: bool = True
+    expire: bool = False
     requests: list[ApprovalRequest] = field(default_factory=list[ApprovalRequest])
 
     async def decide(self, scope: ExecutionScope, request: ApprovalRequest) -> Mapping[str, ToolApprovalDecision]:
         self.requests.append(request)
+        if self.expire:
+            raise LlmNodeError(LlmFailureCode.HUMAN_TIMED_OUT, EXPIRED_APPROVAL)
         decision = ToolApprovalDecision(approve=self.approve, message=None if self.approve else "operator refused")
         return {call.tool_call_id: decision for call in request.calls}
 
@@ -330,6 +338,23 @@ class RecordingSteps:
     async def tool_call(self, scope: ExecutionScope, call: PendingToolCall, work: ToolCallWork) -> ToolCallResult:
         self.calls.append(call)
         return await work()
+
+
+@dataclass(slots=True)
+class SettledCosts:
+    seen: list[RequestCost] = field(default_factory=list[RequestCost])
+
+    def record(self, cost: RequestCost) -> None:
+        self.seen.append(cost)
+        ContextUsageSink().record(cost)
+
+    def total(self) -> Decimal:
+        return sum((entry.cost or Decimal(0) for entry in self.seen), Decimal(0))
+
+    def priced(self, scripted: ScriptedModel) -> Model:
+        model = FunctionModel(stream_function=scripted.stream, model_name=PRICED_NAME)
+        policy = CallPolicy(cassettes=cassette_policy(None), usage_sink=self)
+        return guard_model(model, model_ref=MODEL, policy=policy)
 
 
 @dataclass(slots=True)
@@ -458,6 +483,7 @@ def llm_bed(
     tools: Sequence[CompiledTool] = (),
     code: Mapping[str, object] | None = None,
     approve: bool = True,
+    expire: bool = False,
     max_enum: int = 50,
     delta_batch_ms: int = 80,
     models: Callable[[ScriptedModel], Model] | None = None,
@@ -466,7 +492,7 @@ def llm_bed(
     compiled, flow = project(node, agents, inferences, tools)
     scope = FakeScope(compiled, flow, run_input)
     contexts = RecordingToolContexts()
-    approvals = ScriptedApprovals(approve)
+    approvals = ScriptedApprovals(approve, expire)
     steps = RecordingSteps()
     dependencies = LlmDependencies(
         models=FixedModels(models(scripted) if models is not None else scripted.model()),

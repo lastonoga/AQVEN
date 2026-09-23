@@ -244,8 +244,7 @@ def _audit_template(template: BoundTemplate, reached: set[str], active: set[str]
 def _obvious_root(template: BoundTemplate) -> None:
     nodes = template.nodes
     dynamic = any(
-        isinstance(node, RenderNode | IncludeNode) or node.token.value in {"if", "unless", "for"}
-        for node in nodes
+        isinstance(node, RenderNode | IncludeNode) or node.token.value in {"if", "unless", "for"} for node in nodes
     )
     if dynamic:
         return

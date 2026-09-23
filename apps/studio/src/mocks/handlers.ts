@@ -6,7 +6,7 @@ import { liveDatasetCases, liveDatasets } from "./data/datasets"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
 import { liveFiles, liveFlowDetails, liveFlows, liveProject, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
-import { researchHandlers, researchRunSnapshot } from "./research"
+import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
 const LATENCY_MS = 20
 const NOT_FOUND = 404
@@ -364,7 +364,8 @@ export const handlers = [
 
   http.get(`${API_BASE}/runs`, ({ request }) => {
     const url = new URL(request.url)
-    return served(page(sortedRuns([...startedRuns, ...liveRuns].filter((run) => matchesRun(run, url)), url)))
+    const runs: readonly ApiRun[] = [...startedRuns, ...liveRuns, ...researchRuns(liveRunSnapshots[COMPLETED_RUN_ID])]
+    return served(page(sortedRuns(runs.filter((run) => matchesRun(run, url)), url)))
   }),
 
   http.post(`${API_BASE}/runs`, async ({ request }) => {

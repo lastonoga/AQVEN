@@ -103,7 +103,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
           </Text>
           <Stat
             variant="meter"
-            value={t("series.spend", { usd: usd(series.spend.usd, 2), cap: usd(series.spend.capUsd, 2) })}
+            value={t("series.spend", { usd: usd(series.spend.usd), cap: usd(series.spend.capUsd) })}
             bar={{ value: shareOf(series.spend.usd, series.spend.capUsd), tone: spendTone(series) }}
           />
         </div>

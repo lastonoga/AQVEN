@@ -519,6 +519,12 @@ def cancelled_rule(facts: VerdictFacts) -> Decision | None:
     return invalid(VerdictReason.CANCELLED, cancelled_text(facts.tally.done, facts.tally.total))
 
 
+def failed_rule(facts: VerdictFacts) -> Decision | None:
+    if facts.status is not SeriesStatus.FAILED:
+        return None
+    return invalid(VerdictReason.INFRA_ERRORS, infra_errors_text(facts.tally.infra_errors, facts.tally.settled))
+
+
 def budget_rule(facts: VerdictFacts) -> Decision | None:
     if facts.stop is not StopCause.BUDGET_CUT:
         return None
@@ -596,6 +602,7 @@ def statistics_rule(facts: VerdictFacts) -> Decision | None:
 VERDICT_RULES: Final[tuple[VerdictRule, ...]] = (
     look_rule,
     cancelled_rule,
+    failed_rule,
     budget_rule,
     inputs_rule,
     infra_rule,

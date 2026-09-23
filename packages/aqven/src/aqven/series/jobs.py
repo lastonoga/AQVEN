@@ -20,6 +20,7 @@ from aqven.series.events import SeriesEventLog
 from aqven.series.ids import new_series_id
 from aqven.series.model import (
     SETTLED_STATUSES,
+    TERMINAL_STATUSES,
     AnalysisInput,
     AttemptRecord,
     AttemptState,
@@ -57,6 +58,7 @@ from aqven.series.views import (
     SeriesCaseRow,
     SeriesCasesQuery,
     SeriesEvent,
+    SeriesFinishedEvent,
     SeriesGetRequest,
     SeriesGetResult,
     SeriesListQuery,
@@ -130,6 +132,18 @@ RECONCILE_RULES: Final[tuple[ReconcileRule, ...]] = (failed_workflow, cancelled_
 
 def reconciliation(record: SeriesRecord, status: WorkflowStatus | None, now: datetime) -> SeriesChange | None:
     return next((change for rule in RECONCILE_RULES if (change := rule(record, status, now)) is not None), None)
+
+
+def closing_event(record: SeriesRecord, last_seq: int) -> SeriesFinishedEvent | None:
+    if record.status not in TERMINAL_STATUSES:
+        return None
+    return SeriesFinishedEvent(
+        seq=last_seq + 1,
+        at=record.finished_at or utc_now(),
+        series_id=record.series_id,
+        status=record.status,
+        verdict=None if record.verdict is None else record.verdict.state,
+    )
 
 
 def series_record(series_id: SeriesId, planned: PlannedSeries, outcome: EstimateOutcome, now: datetime) -> SeriesRecord:
@@ -286,20 +300,35 @@ class SeriesService:
         if record.status not in ACTIVE_STATUSES:
             raise state_conflict(record, "cancelled")
         await DBOS.cancel_workflow_async(record.series_id, cancel_children=True)
-        current = await self._record(record.series_id)
-        if current.status not in ACTIVE_STATUSES:
+        current = await self._reconciled(record.series_id)
+        if current.status in ACTIVE_STATUSES:
+            current = await self._mark_cancelled(current)
+        if current.status is not SeriesStatus.CANCELLED:
             raise state_conflict(current, "cancelled")
-        attempts = await self.services.store.attempts(record.series_id)
-        change = SeriesChange(
-            status=SeriesStatus.CANCELLED, finished_at=utc_now(), verdict=cancelled_verdict(current, attempts)
-        )
-        updated = await self.services.store.update(record.series_id, change)
-        return await self._summary(updated, await self.services.waits.open_runs())
+        return await self._summary(current, await self.services.waits.open_runs())
 
     async def events(self, series_id: SeriesId, after_seq: int) -> AsyncIterator[SeriesEvent]:
         await self._record(series_id)
+        last: SeriesEvent | None = None
         async for event in SeriesEventLog().follow(series_id, after_seq):
+            last = event
             yield event
+        closing = await self._closing(series_id, last, after_seq)
+        if closing is not None:
+            yield closing
+
+    async def _mark_cancelled(self, record: SeriesRecord) -> SeriesRecord:
+        attempts = await self.services.store.attempts(record.series_id)
+        change = SeriesChange(
+            status=SeriesStatus.CANCELLED, finished_at=utc_now(), verdict=cancelled_verdict(record, attempts)
+        )
+        return await self.services.store.update(record.series_id, change)
+
+    async def _closing(self, series_id: SeriesId, last: SeriesEvent | None, after_seq: int) -> SeriesEvent | None:
+        if isinstance(last, SeriesFinishedEvent):
+            return None
+        record = await self._reconciled(series_id)
+        return closing_event(record, after_seq if last is None else last.seq)
 
     async def _planned(self, request: SeriesStartRequest, registrar: PlanRegistrar | None) -> PlannedSeries:
         state = await self.services.workspace.state()

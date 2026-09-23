@@ -38,6 +38,7 @@ from aqven.series.model import (
 )
 from aqven.series.planner import PlanningState, SeriesPlanner, rebuild_request
 from aqven.series.ports import SeriesStore
+from aqven.series.presenter import attempt_error
 from aqven.series.protocol import (
     APPROVAL_RECV_SECONDS,
     APPROVAL_TOPIC,
@@ -59,6 +60,7 @@ from aqven.series.scoring import (
 )
 from aqven.series.services import SeriesServices
 from aqven.series.slot import active_series
+from aqven.series.stats.wording import infra_failure_text
 from aqven.series.store import SeriesMissing
 from aqven.series.subjects import SubjectBinding, SubjectStrategy, subject_strategy
 from aqven.series.tickets import AttemptSummary, AttemptTicket, attempt_ticket, running_row, summary_of, variant_at
@@ -421,6 +423,21 @@ async def inputs_changed(services: SeriesServices, record: SeriesRecord) -> bool
     return await rebuilt_snapshot(services, record) != record.plan.snapshot
 
 
+def only_infra_errors(attempts: Sequence[AttemptRecord]) -> bool:
+    return bool(attempts) and all(row.outcome is OutcomeClass.INFRA_ERROR for row in attempts)
+
+
+def closing_status(attempts: Sequence[AttemptRecord]) -> SeriesStatus:
+    return SeriesStatus.FAILED if only_infra_errors(attempts) else SeriesStatus.DONE
+
+
+def closing_error(status: SeriesStatus, attempts: Sequence[AttemptRecord]) -> str | None:
+    if status is not SeriesStatus.FAILED:
+        return None
+    first = min(attempts, key=lambda row: row.ordinal)
+    return infra_failure_text(len(attempts), attempt_error(first))
+
+
 @DBOS.step(name=FINALIZE_STEP)
 async def finalize_series(series_id: str, driven: JsonObject) -> JsonObject:
     services = active_series()
@@ -429,11 +446,12 @@ async def finalize_series(series_id: str, driven: JsonObject) -> JsonObject:
     record = await require_series(store, SeriesId(series_id))
     attempts = await store.attempts(record.series_id)
     cases = await store.cases(record.series_id)
+    status = closing_status(attempts)
     source = AnalysisInput(
         series_id=record.series_id,
         question=record.plan.question,
         split=record.on,
-        status=SeriesStatus.DONE,
+        status=status,
         stop=outcome.stop,
         inputs_changed=await inputs_changed(services, record),
         variants=record.plan.variants,
@@ -446,26 +464,26 @@ async def finalize_series(series_id: str, driven: JsonObject) -> JsonObject:
     now = utc_now()
     finished = record.model_copy(
         update={
-            "status": SeriesStatus.DONE,
+            "status": status,
             "finished_at": now,
             "stop": outcome.stop,
             "verdict": analysis.verdict,
             "analysis": analysis,
         }
     )
-    finding_path, error = await published(services, finished, attempts)
+    finding_path, publish_error = await published(services, finished, attempts)
     change = SeriesChange(
-        status=SeriesStatus.DONE,
+        status=status,
         finished_at=now,
         stop=outcome.stop,
         verdict=analysis.verdict,
         analysis=analysis,
         finding_path=finding_path,
-        error=error,
+        error=closing_error(status, attempts) or publish_error,
     )
     await store.update(record.series_id, change)
     verdict = None if analysis.verdict is None else analysis.verdict.state
-    return SeriesFinish(status=SeriesStatus.DONE, verdict=verdict, finished_at=now).model_dump(mode="json")
+    return SeriesFinish(status=status, verdict=verdict, finished_at=now).model_dump(mode="json")
 
 
 @DBOS.workflow(name=SERIES_WORKFLOW)

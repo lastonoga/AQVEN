@@ -94,6 +94,46 @@ plan:
 """
 
 
+ARM: Final = "brief"
+
+ARM_FLOW: Final = """apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Draft an answer, then polish it"
+input: "Note"
+output: "Note"
+returns:
+- name: "text"
+  from: "$polish.out.answer"
+order:
+- "draft"
+- "polish"
+"""
+
+ARM_DRAFT: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Draft the answer"
+inference: "reply"
+agent: "writer"
+in:
+- name: "question"
+  from: "$input.text"
+"""
+
+ARM_POLISH: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Polish the draft"
+inference: "reply"
+agent: "writer_alt"
+in:
+- name: "question"
+  from: "$draft.out.answer"
+"""
+
+ARM_FILES: Final = {"flow.yaml": ARM_FLOW, "nodes/draft.node.yaml": ARM_DRAFT, "nodes/polish.node.yaml": ARM_POLISH}
+
+
 @pytest.fixture
 def research_project(tmp_path: Path) -> Path:
     root = copy_fixture("dataset_shop", tmp_path)
@@ -103,6 +143,10 @@ def research_project(tmp_path: Path) -> Path:
     folder.mkdir(parents=True)
     (folder / "experiment.yaml").write_text(EXPERIMENT_YAML, encoding="utf-8")
     (folder / "experiment.md").write_text("Why the nano writer might be enough.\n", encoding="utf-8")
+    for relative, text in ARM_FILES.items():
+        target = folder / "arms" / ARM / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
     return root
 
 
@@ -193,6 +237,33 @@ def test_experiment_detail_resolves_variants_checks_columns_and_cases(research_c
     }
     assert body["notes"] == "Why the nano writer might be enough.\n"
     assert body["plan"] == {"cases": 2, "repeats": 2}
+
+
+def test_an_arm_serves_its_nodes_and_schemas_for_the_run_view(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}/arms/{ARM}").json()
+
+    assert (body["experiment_id"], body["arm_id"], body["flow_id"]) == (EXPERIMENT, ARM, ARM)
+    assert (body["description"], body["order"]) == ("Draft an answer, then polish it", ["draft", "polish"])
+    nodes = {node["node_id"]: node for node in body["nodes"]}
+    assert list(nodes) == ["draft", "polish"]
+    assert (nodes["draft"]["kind"], nodes["draft"]["agent"], nodes["draft"]["inference"]) == ("llm", "writer", "reply")
+    assert nodes["polish"]["path"] == f"experiments/{EXPERIMENT}/arms/{ARM}/nodes/polish.node.yaml"
+    assert (nodes["draft"]["downstream"], nodes["polish"]["upstream"]) == (["polish"], ["draft"])
+    schemas = body["schemas"]
+    assert schemas["flow_id"] == ARM
+    assert schemas["input"]["required"] == ["text"]
+    assert sorted(schemas["nodes"]) == ["draft", "polish"]
+    assert "answer" in schemas["nodes"]["draft"]["out"]["properties"]
+
+
+@pytest.mark.parametrize(
+    "path", [f"/api/experiments/{EXPERIMENT}/arms/nothing", f"/api/experiments/nothing/arms/{ARM}"]
+)
+def test_an_unknown_arm_is_not_found(research_client: TestClient, path: str) -> None:
+    response = research_client.get(path)
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
 
 
 def test_an_unknown_experiment_is_not_found(research_client: TestClient) -> None:

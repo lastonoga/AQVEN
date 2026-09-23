@@ -2,24 +2,26 @@ import { createFileRoute } from "@tanstack/react-router"
 import type { ApiNode, ApiPromptDetail, ApiRunEvent, FlowId, RunId } from "@/domain"
 import * as ids from "@/data/ids"
 import type { LiveSources } from "@/data/live/sources"
-import { readRunBlobs, RunsScreen, snapshotRefs, type RunComparison } from "@/features/runs"
-import { parseId } from "@/lib/search"
+import { LISTED_RUN_LISTS, listFilter, readRunBlobs, runListOf, RunsScreen, snapshotRefs, withOpenRun, type RunComparison, type RunListSearch } from "@/features/runs"
+import { parseEnum, parseId } from "@/lib/search"
 import { loadWhen } from "@/routes/-load"
 import { loadExpected } from "@/routes/-run-load"
 import { addressOf, parseRunAddressSearch, type RunAddressSearch } from "@/routes/-run-search"
 import { optional, searchValidator, type RawSearch } from "@/routes/-search"
 
-type RunsSearch = RunAddressSearch & {
+type RunsSearch = RunAddressSearch & RunListSearch & {
   readonly run?: RunId
   readonly compare?: RunId
 }
 
 const parseRun = parseId(ids.runId)
+const parseList = parseEnum(LISTED_RUN_LISTS)
 
 const parseRunsSearch = (raw: RawSearch): RunsSearch => ({
   ...optional("run", parseRun(raw["run"])),
   ...parseRunAddressSearch(raw),
   ...optional("compare", parseRun(raw["compare"])),
+  ...optional("list", parseList(raw["list"])),
 })
 
 const promptsOf = async (
@@ -49,14 +51,14 @@ const validateRunsSearch = searchValidator(parseRunsSearch)
 
 export const Route = createFileRoute("/_project/flows/$flowId/runs")({
   validateSearch: validateRunsSearch,
-  loaderDeps: ({ search }) => ({ runId: search.run ?? null, address: addressOf(search), compare: search.compare ?? null }),
+  loaderDeps: ({ search }) => ({ runId: search.run ?? null, address: addressOf(search), compare: search.compare ?? null, list: runListOf(search) }),
   loader: async ({ context: { api }, params, deps }) => {
-    const [runs, schemas, nodes] = await Promise.all([
-      api.run.list({ flowId: params.flowId }),
+    const [listed, schemas, nodes] = await Promise.all([
+      api.run.list({ flowId: params.flowId, ...listFilter(deps.list) }),
       api.flow.schemas(params.flowId),
       api.flow.nodes(params.flowId),
     ])
-    const runId = deps.runId ?? (runs[0] === undefined ? null : ids.runId(runs[0].run_id))
+    const runId = deps.runId ?? (listed[0] === undefined ? null : ids.runId(listed[0].run_id))
     const { address, compare } = deps
     const [prompts, snapshot, events, execution, comparison] = await Promise.all([
       promptsOf(api, params.flowId, nodes),
@@ -75,6 +77,7 @@ export const Route = createFileRoute("/_project/flows/$flowId/runs")({
       ]),
       loadExpected(api, snapshot),
     ])
+    const runs = withOpenRun(listed, snapshot)
     return { runs, schemas, nodes, prompts, runId, snapshot, events, execution, blobs, comparison, expected }
   },
   component: RunsScreen,
