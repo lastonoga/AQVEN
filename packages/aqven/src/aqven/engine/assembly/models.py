@@ -14,8 +14,17 @@ from pydantic_ai.settings import ModelSettings
 from aqven.engine.extensions import RunAwareScope
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.request import RunSpec
+from aqven.engine.runtime import RunBudgets
 from aqven.ir import AgentModel, CompiledAgent, CompiledProject
-from aqven.models import CallPolicy, DeclaredModel, cassette_policy, current_call_site, guard_model
+from aqven.models import (
+    CallPolicy,
+    ContextUsageSink,
+    DeclaredModel,
+    UsageBudget,
+    cassette_policy,
+    current_call_site,
+    guard_model,
+)
 from aqven.models.providers import CUSTOM_KINDS, custom_options, key_variable
 from aqven.models.rate import ProviderLimiters
 from aqven.models.streams import StreamContext, StreamFirstModel
@@ -170,11 +179,18 @@ def choice_faults(spec: RunSpec | None, choice: AgentModel) -> tuple[ProviderFau
     return tuple(fault for fault in spec.faults if fault.model == choice.model)
 
 
+def run_budget(budgets: RunBudgets | None, scope: ExecutionScope, spec: RunSpec | None) -> UsageBudget | None:
+    if budgets is None or spec is None:
+        return None
+    return budgets.budget(scope.run_id, spec.limits)
+
+
 @dataclass(frozen=True, slots=True)
 class EngineModelSource:
     factories: ModelFactories
     keys: ProviderKeys
     limiters: ProviderLimiters | None = None
+    budgets: RunBudgets | None = None
 
     async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
         spec = scope_run_spec(scope)
@@ -199,9 +215,14 @@ class EngineModelSource:
         provider_model = factory.build(actual, settings=None, api_key=api_key)
         secrets = () if api_key is None else (api_key,)
         cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=secrets)
-        policy = CallPolicy(cassettes=cassettes, concurrency=self._limiter(scope.project, actual))
-        guarded = guard_model(provider_model, model_ref=choice.model, policy=policy)
-        return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), choice.model)
+        policy = CallPolicy(
+            cassettes=cassettes,
+            concurrency=self._limiter(scope.project, actual),
+            budget=run_budget(self.budgets, scope, spec),
+            usage_sink=ContextUsageSink(),
+        )
+        guarded = guard_model(provider_model, model_ref=actual, policy=policy)
+        return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), actual)
 
     def _limiter(self, project: CompiledProject, model: str) -> AbstractConcurrencyLimiter | None:
         shared = self.limiters if self.limiters is not None else ProviderLimiters()

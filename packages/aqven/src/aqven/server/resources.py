@@ -32,6 +32,7 @@ type FileKind = Literal[
     "Agent",
     "Tool",
     "McpServer",
+    "Finding",
     "prompt",
     "code",
     "lock",

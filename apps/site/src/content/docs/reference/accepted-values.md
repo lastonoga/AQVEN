@@ -7,6 +7,16 @@ description: Generated enums from the AQVEN Python package.
 
 These values come from enum classes in `aqven.spec.names`.
 
+## CellVerdict
+
+| Value |
+| --- |
+| `pass` |
+| `fail` |
+| `unclear` |
+| `reference` |
+| `none` |
+
 ## Effect
 
 | Value |
@@ -149,6 +159,13 @@ These values come from enum classes in `aqven.spec.names`.
 | `schema_valid_first_try` |
 | `infra_error_rate` |
 
+## SeriesSplit
+
+| Value |
+| --- |
+| `dev` |
+| `holdout` |
+
 ## SpecKind
 
 | Value |
@@ -163,6 +180,7 @@ These values come from enum classes in `aqven.spec.names`.
 | `Agent` |
 | `Tool` |
 | `McpServer` |
+| `Finding` |
 
 ## TrustLevel
 
@@ -180,4 +198,30 @@ These values come from enum classes in `aqven.spec.names`.
 | `union` |
 | `id` |
 | `value` |
+
+## VerdictReason
+
+| Value |
+| --- |
+| `below_mde` |
+| `uninformative` |
+| `no_discordance` |
+| `compute_confounded` |
+| `inputs_changed` |
+| `infra_errors` |
+| `no_data` |
+| `budget_cut` |
+| `cancelled` |
+| `dev_split` |
+| `judge_not_validated` |
+
+## VerdictState
+
+| Value |
+| --- |
+| `confirmed` |
+| `refuted` |
+| `inconclusive` |
+| `invalid` |
+| `signal` |
 

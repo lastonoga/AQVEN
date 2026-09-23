@@ -7,9 +7,11 @@ from aqven.ports.engine import DEADLINE_SORT, RunListQuery, RunSort
 from aqven.runtime.address import RunId
 from aqven.runtime.human import OpenWaitFilter
 from aqven.runtime.runs import Page, RunSummary
+from aqven.runtime.vocabulary import RunMode
 
 FIRST_PAGE: Final = 0
 SUSPENDED: Final = "suspended"
+HIDDEN_MODE: Final[RunMode] = "experiment"
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,12 +70,18 @@ def wait_plan(query: RunListQuery, now: datetime) -> WaitPlan | None:
     return WaitPlan(wanted=wait_filter(query, now), restricts=restricts)
 
 
+def mode_matches(mode: RunMode, wanted: RunMode | None) -> bool:
+    if wanted is None:
+        return mode != HIDDEN_MODE
+    return mode == wanted
+
+
 def matches(row: RunSummary, query: RunListQuery) -> bool:
     lineage = row.lineage
     checks = (
         query.flow_id is None or row.flow_id == query.flow_id,
         query.status is None or row.status == query.status,
-        query.mode is None or row.mode == query.mode,
+        mode_matches(row.mode, query.mode),
         query.parent_run_id is None or (lineage is not None and lineage.parent_run_id == query.parent_run_id),
         query.since is None or row.started_at >= query.since,
         query.until is None or row.started_at <= query.until,

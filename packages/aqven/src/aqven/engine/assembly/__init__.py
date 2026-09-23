@@ -83,7 +83,9 @@ class StandardExtensions:
     def llm_dependencies(self, services: ToolServices, journal: DbosWaitJournal) -> LlmDependencies:
         limiters = self.limiters
         return LlmDependencies(
-            models=EngineModelSource(self.factories, ProviderKeys(services.settings, services.environ), limiters),
+            models=EngineModelSource(
+                self.factories, ProviderKeys(services.settings, services.environ), limiters, services.budgets
+            ),
             inference_models=LoaderInferenceModels(services.loader, services.package),
             tool_contexts=EngineToolContexts(ToolContextFactory(services)),
             approvals=HumanApprovalGate(ToolApprovalGate(journal)),

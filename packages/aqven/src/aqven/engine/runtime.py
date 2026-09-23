@@ -3,17 +3,22 @@ from dataclasses import dataclass, field
 from typing import Final
 
 import httpx2
+from pydantic_ai.usage import UsageLimits
 
 from aqven.engine.blobs import FileBlobStore
 from aqven.engine.config import EnginePaths
 from aqven.engine.errors import EngineNotLaunched
 from aqven.engine.extensions import HumanLayer
+from aqven.engine.forking import root_run_id
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry
+from aqven.models.limiter import UsageBudget
+from aqven.models.usage import usd_of_micros
 from aqven.ports.execution import NodeExecutors
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.address import RunId
 from aqven.runtime.steps import BlobStore
+from aqven.spec import Limits
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +44,31 @@ class OverrideBook:
         self.entries.pop(run_id, None)
 
 
+def run_usage_limits(limits: Limits) -> UsageLimits:
+    return UsageLimits(
+        request_limit=limits.requests,
+        tool_calls_limit=limits.tool_calls,
+        total_tokens_limit=limits.tokens,
+        cost_limit=usd_of_micros(limits.usd_micros),
+    )
+
+
+@dataclass(slots=True)
+class RunBudgets:
+    entries: dict[RunId, UsageBudget] = field(default_factory=dict[RunId, UsageBudget])
+
+    def budget(self, run_id: RunId, limits: Limits | None) -> UsageBudget | None:
+        if limits is None:
+            return None
+        root = root_run_id(run_id)
+        if root not in self.entries:
+            self.entries[root] = UsageBudget(run_usage_limits(limits))
+        return self.entries[root]
+
+    def discard(self, run_id: RunId) -> None:
+        self.entries.pop(root_run_id(run_id), None)
+
+
 @dataclass(frozen=True, slots=True)
 class ToolServices:
     paths: EnginePaths
@@ -47,6 +77,7 @@ class ToolServices:
     overrides: OverrideBook
     settings: SettingsStore | None
     environ: Mapping[str, str] = field(repr=False)
+    budgets: RunBudgets = field(default_factory=RunBudgets)
 
     @property
     def package(self) -> str:

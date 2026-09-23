@@ -86,9 +86,7 @@ def test_range_can_use_a_nested_output_fixture_from_an_earlier_stage() -> None:
     flow = source.model_copy(update={"nodes": {**source.nodes, NodeId("after"): after}})
 
     missing = range_missing(flow, NodeId("after"), NodeId("after"), {}, {}, {})
-    supplied = range_missing(
-        flow, NodeId("after"), NodeId("after"), {}, {}, {NodeId("fan__left"): {"text": "ready"}}
-    )
+    supplied = range_missing(flow, NodeId("after"), NodeId("after"), {}, {}, {NodeId("fan__left"): {"text": "ready"}})
 
     assert missing[0].reference == "$fan__left.out.text"
     assert supplied == ()

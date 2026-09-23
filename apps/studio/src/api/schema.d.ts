@@ -555,8 +555,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * JSON Schema of every event of the spec, run and chat channels
-         * @description A schema document, not a stream: schemas.spec, schemas.run and schemas.chat map an event type to the JSON Schema of that event. The spec, run and chat arrays stay empty and exist only so the generated client can name each channel union. Live events arrive on GET /api/events/spec, GET /api/runs/{run_id}/events and GET /api/chat/sessions/{session_id}/events.
+         * JSON Schema of every event of the spec, run, chat and series channels
+         * @description A schema document, not a stream: schemas.spec, schemas.run, schemas.chat and schemas.series map an event type to the JSON Schema of that event. The spec, run, chat and series arrays stay empty and exist only so the generated client can name each channel union. Live events arrive on GET /api/events/spec, GET /api/runs/{run_id}/events, GET /api/chat/sessions/{session_id}/events and GET /api/series/{series_id}/events.
          */
         get: operations["event_catalog"];
         put?: never;
@@ -832,6 +832,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datasets/{dataset_id}/cases/from-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft Case From Run */
+        post: operations["case_from_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/draft": {
         parameters: {
             query?: never;
@@ -894,6 +911,160 @@ export interface paths {
         put?: never;
         /** Import Dataset Csv */
         post: operations["dataset_csv_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Experiments */
+        get: operations["experiment_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/experiments/{experiment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Experiment */
+        get: operations["experiment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/experiments/{experiment_id}/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Estimate Series */
+        post: operations["series_estimate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Series */
+        get: operations["series_list"];
+        put?: never;
+        /** Start Series */
+        post: operations["series_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Series */
+        get: operations["series_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Series Cases */
+        get: operations["series_cases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Series Events */
+        get: operations["series_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Series */
+        post: operations["series_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Series */
+        post: operations["series_cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1091,6 +1262,13 @@ export interface components {
             /** @default fail */
             on_truncated: components["schemas"]["OutcomePolicy"];
         };
+        /** AgentRefView */
+        AgentRefView: {
+            /** Agent Id */
+            agent_id: string;
+            /** Model */
+            model: string;
+        };
         /** AgentSpec */
         AgentSpec: {
             /**
@@ -1168,13 +1346,39 @@ export interface components {
             retry_after_ms?: number | null;
         };
         /** @enum {string} */
-        ApiErrorCode: "NOT_FOUND" | "REQUEST_INVALID" | "INPUT_INVALID" | "CONTEXT_MISSING" | "BLOCKING_PROBLEMS" | "VIEW_TOO_BROAD" | "STALE_FILE" | "FILE_VANISHED" | "FILE_EXISTS" | "WAIT_ATTEMPT_STALE" | "TREE_DIRTY" | "INDEX_STALE" | "NOT_RUNNABLE" | "DIRTY_WORKTREE" | "ALREADY_RESUMED" | "NOT_WAITING" | "RUN_TIMED_OUT" | "RUN_STATE_CONFLICT" | "CHAT_STATE_CONFLICT" | "PROMPT_IS_CODE" | "LOCK_BUSY" | "UNAUTHORIZED" | "FORBIDDEN" | "HOST_NOT_ALLOWED" | "METHOD_NOT_ALLOWED" | "INTERNAL";
+        ApiErrorCode: "NOT_FOUND" | "REQUEST_INVALID" | "INPUT_INVALID" | "CONTEXT_MISSING" | "BLOCKING_PROBLEMS" | "VIEW_TOO_BROAD" | "STALE_FILE" | "FILE_VANISHED" | "FILE_EXISTS" | "WAIT_ATTEMPT_STALE" | "TREE_DIRTY" | "INDEX_STALE" | "NOT_RUNNABLE" | "DIRTY_WORKTREE" | "ALREADY_RESUMED" | "NOT_WAITING" | "RUN_TIMED_OUT" | "RUN_STATE_CONFLICT" | "SERIES_STATE_CONFLICT" | "CHAT_STATE_CONFLICT" | "PROMPT_IS_CODE" | "LOCK_BUSY" | "UNAUTHORIZED" | "FORBIDDEN" | "HOST_NOT_ALLOWED" | "METHOD_NOT_ALLOWED" | "INTERNAL";
         /** @enum {string} */
         ApprovalDecision: "allow" | "deny";
         /** @enum {string} */
         ApprovalResolver: "user" | "interrupt" | "session_closed";
+        /** ArmStepView */
+        ArmStepView: {
+            /** Node Id */
+            node_id: string;
+            kind: components["schemas"]["NodeKind"];
+            agent: components["schemas"]["AgentRefView"] | null;
+            /** Description */
+            description: string;
+        };
+        /** ArmView */
+        ArmView: {
+            /** Arm Id */
+            arm_id: string;
+            /** Description */
+            description: string;
+            /** Steps */
+            steps: components["schemas"]["ArmStepView"][];
+        };
         /** @enum {string} */
         AssigneeSource: "setting" | "os_user";
+        /** AssignmentView */
+        AssignmentView: {
+            /** Node Id */
+            node_id: string;
+            agent: components["schemas"]["AgentRefView"];
+            /** Overridden */
+            overridden: boolean;
+        };
         /** Attempt */
         Attempt: {
             /** Attempt */
@@ -1211,6 +1415,71 @@ export interface components {
         };
         /** @enum {string} */
         AttemptCauseKind: "rate_limited" | "schema_invalid" | "truncated" | "refusal" | "provider_error" | "budget_exceeded" | "cassette_miss" | "invalid_json" | "no_structured_output" | "feature_unsupported";
+        /** AttemptFinishedEvent */
+        AttemptFinishedEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Series Id */
+            series_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "attempt_finished";
+            /** Attempt Id */
+            attempt_id: string;
+            /** Ordinal */
+            ordinal: number;
+            /** Variant Id */
+            variant_id: string;
+            /** Case Name */
+            case_name: string;
+            /** Repeat */
+            repeat: number;
+            /** Run Id */
+            run_id: string;
+            outcome: components["schemas"]["OutcomeClass"];
+            /** Passed */
+            passed: boolean | null;
+            /** Cost Usd */
+            cost_usd: string;
+            /** Done */
+            done: number;
+            /** Total */
+            total: number;
+            /** Spend Usd */
+            spend_usd: string;
+        };
+        /**
+         * AttemptOutcome
+         * @enum {string}
+         */
+        AttemptOutcome: "passed" | "failed" | "error" | "waiting" | "running";
+        /** AttemptView */
+        AttemptView: {
+            /** Run Id */
+            run_id: string;
+            /** Variant Id */
+            variant_id: string;
+            /** Repeat */
+            repeat: number;
+            /** Passed */
+            passed: boolean;
+            outcome: components["schemas"]["AttemptOutcome"];
+            /** Failed Checks */
+            failed_checks: string[];
+            /** Usd */
+            usd: string;
+            /** Latency Ms */
+            latency_ms: number;
+            /** Error */
+            error?: string | null;
+        };
         /** BlobMeta */
         BlobMeta: {
             /** Blob Id */
@@ -1374,6 +1643,45 @@ export interface components {
             /** Strict */
             strict?: boolean | null;
         };
+        /** CaseDraft */
+        CaseDraft: {
+            /** Dataset Id */
+            dataset_id: string;
+            case: components["schemas"]["DatasetCase"];
+            /** Yaml */
+            yaml: string;
+        };
+        /** CaseFromRunRequest */
+        CaseFromRunRequest: {
+            /** Run Id */
+            run_id: string;
+            /** Name */
+            name?: string | null;
+        };
+        /** CaseSelectionView */
+        CaseSelectionView: {
+            /** Dataset Id */
+            dataset_id: string;
+            /** Flow Id */
+            flow_id: string | null;
+            /** Tags */
+            tags: {
+                [key: string]: string;
+            };
+            /** Selected */
+            selected: number;
+            /** Total */
+            total: number;
+            /** Splits */
+            splits: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * CellVerdict
+         * @enum {string}
+         */
+        CellVerdict: "pass" | "fail" | "unclear" | "reference" | "none";
         /** @enum {string} */
         ChangeKind: "added" | "modified" | "deleted";
         /** ChatApprovalReply */
@@ -1885,6 +2193,28 @@ export interface components {
             /** Attempt */
             attempt: number;
         };
+        /** CheckSourceView */
+        CheckSourceView: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "builtin" | "code" | "judge";
+            /** Use */
+            use?: string | null;
+            /**
+             * Fields
+             * @default []
+             */
+            fields: string[];
+            /** Ref */
+            ref?: string | null;
+            /** Inference */
+            inference?: string | null;
+            agent?: components["schemas"]["AgentRefView"] | null;
+            /** Validated By */
+            validated_by?: string | null;
+        };
         /** CheckSpec */
         CheckSpec: {
             /** Use */
@@ -1902,6 +2232,13 @@ export interface components {
             on_fail: components["schemas"]["OnFail"];
             /** Threshold */
             threshold?: number | null;
+        };
+        /** CheckView */
+        CheckView: {
+            /** Check Id */
+            check_id: string;
+            kind: components["schemas"]["MetricKind"];
+            source: components["schemas"]["CheckSourceView"];
         };
         /** CodeEvaluator */
         CodeEvaluator: {
@@ -2537,6 +2874,29 @@ export interface components {
             default?: string | null;
         };
         ContractPredicate: components["schemas"]["FamiliesDistinct"] | components["schemas"]["FamilyDisjointFromInput"] | components["schemas"]["FieldBefore"];
+        /** Contrast */
+        Contrast: {
+            /** Metric */
+            metric: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "primary" | "guardrail";
+            /** Baseline */
+            baseline: string;
+            /** Candidate */
+            candidate: string;
+            direction: components["schemas"]["MetricDirection"];
+            /** Margin */
+            margin: number;
+            /** Relative */
+            relative: boolean;
+            /** Margin Abs */
+            margin_abs: number | null;
+            difference: components["schemas"]["Estimate"];
+            verdict: components["schemas"]["CellVerdict"];
+        };
         Count: number;
         /** CsvColumn */
         CsvColumn: {
@@ -2796,6 +3156,11 @@ export interface components {
             policy: "default";
             value: components["schemas"]["JsonValue"];
         };
+        /**
+         * DegenerateReason
+         * @enum {string}
+         */
+        DegenerateReason: "no_data" | "too_few_cases" | "too_few_attempts" | "no_discordance" | "uninformative" | "numeric";
         /** Diagnostic */
         Diagnostic: {
             code: components["schemas"]["DiagnosticCode"];
@@ -2819,7 +3184,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -3031,6 +3396,30 @@ export interface components {
             /** Timeout Seconds */
             timeout_seconds: number;
         };
+        /** Estimate */
+        Estimate: {
+            /** Value */
+            value: number | null;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            method: components["schemas"]["StatMethod"] | null;
+            /** P Value */
+            p_value?: number | null;
+            /** P Adjusted */
+            p_adjusted?: number | null;
+            /** Cases */
+            cases: number;
+            /** Attempts */
+            attempts: number;
+            degenerate?: components["schemas"]["DegenerateReason"] | null;
+        };
+        /**
+         * EstimateReason
+         * @enum {string}
+         */
+        EstimateReason: "look" | "wide" | "enough" | "no_margin" | "no_history" | "short_of_cases";
         /** EventCatalog */
         EventCatalog: {
             /**
@@ -3048,6 +3437,11 @@ export interface components {
              * @description Empty at runtime: the array exists so the generated client can name the channel union. The JSON Schema of every event lives in schemas.
              */
             chat: components["schemas"]["ChatEvent"][];
+            /**
+             * Series
+             * @description Empty at runtime: the array exists so the generated client can name the channel union. The JSON Schema of every event lives in schemas.
+             */
+            series: components["schemas"]["SeriesEvent"][];
             schemas: components["schemas"]["EventSchemas"];
         };
         /** EventSchemas */
@@ -3064,6 +3458,10 @@ export interface components {
             };
             /** Chat */
             chat: {
+                [key: string]: components["schemas"]["JsonObject"];
+            };
+            /** Series */
+            series: {
                 [key: string]: components["schemas"]["JsonObject"];
             };
         };
@@ -3160,6 +3558,101 @@ export interface components {
         };
         /** @enum {string} */
         ExecutionStatus: "pending" | "running" | "ok" | "failed" | "skipped" | "suspended" | "cancelled";
+        /** ExperimentDetailView */
+        ExperimentDetailView: {
+            /** Experiment Id */
+            experiment_id: string;
+            /** Description */
+            description: string;
+            /** Flow Id */
+            flow_id: string | null;
+            subject: components["schemas"]["SubjectView"];
+            /** Failure Mode */
+            failure_mode: string | null;
+            question: components["schemas"]["QuestionKind"];
+            /** Variants */
+            variants: string[];
+            /** Baseline */
+            baseline: string | null;
+            /** Candidate */
+            candidate: string | null;
+            latest: components["schemas"]["LatestSeries"] | null;
+            /** Series Count */
+            series_count: number;
+            /** Spent Usd */
+            spent_usd: string;
+            question_detail: components["schemas"]["QuestionView"];
+            /** Arms */
+            arms: components["schemas"]["ArmView"][];
+            cases: components["schemas"]["CaseSelectionView"];
+            /** Variant Details */
+            variant_details: components["schemas"]["VariantView"][];
+            /** Checks */
+            checks: components["schemas"]["CheckView"][];
+            /** Metrics */
+            metrics: components["schemas"]["MetricColumn"][];
+            plan: components["schemas"]["ExperimentPlan"];
+            /** Notes */
+            notes: string | null;
+            files: components["schemas"]["ExperimentFilesView"];
+        };
+        /** ExperimentFilesView */
+        ExperimentFilesView: {
+            /** Spec */
+            spec: string;
+            /** Notes */
+            notes: string | null;
+        };
+        /** ExperimentOrigin */
+        ExperimentOrigin: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "experiment";
+            /** Experiment Id */
+            experiment_id: string;
+        };
+        /**
+         * ExperimentPlan
+         * @description The default size of a series: how many cases and how many repeats per case.
+         *
+         *     These are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the
+         *     recommended size next to them. ``cases`` unset means every selected case.
+         */
+        ExperimentPlan: {
+            /** Cases */
+            cases?: number | null;
+            /**
+             * Repeats
+             * @default 1
+             */
+            repeats: number;
+        };
+        /** ExperimentSummaryView */
+        ExperimentSummaryView: {
+            /** Experiment Id */
+            experiment_id: string;
+            /** Description */
+            description: string;
+            /** Flow Id */
+            flow_id: string | null;
+            subject: components["schemas"]["SubjectView"];
+            /** Failure Mode */
+            failure_mode: string | null;
+            question: components["schemas"]["QuestionKind"];
+            /** Variants */
+            variants: string[];
+            /** Baseline */
+            baseline: string | null;
+            /** Candidate */
+            candidate: string | null;
+            latest: components["schemas"]["LatestSeries"] | null;
+            /** Series Count */
+            series_count: number;
+            /** Spent Usd */
+            spent_usd: string;
+        };
         /** FailOnTimeout */
         FailOnTimeout: {
             /**
@@ -3286,7 +3779,7 @@ export interface components {
             last_good_content_hash: string | null;
         };
         /** @enum {string} */
-        FileKind: "Project" | "Type" | "Flow" | "Node" | "Dataset" | "Experiment" | "Inference" | "Agent" | "Tool" | "McpServer" | "prompt" | "code" | "lock" | "other";
+        FileKind: "Project" | "Type" | "Flow" | "Node" | "Dataset" | "Experiment" | "Inference" | "Agent" | "Tool" | "McpServer" | "Finding" | "prompt" | "code" | "lock" | "other";
         /** FileRef */
         FileRef: {
             /** Path */
@@ -3450,6 +3943,16 @@ export interface components {
             overrides?: components["schemas"]["ForkOverrides"] | null;
             /** @default original */
             at: components["schemas"]["ForkBase"];
+        };
+        /** GuardrailView */
+        GuardrailView: {
+            /** Metric */
+            metric: string;
+            direction: components["schemas"]["MetricDirection"];
+            /** Margin */
+            margin: number;
+            /** Relative */
+            relative: boolean;
         };
         /** HumanAnswerStatus */
         HumanAnswerStatus: {
@@ -3787,6 +4290,25 @@ export interface components {
             /** Agent */
             agent: string;
         };
+        /** LatestSeries */
+        LatestSeries: {
+            /** Series Id */
+            series_id: string;
+            on: components["schemas"]["SeriesSplit"];
+            status: components["schemas"]["SeriesStatus"];
+            verdict: components["schemas"]["VerdictState"] | null;
+        };
+        /** LaunchRequest */
+        LaunchRequest: {
+            /** @default dev */
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases?: number | null;
+            /** Repeats */
+            repeats?: number | null;
+            /** Cap Usd */
+            cap_usd?: number | string | null;
+        };
         /** Limits */
         Limits: {
             /** Requests */
@@ -3866,6 +4388,37 @@ export interface components {
             account: string | null;
             /** Detail */
             detail: string | null;
+        };
+        /** LookOrigin */
+        LookOrigin: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "look";
+            /** Flow Id */
+            flow_id: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Case Names */
+            case_names: string[];
+            /** Start Node */
+            start_node?: string | null;
+            /** End Node */
+            end_node?: string | null;
+        };
+        /** LookTarget */
+        LookTarget: {
+            /** Flow Id */
+            flow_id: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Case Names */
+            case_names: string[];
+            /** Start Node */
+            start_node?: string | null;
+            /** End Node */
+            end_node?: string | null;
         };
         /** LoopExited */
         LoopExited: {
@@ -4021,6 +4574,14 @@ export interface components {
             /** Out */
             out: components["schemas"]["BoundField"][];
         };
+        /** MatrixRow */
+        MatrixRow: {
+            /** Variant Id */
+            variant_id: string;
+            role: components["schemas"]["VariantRole"];
+            /** Cells */
+            cells: components["schemas"]["MetricCell"][];
+        };
         /** McpToolSource */
         McpToolSource: {
             /**
@@ -4052,6 +4613,53 @@ export interface components {
         };
         /** @enum {string} */
         MessageOrigin: "example" | "prompt";
+        /** MetricCell */
+        MetricCell: {
+            /** Metric */
+            metric: string;
+            /** Value */
+            value: number | null;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            verdict: components["schemas"]["CellVerdict"];
+            method: components["schemas"]["StatMethod"] | null;
+            /** Cases */
+            cases: number;
+        };
+        /** MetricColumn */
+        MetricColumn: {
+            /** Metric */
+            metric: string;
+            role: components["schemas"]["MetricRole"];
+            direction: components["schemas"]["MetricDirection"];
+            unit: components["schemas"]["MetricUnit"];
+            /** Margin */
+            margin: number | null;
+            /** Relative */
+            relative: boolean;
+        };
+        /**
+         * MetricDirection
+         * @enum {string}
+         */
+        MetricDirection: "higher_is_better" | "lower_is_better";
+        /**
+         * MetricKind
+         * @enum {string}
+         */
+        MetricKind: "binary" | "ordinal" | "continuous";
+        /**
+         * MetricRole
+         * @enum {string}
+         */
+        MetricRole: "primary" | "guardrail" | "check" | "builtin";
+        /**
+         * MetricUnit
+         * @enum {string}
+         */
+        MetricUnit: "rate" | "score" | "ordinal" | "usd" | "ms";
         /** MissingRangeData */
         MissingRangeData: {
             /** Case Name */
@@ -4399,6 +5007,11 @@ export interface components {
             tokens_out: number;
             /** Latency Ms */
             latency_ms: number;
+            /**
+             * Wait Ms
+             * @default 0
+             */
+            wait_ms: number;
             /** Model */
             model: string | null;
             /** Cache Hit */
@@ -4668,6 +5281,11 @@ export interface components {
             zdr: boolean;
         };
         /**
+         * OutcomeClass
+         * @enum {string}
+         */
+        OutcomeClass: "ok" | "model_fail" | "schema_invalid" | "refusal" | "infra_error" | "budget_cut" | "cancelled";
+        /**
          * OutcomePolicy
          * @enum {string}
          */
@@ -4736,6 +5354,15 @@ export interface components {
             /** Total Estimate */
             total_estimate: number | null;
         };
+        /** Page[ExperimentSummaryView] */
+        Page_ExperimentSummaryView_: {
+            /** Items */
+            items: components["schemas"]["ExperimentSummaryView"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total Estimate */
+            total_estimate: number | null;
+        };
         /** Page[FileEntry] */
         Page_FileEntry_: {
             /** Items */
@@ -4776,6 +5403,15 @@ export interface components {
         Page_RunSummary_: {
             /** Items */
             items: components["schemas"]["RunSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total Estimate */
+            total_estimate: number | null;
+        };
+        /** Page[SeriesSummaryView] */
+        Page_SeriesSummaryView_: {
+            /** Items */
+            items: components["schemas"]["SeriesSummaryView"][];
             /** Next Cursor */
             next_cursor: string | null;
             /** Total Estimate */
@@ -5207,6 +5843,37 @@ export interface components {
             limits?: components["schemas"]["ProviderLimits"] | null;
         };
         ProviderText: string;
+        /** @enum {string} */
+        QuestionKind: "look" | "threshold" | "compare" | "noninferior";
+        /** QuestionView */
+        QuestionView: {
+            kind: components["schemas"]["QuestionKind"];
+            /** Metric */
+            metric?: string | null;
+            /** Bound */
+            bound?: ("above" | "below") | null;
+            /** Value */
+            value?: number | null;
+            /** Variant */
+            variant?: string | null;
+            /** Baseline */
+            baseline?: string | null;
+            /** Candidate */
+            candidate?: string | null;
+            direction?: components["schemas"]["MetricDirection"] | null;
+            /** Margin */
+            margin?: number | null;
+            /**
+             * Relative
+             * @default false
+             */
+            relative: boolean;
+            /**
+             * Guardrails
+             * @default []
+             */
+            guardrails: components["schemas"]["GuardrailView"][];
+        };
         /** ReadyState */
         ReadyState: {
             /**
@@ -5217,6 +5884,16 @@ export interface components {
             status: "ready";
             /** Engine Version */
             engine_version: string;
+        };
+        /** Recommendation */
+        Recommendation: {
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            reason: components["schemas"]["EstimateReason"];
+            /** Text */
+            text: string;
         };
         /** RecordType */
         RecordType: {
@@ -5439,6 +6116,8 @@ export interface components {
             start_node?: string | null;
             /** End Node */
             end_node?: string | null;
+            /** Series Id */
+            series_id?: string | null;
             /** Execution Id */
             execution_id: string;
             context: components["schemas"]["RunContext"] | null;
@@ -5585,6 +6264,8 @@ export interface components {
             start_node?: string | null;
             /** End Node */
             end_node?: string | null;
+            /** Series Id */
+            series_id?: string | null;
         };
         /** RunSuspended */
         RunSuspended: {
@@ -5664,6 +6345,298 @@ export interface components {
             /** Set */
             set: boolean;
         };
+        /** SeriesCancelBody */
+        SeriesCancelBody: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** SeriesCaseRow */
+        SeriesCaseRow: {
+            /** Name */
+            name: string;
+            split: components["schemas"]["SeriesSplit"];
+            /** Tags */
+            tags: {
+                [key: string]: string;
+            };
+            /** Variants */
+            variants: components["schemas"]["VariantTally"][];
+            /** Usd */
+            usd: string;
+            /** Failing */
+            failing: boolean;
+            /** Divergent */
+            divergent: boolean;
+            /** Attempts */
+            attempts: components["schemas"]["AttemptView"][];
+        };
+        /** SeriesDetailView */
+        SeriesDetailView: {
+            /** Series Id */
+            series_id: string;
+            origin: components["schemas"]["SeriesOrigin"];
+            /** Flow Id */
+            flow_id: string | null;
+            /** Dataset Id */
+            dataset_id: string;
+            question: components["schemas"]["QuestionKind"];
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: string[];
+            status: components["schemas"]["SeriesStatus"];
+            progress: components["schemas"]["SeriesProgress"];
+            spend: components["schemas"]["SeriesSpend"];
+            verdict: components["schemas"]["SeriesVerdict"] | null;
+            /** Waits */
+            waits: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            question_detail: components["schemas"]["QuestionView"];
+            /** Checks */
+            checks: components["schemas"]["CheckView"][];
+            matrix: components["schemas"]["SeriesMatrix"];
+            /** Stability */
+            stability: components["schemas"]["StabilityRow"][];
+            /** Contrasts */
+            contrasts: components["schemas"]["Contrast"][];
+            /** Thresholds */
+            thresholds: components["schemas"]["ThresholdCell"][];
+            /** Aggregates */
+            aggregates: components["schemas"]["VariantAggregates"][];
+            estimate: components["schemas"]["SeriesEstimate"];
+            /** Needs Approval */
+            needs_approval: boolean;
+            /** Approved By */
+            approved_by: string | null;
+            /** Finding Path */
+            finding_path: string | null;
+            /** Error */
+            error: string | null;
+        };
+        /** SeriesEstimate */
+        SeriesEstimate: {
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: number;
+            /** Attempts */
+            attempts: number;
+            /** Available */
+            available: number;
+            /** Usd */
+            usd: string | null;
+            /**
+             * Usd Source
+             * @enum {string}
+             */
+            usd_source: "history" | "prices" | "unknown";
+            /** Minutes */
+            minutes: number | null;
+            /** Half Width */
+            half_width: number | null;
+            /** Mde */
+            mde: number | null;
+            /** Margin */
+            margin: number | null;
+            /** Spread */
+            spread: number | null;
+            /**
+             * Spread Source
+             * @enum {string}
+             */
+            spread_source: "history" | "prior" | "none";
+            /** Icc */
+            icc: number;
+            recommended: components["schemas"]["Recommendation"];
+            /** Below Recommended */
+            below_recommended: boolean;
+            /** Needs Approval */
+            needs_approval: boolean;
+            /** Project Cap Usd */
+            project_cap_usd: string;
+            /** Cap Usd */
+            cap_usd: string;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
+        };
+        SeriesEvent: components["schemas"]["SeriesStatusEvent"] | components["schemas"]["AttemptFinishedEvent"] | components["schemas"]["SeriesFinishedEvent"];
+        /** SeriesFinishedEvent */
+        SeriesFinishedEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Series Id */
+            series_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_finished";
+            status: components["schemas"]["SeriesStatus"];
+            verdict: components["schemas"]["VerdictState"] | null;
+        };
+        /** SeriesGetResult */
+        SeriesGetResult: {
+            series: components["schemas"]["SeriesDetailView"];
+            /** Cases */
+            cases: components["schemas"]["SeriesCaseRow"][] | null;
+            /** Hidden Cases */
+            hidden_cases: number;
+        };
+        /** SeriesMatrix */
+        SeriesMatrix: {
+            /** Columns */
+            columns: components["schemas"]["MetricColumn"][];
+            /** Rows */
+            rows: components["schemas"]["MatrixRow"][];
+        };
+        SeriesOrigin: components["schemas"]["ExperimentOrigin"] | components["schemas"]["LookOrigin"];
+        /** SeriesProgress */
+        SeriesProgress: {
+            /** Done */
+            done: number;
+            /** Total */
+            total: number;
+        };
+        /** SeriesSpend */
+        SeriesSpend: {
+            /** Usd */
+            usd: string;
+            /** Cap Usd */
+            cap_usd: string;
+        };
+        /**
+         * SeriesSplit
+         * @enum {string}
+         */
+        SeriesSplit: "dev" | "holdout";
+        /** SeriesStartRequest */
+        SeriesStartRequest: {
+            /** @default dev */
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases?: number | null;
+            /** Repeats */
+            repeats?: number | null;
+            /** Cap Usd */
+            cap_usd?: number | string | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
+            look?: components["schemas"]["LookTarget"] | null;
+            client_op_id?: components["schemas"]["Ulid"] | null;
+        };
+        /** SeriesStarted */
+        SeriesStarted: {
+            /** Series Id */
+            series_id: string;
+            origin: components["schemas"]["SeriesOrigin"];
+            /** Flow Id */
+            flow_id: string | null;
+            /** Dataset Id */
+            dataset_id: string;
+            question: components["schemas"]["QuestionKind"];
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: string[];
+            status: components["schemas"]["SeriesStatus"];
+            progress: components["schemas"]["SeriesProgress"];
+            spend: components["schemas"]["SeriesSpend"];
+            verdict: components["schemas"]["SeriesVerdict"] | null;
+            /** Waits */
+            waits: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            estimate: components["schemas"]["SeriesEstimate"];
+        };
+        /**
+         * SeriesStatus
+         * @enum {string}
+         */
+        SeriesStatus: "awaiting_approval" | "running" | "waiting_human" | "done" | "cancelled" | "failed";
+        /** SeriesStatusEvent */
+        SeriesStatusEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Series Id */
+            series_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_status";
+            status: components["schemas"]["SeriesStatus"];
+        };
+        /** SeriesSummaryView */
+        SeriesSummaryView: {
+            /** Series Id */
+            series_id: string;
+            origin: components["schemas"]["SeriesOrigin"];
+            /** Flow Id */
+            flow_id: string | null;
+            /** Dataset Id */
+            dataset_id: string;
+            question: components["schemas"]["QuestionKind"];
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: string[];
+            status: components["schemas"]["SeriesStatus"];
+            progress: components["schemas"]["SeriesProgress"];
+            spend: components["schemas"]["SeriesSpend"];
+            verdict: components["schemas"]["SeriesVerdict"] | null;
+            /** Waits */
+            waits: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+        };
+        /** SeriesVerdict */
+        SeriesVerdict: {
+            state: components["schemas"]["VerdictState"];
+            reason: components["schemas"]["VerdictReason"] | null;
+            /** Text */
+            text: string;
+        };
         /** SettingDeleted */
         SettingDeleted: {
             scope: components["schemas"]["SettingScope"];
@@ -5732,7 +6705,7 @@ export interface components {
          * SpecKind
          * @enum {string}
          */
-        SpecKind: "Project" | "Type" | "Flow" | "Node" | "Dataset" | "Experiment" | "Inference" | "Agent" | "Tool" | "McpServer";
+        SpecKind: "Project" | "Type" | "Flow" | "Node" | "Dataset" | "Experiment" | "Inference" | "Agent" | "Tool" | "McpServer" | "Finding";
         /** @enum {string} */
         SpecOrigin: "working_copy" | "release";
         /** SpecResync */
@@ -5787,6 +6760,31 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** Stability */
+        Stability: {
+            /** Always */
+            always: number;
+            /** Never */
+            never: number;
+            /** Flaky */
+            flaky: number;
+        };
+        /** StabilityRow */
+        StabilityRow: {
+            /** Variant Id */
+            variant_id: string;
+            /** Always */
+            always: number;
+            /** Never */
+            never: number;
+            /** Flaky */
+            flaky: number;
+        };
+        /**
+         * StatMethod
+         * @enum {string}
+         */
+        StatMethod: "wilson" | "kish_wilson" | "beta_binomial" | "t_case_means" | "bca_case_means" | "bootstrap_ratio" | "bootstrap_quantile" | "exact_sign" | "paired_t" | "paired_bca" | "paired_bootstrap_ratio" | "paired_bootstrap_quantile";
         /** @enum {string} */
         StructuredMode: "tool" | "native" | "prompted";
         /** SubagentSpec */
@@ -5799,6 +6797,23 @@ export interface components {
             agent: string;
             /** Inference */
             inference: string;
+        };
+        /**
+         * SubjectKind
+         * @enum {string}
+         */
+        SubjectKind: "flow" | "range" | "arm";
+        /** SubjectView */
+        SubjectView: {
+            kind: components["schemas"]["SubjectKind"];
+            /** Flow Id */
+            flow_id: string | null;
+            /** Arm Id */
+            arm_id: string | null;
+            /** From Node */
+            from_node: string | null;
+            /** To Node */
+            to_node: string | null;
         };
         /** SwitchCase */
         SwitchCase: {
@@ -5855,6 +6870,24 @@ export interface components {
         };
         /** @enum {string} */
         TerminalRunStatus: "completed" | "failed" | "cancelled";
+        /** ThresholdCell */
+        ThresholdCell: {
+            /** Metric */
+            metric: string;
+            /** Variant Id */
+            variant_id: string;
+            /**
+             * Bound
+             * @enum {string}
+             */
+            bound: "above" | "below";
+            /** Threshold */
+            threshold: number;
+            /** Margin */
+            margin: number;
+            estimate: components["schemas"]["Estimate"];
+            verdict: components["schemas"]["CellVerdict"];
+        };
         TimeoutPolicy: components["schemas"]["FailOnTimeout"] | components["schemas"]["DefaultOnTimeout"] | components["schemas"]["EscalateOnTimeout"];
         /** ToolApprovalSpec */
         ToolApprovalSpec: {
@@ -5933,6 +6966,7 @@ export interface components {
              */
             status: "ok" | "invalid";
         };
+        Ulid: string;
         /** UnionType */
         UnionType: {
             /**
@@ -6015,7 +7049,43 @@ export interface components {
             /** Enum */
             enum?: string[] | null;
         };
+        /** VariantAggregates */
+        VariantAggregates: {
+            /** Variant Id */
+            variant_id: string;
+            role: components["schemas"]["VariantRole"];
+            /** Cases */
+            cases: number;
+            /** Attempts */
+            attempts: number;
+            /** Counted */
+            counted: number;
+            /** Infra Errors */
+            infra_errors: number;
+            /** Spend Usd */
+            spend_usd: string;
+            /** Pass K */
+            pass_k: number | null;
+            /** Icc */
+            icc: number | null;
+            stability: components["schemas"]["Stability"] | null;
+            /** Metrics */
+            metrics: {
+                [key: string]: components["schemas"]["Estimate"];
+            };
+            /** Runtime Checks */
+            runtime_checks: {
+                [key: string]: components["schemas"]["Estimate"];
+            };
+            /** Models */
+            models: string[];
+        };
         VariantRef: string;
+        /**
+         * VariantRole
+         * @enum {string}
+         */
+        VariantRole: "baseline" | "candidate" | "other";
         /** VariantSlot */
         VariantSlot: {
             /** On */
@@ -6026,6 +7096,39 @@ export interface components {
             };
             default?: components["schemas"]["VariantRef"] | null;
         };
+        /** VariantTally */
+        VariantTally: {
+            /** Variant Id */
+            variant_id: string;
+            /** Passed */
+            passed: number;
+            /** Total */
+            total: number;
+            /** Failed Checks */
+            failed_checks: string[];
+            /** Usd */
+            usd: string;
+        };
+        /** VariantView */
+        VariantView: {
+            /** Variant Id */
+            variant_id: string;
+            /** Arm Id */
+            arm_id: string | null;
+            role: components["schemas"]["VariantRole"];
+            /** Assignments */
+            assignments: components["schemas"]["AssignmentView"][];
+        };
+        /**
+         * VerdictReason
+         * @enum {string}
+         */
+        VerdictReason: "below_mde" | "uninformative" | "no_discordance" | "compute_confounded" | "inputs_changed" | "infra_errors" | "no_data" | "budget_cut" | "cancelled" | "dev_split" | "judge_not_validated";
+        /**
+         * VerdictState
+         * @enum {string}
+         */
+        VerdictState: "confirmed" | "refuted" | "inconclusive" | "invalid" | "signal";
         /** @enum {string} */
         WaitKind: "form" | "tool_approval";
         /** @enum {string} */
@@ -6053,6 +7156,7 @@ export type SchemaActorKind = components['schemas']['ActorKind'];
 export type SchemaAgentBackendKind = components['schemas']['AgentBackendKind'];
 export type SchemaAgentModel = components['schemas']['AgentModel'];
 export type SchemaAgentOutputSpec = components['schemas']['AgentOutputSpec'];
+export type SchemaAgentRefView = components['schemas']['AgentRefView'];
 export type SchemaAgentSpec = components['schemas']['AgentSpec'];
 export type SchemaAllowedSetMember = components['schemas']['AllowedSetMember'];
 export type SchemaAllowedSetMode = components['schemas']['AllowedSetMode'];
@@ -6061,11 +7165,17 @@ export type SchemaApiError = components['schemas']['ApiError'];
 export type SchemaApiErrorCode = components['schemas']['ApiErrorCode'];
 export type SchemaApprovalDecision = components['schemas']['ApprovalDecision'];
 export type SchemaApprovalResolver = components['schemas']['ApprovalResolver'];
+export type SchemaArmStepView = components['schemas']['ArmStepView'];
+export type SchemaArmView = components['schemas']['ArmView'];
 export type SchemaAssigneeSource = components['schemas']['AssigneeSource'];
+export type SchemaAssignmentView = components['schemas']['AssignmentView'];
 export type SchemaAttempt = components['schemas']['Attempt'];
 export type SchemaAttemptAction = components['schemas']['AttemptAction'];
 export type SchemaAttemptCause = components['schemas']['AttemptCause'];
 export type SchemaAttemptCauseKind = components['schemas']['AttemptCauseKind'];
+export type SchemaAttemptFinishedEvent = components['schemas']['AttemptFinishedEvent'];
+export type SchemaAttemptOutcome = components['schemas']['AttemptOutcome'];
+export type SchemaAttemptView = components['schemas']['AttemptView'];
 export type SchemaBlobMeta = components['schemas']['BlobMeta'];
 export type SchemaBlobUploaded = components['schemas']['BlobUploaded'];
 export type SchemaBlobValue = components['schemas']['BlobValue'];
@@ -6080,6 +7190,10 @@ export type SchemaCallOutcome = components['schemas']['CallOutcome'];
 export type SchemaCancelRequest = components['schemas']['CancelRequest'];
 export type SchemaCancelResult = components['schemas']['CancelResult'];
 export type SchemaCapabilityOverride = components['schemas']['CapabilityOverride'];
+export type SchemaCaseDraft = components['schemas']['CaseDraft'];
+export type SchemaCaseFromRunRequest = components['schemas']['CaseFromRunRequest'];
+export type SchemaCaseSelectionView = components['schemas']['CaseSelectionView'];
+export type SchemaCellVerdict = components['schemas']['CellVerdict'];
 export type SchemaChangeKind = components['schemas']['ChangeKind'];
 export type SchemaChatApprovalReply = components['schemas']['ChatApprovalReply'];
 export type SchemaChatApprovalRequested = components['schemas']['ChatApprovalRequested'];
@@ -6116,7 +7230,9 @@ export type SchemaChatTurnStarted = components['schemas']['ChatTurnStarted'];
 export type SchemaChatUsage = components['schemas']['ChatUsage'];
 export type SchemaChatUsageReported = components['schemas']['ChatUsageReported'];
 export type SchemaCheckOutcome = components['schemas']['CheckOutcome'];
+export type SchemaCheckSourceView = components['schemas']['CheckSourceView'];
 export type SchemaCheckSpec = components['schemas']['CheckSpec'];
+export type SchemaCheckView = components['schemas']['CheckView'];
 export type SchemaCodeEvaluator = components['schemas']['CodeEvaluator'];
 export type SchemaCodeFormat = components['schemas']['CodeFormat'];
 export type SchemaCodeNodeSpec = components['schemas']['CodeNodeSpec'];
@@ -6155,6 +7271,7 @@ export type SchemaCompiledToolNode = components['schemas']['CompiledToolNode'];
 export type SchemaCompiledToolSource = components['schemas']['CompiledToolSource'];
 export type SchemaCompiledVariantSlot = components['schemas']['CompiledVariantSlot'];
 export type SchemaContractPredicate = components['schemas']['ContractPredicate'];
+export type SchemaContrast = components['schemas']['Contrast'];
 export type SchemaCount = components['schemas']['Count'];
 export type SchemaCsvColumn = components['schemas']['CsvColumn'];
 export type SchemaCsvImportPreview = components['schemas']['CsvImportPreview'];
@@ -6174,6 +7291,7 @@ export type SchemaDatasetRangePreview = components['schemas']['DatasetRangePrevi
 export type SchemaDatasetRangeRequest = components['schemas']['DatasetRangeRequest'];
 export type SchemaDatasetSummary = components['schemas']['DatasetSummary'];
 export type SchemaDefaultOnTimeout = components['schemas']['DefaultOnTimeout'];
+export type SchemaDegenerateReason = components['schemas']['DegenerateReason'];
 export type SchemaDiagnostic = components['schemas']['Diagnostic'];
 export type SchemaDiagnosticCode = components['schemas']['DiagnosticCode'];
 export type SchemaDiagnosticsChanged = components['schemas']['DiagnosticsChanged'];
@@ -6199,12 +7317,19 @@ export type SchemaEffect = components['schemas']['Effect'];
 export type SchemaEnumType = components['schemas']['EnumType'];
 export type SchemaEnumValue = components['schemas']['EnumValue'];
 export type SchemaEscalateOnTimeout = components['schemas']['EscalateOnTimeout'];
+export type SchemaEstimate = components['schemas']['Estimate'];
+export type SchemaEstimateReason = components['schemas']['EstimateReason'];
 export type SchemaEventCatalog = components['schemas']['EventCatalog'];
 export type SchemaEventSchemas = components['schemas']['EventSchemas'];
 export type SchemaExampleSpec = components['schemas']['ExampleSpec'];
 export type SchemaExecutionAddress = components['schemas']['ExecutionAddress'];
 export type SchemaExecutionDetail = components['schemas']['ExecutionDetail'];
 export type SchemaExecutionStatus = components['schemas']['ExecutionStatus'];
+export type SchemaExperimentDetailView = components['schemas']['ExperimentDetailView'];
+export type SchemaExperimentFilesView = components['schemas']['ExperimentFilesView'];
+export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
+export type SchemaExperimentPlan = components['schemas']['ExperimentPlan'];
+export type SchemaExperimentSummaryView = components['schemas']['ExperimentSummaryView'];
 export type SchemaFailOnTimeout = components['schemas']['FailOnTimeout'];
 export type SchemaFamiliesDistinct = components['schemas']['FamiliesDistinct'];
 export type SchemaFamilyDisjointFromInput = components['schemas']['FamilyDisjointFromInput'];
@@ -6229,6 +7354,7 @@ export type SchemaFlowSummary = components['schemas']['FlowSummary'];
 export type SchemaForkBase = components['schemas']['ForkBase'];
 export type SchemaForkOverrides = components['schemas']['ForkOverrides'];
 export type SchemaForkRequest = components['schemas']['ForkRequest'];
+export type SchemaGuardrailView = components['schemas']['GuardrailView'];
 export type SchemaHumanAnswerStatus = components['schemas']['HumanAnswerStatus'];
 export type SchemaHumanNodeSpec = components['schemas']['HumanNodeSpec'];
 export type SchemaHumanWait = components['schemas']['HumanWait'];
@@ -6253,6 +7379,8 @@ export type SchemaJsonPointer = components['schemas']['JsonPointer'];
 export type SchemaJsonSchema = components['schemas']['JsonSchema'];
 export type SchemaJsonValue = components['schemas']['JsonValue'];
 export type SchemaJudgeEvaluator = components['schemas']['JudgeEvaluator'];
+export type SchemaLatestSeries = components['schemas']['LatestSeries'];
+export type SchemaLaunchRequest = components['schemas']['LaunchRequest'];
 export type SchemaLimits = components['schemas']['Limits'];
 export type SchemaLineage = components['schemas']['Lineage'];
 export type SchemaLineageRelation = components['schemas']['LineageRelation'];
@@ -6262,6 +7390,8 @@ export type SchemaLocalUserView = components['schemas']['LocalUserView'];
 export type SchemaLoginMethod = components['schemas']['LoginMethod'];
 export type SchemaLoginState = components['schemas']['LoginState'];
 export type SchemaLoginStatus = components['schemas']['LoginStatus'];
+export type SchemaLookOrigin = components['schemas']['LookOrigin'];
+export type SchemaLookTarget = components['schemas']['LookTarget'];
 export type SchemaLoopExited = components['schemas']['LoopExited'];
 export type SchemaLoopIterationFinished = components['schemas']['LoopIterationFinished'];
 export type SchemaLoopNodeSpec = components['schemas']['LoopNodeSpec'];
@@ -6271,9 +7401,16 @@ export type SchemaManualRangePair = components['schemas']['ManualRangePair'];
 export type SchemaManualRangePreview = components['schemas']['ManualRangePreview'];
 export type SchemaManualRangeRequest = components['schemas']['ManualRangeRequest'];
 export type SchemaMapNodeSpec = components['schemas']['MapNodeSpec'];
+export type SchemaMatrixRow = components['schemas']['MatrixRow'];
 export type SchemaMcpToolSource = components['schemas']['McpToolSource'];
 export type SchemaMediaValue = components['schemas']['MediaValue'];
 export type SchemaMessageOrigin = components['schemas']['MessageOrigin'];
+export type SchemaMetricCell = components['schemas']['MetricCell'];
+export type SchemaMetricColumn = components['schemas']['MetricColumn'];
+export type SchemaMetricDirection = components['schemas']['MetricDirection'];
+export type SchemaMetricKind = components['schemas']['MetricKind'];
+export type SchemaMetricRole = components['schemas']['MetricRole'];
+export type SchemaMetricUnit = components['schemas']['MetricUnit'];
 export type SchemaMissingRangeData = components['schemas']['MissingRangeData'];
 export type SchemaModality = components['schemas']['Modality'];
 export type SchemaModalitySet = components['schemas']['ModalitySet'];
@@ -6312,6 +7449,7 @@ export type SchemaNodeWaitTimedOut = components['schemas']['NodeWaitTimedOut'];
 export type SchemaOnFail = components['schemas']['OnFail'];
 export type SchemaOnTimeoutAction = components['schemas']['OnTimeoutAction'];
 export type SchemaOpenRouterRouting = components['schemas']['OpenRouterRouting'];
+export type SchemaOutcomeClass = components['schemas']['OutcomeClass'];
 export type SchemaOutcomePolicy = components['schemas']['OutcomePolicy'];
 export type SchemaOutputField = components['schemas']['OutputField'];
 export type SchemaOutputMode = components['schemas']['OutputMode'];
@@ -6321,11 +7459,13 @@ export type SchemaOutputPartKind = components['schemas']['OutputPartKind'];
 export type SchemaPageChatSession = components['schemas']['Page_ChatSession_'];
 export type SchemaPageDatasetCase = components['schemas']['Page_DatasetCase_'];
 export type SchemaPageDatasetSummary = components['schemas']['Page_DatasetSummary_'];
+export type SchemaPageExperimentSummaryView = components['schemas']['Page_ExperimentSummaryView_'];
 export type SchemaPageFileEntry = components['schemas']['Page_FileEntry_'];
 export type SchemaPageFlowSummary = components['schemas']['Page_FlowSummary_'];
 export type SchemaPagePromptSummary = components['schemas']['Page_PromptSummary_'];
 export type SchemaPageRunEvent = components['schemas']['Page_RunEvent_'];
 export type SchemaPageRunSummary = components['schemas']['Page_RunSummary_'];
+export type SchemaPageSeriesSummaryView = components['schemas']['Page_SeriesSummaryView_'];
 export type SchemaPageTypeSummary = components['schemas']['Page_TypeSummary_'];
 export type SchemaPageStr = components['schemas']['Page_str_'];
 export type SchemaParallelNodeSpec = components['schemas']['ParallelNodeSpec'];
@@ -6370,7 +7510,10 @@ export type SchemaProviderLimits = components['schemas']['ProviderLimits'];
 export type SchemaProviderNameField = components['schemas']['ProviderNameField'];
 export type SchemaProviderSpec = components['schemas']['ProviderSpec'];
 export type SchemaProviderText = components['schemas']['ProviderText'];
+export type SchemaQuestionKind = components['schemas']['QuestionKind'];
+export type SchemaQuestionView = components['schemas']['QuestionView'];
 export type SchemaReadyState = components['schemas']['ReadyState'];
+export type SchemaRecommendation = components['schemas']['Recommendation'];
 export type SchemaRecordType = components['schemas']['RecordType'];
 export type SchemaRefBinding = components['schemas']['RefBinding'];
 export type SchemaRefText = components['schemas']['RefText'];
@@ -6408,6 +7551,24 @@ export type SchemaSecretScope = components['schemas']['SecretScope'];
 export type SchemaSecretSettingWrite = components['schemas']['SecretSettingWrite'];
 export type SchemaSecretSource = components['schemas']['SecretSource'];
 export type SchemaSecretStatus = components['schemas']['SecretStatus'];
+export type SchemaSeriesCancelBody = components['schemas']['SeriesCancelBody'];
+export type SchemaSeriesCaseRow = components['schemas']['SeriesCaseRow'];
+export type SchemaSeriesDetailView = components['schemas']['SeriesDetailView'];
+export type SchemaSeriesEstimate = components['schemas']['SeriesEstimate'];
+export type SchemaSeriesEvent = components['schemas']['SeriesEvent'];
+export type SchemaSeriesFinishedEvent = components['schemas']['SeriesFinishedEvent'];
+export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
+export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
+export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
+export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
+export type SchemaSeriesSpend = components['schemas']['SeriesSpend'];
+export type SchemaSeriesSplit = components['schemas']['SeriesSplit'];
+export type SchemaSeriesStartRequest = components['schemas']['SeriesStartRequest'];
+export type SchemaSeriesStarted = components['schemas']['SeriesStarted'];
+export type SchemaSeriesStatus = components['schemas']['SeriesStatus'];
+export type SchemaSeriesStatusEvent = components['schemas']['SeriesStatusEvent'];
+export type SchemaSeriesSummaryView = components['schemas']['SeriesSummaryView'];
+export type SchemaSeriesVerdict = components['schemas']['SeriesVerdict'];
 export type SchemaSettingDeleted = components['schemas']['SettingDeleted'];
 export type SchemaSettingKeyText = components['schemas']['SettingKeyText'];
 export type SchemaSettingKind = components['schemas']['SettingKind'];
@@ -6425,13 +7586,19 @@ export type SchemaSpecResync = components['schemas']['SpecResync'];
 export type SchemaSpecSchema = components['schemas']['SpecSchema'];
 export type SchemaSpecSchemaCatalog = components['schemas']['SpecSchemaCatalog'];
 export type SchemaSpecVersionInfo = components['schemas']['SpecVersionInfo'];
+export type SchemaStability = components['schemas']['Stability'];
+export type SchemaStabilityRow = components['schemas']['StabilityRow'];
+export type SchemaStatMethod = components['schemas']['StatMethod'];
 export type SchemaStructuredMode = components['schemas']['StructuredMode'];
 export type SchemaSubagentSpec = components['schemas']['SubagentSpec'];
+export type SchemaSubjectKind = components['schemas']['SubjectKind'];
+export type SchemaSubjectView = components['schemas']['SubjectView'];
 export type SchemaSwitchCase = components['schemas']['SwitchCase'];
 export type SchemaSwitchNodeSpec = components['schemas']['SwitchNodeSpec'];
 export type SchemaSyncState = components['schemas']['SyncState'];
 export type SchemaTemplatePrompt = components['schemas']['TemplatePrompt'];
 export type SchemaTerminalRunStatus = components['schemas']['TerminalRunStatus'];
+export type SchemaThresholdCell = components['schemas']['ThresholdCell'];
 export type SchemaTimeoutPolicy = components['schemas']['TimeoutPolicy'];
 export type SchemaToolApprovalSpec = components['schemas']['ToolApprovalSpec'];
 export type SchemaToolKind = components['schemas']['ToolKind'];
@@ -6443,14 +7610,21 @@ export type SchemaTypeKind = components['schemas']['TypeKind'];
 export type SchemaTypeRefText = components['schemas']['TypeRefText'];
 export type SchemaTypeSpec = components['schemas']['TypeSpec'];
 export type SchemaTypeSummary = components['schemas']['TypeSummary'];
+export type SchemaUlid = components['schemas']['Ulid'];
 export type SchemaUnionType = components['schemas']['UnionType'];
 export type SchemaUnionVariant = components['schemas']['UnionVariant'];
 export type SchemaValueBase = components['schemas']['ValueBase'];
 export type SchemaValueRef = components['schemas']['ValueRef'];
 export type SchemaValueSettingWrite = components['schemas']['ValueSettingWrite'];
 export type SchemaValueType = components['schemas']['ValueType'];
+export type SchemaVariantAggregates = components['schemas']['VariantAggregates'];
 export type SchemaVariantRef = components['schemas']['VariantRef'];
+export type SchemaVariantRole = components['schemas']['VariantRole'];
 export type SchemaVariantSlot = components['schemas']['VariantSlot'];
+export type SchemaVariantTally = components['schemas']['VariantTally'];
+export type SchemaVariantView = components['schemas']['VariantView'];
+export type SchemaVerdictReason = components['schemas']['VerdictReason'];
+export type SchemaVerdictState = components['schemas']['VerdictState'];
 export type SchemaWaitKind = components['schemas']['WaitKind'];
 export type SchemaWaitState = components['schemas']['WaitState'];
 export type SchemaAqvenRuntimeVocabularyPromptRole = components['schemas']['aqven__runtime__vocabulary__PromptRole'];
@@ -11955,6 +13129,113 @@ export interface operations {
             };
         };
     };
+    case_from_run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseFromRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseDraft"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     dataset_draft: {
         parameters: {
             query?: never;
@@ -12288,6 +13569,1064 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    experiment_list: {
+        parameters: {
+            query?: {
+                flow_id?: string | null;
+                question?: components["schemas"]["QuestionKind"] | null;
+                failure_mode?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ExperimentSummaryView_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    experiment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentDetailView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_estimate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LaunchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesEstimate"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_list: {
+        parameters: {
+            query?: {
+                experiment_id?: string | null;
+                flow_id?: string | null;
+                status?: components["schemas"]["SeriesStatus"] | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SeriesSummaryView_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeriesStartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesStarted"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_get: {
+        parameters: {
+            query?: {
+                wait_seconds?: number;
+                include_cases?: boolean;
+            };
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesGetResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_cases: {
+        parameters: {
+            query?: {
+                failures?: boolean;
+                divergent?: boolean;
+            };
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesCaseRow"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_events: {
+        parameters: {
+            query?: {
+                after_seq?: number;
+            };
+            header?: {
+                "last-event-id"?: number | null;
+            };
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesSummaryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SeriesCancelBody"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesSummaryView"];
                 };
             };
             /** @description Bad Request */

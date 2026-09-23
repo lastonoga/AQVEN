@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
-from typing import Final, TypeAliasType, TypeVar, get_args, get_origin
+from typing import Final, Protocol, TypeAliasType, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
@@ -15,7 +15,7 @@ from aqven.check.graph import NodeEntry
 from aqven.check.nodes import typed_entries
 from aqven.check.registry import known_agent, known_inference
 from aqven.check.resolver import CodeTarget
-from aqven.check.scopes import Resolution, Resolved, Unresolved
+from aqven.check.scopes import INFERENCE_ROOTS, Resolution, Resolved, Side, Unresolved
 from aqven.check.shapes import (
     Missing,
     NotList,
@@ -27,8 +27,8 @@ from aqven.check.shapes import (
     step_field,
     unwrap,
 )
-from aqven.check.subjects import Evaluated, inference_evaluated, subject_evaluated
-from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
+from aqven.check.subjects import UNKNOWN_RECORDS, Evaluated, JudgeScope, inference_evaluated, subject_evaluated
+from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic, has_errors, templated_diagnostic
 from aqven.loader import LoadedExperiment, YamlPath
 from aqven.policies import (
     BUILTINS,
@@ -55,7 +55,18 @@ from aqven.policies.evaluators import (
     RegexParams,
     UniqueItemsParams,
 )
-from aqven.spec import EvaluatorRef, Locale, LoopNodeSpec, MapItemError, MapNodeSpec, ParallelNodeSpec, PolicyRef
+from aqven.spec import (
+    EvaluatorRef,
+    FieldStep,
+    Locale,
+    LoopNodeSpec,
+    MapItemError,
+    MapNodeSpec,
+    ParallelNodeSpec,
+    PolicyRef,
+    RefSyntaxError,
+    parse_ref,
+)
 
 RETURN_HINT: Final = "return"
 OUT_PREFIX: Final = "$out."
@@ -81,14 +92,16 @@ class Contract:
 
 
 @dataclass(frozen=True, slots=True)
-class PolicySite:
-    slot: Slot
-    file: str
-    path: YamlPath
-    ref: PolicyRef | EvaluatorRef
-    contract: Contract
-    resolve: Resolve
-    entry: NodeEntry | None = None
+class ContractProblem:
+    text: str
+    typed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class UnknownHead:
+    side: Side
+    name: str
+    fields: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +122,78 @@ class EvaluatorUse:
     ref: EvaluatorRef
     evaluated: Evaluated
     host: EvaluatorHost
+    check: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class PolicySite:
+    slot: Slot
+    file: str
+    path: YamlPath
+    ref: PolicyRef | EvaluatorRef
+    contract: Contract
+    resolve: Resolve
+    entry: NodeEntry | None = None
+    use: EvaluatorUse | None = None
+
+
+class SiteReports(Protocol):
+    def mismatch(self, site: PolicySite, key: str, problem: str) -> Diagnostic: ...
+
+    def reference(self, site: PolicySite, text: str, resolution: Unresolved) -> Diagnostic: ...
+
+    def unbound(self, use: EvaluatorUse, judge: str, name: str, scope: JudgeScope) -> Diagnostic: ...
+
+
+class StrictReports:
+    def mismatch(self, site: PolicySite, key: str, problem: str) -> Diagnostic:
+        message = f"{_label(site.ref)}: {problem} and the node types"
+        return diagnostic(DiagnosticCode.E_CODE_SIGNATURE_MISMATCH, site.file, (*site.path, key), message)
+
+    def reference(self, site: PolicySite, text: str, resolution: Unresolved) -> Diagnostic:
+        message = f"{_label(site.ref)}: {resolution.message}"
+        return diagnostic(PARAMS_CODES[site.slot], site.file, (*site.path, "with"), message)
+
+    def unbound(self, use: EvaluatorUse, judge: str, name: str, scope: JudgeScope) -> Diagnostic:
+        message = f"judge {judge}: input {name} is not found by name among the in and out of {scope.label}"
+        return diagnostic(DiagnosticCode.E_CHECK_PARAMS, use.file, (*use.path, "inference"), message)
+
+
+class ExperimentReports:
+    def mismatch(self, site: PolicySite, key: str, problem: str) -> Diagnostic:
+        evaluated = _evaluated(site)
+        values = {
+            "experiment": evaluated.owner,
+            "check": _check(site),
+            "problem": f"{_label(site.ref)}: {problem} and the types of {evaluated.label}",
+            "fix": evaluated.typing,
+        }
+        return templated_diagnostic(DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, site.file, (*site.path, key), values)
+
+    def reference(self, site: PolicySite, text: str, resolution: Unresolved) -> Diagnostic:
+        evaluated = _evaluated(site)
+        head = unknown_head(evaluated, text)
+        if head is None:
+            return STRICT_REPORTS.reference(site, text, resolution)
+        values = {
+            "experiment": evaluated.owner,
+            "check": _check(site),
+            "ref": text,
+            "field": head.name,
+            "side": evaluated.sides.get(head.side, f"${head.side}"),
+            "fields": ", ".join(head.fields) or NONE,
+        }
+        return templated_diagnostic(DiagnosticCode.E_CHECK_PATH_UNKNOWN, site.file, (*site.path, "with"), values)
+
+    def unbound(self, use: EvaluatorUse, judge: str, name: str, scope: JudgeScope) -> Diagnostic:
+        values = {
+            "experiment": use.evaluated.owner,
+            "judge": judge,
+            "check": use.check,
+            "field": name,
+            "target": scope.label,
+        }
+        return templated_diagnostic(DiagnosticCode.W_JUDGE_INPUT_UNBOUND, use.file, (*use.path, "inference"), values)
 
 
 type ShapeRule = Callable[[CheckContext, PolicySite, BaseModel], Iterator[str]]
@@ -118,12 +203,19 @@ CASELESS_HOSTS: Final[Mapping[EvaluatorHost, str]] = {
 }
 CASE_ONLY_HINT: Final = "move the comparison into a check of an experiment, or use a check that reads the output alone"
 
+NONE: Final = "none"
+
 PARAMS_CODES: Final[Mapping[Slot, DiagnosticCode]] = {
     Slot.JOIN: DiagnosticCode.E_POLICY_PARAMS,
     Slot.STOP: DiagnosticCode.E_POLICY_PARAMS,
     Slot.SELECT: DiagnosticCode.E_POLICY_PARAMS,
     Slot.ITEM_ERROR: DiagnosticCode.E_POLICY_PARAMS,
     Slot.EVALUATOR: DiagnosticCode.E_CHECK_PARAMS,
+}
+STRICT_REPORTS: Final[SiteReports] = StrictReports()
+HOST_REPORTS: Final[Mapping[EvaluatorHost, SiteReports]] = {
+    EvaluatorHost.INFERENCE_CHECK: STRICT_REPORTS,
+    EvaluatorHost.EXPERIMENT_CHECK: ExperimentReports(),
 }
 
 
@@ -158,7 +250,7 @@ def _experiment_uses(context: CheckContext, loaded: LoadedExperiment) -> Iterato
     evaluated = subject_evaluated(context, loaded)
     source = loaded.source
     for index, check in enumerate(source.spec.checks or ()):
-        yield EvaluatorUse(source.path, ("checks", index), check, evaluated, EvaluatorHost.EXPERIMENT_CHECK)
+        yield EvaluatorUse(source.path, ("checks", index), check, evaluated, EvaluatorHost.EXPERIMENT_CHECK, check.id)
 
 
 def _join_sites(context: CheckContext) -> Iterator[PolicySite]:
@@ -212,14 +304,14 @@ def _evaluator_sites(context: CheckContext, uses: Iterable[EvaluatorUse]) -> Ite
     for use in uses:
         if use.ref.inference is not None:
             continue
-        records = use.evaluated.records
+        hints = use.evaluated.hints
         contract = Contract(
             "(value: O, context: EvalContext[I, O], params: P) -> Verdict",
-            (records.out, Generic(EvalContext, (records.in_, records.out))),
+            (hints.out, Generic(EvalContext, (hints.in_, hints.out))),
             Generic(Verdict),
         )
-        resolve = partial(context.refs.resolve_evaluated, records)
-        yield PolicySite(Slot.EVALUATOR, use.file, use.path, use.ref, contract, resolve)
+        resolve = partial(context.refs.resolve_evaluated, use.evaluated.records)
+        yield PolicySite(Slot.EVALUATOR, use.file, use.path, use.ref, contract, resolve, use=use)
 
 
 def _site(context: CheckContext, site: PolicySite) -> Iterator[Diagnostic]:
@@ -228,14 +320,23 @@ def _site(context: CheckContext, site: PolicySite) -> Iterator[Diagnostic]:
         yield target
         return
     signature = _signature(target)
-    problems = list(_contract(context, site.contract, signature))
     key = "use" if site.ref.run is None else "run"
-    for problem in problems:
-        message = f"{_label(site.ref)}: {problem}"
-        yield diagnostic(DiagnosticCode.E_CODE_SIGNATURE_MISMATCH, site.file, (*site.path, key), message)
-    if problems or signature is None:
+    found = [_contract_diagnostic(site, key, problem) for problem in _contract(context, site.contract, signature)]
+    yield from found
+    if has_errors(found) or signature is None:
         return
     yield from _params(context, site, signature.hints.get(signature.names[-1]))
+
+
+def reports_of(site: PolicySite) -> SiteReports:
+    return STRICT_REPORTS if site.use is None else HOST_REPORTS[site.use.host]
+
+
+def _contract_diagnostic(site: PolicySite, key: str, problem: ContractProblem) -> Diagnostic:
+    if problem.typed:
+        return reports_of(site).mismatch(site, key, problem.text)
+    message = f"{_label(site.ref)}: {problem.text}"
+    return diagnostic(DiagnosticCode.E_CODE_SIGNATURE_MISMATCH, site.file, (*site.path, key), message)
 
 
 def _target(context: CheckContext, site: PolicySite) -> object:
@@ -260,17 +361,17 @@ def _signature(target: object) -> Signature | None:
     return Signature(tuple(inspect.signature(target).parameters), hints) if hints is not None else None
 
 
-def _contract(context: CheckContext, contract: Contract, signature: Signature | None) -> Iterator[str]:
+def _contract(context: CheckContext, contract: Contract, signature: Signature | None) -> Iterator[ContractProblem]:
     if signature is None or len(signature.names) != len(contract.arguments) + 1:
-        yield f"expected a function {contract.text} with type annotations"
+        yield ContractProblem(f"expected a function {contract.text} with type annotations")
         return
     for name, expected in zip(signature.names, contract.arguments, strict=False):
         if not _matches(context, signature.hints.get(name), expected):
-            yield f"parameter {name} does not match contract {contract.text} and the node types"
+            yield ContractProblem(f"parameter {name} does not match contract {contract.text}", typed=True)
     if not _is_model(signature.hints.get(signature.names[-1])):
-        yield f"parameter {signature.names[-1]} must be the Pydantic model of the with parameters"
+        yield ContractProblem(f"parameter {signature.names[-1]} must be the Pydantic model of the with parameters")
     if not _matches(context, signature.hints.get(RETURN_HINT), contract.returns):
-        yield f"the return type does not match contract {contract.text} and the node types"
+        yield ContractProblem(f"the return type does not match contract {contract.text} and the node types")
 
 
 def _matches(context: CheckContext, annotation: object, expected: object | None) -> bool:
@@ -319,19 +420,44 @@ def _params(context: CheckContext, site: PolicySite, model: object) -> Iterator[
         return
     rule = SHAPE_RULES.get((site.slot, site.ref.use or ""))
     shapes = rule(context, site, params) if rule is not None else iter(())
-    for problem in (*_references(site, params), *shapes):
+    yield from _references(site, params)
+    for problem in shapes:
         yield diagnostic(code, site.file, path, f"{label}: {problem}")
 
 
-def _references(site: PolicySite, params: BaseModel) -> Iterator[str]:
+def _references(site: PolicySite, params: BaseModel) -> Iterator[Diagnostic]:
     data: dict[str, JsonValue] = params.model_dump(mode="json")
     texts = (
         text for name, info in type(params).model_fields.items() for text in _paths(info.annotation, data.get(name))
     )
+    reports = reports_of(site)
     for text in texts:
         resolution = site.resolve(text)
         if isinstance(resolution, Unresolved):
-            yield resolution.message
+            yield reports.reference(site, text, resolution)
+
+
+def unknown_head(evaluated: Evaluated, text: str) -> UnknownHead | None:
+    try:
+        ref = parse_ref(text)
+    except RefSyntaxError:
+        return None
+    side = INFERENCE_ROOTS.get(ref.root)
+    head = ref.steps[0] if ref.steps else None
+    if side is None or not isinstance(head, FieldStep):
+        return None
+    fields = record_fields(evaluated.records.side(side))
+    if fields is None or head.name in fields:
+        return None
+    return UnknownHead(side, head.name, tuple(sorted(fields)))
+
+
+def _evaluated(site: PolicySite) -> Evaluated:
+    return site.use.evaluated if site.use is not None else Evaluated("", UNKNOWN_RECORDS)
+
+
+def _check(site: PolicySite) -> str:
+    return site.use.check if site.use is not None else ""
 
 
 def _paths(annotation: object, value: JsonValue) -> tuple[str, ...]:
@@ -362,8 +488,10 @@ def _judge(context: CheckContext, use: EvaluatorUse) -> Iterator[Diagnostic]:
     inputs = record_fields(context.refs.inference_record(judge, "in"))
     if outputs is None or inputs is None:
         return
-    for problem in (*_judge_score(outputs), *_judge_inputs(context, use.evaluated, inputs)):
+    for problem in _judge_score(outputs):
         yield diagnostic(DiagnosticCode.E_CHECK_PARAMS, use.file, (*use.path, "inference"), f"judge {judge}: {problem}")
+    for scope in use.evaluated.scopes:
+        yield from _judge_inputs(context, use, judge, inputs, scope)
 
 
 def _case_only(use: EvaluatorUse) -> Iterator[Diagnostic]:
@@ -384,17 +512,36 @@ def _judge_score(outputs: Mapping[str, object]) -> Iterator[str]:
     yield f"the judge out needs a field {SCORE_FIELD} of type Int, Float or Bool: the score is read from it"
 
 
-def _judge_inputs(context: CheckContext, evaluated: Evaluated, inputs: Mapping[str, object]) -> Iterator[str]:
-    records = evaluated.records
-    if records.in_ is None and records.out is None:
+def _judge_inputs(
+    context: CheckContext, use: EvaluatorUse, judge: str, inputs: Mapping[str, object], scope: JudgeScope
+) -> Iterator[Diagnostic]:
+    if all(document is None for document in scope.documents):
         return
-    sources = {**(record_fields(records.in_) or {}), **(record_fields(records.out) or {})}
+    sources = scope_fields(scope)
     for name, slot in inputs.items():
-        source = sources.get(name)
-        if source is None and not is_optional(slot):
-            yield f"input {name} is not found by name among the in and out of {evaluated.label}"
-        if source is not None and compatible(context, slot, source) is False:
-            yield f"input {name} is not type compatible with field {name} of {evaluated.label}"
+        yield from _judge_input(context, use, judge, (name, slot), scope, sources.get(name))
+
+
+def scope_fields(scope: JudgeScope) -> Mapping[str, object]:
+    return {name: field for document in scope.documents for name, field in (record_fields(document) or {}).items()}
+
+
+def _judge_input(
+    context: CheckContext,
+    use: EvaluatorUse,
+    judge: str,
+    wanted: tuple[str, object],
+    scope: JudgeScope,
+    source: object | None,
+) -> Iterator[Diagnostic]:
+    name, slot = wanted
+    if name in scope.bound:
+        return
+    if source is None and not is_optional(slot):
+        yield HOST_REPORTS[use.host].unbound(use, judge, name, scope)
+    if source is not None and compatible(context, slot, source) is False:
+        message = f"judge {judge}: input {name} is not type compatible with field {name} of {scope.label}"
+        yield diagnostic(DiagnosticCode.E_CHECK_PARAMS, use.file, (*use.path, "inference"), message)
 
 
 def _expect(site: PolicySite, text: str, shape: Shape, label: str) -> Iterator[str]:

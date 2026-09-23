@@ -1,3 +1,6 @@
+from collections.abc import Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Final, Literal, Protocol
@@ -13,6 +16,7 @@ type UsageSource = Literal["live", "replay"]
 PROVIDER_COST_KEY: Final = "cost"
 CASSETTE_METADATA_KEY: Final = "aqven.cassette"
 ZERO_COST: Final = Decimal(0)
+USD_MICROS: Final = Decimal(1_000_000)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +53,33 @@ class UsageLog:
 class DiscardUsage:
     def record(self, cost: RequestCost) -> None:
         return None
+
+
+NODE_USAGE: Final[ContextVar[UsageLog | None]] = ContextVar("aqven_node_usage", default=None)
+
+
+class ContextUsageSink:
+    def record(self, cost: RequestCost) -> None:
+        log = NODE_USAGE.get()
+        if log is None:
+            return
+        log.record(cost)
+
+
+@contextmanager
+def node_usage_log() -> Generator[UsageLog]:
+    log = UsageLog()
+    token = NODE_USAGE.set(log)
+    try:
+        yield log
+    finally:
+        NODE_USAGE.reset(token)
+
+
+def usd_of_micros(usd_micros: int | None) -> Decimal | None:
+    if usd_micros is None:
+        return None
+    return Decimal(usd_micros) / USD_MICROS
 
 
 def estimated_cost(response: ModelResponse) -> Decimal | None:

@@ -32,7 +32,7 @@ def test_datasets_carry_case_counts_and_splits(dataset_client: TestClient) -> No
 
     assert (row["dataset_id"], row["cases"]) == ("reply_cases", 3)
     assert row["path"] == "datasets/reply_cases.yaml"
-    assert row["splits"] == {"test": 3}
+    assert row["splits"] == {"dev": 2, "holdout": 1}
     assert dataset_client.get("/api/datasets/reply_cases").json() == row
     assert dataset_client.get("/api/datasets/nothing").status_code == 404
 
@@ -82,7 +82,7 @@ def test_flow_dataset_can_be_created_and_started_from_a_case(
     assert server_engine.started_dataset_items[-1] == "intake_cases/question"
 
 
-def test_dataset_cases_filter_by_split_and_name(dataset_client: TestClient) -> None:
+def test_dataset_cases_filter_by_the_server_split_and_name(dataset_client: TestClient) -> None:
     created = dataset_client.post(
         "/api/datasets",
         json={
@@ -96,11 +96,13 @@ def test_dataset_cases_filter_by_split_and_name(dataset_client: TestClient) -> N
         },
     )
     assert created.status_code == 200
-    assert created.json()["splits"] == {"dev": 1, "test": 2}
-    filtered = dataset_client.get("/api/datasets/split_cases/cases", params={"split": "test", "search": "sec"}).json()
-    assert [case["name"] for case in filtered["items"]] == ["second"]
-    names = dataset_client.get("/api/datasets/split_cases/case-names", params={"split": "test"}).json()
-    assert names["items"] == ["second", "third"]
+    assert created.json()["splits"] == {"dev": 2, "holdout": 1}
+    filtered = dataset_client.get("/api/datasets/split_cases/cases", params={"split": "dev", "search": "ir"}).json()
+    assert [case["name"] for case in filtered["items"]] == ["first", "third"]
+    names = dataset_client.get("/api/datasets/split_cases/case-names", params={"split": "holdout"}).json()
+    assert names["items"] == ["second"]
+    ignored = dataset_client.get("/api/datasets/split_cases/case-names", params={"split": "test"}).json()
+    assert ignored["items"] == []
     assert dataset_client.get("/api/datasets/split_cases/cases/second").json()["inputs"] == {"text": "second input"}
     assert dataset_client.get("/api/datasets/split_cases/cases/nothing").status_code == 404
 

@@ -2,6 +2,7 @@ import json
 import os
 import warnings
 from pathlib import Path
+from typing import Final
 
 import aqven
 from aqven.server import (
@@ -45,6 +46,7 @@ def test_event_catalog_is_discriminated_union() -> None:
     assert catalog["run"]["items"] == {"$ref": "#/components/schemas/RunEvent"}
     assert catalog["spec"]["items"] == {"$ref": "#/components/schemas/SpecEvent"}
     assert catalog["chat"]["items"] == {"$ref": "#/components/schemas/ChatEvent"}
+    assert catalog["series"]["items"] == {"$ref": "#/components/schemas/SeriesEvent"}
     assert catalog["schemas"] == {"$ref": "#/components/schemas/EventSchemas"}
     run_items = schemas["RunEvent"]
     spec_items = schemas["SpecEvent"]
@@ -52,6 +54,8 @@ def test_event_catalog_is_discriminated_union() -> None:
     assert "run_finished" in run_items["discriminator"]["mapping"]
     assert "node_output_delta" in run_items["discriminator"]["mapping"]
     assert set(spec_items["discriminator"]["mapping"]) == {"files_changed", "diagnostics_changed", "resync"}
+    series_items = schemas["SeriesEvent"]
+    assert set(series_items["discriminator"]["mapping"]) == {"series_status", "attempt_finished", "series_finished"}
 
 
 def test_openapi_document_publishes_the_schema_paths() -> None:
@@ -103,3 +107,30 @@ def test_runtime_file_is_owner_only(tmp_path: Path) -> None:
     assert path.exists()
     remove_runtime(tmp_path, os.getpid())
     assert read_runtime(tmp_path) is None
+
+
+RESEARCH_OPERATIONS: Final = {
+    ("/api/experiments", "get"): ("experiment_list", None),
+    ("/api/experiments/{experiment_id}", "get"): ("experiment_get", None),
+    ("/api/experiments/{experiment_id}/estimate", "post"): ("series_estimate", None),
+    ("/api/series", "post"): ("series_start", "series_start"),
+    ("/api/series", "get"): ("series_list", None),
+    ("/api/series/{series_id}", "get"): ("series_get", "series_get"),
+    ("/api/series/{series_id}/cases", "get"): ("series_cases", None),
+    ("/api/series/{series_id}/events", "get"): ("series_events", None),
+    ("/api/series/{series_id}/approve", "post"): ("series_approve", None),
+    ("/api/series/{series_id}/cancel", "post"): ("series_cancel", "series_cancel"),
+    ("/api/datasets/{dataset_id}/cases/from-run", "post"): ("case_from_run", None),
+}
+
+
+def test_research_routes_are_published_with_their_surface_labels() -> None:
+    paths = json.loads(openapi_text(contract_app()))["paths"]
+    found = {
+        (path, method): (paths[path][method]["operationId"], paths[path][method].get("x-aqven-operation"))
+        for path, method in RESEARCH_OPERATIONS
+    }
+
+    assert found == RESEARCH_OPERATIONS
+    assert paths["/api/series"]["post"]["responses"]["201"]
+    assert "text/event-stream" in paths["/api/series/{series_id}/events"]["get"]["responses"]["200"]["content"]

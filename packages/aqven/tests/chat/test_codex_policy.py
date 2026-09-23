@@ -26,13 +26,11 @@ def test_codex_config_keeps_mcp_token_out_of_arguments_and_agent_shell(
     assert config.env["AQVEN_MCP_TOKEN"] == token
     assert token not in " ".join(config.config_overrides)
     assert 'shell_environment_policy.inherit="none"' in config.config_overrides
-    assert 'mcp_servers.aqven.required=true' in config.config_overrides
+    assert "mcp_servers.aqven.required=true" in config.config_overrides
     assert 'mcp_servers.aqven.bearer_token_env_var="AQVEN_MCP_TOKEN"' in config.config_overrides
     assert config.env.get("TEST_PROVIDER_KEY", "") == ""
     assert any(".aqven/server.json" in item and "**/.env.*" in item for item in config.config_overrides)
-    assert any("=:read-only" in item or '":read-only"' in item for item in config.config_overrides) == (
-        mode == "plan"
-    )
+    assert any("=:read-only" in item or '":read-only"' in item for item in config.config_overrides) == (mode == "plan")
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="sandbox command probe uses the macOS sandbox")

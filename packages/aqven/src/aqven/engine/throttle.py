@@ -1,7 +1,9 @@
 import asyncio
+import time
 from dataclasses import dataclass, field
 from typing import Final
 
+from aqven.models.waits import record_wait
 from aqven.ports.execution import ExecutionScope, NodeExecutor, NodeOutcome
 
 MINIMUM_WORKERS: Final = 1
@@ -24,5 +26,7 @@ class ThrottledExecutor[N]:
     pool: WorkerPool
 
     async def execute(self, node: N, scope: ExecutionScope) -> NodeOutcome:
+        queued = time.monotonic()
         async with self.pool.slots:
+            record_wait(time.monotonic() - queued)
             return await self.inner.execute(node, scope)

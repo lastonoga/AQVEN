@@ -508,13 +508,6 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_CHECK_PARAMS,
         (TRIAGE_EXPERIMENT, ("checks", 0, "with")),
     ),
-    "code_check_typed_for_an_inference": Mutation(
-        TRIAGE_EXPERIMENT,
-        '"@root.triage.experiment_checks:summary_written"',
-        '"fixture_shop.triage.classify:rationale_is_short"',
-        DiagnosticCode.E_CODE_SIGNATURE_MISMATCH,
-        (TRIAGE_EXPERIMENT, ("checks", 1, "run")),
-    ),
     "code_check_unresolved": Mutation(
         TRIAGE_EXPERIMENT,
         "experiment_checks:summary_written",
@@ -536,12 +529,21 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_INFERENCE_UNKNOWN,
         (TRIAGE_EXPERIMENT, ("checks", 2, "inference")),
     ),
-    "judge_input_outside_the_subject": Mutation(
-        JUDGE_INFERENCE,
-        'in:\n- name: "subject"',
-        'in:\n- name: "topic"',
-        DiagnosticCode.E_CHECK_PARAMS,
-        (TRIAGE_EXPERIMENT, ("checks", 2, "inference")),
+    "builtin_check_path_outside_the_output": Mutation(
+        TRIAGE_EXPERIMENT,
+        '- id: "summary_written"\n',
+        '- id: "headline_written"\n  kind: "binary"\n  use: "not_empty"\n  with:\n    field: "$out.headline"\n'
+        '- id: "summary_written"\n',
+        DiagnosticCode.E_CHECK_PATH_UNKNOWN,
+        (TRIAGE_EXPERIMENT, ("checks", 1, "with")),
+    ),
+    "builtin_check_path_outside_the_input": Mutation(
+        TRIAGE_EXPERIMENT,
+        '- id: "summary_written"\n',
+        '- id: "topic_written"\n  kind: "binary"\n  use: "not_empty"\n  with:\n    field: "$in.topic"\n'
+        '- id: "summary_written"\n',
+        DiagnosticCode.E_CHECK_PATH_UNKNOWN,
+        (TRIAGE_EXPERIMENT, ("checks", 1, "with")),
     ),
     "case_input_type": Mutation(
         TRIAGE_CASES,
@@ -752,7 +754,109 @@ def test_range_subject_tolerates_partial_case_inputs(lab: Path) -> None:
     replace(lab, TRIAGE_EXPERIMENT, 'flow: "triage"\n', 'flow: "triage"\n  from: "classify"\n  to: "summarize"\n')
     replace(lab, TRIAGE_CASES, '    body: "My card was charged twice for one order"\n', "")
 
+    assert located(check_project(lab), DiagnosticCode.E_SPEC_INVALID) == []
+
+
+def test_checks_of_a_range_read_the_out_of_its_last_node(lab: Path) -> None:
+    replace(lab, TRIAGE_EXPERIMENT, 'flow: "triage"\n', 'flow: "triage"\n  from: "classify"\n  to: "summarize"\n')
+
+    report = check_project(lab)
+
+    assert [(item.code, item.path) for item in report.diagnostics] == [
+        (DiagnosticCode.E_CHECK_PARAMS, ("checks", 0, "with")),
+        (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run")),
+        (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run")),
+    ]
+    assert "$out.category: the value has no field category" in report.diagnostics[0].message
+    hint = report.diagnostics[1].hint
+    assert hint is not None and "the JSON record of node summarize" in hint
+
+
+def test_a_code_check_typed_for_an_inference_is_a_context_warning(lab: Path) -> None:
+    replace(
+        lab,
+        TRIAGE_EXPERIMENT,
+        '"@root.triage.experiment_checks:summary_written"',
+        '"fixture_shop.triage.classify:rationale_is_short"',
+    )
+
+    report = check_project(lab)
+
+    assert {(item.code, item.path) for item in report.diagnostics} == {
+        (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run"))
+    }
+    assert report.ok
+    assert (
+        report.diagnostics[0].hint
+        == "type value as TriageResult and context as EvalContext[TriageTicket, TriageResult]"
+    )
+
+
+def test_a_path_outside_the_subject_names_the_fields_it_could_read(lab: Path) -> None:
+    replace(
+        lab,
+        TRIAGE_EXPERIMENT,
+        '- id: "summary_written"\n',
+        '- id: "headline_written"\n  kind: "binary"\n  use: "not_empty"\n  with:\n    field: "$out.headline"\n'
+        '- id: "summary_written"\n',
+    )
+
+    (problem,) = check_project(lab).diagnostics
+
+    assert problem.code is DiagnosticCode.E_CHECK_PATH_UNKNOWN
+    assert problem.message == (
+        "experiment triage_agents: check headline_written: path $out.headline starts with headline, "
+        "which is not a field of $out, the output TriageResult of flow triage"
+    )
+    assert problem.hint == "name a field of $out, the output TriageResult of flow triage: category, summary"
+
+
+def with_second_judge(root: Path, name: str, extra: str) -> None:
+    field = f'- name: "{name}"\n  type: "Text"\n  description: "Judge input {name}"\n  maxLength: 300\n'
+    write(root, "triage/quality/second_judge.inference.yaml", TRIAGE_JUDGE.replace("in:\n", f"in:\n{field}", 1))
+    write(root, "triage/quality/second_judge.prompt.md", TRIAGE_JUDGE_PROMPT.replace("{{ category }}", extra))
+    replace(root, TRIAGE_EXPERIMENT, 'inference: "triage_judge"', 'inference: "second_judge"')
+    generate_types(root)
+
+
+def test_a_judge_input_missing_from_its_scope_is_a_warning(lab: Path) -> None:
+    with_second_judge(lab, "topic", "{{ category }} {{ topic }}")
+
+    report = check_project(lab)
+
+    assert [(item.code, item.file, item.path) for item in report.diagnostics] == [
+        (DiagnosticCode.W_JUDGE_INPUT_UNBOUND, TRIAGE_EXPERIMENT, ("checks", 2, "inference"))
+    ]
+    assert report.diagnostics[0].message == (
+        "experiment triage_agents: judge second_judge of check judge needs input topic, "
+        "which no document of its scope carries in flow triage"
+    )
+    assert report.ok
+
+
+def test_a_judge_input_bound_from_an_earlier_node_output_is_in_scope(lab: Path) -> None:
+    with_second_judge(lab, "rationale", "{{ category }} {{ rationale }}")
+
     assert check_project(lab).diagnostics == ()
+
+
+def test_a_variant_arm_without_the_ends_of_the_range_is_reported(lab: Path) -> None:
+    replace(lab, JUDGE_EXPERIMENT, 'arm: "judge"\n', 'arm: "judge"\n  from: "judge"\n  to: "judge"\n')
+    replace(lab, JUDGE_EXPERIMENT, '- id: "writer"\n', '- id: "writer"\n- id: "strict"\n  arm: "strict"\n')
+    strict = "experiments/judge_check/arms/strict"
+    write(lab, f"{strict}/flow.yaml", ARM_FLOW_YAML.replace('"judge"', '"grade"').replace("$judge.", "$grade."))
+    write(lab, f"{strict}/nodes/grade.node.yaml", ARM_NODE_YAML)
+    generate_types(lab)
+
+    report = check_project(lab)
+
+    assert [(item.code, item.path) for item in report.errors] == [
+        (DiagnosticCode.E_RANGE_INVALID, ("variants", 1, "arm"))
+    ]
+    assert report.errors[0].message == (
+        "experiment judge_check: variant strict runs arm strict, whose top-level nodes lack judge "
+        "of the range judge to judge"
+    )
 
 
 def test_partial_case_inputs_pass_a_dataset_that_no_experiment_runs_whole(lab: Path) -> None:

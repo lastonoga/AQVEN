@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Annotated, Final
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter
 
@@ -14,6 +14,17 @@ from aqven.runtime.vocabulary import RunMode, TerminalRunStatus
 from aqven.spec import FlowId, Limits, NodeId
 
 RECORD_CONFIG: Final = ConfigDict(extra="forbid", frozen=True)
+
+
+class SeriesTag(BaseModel):
+    model_config = RECORD_CONFIG
+    series_id: str
+    attempt_id: str
+    role: Literal["subject", "judge"]
+    variant_id: str
+    case_name: str
+    repeat: int = Field(ge=1)
+    check_id: str | None = None
 
 
 class RunSpec(BaseModel):
@@ -33,6 +44,8 @@ class RunSpec(BaseModel):
     limits: Limits | None = None
     models: ModelProfile | None = None
     outputs: tuple[NodeOutputOverride, ...] = ()
+    series: SeriesTag | None = None
+    output_deltas: bool = True
 
     def run_context(self) -> JsonObject:
         if self.context is None:

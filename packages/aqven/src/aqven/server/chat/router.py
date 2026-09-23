@@ -94,9 +94,7 @@ def chat_frame(event: ChatEvent) -> ServerSentEvent:
     return ServerSentEvent(data=event, event=event.type, id=str(event.seq))
 
 
-def build_chat_router(
-    registry: BackendRegistry, sessions: ChatJournal, context: ChatRouteContext
-) -> APIRouter:
+def build_chat_router(registry: BackendRegistry, sessions: ChatJournal, context: ChatRouteContext) -> APIRouter:
     router = APIRouter(prefix=CHAT_PREFIX, responses=ERROR_RESPONSES, route_class=ChatRoute)
 
     def session_view(session_id: ChatSessionId) -> ChatSession:

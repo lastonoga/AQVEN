@@ -26,12 +26,12 @@ files to match.
   prints `types.py` and exits `0`; nothing on screen tells you a type went missing.
 - `check` is what actually validates type references. It calls the same generation step internally
   before it checks anything else, so a bad reference shows up there as `E_TYPE_UNKNOWN` on the type
-  file itself, plus an `E_CODE_REF_UNRESOLVED` on every node, tool, or eval whose Python code tried to
+  file itself, plus an `E_CODE_REF_UNRESOLVED` on every node, tool, or check whose Python code tried to
   import the class that generation dropped. If you just ran `generate` and a name you expected in
   `types.py` isn't there, that's your signal to run `check` next and read the real error.
-- `{{CLI_COMMAND}} schema <path>` writes ten JSON Schema files to `.aqven/schema/`, one per kind of
-  definition file: `project`, `type`, `flow`, `node`, `dataset`, `eval`, `inference`, `agent`, `tool`,
-  and `mcpserver`. These describe the shape of the YAML files themselves — the keys a `flow.yaml` or a
+- `{{CLI_COMMAND}} schema <path>` writes eleven JSON Schema files to `.aqven/schema/`, one per kind of
+  definition file: `project`, `type`, `flow`, `node`, `dataset`, `experiment`, `inference`, `agent`,
+  `tool`, `mcpserver`, and `finding` (the finding files a series writes; you read them, never edit them). These describe the shape of the YAML files themselves — the keys a `flow.yaml` or a
   node file is allowed to have — not the types your project declares. They come out the same whether
   your project's types resolve cleanly or not, because `schema` doesn't load your project's type or
   flow definitions at all; it only needs to know where the project root is.
@@ -127,11 +127,12 @@ Python code imports `IntentBallot` by name and can no longer find it in `types.p
 .aqven/schema/flow.schema.json
 .aqven/schema/node.schema.json
 .aqven/schema/dataset.schema.json
-.aqven/schema/eval.schema.json
+.aqven/schema/experiment.schema.json
 .aqven/schema/inference.schema.json
 .aqven/schema/agent.schema.json
 .aqven/schema/tool.schema.json
 .aqven/schema/mcpserver.schema.json
+.aqven/schema/finding.schema.json
 ```
 
 This still works even with the `CaseIntentTypo` mistake from above still in place — `schema` doesn't

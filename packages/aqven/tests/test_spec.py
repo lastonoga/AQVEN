@@ -1144,6 +1144,9 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_TOOL_ARG_UNREACHABLE,
         DiagnosticCode.W_CONTEXT_KEY_UNUSED,
         DiagnosticCode.W_PLAN_EXCEEDS_CASES,
+        DiagnosticCode.W_CHECK_CONTEXT_MISMATCH,
+        DiagnosticCode.W_JUDGE_INPUT_UNBOUND,
+        DiagnosticCode.W_FINDINGS_STALE,
     }
     assert all(code.value.startswith("W_") == (code in warnings) for code in DiagnosticCode)
     unbounded = diagnostic(

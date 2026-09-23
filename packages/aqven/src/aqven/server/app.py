@@ -13,6 +13,7 @@ from starlette.types import ASGIApp
 from aqven.app.access import AccessGuard, AccessPolicy, local_access_policy, new_access_token
 from aqven.ports.engine import EngineFacade
 from aqven.ports.settings import SettingsStore
+from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles, DirectoryBlobStore
 from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
@@ -23,6 +24,7 @@ from aqven.server.routes.fallback import build_fallback_router
 from aqven.server.routes.flows import build_flows_router
 from aqven.server.routes.meta import build_meta_router
 from aqven.server.routes.project import build_project_router
+from aqven.server.routes.research import build_research_router
 from aqven.server.routes.runs import build_runs_router
 from aqven.server.routes.schemas import build_schemas_router
 from aqven.server.routes.settings import build_settings_router
@@ -139,6 +141,7 @@ def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
         build_blobs_router(context),
         build_settings_router(context),
         build_datasets_router(context),
+        build_research_router(context),
     )
 
 
@@ -152,6 +155,7 @@ def create_app(
     extensions: ServerExtensions | None = None,
     blobs: BlobFiles | None = None,
     workspace: ProjectWorkspace | None = None,
+    series: SeriesJobs | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
@@ -165,6 +169,7 @@ def create_app(
         environ=chosen.environ,
         engine_version=engine_version(),
         mcp_url=chosen.mcp_url,
+        series=series,
     )
     app = FastAPI(
         title=API_TITLE,

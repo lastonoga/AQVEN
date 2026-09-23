@@ -21,6 +21,7 @@ class ChatSessionDefaults:
     effort: ChatEffort | None = None
     permission_mode: ChatPermissionMode = "default"
 
+
 type ChatLifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 
 

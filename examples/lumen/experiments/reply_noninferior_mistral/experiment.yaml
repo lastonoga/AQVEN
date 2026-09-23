@@ -21,7 +21,7 @@ checks:
   validated_by: "critique_planted_defects"
 - id: "promises"
   kind: "binary"
-  run: "@root.code.support_case:promises_match_resolution"
+  run: "@root.code.support_case:reply_keeps_resolution"
 question:
   kind: "noninferior"
   baseline: "gpt"

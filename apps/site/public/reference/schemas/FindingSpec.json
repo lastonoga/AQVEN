@@ -1,0 +1,584 @@
+{
+  "$defs": {
+    "CellVerdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "unclear",
+        "reference",
+        "none"
+      ],
+      "title": "CellVerdict",
+      "type": "string"
+    },
+    "FindingCell": {
+      "additionalProperties": false,
+      "description": "One decided cell of the question: a metric of a variant against a bound or against the baseline.\n\nA threshold cell sets ``bound`` and ``threshold``; a pair cell sets ``baseline`` and reads ``estimate`` as the\ndifference candidate minus baseline, signed so that a positive value is better. ``margin`` is the tolerance\ndeclared in the experiment before the data, as a share of the baseline value when ``relative`` is true.",
+      "properties": {
+        "baseline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline"
+        },
+        "bound": {
+          "anyOf": [
+            {
+              "enum": [
+                "above",
+                "below"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bound"
+        },
+        "direction": {
+          "$ref": "#/$defs/MetricDirection"
+        },
+        "estimate": {
+          "$ref": "#/$defs/FindingEstimate"
+        },
+        "margin": {
+          "title": "Margin",
+          "type": "number"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "relative": {
+          "default": false,
+          "title": "Relative",
+          "type": "boolean"
+        },
+        "role": {
+          "enum": [
+            "primary",
+            "guardrail"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        },
+        "variant": {
+          "title": "Variant",
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/CellVerdict"
+        }
+      },
+      "required": [
+        "metric",
+        "role",
+        "variant",
+        "direction",
+        "margin",
+        "estimate",
+        "verdict"
+      ],
+      "title": "FindingCell",
+      "type": "object"
+    },
+    "FindingEstimate": {
+      "additionalProperties": false,
+      "description": "A point estimate with its 95 % interval, as the series computed it on the holdout cases.\n\n``method`` names the interval (``wilson``, ``paired_t`` and so on); ``p_adjusted`` is the Benjamini\u2013Hochberg\nvalue over the primary cells of the series. ``cases`` and ``attempts`` count the data behind the estimate.",
+      "properties": {
+        "attempts": {
+          "minimum": 0,
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "cases": {
+          "minimum": 0,
+          "title": "Cases",
+          "type": "integer"
+        },
+        "high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "High"
+        },
+        "low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Low"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "p_adjusted": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Adjusted"
+        },
+        "p_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Value"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "value",
+        "low",
+        "high",
+        "method",
+        "cases",
+        "attempts"
+      ],
+      "title": "FindingEstimate",
+      "type": "object"
+    },
+    "FindingInputs": {
+      "additionalProperties": false,
+      "description": "Hashes of everything the series ran on: the experiment file, the dataset, the cases, the code and the judges.\n\nA later series with different hashes measured something else, so the finding does not speak for it.",
+      "properties": {
+        "cases_sha256": {
+          "title": "Cases Sha256",
+          "type": "string"
+        },
+        "code_sha256": {
+          "title": "Code Sha256",
+          "type": "string"
+        },
+        "dataset_sha256": {
+          "title": "Dataset Sha256",
+          "type": "string"
+        },
+        "experiment_sha256": {
+          "title": "Experiment Sha256",
+          "type": "string"
+        },
+        "judges": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Judges",
+          "type": "object"
+        }
+      },
+      "required": [
+        "experiment_sha256",
+        "dataset_sha256",
+        "cases_sha256",
+        "code_sha256"
+      ],
+      "title": "FindingInputs",
+      "type": "object"
+    },
+    "FindingJudge": {
+      "additionalProperties": false,
+      "description": "A judge check behind the finding: its inference, its agent and the experiment that validated it.\n\nA judge without ``validated_by`` produces a signal, not a finding.",
+      "properties": {
+        "agent": {
+          "title": "Agent",
+          "type": "string"
+        },
+        "check": {
+          "title": "Check",
+          "type": "string"
+        },
+        "inference": {
+          "title": "Inference",
+          "type": "string"
+        },
+        "validated_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validated By"
+        }
+      },
+      "required": [
+        "check",
+        "inference",
+        "agent"
+      ],
+      "title": "FindingJudge",
+      "type": "object"
+    },
+    "FindingScope": {
+      "additionalProperties": false,
+      "description": "What the finding covers: the holdout cases of one dataset, their count, the repeats and the time span.\n\n``holdout_looks`` counts the finished holdout series of this experiment on the same cases, this one included;\n``case_names_sha256`` identifies the exact set of cases.",
+      "properties": {
+        "attempts": {
+          "minimum": 1,
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "case_names_sha256": {
+          "title": "Case Names Sha256",
+          "type": "string"
+        },
+        "cases": {
+          "minimum": 1,
+          "title": "Cases",
+          "type": "integer"
+        },
+        "dataset": {
+          "title": "Dataset",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "finished_at": {
+          "format": "date-time",
+          "title": "Finished At",
+          "type": "string"
+        },
+        "holdout_looks": {
+          "minimum": 1,
+          "title": "Holdout Looks",
+          "type": "integer"
+        },
+        "infra_errors": {
+          "minimum": 0,
+          "title": "Infra Errors",
+          "type": "integer"
+        },
+        "repeats": {
+          "minimum": 1,
+          "title": "Repeats",
+          "type": "integer"
+        },
+        "split": {
+          "const": "holdout",
+          "title": "Split",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tags"
+        }
+      },
+      "required": [
+        "split",
+        "dataset",
+        "cases",
+        "repeats",
+        "attempts",
+        "infra_errors",
+        "holdout_looks",
+        "case_names_sha256",
+        "started_at",
+        "finished_at",
+        "engine_version"
+      ],
+      "title": "FindingScope",
+      "type": "object"
+    },
+    "FindingVariant": {
+      "additionalProperties": false,
+      "description": "A variant as it ran: the agents on its nodes, the models that answered and the hash of its flow.\n\n``models`` lists the models recorded on the attempts, which may differ from the declared ones when a model\nprofile routes the call. ``metrics`` holds the variant's own estimate of every metric of the series.",
+      "properties": {
+        "agents": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Agents",
+          "type": "object"
+        },
+        "arm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arm"
+        },
+        "flow_hash": {
+          "title": "Flow Hash",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "$ref": "#/$defs/FindingEstimate"
+          },
+          "title": "Metrics",
+          "type": "object"
+        },
+        "models": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Models",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "agents",
+        "models",
+        "flow_hash",
+        "metrics"
+      ],
+      "title": "FindingVariant",
+      "type": "object"
+    },
+    "MetricDirection": {
+      "enum": [
+        "higher_is_better",
+        "lower_is_better"
+      ],
+      "title": "MetricDirection",
+      "type": "string"
+    },
+    "VerdictReason": {
+      "enum": [
+        "below_mde",
+        "uninformative",
+        "no_discordance",
+        "compute_confounded",
+        "inputs_changed",
+        "infra_errors",
+        "no_data",
+        "budget_cut",
+        "cancelled",
+        "dev_split",
+        "judge_not_validated"
+      ],
+      "title": "VerdictReason",
+      "type": "string"
+    },
+    "VerdictState": {
+      "enum": [
+        "confirmed",
+        "refuted",
+        "inconclusive",
+        "invalid",
+        "signal"
+      ],
+      "title": "VerdictState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A finding: the verdict of one series of an experiment on holdout cases, written once and never edited.\n\nThe server writes it to ``experiments/<experiment>/findings/<series>.yaml`` when the series finishes and\nregenerates ``FINDINGS.md`` from all findings. ``statement`` is the sentence to quote; ``self_sha256`` is the\nhash of the rest of the document, so ``aqven check`` notices a hand edit.",
+  "properties": {
+    "apiVersion": {
+      "const": "aqven/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "cells": {
+      "items": {
+        "$ref": "#/$defs/FindingCell"
+      },
+      "minItems": 1,
+      "title": "Cells",
+      "type": "array"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "experiment": {
+      "title": "Experiment",
+      "type": "string"
+    },
+    "failure_mode": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Mode"
+    },
+    "inputs": {
+      "$ref": "#/$defs/FindingInputs"
+    },
+    "judges": {
+      "items": {
+        "$ref": "#/$defs/FindingJudge"
+      },
+      "title": "Judges",
+      "type": "array"
+    },
+    "kind": {
+      "const": "Finding",
+      "title": "Kind",
+      "type": "string"
+    },
+    "question": {
+      "enum": [
+        "threshold",
+        "compare",
+        "noninferior"
+      ],
+      "title": "Question",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VerdictReason"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "scope": {
+      "$ref": "#/$defs/FindingScope"
+    },
+    "self_sha256": {
+      "pattern": "^sha256-[0-9a-f]{64}$",
+      "title": "Self Sha256",
+      "type": "string"
+    },
+    "series": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Series",
+      "type": "string"
+    },
+    "spend_usd": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Spend Usd"
+    },
+    "state": {
+      "$ref": "#/$defs/VerdictState"
+    },
+    "statement": {
+      "title": "Statement",
+      "type": "string"
+    },
+    "variants": {
+      "items": {
+        "$ref": "#/$defs/FindingVariant"
+      },
+      "minItems": 1,
+      "title": "Variants",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "experiment",
+    "series",
+    "description",
+    "question",
+    "state",
+    "statement",
+    "cells",
+    "variants",
+    "scope",
+    "inputs",
+    "spend_usd",
+    "self_sha256"
+  ],
+  "title": "FindingSpec",
+  "type": "object"
+}

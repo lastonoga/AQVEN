@@ -47,8 +47,9 @@ The body nodes sit flat in the same `nodes/polish/` folder. `revise.node.yaml` h
 `init`, after that `previous ← $acc.revise.out.reply` and `critique ← $acc.critique.out`. `critique.node.yaml` has its
 own `critique` inference @ `mistral`, and its check `critique_consistent` lives in `critique.py` beside it. The same
 `critique` inference, on the `deepseek` agent, is the judge check of the experiments `reply_look` and
-`reply_noninferior_mistral`, and the evaluator `promises_match_resolution` from `code/support_case.py` is at once a
-check on `revise` and a check of those experiments.
+`reply_noninferior_mistral`. The evaluator `promises_match_resolution` from `code/support_case.py` is a check on
+`revise`; its sibling `reply_keeps_resolution` applies the same promise rules to the `polish` range of the `reply_*`
+experiments, where the decision comes from the `route` output in the case's `node_outputs`.
 
 ## Layout
 
@@ -280,9 +281,17 @@ question kind:
 | `critique_recall_by_agent` | arm `critic` written in Python (`flow.py`), three critic agents | `threshold`: `blocked` above 0.8 |
 
 `aqven check` validates every experiment: the subject and its range, the arms, the agents of every variant, the
-dataset and its tag filter, the references of the checks, the metric names, `validated_by`, and an `expected_output`
-on every case an `expected` check reads. Running an experiment as a series arrives with the next engine step; one
-case of a dataset runs today through `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"`.
+dataset and its tag filter, the references of the checks and the fields they read, the metric names, `validated_by`,
+an `expected_output` on every case an `expected` check reads, and the finding files.
+
+A series runs an experiment on the project server: every selected case for every variant, `repeats` times, each
+attempt an ordinary run with a trace, the attempts interleaved case by case. The agent starts one with the MCP tools
+`series_start` and `series_get` (with `wait_seconds`), a person with `uv run aqven series reply_look --path lumen` or
+from Studio. The server splits every dataset into `dev` and `holdout` cases by a hash of the case name: a series on
+`dev` gives at most a signal, a series on `holdout` with a verdict writes a finding,
+`lumen/experiments/<experiment>/findings/<series>.yaml`, once, and regenerates `lumen/FINDINGS.md`. A series whose
+estimate is above the project spend cap (`research.spend_cap_usd`, $1.00 by default) waits for a person to approve it
+in Studio. Every attempt calls the models live; the tests of this example never start a series.
 
 ## Models
 

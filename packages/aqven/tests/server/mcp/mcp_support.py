@@ -31,6 +31,7 @@ from aqven.runtime.runs import (
     SpecVersionInfo,
 )
 from aqven.runtime.vocabulary import IncludePayloads
+from aqven.series.ports import SeriesJobs
 from aqven.server.mcp import (
     McpPorts,
     ProcessRunner,
@@ -253,6 +254,7 @@ def mcp_client(
     engine: EngineFacade | None = None,
     patch_flow: PatchFlow | None = None,
     runner: ProcessRunner | None = None,
+    series: SeriesJobs | None = None,
 ) -> Client:
     chosen = runner if runner is not None else SubprocessRunner()
     ports = McpPorts(
@@ -260,5 +262,6 @@ def mcp_client(
         runner=chosen,
         engine=engine,
         patch_flow=patch_flow,
+        series=series,
     )
     return Client(build_mcp_server(build_catalog(ports)), cache=None)

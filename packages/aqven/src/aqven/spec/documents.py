@@ -6,6 +6,7 @@ from pydantic import TypeAdapter
 from aqven.spec.agent import AgentSpec
 from aqven.spec.datasets import DatasetFile
 from aqven.spec.experiments import ExperimentSpec
+from aqven.spec.findings import FindingSpec
 from aqven.spec.flow import FlowSpec
 from aqven.spec.inference import InferenceSpec
 from aqven.spec.mcp import McpServerSpec
@@ -26,6 +27,7 @@ type SpecDocument = (
     | AgentSpec
     | ToolSpec
     | McpServerSpec
+    | FindingSpec
 )
 
 SPEC_MODEL_BY_KIND: Final[Mapping[SpecKind, TypeAdapter[SpecDocument]]] = {
@@ -39,4 +41,5 @@ SPEC_MODEL_BY_KIND: Final[Mapping[SpecKind, TypeAdapter[SpecDocument]]] = {
     SpecKind.AGENT: TypeAdapter[SpecDocument](AgentSpec),
     SpecKind.TOOL: TypeAdapter[SpecDocument](ToolSpec),
     SpecKind.MCP_SERVER: TypeAdapter[SpecDocument](McpServerSpec),
+    SpecKind.FINDING: TypeAdapter[SpecDocument](FindingSpec),
 }

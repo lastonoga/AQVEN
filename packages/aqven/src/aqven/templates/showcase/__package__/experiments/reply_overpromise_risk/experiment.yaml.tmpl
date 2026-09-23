@@ -13,13 +13,13 @@ variants:
 checks:
 - id: "promises"
   kind: "binary"
-  run: "@root.code.support_case:promises_match_resolution"
+  run: "@root.code.support_case:reply_keeps_resolution"
 - id: "customer_language"
   kind: "binary"
   use: "language"
   with:
     field: "$out.reply.text"
-    locale: "$in.locale"
+    locale: "$in.customer.locale"
 question:
   kind: "threshold"
   metric: "promises"

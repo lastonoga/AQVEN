@@ -43,6 +43,7 @@ GROUPS = {
     "types": ("Type specifications", "aqven.spec.types"),
     "datasets": ("Datasets", "aqven.spec.datasets"),
     "experiments": ("Experiments", "aqven.spec.experiments"),
+    "findings": ("Findings", "aqven.spec.findings"),
     "policies": ("Policies and limits", "aqven.spec.policy"),
     "common": ("Common limits and constraints", "aqven.spec.common"),
     "media": ("Media and dynamic values", "aqven.spec.builtins"),

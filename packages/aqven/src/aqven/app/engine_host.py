@@ -10,6 +10,7 @@ from aqven.engine.lifecycle import EngineLifecycle, EngineSetup
 from aqven.ports.engine import EngineFacade
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.project import ProjectPlanSource
+from aqven.series.workflow import REGISTERED_SERIES_WORKFLOWS
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +34,9 @@ class DbosEngineHost:
 
     async def start(self, launch: EngineLaunch) -> EngineFacade:
         workers = await configured_workers(launch.settings)
-        setup = replace(self.setup, settings=launch.settings, max_parallel=workers)
+        setup = replace(
+            self.setup, settings=launch.settings, max_parallel=workers, workflows=REGISTERED_SERIES_WORKFLOWS
+        )
         lifecycle = EngineLifecycle(root=launch.project_root, setup=setup)
         runtime = await asyncio.to_thread(lifecycle.launch)
         self.lifecycle = lifecycle

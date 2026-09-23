@@ -1,0 +1,206 @@
+{
+  "$defs": {
+    "CellVerdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "unclear",
+        "reference",
+        "none"
+      ],
+      "title": "CellVerdict",
+      "type": "string"
+    },
+    "FindingEstimate": {
+      "additionalProperties": false,
+      "description": "A point estimate with its 95 % interval, as the series computed it on the holdout cases.\n\n``method`` names the interval (``wilson``, ``paired_t`` and so on); ``p_adjusted`` is the Benjamini\u2013Hochberg\nvalue over the primary cells of the series. ``cases`` and ``attempts`` count the data behind the estimate.",
+      "properties": {
+        "attempts": {
+          "minimum": 0,
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "cases": {
+          "minimum": 0,
+          "title": "Cases",
+          "type": "integer"
+        },
+        "high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "High"
+        },
+        "low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Low"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "p_adjusted": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Adjusted"
+        },
+        "p_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Value"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "value",
+        "low",
+        "high",
+        "method",
+        "cases",
+        "attempts"
+      ],
+      "title": "FindingEstimate",
+      "type": "object"
+    },
+    "MetricDirection": {
+      "enum": [
+        "higher_is_better",
+        "lower_is_better"
+      ],
+      "title": "MetricDirection",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One decided cell of the question: a metric of a variant against a bound or against the baseline.\n\nA threshold cell sets ``bound`` and ``threshold``; a pair cell sets ``baseline`` and reads ``estimate`` as the\ndifference candidate minus baseline, signed so that a positive value is better. ``margin`` is the tolerance\ndeclared in the experiment before the data, as a share of the baseline value when ``relative`` is true.",
+  "properties": {
+    "baseline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline"
+    },
+    "bound": {
+      "anyOf": [
+        {
+          "enum": [
+            "above",
+            "below"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bound"
+    },
+    "direction": {
+      "$ref": "#/$defs/MetricDirection"
+    },
+    "estimate": {
+      "$ref": "#/$defs/FindingEstimate"
+    },
+    "margin": {
+      "title": "Margin",
+      "type": "number"
+    },
+    "metric": {
+      "title": "Metric",
+      "type": "string"
+    },
+    "relative": {
+      "default": false,
+      "title": "Relative",
+      "type": "boolean"
+    },
+    "role": {
+      "enum": [
+        "primary",
+        "guardrail"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "threshold": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Threshold"
+    },
+    "variant": {
+      "title": "Variant",
+      "type": "string"
+    },
+    "verdict": {
+      "$ref": "#/$defs/CellVerdict"
+    }
+  },
+  "required": [
+    "metric",
+    "role",
+    "variant",
+    "direction",
+    "margin",
+    "estimate",
+    "verdict"
+  ],
+  "title": "FindingCell",
+  "type": "object"
+}

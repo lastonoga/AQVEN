@@ -28,6 +28,7 @@ from aqven.loader.layout import (
     entity_stem,
     expanded_node_id,
     expected_kind,
+    finding_experiment_folder,
     inference_texts,
     type_id_for,
 )
@@ -42,6 +43,7 @@ from aqven.spec import (
     DatasetId,
     ExperimentId,
     ExperimentSpec,
+    FindingSpec,
     FlowId,
     FlowSpec,
     InferenceId,
@@ -73,6 +75,8 @@ INFERENCE_ADAPTER: Final = TypeAdapter(InferenceSpec)
 AGENT_ADAPTER: Final = TypeAdapter(AgentSpec)
 TOOL_ADAPTER: Final = TypeAdapter(ToolSpec)
 MCP_SERVER_ADAPTER: Final = TypeAdapter(McpServerSpec)
+FINDING_ADAPTER: Final = TypeAdapter(FindingSpec)
+UNNAMED_KINDS: Final = frozenset({SpecKind.FINDING})
 
 
 class ProjectNotFound(Exception):
@@ -118,6 +122,7 @@ class LoadedExperiment:
     source: SourceSpec[ExperimentSpec]
     arms: Mapping[ArmId, LoadedFlow]
     notes: str | None
+    findings: Mapping[str, SourceSpec[FindingSpec]] = field(default_factory=dict[str, SourceSpec[FindingSpec]])
 
     def arm_folder(self, arm_id: ArmId) -> str | None:
         arm = self.arms.get(arm_id)
@@ -244,6 +249,7 @@ class _Collector:
     )
     flows: dict[str, _Parts[FlowSpec]] = field(default_factory=dict[str, _Parts[FlowSpec]])
     inferences: dict[str, _Parts[InferenceSpec]] = field(default_factory=dict[str, _Parts[InferenceSpec]])
+    findings: list[SourceSpec[FindingSpec]] = field(default_factory=list[SourceSpec[FindingSpec]])
     nodes: list[tuple[_File, SourceSpec[NodeSpec]]] = field(default_factory=list[tuple[_File, SourceSpec[NodeSpec]]])
     texts: dict[str, str] = field(default_factory=dict[str, str])
     aliases: dict[str, Mapping[YamlPath, Alias]] = field(default_factory=dict[str, Mapping[YamlPath, Alias]])
@@ -265,6 +271,7 @@ class _Collector:
             folder: parts for folder, parts in self.flows.items() if not _is_arm(folder, self.experiment_folders)
         }
         flows = {FlowId(name): _loaded_flow(parts, owned) for name, parts in self._unique(project_flows).items()}
+        findings = self._owned_findings()
         experiments = {
             key: LoadedExperiment(
                 experiment_id=key,
@@ -272,6 +279,7 @@ class _Collector:
                 source=source,
                 arms=_arms(posixpath.dirname(source.path), self.flows, owned),
                 notes=self.texts.get(posixpath.join(posixpath.dirname(source.path), EXPERIMENT_NOTES)),
+                findings=findings.get(posixpath.dirname(source.path), {}),
             )
             for key, source in self.experiments.items()
         }
@@ -374,6 +382,11 @@ class _Collector:
         source = self._validated(EXPERIMENT_ADAPTER, file, document, digest)
         self._register(self.experiments, ExperimentId(file.entity), source)
 
+    def collect_finding(self, file: _File, document: YamlDocument, digest: str) -> None:
+        source = self._validated(FINDING_ADAPTER, file, document, digest)
+        if source is not None:
+            self.findings.append(source)
+
     def collect_agent(self, file: _File, document: YamlDocument, digest: str) -> None:
         self._register(self.agents, AgentId(file.entity), self._validated(AGENT_ADAPTER, file, document, digest))
 
@@ -411,6 +424,8 @@ class _Collector:
         self.broken.add(file.entity)
 
     def _check_name(self, file: _File, kind: SpecKind) -> None:
+        if kind in UNNAMED_KINDS:
+            return
         name = file.entity
         if NAME.fullmatch(name) is not None and not (kind is SpecKind.NODE and NODE_ID_SEPARATOR in name):
             return
@@ -462,6 +477,24 @@ class _Collector:
         )
         self.diagnostics.append(diagnostic(DiagnosticCode.E_SOURCE_CONFLICT, file.path, ("inference",), message))
         return source
+
+    def _owned_findings(self) -> Mapping[str, Mapping[str, SourceSpec[FindingSpec]]]:
+        tables: dict[str, dict[str, SourceSpec[FindingSpec]]] = {
+            posixpath.dirname(source.path): {} for source in self.experiments.values()
+        }
+        for source in self.findings:
+            self._own_finding(tables, source)
+        return tables
+
+    def _own_finding(
+        self, tables: dict[str, dict[str, SourceSpec[FindingSpec]]], source: SourceSpec[FindingSpec]
+    ) -> None:
+        owner = tables.get(finding_experiment_folder(source.path) or "")
+        if owner is None:
+            message = "finding outside an experiment: a finding lives in experiments/<id>/findings/<series>.yaml"
+            self.diagnostics.append(diagnostic(DiagnosticCode.E_ORPHAN_FILE, source.path, (), message))
+            return
+        self._register(owner, source.spec.series, source)
 
     def _owned_nodes(self) -> Mapping[str, _NodeTable]:
         tables: dict[str, _NodeTable] = {folder: {} for folder in self.flows}
@@ -529,6 +562,7 @@ YAML_HANDLERS: Final[Mapping[SpecKind, _YamlHandler]] = {
     SpecKind.AGENT: _Collector.collect_agent,
     SpecKind.TOOL: _Collector.collect_tool,
     SpecKind.MCP_SERVER: _Collector.collect_mcp_server,
+    SpecKind.FINDING: _Collector.collect_finding,
 }
 
 BUILDER_HANDLERS: Final[Mapping[SpecKind, _BuilderHandler]] = {

@@ -29,7 +29,7 @@ import {
 import {
   CheckBeforeItRunsSchematic,
   CostLatencySchematic,
-  EvalGateSchematic,
+  SeriesVerdictSchematic,
   MiniCheckPassedSchematic,
   MiniTypeMismatchSchematic,
   RealFilesSchematic,
@@ -76,8 +76,8 @@ const GUARDS: { heading: string; body: string; visual: React.ReactNode }[] = [
   },
   {
     heading: "Know an edit helped, before you ship it.",
-    body: "Run the same dataset before and after. The gate reports which scores went up, which went down, and whether it's a real improvement, not a vibe.",
-    visual: <EvalGateSchematic />,
+    body: "Write the question and its margin down first, then run every case for every variant, several times. The verdict comes from a 95% interval against that margin: confirmed, refuted or inconclusive, not a vibe.",
+    visual: <SeriesVerdictSchematic />,
   },
   {
     heading: "Fix a bug once. It stays fixed.",
@@ -436,9 +436,9 @@ export const INSIDE_FEATURES = [
   },
   {
     icon: <ChartLine className="size-5" />,
-    title: "Evaluations",
-    description: "Score a change before you ship it.",
-    href: "/studio/evals/",
+    title: "Experiments",
+    description: "Answer a question before you ship a change.",
+    href: "/studio/research/",
   },
   {
     icon: <Shield className="size-5" />,

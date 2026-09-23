@@ -19,6 +19,7 @@ from aqven.write.model import (
     DraftView,
     DraftWrite,
     ExpectedFile,
+    FilesWriteRequest,
     FlowPatchRequest,
     PromptSaveRequest,
     VersionFile,
@@ -89,7 +90,7 @@ class _Request:
 class _Plan:
     changes: Mapping[str, FileState]
     validation: Validation
-    flow_id: str
+    flow_id: str | None
     focus: NodeId | None
     renames: tuple[JsonValue, ...]
 
@@ -133,6 +134,13 @@ class WriteService:
         self._check_flow_lock(request, actor)
         with self._exclusive(request, actor), self.project_lock.hold(actor) as lease:
             return self._patch_locked(request, actor, lease)
+
+    def write_files(self, request: FilesWriteRequest, actor: WriteActor) -> WriteResult:
+        replay = self.intents.find(request.client_op_id)
+        if replay is not None:
+            return replay
+        with self.project_lock.hold(actor) as lease:
+            return self._files_locked(request, actor, lease)
 
     def put_draft(self, flow_id: str, node_id: str, write: DraftWrite, actor: WriteActor) -> DraftView:
         prompt = node_prompt(self.root, flow_id, node_id)
@@ -178,6 +186,20 @@ class WriteService:
         )
         if request.dry_run:
             return result
+        return self._committed(result, plan, (), actor, request.intent, lease)
+
+    def _files_locked(self, request: FilesWriteRequest, actor: WriteActor, lease: LockLease) -> WriteResult:
+        replay = self.intents.find(request.client_op_id)
+        if replay is not None:
+            return replay
+        _verify_expects(self.root, request.expects)
+        encoded = {path: text.encode("utf-8") for path, text in request.files.items()}
+        changes: dict[str, FileState] = {
+            path: data for path, data in encoded.items() if not _same_bytes(self.root, path, data)
+        }
+        _require_coverage(self.root, changes, request.expects)
+        plan = _Plan(changes, self._validated(changes), None, None, ())
+        result = self._result(_Request("files_write", request.expects, request.client_op_id, (), False), actor, plan)
         return self._committed(result, plan, (), actor, request.intent, lease)
 
     def _save_locked(
@@ -253,7 +275,7 @@ class WriteService:
                 "changed_paths": tuple(sorted(planned)),
                 "applied_ops": request.ops,
                 "renames": plan.renames,
-                "focus": WriteFocus(flow_id=FlowId(plan.flow_id), node_id=plan.focus),
+                "focus": _focus(plan),
                 "problems": plan.validation.problems,
             }
         )
@@ -311,6 +333,12 @@ class WriteService:
 
     def _timestamp(self) -> str:
         return self.clock().astimezone(UTC).strftime(TIMESTAMP_FORMAT)
+
+
+def _focus(plan: _Plan) -> WriteFocus | None:
+    if plan.flow_id is None:
+        return None
+    return WriteFocus(flow_id=FlowId(plan.flow_id), node_id=plan.focus)
 
 
 def _verify_expects(root: Path, expects: list[ExpectedFile]) -> None:

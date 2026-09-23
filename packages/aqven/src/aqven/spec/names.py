@@ -60,6 +60,7 @@ class SpecKind(StrEnum):
     AGENT = "Agent"
     TOOL = "Tool"
     MCP_SERVER = "McpServer"
+    FINDING = "Finding"
 
 
 class NodeKind(StrEnum):
@@ -179,6 +180,41 @@ class SeriesMetric(StrEnum):
     LATENCY_P95_MS = "latency_p95_ms"
     SCHEMA_VALID_FIRST_TRY = "schema_valid_first_try"
     INFRA_ERROR_RATE = "infra_error_rate"
+
+
+class SeriesSplit(StrEnum):
+    DEV = "dev"
+    HOLDOUT = "holdout"
+
+
+class VerdictState(StrEnum):
+    CONFIRMED = "confirmed"
+    REFUTED = "refuted"
+    INCONCLUSIVE = "inconclusive"
+    INVALID = "invalid"
+    SIGNAL = "signal"
+
+
+class VerdictReason(StrEnum):
+    BELOW_MDE = "below_mde"
+    UNINFORMATIVE = "uninformative"
+    NO_DISCORDANCE = "no_discordance"
+    COMPUTE_CONFOUNDED = "compute_confounded"
+    INPUTS_CHANGED = "inputs_changed"
+    INFRA_ERRORS = "infra_errors"
+    NO_DATA = "no_data"
+    BUDGET_CUT = "budget_cut"
+    CANCELLED = "cancelled"
+    DEV_SPLIT = "dev_split"
+    JUDGE_NOT_VALIDATED = "judge_not_validated"
+
+
+class CellVerdict(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    UNCLEAR = "unclear"
+    REFERENCE = "reference"
+    NONE = "none"
 
 
 class PromptLevel(IntEnum):

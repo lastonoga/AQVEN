@@ -6,22 +6,18 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final, Literal, Protocol
 
-from dbos import DBOS, SetWorkflowID, WorkflowHandleAsync, WorkflowStatus
-from dbos import error as dbos_errors
+from dbos import DBOS, WorkflowHandleAsync, WorkflowStatus
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.forking import locate_fork, new_run_id, perform_fork
-from aqven.engine.interpreter import run_flow
+from aqven.engine.launching import settled_record, start_run_workflow
 from aqven.engine.listing import RunListing, WorkflowFilters
 from aqven.engine.llm.errors import LlmNodeError
 from aqven.engine.presentation import CurrentFormatterLoader, CurrentTemplateLoader, present_batch
 from aqven.engine.projection import ExecutionFold, RunFold, fold_events
-from aqven.engine.protocol import (
-    POLLING_INTERVAL_SECONDS,
-    RUN_FLOW_WORKFLOW,
-)
+from aqven.engine.protocol import RUN_FLOW_WORKFLOW
 from aqven.engine.reader import TERMINAL_DBOS_STATUSES, RunEventLog
 from aqven.engine.request import RUN_CALL_ARGUMENTS, RunCall, RunRecord, RunSpec
 from aqven.engine.runtime import NO_OVERRIDES, EngineRuntime, RunOverrides
@@ -31,7 +27,7 @@ from aqven.ports.engine import EngineError, EventLogQuery, ExecutionQuery, RunLi
 from aqven.ports.identity import local_user, resolved_assignee
 from aqven.runtime.address import ExecutionAddress, JsonObject, Problem, RunId
 from aqven.runtime.events import RunEvent
-from aqven.runtime.executions import ExecutionDetail, NodeExecution, ResolvedAllowedSet, RunError
+from aqven.runtime.executions import ExecutionDetail, NodeExecution, ResolvedAllowedSet
 from aqven.runtime.human import HumanWait, HumanWaitDetail, OpenWaitFilter, ResumeRequest, ResumeResult
 from aqven.runtime.presentation import PresentationRequest, PresentationResponse, PresentationResult
 from aqven.runtime.runs import (
@@ -144,6 +140,10 @@ def validation_problems(error: ValidationError, prefix: str) -> tuple[Problem, .
     )
 
 
+def series_of(spec: RunSpec) -> str | None:
+    return None if spec.series is None else spec.series.series_id
+
+
 def not_found(run_id: RunId) -> EngineError:
     return EngineError("NOT_FOUND", f"run {run_id} not found")
 
@@ -196,6 +196,7 @@ class RunRecordView:
             selected_nodes=self.call.spec.selected_nodes,
             start_node=self.call.spec.start_node,
             end_node=self.call.spec.end_node,
+            series_id=series_of(self.call.spec),
         )
 
     def snapshot(self) -> RunSnapshot:
@@ -286,8 +287,7 @@ class DbosEngineFacade:
         ir_hash = self.runtime.plans.register(plan)
         run_id = RunId(str(uuid.uuid7()))
         self.runtime.services.overrides.register(run_id, overrides)
-        with SetWorkflowID(run_id):
-            await DBOS.start_workflow_async(run_flow, ir_hash, flow_input, spec.model_dump(mode="json"))
+        await start_run_workflow(run_id, ir_hash, flow_input, spec)
         return RunStarted(
             run_id=run_id,
             status="running",
@@ -322,13 +322,7 @@ class DbosEngineFacade:
     async def result(self, run_id: RunId) -> RunRecord:
         await self._status(run_id)
         handle: WorkflowHandleAsync[JsonObject] = await DBOS.retrieve_workflow_async(run_id)
-        try:
-            raw = await handle.get_result(polling_interval_sec=POLLING_INTERVAL_SECONDS)
-        except dbos_errors.DBOSAwaitedWorkflowCancelledError:
-            return RunRecord(status="cancelled")
-        except Exception as error:
-            return RunRecord(status="failed", error=RunError(code="INTERNAL", message=str(error), address=None))
-        return RunRecord.model_validate(raw)
+        return await settled_record(handle)
 
     async def get_run(self, run_id: RunId) -> RunSnapshot:
         return (await self._view(run_id)).snapshot()
