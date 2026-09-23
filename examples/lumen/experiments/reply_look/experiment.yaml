@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A quick look at the polished reply on the regression cases after a change to the revision prompt: each case with its checks, cost and trace, no verdict"
+subject:
+  flow: "support_case"
+  from: "polish"
+  to: "polish"
+cases:
+  dataset: "support_case_cases"
+  tags:
+    regression: "yes"
+variants:
+- id: "current"
+checks:
+- id: "promises"
+  kind: "binary"
+  run: "@root.code.support_case:promises_match_resolution"
+- id: "critique"
+  kind: "continuous"
+  inference: "critique"
+  agent: "deepseek"
+  validated_by: "critique_planted_defects"
+question:
+  kind: "look"

@@ -48,6 +48,7 @@ BUILTINS: Final[Mapping[Slot, Mapping[str, Callable[..., object]]]] = {
         "unique_items": evaluators.unique_items,
         "ids_in_allowed_set": evaluators.ids_in_allowed_set,
         "citations_in_sources": evaluators.citations_in_sources,
+        evaluators.EXPECTED_CHECK: evaluators.expected,
         "cost_usd": evaluators.cost_usd,
         "latency_ms": evaluators.latency_ms,
     },

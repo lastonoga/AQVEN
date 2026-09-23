@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The reply critic on its own: the critique inference with the DeepSeek agent scores a finished reply, and the verdict step reads the score and the blocking remarks as the polish loop does"
+input: "ReplyReview"
+output: "CritiqueVerdict"
+returns:
+- name: "verdict"
+  from: "$verdict.out.verdict"
+- name: "score"
+  from: "$critique.out.score"
+- name: "blocking"
+  from: "$critique.out.blocking"
+order:
+- "critique"
+- "verdict"

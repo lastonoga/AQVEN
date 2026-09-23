@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent straight from the customer's message, in one call to a cheap open model"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$classify_message.out.rationale"
+- name: "intent"
+  from: "$classify_message.out.intent"
+- name: "confidence"
+  from: "$classify_message.out.confidence"
+order:
+- "classify_message"

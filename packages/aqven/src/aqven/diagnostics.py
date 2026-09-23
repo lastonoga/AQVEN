@@ -113,6 +113,15 @@ class DiagnosticCode(StrEnum):
     E_SIM_PROMPT_RENDER = "E_SIM_PROMPT_RENDER"
     E_SIM_OUTPUT_INVALID = "E_SIM_OUTPUT_INVALID"
     E_SIM_RUN_FAILED = "E_SIM_RUN_FAILED"
+    E_ARM_UNKNOWN = "E_ARM_UNKNOWN"
+    E_RANGE_INVALID = "E_RANGE_INVALID"
+    E_VARIANT_INVALID = "E_VARIANT_INVALID"
+    E_METRIC_UNKNOWN = "E_METRIC_UNKNOWN"
+    E_EXPERIMENT_UNKNOWN = "E_EXPERIMENT_UNKNOWN"
+    E_DATASET_MISMATCH = "E_DATASET_MISMATCH"
+    E_CASE_DUPLICATE = "E_CASE_DUPLICATE"
+    E_CASES_EMPTY = "E_CASES_EMPTY"
+    E_EXPECTED_MISSING = "E_EXPECTED_MISSING"
     W_PROMPT_SHADOWED = "W_PROMPT_SHADOWED"
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
@@ -121,6 +130,7 @@ class DiagnosticCode(StrEnum):
     W_PROMPT_VALUE_UNREADABLE = "W_PROMPT_VALUE_UNREADABLE"
     W_TOOL_ARG_UNREACHABLE = "W_TOOL_ARG_UNREACHABLE"
     W_CONTEXT_KEY_UNUSED = "W_CONTEXT_KEY_UNUSED"
+    W_PLAN_EXCEEDS_CASES = "W_PLAN_EXCEEDS_CASES"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -218,6 +228,46 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_TYPES_SHADOWS_STDLIB: DiagnosticText(
         "generated {module}/types.py shadows the standard library module types while {folder} is on sys.path",
         "remove {folder} from sys.path and PYTHONPATH; import the models as {module}.types",
+    ),
+    DiagnosticCode.E_ARM_UNKNOWN: DiagnosticText(
+        "arm {arm} is not an arm of experiment {experiment}; its arms: {arms}",
+        "create {folder}/arms/{arm}/flow.yaml or name an existing arm",
+    ),
+    DiagnosticCode.E_RANGE_INVALID: DiagnosticText(
+        "experiment {experiment}: {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_VARIANT_INVALID: DiagnosticText(
+        "experiment {experiment}: {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_METRIC_UNKNOWN: DiagnosticText(
+        "experiment {experiment}: metric {metric} is neither a check id of the experiment nor a series metric",
+        "name a check id ({checks}) or a series metric ({metrics})",
+    ),
+    DiagnosticCode.E_EXPERIMENT_UNKNOWN: DiagnosticText(
+        "check {check}: validated_by names experiment {target}, which does not exist in the project",
+        "name the experiment that measured this judge on planted defects, or remove validated_by",
+    ),
+    DiagnosticCode.E_DATASET_MISMATCH: DiagnosticText(
+        "experiment {experiment}: {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_CASE_DUPLICATE: DiagnosticText(
+        "case name {name} is already taken by cases[{first}] of dataset {dataset}",
+        "rename one of the cases: name is the case key and is unique in a dataset",
+    ),
+    DiagnosticCode.E_CASES_EMPTY: DiagnosticText(
+        "experiment {experiment}: tags {tags} select no case of dataset {dataset}",
+        "tag the cases of the dataset or relax the tag filter under cases.tags",
+    ),
+    DiagnosticCode.E_EXPECTED_MISSING: DiagnosticText(
+        "experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem}",
+        "add {wanted} to case {case} of dataset {dataset}, or narrow cases.tags to cases that carry it",
+    ),
+    DiagnosticCode.W_PLAN_EXCEEDS_CASES: DiagnosticText(
+        "experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases",
+        "add cases to the dataset or lower plan.cases: a series runs each selected case at most once per repeat",
     ),
 }
 

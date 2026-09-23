@@ -1,13 +1,13 @@
 import json
 import re
-from collections.abc import Mapping
-from typing import Final
+from collections.abc import Mapping, Sequence
+from typing import Annotated, Final
 
-from pydantic import BaseModel, Field, JsonValue
+from pydantic import BaseModel, Field, JsonValue, TypeAdapter
 
 from aqven.policies.contracts import POLICY_CONFIG, EvalContext, NoParams, RefPath, Verdict
 from aqven.policies.paths import items, json_of, member, read, text
-from aqven.spec import PiiDetector, RefRoot
+from aqven.spec import NAME_PATTERN, PiiDetector, RefRoot
 
 CYRILLIC: Final = re.compile(r"[\u0400-\u04ff]")
 LATIN: Final = re.compile(r"[a-zA-Z\u00c0-\u024f]")
@@ -35,7 +35,13 @@ DETECTORS: Final[Mapping[PiiDetector, re.Pattern[str]]] = {
     PiiDetector.IP_ADDRESS: re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
 }
 
+JSON_ADAPTER: Final = TypeAdapter[JsonValue](JsonValue)
+EXPECTED_CHECK: Final = "expected"
+NO_EXPECTED_OUTPUT: Final = "there is no expected_output to compare with"
+
 type Context = EvalContext[BaseModel, BaseModel]
+type ExpectationContext = EvalContext[BaseModel, object]
+type FieldName = Annotated[str, Field(pattern=NAME_PATTERN)]
 
 
 class FieldParams(BaseModel):
@@ -79,6 +85,12 @@ class CitationsInSourcesParams(BaseModel):
     id: str
     quote: str
     text: str
+
+
+class ExpectedParams(BaseModel):
+    model_config = POLICY_CONFIG
+
+    fields: list[FieldName] | None = Field(default=None, min_length=1)
 
 
 def not_empty(value: BaseModel, context: Context, params: FieldParams) -> Verdict:
@@ -138,6 +150,30 @@ def citations_in_sources(value: BaseModel, context: Context, params: CitationsIn
     return verdict(not broken, f"quotes not found in sources: {', '.join(broken)}")
 
 
+def expected(value: BaseModel, context: ExpectationContext, params: ExpectedParams) -> Verdict:
+    wanted = _expected_output(context)
+    gap = expectation_gap(wanted, params.fields)
+    if gap is not None:
+        return Verdict(passed=False, reason=gap)
+    actual = json_of(value)
+    if not isinstance(wanted, dict):
+        return verdict(actual == wanted, "the output differs from expected_output")
+    names = params.fields or list(wanted)
+    differing = [name for name in names if member(actual, name) != member(wanted, name)]
+    return verdict(not differing, f"fields differ from expected_output: {', '.join(differing)}")
+
+
+def expectation_gap(wanted: JsonValue, fields: Sequence[str] | None) -> str | None:
+    if wanted is None:
+        return NO_EXPECTED_OUTPUT
+    if fields is None:
+        return None
+    if not isinstance(wanted, dict):
+        return f"expected_output is not an object with the fields {', '.join(fields)}"
+    absent = [name for name in fields if name not in wanted]
+    return f"expected_output lacks the fields {', '.join(absent)}" if absent else None
+
+
 def cost_usd(value: BaseModel, context: Context, params: NoParams) -> Verdict:
     return Verdict(passed=True, score=context.cost_usd)
 
@@ -153,6 +189,13 @@ def verdict(passed: bool, reason: str) -> Verdict:
 def _cited(citation: JsonValue, sources: Mapping[str, str], params: CitationsInSourcesParams) -> bool:
     source = sources.get(text(member(citation, params.id)))
     return source is not None and text(member(citation, params.quote)) in source
+
+
+def _expected_output(context: ExpectationContext) -> JsonValue:
+    found = context.expected_output
+    if isinstance(found, BaseModel):
+        return json_of(found)
+    return JSON_ADAPTER.validate_python(found)
 
 
 def _read(value: BaseModel, context: Context, path: str) -> JsonValue:

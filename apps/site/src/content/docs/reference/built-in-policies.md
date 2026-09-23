@@ -52,6 +52,7 @@ None of these fit your check? [How to write a custom evaluator](/engine/custom-e
 | `unique_items` | `unique_items(value: 'BaseModel', context: 'Context', params: 'UniqueItemsParams') -> 'Verdict'` |
 | `ids_in_allowed_set` | `ids_in_allowed_set(value: 'BaseModel', context: 'Context', params: 'IdsInAllowedSetParams') -> 'Verdict'` |
 | `citations_in_sources` | `citations_in_sources(value: 'BaseModel', context: 'Context', params: 'CitationsInSourcesParams') -> 'Verdict'` |
+| `expected` | `expected(value: 'BaseModel', context: 'ExpectationContext', params: 'ExpectedParams') -> 'Verdict'` |
 | `cost_usd` | `cost_usd(value: 'BaseModel', context: 'Context', params: 'NoParams') -> 'Verdict'` |
 | `latency_ms` | `latency_ms(value: 'BaseModel', context: 'Context', params: 'NoParams') -> 'Verdict'` |
 
@@ -84,6 +85,14 @@ None of these fit your check? [How to write a custom evaluator](/engine/custom-e
 | `value` | `JsonValue` | Yes | `—` | — |
 
 [JSON Schema](/reference/schemas/DefaultParams.json)
+
+## ExpectedParams
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `fields` | `FieldName[] \| null` | No | `None` | — |
+
+[JSON Schema](/reference/schemas/ExpectedParams.json)
 
 ## FieldParams
 

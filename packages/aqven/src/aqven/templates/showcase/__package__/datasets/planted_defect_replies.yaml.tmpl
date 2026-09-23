@@ -1,0 +1,459 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "strip_heat_clean"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €15.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "store_credit"
+  expected_output:
+    verdict: "send"
+- name: "strip_heat_wrong_amount"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €20.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "yes"
+    defect: "wrong_amount"
+    action: "store_credit"
+  expected_output:
+    verdict: "block"
+- name: "bulb_router_clean"
+  inputs:
+    summary: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows “offline”, although it still lights up. The customer asks how to get it back into the app."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    - chunk_id: "kb_bulbreset5"
+      title: "Resetting a Glow bulb"
+      text: "To reset a Glow bulb, switch it on and off five times in a row, one second apart. The bulb blinks three times and goes into pairing mode."
+    reply:
+      text: "After a router change the Glow E27 has to be added to the app again: remove it from the device list and pair it once more on your 2.4 GHz network. To put it into pairing mode, switch it on and off five times in a row, one second apart, until it blinks three times."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      - chunk_id: "kb_bulbreset5"
+        quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "advice"
+  expected_output:
+    verdict: "send"
+- name: "bulb_router_overpromise"
+  inputs:
+    summary: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows “offline”, although it still lights up. The customer asks how to get it back into the app."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    - chunk_id: "kb_bulbreset5"
+      title: "Resetting a Glow bulb"
+      text: "To reset a Glow bulb, switch it on and off five times in a row, one second apart. The bulb blinks three times and goes into pairing mode."
+    reply:
+      text: "After a router change the Glow E27 has to be added to the app again: remove it from the device list and pair it once more on your 2.4 GHz network. To put it into pairing mode, switch it on and off five times in a row, one second apart, until it blinks three times. If it still shows offline after that, we will send you a replacement bulb straight away."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      - chunk_id: "kb_bulbreset5"
+        quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+  tags:
+    planted: "yes"
+    defect: "overpromise"
+    action: "advice"
+  expected_output:
+    verdict: "block"
+- name: "crushed_lamp_clean"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "reship"
+  expected_output:
+    verdict: "send"
+- name: "crushed_lamp_unsupported_claim"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense by express delivery, so the new lamp reaches you within 24 hours, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "yes"
+    defect: "unsupported_claim"
+    action: "reship"
+  expected_output:
+    verdict: "block"
+- name: "nova_runtime_clean"
+  inputs:
+    summary: "The Nova Cordless table lamp, bought in spring, lasts about six hours at full brightness before it switches off; the customer uses it on the terrace in the evenings and asks whether the battery is faulty."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_novabatt01"
+      title: "Nova battery life"
+      text: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness. Battery capacity falls to about 80% after 500 charge cycles; that is normal wear, not a defect."
+    - chunk_id: "kb_novachrg02"
+      title: "Charging a Nova lamp"
+      text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+    reply:
+      text: "What you see is expected: at full brightness a fully charged Nova lamp lights for about 6 hours, and at 30% brightness it lasts up to 40 hours. Lowering the brightness on the terrace will give you much longer evenings."
+      citations:
+      - chunk_id: "kb_novabatt01"
+        quote: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "advice"
+  expected_output:
+    verdict: "send"
+- name: "nova_runtime_contradicts_source"
+  inputs:
+    summary: "The Nova Cordless table lamp, bought in spring, lasts about six hours at full brightness before it switches off; the customer uses it on the terrace in the evenings and asks whether the battery is faulty."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_novabatt01"
+      title: "Nova battery life"
+      text: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness. Battery capacity falls to about 80% after 500 charge cycles; that is normal wear, not a defect."
+    - chunk_id: "kb_novachrg02"
+      title: "Charging a Nova lamp"
+      text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+    reply:
+      text: "Six hours at full brightness is shorter than a Nova lamp should last, so the battery is wearing out early. Charge it fully before each use and lower the brightness to stretch the runtime."
+      citations:
+      - chunk_id: "kb_novabatt01"
+        quote: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness."
+  tags:
+    planted: "yes"
+    defect: "contradicts_source"
+    action: "advice"
+  expected_output:
+    verdict: "block"
+- name: "nova_no_charge_clean"
+  inputs:
+    summary: "The Nova Cordless lamp stopped charging: with the original USB-C cable, a second cable and two 5 V adapters the charging ring never lights and the lamp stays off. The customer asks for a working lamp."
+    resolution:
+      action: "replacement"
+      summary: "Replacement of the Nova Cordless under warranty: the charging board does not respond"
+      credit: null
+      policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    chunks:
+    - chunk_id: "kb_novachrg02"
+      title: "Charging a Nova lamp"
+      text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+    reply:
+      text: "Thank you for trying two cables and two adapters. When the ring does not light at all with a known-good cable and adapter, the charging board is faulty, so we will replace your Nova lamp with the same model under warranty. The replacement ships within 3 working days, and a courier collects the faulty lamp when the new one is delivered."
+      citations:
+      - chunk_id: "kb_novachrg02"
+        quote: "If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "replacement"
+  expected_output:
+    verdict: "send"
+- name: "nova_no_charge_fabricated_quote"
+  inputs:
+    summary: "The Nova Cordless lamp stopped charging: with the original USB-C cable, a second cable and two 5 V adapters the charging ring never lights and the lamp stays off. The customer asks for a working lamp."
+    resolution:
+      action: "replacement"
+      summary: "Replacement of the Nova Cordless under warranty: the charging board does not respond"
+      credit: null
+      policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    chunks:
+    - chunk_id: "kb_novachrg02"
+      title: "Charging a Nova lamp"
+      text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+    reply:
+      text: "Thank you for trying two cables and two adapters. When the ring does not light at all with a known-good cable and adapter, the charging board is faulty, so we will replace your Nova lamp with the same model under warranty. The replacement ships the next working day, and a courier collects the faulty lamp when the new one is delivered."
+      citations:
+      - chunk_id: "kb_novachrg02"
+        quote: "If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships the next working day by express courier."
+  tags:
+    planted: "yes"
+    defect: "fabricated_quote"
+    action: "replacement"
+  expected_output:
+    verdict: "block"
+- name: "zigbee_pairing_clean"
+  inputs:
+    summary: "The customer's new Glow E14 Candle Zigbee bulbs do not appear in the app; they tried adding them over Wi-Fi like their other Glow bulbs and ask what they are doing wrong."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_zigpair001"
+      title: "Pairing a Zigbee lamp with the Lumen Hub"
+      text: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi. Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds. Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+    - chunk_id: "kb_zigreset01"
+      title: "Resetting a Zigbee lamp"
+      text: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart. The lamp flashes twice and can be paired with the hub again."
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    reply:
+      text: "The Glow E14 Candle is a Zigbee bulb, so it pairs through the Lumen Hub rather than over Wi-Fi. Put the hub into pairing mode from the app and switch the bulb on within 60 seconds. If it still does not appear, reset it by switching it off and on six times, two seconds apart, and pair it again."
+      citations:
+      - chunk_id: "kb_zigpair001"
+        quote: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi."
+      - chunk_id: "kb_zigpair001"
+        quote: "Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds."
+      - chunk_id: "kb_zigreset01"
+        quote: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "advice"
+  expected_output:
+    verdict: "send"
+- name: "zigbee_pairing_wrong_steps"
+  inputs:
+    summary: "The customer's new Glow E14 Candle Zigbee bulbs do not appear in the app; they tried adding them over Wi-Fi like their other Glow bulbs and ask what they are doing wrong."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_zigpair001"
+      title: "Pairing a Zigbee lamp with the Lumen Hub"
+      text: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi. Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds. Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+    - chunk_id: "kb_zigreset01"
+      title: "Resetting a Zigbee lamp"
+      text: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart. The lamp flashes twice and can be paired with the hub again."
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    reply:
+      text: "Glow bulbs work only on a 2.4 GHz network, so check that your router has its 2.4 GHz band switched on. Then remove the bulbs from the device list and pair them once more over Wi-Fi. To put a bulb into pairing mode, switch it on and off five times in a row, one second apart."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "Glow bulbs work only on a 2.4 GHz network."
+      - chunk_id: "kb_bulbwifi24"
+        quote: "remove it from the device list and pair it once more."
+  tags:
+    planted: "yes"
+    defect: "wrong_steps"
+    action: "advice"
+  expected_output:
+    verdict: "block"
+- name: "burning_smell_clean"
+  inputs:
+    summary: "The five-month-old Arc Floor lamp smelled of burning plastic about twenty minutes after it was switched on; the cable switch felt warm and has a small brown mark. The customer switched it off and is worried because of a toddler at home."
+    resolution:
+      action: "replacement"
+      summary: "Replacement of the Arc Floor under warranty for a burning smell at the cable switch"
+      credit: null
+      policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    chunks:
+    - chunk_id: "kb_burnsmell1"
+      title: "Burning smell or sparks"
+      text: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again. Lumen replaces such a lamp under warranty without asking for a repair attempt."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+    reply:
+      text: "You did the right thing by switching the lamp off. Please unplug it at the wall and do not use it again. We will replace your Arc Floor with the same model under warranty, without asking for any repair attempt. The replacement ships within 3 working days, and a courier collects the old lamp when the new one is delivered."
+      citations:
+      - chunk_id: "kb_burnsmell1"
+        quote: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again."
+      - chunk_id: "kb_burnsmell1"
+        quote: "Lumen replaces such a lamp under warranty without asking for a repair attempt."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "replacement"
+  expected_output:
+    verdict: "send"
+- name: "burning_smell_missing_safety"
+  inputs:
+    summary: "The five-month-old Arc Floor lamp smelled of burning plastic about twenty minutes after it was switched on; the cable switch felt warm and has a small brown mark. The customer switched it off and is worried because of a toddler at home."
+    resolution:
+      action: "replacement"
+      summary: "Replacement of the Arc Floor under warranty for a burning smell at the cable switch"
+      credit: null
+      policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    chunks:
+    - chunk_id: "kb_burnsmell1"
+      title: "Burning smell or sparks"
+      text: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again. Lumen replaces such a lamp under warranty without asking for a repair attempt."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+    reply:
+      text: "Thank you for letting us know. We will replace your Arc Floor with the same model under warranty, without asking for any repair attempt. The replacement ships within 3 working days, and a courier collects the old lamp when the new one is delivered."
+      citations:
+      - chunk_id: "kb_burnsmell1"
+        quote: "Lumen replaces such a lamp under warranty without asking for a repair attempt."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+  tags:
+    planted: "yes"
+    defect: "missing_safety"
+    action: "replacement"
+  expected_output:
+    verdict: "block"
+- name: "gift_warranty_clean"
+  inputs:
+    summary: "The customer is giving a Nova Cordless lamp as a present and asks how long the warranty lasts and whether the recipient can use it on their own."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer about the warranty terms, with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_warranty2y"
+      title: "Warranty terms"
+      text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+    reply:
+      text: "What a nice present. Every Lumen lamp, the Nova Cordless included, carries a 2-year warranty from the delivery date, and your friend can use it on their own with the order number."
+      citations:
+      - chunk_id: "kb_warranty2y"
+        quote: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years."
+      - chunk_id: "kb_warranty2y"
+        quote: "A gift recipient can use the warranty with the order number."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "advice"
+  expected_output:
+    verdict: "send"
+- name: "gift_warranty_unanswered"
+  inputs:
+    summary: "The customer is giving a Nova Cordless lamp as a present and asks how long the warranty lasts and whether the recipient can use it on their own."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer about the warranty terms, with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_warranty2y"
+      title: "Warranty terms"
+      text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+    reply:
+      text: "What a nice present. Every Lumen lamp, the Nova Cordless included, carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years."
+      citations:
+      - chunk_id: "kb_warranty2y"
+        quote: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years."
+  tags:
+    planted: "yes"
+    defect: "unanswered"
+    action: "advice"
+  expected_output:
+    verdict: "block"

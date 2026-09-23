@@ -1,0 +1,26 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "The DeepSeek critic blocks replies with a planted defect and lets clean replies through: its verdict matches the label in more than 85% of cases"
+failure_mode: "judge_misses_defect"
+subject:
+  arm: "critique_only"
+cases:
+  dataset: "planted_defect_replies"
+variants:
+- id: "deepseek"
+checks:
+- id: "label"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "verdict"
+question:
+  kind: "threshold"
+  metric: "label"
+  variant: "deepseek"
+  above: 0.85
+  margin: 0.05
+plan:
+  cases: 16
+  repeats: 3

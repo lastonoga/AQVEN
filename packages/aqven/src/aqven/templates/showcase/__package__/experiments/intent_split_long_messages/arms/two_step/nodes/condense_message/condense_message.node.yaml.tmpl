@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "A cheap open model condenses a long message to the request and the facts behind it"
+agent: "llama"
+in:
+- name: "message"
+  from: "$input.message"
+- name: "product"
+  from: "$input.product"

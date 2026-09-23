@@ -2,6 +2,7 @@ import inspect
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from functools import partial
 from typing import Final, TypeAliasType, TypeVar, get_args, get_origin
 
@@ -14,7 +15,7 @@ from aqven.check.graph import NodeEntry
 from aqven.check.nodes import typed_entries
 from aqven.check.registry import known_agent, known_inference
 from aqven.check.resolver import CodeTarget
-from aqven.check.scopes import InferenceScope, Resolution, Resolved, Unresolved
+from aqven.check.scopes import Resolution, Resolved, Unresolved
 from aqven.check.shapes import (
     Missing,
     NotList,
@@ -26,8 +27,9 @@ from aqven.check.shapes import (
     step_field,
     unwrap,
 )
+from aqven.check.subjects import Evaluated, inference_evaluated, subject_evaluated
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
-from aqven.loader import YamlPath
+from aqven.loader import LoadedExperiment, YamlPath
 from aqven.policies import (
     BUILTINS,
     EvalContext,
@@ -42,7 +44,9 @@ from aqven.policies import (
 )
 from aqven.policies.control import BestParams, DefaultParams, QuorumParams, StagnationParams, ThresholdParams
 from aqven.policies.evaluators import (
+    EXPECTED_CHECK,
     CitationsInSourcesParams,
+    ExpectedParams,
     FieldParams,
     IdsInAllowedSetParams,
     LanguageParams,
@@ -54,6 +58,7 @@ from aqven.policies.evaluators import (
 from aqven.spec import EvaluatorRef, Locale, LoopNodeSpec, MapItemError, MapNodeSpec, ParallelNodeSpec, PolicyRef
 
 RETURN_HINT: Final = "return"
+OUT_PREFIX: Final = "$out."
 SCORE_FIELD: Final = "score"
 WILDCARDS: Final[tuple[object, ...]] = (object, BaseModel, JsonValue)
 SCORES: Final[tuple[object, ...]] = (int, float, bool)
@@ -92,15 +97,28 @@ class Signature:
     hints: Mapping[str, object]
 
 
+class EvaluatorHost(StrEnum):
+    INFERENCE_CHECK = "inference_check"
+    EVAL_SCORER = "eval_scorer"
+    EXPERIMENT_CHECK = "experiment_check"
+
+
 @dataclass(frozen=True, slots=True)
 class EvaluatorUse:
     file: str
     path: YamlPath
     ref: EvaluatorRef
-    inference_id: str
+    evaluated: Evaluated
+    host: EvaluatorHost
 
 
 type ShapeRule = Callable[[CheckContext, PolicySite, BaseModel], Iterator[str]]
+
+CASELESS_HOSTS: Final[Mapping[EvaluatorHost, str]] = {
+    EvaluatorHost.INFERENCE_CHECK: "an inference check runs on live requests, which have no case",
+    EvaluatorHost.EVAL_SCORER: "an Eval scorer does not receive the case expected_output",
+}
+CASE_ONLY_HINT: Final = "move the comparison into a check of an experiment, or use a check that reads the output alone"
 
 PARAMS_CODES: Final[Mapping[Slot, DiagnosticCode]] = {
     Slot.JOIN: DiagnosticCode.E_POLICY_PARAMS,
@@ -112,25 +130,48 @@ PARAMS_CODES: Final[Mapping[Slot, DiagnosticCode]] = {
 
 
 def check_policies(context: CheckContext) -> Iterable[Diagnostic]:
-    listed = (*_join_sites(context), *_loop_sites(context), *_item_sites(context), *_evaluator_sites(context))
+    uses = tuple(evaluator_uses(context))
+    evaluators = _evaluator_sites(context, uses)
+    listed = (*_join_sites(context), *_loop_sites(context), *_item_sites(context), *evaluators)
     sites = (site for site in listed if not context.alias_failed(site.file, (*site.path, "run")))
-    judges = (item for use in evaluator_uses(context) for item in _judge(context, use))
-    return (*(item for site in sites for item in _site(context, site)), *judges)
+    judges = (item for use in uses for item in _judge(context, use))
+    caseless = (item for use in uses for item in _case_only(use))
+    return (*(item for site in sites for item in _site(context, site)), *judges, *caseless)
 
 
 def evaluator_uses(context: CheckContext) -> Iterator[EvaluatorUse]:
     checks = (
-        EvaluatorUse(source.path, ("checks", index), check, loaded.inference_id)
+        EvaluatorUse(
+            source.path,
+            ("checks", index),
+            check,
+            inference_evaluated(context, loaded.inference_id),
+            EvaluatorHost.INFERENCE_CHECK,
+        )
         for loaded in context.project.inferences.values()
         if (source := loaded.source) is not None
         for index, check in enumerate(source.spec.checks or ())
     )
     scorers = (
-        EvaluatorUse(source.path, ("scorers", index), scorer, source.spec.inference)
+        EvaluatorUse(
+            source.path,
+            ("scorers", index),
+            scorer,
+            inference_evaluated(context, source.spec.inference),
+            EvaluatorHost.EVAL_SCORER,
+        )
         for source in context.project.evals.values()
         for index, scorer in enumerate(source.spec.scorers)
     )
-    return iter((*checks, *scorers))
+    experiments = (use for loaded in context.project.experiments.values() for use in _experiment_uses(context, loaded))
+    return iter((*checks, *scorers, *experiments))
+
+
+def _experiment_uses(context: CheckContext, loaded: LoadedExperiment) -> Iterator[EvaluatorUse]:
+    evaluated = subject_evaluated(context, loaded)
+    source = loaded.source
+    for index, check in enumerate(source.spec.checks or ()):
+        yield EvaluatorUse(source.path, ("checks", index), check, evaluated, EvaluatorHost.EXPERIMENT_CHECK)
 
 
 def _join_sites(context: CheckContext) -> Iterator[PolicySite]:
@@ -180,19 +221,17 @@ def _item_sites(context: CheckContext) -> Iterator[PolicySite]:
         yield PolicySite(Slot.ITEM_ERROR, entry.file, ("on_item_error",), spec.on_item_error, contract, resolve, entry)
 
 
-def _evaluator_sites(context: CheckContext) -> Iterator[PolicySite]:
-    for use in evaluator_uses(context):
+def _evaluator_sites(context: CheckContext, uses: Iterable[EvaluatorUse]) -> Iterator[PolicySite]:
+    for use in uses:
         if use.ref.inference is not None:
             continue
-        refs = context.refs
-        value = refs.inference_record(use.inference_id, "out")
-        inputs = refs.inference_record(use.inference_id, "in")
+        records = use.evaluated.records
         contract = Contract(
             "(value: O, context: EvalContext[I, O], params: P) -> Verdict",
-            (value, Generic(EvalContext, (inputs, value))),
+            (records.out, Generic(EvalContext, (records.in_, records.out))),
             Generic(Verdict),
         )
-        resolve = partial(refs.resolve_inference, InferenceScope(use.inference_id))
+        resolve = partial(context.refs.resolve_evaluated, records)
         yield PolicySite(Slot.EVALUATOR, use.file, use.path, use.ref, contract, resolve)
 
 
@@ -336,8 +375,19 @@ def _judge(context: CheckContext, use: EvaluatorUse) -> Iterator[Diagnostic]:
     inputs = record_fields(context.refs.inference_record(judge, "in"))
     if outputs is None or inputs is None:
         return
-    for problem in (*_judge_score(outputs), *_judge_inputs(context, use.inference_id, inputs)):
+    for problem in (*_judge_score(outputs), *_judge_inputs(context, use.evaluated, inputs)):
         yield diagnostic(DiagnosticCode.E_CHECK_PARAMS, use.file, (*use.path, "inference"), f"judge {judge}: {problem}")
+
+
+def _case_only(use: EvaluatorUse) -> Iterator[Diagnostic]:
+    reason = CASELESS_HOSTS.get(use.host)
+    if reason is None or use.ref.use != EXPECTED_CHECK:
+        return
+    message = (
+        f"built-in {EXPECTED_CHECK} compares the output with the case expected_output "
+        f"and is available in experiments only: {reason}"
+    )
+    yield diagnostic(DiagnosticCode.E_CHECK_PARAMS, use.file, (*use.path, "use"), message, hint=CASE_ONLY_HINT)
 
 
 def _judge_score(outputs: Mapping[str, object]) -> Iterator[str]:
@@ -347,18 +397,17 @@ def _judge_score(outputs: Mapping[str, object]) -> Iterator[str]:
     yield f"the judge out needs a field {SCORE_FIELD} of type Int, Float or Bool: the score is read from it"
 
 
-def _judge_inputs(context: CheckContext, evaluated: str, inputs: Mapping[str, object]) -> Iterator[str]:
-    refs = context.refs
-    sources = {
-        **(record_fields(refs.inference_record(evaluated, "in")) or {}),
-        **(record_fields(refs.inference_record(evaluated, "out")) or {}),
-    }
+def _judge_inputs(context: CheckContext, evaluated: Evaluated, inputs: Mapping[str, object]) -> Iterator[str]:
+    records = evaluated.records
+    if records.in_ is None and records.out is None:
+        return
+    sources = {**(record_fields(records.in_) or {}), **(record_fields(records.out) or {})}
     for name, slot in inputs.items():
         source = sources.get(name)
         if source is None and not is_optional(slot):
-            yield f"input {name} is not found by name among the in and out of inference {evaluated}"
+            yield f"input {name} is not found by name among the in and out of {evaluated.label}"
         if source is not None and compatible(context, slot, source) is False:
-            yield f"input {name} is not type compatible with field {name} of inference {evaluated}"
+            yield f"input {name} is not type compatible with field {name} of {evaluated.label}"
 
 
 def _expect(site: PolicySite, text: str, shape: Shape, label: str) -> Iterator[str]:
@@ -456,6 +505,12 @@ def _element_field(site: PolicySite, text: str, name: str) -> object | None:
     return None if isinstance(found, Missing | Opaque | NotList) else found
 
 
+def _expected_fields(context: CheckContext, site: PolicySite, params: BaseModel) -> Iterator[str]:
+    fields = params.fields if isinstance(params, ExpectedParams) else None
+    resolutions = (site.resolve(f"{OUT_PREFIX}{name}") for name in fields or ())
+    yield from (resolution.message for resolution in resolutions if isinstance(resolution, Unresolved))
+
+
 def _score_path(context: CheckContext, site: PolicySite, params: BaseModel) -> Iterator[str]:
     if isinstance(params, ThresholdParams | StagnationParams | BestParams):
         yield from _expect(site, params.path, _is_number, "a number")
@@ -492,4 +547,5 @@ SHAPE_RULES: Final[Mapping[tuple[Slot, str], ShapeRule]] = {
     (Slot.EVALUATOR, "unique_items"): _unique_items,
     (Slot.EVALUATOR, "ids_in_allowed_set"): _ids_in_allowed_set,
     (Slot.EVALUATOR, "citations_in_sources"): _citations_in_sources,
+    (Slot.EVALUATOR, "expected"): _expected_fields,
 }

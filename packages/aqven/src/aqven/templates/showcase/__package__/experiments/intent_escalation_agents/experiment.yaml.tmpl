@@ -1,0 +1,41 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Qwen as the escalation agent decides the support lead's intent at most 0.1 less often than DeepSeek on the recorded triage, with no more invalid first outputs and at most 25% slower at p95"
+failure_mode: "intent_misread"
+subject:
+  arm: "escalation"
+  from: "escalate"
+  to: "escalate"
+cases:
+  dataset: "support_case_cases"
+variants:
+- id: "deepseek"
+- id: "qwen"
+  agents:
+    escalate: "qwen"
+- id: "gpt"
+  agents:
+    escalate: "gpt"
+checks:
+- id: "intent"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "intent"
+question:
+  kind: "noninferior"
+  baseline: "deepseek"
+  candidate: "qwen"
+  primary: "intent"
+  margin: 0.1
+  guardrails:
+  - metric: "schema_valid_first_try"
+    margin: 0.05
+  - metric: "latency_p95_ms"
+    direction: "lower_is_better"
+    margin: 0.25
+    relative: true
+plan:
+  cases: 12
+  repeats: 3

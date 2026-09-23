@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "description": "The default size of a series: how many cases and how many repeats per case.\n\nThese are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the\nrecommended size next to them. ``cases`` unset means every selected case.",
+  "properties": {
+    "cases": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cases"
+    },
+    "repeats": {
+      "default": 1,
+      "maximum": 20,
+      "minimum": 1,
+      "title": "Repeats",
+      "type": "integer"
+    }
+  },
+  "title": "ExperimentPlan",
+  "type": "object"
+}

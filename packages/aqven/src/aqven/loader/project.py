@@ -12,6 +12,8 @@ from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader.aliases import RESERVED_ALIASES, Alias, AliasScope, reserved_flow, resolve_aliases
 from aqven.loader.layout import (
     AQVEN_HEADER,
+    EXPERIMENT_FILES,
+    EXPERIMENT_NOTES,
     FLOW_FILES,
     LOCK_FILE,
     NODE_ID_SEPARATOR,
@@ -19,6 +21,7 @@ from aqven.loader.layout import (
     SKIPPED_DIRECTORIES,
     TEXT_SUFFIX,
     ancestors,
+    arm_experiment_folder,
     builder_kind,
     declares,
     entity_id,
@@ -34,10 +37,13 @@ from aqven.spec import (
     NAME_PATTERN,
     AgentId,
     AgentSpec,
+    ArmId,
     DatasetFile,
     DatasetId,
     EvalId,
     EvalSpec,
+    ExperimentId,
+    ExperimentSpec,
     FlowId,
     FlowSpec,
     InferenceId,
@@ -65,6 +71,7 @@ FLOW_ADAPTER: Final = TypeAdapter(FlowSpec)
 NODE_ADAPTER: Final = TypeAdapter[NodeSpec](NodeSpec)
 DATASET_ADAPTER: Final = TypeAdapter(DatasetFile)
 EVAL_ADAPTER: Final = TypeAdapter(EvalSpec)
+EXPERIMENT_ADAPTER: Final = TypeAdapter(ExperimentSpec)
 INFERENCE_ADAPTER: Final = TypeAdapter(InferenceSpec)
 AGENT_ADAPTER: Final = TypeAdapter(AgentSpec)
 TOOL_ADAPTER: Final = TypeAdapter(ToolSpec)
@@ -108,6 +115,19 @@ class LoadedInference:
 
 
 @dataclass(frozen=True, slots=True)
+class LoadedExperiment:
+    experiment_id: ExperimentId
+    folder: str
+    source: SourceSpec[ExperimentSpec]
+    arms: Mapping[ArmId, LoadedFlow]
+    notes: str | None
+
+    def arm_folder(self, arm_id: ArmId) -> str | None:
+        arm = self.arms.get(arm_id)
+        return None if arm is None else arm.folder
+
+
+@dataclass(frozen=True, slots=True)
 class LoadedProject:
     root: Path
     project: SourceSpec[ProjectSpec]
@@ -123,6 +143,7 @@ class LoadedProject:
     invalid_paths: frozenset[str] = frozenset()
     broken_ids: frozenset[str] = frozenset()
     aliases: Mapping[str, Mapping[YamlPath, Alias]] = field(default_factory=dict[str, Mapping[YamlPath, Alias]])
+    experiments: Mapping[ExperimentId, LoadedExperiment] = field(default_factory=dict[ExperimentId, LoadedExperiment])
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,7 +168,8 @@ def load_project(root: Path) -> LoadResult:
     files = project_files(root)
     inference_stems = frozenset(entity_stem(path) for path in files if declares(path, SpecKind.INFERENCE))
     flow_folders = tuple(sorted({posixpath.dirname(path) for path in files if _named(path, FLOW_FILES)}))
-    collector = _Collector(root, inference_stems, AliasScope(root.name, flow_folders))
+    experiment_folders = frozenset(posixpath.dirname(path) for path in files if _named(path, EXPERIMENT_FILES))
+    collector = _Collector(root, inference_stems, AliasScope(root.name, flow_folders), experiment_folders)
     for relative in files:
         collector.add(relative)
     return collector.result()
@@ -209,6 +231,7 @@ class _Collector:
     root: Path
     inference_stems: frozenset[str]
     scope: AliasScope
+    experiment_folders: frozenset[str]
     diagnostics: list[Diagnostic] = field(default_factory=list[Diagnostic])
     invalid: set[str] = field(default_factory=set[str])
     broken: set[str] = field(default_factory=set[str])
@@ -221,6 +244,9 @@ class _Collector:
     )
     datasets: dict[DatasetId, SourceSpec[DatasetFile]] = field(default_factory=dict[DatasetId, SourceSpec[DatasetFile]])
     evals: dict[EvalId, SourceSpec[EvalSpec]] = field(default_factory=dict[EvalId, SourceSpec[EvalSpec]])
+    experiments: dict[ExperimentId, SourceSpec[ExperimentSpec]] = field(
+        default_factory=dict[ExperimentId, SourceSpec[ExperimentSpec]]
+    )
     flows: dict[str, _Parts[FlowSpec]] = field(default_factory=dict[str, _Parts[FlowSpec]])
     inferences: dict[str, _Parts[InferenceSpec]] = field(default_factory=dict[str, _Parts[InferenceSpec]])
     nodes: list[tuple[_File, SourceSpec[NodeSpec]]] = field(default_factory=list[tuple[_File, SourceSpec[NodeSpec]]])
@@ -240,9 +266,19 @@ class _Collector:
             self._check_builder(flow)
         for inference in self.inferences.values():
             self._check_builder(inference)
-        flows = {
-            FlowId(name): LoadedFlow(FlowId(name), parts.folder, parts.source, parts.builder_path, owned[parts.folder])
-            for name, parts in self._unique(self.flows).items()
+        project_flows = {
+            folder: parts for folder, parts in self.flows.items() if not _is_arm(folder, self.experiment_folders)
+        }
+        flows = {FlowId(name): _loaded_flow(parts, owned) for name, parts in self._unique(project_flows).items()}
+        experiments = {
+            key: LoadedExperiment(
+                experiment_id=key,
+                folder=posixpath.dirname(source.path),
+                source=source,
+                arms=_arms(posixpath.dirname(source.path), self.flows, owned),
+                notes=self.texts.get(posixpath.join(posixpath.dirname(source.path), EXPERIMENT_NOTES)),
+            )
+            for key, source in self.experiments.items()
         }
         inferences = {
             InferenceId(name): LoadedInference(
@@ -271,6 +307,7 @@ class _Collector:
             invalid_paths=frozenset(self.invalid),
             broken_ids=frozenset(self.broken),
             aliases={path: aliases for path, aliases in self.aliases.items() if aliases},
+            experiments=experiments,
         )
         return LoadResult(project, tuple(self.diagnostics))
 
@@ -341,6 +378,10 @@ class _Collector:
 
     def collect_eval(self, file: _File, document: YamlDocument, digest: str) -> None:
         self._register(self.evals, EvalId(file.entity), self._validated(EVAL_ADAPTER, file, document, digest))
+
+    def collect_experiment(self, file: _File, document: YamlDocument, digest: str) -> None:
+        source = self._validated(EXPERIMENT_ADAPTER, file, document, digest)
+        self._register(self.experiments, ExperimentId(file.entity), source)
 
     def collect_agent(self, file: _File, document: YamlDocument, digest: str) -> None:
         self._register(self.agents, AgentId(file.entity), self._validated(AGENT_ADAPTER, file, document, digest))
@@ -446,6 +487,25 @@ class _Collector:
         self._register(tables[owner], NodeId(file.entity), source)
 
 
+def _is_arm(flow_folder: str, experiment_folders: frozenset[str]) -> bool:
+    owner = arm_experiment_folder(flow_folder)
+    return owner is not None and owner in experiment_folders
+
+
+def _loaded_flow(parts: _Parts[FlowSpec], owned: Mapping[str, _NodeTable]) -> LoadedFlow:
+    return LoadedFlow(FlowId(parts.name), parts.folder, parts.source, parts.builder_path, owned[parts.folder])
+
+
+def _arms(
+    experiment_folder: str, flows: Mapping[str, _Parts[FlowSpec]], owned: Mapping[str, _NodeTable]
+) -> Mapping[ArmId, LoadedFlow]:
+    return {
+        ArmId(parts.name): _loaded_flow(parts, owned)
+        for folder, parts in sorted(flows.items())
+        if arm_experiment_folder(folder) == experiment_folder
+    }
+
+
 def _is_spec_file(relative: str, data: bytes) -> bool:
     return relative == PROJECT_FILE or relative != LOCK_FILE and AQVEN_HEADER.search(data) is not None
 
@@ -474,6 +534,7 @@ YAML_HANDLERS: Final[Mapping[SpecKind, _YamlHandler]] = {
     SpecKind.NODE: _Collector.collect_node,
     SpecKind.DATASET: _Collector.collect_dataset,
     SpecKind.EVAL: _Collector.collect_eval,
+    SpecKind.EXPERIMENT: _Collector.collect_experiment,
     SpecKind.INFERENCE: _Collector.collect_inference,
     SpecKind.AGENT: _Collector.collect_agent,
     SpecKind.TOOL: _Collector.collect_tool,

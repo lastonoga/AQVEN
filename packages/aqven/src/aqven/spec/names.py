@@ -38,6 +38,9 @@ ModelString = NewType("ModelString", str)
 McpServerId = NewType("McpServerId", str)
 DatasetId = NewType("DatasetId", str)
 EvalId = NewType("EvalId", str)
+ExperimentId = NewType("ExperimentId", str)
+ArmId = NewType("ArmId", str)
+VariantId = NewType("VariantId", str)
 SecretRef = NewType("SecretRef", str)
 ProviderName = NewType("ProviderName", str)
 CodeRef = NewType("CodeRef", str)
@@ -54,6 +57,7 @@ class SpecKind(StrEnum):
     NODE = "Node"
     DATASET = "Dataset"
     EVAL = "Eval"
+    EXPERIMENT = "Experiment"
     INFERENCE = "Inference"
     AGENT = "Agent"
     TOOL = "Tool"
@@ -162,6 +166,21 @@ class MetricKind(StrEnum):
     BINARY = "binary"
     ORDINAL = "ordinal"
     CONTINUOUS = "continuous"
+
+
+class MetricDirection(StrEnum):
+    HIGHER_IS_BETTER = "higher_is_better"
+    LOWER_IS_BETTER = "lower_is_better"
+
+
+class SeriesMetric(StrEnum):
+    SUCCESS_RATE = "success_rate"
+    COST_USD = "cost_usd"
+    COST_OF_PASS = "cost_of_pass"
+    LATENCY_P50_MS = "latency_p50_ms"
+    LATENCY_P95_MS = "latency_p95_ms"
+    SCHEMA_VALID_FIRST_TRY = "schema_valid_first_try"
+    INFRA_ERROR_RATE = "infra_error_rate"
 
 
 class GateAction(StrEnum):

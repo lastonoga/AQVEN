@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "FieldName": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fields": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/FieldName"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fields"
+    }
+  },
+  "title": "ExpectedParams",
+  "type": "object"
+}

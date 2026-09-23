@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "description": "What the experiment runs: a project flow, an arm of this experiment, or a range of top-level nodes.\n\nExactly one of ``flow`` and ``arm`` is set. ``from`` and ``to`` narrow the run to a contiguous range of\ntop-level nodes; nodes before the range take their outputs from the case ``node_outputs``.",
+  "properties": {
+    "arm": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Arm"
+    },
+    "flow": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Flow"
+    },
+    "from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "From"
+    },
+    "to": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "To"
+    }
+  },
+  "title": "ExperimentSubject",
+  "type": "object"
+}

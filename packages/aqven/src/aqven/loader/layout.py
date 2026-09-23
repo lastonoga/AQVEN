@@ -20,6 +20,10 @@ ROLE_KINDS: Final[Mapping[str, SpecKind]] = {"node": SpecKind.NODE, "inference":
 BUILDER_ROLES: Final[Mapping[str, SpecKind]] = {"inference": SpecKind.INFERENCE}
 FLOW_BUILDER: Final = "flow.py"
 FLOW_FILES: Final = frozenset({"flow.yaml", "flow.yml", FLOW_BUILDER})
+EXPERIMENT_FILES: Final = frozenset({"experiment.yaml", "experiment.yml"})
+EXPERIMENT_NOTES: Final = "experiment.md"
+ARMS_FOLDER: Final = "arms"
+FOLDER_NAMED_FILES: Final = FLOW_FILES | EXPERIMENT_FILES
 FLOW_PATH_PREFIX: Final = "@flow/"
 ROOT_PATH_PREFIX: Final = "@root/"
 CODE_FUNCTION_SEPARATOR: Final = ":"
@@ -31,8 +35,11 @@ INFERENCE_TEXT_KEY: Final = re.compile(
 def expected_kind(path: str) -> SpecKind | None:
     if path == PROJECT_FILE:
         return SpecKind.PROJECT
-    if PurePosixPath(path).name in FLOW_FILES:
+    name = PurePosixPath(path).name
+    if name in FLOW_FILES:
         return SpecKind.FLOW
+    if name in EXPERIMENT_FILES:
+        return SpecKind.EXPERIMENT
     return ROLE_KINDS.get(entity_role(path))
 
 
@@ -44,7 +51,7 @@ def builder_kind(path: str) -> SpecKind | None:
 
 def entity_id(path: str) -> str:
     pure = PurePosixPath(path)
-    return pure.parent.name if pure.name in FLOW_FILES else pure.name.partition(ID_SEPARATOR)[0]
+    return pure.parent.name if pure.name in FOLDER_NAMED_FILES else pure.name.partition(ID_SEPARATOR)[0]
 
 
 def entity_role(path: str) -> str:
@@ -75,6 +82,13 @@ def ancestors(folder: str) -> Iterator[str]:
         yield current
         current = posixpath.dirname(current)
     yield ""
+
+
+def arm_experiment_folder(flow_folder: str) -> str | None:
+    arms = posixpath.dirname(flow_folder)
+    if posixpath.basename(arms) != ARMS_FOLDER:
+        return None
+    return posixpath.dirname(arms)
 
 
 def within(path: str, folder: str) -> bool:

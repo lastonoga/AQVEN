@@ -14,7 +14,7 @@ cases:
       kind: "marketplace"
       marketplace: "amazon"
       order_ref: "113-4829175-6630201"
-    message: "Hello! The Lumen Flow 5 m strip arrived in a dented box. Once connected it flickers near the controller, and the controller turns warm after half an hour. Could you tell me how to wire the controller properly — maybe I did something wrong? Or was the strip damaged in delivery? I am attaching a photo of the controller and the invoice; the order was placed on 03/09/2027."
+    message: "Hello! The Lumen Flow 5 m strip arrived in a dented box. Since I connected it exactly as the manual says, it has been flickering near the controller for three days, and after half an hour the controller is hot to the touch. I am afraid to leave it switched on. The strip is faulty and I would like it resolved under warranty. I am attaching a photo of the controller and the invoice; the order was placed on 3 September 2027."
     order_id: "LUM-20260903"
     product:
       sku: "SKU-LS5M01"
@@ -40,8 +40,134 @@ cases:
   context:
     date: "2026-09-18"
     tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "Hello! The Lumen Flow 5 m strip arrived in a dented box. Since I connected it exactly as the manual says, it has been flickering near the controller for three days, and after half an hour the controller is hot to the touch. I am afraid to leave it switched on. The strip is faulty and I would like it resolved under warranty. I am attaching a photo of the controller and the invoice; the order was placed on 3 September 2027."
+      channel: "amazon"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "dead_segment"
+        label: "A section of the strip does not light"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "app_offline"
+        label: "Does not respond in the app"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields:
+      - name: "return_reason"
+        type: "Text"
+        description: "Return reason the customer picked on Amazon"
+        maxLength: 20
+        enum:
+        - "defective"
+        - "damaged"
+        - "not_as_described"
+      - name: "asin"
+        type: "Text?"
+        description: "Amazon ASIN of the product; null when the case does not carry one"
+        maxLength: 10
+        pattern: "^B0[A-Z0-9]{8}$"
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Lumen Flow Strip 5 m has flickered near the controller for three days after an install done by the manual, and the controller turns hot to the touch after half an hour; the customer is afraid to leave it on and asks for a warranty fix. The box arrived dented. A photo of the controller and the invoice are attached."
+      category: "light_strip"
+      observations:
+      - key: "flicker"
+        value: "Flicker near the controller for three days"
+      - key: "overheating"
+        value: "The controller is hot to the touch after half an hour"
+      - key: "package_damaged"
+        value: "The box arrived dented"
+      safety_risk: true
+      intake_extra:
+        value:
+          return_reason: "defective"
+          asin: null
+        fields:
+        - name: "return_reason"
+          type: "Text"
+          description: "Return reason the customer picked on Amazon"
+          maxLength: 20
+          enum:
+          - "defective"
+          - "damaged"
+          - "not_as_described"
+        - name: "asin"
+          type: "Text?"
+          description: "Amazon ASIN of the product; null when the case does not carry one"
+          maxLength: 10
+          pattern: "^B0[A-Z0-9]{8}$"
+        schema_hash: "sha256-809782d2844a12ecfc87fbfc182e065465fd24b20c245055b5f1990ae5086b78"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_strip0flck"
+        title: "Flow strip flicker"
+        text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+      - chunk_id: "kb_ctrlheat01"
+        title: "Controller heat"
+        text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+      - chunk_id: "kb_credit2026"
+        title: "Store credit under warranty"
+        text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+      - chunk_id: "kb_amznsupp01"
+        title: "Amazon orders"
+        text: "For orders placed on Amazon, replacements and reshipments are arranged by Lumen support in Amazon messages; the customer does not need to open a return on Amazon first."
+      policies:
+      - policy_id: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+        title: "Store credit under warranty"
+        text: "Lumen Plus customers receive store credit of up to €20 for a faulty product within the warranty period."
+    route:
+      resolution:
+        action: "store_credit"
+        summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+        credit:
+          amount_minor: 1500
+          currency: "eur"
+        policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    panel:
+      winner:
+        text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €15.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+        citations:
+        - chunk_id: "kb_ctrlheat01"
+          quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+        - chunk_id: "kb_credit2026"
+          quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+      verdict:
+        verdict:
+          rationale: "Candidate 1 grounds the safety step and the credit terms in the chunks; candidate 0 skips the unplug warning, and candidate 2 tells the customer to keep the strip running."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 4
+          - criterion: "tone"
+            score: 4
+          best_index: 1
+        tie_broken: false
+        spread: 1
   metadata:
     split: "train"
+  tags:
+    lamp_kind: "smart_wifi"
+    channel: "amazon"
+    action: "store_credit"
+    length: "long"
+    regression: "no"
+  expected_output:
+    intent: "defect"
 - name: "bulb_app_offline_advice"
   inputs:
     customer:
@@ -67,6 +193,9 @@ cases:
     voice_note: null
     video: null
     invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
   node_outputs:
     prepare:
       message: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up."
@@ -91,11 +220,64 @@ cases:
       - "words"
       - "evidence"
       - "risk"
-  context:
-    date: "2026-09-18"
-    tenant_id: "__package__"
+    triage:
+      summary: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows the status “offline”, although it still lights up. The customer asks how to get it back into the app."
+      category: "smart_bulb"
+      observations:
+      - key: "app_offline"
+        value: "The bulb shows offline in the app since the router was replaced"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_bulbwifi24"
+        title: "Connecting a Glow bulb to Wi-Fi"
+        text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      - chunk_id: "kb_bulbreset5"
+        title: "Resetting a Glow bulb"
+        text: "To reset a Glow bulb, switch it on and off five times in a row, one second apart. The bulb blinks three times and goes into pairing mode."
+      policies: []
+    route:
+      resolution:
+        action: "advice"
+        summary: "A knowledge base answer with no compensation"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "Sorry about the trouble with your Glow E27. After a router change the bulb has to be added to the app again: remove it from the device list and pair it once more on your 2.4 GHz network. To put it into pairing mode, switch it on and off five times, one second apart, until it blinks three times. If it still shows offline after that, we will send a replacement."
+        citations:
+        - chunk_id: "kb_bulbwifi24"
+          quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+        - chunk_id: "kb_bulbreset5"
+          quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+      verdict:
+        verdict:
+          rationale: "Candidate 0 gives the re-pairing and the reset steps from the chunks in order; the others only mention the reset. No judge weighed the closing offer."
+          scores:
+          - criterion: "grounded"
+            score: 4
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 4
+          best_index: 0
+        tie_broken: false
+        spread: 1
   metadata:
     split: "dev"
+    regression_of: "The polished reply kept the draft's offer of a replacement, which an advice-only decision does not give"
+  tags:
+    lamp_kind: "smart_wifi"
+    channel: "storefront"
+    action: "advice"
+    length: "short"
+    regression: "yes"
+  expected_output:
+    intent: "question"
 - name: "lamp_crushed_box_reship"
   inputs:
     customer:
@@ -125,5 +307,1215 @@ cases:
   context:
     date: "2026-09-18"
     tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; the customer attached a photo of the packaging."
+      channel: "ozon"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields:
+      - name: "posting_number"
+        type: "Text"
+        description: "Ozon shipment number"
+        maxLength: 40
+      - name: "claim_type"
+        type: "Text"
+        description: "Claim type the customer picked on Ozon"
+        maxLength: 10
+        enum:
+        - "defect"
+        - "damage"
+        - "missing"
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+      category: "floor_lamp"
+      observations:
+      - key: "package_damaged"
+        value: "The box arrived crushed"
+      - key: "cracked_shade"
+        value: "The shade is cracked"
+      safety_risk: false
+      intake_extra:
+        value:
+          posting_number: "0187432915-0041-1"
+          claim_type: "damage"
+        fields:
+        - name: "posting_number"
+          type: "Text"
+          description: "Ozon shipment number"
+          maxLength: 40
+        - name: "claim_type"
+          type: "Text"
+          description: "Claim type the customer picked on Ozon"
+          maxLength: 10
+          enum:
+          - "defect"
+          - "damage"
+          - "missing"
+        schema_hash: "sha256-d70147c440a50e463d30d0cba614c3f66141092ba97ddf9cfdfe3e97c2391191"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_shipdmg001"
+        title: "Damage in delivery"
+        text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        title: "Ozon orders"
+        text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+      policies:
+      - policy_id: "c2e8f4a6-1b3d-4f5e-8a7c-6d9b0e2f4a13"
+        title: "Reshipment after delivery damage"
+        text: "An order damaged in delivery, or one with missing items, is shipped again at Lumen's expense once the customer confirms what arrived."
+    route:
+      resolution:
+        action: "reship"
+        summary: "The order is shipped again at the store's expense"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense, and a courier will collect the damaged lamp. You can follow the new shipment in your account on __package__.example."
+        citations:
+        - chunk_id: "kb_shipdmg001"
+          quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      verdict:
+        verdict:
+          rationale: "Candidate 2 states the reshipment and the courier pickup from the chunks; candidate 0 asks for a marketplace claim the chunks say is not needed, candidate 1 is curt."
+          scores:
+          - criterion: "grounded"
+            score: 4
+          - criterion: "helpful"
+            score: 4
+          - criterion: "tone"
+            score: 4
+          best_index: 2
+        tie_broken: false
+        spread: 1
   metadata:
     split: "test"
+    regression_of: "The reply in the marketplace chat sent the customer to the store website"
+  tags:
+    lamp_kind: "mains"
+    channel: "ozon"
+    action: "reship"
+    length: "short"
+    regression: "yes"
+  expected_output:
+    intent: "delivery"
+- name: "nova_runtime_advice"
+  inputs:
+    customer:
+      customer_id: "cus_2h7j4k9l1m3n"
+      display_name: "Priya Nair"
+      email: "priya.nair@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/nova-cordless"
+    message: "My Nova Cordless table lamp only lasts about six hours now before it switches off. I use it at full brightness on the terrace in the evening. Is the battery faulty? I bought it in spring."
+    order_id: "LUM-20260412"
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "battery"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "My Nova Cordless table lamp only lasts about six hours now before it switches off. I use it at full brightness on the terrace in the evening. Is the battery faulty? I bought it in spring."
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Nova Cordless table lamp, bought in spring, lasts about six hours at full brightness before it switches off; the customer uses it on the terrace in the evenings and asks whether the battery is faulty."
+      category: "desk_lamp"
+      observations:
+      - key: "usage_question"
+        value: "Asks whether six hours at full brightness means a faulty battery"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_novabatt01"
+        title: "Nova battery life"
+        text: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness. Battery capacity falls to about 80% after 500 charge cycles; that is normal wear, not a defect."
+      - chunk_id: "kb_novachrg02"
+        title: "Charging a Nova lamp"
+        text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+      - chunk_id: "kb_warranty2y"
+        title: "Warranty terms"
+        text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+      policies: []
+    route:
+      resolution:
+        action: "advice"
+        summary: "A knowledge base answer with no compensation"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "Thank you for your question. At full brightness a fully charged Nova lamp lights for about 6 hours, so what you see is expected; at 30% brightness it lasts up to 40 hours. If you would rather have a longer runtime, we can offer a refund."
+        citations:
+        - chunk_id: "kb_novabatt01"
+          quote: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness."
+      verdict:
+        verdict:
+          rationale: "Candidate 0 answers with the runtime figures from the chunk; candidate 1 guesses at a battery fault, candidate 2 only explains charging."
+          scores:
+          - criterion: "grounded"
+            score: 4
+          - criterion: "helpful"
+            score: 4
+          - criterion: "tone"
+            score: 4
+          best_index: 0
+        tie_broken: false
+        spread: 1
+  metadata:
+    regression_of: "The reply offered a refund for battery life that matches the specification"
+  tags:
+    lamp_kind: "rechargeable"
+    channel: "storefront"
+    action: "advice"
+    length: "short"
+    regression: "yes"
+  expected_output:
+    intent: "question"
+- name: "nova_no_charge_replacement"
+  inputs:
+    customer:
+      customer_id: "cus_5r8t1y4u7i0o"
+      display_name: "Tom Becker"
+      email: null
+      tier: "standard"
+      locale: "en-US"
+    origin:
+      kind: "marketplace"
+      marketplace: "amazon"
+      order_ref: "114-7731205-4418266"
+    message: "Hi, I received the Nova Cordless lamp as a birthday present two months ago and it worked fine until last week. Now it will not charge at all. I tried the USB-C cable that came in the box and also the cable from my phone, with two different 5 V adapters, and the little ring at the base never lights up, neither amber nor green. The lamp stays dead. I have not dropped it and it has never been outside. Can you help? I would like a working lamp, it was a gift."
+    order_id: null
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "no_charge"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "Hi, I received the Nova Cordless lamp as a birthday present two months ago and it worked fine until last week. Now it will not charge at all. I tried the USB-C cable that came in the box and also the cable from my phone, with two different 5 V adapters, and the little ring at the base never lights up, neither amber nor green. The lamp stays dead. I have not dropped it and it has never been outside. Can you help? I would like a working lamp, it was a gift."
+      channel: "amazon"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields:
+      - name: "return_reason"
+        type: "Text"
+        description: "Return reason the customer picked on Amazon"
+        maxLength: 20
+        enum:
+        - "defective"
+        - "damaged"
+        - "not_as_described"
+      - name: "asin"
+        type: "Text?"
+        description: "Amazon ASIN of the product; null when the case does not carry one"
+        maxLength: 10
+        pattern: "^B0[A-Z0-9]{8}$"
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Nova Cordless lamp, a gift two months ago, stopped charging last week: with the original USB-C cable, a second cable and two 5 V adapters the charging ring never lights and the lamp stays off. It was not dropped and never used outdoors. The customer asks for a working lamp."
+      category: "desk_lamp"
+      observations:
+      - key: "no_power"
+        value: "The lamp stays off and the charging ring never lights with two cables and two adapters"
+      safety_risk: false
+      intake_extra:
+        value:
+          return_reason: "defective"
+          asin: "B0CX7NOVA1"
+        fields:
+        - name: "return_reason"
+          type: "Text"
+          description: "Return reason the customer picked on Amazon"
+          maxLength: 20
+          enum:
+          - "defective"
+          - "damaged"
+          - "not_as_described"
+        - name: "asin"
+          type: "Text?"
+          description: "Amazon ASIN of the product; null when the case does not carry one"
+          maxLength: 10
+          pattern: "^B0[A-Z0-9]{8}$"
+        schema_hash: "sha256-809782d2844a12ecfc87fbfc182e065465fd24b20c245055b5f1990ae5086b78"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_novachrg02"
+        title: "Charging a Nova lamp"
+        text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      - chunk_id: "kb_amznsupp01"
+        title: "Amazon orders"
+        text: "For orders placed on Amazon, replacements and reshipments are arranged by Lumen support in Amazon messages; the customer does not need to open a return on Amazon first."
+      policies:
+      - policy_id: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model at Lumen's expense; safety faults are replaced without a repair attempt."
+    route:
+      resolution:
+        action: "replacement"
+        summary: "Replacement of the Nova Cordless under warranty: the charging board does not respond"
+        credit: null
+        policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    panel:
+      winner:
+        text: "Thank you for checking with two cables and two adapters, that helps. If the ring at the base does not light at all with a known-good cable and adapter, the charging board is faulty, so we will replace your Nova lamp with the same model under warranty. The replacement ships within 3 working days, and a courier collects the faulty lamp when the new one arrives."
+        citations:
+        - chunk_id: "kb_novachrg02"
+          quote: "If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+        - chunk_id: "kb_replace0wr"
+          quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      verdict:
+        verdict:
+          rationale: "Candidate 2 ties the replacement to the charging check the customer already did and gives the shipping terms; candidate 0 asks them to retry the charger, candidate 1 has no timeline."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 4
+          best_index: 2
+        tie_broken: false
+        spread: 1
+  tags:
+    lamp_kind: "rechargeable"
+    channel: "amazon"
+    action: "replacement"
+    length: "long"
+    regression: "no"
+  expected_output:
+    intent: "defect"
+- name: "zigbee_pairing_advice"
+  inputs:
+    customer:
+      customer_id: "cus_8w3e6r9t2y5u"
+      display_name: "Sofia Lindqvist"
+      email: "sofia.l@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/glow-e14-zigbee"
+    message: "The new Glow E14 candle bulbs will not show up in the app. I added them over Wi-Fi like my other Glow bulbs but they never appear. What am I doing wrong?"
+    order_id: "LUM-20260827"
+    product:
+      sku: "SKU-GLE14Z"
+      name: "Lumen Glow E14 Candle Zigbee"
+      category: "smart_bulb"
+      lamp_kind: "smart_zigbee"
+    tags:
+    - "pairing"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "The new Glow E14 candle bulbs will not show up in the app. I added them over Wi-Fi like my other Glow bulbs but they never appear. What am I doing wrong?"
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "app_offline"
+        label: "Does not respond in the app"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The customer's new Glow E14 Candle Zigbee bulbs do not appear in the app; they tried adding them over Wi-Fi like their other Glow bulbs and ask what they are doing wrong."
+      category: "smart_bulb"
+      observations:
+      - key: "app_offline"
+        value: "The new bulbs never appear in the app"
+      - key: "usage_question"
+        value: "Asks what they are doing wrong when adding the bulbs"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_zigpair001"
+        title: "Pairing a Zigbee lamp with the Lumen Hub"
+        text: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi. Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds. Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+      - chunk_id: "kb_zigreset01"
+        title: "Resetting a Zigbee lamp"
+        text: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart. The lamp flashes twice and can be paired with the hub again."
+      - chunk_id: "kb_bulbwifi24"
+        title: "Connecting a Glow bulb to Wi-Fi"
+        text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      policies: []
+    route:
+      resolution:
+        action: "advice"
+        summary: "A knowledge base answer with no compensation"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "The Glow E14 Candle is a Zigbee bulb, so it pairs through the Lumen Hub rather than over Wi-Fi. Put the hub into pairing mode from the app and switch the bulb on within 60 seconds. If it still does not appear, reset it by switching it off and on six times, two seconds apart, and pair it again."
+        citations:
+        - chunk_id: "kb_zigpair001"
+          quote: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi."
+        - chunk_id: "kb_zigpair001"
+          quote: "Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds."
+        - chunk_id: "kb_zigreset01"
+          quote: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart."
+      verdict:
+        verdict:
+          rationale: "Candidate 1 names the real cause, hub pairing instead of Wi-Fi, and gives the steps from the chunks; candidates 0 and 2 repeat the Wi-Fi steps that do not apply to Zigbee."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 5
+          best_index: 1
+        tie_broken: false
+        spread: 0
+  tags:
+    lamp_kind: "smart_zigbee"
+    channel: "storefront"
+    action: "advice"
+    length: "short"
+    regression: "no"
+  expected_output:
+    intent: "question"
+- name: "strip_dead_segment_replacement"
+  inputs:
+    customer:
+      customer_id: "cus_4k6m8n0p2q4r"
+      display_name: "Marta Nowak"
+      email: "marta.nowak@example.com"
+      tier: "business"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders"
+    message: "We fitted three Lumen Flow 10 m strips along the shelves in our shop two weeks ago. Two work perfectly. On the third, the fourth section from the controller stays dark while everything after it lights normally. We unplugged and re-seated the connector at the start of that section twice, it clicks in firmly, and we restarted the strip from the app. The section is still dark. We need the shelves lit evenly before the weekend, so please tell us how quickly this can be sorted."
+    order_id: "LUM-20260902"
+    product:
+      sku: "SKU-LS10M1"
+      name: "Lumen Flow Strip 10 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "dead_segment"
+    - "business"
+    urgent: true
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "We fitted three Lumen Flow 10 m strips along the shelves in our shop two weeks ago. Two work perfectly. On the third, the fourth section from the controller stays dark while everything after it lights normally. We unplugged and re-seated the connector at the start of that section twice, it clicks in firmly, and we restarted the strip from the app. The section is still dark. We need the shelves lit evenly before the weekend, so please tell us how quickly this can be sorted."
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "dead_segment"
+        label: "A section of the strip does not light"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "app_offline"
+        label: "Does not respond in the app"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "One of three Flow Strip 10 m strips fitted in the customer's shop two weeks ago has its fourth section from the controller dark while later sections light; the connector was re-seated twice and clicks firmly, and a restart from the app did not help. The customer needs even lighting before the weekend."
+      category: "light_strip"
+      observations:
+      - key: "dead_segment"
+        value: "The fourth section from the controller stays dark while the sections after it light"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_segment0dk"
+        title: "Dark strip section"
+        text: "If one section of a Flow strip stays dark, check the connector at the start of that section. A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      policies:
+      - policy_id: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model at Lumen's expense; safety faults are replaced without a repair attempt."
+    route:
+      resolution:
+        action: "replacement"
+        summary: "Replacement of the Flow Strip 10 m under warranty: a section stays dark with a firm connector"
+        credit: null
+        policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    panel:
+      winner:
+        text: "Thank you for checking the connector so carefully. A section that stays dark with a firm connector is a defect, so we will replace the Flow Strip 10 m with the same model under warranty. The replacement ships within 3 working days, and a courier collects the faulty strip when the new one is delivered."
+        citations:
+        - chunk_id: "kb_segment0dk"
+          quote: "A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+        - chunk_id: "kb_replace0wr"
+          quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      verdict:
+        verdict:
+          rationale: "Candidates 0 and 1 both confirm the replacement from the chunks; candidate 0 also gives the shipping time the customer asked for. The judges split on tone, the tie-break chose candidate 0."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 4
+          best_index: 0
+        tie_broken: true
+        spread: 3
+  tags:
+    lamp_kind: "smart_wifi"
+    channel: "storefront"
+    action: "replacement"
+    length: "long"
+    regression: "no"
+  expected_output:
+    intent: "defect"
+- name: "dimmer_buzz_advice"
+  inputs:
+    customer:
+      customer_id: "cus_6y9u2i5o8p1a"
+      display_name: "Ivan Petrov"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "marketplace"
+      marketplace: "ozon"
+      order_ref: "0294817736-0012-1"
+    message: "I bought the Arc Desk lamp for my study. It is connected through the wall dimmer that was already in the flat. At full power it is fine, but when I turn the dimmer down it starts to buzz and the light flickers a little. My old filament lamp on the same dimmer never did this. I think the lamp is faulty and I want a new one."
+    order_id: null
+    product:
+      sku: "SKU-ARCD01"
+      name: "Lumen Arc Desk"
+      category: "desk_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "buzz"
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "I bought the Arc Desk lamp for my study. It is connected through the wall dimmer that was already in the flat. At full power it is fine, but when I turn the dimmer down it starts to buzz and the light flickers a little. My old filament lamp on the same dimmer never did this. I think the lamp is faulty and I want a new one."
+      channel: "ozon"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields:
+      - name: "posting_number"
+        type: "Text"
+        description: "Ozon shipment number"
+        maxLength: 40
+      - name: "claim_type"
+        type: "Text"
+        description: "Claim type the customer picked on Ozon"
+        maxLength: 10
+        enum:
+        - "defect"
+        - "damage"
+        - "missing"
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Arc Desk lamp, connected through an existing wall dimmer, buzzes and flickers slightly when dimmed down but works at full power; an old filament lamp on the same dimmer did not do this. The customer believes the lamp is faulty and wants a new one."
+      category: "desk_lamp"
+      observations:
+      - key: "flicker"
+        value: "Slight flicker and a buzz when the dimmer is turned down"
+      safety_risk: false
+      intake_extra:
+        value:
+          posting_number: "0294817736-0012-1"
+          claim_type: "defect"
+        fields:
+        - name: "posting_number"
+          type: "Text"
+          description: "Ozon shipment number"
+          maxLength: 40
+        - name: "claim_type"
+          type: "Text"
+          description: "Claim type the customer picked on Ozon"
+          maxLength: 10
+          enum:
+          - "defect"
+          - "damage"
+          - "missing"
+        schema_hash: "sha256-d70147c440a50e463d30d0cba614c3f66141092ba97ddf9cfdfe3e97c2391191"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_dimmer0cmp"
+        title: "Dimmers and mains lamps"
+        text: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible. A leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker at low settings; that is not a product defect, and replacing the dimmer solves it."
+      - chunk_id: "kb_warranty2y"
+        title: "Warranty terms"
+        text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+      policies:
+      - policy_id: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model at Lumen's expense; safety faults are replaced without a repair attempt."
+    route:
+      resolution:
+        action: "advice"
+        summary: "The buzz comes from a leading-edge dimmer, not from the lamp: advice with no compensation"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "Thank you for the details. A buzz and a slight flicker at low settings usually come from the dimmer rather than the lamp: dimmers made for filament bulbs are leading-edge, and Lumen mains lamps need a trailing-edge dimmer marked as LED-compatible. If the lamp still buzzes after that, we will send a replacement."
+        citations:
+        - chunk_id: "kb_dimmer0cmp"
+          quote: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible."
+      verdict:
+        verdict:
+          rationale: "Candidate 1 explains the dimmer mismatch from the chunk; candidate 0 treats it as a defect, candidate 2 suggests a different bulb for a lamp with a built-in LED."
+          scores:
+          - criterion: "grounded"
+            score: 4
+          - criterion: "helpful"
+            score: 4
+          - criterion: "tone"
+            score: 5
+          best_index: 1
+        tie_broken: false
+        spread: 1
+  metadata:
+    regression_of: "The reply promised a replacement for a buzz that the dimmer causes"
+  tags:
+    lamp_kind: "mains"
+    channel: "ozon"
+    action: "advice"
+    length: "long"
+    regression: "yes"
+  expected_output:
+    intent: "defect"
+- name: "hub_missing_mount_reship"
+  inputs:
+    customer:
+      customer_id: "cus_1z3x5c7v9b2n"
+      display_name: "Lukas Weber"
+      email: "lukas.weber@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "marketplace"
+      marketplace: "amazon"
+      order_ref: "302-5517820-9934117"
+    message: "The Lumen Hub arrived without the wall mount and the screws, although the box contents list shows them. Can you send them?"
+    order_id: null
+    product:
+      sku: "SKU-HUB001"
+      name: "Lumen Hub"
+      category: "accessory"
+      lamp_kind: null
+    tags:
+    - "missing_part"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "The Lumen Hub arrived without the wall mount and the screws, although the box contents list shows them. Can you send them?"
+      channel: "amazon"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields:
+      - name: "return_reason"
+        type: "Text"
+        description: "Return reason the customer picked on Amazon"
+        maxLength: 20
+        enum:
+        - "defective"
+        - "damaged"
+        - "not_as_described"
+      - name: "asin"
+        type: "Text?"
+        description: "Amazon ASIN of the product; null when the case does not carry one"
+        maxLength: 10
+        pattern: "^B0[A-Z0-9]{8}$"
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The Lumen Hub arrived without the wall mount and the screws listed in the box contents; the customer asks for them to be sent."
+      category: "accessory"
+      observations:
+      - key: "missing_part"
+        value: "The wall mount and the screws are missing from the box"
+      safety_risk: false
+      intake_extra:
+        value:
+          return_reason: "not_as_described"
+          asin: null
+        fields:
+        - name: "return_reason"
+          type: "Text"
+          description: "Return reason the customer picked on Amazon"
+          maxLength: 20
+          enum:
+          - "defective"
+          - "damaged"
+          - "not_as_described"
+        - name: "asin"
+          type: "Text?"
+          description: "Amazon ASIN of the product; null when the case does not carry one"
+          maxLength: 10
+          pattern: "^B0[A-Z0-9]{8}$"
+        schema_hash: "sha256-809782d2844a12ecfc87fbfc182e065465fd24b20c245055b5f1990ae5086b78"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_missing0pt"
+        title: "Missing parts"
+        text: "If an item or a part listed in the box contents is missing, Lumen ships the missing items again at its own expense; the customer keeps what arrived and does not need to return anything."
+      - chunk_id: "kb_amznsupp01"
+        title: "Amazon orders"
+        text: "For orders placed on Amazon, replacements and reshipments are arranged by Lumen support in Amazon messages; the customer does not need to open a return on Amazon first."
+      policies:
+      - policy_id: "c2e8f4a6-1b3d-4f5e-8a7c-6d9b0e2f4a13"
+        title: "Reshipment after delivery damage"
+        text: "An order damaged in delivery, or one with missing items, is shipped again at Lumen's expense once the customer confirms what arrived."
+    route:
+      resolution:
+        action: "reship"
+        summary: "The order is shipped again at the store's expense"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "Sorry that the wall mount and the screws were missing from your Lumen Hub. We will ship the missing items again at our expense; you keep what arrived and do not need to return anything. We arrange it here in Amazon messages, so there is no need to open a return on Amazon."
+        citations:
+        - chunk_id: "kb_missing0pt"
+          quote: "Lumen ships the missing items again at its own expense; the customer keeps what arrived and does not need to return anything."
+        - chunk_id: "kb_amznsupp01"
+          quote: "the customer does not need to open a return on Amazon first."
+      verdict:
+        verdict:
+          rationale: "Candidate 0 covers the reshipment and the Amazon side from the chunks; the others ask for a return that is not needed."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 4
+          best_index: 0
+        tie_broken: false
+        spread: 1
+  tags:
+    lamp_kind: "none"
+    channel: "amazon"
+    action: "reship"
+    length: "short"
+    regression: "no"
+  expected_output:
+    intent: "delivery"
+- name: "candle_flicker_credit"
+  inputs:
+    customer:
+      customer_id: "cus_9q2w4e6r8t0y"
+      display_name: "Emily Clarke"
+      email: "emily.clarke@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260611"
+    message: "Two of the four Glow E14 Candle Zigbee bulbs I bought in June have started to flicker every few minutes, even at full brightness. The other two on the same hub and the same circuit are fine, so I do not think it is the wiring. I have already reset both flickering bulbs and paired them again with the hub as your guide says, and the flicker came back within an hour. As a Plus member I understood I am covered. What can you do?"
+    order_id: "LUM-20260611"
+    product:
+      sku: "SKU-GLE14Z"
+      name: "Lumen Glow E14 Candle Zigbee"
+      category: "smart_bulb"
+      lamp_kind: "smart_zigbee"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "Two of the four Glow E14 Candle Zigbee bulbs I bought in June have started to flicker every few minutes, even at full brightness. The other two on the same hub and the same circuit are fine, so I do not think it is the wiring. I have already reset both flickering bulbs and paired them again with the hub as your guide says, and the flicker came back within an hour. As a Plus member I understood I am covered. What can you do?"
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "app_offline"
+        label: "Does not respond in the app"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "Two of four Glow E14 Candle Zigbee bulbs bought in June flicker every few minutes even at full brightness, while the other two on the same hub and circuit are fine; a reset and re-pairing did not help. The customer, a Lumen Plus member, asks what can be done under warranty."
+      category: "smart_bulb"
+      observations:
+      - key: "flicker"
+        value: "Two bulbs flicker every few minutes even at full brightness"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_credit2026"
+        title: "Store credit under warranty"
+        text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+      - chunk_id: "kb_zigreset01"
+        title: "Resetting a Zigbee lamp"
+        text: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart. The lamp flashes twice and can be paired with the hub again."
+      - chunk_id: "kb_warranty2y"
+        title: "Warranty terms"
+        text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+      policies:
+      - policy_id: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+        title: "Store credit under warranty"
+        text: "Lumen Plus customers receive store credit of up to €20 for a faulty product within the warranty period."
+    route:
+      resolution:
+        action: "store_credit"
+        summary: "Store credit of €12.00 under warranty for two flickering Glow E14 Candle bulbs"
+        credit:
+          amount_minor: 1200
+          currency: "eur"
+        policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    panel:
+      winner:
+        text: "Thank you for trying the reset and the pairing again, that rules out the setup. As a Lumen Plus member you are covered: we have issued store credit of up to €20 for the two flickering bulbs. The credit reaches your account within 24 hours and is valid for 12 months."
+        citations:
+        - chunk_id: "kb_credit2026"
+          quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+      verdict:
+        verdict:
+          rationale: "Candidate 2 acknowledges the troubleshooting already done and states the credit terms from the chunk; candidates 0 and 1 ask for another reset."
+          scores:
+          - criterion: "grounded"
+            score: 4
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 5
+          best_index: 2
+        tie_broken: false
+        spread: 1
+  metadata:
+    regression_of: "The reply named the €20 policy cap instead of the credit amount of the decision"
+  tags:
+    lamp_kind: "smart_zigbee"
+    channel: "storefront"
+    action: "store_credit"
+    length: "long"
+    regression: "yes"
+  expected_output:
+    intent: "defect"
+- name: "arc_floor_burning_smell_replacement"
+  inputs:
+    customer:
+      customer_id: "cus_3s5d7f9g1h3j"
+      display_name: "Daniel Moreau"
+      email: "daniel.moreau@example.com"
+      tier: "standard"
+      locale: "en-IE"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "Yesterday evening my Arc Floor lamp started to smell of burning plastic about twenty minutes after I switched it on. I turned it off straight away. The switch on the cable felt warm and there is a small brown mark on it. I have not used the lamp since. We have a toddler at home so I am worried. The lamp is five months old. What should I do?"
+    order_id: "LUM-20260419"
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "burning_smell"
+    - "safety"
+    urgent: true
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "Yesterday evening my Arc Floor lamp started to smell of burning plastic about twenty minutes after I switched it on. I turned it off straight away. The switch on the cable felt warm and there is a small brown mark on it. I have not used the lamp since. We have a toddler at home so I am worried. The lamp is five months old. What should I do?"
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The five-month-old Arc Floor lamp smelled of burning plastic about twenty minutes after it was switched on; the cable switch felt warm and has a small brown mark. The customer switched it off at once, has not used it since and is worried because of a toddler at home."
+      category: "floor_lamp"
+      observations:
+      - key: "burning_smell"
+        value: "A smell of burning plastic twenty minutes after switching on"
+      - key: "overheating"
+        value: "The switch on the cable felt warm and has a brown mark"
+      safety_risk: true
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_burnsmell1"
+        title: "Burning smell or sparks"
+        text: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again. Lumen replaces such a lamp under warranty without asking for a repair attempt."
+      - chunk_id: "kb_replace0wr"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      - chunk_id: "kb_warranty2y"
+        title: "Warranty terms"
+        text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+      policies:
+      - policy_id: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+        title: "Replacement under warranty"
+        text: "A faulty product within the warranty period is replaced with the same model at Lumen's expense; safety faults are replaced without a repair attempt."
+    route:
+      resolution:
+        action: "replacement"
+        summary: "Replacement of the Arc Floor under warranty for a burning smell at the cable switch"
+        credit: null
+        policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    panel:
+      winner:
+        text: "You did the right thing by switching the lamp off. Please unplug it at the wall and do not use it again. We will replace your Arc Floor with the same model under warranty, without asking for any repair attempt. The replacement ships within 3 working days, and a courier collects the old lamp when the new one is delivered."
+        citations:
+        - chunk_id: "kb_burnsmell1"
+          quote: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again."
+        - chunk_id: "kb_burnsmell1"
+          quote: "Lumen replaces such a lamp under warranty without asking for a repair attempt."
+        - chunk_id: "kb_replace0wr"
+          quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+      verdict:
+        verdict:
+          rationale: "Candidate 1 leads with the safety step and grounds the replacement in the chunks; candidate 0 suggests trying another socket, candidate 2 calls the smell normal."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 5
+          best_index: 1
+        tie_broken: false
+        spread: 0
+  tags:
+    lamp_kind: "mains"
+    channel: "storefront"
+    action: "replacement"
+    length: "long"
+    regression: "no"
+  expected_output:
+    intent: "defect"
+- name: "nova_gift_warranty_question"
+  inputs:
+    customer:
+      customer_id: "cus_7b9n1m3k5j7h"
+      display_name: "Chloe Martin"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/products/nova-cordless"
+    message: "I am giving a Nova Cordless lamp as a present. How long is the warranty, and can my friend use it without me?"
+    order_id: null
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "warranty"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  context:
+    date: "2026-09-18"
+    tenant_id: "__package__"
+  node_outputs:
+    prepare:
+      message: "I am giving a Nova Cordless lamp as a present. How long is the warranty, and can my friend use it without me?"
+      channel: "storefront"
+      signals:
+      - key: "no_power"
+        label: "Does not turn on"
+      - key: "flicker"
+        label: "Flickers"
+      - key: "overheating"
+        label: "Overheats"
+      - key: "burning_smell"
+        label: "Smells of burning"
+      - key: "cracked_shade"
+        label: "The shade is cracked"
+      - key: "package_damaged"
+        label: "The packaging is damaged"
+      - key: "missing_part"
+        label: "A part is missing"
+      - key: "usage_question"
+        label: "A question about use"
+      intake_fields: []
+      perspectives:
+      - "words"
+      - "evidence"
+      - "risk"
+    triage:
+      summary: "The customer is giving a Nova Cordless lamp as a present and asks how long the warranty lasts and whether the recipient can use it on their own."
+      category: "desk_lamp"
+      observations:
+      - key: "usage_question"
+        value: "Asks about the warranty length and whether a gift recipient can use it"
+      safety_risk: false
+      intake_extra:
+        value: null
+        fields: []
+        schema_hash: "sha256-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    search_kb:
+      chunks:
+      - chunk_id: "kb_warranty2y"
+        title: "Warranty terms"
+        text: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years. The warranty covers defects, not wear, drops or water damage. A gift recipient can use the warranty with the order number."
+      policies: []
+    route:
+      resolution:
+        action: "advice"
+        summary: "A knowledge base answer with no compensation"
+        credit: null
+        policy: null
+    panel:
+      winner:
+        text: "What a nice present. Every Lumen lamp, the Nova Cordless included, carries a 2-year warranty from the delivery date, and your friend can use it on their own with the order number. The warranty covers defects, not wear, drops or water damage."
+        citations:
+        - chunk_id: "kb_warranty2y"
+          quote: "Every Lumen lamp carries a 2-year warranty from the delivery date, and Lumen Plus extends it to 3 years."
+        - chunk_id: "kb_warranty2y"
+          quote: "A gift recipient can use the warranty with the order number."
+      verdict:
+        verdict:
+          rationale: "Candidate 0 answers both questions from the chunk; candidate 1 answers only the length, candidate 2 adds a Plus extension the customer does not have."
+          scores:
+          - criterion: "grounded"
+            score: 5
+          - criterion: "helpful"
+            score: 5
+          - criterion: "tone"
+            score: 4
+          best_index: 0
+        tie_broken: false
+        spread: 1
+  tags:
+    lamp_kind: "rechargeable"
+    channel: "storefront"
+    action: "advice"
+    length: "short"
+    regression: "no"
+  expected_output:
+    intent: "question"

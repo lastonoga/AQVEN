@@ -1,0 +1,303 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+flow: "judge_panel"
+cases:
+- name: "panel_strip_heat_clear"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m has flickered near the controller for three days, and the controller turns hot to the touch after half an hour; the customer is afraid to leave it on and asks for a warranty fix."
+    candidates:
+    - text: "Sorry about the flicker. Try restarting the strip from the Lumen app, that usually sorts it out. We have also added store credit to your account."
+      citations:
+      - chunk_id: "kb_strip0flck"
+        quote: "restart the strip from the Lumen app"
+    - text: "Thank you for the details. Please unplug the strip now and keep it off: a controller that is hot to the touch is a sign of a faulty power supply. Your store credit reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+    - text: "Flow controllers are rated for high temperatures, so some heat is normal. Keep using the strip and the flicker should settle within a week as the controller beds in."
+      citations: []
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    contest: "clear"
+    category: "light_strip"
+    winner_position: "middle"
+  expected_output:
+    winner:
+      text: "Thank you for the details. Please unplug the strip now and keep it off: a controller that is hot to the touch is a sign of a faulty power supply. Your store credit reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+- name: "panel_bulb_router_close"
+  inputs:
+    summary: "After the router was replaced, the Lumen Glow E27 smart bulb disappeared from the app and shows “offline”, although it still lights up. The customer asks how to get it back into the app."
+    candidates:
+    - text: "After a router change the bulb has to be added to the app again. Remove it from the device list and pair it once more."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    - text: "To reset the bulb, switch it on and off five times in a row, one second apart; it blinks three times when it is ready to pair."
+      citations:
+      - chunk_id: "kb_bulbreset5"
+        quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+    - text: "After a router change the bulb has to be added to the app again: remove it from the device list, then pair it once more on the 2.4 GHz network, since Glow bulbs do not work on 5 GHz. To put it into pairing mode, switch it on and off five times, one second apart, until it blinks three times."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "Glow bulbs work only on a 2.4 GHz network."
+      - chunk_id: "kb_bulbwifi24"
+        quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      - chunk_id: "kb_bulbreset5"
+        quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+    chunks:
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    - chunk_id: "kb_bulbreset5"
+      title: "Resetting a Glow bulb"
+      text: "To reset a Glow bulb, switch it on and off five times in a row, one second apart. The bulb blinks three times and goes into pairing mode."
+  tags:
+    contest: "close"
+    category: "smart_bulb"
+    winner_position: "last"
+  expected_output:
+    winner:
+      text: "After a router change the bulb has to be added to the app again: remove it from the device list, then pair it once more on the 2.4 GHz network, since Glow bulbs do not work on 5 GHz. To put it into pairing mode, switch it on and off five times, one second apart, until it blinks three times."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "Glow bulbs work only on a 2.4 GHz network."
+      - chunk_id: "kb_bulbwifi24"
+        quote: "After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+      - chunk_id: "kb_bulbreset5"
+        quote: "To reset a Glow bulb, switch it on and off five times in a row, one second apart."
+- name: "panel_crushed_lamp_clear"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    candidates:
+    - text: "We are sorry the lamp arrived damaged. Please keep the packaging and the photo. We will ship the order again at our expense, a courier will collect the damaged lamp, and there is no need to raise a separate claim on Ozon."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+    - text: "Please open a return on Ozon and send the lamp back. We will refund it once it reaches our warehouse."
+      citations: []
+    - text: "Damage in delivery happens. Photograph the box."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "If a product arrives damaged, keep the packaging and photograph it."
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+  tags:
+    contest: "clear"
+    category: "floor_lamp"
+    winner_position: "first"
+  expected_output:
+    winner:
+      text: "We are sorry the lamp arrived damaged. Please keep the packaging and the photo. We will ship the order again at our expense, a courier will collect the damaged lamp, and there is no need to raise a separate claim on Ozon."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+- name: "panel_nova_runtime_close"
+  inputs:
+    summary: "The Nova Cordless table lamp, bought in spring, lasts about six hours at full brightness before it switches off; the customer uses it on the terrace in the evenings and asks whether the battery is faulty."
+    candidates:
+    - text: "Six hours is quite normal for a cordless lamp. Charging it overnight with the cable from the box keeps the battery in good shape."
+      citations:
+      - chunk_id: "kb_novachrg02"
+        quote: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter."
+    - text: "It sounds like the battery has worn out early. We can replace the battery under warranty if you send the lamp in."
+      citations: []
+    - text: "What you see is expected: at full brightness a fully charged Nova lamp lights for about 6 hours, and at 30% brightness it lasts up to 40 hours. Lowering the brightness on the terrace will give you much longer evenings."
+      citations:
+      - chunk_id: "kb_novabatt01"
+        quote: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness."
+    chunks:
+    - chunk_id: "kb_novabatt01"
+      title: "Nova battery life"
+      text: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness. Battery capacity falls to about 80% after 500 charge cycles; that is normal wear, not a defect."
+    - chunk_id: "kb_novachrg02"
+      title: "Charging a Nova lamp"
+      text: "Charge a Nova lamp with the USB-C cable from the box and a 5 V adapter. The ring glows amber while charging and green when full. If the ring does not light at all with a known-good cable and adapter, the charging board is faulty and the lamp is replaced under warranty."
+  tags:
+    contest: "close"
+    category: "desk_lamp"
+    winner_position: "last"
+  expected_output:
+    winner:
+      text: "What you see is expected: at full brightness a fully charged Nova lamp lights for about 6 hours, and at 30% brightness it lasts up to 40 hours. Lowering the brightness on the terrace will give you much longer evenings."
+      citations:
+      - chunk_id: "kb_novabatt01"
+        quote: "A fully charged Nova lamp lights for up to 40 hours at 30% brightness and about 6 hours at full brightness."
+- name: "panel_zigbee_pairing_clear"
+  inputs:
+    summary: "The customer's new Glow E14 Candle Zigbee bulbs do not appear in the app; they tried adding them over Wi-Fi like their other Glow bulbs."
+    candidates:
+    - text: "Glow bulbs work only on a 2.4 GHz network, so check that your router has a 2.4 GHz band switched on and try again."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "Glow bulbs work only on a 2.4 GHz network."
+    - text: "The Glow E14 Candle is a Zigbee bulb, so it pairs through the Lumen Hub rather than over Wi-Fi. Put the hub into pairing mode from the app and switch the bulb on within 60 seconds. If it still does not appear, reset it by switching it off and on six times, two seconds apart."
+      citations:
+      - chunk_id: "kb_zigpair001"
+        quote: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi."
+      - chunk_id: "kb_zigpair001"
+        quote: "Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds."
+      - chunk_id: "kb_zigreset01"
+        quote: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart."
+    - text: "Remove the bulbs from the device list and pair them once more, the same way as your other Glow bulbs."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "remove it from the device list and pair it once more."
+    chunks:
+    - chunk_id: "kb_zigpair001"
+      title: "Pairing a Zigbee lamp with the Lumen Hub"
+      text: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi. Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds. Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+    - chunk_id: "kb_zigreset01"
+      title: "Resetting a Zigbee lamp"
+      text: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart. The lamp flashes twice and can be paired with the hub again."
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+  tags:
+    contest: "clear"
+    category: "smart_bulb"
+    winner_position: "middle"
+  expected_output:
+    winner:
+      text: "The Glow E14 Candle is a Zigbee bulb, so it pairs through the Lumen Hub rather than over Wi-Fi. Put the hub into pairing mode from the app and switch the bulb on within 60 seconds. If it still does not appear, reset it by switching it off and on six times, two seconds apart."
+      citations:
+      - chunk_id: "kb_zigpair001"
+        quote: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi."
+      - chunk_id: "kb_zigpair001"
+        quote: "Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds."
+      - chunk_id: "kb_zigreset01"
+        quote: "To reset a Zigbee lamp, switch it off and on six times, two seconds apart."
+- name: "panel_dark_segment_close"
+  inputs:
+    summary: "One Flow Strip 10 m in the customer's shop has its fourth section from the controller dark while later sections light; the connector was re-seated twice and clicks firmly. The customer needs even lighting before the weekend."
+    candidates:
+    - text: "A section that stays dark with a firm connector is a defect, so we will replace the strip under warranty. The replacement ships within 3 working days, and a courier collects the faulty strip when the new one is delivered."
+      citations:
+      - chunk_id: "kb_segment0dk"
+        quote: "A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+    - text: "Please check the connector at the start of the dark section once more. If it stays dark with a firm connector, the strip is replaced under warranty."
+      citations:
+      - chunk_id: "kb_segment0dk"
+        quote: "check the connector at the start of that section."
+      - chunk_id: "kb_segment0dk"
+        quote: "A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+    - text: "You can cut the strip just after the dark section and reconnect the rest with a Flow joiner, which keeps the shelves lit until the weekend."
+      citations: []
+    chunks:
+    - chunk_id: "kb_segment0dk"
+      title: "Dark strip section"
+      text: "If one section of a Flow strip stays dark, check the connector at the start of that section. A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+  tags:
+    contest: "close"
+    category: "light_strip"
+    winner_position: "first"
+  expected_output:
+    winner:
+      text: "A section that stays dark with a firm connector is a defect, so we will replace the strip under warranty. The replacement ships within 3 working days, and a courier collects the faulty strip when the new one is delivered."
+      citations:
+      - chunk_id: "kb_segment0dk"
+        quote: "A section that stays dark with a firm connector is a defect, and the strip is replaced under warranty."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+- name: "panel_burning_smell_clear"
+  inputs:
+    summary: "The five-month-old Arc Floor lamp smelled of burning plastic about twenty minutes after it was switched on; the cable switch felt warm and has a small brown mark. The customer has not used it since."
+    candidates:
+    - text: "Try the lamp in another socket and see whether the smell goes away; sometimes the wall socket is the cause."
+      citations: []
+    - text: "A slight smell is normal for a new lamp during the first hours of use and fades on its own."
+      citations: []
+    - text: "Please unplug the lamp at the wall and do not use it again. We replace a lamp that smells of burning under warranty without asking for any repair attempt, and the replacement ships within 3 working days."
+      citations:
+      - chunk_id: "kb_burnsmell1"
+        quote: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again."
+      - chunk_id: "kb_burnsmell1"
+        quote: "Lumen replaces such a lamp under warranty without asking for a repair attempt."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days"
+    chunks:
+    - chunk_id: "kb_burnsmell1"
+      title: "Burning smell or sparks"
+      text: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again. Lumen replaces such a lamp under warranty without asking for a repair attempt."
+    - chunk_id: "kb_replace0wr"
+      title: "Replacement under warranty"
+      text: "A faulty product within the warranty period is replaced with the same model. The replacement ships within 3 working days, and a courier collects the faulty unit when the new one is delivered."
+  tags:
+    contest: "clear"
+    category: "floor_lamp"
+    winner_position: "last"
+  expected_output:
+    winner:
+      text: "Please unplug the lamp at the wall and do not use it again. We replace a lamp that smells of burning under warranty without asking for any repair attempt, and the replacement ships within 3 working days."
+      citations:
+      - chunk_id: "kb_burnsmell1"
+        quote: "If a lamp smells of burning, sparks or smokes, switch it off at the wall and unplug it, and do not use it again."
+      - chunk_id: "kb_burnsmell1"
+        quote: "Lumen replaces such a lamp under warranty without asking for a repair attempt."
+      - chunk_id: "kb_replace0wr"
+        quote: "The replacement ships within 3 working days"
+- name: "panel_dimmer_buzz_close"
+  inputs:
+    summary: "The Arc Desk lamp, connected through an existing wall dimmer, buzzes and flickers slightly when dimmed down but works at full power; the customer believes it is faulty."
+    candidates:
+    - text: "This comes from the dimmer. Lumen mains lamps need a trailing-edge dimmer marked as LED-compatible."
+      citations:
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible."
+    - text: "The buzz at low settings comes from the dimmer, not from the lamp: a leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker. Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible, and replacing the dimmer solves it."
+      citations:
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "A leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker at low settings"
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible."
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "replacing the dimmer solves it."
+    - text: "A buzzing lamp is faulty; we will send you a new Arc Desk."
+      citations: []
+    chunks:
+    - chunk_id: "kb_dimmer0cmp"
+      title: "Dimmers and mains lamps"
+      text: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible. A leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker at low settings; that is not a product defect, and replacing the dimmer solves it."
+  tags:
+    contest: "close"
+    category: "desk_lamp"
+    winner_position: "middle"
+  expected_output:
+    winner:
+      text: "The buzz at low settings comes from the dimmer, not from the lamp: a leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker. Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible, and replacing the dimmer solves it."
+      citations:
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "A leading-edge dimmer made for filament bulbs makes LED lamps buzz or flicker at low settings"
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "Lumen mains lamps work with trailing-edge dimmers marked as LED-compatible."
+      - chunk_id: "kb_dimmer0cmp"
+        quote: "replacing the dimmer solves it."

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AQVEN Studio API",
-    "version": "0.0.0"
+    "version": "0.0.2"
   },
   "paths": {
     "/api/ready": {
@@ -579,11 +579,12 @@
     },
     "/api/flows": {
       "get": {
+        "summary": "List Flows",
         "operationId": "flow_list",
         "parameters": [
           {
-            "in": "query",
             "name": "status",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -598,8 +599,8 @@
             }
           },
           {
-            "in": "query",
             "name": "cursor",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -614,28 +615,28 @@
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_FlowSummary_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -728,34 +729,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Flows",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}": {
       "get": {
+        "summary": "Get Flow",
         "operationId": "flow_get",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -848,34 +849,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/spec": {
       "get": {
+        "summary": "Get Flow Spec",
         "operationId": "flow_spec",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowSpecView"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -968,26 +969,26 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Spec",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/ir": {
       "get": {
+        "summary": "Get Flow Ir",
         "operationId": "flow_ir",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           },
           {
-            "in": "header",
             "name": "if-none-match",
+            "in": "header",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1004,14 +1005,14 @@
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowIr"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1104,34 +1105,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Ir",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/schemas": {
       "get": {
+        "summary": "Get Flow Schemas",
         "operationId": "flow_schemas",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowSchemas"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1224,7 +1225,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Flow Schemas",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -1620,32 +1620,33 @@
     },
     "/api/flows/{flow_id}/nodes": {
       "get": {
+        "summary": "List Nodes",
         "operationId": "flow_nodes",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/NodeSummary"
                   },
-                  "title": "Response Flow Nodes",
-                  "type": "array"
+                  "title": "Response Flow Nodes"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1738,43 +1739,43 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Nodes",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/flows/{flow_id}/nodes/{node_id}": {
       "get": {
+        "summary": "Get Node",
         "operationId": "flow_node",
         "parameters": [
           {
-            "in": "path",
             "name": "flow_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Flow Id",
-              "type": "string"
+              "type": "string",
+              "title": "Flow Id"
             }
           },
           {
-            "in": "path",
             "name": "node_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Node Id",
-              "type": "string"
+              "type": "string",
+              "title": "Node Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NodeDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -1867,7 +1868,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Node",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -2441,11 +2441,12 @@
     },
     "/api/types": {
       "get": {
+        "summary": "List Types",
         "operationId": "type_list",
         "parameters": [
           {
-            "in": "query",
             "name": "cursor",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
@@ -2460,28 +2461,28 @@
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_TypeSummary_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -2574,34 +2575,34 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "List Types",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
     "/api/types/{type_id}": {
       "get": {
+        "summary": "Get Type",
         "operationId": "type_get",
         "parameters": [
           {
-            "in": "path",
             "name": "type_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Type Id",
-              "type": "string"
+              "type": "string",
+              "title": "Type Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TypeDetail"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -2694,7 +2695,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Type",
         "x-aqven-rest-only": "project files: the agent reads them directly"
       }
     },
@@ -3395,51 +3395,52 @@
     },
     "/api/runs/{run_id}/events/log": {
       "get": {
+        "summary": "Run Event Log",
         "operationId": "run_event_log",
         "parameters": [
           {
-            "in": "path",
             "name": "run_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Run Id",
-              "type": "string"
+              "type": "string",
+              "title": "Run Id"
             }
           },
           {
-            "in": "query",
             "name": "after_seq",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 0,
+              "type": "integer",
               "minimum": 0,
-              "title": "After Seq",
-              "type": "integer"
+              "default": 0,
+              "title": "After Seq"
             }
           },
           {
-            "in": "query",
             "name": "limit",
+            "in": "query",
             "required": false,
             "schema": {
-              "default": 20,
+              "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "default": 20,
+              "title": "Limit"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_RunEvent_"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -3532,7 +3533,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Run Event Log",
         "x-aqven-operation": "run_events"
       }
     },
@@ -7383,27 +7383,28 @@
     },
     "/api/dataset-batches": {
       "post": {
+        "summary": "Start Dataset Batch",
         "operationId": "dataset_batch_start",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DatasetBatchStartRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "202": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DatasetBatchRecord"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -7496,7 +7497,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Start Dataset Batch",
         "x-aqven-operation": "dataset_batch_start"
       },
       "get": {
@@ -7657,28 +7657,29 @@
     },
     "/api/dataset-batches/{batch_id}": {
       "get": {
+        "summary": "Get Dataset Batch",
         "operationId": "dataset_batch_get",
         "parameters": [
           {
-            "in": "path",
             "name": "batch_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Batch Id",
-              "type": "string"
+              "type": "string",
+              "title": "Batch Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DatasetBatchRecord"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -7771,7 +7772,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Dataset Batch",
         "x-aqven-operation": "dataset_batch_get"
       }
     },
@@ -8434,27 +8434,28 @@
     },
     "/api/eval-runs": {
       "post": {
+        "summary": "Start Eval Run",
         "operationId": "eval_run_start",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EvalRunRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "202": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EvalRunAccepted"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -8547,7 +8548,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Start Eval Run",
         "x-aqven-operation": "eval_run_start"
       },
       "get": {
@@ -8722,28 +8722,29 @@
     },
     "/api/eval-runs/{eval_run_id}": {
       "get": {
+        "summary": "Get Eval Run",
         "operationId": "eval_run_get",
         "parameters": [
           {
-            "in": "path",
             "name": "eval_run_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Eval Run Id",
-              "type": "string"
+              "type": "string",
+              "title": "Eval Run Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EvalRunRecord"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -8836,7 +8837,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Eval Run",
         "x-aqven-operation": "eval_run_get"
       }
     },
@@ -8990,28 +8990,29 @@
     },
     "/api/eval-runs/{eval_run_id}/gate": {
       "get": {
+        "summary": "Get Eval Gate",
         "operationId": "eval_gate",
         "parameters": [
           {
-            "in": "path",
             "name": "eval_run_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "title": "Eval Run Id",
-              "type": "string"
+              "type": "string",
+              "title": "Eval Run Id"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GateReport"
                 }
               }
-            },
-            "description": "Successful Response"
+            }
           },
           "400": {
             "content": {
@@ -9104,7 +9105,6 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Eval Gate",
         "x-aqven-operation": "eval_gate"
       }
     },
@@ -13286,6 +13286,12 @@
             "minimum": 0,
             "title": "Tokens Out"
           },
+          "thinking_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Thinking Tokens",
+            "default": 0
+          },
           "cache_read_tokens": {
             "type": "integer",
             "minimum": 0,
@@ -13307,11 +13313,6 @@
               }
             ],
             "title": "Cost Usd"
-          },
-          "thinking_tokens": {
-            "minimum": 0,
-            "title": "Thinking Tokens",
-            "type": "integer"
           }
         },
         "type": "object",
@@ -16124,6 +16125,20 @@
             ],
             "title": "Metadata"
           },
+          "tags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
           "expected_output": {
             "$ref": "#/components/schemas/JsonValue"
           }
@@ -16561,6 +16576,15 @@
           "E_SIM_PROMPT_RENDER",
           "E_SIM_OUTPUT_INVALID",
           "E_SIM_RUN_FAILED",
+          "E_ARM_UNKNOWN",
+          "E_RANGE_INVALID",
+          "E_VARIANT_INVALID",
+          "E_METRIC_UNKNOWN",
+          "E_EXPERIMENT_UNKNOWN",
+          "E_DATASET_MISMATCH",
+          "E_CASE_DUPLICATE",
+          "E_CASES_EMPTY",
+          "E_EXPECTED_MISSING",
           "W_PROMPT_SHADOWED",
           "W_GENERATED_STALE",
           "W_OUTPUT_MODE_RESOLVED",
@@ -16568,7 +16592,8 @@
           "W_SIM_NODE_UNREACHED",
           "W_PROMPT_VALUE_UNREADABLE",
           "W_TOOL_ARG_UNREACHABLE",
-          "W_CONTEXT_KEY_UNUSED"
+          "W_CONTEXT_KEY_UNUSED",
+          "W_PLAN_EXCEEDS_CASES"
         ],
         "title": "DiagnosticCode"
       },
@@ -18306,6 +18331,7 @@
           "Node",
           "Dataset",
           "Eval",
+          "Experiment",
           "Inference",
           "Agent",
           "Tool",
@@ -25102,6 +25128,25 @@
           "openai_compatible"
         ]
       },
+      "ProviderLimits": {
+        "properties": {
+          "rpm": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProviderLimits"
+      },
       "ProviderNameField": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9_-]{0,62}$"
@@ -25179,6 +25224,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/OpenRouterRouting"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderLimits"
               },
               {
                 "type": "null"
@@ -27141,6 +27196,7 @@
           "Node",
           "Dataset",
           "Eval",
+          "Experiment",
           "Inference",
           "Agent",
           "Tool",

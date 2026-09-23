@@ -1,0 +1,380 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "strip_late_parcel_then_flicker"
+  inputs:
+    customer:
+      customer_id: "cus_0a2s4d6f8g1h"
+      display_name: "Hannah Schulz"
+      email: "hannah.schulz@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260821"
+    message: "Hello, first of all the parcel was four days late. The tracking page said out for delivery on Monday, then nothing until Friday, and nobody answered the phone number on the courier's website. I nearly cancelled the order. Anyway, it did arrive in the end, the box was fine and everything was inside, so the delivery itself is not the reason I am writing. I installed the Flow Strip 5 m under the kitchen cabinets on Saturday, following the manual step by step, and it looked great for about a week. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness, and the colour jumps between warm and cold white. I have pushed the controller plug in until it clicked and restarted the strip from the app three times. Nothing changed. I would like the strip to work properly, what are my options?"
+    order_id: "LUM-20260821"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "defect"
+    opens_with: "delivery"
+  expected_output:
+    intent: "defect"
+- name: "nova_gift_story_no_charge"
+  inputs:
+    customer:
+      customer_id: "cus_1b3n5m7k9j2l"
+      display_name: "Oliver Grant"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "Hi there. I bought three Nova Cordless lamps as presents for my sisters in July and I have a couple of questions, sorry if this is long. Do you still sell the sage green colour? One of my sisters would like a second one for her bedroom and I could only see white and charcoal on the website. Also, is there a discount if you buy more than two at once, because I did not see one at checkout? The actual reason I am writing is my own lamp, which I kept for myself. It worked perfectly for the first month, but now it does not charge any more. I plug in the cable from the box and the ring at the base stays dark, no amber light at all, and I have tried two different adapters and a different socket. It was never dropped or taken outside. The lamp is now completely dead. Could you please help me with this one?"
+    order_id: "LUM-20260703"
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "charging"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "defect"
+    opens_with: "question"
+  expected_output:
+    intent: "defect"
+- name: "arc_desk_moving_house_switch_dead"
+  inputs:
+    customer:
+      customer_id: "cus_2c4v6b8n0m3q"
+      display_name: "Rafael Ortiz"
+      email: "rafael.ortiz@example.com"
+      tier: "plus"
+      locale: "en-US"
+    origin:
+      kind: "marketplace"
+      marketplace: "amazon"
+      order_ref: "113-2290541-7716843"
+    message: "Hello Lumen team. We moved into a new flat last month, and I want to say your Arc Desk survived the move better than half of our furniture, I wrapped it in the original box and it came out without a scratch. I set it up on my new desk and it worked fine for about two weeks. Last Thursday I switched it on in the morning and nothing happened. The bulb area stays dark, the switch on the cable clicks but does nothing. I checked the socket with a phone charger and it works, and I tried two other sockets in the flat with the same result. There was no smell, no noise, no flicker before it stopped, it just went dark from one day to the next. I have the order number from Amazon and the lamp is not even a year old. What should I do now?"
+    order_id: null
+    product:
+      sku: "SKU-ARCD01"
+      name: "Lumen Arc Desk"
+      category: "desk_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "no_power"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "defect"
+    opens_with: "other"
+  expected_output:
+    intent: "defect"
+- name: "glow_app_history_flicker"
+  inputs:
+    customer:
+      customer_id: "cus_3d5f7g9h1j4w"
+      display_name: "Mei Tanaka"
+      email: "mei.tanaka@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/glow-e27"
+    message: "Good afternoon. I have had Lumen Glow E27 bulbs for about a year and I have a long history with your app, so bear with me. Last winter the app kept logging me out every few days, then after an update in March the scenes I had built disappeared and I had to set them up again. In May I changed my internet provider and had to add every bulb to the app again, which took an evening, although your guide about removing them from the device list and pairing them once more did help. My new router has separate 2.4 GHz and 5 GHz networks and the bulbs are all on the 2.4 GHz one, as the guide says. Everything was fine through the summer. Now the actual problem: the bulb in the hallway has started to flicker quickly and constantly, even at full brightness and even when the app is closed and the phone is off. I reset it with the five on-off switches, it blinked three times and paired again, and ten minutes later it was flickering again. The other five bulbs on the same network are fine. I also swapped it with the one from the bedroom, and the flicker moved with the bulb, so it is the bulb and not the socket. I would like to know what you can do about this bulb. And, separately, will the app ever keep my scenes after an update?"
+    order_id: "LUM-20250918"
+    product:
+      sku: "SKU-GL27E1"
+      name: "Lumen Glow E27"
+      category: "smart_bulb"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    - "app"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "very_long"
+    intent: "defect"
+    opens_with: "question"
+  expected_output:
+    intent: "defect"
+- name: "arc_floor_praise_then_cracked_shade"
+  inputs:
+    customer:
+      customer_id: "cus_4e6r8t0y2u5e"
+      display_name: "Isabel Costa"
+      email: "isabel.costa@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260910"
+    message: "Dear Lumen, I have two of your Arc Desk lamps in my home office and I love them, they are the best lamps I have owned, and I recommended them to my whole team. That is why I ordered the Arc Floor for the living room, and I also wanted to ask whether you are planning a smaller table version in the same brass colour, because it would match perfectly next to the sofa. Unfortunately the Arc Floor arrived on Tuesday in a box that was crushed on one corner, and when I unpacked it the glass shade had a crack running all the way across. The base and the stand look fine and the lamp turns on, but I cannot use it with a cracked shade, it looks awful and I am worried about the glass. I kept the box and took photos of it and of the shade. How can we sort this out?"
+    order_id: "LUM-20260910"
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "shipping_damage"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "delivery"
+    opens_with: "question"
+  expected_output:
+    intent: "delivery"
+- name: "hub_setup_then_missing_mount"
+  inputs:
+    customer:
+      customer_id: "cus_5f7t9y1u3i6r"
+      display_name: "Jonas Berg"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "marketplace"
+      marketplace: "amazon"
+      order_ref: "028-6614090-2285317"
+    message: "Hi. I thought the Lumen Hub I got last week was broken, because I could not get it into pairing mode for two evenings and the light on it just kept blinking blue. I was about to ask for a new one. It turns out I had the app set to the wrong region, and once I changed that the hub paired straight away and my Zigbee bulbs appeared, so the hub works fine now and you can ignore that part. The problem is something else. When I went to mount the hub on the wall in the hallway, I realised the wall mount and the screws are not in the box at all. The contents list on the side of the box shows a wall mount and two screws with plugs, and the manual has a page about mounting it, but there was only the hub, the cable and the adapter inside. I do not want to return the hub, I just need the mount and the screws. Can you send them?"
+    order_id: null
+    product:
+      sku: "SKU-HUB001"
+      name: "Lumen Hub"
+      category: "accessory"
+      lamp_kind: null
+    tags:
+    - "missing_part"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "delivery"
+    opens_with: "defect"
+  expected_output:
+    intent: "delivery"
+- name: "strip_parcel_lost_concierge"
+  inputs:
+    customer:
+      customer_id: "cus_6g8y0u2i4o7t"
+      display_name: "Aisha Rahman"
+      email: "aisha.rahman@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260904"
+    message: "Hello, I am writing about order LUM-20260904 for a Flow Strip 10 m and I will try to explain everything, because this has taken a lot of my time already. The tracking page has said delivered since last Wednesday at 14:12, with a note that it was left with the building reception. I was at work, so on Wednesday evening I went down to our concierge desk, but they had no parcel for me and nothing in their logbook for that afternoon. On Thursday I asked my neighbours on the same floor and the floor below, in case it had been left with one of them, and nobody has seen it. On Friday the concierge checked the camera recording for the entrance for the whole afternoon, and no courier from your delivery company came into the building at all that day. The photo on the tracking page, which is supposed to prove delivery, shows a door that is not our building, it has a green frame and ours is grey. I have also tried to call the courier twice, and both times I was told to contact the sender. So I am contacting you. I still need the strip, it is for my daughter's room and I promised her it would be up before her birthday this Saturday. I do not want a refund, I just want the strip to actually arrive. Can you please look into this and tell me what happens next? I can send screenshots of the tracking page and the photo if that helps."
+    order_id: "LUM-20260904"
+    product:
+      sku: "SKU-LS10M1"
+      name: "Lumen Flow Strip 10 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "lost_parcel"
+    urgent: true
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "very_long"
+    intent: "delivery"
+    opens_with: "other"
+  expected_output:
+    intent: "delivery"
+- name: "strip_wrong_length_received"
+  inputs:
+    customer:
+      customer_id: "cus_7h9u1i3o5p8y"
+      display_name: "Mateo Silva"
+      email: "mateo.silva@example.com"
+      tier: "business"
+      locale: "en-US"
+    origin:
+      kind: "marketplace"
+      marketplace: "ozon"
+      order_ref: "0412290837-0019-1"
+    message: "Good morning. We are fitting out a small café and ordered six Lumen Flow strips for the counter and the shelves. I want to say first that the strips we have fitted so far look excellent and the app scenes work well for opening and closing time, so thank you for that. We are also thinking of ordering two Arc Floor lamps for the seating area next month and would like to know if there is a business price. But the reason for this message is the last parcel. We ordered the Flow Strip 10 m for the long counter, it says 10 m on our order and on the invoice, but the box we received is a Flow Strip 5 m, and the label inside the box says 5 m too. The strip is still sealed in its bag. A 5 m strip does not cover the counter, so we cannot use it. How do we get the 10 m strip we ordered?"
+    order_id: null
+    product:
+      sku: "SKU-LS10M1"
+      name: "Lumen Flow Strip 10 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "wrong_item"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "delivery"
+    opens_with: "other"
+  expected_output:
+    intent: "delivery"
+- name: "arc_desk_renovation_dimmer_question"
+  inputs:
+    customer:
+      customer_id: "cus_8j0i2o4p6a9u"
+      display_name: "Grace Okafor"
+      email: "grace.okafor@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/products/arc-desk"
+    message: "Hi, a bit of background first. We are renovating the study and pulling out the old lighting. The previous desk lamp was from another brand and it flickered like mad whenever the dimmer was below half, and it also buzzed, which drove me mad during calls. I do not want to repeat that. The electrician is coming next week to replace the switches and he asked me which dimmer to fit. I am thinking of buying your Arc Desk lamp for the new desk, and I would plug it into the socket that will be controlled by the new wall dimmer. So my question is simple: what kind of dimmer do I need so that the Arc Desk works without buzzing or flickering at low settings? The electrician mentioned leading-edge and trailing-edge and I have no idea which is which."
+    order_id: null
+    product:
+      sku: "SKU-ARCD01"
+      name: "Lumen Arc Desk"
+      category: "desk_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "dimmer"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "question"
+    opens_with: "defect"
+  expected_output:
+    intent: "question"
+- name: "zigbee_smart_home_planning"
+  inputs:
+    customer:
+      customer_id: "cus_9k1o3p5a7s0i"
+      display_name: "Ethan Walsh"
+      email: "ethan.walsh@example.com"
+      tier: "standard"
+      locale: "en-IE"
+    origin:
+      kind: "storefront"
+      page: "/products/glow-e14-candle-zigbee"
+    message: "Hello! I am planning the lighting for our new house before we move in and I would like to get it right the first time. The house has two floors. Downstairs is an open kitchen and living room of about 50 square metres, a hallway and a small toilet. Upstairs there are three bedrooms and a bathroom. I want to use the Glow E14 Candle Zigbee bulbs in the living room chandelier, which takes six of them, and in the two bedside lamps in the main bedroom. For the kitchen I am thinking of two Flow strips under the cabinets, and for the hallway ordinary mains lamps without anything smart. My partner is sceptical about smart lighting because at her old flat the bulbs kept dropping off the Wi-Fi, so I would like to avoid that. I have read that Zigbee is more reliable. My questions: do the Zigbee bulbs need the Lumen Hub, or can they connect to our Wi-Fi router directly like the Glow E27? Where should the hub go if the router is in the downstairs hallway and the main bedroom is upstairs at the far end of the house, about 15 metres away? And will the Flow strips in the kitchen talk to the hub too, or do they use Wi-Fi? I have not bought anything yet, I just want to plan the shopping list."
+    order_id: null
+    product:
+      sku: "SKU-GLE14Z"
+      name: "Lumen Glow E14 Candle Zigbee"
+      category: "smart_bulb"
+      lamp_kind: "smart_zigbee"
+    tags:
+    - "planning"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "very_long"
+    intent: "question"
+    opens_with: "other"
+  expected_output:
+    intent: "question"
+- name: "warranty_moving_abroad_question"
+  inputs:
+    customer:
+      customer_id: "cus_0l2p4a6s8d1o"
+      display_name: "Lucía Fernández"
+      email: "lucia.fernandez@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/warranty"
+    message: "Hello. We are moving from London to Lisbon at the end of the month, and I am packing up the house. The movers were here yesterday to measure, and one of them knocked the Arc Floor lamp over while moving the sofa. It fell onto the rug, there is a small scratch on the base, but the lamp and the shade are fine and it still works, so no harm done and I am not asking you to fix anything. It did make me think about the warranty though. I bought the Arc Floor and three Glow bulbs from your UK store last year, and I am a Lumen Plus member. Will my warranty still be valid after we move to Portugal? And if something goes wrong there, do I contact the same support or is there a separate one for Europe?"
+    order_id: "LUM-20251102"
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "warranty"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "question"
+    opens_with: "delivery"
+  expected_output:
+    intent: "question"
+- name: "nova_battery_winter_storage_question"
+  inputs:
+    customer:
+      customer_id: "cus_1m3a5s7d9f2p"
+      display_name: "Peter Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/nova-cordless"
+    message: "Hello, I have four Nova Cordless lamps that we use on the terrace of our holiday cottage from May to September. I have had them for two summers now. I noticed this year that on a full charge they last a bit less than when they were new, maybe an hour less at full brightness, but I read in your help centre that the battery keeps about 80% after 500 cycles and that this is normal, so I am not complaining about that. My question is about the winter. The cottage is empty and unheated from October to April and it gets down to around zero degrees inside. Should I take the lamps home for the winter, or can they stay there? And should I leave them fully charged, half charged or empty while they are stored? I would like them to last as many summers as possible."
+    order_id: null
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "battery"
+    - "storage"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    intent: "question"
+    opens_with: "defect"
+  expected_output:
+    intent: "question"
