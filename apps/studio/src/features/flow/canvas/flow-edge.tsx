@@ -4,7 +4,7 @@ import { Tag } from "@/components/studio"
 import { edgeGeometry, labelTransform, type LabelPlacement } from "./edge-paths"
 import type { EdgeVariant } from "../layout"
 import { edgeStyle, LABEL_TONE } from "./edge-style"
-import { SelectedNodeContext } from "./selection"
+import { HoveredNodeContext, SelectedNodeContext } from "./selection"
 import type { CanvasFlowEdge } from "./to-flow"
 
 type EdgeLabelProps = { readonly label: string | null; readonly placement: LabelPlacement; readonly variant: EdgeVariant }
@@ -44,9 +44,11 @@ const dotTiming = (edgeId: string): DotTiming => {
 
 export function FlowEdge({ id, source, target, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, data, markerEnd }: EdgeProps<CanvasFlowEdge>) {
   const selected = use(SelectedNodeContext)
+  const hovered = use(HoveredNodeContext)
   if (data === undefined) return null
   const geometry = edgeGeometry({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }, data)
-  const related = selected === null || selected === source || selected === target
+  const traced = hovered ?? selected
+  const related = traced === null || traced === source || traced === target
   const timing = dotTiming(id)
   return (
     <>

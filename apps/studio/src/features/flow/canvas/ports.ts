@@ -1,19 +1,21 @@
 import type { Box, CanvasEdge, CanvasGraph } from "../layout"
 
-export type Port = { readonly id: string; readonly offset: number }
-export type NodePorts = { readonly in: readonly Port[]; readonly out: readonly Port[] }
+export type Port = { readonly id: string; readonly offset: number; readonly edgeId: string }
+export type NodePorts = { readonly in: readonly Port[]; readonly out: readonly Port[]; readonly bottom: readonly Port[] }
 
 export const OUT_PREFIX = "out-"
 export const IN_PREFIX = "in-"
+export const BOTTOM_HANDLE = "bottom"
 
 const ZERO_BOX: Box = { x: 0, y: 0, width: 0, height: 0 }
-const EMPTY_PORTS: NodePorts = { in: [], out: [] }
+const EMPTY_PORTS: NodePorts = { in: [], out: [], bottom: [] }
+const CENTER = 0.5
 const SPREAD = 0.6
 
 const centerOf = (box: Box): number => box.y + box.height / 2
 
 const offsetOf = (index: number, count: number): number =>
-  count <= 1 ? 0.5 : 0.5 - SPREAD / 2 + (SPREAD * index) / (count - 1)
+  count <= 1 ? CENTER : CENTER - SPREAD / 2 + (SPREAD * index) / (count - 1)
 
 const groupedBy = (edges: readonly CanvasEdge[], keyOf: (edge: CanvasEdge) => string): ReadonlyMap<string, readonly CanvasEdge[]> => {
   const map = new Map<string, readonly CanvasEdge[]>()
@@ -31,10 +33,10 @@ const spreadPorts = (
   prefix: string,
 ): readonly Port[] => {
   const ordered = [...edges].sort((left, right) => centerOf(boxOf.get(otherOf(left)) ?? ZERO_BOX) - centerOf(boxOf.get(otherOf(right)) ?? ZERO_BOX))
-  return ordered.map((edge, index) => ({ id: prefix + edge.id, offset: offsetOf(index, ordered.length) }))
+  return ordered.map((edge, index) => ({ id: prefix + edge.id, offset: offsetOf(index, ordered.length), edgeId: edge.id }))
 }
 
-export const sourceHandleOf = (edge: CanvasEdge): string => (edge.variant === "back" ? "bottom" : OUT_PREFIX + edge.id)
+export const sourceHandleOf = (edge: CanvasEdge): string => (edge.variant === "back" ? BOTTOM_HANDLE : OUT_PREFIX + edge.id)
 export const targetHandleOf = (edge: CanvasEdge): string => IN_PREFIX + edge.id
 
 export const nodePorts = (graph: CanvasGraph): ReadonlyMap<string, NodePorts> => {
@@ -43,13 +45,18 @@ export const nodePorts = (graph: CanvasGraph): ReadonlyMap<string, NodePorts> =>
     graph.edges.filter((edge) => edge.variant === "flow"),
     (edge) => edge.source,
   )
+  const bottomByNode = groupedBy(
+    graph.edges.filter((edge) => edge.variant === "back"),
+    (edge) => edge.source,
+  )
   const inByNode = groupedBy(graph.edges, (edge) => edge.target)
-  const nodeIds = new Set([...outByNode.keys(), ...inByNode.keys()])
+  const nodeIds = new Set([...outByNode.keys(), ...inByNode.keys(), ...bottomByNode.keys()])
   const result = new Map<string, NodePorts>()
   nodeIds.forEach((id) => {
     result.set(id, {
       out: spreadPorts(outByNode.get(id) ?? [], (edge) => edge.target, boxOf, OUT_PREFIX),
       in: spreadPorts(inByNode.get(id) ?? [], (edge) => edge.source, boxOf, IN_PREFIX),
+      bottom: (bottomByNode.get(id) ?? []).map((edge) => ({ id: BOTTOM_HANDLE, offset: CENTER, edgeId: edge.id })),
     })
   })
   return result

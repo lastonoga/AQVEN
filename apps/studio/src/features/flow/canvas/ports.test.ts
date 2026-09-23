@@ -44,10 +44,11 @@ describe("sourceHandleOf and targetHandleOf", () => {
 
 describe("nodePorts", () => {
   it("gives a node with a single edge on a side one centred port", () => {
-    const graph = graphOf([step("a", 0), step("b", 0)], [flow("a", "b")])
+    const edge = flow("a", "b")
+    const graph = graphOf([step("a", 0), step("b", 0)], [edge])
     const ports = nodePorts(graph)
-    expect(portsOf(ports, "a").out).toEqual([{ id: `out-${flow("a", "b").id}`, offset: 0.5 }])
-    expect(portsOf(ports, "b").in).toEqual([{ id: `in-${flow("a", "b").id}`, offset: 0.5 }])
+    expect(portsOf(ports, "a").out).toEqual([{ id: `out-${edge.id}`, offset: 0.5, edgeId: edge.id }])
+    expect(portsOf(ports, "b").in).toEqual([{ id: `in-${edge.id}`, offset: 0.5, edgeId: edge.id }])
   })
 
   it("orders a node's out ports by the y of whatever each edge targets", () => {
@@ -86,10 +87,18 @@ describe("nodePorts", () => {
   it("gives a node with no edges on a side an empty port list", () => {
     const graph = graphOf([step("lonely", 0)], [])
     const ports = portsOf(nodePorts(graph), "lonely")
-    expect(ports).toEqual({ in: [], out: [] })
+    expect(ports).toEqual({ in: [], out: [], bottom: [] })
   })
 
   it("falls back to empty ports for a node id absent from the graph", () => {
-    expect(portsOf(nodePorts(graphOf([], [])), "missing")).toEqual({ in: [], out: [] })
+    expect(portsOf(nodePorts(graphOf([], [])), "missing")).toEqual({ in: [], out: [], bottom: [] })
+  })
+
+  it("gives the loop entry a bottom port only when a back edge actually sources from it", () => {
+    const loop = back("last", "first")
+    const graph = graphOf([step("first", 0), step("last", 200)], [loop])
+    const ports = nodePorts(graph)
+    expect(portsOf(ports, "last").bottom).toEqual([{ id: "bottom", offset: 0.5, edgeId: loop.id }])
+    expect(portsOf(ports, "first").bottom).toEqual([])
   })
 })
