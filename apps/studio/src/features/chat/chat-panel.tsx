@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useParams } from "@tanstack/react-router"
 import { useTranslations } from "use-intl"
 import type {
   ApiChatApprovalReply,
@@ -17,8 +18,9 @@ import { Surface, Text } from "@/components/studio"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { flowRouteApi } from "@/lib/routes"
+import { projectRouteApi } from "@/lib/routes"
 import { useChatBackend } from "@/features/chat-backend"
+import { rememberedSession, rememberSession, useHandoffSignal } from "@/features/chat-handoff"
 import { ChatSession } from "./chat-session"
 import { DEFAULT_CHAT_CHOICE, type ChatChoice } from "./chat-choice"
 import { ChatChoiceContext, type ChatChoiceControl } from "./chat-choice-context"
@@ -41,7 +43,7 @@ type PanelState =
   | { readonly kind: "ready"; readonly backend: ApiChatSession["backend"]; readonly sessions: readonly ApiChatSession[]; readonly session: ApiChatSession | null }
   | { readonly kind: "offline"; readonly backend: ApiChatSession["backend"]; readonly detail: string }
 
-const newSession = (flowId: FlowId, choice: ChatChoice): ApiChatSessionCreate => ({
+const newSession = (flowId: FlowId | null, choice: ChatChoice): ApiChatSessionCreate => ({
   flow_id: flowId,
   model: choice.model,
   effort: choice.effort,
@@ -52,19 +54,13 @@ const newSession = (flowId: FlowId, choice: ChatChoice): ApiChatSessionCreate =>
 const newest = (sessions: readonly ApiChatSession[]): ApiChatSession | null =>
   [...sessions].sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))[0] ?? null
 
-const storageKey = (projectRoot: string): string => `aqven:chat:session:${projectRoot}`
-
 const remember = (projectRoot: string, session: ApiChatSession): void => {
-  try { sessionStorage.setItem(storageKey(projectRoot), session.session_id) } catch { return }
+  rememberSession(projectRoot, session.session_id)
 }
 
 const remembered = (projectRoot: string, sessions: readonly ApiChatSession[]): ApiChatSession | null => {
-  try {
-    const id = sessionStorage.getItem(storageKey(projectRoot))
-    return sessions.find((session) => session.session_id === id) ?? null
-  } catch {
-    return null
-  }
+  const id = rememberedSession(projectRoot)
+  return sessions.find((session) => session.session_id === id) ?? null
 }
 
 const openSession = async (api: ChatApi, projectRoot: string, backend: ApiChatSession["backend"]): Promise<PanelState> => {
@@ -106,9 +102,10 @@ function ChatBody({ state, transport, onRetry }: { readonly state: PanelState; r
 export function ChatPanel() {
   const common = useTranslations("common")
   const chat = useTranslations("chat.session")
-  const { api } = flowRouteApi.useRouteContext()
-  const { flowId } = flowRouteApi.useParams()
-  const { project } = flowRouteApi.useLoaderData()
+  const { api } = projectRouteApi.useRouteContext()
+  const { flowId } = useParams({ strict: false })
+  const { project } = projectRouteApi.useLoaderData()
+  const handoff = useHandoffSignal()
   const { backend, pending, error: backendError, select, retry } = useChatBackend()
   const [transport] = useState<ChatTransport>(() => chatTransport(api.chat))
   const [state, setState] = useState<PanelState>({ kind: "loading" })
@@ -126,7 +123,7 @@ export function ChatPanel() {
     return () => {
       live = false
     }
-  }, [api, backend, project.root, revision])
+  }, [api, backend, project.root, revision, handoff?.seq])
 
   const selectSession = async (session: ApiChatSession): Promise<void> => {
     if (session.backend !== backend && !(await select(session.backend))) return
@@ -150,7 +147,7 @@ export function ChatPanel() {
         setCreateError(status.detail ?? status.state)
         return
       }
-      const session = await api.chat.create(newSession(flowId, choice))
+      const session = await api.chat.create(newSession(flowId ?? null, choice))
       if (session.backend !== backend) {
         setCreateError(chat("selectedAgentChanged"))
         retry()

@@ -20,7 +20,7 @@ const datasetParts = (itemId: string | null | undefined): { readonly dataset: st
   return { dataset: itemId.slice(0, separator), caseName: itemId.slice(separator + 1) }
 }
 
-function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect: (id: RunId) => void }) {
+export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect: (id: RunId) => void }) {
   const t = useTranslations("runs")
   const status = useTranslations("domain.runStatus")
   const mode = useTranslations("domain.runMode")

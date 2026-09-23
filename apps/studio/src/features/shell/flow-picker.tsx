@@ -2,22 +2,19 @@ import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ApiFlow, ApiFlowDetail, ApiProject } from "@/domain"
-import { Surface, Tag, Text } from "@/components/studio"
+import { Surface, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { flowId as toFlowId } from "@/data/ids"
-import { PickerActions } from "./picker-actions"
 import { FlowItems } from "./flow-items"
-import { projectInitial, projectName } from "./presenters"
+import { projectName } from "./presenters"
 
 const MENU_OFFSET = 4
-const PATH_SLASH = "/"
 
 export type FlowPickerProps = {
   readonly project: ApiProject
   readonly flows: readonly ApiFlow[]
   readonly flow: ApiFlowDetail
-  readonly onOpenSettings: () => void
 }
 
 function Caret({ open }: { readonly open: boolean }) {
@@ -29,7 +26,7 @@ function Caret({ open }: { readonly open: boolean }) {
   )
 }
 
-export function FlowPicker({ project, flows, flow, onOpenSettings }: FlowPickerProps) {
+export function FlowPicker({ project, flows, flow }: FlowPickerProps) {
   const t = useTranslations("shell.picker")
   const [open, setOpen] = useState(false)
   const close = () => {
@@ -39,15 +36,6 @@ export function FlowPicker({ project, flows, flow, onOpenSettings }: FlowPickerP
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="md" aria-label={t("triggerAria")} className="min-w-0 max-w-72 shrink justify-start">
-          <Tag fill="solid" tone="primary" shape="square" size="sm">
-            {projectInitial(project)}
-          </Tag>
-          <Text role="hint" weight="normal" tone="neutral" className="shrink-0">
-            {projectName(project)}
-          </Text>
-          <Text role="hint" tone="faint" className="shrink-0">
-            {PATH_SLASH}
-          </Text>
           <Text role="item" weight="semibold" tone="default" truncate>
             {flow.flow_id}
           </Text>
@@ -64,8 +52,6 @@ export function FlowPicker({ project, flows, flow, onOpenSettings }: FlowPickerP
             </Text>
           </DropdownMenuLabel>
           <FlowItems flows={flows} currentId={toFlowId(flow.flow_id)} onNavigate={close} />
-          <DropdownMenuSeparator className="mx-0 my-1.25" />
-          <PickerActions onNavigate={close} onOpenSettings={onOpenSettings} />
         </DropdownMenuContent>
       </Surface>
     </DropdownMenu>

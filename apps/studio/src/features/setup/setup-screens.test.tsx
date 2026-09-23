@@ -15,9 +15,9 @@ const hrefs = (container: HTMLElement): readonly (string | null)[] =>
     .map((link) => link.getAttribute("href"))
 
 describe("Landing", () => {
-  it("opens the most recently run workflow of the launched project", async () => {
+  it("opens the flows of the launched project", async () => {
     const router = await renderRoute("/")
-    expect(router.state.location.pathname).toBe("/flows/support_case/canvas")
+    expect(router.state.location.pathname).toBe("/flows")
   })
 
   it("redirects an old English URL while preserving its query", async () => {
@@ -77,7 +77,7 @@ describe("Settings", () => {
     const nav = await screen.findByRole("navigation", { name: "Settings sections" })
     expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual([
       "Project",
-      "Chat agent",
+      "Chat",
       "Model keys",
       "MCP connections",
       "Updates",
@@ -115,6 +115,8 @@ describe("Settings", () => {
     await renderRoute("/settings?section=agents")
     expect(await screen.findByText("SIGNED IN")).toBeTruthy()
     expect(screen.getByText(liveChatStatus.detail ?? "")).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Chat", level: 2 })).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "Chat agent" })).toBeNull()
   })
 
   it("saves the project chat backend and refreshes its sign-in status", async () => {

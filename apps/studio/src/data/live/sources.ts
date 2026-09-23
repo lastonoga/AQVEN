@@ -6,7 +6,6 @@ import type {
   ApiChatSessionCreate,
   ApiChatSessionSettings,
   ApiDatasetCreateRequest,
-  ApiDatasetBatchStartRequest,
   ApiExecutionAddress,
   ApiFileKind,
   ApiForkRequest,
@@ -29,6 +28,7 @@ import type {
 } from "@/domain"
 import type { SchemaPresentationResponse, SchemaPresentationTarget, SchemaRunSort } from "@/api/schema"
 import { API_BASE, api, unwrap } from "@/api/client"
+import { research } from "./research"
 
 export type RunSort = SchemaRunSort
 
@@ -179,10 +179,6 @@ const evals = {
     unwrap(await api.GET("/api/datasets/{dataset_id}", { params: { path: { dataset_id: datasetId } } })),
   datasetCases: async (datasetId: string) => everyPage(async (cursor) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}/cases", { params: { path: { dataset_id: datasetId }, query: { cursor, limit: MAX_PAGE } } }))),
-  datasetCasesPage: async (datasetId: string, search: string | null, split: string | null, cursor: string | null, limit = 25) =>
-    unwrap(await api.GET("/api/datasets/{dataset_id}/cases", {
-      params: { path: { dataset_id: datasetId }, query: { search, split, cursor, limit } },
-    })),
   datasetCase: async (datasetId: string, caseName: string) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}/cases/{case_name}", {
       params: { path: { dataset_id: datasetId, case_name: caseName } },
@@ -191,18 +187,6 @@ const evals = {
     unwrap(await api.GET("/api/datasets/{dataset_id}/case-names", {
       params: { path: { dataset_id: datasetId }, query: { search, split, cursor, limit: MAX_PAGE } },
     }))),
-  startDatasetBatch: async (request: ApiDatasetBatchStartRequest) =>
-    unwrap(await api.POST("/api/dataset-batches", { body: request })),
-  datasetBatches: async (flowId: FlowId, datasetId: string, cursor: string | null = null) =>
-    unwrap(await api.GET("/api/dataset-batches", {
-      params: { query: { flow_id: flowId, dataset_id: datasetId, cursor, limit: 20 } },
-    })),
-  datasetBatch: async (batchId: string) =>
-    unwrap(await api.GET("/api/dataset-batches/{batch_id}", { params: { path: { batch_id: batchId } } })),
-  datasetBatchCases: async (batchId: string, search: string | null, status: string | null, cursor: string | null) =>
-    unwrap(await api.GET("/api/dataset-batches/{batch_id}/cases", {
-      params: { path: { batch_id: batchId }, query: { search, status, cursor, limit: 25 } },
-    })),
   draftDataset: async (flowId: FlowId) =>
     unwrap(await api.POST("/api/datasets/draft", { body: { flow_id: flowId } })),
   createDataset: async (request: ApiDatasetCreateRequest) =>
@@ -287,6 +271,6 @@ export const chatEventsUrl = (sessionId: ChatSessionId, afterSeq: number | null)
     ? `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events`
     : `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events?after_seq=${String(afterSeq)}`
 
-export const liveSources = { project, flow, run, evals, chat, settings, blob }
+export const liveSources = { project, flow, run, evals, research, chat, settings, blob }
 
 export type LiveSources = typeof liveSources

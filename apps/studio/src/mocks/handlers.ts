@@ -1,5 +1,5 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiDatasetBatch, ApiDatasetBatchCase, ApiDatasetCase, ApiDatasetSummary, ApiRun, ApiRunSnapshot } from "@/domain"
+import type { ApiDatasetCase, ApiDatasetSummary, ApiRun, ApiRunSnapshot } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveChatSessions, liveChatStatus } from "./data/chat"
 import { liveDatasetCases, liveDatasets, liveEvalCases, liveEvalGates, liveEvalRuns, liveEvals } from "./data/evals"
@@ -15,8 +15,6 @@ const createdDatasets: ApiDatasetSummary[] = []
 const createdDatasetCases = new Map<string, readonly ApiDatasetCase[]>()
 const startedRuns: ApiRun[] = []
 const startedSnapshots = new Map<string, ApiRunSnapshot>()
-const startedBatches: ApiDatasetBatch[] = []
-const startedBatchCases = new Map<string, readonly ApiDatasetBatchCase[]>()
 
 const runSnapshot = (runId: string): ApiRunSnapshot | undefined => {
   const recorded = startedSnapshots.get(runId) ?? liveRunSnapshots[runId]
@@ -494,61 +492,6 @@ export const handlers = [
     const cases = createdDatasetCases.get(datasetId) ?? liveDatasetCases[datasetId]
     const found = cases?.find((item) => item.name === caseName)
     return found === undefined ? notFound("dataset_case_get", `case ${caseName} is not in dataset ${datasetId}`) : served(found)
-  }),
-
-  http.post(`${API_BASE}/dataset-batches`, async ({ request }) => {
-    const body: unknown = await request.json()
-    if (!isRecord(body) || typeof body["dataset_id"] !== "string" || typeof body["flow_id"] !== "string" || !Array.isArray(body["case_names"])) {
-      return HttpResponse.json({ message: "Invalid batch request" }, { status: UNPROCESSABLE })
-    }
-    const dataset = [...liveDatasets, ...createdDatasets].find((item) => item.dataset_id === body["dataset_id"])
-    if (dataset === undefined) return notFound("dataset_batch_start", "Dataset is missing")
-    const names = body["case_names"].filter((name): name is string => typeof name === "string")
-    const batchId = crypto.randomUUID()
-    const record: ApiDatasetBatch = {
-      batch_id: batchId,
-      flow_id: body["flow_id"],
-      dataset_id: dataset.dataset_id,
-      dataset_file_hash: dataset.file_hash,
-      case_names: names,
-      selected_nodes: Array.isArray(body["selected_nodes"]) ? body["selected_nodes"].filter((name): name is string => typeof name === "string") : null,
-      start_node: typeof body["start_node"] === "string" ? body["start_node"] : null,
-      end_node: typeof body["end_node"] === "string" ? body["end_node"] : null,
-      mode: "dryrun",
-      status: "completed",
-      started_at: new Date().toISOString(),
-      finished_at: new Date().toISOString(),
-      cases_total: names.length,
-      cases_completed: names.length,
-      cases_failed: 0,
-      cost_usd: "0",
-    }
-    startedBatches.unshift(record)
-    startedBatchCases.set(batchId, names.map((caseName) => ({ case_name: caseName, status: "completed", run_id: COMPLETED_RUN_ID, error: null, cost_usd: "0" })))
-    return HttpResponse.json(record, { status: 202 })
-  }),
-
-  http.get(`${API_BASE}/dataset-batches`, ({ request }) => {
-    const url = new URL(request.url)
-    const records = startedBatches.filter((item) => item.flow_id === url.searchParams.get("flow_id") && item.dataset_id === url.searchParams.get("dataset_id"))
-    return served(page(records))
-  }),
-
-  http.get(`${API_BASE}/dataset-batches/:batchId`, ({ params }) => {
-    const id = text(params, "batchId")
-    const found = startedBatches.find((item) => item.batch_id === id)
-    return found === undefined ? notFound("dataset_batch_get", `batch ${id} is not in the project`) : served(found)
-  }),
-
-  http.get(`${API_BASE}/dataset-batches/:batchId/cases`, ({ params, request }) => {
-    const id = text(params, "batchId")
-    const rows = startedBatchCases.get(id)
-    if (rows === undefined) return notFound("dataset_batch_cases", `batch ${id} is not in the project`)
-    const url = new URL(request.url)
-    const query = (url.searchParams.get("search") ?? "").toLocaleLowerCase()
-    const status = url.searchParams.get("status")
-    const filtered = rows.filter((item) => item.case_name.toLocaleLowerCase().includes(query) && (status === null || item.status === status)).sort((a, b) => a.case_name.localeCompare(b.case_name))
-    return served(namePage(filtered, url))
   }),
 
   http.post(`${API_BASE}/datasets/draft`, async ({ request }) => {

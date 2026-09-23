@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useTranslations } from "use-intl"
 import type { ApiFlowSchemas, ApiJsonValue, ApiManualRangePair, ApiManualRangePreview, ApiRunSnapshot, FlowId, RunId } from "@/domain"
 import { Actions, Heading, Text, TitledPanel, Toolbar } from "@/components/studio"
+import { useStageRangeLabels } from "@/components/studio/stage-range-labels"
 import { StageRangeTimeline } from "@/components/studio/stage-range-timeline"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,7 +57,8 @@ const referenceLabel = (reference: string): string => {
 
 export function StartRun({ flowId, schemas, order, previousRun, today, onStarted, onCancel }: StartRunProps) {
   const t = useTranslations("runs.start")
-  const timeline = useTranslations("datasets")
+  const timeline = useTranslations("common.stageRange")
+  const rangeLabels = useStageRangeLabels()
   const { api } = runsRouteApi.useRouteContext()
   const [range, setRange] = useState<readonly [number, number]>([0, Math.max(0, order.length - 1)])
   const [input, setInput] = useState<Record<string, unknown>>(() => initialManualInput(schemas.input))
@@ -141,7 +143,7 @@ export function StartRun({ flowId, schemas, order, previousRun, today, onStarted
             const pair = rangeAt(preview, nodeId, currentEnd)
             return { canStart: preview.ranges.some((item) => item.start_node === nodeId && item.available), compatible: pair?.available === true, unavailableReason: pair?.missing.map((item) => item.reference + ": " + item.reason).join("; ") ?? null }
           }}
-          labels={{ selectOnlyNode: (node) => timeline("selectOnlyNode", { node }), moveRange: timeline("moveRange"), moveRangeHint: timeline("moveRangeHint"), startNode: timeline("startNode"), endNode: timeline("endNode") }}
+          labels={rangeLabels}
         />}
         <Text as="p" role="hint" tone="neutral">{t("scopeSelection", { start: startNode ?? "—", end: endNode ?? "—", count: selected.length })}</Text>
       </div>
