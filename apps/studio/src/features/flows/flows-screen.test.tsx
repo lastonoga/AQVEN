@@ -21,8 +21,8 @@ describe("FlowsScreen", () => {
     const rows = within(await flowList()).getAllByRole("link")
     expect(rows.map((row) => row.getAttribute("href"))).toEqual(["/flows/support_case/canvas", "/flows/judge_panel/canvas"])
     expect(within(rows[0] ?? document.body).getByText(description("support_case"))).toBeTruthy()
-    expect(rows[0]?.textContent).toMatch(/30 nodes · last run .+ · 4 experiments/)
-    expect(rows[1]?.textContent).toContain("8 nodes · never run · 2 experiments")
+    expect(rows[0]?.textContent).toMatch(/30 nodes · last run .+ · 5 experiments/)
+    expect(rows[1]?.textContent).toContain("8 nodes · never run · 4 experiments")
   })
 
   it("opens the graph of a flow from its row", async () => {

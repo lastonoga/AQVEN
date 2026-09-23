@@ -28,6 +28,8 @@ export function useReasonCopy(): ReasonCopy {
     wide: (values) => t("wide", values),
     enough: (values) => t("enough", values),
     no_margin: (values) => t("no_margin", values),
+    no_history: (values) => t("no_history", values),
+    short_of_cases: (values) => t("short_of_cases", values),
   }
 }
 

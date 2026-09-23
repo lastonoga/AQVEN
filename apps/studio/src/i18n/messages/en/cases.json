@@ -4,7 +4,7 @@
   "scope": {
     "flow": "Cases of this flow",
     "otherFlow": "Cases of flow {flow}: open that flow to run them",
-    "inference": "Inputs of an inference evaluation: they do not run on a flow"
+    "inference": "Cases without a flow: experiments run them on an arm, not from here"
   },
   "picker": {
     "selected": "Selected dataset {id}, {cases}, {datasets}",
@@ -14,7 +14,7 @@
     "searchPlaceholder": "Search by dataset ID...",
     "noMatches": "No matching datasets",
     "forFlow": "Flow · {flow}",
-    "inference": "Inference evaluation",
+    "inference": "No flow · arms",
     "current": "current"
   },
   "actions": {

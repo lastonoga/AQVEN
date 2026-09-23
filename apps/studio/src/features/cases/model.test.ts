@@ -39,7 +39,6 @@ const summary = (dataset: string, flow: string | null): ApiDatasetSummary => ({
   file_hash: "sha256-test",
   cases: 3,
   splits: {},
-  used_by: [],
 })
 
 const experiment = (id: string, dataset: string, tags: CaseTags): ExperimentDetail => ({
@@ -53,7 +52,7 @@ const experiment = (id: string, dataset: string, tags: CaseTags): ExperimentDeta
   spentUsd: 0,
   question: { kind: "look" },
   arms: [],
-  cases: { dataset: ids.datasetId(dataset), flow: FLOW, tags, selected: 0, total: 0 },
+  cases: { dataset: ids.datasetId(dataset), flow: FLOW, tags, selected: 0, total: 0, splits: { dev: 0, holdout: 0 } },
   variants: [],
   checks: [],
   metrics: [],

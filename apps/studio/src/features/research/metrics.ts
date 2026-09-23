@@ -29,6 +29,11 @@ export const metricValue = (value: number, unit: MetricUnit): string => UNIT_TEX
 export const marginText = (margin: number, unit: MetricUnit, relative: boolean): string =>
   relative ? `${String(Math.round(margin * PERCENT))}%` : metricValue(margin, unit)
 
+const PLUS = "+"
+const MINUS = "−"
+
+export const signedValue = (value: number, unit: MetricUnit): string => `${value < 0 ? MINUS : PLUS}${metricValue(Math.abs(value), unit)}`
+
 export const intervalText = (low: number, high: number, unit: MetricUnit): string => `${metricValue(low, unit)}${RANGE_DASH}${metricValue(high, unit)}`
 
 export const directionGlyph = (direction: MetricDirection): string => DIRECTION_GLYPH[direction]

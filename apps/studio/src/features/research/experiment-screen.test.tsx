@@ -1,19 +1,19 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { http, HttpResponse } from "msw"
+import { describe, expect, it, vi } from "vitest"
 import type { ExperimentDetail } from "@/domain"
+import { API_BASE } from "@/api/client"
 import * as ids from "@/data/ids"
+import { liveExperiments } from "@/mocks/data/experiments"
+import { estimateFor, RESEARCH_SERIES } from "@/mocks/data/research"
+import { server } from "@/mocks/node"
 import { router as appRouter } from "@/router"
 import { renderInStudio, renderRoute } from "@/test/render-route"
-import { RESEARCH_FIXTURE_SERIES, resetResearchFixtures } from "@/test/research-fixtures"
 import { ExperimentMeasure } from "./experiment-measure"
 
 vi.mock("@/features/chat", () => ({
   ChatPanel: () => null,
 }))
-
-afterEach(() => {
-  resetResearchFixtures()
-})
 
 const section = (name: string): Promise<HTMLElement> => screen.findByRole("region", { name })
 
@@ -43,25 +43,27 @@ describe("ExperimentScreen header", () => {
 })
 
 describe("ExperimentScreen: what we run", () => {
-  it("shows the subject, the selected cases and each variant as node to agent and model", async () => {
+  it("shows the subject, the selected cases split in two and each variant as node to agent and model", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     const run = await section("What we run")
     expect(within(run).getByText("support_case, nodes polish")).toBeTruthy()
-    expect(within(run).getByText("support_case_cases · 12 of 12 cases")).toBeTruthy()
+    expect(within(run).getByText("support_case_cases · 12 of 12 cases · 6 working, 6 held out")).toBeTruthy()
     expect(within(run).getByRole("link", { name: /Open the cases/ }).getAttribute("href")).toContain("/flows/support_case/cases")
     const variants = within(within(run).getByRole("table", { name: "Variants of this experiment" })).getAllByRole("row")
     expect(variants.slice(1).map((row) => row.textContent)).toEqual([
-      "gptbaseline—polish__revisegptopenrouter:openai/gpt-oss-20b",
-      "mistralcandidate—polish__revisemistraloverriddenopenrouter:mistralai/mistral-nemo",
+      "gptbaseline—polish__critiquemistralopenrouter:mistralai/mistral-nemo",
+      "polish__revisegptopenrouter:openai/gpt-oss-20b",
+      "mistralcandidate—polish__critiquemistralopenrouter:mistralai/mistral-nemo",
+      "polish__revisemistraloverriddenopenrouter:mistralai/mistral-nemo",
     ])
   })
 
-  it("draws the steps of each arm and filters the cases by tags", async () => {
+  it("draws the steps of each arm", async () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
     const steps = await screen.findByRole("table", { name: "Steps of arm two_step" })
     expect(within(steps).getAllByRole("row").slice(1).map((row) => row.textContent)).toEqual([
-      "1condense_messageLLMllamaopenrouter:meta-llama/llama-3.1-8b-instructCondenses the message to what the customer needs now, at most 600 characters",
-      "2classify_summaryLLMllamaopenrouter:meta-llama/llama-3.1-8b-instructDecides the intent from the summary",
+      "1condense_messageLLMllamaopenrouter:meta-llama/llama-3.1-8b-instructA cheap open model condenses a long message to the request and the facts behind it",
+      "2classify_summaryLLMllamaopenrouter:meta-llama/llama-3.1-8b-instructThe same cheap open model decides the intent from the condensed summary",
     ])
     expect(screen.getByRole("table", { name: "Steps of arm one_step" })).toBeTruthy()
     expect(within(await section("What we run")).getByText("arm one_step")).toBeTruthy()
@@ -70,7 +72,7 @@ describe("ExperimentScreen: what we run", () => {
   it("names the tag filter of a look experiment", async () => {
     await renderRoute("/research/experiments/reply_look")
     const run = await section("What we run")
-    expect(within(run).getByText("support_case_cases · 5 of 12 cases")).toBeTruthy()
+    expect(within(run).getByText("support_case_cases · 5 of 12 cases · 4 working, 1 held out")).toBeTruthy()
     expect(within(run).getByText("regression=yes")).toBeTruthy()
     expect(within(await section("How we measure")).getByText("A look has no primary metric and no guardrails.")).toBeTruthy()
   })
@@ -86,7 +88,7 @@ describe("ExperimentScreen: how we measure", () => {
     expect(within(critique ?? document.body).getByRole("link", { name: "validated by critique_planted_defects" }).getAttribute("href")).toBe(
       "/research/experiments/critique_planted_defects",
     )
-    expect(promises?.textContent).toContain("@root.code.support_case:promises_match_resolution")
+    expect(promises?.textContent).toContain("lumen.code.support_case:reply_keeps_resolution")
     const metrics = within(screen.getByRole("table", { name: "Metrics of the question" })).getAllByRole("row")
     expect(metrics.slice(1).map((row) => row.textContent)).toEqual(["critiqueprimary↑ higher is better0.05", "cost per passguardrail↓ lower is better20%"])
   })
@@ -105,45 +107,61 @@ describe("ExperimentScreen: how we measure", () => {
 })
 
 describe("ExperimentScreen: launch", () => {
-  it("starts from the plan with the recommended size, its reason and the estimate", async () => {
+  it("starts from the plan cut to the working cases, with the recommended size, its reason and the estimate", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    await section("Launch")
-    expect(casesInput()).toHaveProperty("value", "12")
-    expect(screen.getByText("Recommended N ≈ 65")).toBeTruthy()
-    expect(screen.getByText(/At 12 cases the expected interval is ±0\.12, wider than the 0\.05 margin/)).toBeTruthy()
-    expect(await estimateText()).toContain("Attempts72")
-    expect(await estimateText()).toContain("Spend$0.91")
-    expect(screen.getByRole("note").textContent).toContain("only 12 are selected")
+    const launch = await section("Launch")
+    expect(casesInput()).toHaveProperty("value", "6")
+    expect(within(launch).getByText("1 to 6 on working cases")).toBeTruthy()
+    expect(screen.getByText("Recommended N ≈ 52")).toBeTruthy()
+    expect(screen.getByText("About 52 cases are needed for an interval within the 0.05 margin, but only 6 are available: expect a wide interval.")).toBeTruthy()
+    expect(await estimateText()).toContain("Attempts36")
+    expect(await estimateText()).toContain("Spend$0.45")
+    expect(await estimateText()).toContain("Spend cap $1.00")
+    expect(screen.getByRole("note").textContent).toContain("these cases hold only 6")
     expect(screen.getByRole("button", { name: "Start" }).hasAttribute("disabled")).toBe(false)
   })
 
   it("re-estimates a smaller launch and keeps it startable with a warning", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     await section("Launch")
-    fireEvent.change(casesInput(), { target: { value: "6" } })
+    fireEvent.change(casesInput(), { target: { value: "3" } })
     await waitFor(async () => {
-      expect(await estimateText()).toContain("Attempts36")
+      expect(await estimateText()).toContain("Attempts18")
     })
-    expect(screen.getByText(/At 6 cases the expected interval/)).toBeTruthy()
-    expect(screen.getAllByRole("note")[0]?.textContent).toContain("Fewer cases than recommended (65)")
+    expect(screen.getAllByRole("note")[0]?.textContent).toContain("Fewer cases than recommended (52)")
     expect(screen.getByRole("button", { name: "Start" }).hasAttribute("disabled")).toBe(false)
   })
 
-  it("refuses a size outside the selection", async () => {
+  it("says so when the models have no price and the series needs an approval", async () => {
+    const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
+    if (experiment === undefined) throw new Error("no experiment")
+    server.use(
+      http.post(`${API_BASE}/experiments/:experimentId/estimate`, () =>
+        HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd: null, minutes: null, usd_source: "unknown", needs_approval: true }),
+      ),
+    )
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     await section("Launch")
-    fireEvent.change(casesInput(), { target: { value: "0" } })
-    expect(await screen.findByText("N must be a whole number from 1 to 12")).toBeTruthy()
+    expect(await estimateText()).toContain("Spendno estimate")
+    expect(await estimateText()).toContain("Timeno estimate")
+    expect(screen.getByText(/have no price yet, so the spend cannot be estimated/)).toBeTruthy()
+  })
+
+  it("refuses a size outside the cases of the split", async () => {
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    await section("Launch")
+    fireEvent.change(casesInput(), { target: { value: "7" } })
+    expect(await screen.findByText("N must be a whole number from 1 to 6")).toBeTruthy()
     expect(screen.getByRole("button", { name: "Start" }).hasAttribute("disabled")).toBe(true)
     fireEvent.change(screen.getByRole("spinbutton", { name: "Repeats (R)" }), { target: { value: "21" } })
     expect(await screen.findByText("R must be a whole number from 1 to 20")).toBeTruthy()
   })
 
-  it("starts a series on the chosen cases and opens it", async () => {
+  it("starts a series on the held-out cases and opens it", async () => {
     const router = await renderRoute("/research/experiments/reply_noninferior_mistral")
     await section("Launch")
-    fireEvent.change(casesInput(), { target: { value: "4" } })
     fireEvent.click(screen.getByRole("radio", { name: "held-out cases" }))
+    fireEvent.change(casesInput(), { target: { value: "4" } })
     await waitFor(async () => {
       expect(await estimateText()).toContain("Attempts24")
     })
@@ -159,7 +177,7 @@ describe("ExperimentScreen: launch", () => {
   it("approves the spend of a waiting series, then stops it", async () => {
     await renderRoute("/research/experiments/reply_overpromise_risk")
     const launch = await section("Launch")
-    expect(within(launch).getByText("This estimate is above the spend limit: the series will wait for your approval before it runs.")).toBeTruthy()
+    expect(within(launch).getByText("This estimate is above the $1.00 spend cap: the series will wait for your approval before it runs.")).toBeTruthy()
     expect(within(launch).getByText("AWAITING APPROVAL")).toBeTruthy()
     fireEvent.click(within(launch).getByRole("button", { name: "Approve spend" }))
     expect(await within(launch).findByText("RUNNING")).toBeTruthy()
@@ -178,12 +196,12 @@ describe("ExperimentScreen: series history", () => {
     const history = await screen.findByRole("table", { name: "Series of this experiment" })
     const rows = within(history).getAllByRole("row").slice(1)
     expect(rows.map((row) => row.textContent)).toEqual([
-      expect.stringContaining("holdout12×372 of 72 attempts$0.89DONEconfirmed"),
-      expect.stringContaining("dev12×372 of 72 attempts$0.90DONEsignal"),
+      expect.stringMatching(/holdout6×336 of 36 attempts\$0\.\d\dDONEconfirmed$/),
+      expect.stringMatching(/dev6×336 of 36 attempts\$0\.\d\dDONEsignal$/),
     ])
     fireEvent.click(within(history).getAllByRole("link")[0] ?? document.body)
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe(`/research/series/${RESEARCH_FIXTURE_SERIES.replyNoninferiorHoldout}`)
+      expect(router.state.location.pathname).toBe(`/research/series/${RESEARCH_SERIES.noninferiorHoldout}`)
     })
   })
 

@@ -86,7 +86,8 @@
     "spec": "{origin} · {hash}",
     "fork": "forked from {parent}",
     "changed": "The flow changed after this run",
-    "timelineAria": "Executions of this run"
+    "timelineAria": "Executions of this run",
+    "series": "attempt of series {series}"
   },
   "dataset": {
     "label": "Dataset",
@@ -264,9 +265,14 @@
   "toCases": {
     "open": "To cases",
     "title": "Draft a case from this run",
-    "description": "The run input, its context and the outputs of its top-level nodes become a dataset case.",
-    "targetDataset": "The case goes to dataset {dataset}, where this run came from.",
-    "targetNew": "The run did not come from a case: the chat adds it to a dataset of {flow}.",
+    "description": "The engine turns the run input, its context and the outputs of its top-level nodes into a dataset case; the chat writes it to the file.",
+    "targetDataset": "The case goes to dataset {dataset}.",
+    "chooseDataset": "Dataset",
+    "targetNew": "Flow {flow} has no dataset yet: the chat creates one and adds this run as its first case.",
+    "loadingDatasets": "Looking for the datasets of this flow…",
+    "drafting": "Drafting the case…",
+    "draftName": "Case {name} for dataset {dataset}",
+    "failed": "Could not draft the case: {reason}",
     "handoff": "Hand the case to the chat",
     "close": "Close the case draft"
   },

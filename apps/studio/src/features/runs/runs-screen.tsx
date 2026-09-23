@@ -88,17 +88,16 @@ function RunsBody({ starting, flowId, schemas, order, today, snapshot, events, b
 type RunToolsProps = {
   readonly runs: readonly ApiRun[]
   readonly snapshot: ApiRunSnapshot
-  readonly blobs: readonly BlobText[]
   readonly compare: RunId | null
   readonly onCompare: (runId: RunId) => void
 }
 
-function RunTools({ runs, snapshot, blobs, compare, onCompare }: RunToolsProps) {
+function RunTools({ runs, snapshot, compare, onCompare }: RunToolsProps) {
   const runId = ids.runId(snapshot.run_id)
   return (
     <>
       <ComparePicker runs={runs} current={runId} compare={compare} onChoose={onCompare} />
-      <ToCases snapshot={snapshot} blobs={blobs} />
+      <ToCases snapshot={snapshot} />
       <RunCancelSlot runId={runId} status={snapshot.status} />
     </>
   )
@@ -226,7 +225,7 @@ export function RunsScreen(): JSX.Element {
         <RunHeader
           snapshot={snapshot}
           live={following}
-          tools={<RunTools runs={runs} snapshot={snapshot} blobs={blobs} compare={compareId} onCompare={setCompare} />}
+          tools={<RunTools runs={runs} snapshot={snapshot} compare={compareId} onCompare={setCompare} />}
         />
       )}
     />

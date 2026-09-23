@@ -12,8 +12,8 @@ const row = (variant: string, cells: MatrixRow["cells"]): MatrixRow => ({ varian
 describe("shared column scale", () => {
   it("spans every value and interval of the column with a margin and stays inside the unit bounds", () => {
     const rows = [
-      row("a", [{ metric: LABEL.id, value: 0.9, ciLow: 0.8, ciHigh: 0.98, verdict: "pass" }]),
-      row("b", [{ metric: LABEL.id, value: 0.5, ciLow: 0.3, ciHigh: 0.7, verdict: "fail" }]),
+      row("a", [{ metric: LABEL.id, value: 0.9, ciLow: 0.8, ciHigh: 0.98, verdict: "pass", cases: 3 }]),
+      row("b", [{ metric: LABEL.id, value: 0.5, ciLow: 0.3, ciHigh: 0.7, verdict: "fail", cases: 3 }]),
     ]
     const scale = columnScale(LABEL, rows, [])
     expect(scale?.low).toBeCloseTo(0.2456)
@@ -21,17 +21,17 @@ describe("shared column scale", () => {
   })
 
   it("includes the threshold of the question and pads a single value", () => {
-    const rows = [row("a", [{ metric: COST.id, value: 0.002, ciLow: null, ciHigh: null, verdict: "none" }])]
+    const rows = [row("a", [{ metric: COST.id, value: 0.002, ciLow: null, ciHigh: null, verdict: "none", cases: 3 }])]
     const single = columnScale(COST, rows, [])
     expect(single?.low).toBeCloseTo(0.0015)
     expect(single?.high).toBeCloseTo(0.0025)
-    const threshold = columnScale(LABEL, [row("a", [{ metric: LABEL.id, value: 0.83, ciLow: 0.66, ciHigh: 0.93, verdict: "unclear" }])], [0.85])
+    const threshold = columnScale(LABEL, [row("a", [{ metric: LABEL.id, value: 0.83, ciLow: 0.66, ciHigh: 0.93, verdict: "unclear", cases: 3 }])], [0.85])
     expect(threshold?.low).toBeCloseTo(0.6384)
     expect(threshold?.high).toBeCloseTo(0.9516)
   })
 
   it("has no scale when the column has no value yet", () => {
-    expect(columnScale(LABEL, [row("a", [{ metric: LABEL.id, value: null, ciLow: null, ciHigh: null, verdict: "none" }])], [])).toBeNull()
+    expect(columnScale(LABEL, [row("a", [{ metric: LABEL.id, value: null, ciLow: null, ciHigh: null, verdict: "none", cases: 3 }])], [])).toBeNull()
   })
 
   it("marks the threshold only on the primary column of a threshold question", () => {
@@ -45,9 +45,9 @@ describe("shared column scale", () => {
 describe("whisker", () => {
   it("places the point and the interval in percent of the column scale", () => {
     const scale = { low: 0, high: 1 }
-    expect(whiskerOf({ metric: LABEL.id, value: 0.5, ciLow: 0.25, ciHigh: 0.75, verdict: "pass" }, scale)).toEqual({ point: 50, low: 25, high: 75 })
-    expect(whiskerOf({ metric: LABEL.id, value: 0.5, ciLow: null, ciHigh: null, verdict: "none" }, scale)).toEqual({ point: 50, low: null, high: null })
-    expect(whiskerOf({ metric: LABEL.id, value: null, ciLow: null, ciHigh: null, verdict: "none" }, scale)).toBeNull()
+    expect(whiskerOf({ metric: LABEL.id, value: 0.5, ciLow: 0.25, ciHigh: 0.75, verdict: "pass", cases: 3 }, scale)).toEqual({ point: 50, low: 25, high: 75 })
+    expect(whiskerOf({ metric: LABEL.id, value: 0.5, ciLow: null, ciHigh: null, verdict: "none", cases: 3 }, scale)).toEqual({ point: 50, low: null, high: null })
+    expect(whiskerOf({ metric: LABEL.id, value: null, ciLow: null, ciHigh: null, verdict: "none", cases: 3 }, scale)).toBeNull()
     expect(whiskerOf(undefined, scale)).toBeNull()
   })
 

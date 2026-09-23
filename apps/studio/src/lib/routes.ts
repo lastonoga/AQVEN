@@ -7,6 +7,7 @@ export const ROUTE_PATH = {
   canvas: "/flows/$flowId/canvas",
   runs: "/flows/$flowId/runs",
   cases: "/flows/$flowId/cases",
+  run: "/runs/$runId",
   research: "/research",
   experiment: "/research/experiments/$experimentId",
   series: "/research/series/$seriesId",
@@ -21,6 +22,7 @@ export const ROUTE_ID = {
   canvas: "/_project/flows/$flowId/canvas",
   runs: "/_project/flows/$flowId/runs",
   cases: "/_project/flows/$flowId/cases",
+  run: "/_project/runs/$runId",
   research: "/_project/research/",
   experiment: "/_project/research/experiments/$experimentId",
   series: "/_project/research/series/$seriesId",
@@ -36,6 +38,7 @@ export const flowRouteApi = getRouteApi(ROUTE_ID.flow)
 export const canvasRouteApi = getRouteApi(ROUTE_ID.canvas)
 export const runsRouteApi = getRouteApi(ROUTE_ID.runs)
 export const casesRouteApi = getRouteApi(ROUTE_ID.cases)
+export const runRouteApi = getRouteApi(ROUTE_ID.run)
 export const researchRouteApi = getRouteApi(ROUTE_ID.research)
 export const experimentRouteApi = getRouteApi(ROUTE_ID.experiment)
 export const seriesRouteApi = getRouteApi(ROUTE_ID.series)

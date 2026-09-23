@@ -22,8 +22,8 @@ export const experimentSummary = (fields: Partial<ExperimentSummary>): Experimen
 const CRITIQUE: MetricColumn = { id: ids.checkId("critique"), role: "primary", direction: "higher_is_better", unit: "score", margin: 0.05, relative: false }
 
 const ROWS: readonly MatrixRow[] = [
-  { variant: ids.variantId("gpt"), role: "baseline", cells: [{ metric: CRITIQUE.id, value: 0.8, ciLow: 0.7, ciHigh: 0.9, verdict: "reference" }] },
-  { variant: ids.variantId("mistral"), role: "candidate", cells: [{ metric: CRITIQUE.id, value: 0.6, ciLow: 0.5, ciHigh: 0.7, verdict: "fail" }] },
+  { variant: ids.variantId("gpt"), role: "baseline", cells: [{ metric: CRITIQUE.id, value: 0.8, ciLow: 0.7, ciHigh: 0.9, verdict: "reference", cases: 2 }] },
+  { variant: ids.variantId("mistral"), role: "candidate", cells: [{ metric: CRITIQUE.id, value: 0.6, ciLow: 0.5, ciHigh: 0.7, verdict: "fail", cases: 2 }] },
 ]
 
 export const seriesDetail = (fields: Partial<SeriesDetail>): SeriesDetail => ({
@@ -46,16 +46,22 @@ export const seriesDetail = (fields: Partial<SeriesDetail>): SeriesDetail => ({
   checks: [],
   matrix: { columns: [CRITIQUE], rows: ROWS },
   stability: [],
+  contrasts: [],
+  needsApproval: false,
+  approvedBy: null,
+  findingPath: null,
+  error: null,
   ...fields,
 })
 
 export const seriesSummary = (fields: Partial<SeriesSummary>): SeriesSummary => {
-  const { question, checks, matrix, stability, ...head } = seriesDetail({})
+  const { question, checks, matrix, stability, contrasts, needsApproval, approvedBy, findingPath, error, ...head } = seriesDetail({})
   return { ...head, question: question.kind, ...fields }
 }
 
 export const caseRow = (fields: Partial<SeriesCaseRow>): SeriesCaseRow => ({
   name: "strip_flicker_credit",
+  split: "dev",
   tags: { channel: "amazon" },
   variants: [
     { variant: ids.variantId("gpt"), passed: 3, total: 3, failedChecks: [], usd: 0.03 },

@@ -31,6 +31,7 @@ export const OUTCOME_TONE: Readonly<Record<AttemptOutcome, Tone>> = {
   failed: "destructive",
   error: "warning",
   waiting: "llm",
+  running: "primary",
 }
 
 export const STABILITY_TONE: Readonly<Record<StabilityClass, Tone>> = {

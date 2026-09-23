@@ -1,12 +1,11 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { API_BASE } from "@/api/client"
 import { liveChatSessions } from "@/mocks/data/chat"
-import { liveDatasets } from "@/mocks/data/evals"
+import { liveDatasets } from "@/mocks/data/datasets"
 import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
-import { resetResearchFixtures } from "@/test/research-fixtures"
 
 vi.mock("@/features/chat", () => ({
   ChatPanel: () => null,
@@ -62,10 +61,6 @@ const settled = async (router: { readonly state: { readonly status: string } }):
     expect(router.state.status).toBe("idle")
   })
 }
-
-afterEach(() => {
-  resetResearchFixtures()
-})
 
 describe("CasesScreen", () => {
   it("lists every case with its tags, the expected mark and the node_outputs count", async () => {
@@ -153,9 +148,9 @@ describe("CasesScreen", () => {
     expect(within(detail).getByText("No saved node outputs: this case runs from the first stage of the flow.")).toBeTruthy()
     const experiments = within(detail).getAllByRole("link").map((link) => link.getAttribute("href"))
     expect(experiments).toEqual([
+      "/research/experiments/intent_escalation_agents",
       "/research/experiments/reply_noninferior_mistral",
       "/research/experiments/reply_overpromise_risk",
-      "/research/experiments/intent_escalation_agents",
     ])
     fireEvent.click(within(detail).getByRole("radio", { name: "Flat" }))
     expect(await within(detail).findByText("The strip flickers near the controller")).toBeTruthy()
@@ -198,7 +193,11 @@ describe("CasesScreen", () => {
     })
     await waitFor(() => {
       expect(loaded(router.state.matches, SERIES_ROUTE)).toMatchObject({
-        series: { origin: { kind: "look", dataset: "support_case_cases", cases: ["strip_flicker_credit", "lamp_crushed_box_reship"] }, question: { kind: "look" } },
+        series: {
+          origin: { kind: "look", flow: "support_case", dataset: "support_case_cases", cases: ["strip_flicker_credit", "lamp_crushed_box_reship"], range: null },
+          question: { kind: "look" },
+          status: "running",
+        },
       })
     })
     await settled(router)
@@ -232,16 +231,17 @@ describe("CasesScreen", () => {
   })
 
   it("keeps cases of another dataset kind readable but not runnable from this flow", async () => {
-    const router = await renderRoute(`${CASES}?dataset=reply_cases&case=strip_flicker_credit`)
+    const router = await renderRoute(`${CASES}?dataset=planted_defect_replies&case=strip_heat_clean`)
     const list = await caseList()
-    expect(screen.getByText("Inputs of an inference evaluation: they do not run on a flow")).toBeTruthy()
+    expect(screen.getByText("Cases without a flow: experiments run them on an arm, not from here")).toBeTruthy()
     expect(screen.getByText("Only cases of this flow run from here.")).toBeTruthy()
-    fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
+    fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_heat_clean" }))
     expect(screen.getByRole("button", { name: "Run selected (1)" })).toHaveProperty("disabled", true)
-    const detail = screen.getByRole("region", { name: "Case strip_flicker_credit" })
+    const detail = screen.getByRole("region", { name: "Case strip_heat_clean" })
     expect(within(detail).queryByRole("heading", { name: "Run this case" })).toBeNull()
+    expect(within(detail).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/research/experiments/critique_planted_defects"])
     expect(screen.getByRole("button", { name: "Ask the agent to write cases" })).toBeTruthy()
-    expect(router.state.location.search).toEqual({ dataset: "reply_cases", case: "strip_flicker_credit" })
+    expect(router.state.location.search).toEqual({ dataset: "planted_defect_replies", case: "strip_heat_clean" })
   })
 
   it("switches the dataset from the picker and drops the case filters", async () => {
@@ -251,11 +251,11 @@ describe("CasesScreen", () => {
     fireEvent.click(trigger)
     const options = await screen.findByRole("listbox", { name: "Datasets in this project" })
     expect(within(options).getByRole("option", { name: /support_case_cases.*Flow · support_case · current/u }).getAttribute("data-checked")).toBe("true")
-    fireEvent.click(within(options).getByRole("option", { name: /reply_cases.*Inference evaluation/u }))
+    fireEvent.click(within(options).getByRole("option", { name: /planted_defect_replies.*No flow · arms/u }))
     await waitFor(() => {
-      expect(router.state.location.search).toEqual({ dataset: "reply_cases" })
+      expect(router.state.location.search).toEqual({ dataset: "planted_defect_replies" })
     })
-    expect(await screen.findByRole("combobox", { name: /Selected dataset reply_cases, 3 cases/u })).toBeTruthy()
+    expect(await screen.findByRole("combobox", { name: /Selected dataset planted_defect_replies, 3 cases/u })).toBeTruthy()
     await settled(router)
   })
 

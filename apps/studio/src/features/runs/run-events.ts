@@ -1,6 +1,7 @@
 import type { ApiRunEvent, ApiRunSnapshot, RunId, RunStatus } from "@/domain"
 import { API_BASE } from "@/api/client"
 import type { BlobText } from "@/features/call-sheet"
+import { isRecord, subscribeEvents } from "@/lib/sse"
 
 export type RunEventType = ApiRunEvent["type"]
 
@@ -51,8 +52,6 @@ const LIVE_STATUSES: ReadonlySet<RunStatus> = new Set<RunStatus>(["queued", "run
 
 export const isLiveStatus = (status: RunStatus): boolean => LIVE_STATUSES.has(status)
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> => typeof value === "object" && value !== null
-
 export const isRunEvent = (value: unknown): value is ApiRunEvent =>
   isRecord(value) &&
   typeof value["seq"] === "number" &&
@@ -68,29 +67,10 @@ export const readRunEvent = (raw: string): ApiRunEvent | null => {
 export const runEventsUrl = (runId: RunId, afterSeq: number): string =>
   `${API_BASE}/runs/${encodeURIComponent(runId)}/events?after_seq=${String(afterSeq)}`
 
-const messageText = (event: Event): string | null => {
-  if (!(event instanceof MessageEvent)) return null
-  const data: unknown = event.data
-  return typeof data === "string" ? data : null
-}
+const runEventOf = (runId: RunId) => (value: unknown): ApiRunEvent | null => (isRunEvent(value) && value.run_id === runId ? value : null)
 
-const noSubscription = (): void => undefined
-
-export const eventSourceStream: RunEventStream = (runId, afterSeq, onEvent) => {
-  if (typeof EventSource === "undefined") return noSubscription
-  const source = new EventSource(runEventsUrl(runId, afterSeq))
-  const receive = (message: Event): void => {
-    const raw = messageText(message)
-    const event = raw === null ? null : readRunEvent(raw)
-    if (event !== null && event.run_id === runId) onEvent(event)
-  }
-  RUN_EVENT_TYPES.forEach((type) => {
-    source.addEventListener(type, receive)
-  })
-  return () => {
-    source.close()
-  }
-}
+export const eventSourceStream: RunEventStream = (runId, afterSeq, onEvent) =>
+  subscribeEvents({ url: runEventsUrl(runId, afterSeq), types: RUN_EVENT_TYPES, read: runEventOf(runId), onEvent })
 
 const bySeq = (left: ApiRunEvent, right: ApiRunEvent): number => left.seq - right.seq
 

@@ -6,7 +6,7 @@ import { Heading, RUN_STATUS_TONE, Stat, StructuredValue, Surface, Tag, Text, Ti
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
 import { joinMeta, runRef } from "@/lib/format"
-import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
+import { ROUTE_PATH } from "@/lib/routes"
 import { isBinaryMedia, StageTimeline, valueCell, type RowKey, type TraceRun, type ValueCell } from "@/features/trace"
 import type { BlobText } from "@/features/call-sheet"
 import { WaitsInline } from "@/features/review"
@@ -64,8 +64,8 @@ export function RunHeader({ snapshot, live, tools }: RunHeaderProps) {
   const mode = useTranslations("domain.runMode")
   const origin = useTranslations("domain.specOrigin")
   const relative = useRelativeTime("long")
-  const params = runsRouteApi.useParams()
   const lineage = snapshot.lineage
+  const seriesId = snapshot.series_id ?? null
   return (
     <Heading
       size="page"
@@ -81,8 +81,13 @@ export function RunHeader({ snapshot, live, tools }: RunHeaderProps) {
           t("spec", { origin: origin(snapshot.spec_version.origin), hash: shortHash(snapshot.content_hash) }),
         ]),
         lineage === null ? null : (
-          <Link key="lineage" to={ROUTE_PATH.runs} params={params} search={{ run: ids.runId(lineage.parent_run_id) }}>
+          <Link key="lineage" to={ROUTE_PATH.run} params={{ runId: ids.runId(lineage.parent_run_id) }}>
             {t("fork", { parent: runRef(lineage.parent_run_id) })}
+          </Link>
+        ),
+        seriesId === null ? null : (
+          <Link key="series" to={ROUTE_PATH.series} params={{ seriesId: ids.seriesId(seriesId) }}>
+            {t("series", { series: runRef(seriesId) })}
           </Link>
         ),
       ].filter((line) => line !== null)}

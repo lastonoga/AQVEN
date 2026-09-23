@@ -147,6 +147,20 @@ writeFileSync(`${OUT}/chat.ts`, [
   '',
 ].join('\n'))
 
+const experimentIds = (await get('/api/experiments?limit=200')).items.map((item) => item.experiment_id)
+const experiments = await Promise.all(experimentIds.map(async (id) => ({
+  ...(await get(`/api/experiments/${id}`)),
+  latest: null,
+  series_count: 0,
+  spent_usd: '0',
+})))
+writeFileSync(`${OUT}/experiments.ts`, [
+  'import type { ApiExperimentDetail } from "@/domain"',
+  '',
+  `export const liveExperiments: readonly ApiExperimentDetail[] = ${lit(experiments)}`,
+  '',
+].join('\n'))
+
 const notFound = await failing('/api/flows/no_such_flow')
 const conflict = await failing(`/api/runs/${COMPLETED}/resume`, {
   method: 'POST',

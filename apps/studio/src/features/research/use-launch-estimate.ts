@@ -10,15 +10,17 @@ export type EstimateState =
   | { readonly kind: "failed"; readonly message: string }
   | { readonly kind: "none" }
 
+export type InitialEstimate = { readonly request: LaunchRequest; readonly estimate: LaunchEstimate | null }
+
 type Loaded = { readonly key: string; readonly state: EstimateState }
 
 const LOADING: EstimateState = { kind: "loading" }
 const NONE: EstimateState = { kind: "none" }
 
-export function useLaunchEstimate(experiment: ExperimentId, request: LaunchRequest | null, initial: LaunchEstimate): EstimateState {
+export function useLaunchEstimate(experiment: ExperimentId, request: LaunchRequest | null, initial: InitialEstimate): EstimateState {
   const { api } = useRouter().options.context
   const [loaded, setLoaded] = useState<Loaded | null>(null)
-  const initialKey = requestKey(initial.request)
+  const preloaded = initial.estimate === null ? null : requestKey(initial.request)
   const on = request?.on ?? null
   const cases = request?.cases ?? null
   const repeats = request?.repeats ?? null
@@ -27,7 +29,7 @@ export function useLaunchEstimate(experiment: ExperimentId, request: LaunchReque
     if (on === null || cases === null || repeats === null) return
     const next: LaunchRequest = { on, cases, repeats }
     const key = requestKey(next)
-    if (key === initialKey) return
+    if (key === preloaded) return
     let live = true
     void api.research.estimate(experiment, next).then(
       (estimate) => {
@@ -40,11 +42,11 @@ export function useLaunchEstimate(experiment: ExperimentId, request: LaunchReque
     return () => {
       live = false
     }
-  }, [api, experiment, on, cases, repeats, initialKey])
+  }, [api, experiment, on, cases, repeats, preloaded])
 
   if (request === null) return NONE
   const key = requestKey(request)
-  if (key === initialKey) return { kind: "ready", estimate: initial }
+  if (key === preloaded && initial.estimate !== null) return { kind: "ready", estimate: initial.estimate }
   if (loaded === null || loaded.key !== key) return LOADING
   return loaded.state
 }

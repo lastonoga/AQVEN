@@ -1,17 +1,20 @@
 import { Link } from "@tanstack/react-router"
 import { Check, Square } from "lucide-react"
 import { useFormatter, useTranslations } from "use-intl"
-import type { SeriesDetail, VerdictReason } from "@/domain"
-import { Actions, Heading, Stat, Surface, Text, type ActionSpec, type TagSpec } from "@/components/studio"
+import type { Contrast, MetricColumn, SeriesDetail, VerdictReason } from "@/domain"
+import { Actions, Heading, Stat, Surface, Tag, Text, type ActionSpec, type TagSpec } from "@/components/studio"
 import { joinMeta, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
+import { useBuiltinNames } from "./copy"
 import { Failure } from "./layout"
+import { intervalText, marginText, metricName, signedValue, unitOf } from "./metrics"
 import { isActive, seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
 import { shareOf, spendTone, verdictGap } from "./series-presenters"
-import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
+import { CELL_VERDICT_TONE, SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 import { useResearchAction } from "./use-research-action"
 
 const LIST_JOIN = ", "
+const EMPTY_MARK = "—"
 const METER_CLASS = "w-72 max-w-full"
 
 const reasonTags = (reason: VerdictReason | null, label: (reason: VerdictReason) => string): readonly TagSpec[] =>
@@ -53,12 +56,15 @@ function useSeriesActions(series: SeriesDetail): { readonly actions: readonly Ac
   return { actions: [...approve, ...stop], failure: action.state.kind === "failed" ? t("actionFailed", { reason: action.state.message }) : null }
 }
 
-export function SeriesHeader({ series }: { readonly series: SeriesDetail }) {
+const liveTags = (live: boolean, label: string): readonly TagSpec[] => (live ? [{ children: label, tone: "primary", fill: "solid" }] : [])
+
+export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; readonly live: boolean }) {
   const t = useTranslations("research")
   const format = useFormatter()
   const { actions, failure } = useSeriesActions(series)
   const tags: readonly TagSpec[] = [
     { children: t(`vocabulary.status.${series.status}`), tone: SERIES_STATUS_TONE[series.status] },
+    ...liveTags(live, t("series.live")),
     { children: t(`vocabulary.splitShort.${series.on}`), tone: "neutral", fill: "outline" },
   ]
   const when = (iso: string): string => format.dateTime(new Date(iso), STARTED_FORMAT)
@@ -106,6 +112,64 @@ export function SeriesHeader({ series }: { readonly series: SeriesDetail }) {
   )
 }
 
+function useContrastLine(columns: readonly MetricColumn[]): (contrast: Contrast) => string {
+  const t = useTranslations("research.series.verdict")
+  const builtin = useBuiltinNames()
+  return (contrast) => {
+    const unit = unitOf(columns, contrast.metric)
+    const { value, low, high } = contrast.difference
+    const values = {
+      metric: metricName(contrast.metric, builtin),
+      candidate: contrast.candidate,
+      baseline: contrast.baseline,
+      value: value === null ? EMPTY_MARK : signedValue(value, unit),
+    }
+    if (low === null || high === null) return t("contrast", values)
+    return t("contrastInterval", { ...values, interval: intervalText(low, high, unit), margin: marginText(contrast.margin, unit, contrast.relative) })
+  }
+}
+
+function Contrasts({ series }: { readonly series: SeriesDetail }) {
+  const t = useTranslations("research.series.verdict")
+  const line = useContrastLine(series.matrix.columns)
+  if (series.contrasts.length === 0) return null
+  return (
+    <ul aria-label={t("contrastsAria")} className="mt-2 flex flex-col gap-1">
+      {series.contrasts.map((contrast) => (
+        <li key={`${contrast.role}:${contrast.metric}`} className="flex min-w-0 flex-wrap items-center gap-2">
+          <Tag size="micro" fill="tint" tone={CELL_VERDICT_TONE[contrast.verdict]}>
+            {t(`contrastRole.${contrast.role}`)}
+          </Tag>
+          <Text role="data" tone="default">
+            {line(contrast)}
+          </Text>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function VerdictFacts({ series }: { readonly series: SeriesDetail }) {
+  const t = useTranslations("research.series.verdict")
+  const facts = [
+    series.findingPath === null ? null : t("finding", { path: series.findingPath }),
+    series.approvedBy === null ? null : t("approvedBy", { who: series.approvedBy }),
+  ]
+  const text = joinMeta(facts)
+  if (text.length === 0) return null
+  return (
+    <Text as="p" role="hint" tone="neutral" className="mt-2">
+      {text}
+    </Text>
+  )
+}
+
+function SeriesError({ series }: { readonly series: SeriesDetail }) {
+  const t = useTranslations("research.series.verdict")
+  if (series.error === null) return null
+  return <Failure message={t("error", { error: series.error })} />
+}
+
 export function SeriesVerdictBlock({ series }: { readonly series: SeriesDetail }) {
   const t = useTranslations("research")
   const { verdict } = series
@@ -113,6 +177,8 @@ export function SeriesVerdictBlock({ series }: { readonly series: SeriesDetail }
     return (
       <Surface variant="well" padding="md" role="region" aria-label={t("series.verdict.title")}>
         <Heading size="block" title={t("series.verdict.title")} below={[t(`series.verdict.${verdictGap(series)}`)]} />
+        <SeriesError series={series} />
+        <VerdictFacts series={series} />
       </Surface>
     )
   }
@@ -126,6 +192,9 @@ export function SeriesVerdictBlock({ series }: { readonly series: SeriesDetail }
       <Text as="p" role="prose" tone="default" className="mt-2">
         {verdict.text}
       </Text>
+      <Contrasts series={series} />
+      <SeriesError series={series} />
+      <VerdictFacts series={series} />
     </Surface>
   )
 }

@@ -7,7 +7,7 @@ import { useSubjectCopy } from "./copy"
 import { experimentFlows, experimentRows, failureModes, type ExperimentRow, type ListCopy } from "./presenters"
 import { ResearchFilters } from "./research-filters"
 
-const TABLE_MIN_WIDTH = 880
+const TABLE_MIN_WIDTH = 866
 
 const hypothesesPrompt = (experiments: readonly ExperimentSummary[], filter: ExperimentFilter) => (): string =>
   [
@@ -40,7 +40,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "experiment",
       label: t("list.column.experiment"),
-      track: "minmax(220px,1.2fr)",
+      track: "minmax(200px,1.6fr)",
       render: (row) => (
         <div className="min-w-0">
           <Text as="div" role="cell" tone="default" weight="semibold" truncate>
@@ -55,7 +55,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "question",
       label: t("list.column.question"),
-      track: "92px",
+      track: "84px",
       render: (row) => (
         <Tag size="xs" tone="neutral" fill="outline">
           {t(`vocabulary.question.${row.question}`)}
@@ -65,9 +65,9 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "subject",
       label: t("list.column.subject"),
-      track: "minmax(180px,1fr)",
+      track: "minmax(120px,1fr)",
       render: (row) => (
-        <Text as="div" role="cell" truncate>
+        <Text as="div" role="cell" truncate title={row.subject}>
           {row.subject}
         </Text>
       ),
@@ -75,9 +75,9 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "variants",
       label: t("list.column.variants"),
-      track: "minmax(200px,1.1fr)",
+      track: "minmax(120px,1fr)",
       render: (row) => (
-        <Text as="div" role="cell" truncate>
+        <Text as="div" role="cell" truncate title={row.variants}>
           {row.variants}
         </Text>
       ),
@@ -85,14 +85,14 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "verdict",
       label: t("list.column.verdict"),
-      track: "164px",
+      track: "minmax(140px,0.9fr)",
       render: (row) =>
         row.latest === null ? (
           <Text role="cell" tone="neutral">
             —
           </Text>
         ) : (
-          <Tag size="xs" tone={row.latest.tone} detail={row.latest.detail}>
+          <Tag size="xs" wrap tone={row.latest.tone} detail={row.latest.detail}>
             {row.latest.label}
           </Tag>
         ),
@@ -100,7 +100,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "series",
       label: t("list.column.series"),
-      track: "128px",
+      track: "104px",
       align: "end",
       render: (row) => (
         <Text as="div" role="cell" tone="neutral">

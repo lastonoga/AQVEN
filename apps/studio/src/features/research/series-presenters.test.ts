@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest"
+import type { AttemptOutcome, SeriesAttempt } from "@/domain"
 import * as ids from "@/data/ids"
-import { failedChecksOf, hasFilter, hasFinished, orderedAttempts, shareOf, spendTone, tallyTone, toggledFilter, verdictGap, waitingOf } from "./series-presenters"
+import { failedChecksOf, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, shareOf, spendTone, tallyTone, toggledFilter, verdictGap } from "./series-presenters"
 import { caseRow, seriesDetail } from "./test-support"
 
-const attempt = (variant: string, repeat: number, outcome: "passed" | "failed" | "error" | "waiting") => ({
+const attempt = (variant: string, repeat: number, outcome: AttemptOutcome): SeriesAttempt => ({
   run: ids.runId(`${variant}-${String(repeat)}`),
   variant: ids.variantId(variant),
   repeat,
@@ -12,6 +13,7 @@ const attempt = (variant: string, repeat: number, outcome: "passed" | "failed" |
   failedChecks: [],
   usd: 0.01,
   latencyMs: 1000,
+  error: null,
 })
 
 describe("series header", () => {
@@ -50,11 +52,13 @@ describe("case rows", () => {
     expect(hasFinished(caseRow({ variants: [{ variant: ids.variantId("gpt"), passed: 0, total: 0, failedChecks: [], usd: 0 }] }))).toBe(false)
   })
 
-  it("orders attempts by variant, then repeat, and counts the waiting ones", () => {
-    const attempts = [attempt("mistral", 1, "failed"), attempt("gpt", 2, "passed"), attempt("gpt", 1, "waiting")]
-    expect(orderedAttempts(attempts, [ids.variantId("gpt"), ids.variantId("mistral")]).map((item) => item.run)).toEqual(["gpt-1", "gpt-2", "mistral-1"])
-    expect(waitingOf(caseRow({ attempts }), ids.variantId("gpt"))).toBe(1)
-    expect(waitingOf(caseRow({ attempts }), ids.variantId("mistral"))).toBe(0)
+  it("orders attempts by variant, then repeat, and counts the pending ones by outcome", () => {
+    const attempts = [attempt("mistral", 1, "failed"), attempt("gpt", 2, "passed"), attempt("gpt", 1, "waiting"), attempt("mistral", 2, "running")]
+    expect(orderedAttempts(attempts, [ids.variantId("gpt"), ids.variantId("mistral")]).map((item) => item.run)).toEqual(["gpt-1", "gpt-2", "mistral-1", "mistral-2"])
+    expect(pendingOf(caseRow({ attempts }), ids.variantId("gpt"), "waiting")).toBe(1)
+    expect(pendingOf(caseRow({ attempts }), ids.variantId("mistral"), "waiting")).toBe(0)
+    expect(pendingOf(caseRow({ attempts }), ids.variantId("mistral"), "running")).toBe(1)
+    expect([isPending("running"), isPending("waiting"), isPending("error")]).toEqual([true, true, false])
   })
 
   it("toggles one case filter and keeps the other", () => {

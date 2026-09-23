@@ -1,4 +1,5 @@
 import type {
+  ApiSeriesEvent,
   DatasetId,
   ExperimentDetail,
   ExperimentFilter,
@@ -10,11 +11,24 @@ import type {
   SeriesCaseFilter,
   SeriesCaseRow,
   SeriesDetail,
+  SeriesEvent,
   SeriesId,
   SeriesSummary,
 } from "@/domain"
-import { apiError } from "@/api/client"
-import { createResearchStore, type ResearchStore } from "@/data/fixtures/research"
+import { API_BASE, api, unwrap } from "@/api/client"
+import * as ids from "@/data/ids"
+import { isRecord, subscribeEvents, type Unsubscribe } from "@/lib/sse"
+import { everyPage, MAX_PAGE } from "./paging"
+import {
+  caseRowOf,
+  estimateOf,
+  experimentDetailOf,
+  experimentSummaryOf,
+  launchBody,
+  seriesDetailOf,
+  seriesEventOf,
+  seriesSummaryOf,
+} from "./research-adapter"
 
 export type ResearchSource = {
   readonly experiments: (filter?: ExperimentFilter) => Promise<readonly ExperimentSummary[]>
@@ -22,53 +36,78 @@ export type ResearchSource = {
   readonly estimate: (id: ExperimentId, request: LaunchRequest) => Promise<LaunchEstimate>
   readonly startSeries: (id: ExperimentId, request: LaunchRequest) => Promise<SeriesId>
   readonly approveSeries: (id: SeriesId) => Promise<SeriesSummary>
-  readonly cancelSeries: (id: SeriesId) => Promise<SeriesSummary>
+  readonly cancelSeries: (id: SeriesId, reason?: string) => Promise<SeriesSummary>
   readonly series: (id: SeriesId) => Promise<SeriesDetail>
   readonly seriesCases: (id: SeriesId, filter?: SeriesCaseFilter) => Promise<readonly SeriesCaseRow[]>
   readonly seriesOfExperiment: (id: ExperimentId) => Promise<readonly SeriesSummary[]>
   readonly startLook: (flowId: FlowId, datasetId: DatasetId, caseNames: readonly string[]) => Promise<SeriesId>
+  readonly events: SeriesEventStream
 }
 
-const NOT_FOUND = 404
-const INPUT_INVALID = 422
-const NO_FILTER = {}
+export type SeriesEventStream = (id: SeriesId, afterSeq: number, onEvent: (event: SeriesEvent) => void) => Unsubscribe
 
-const missing = (op: string, what: string): Error =>
-  apiError(NOT_FOUND, { ok: false, op, code: "NOT_FOUND", message: `${what} not found`, problems: [], retry_after_ms: null })
+const NO_FILTER: ExperimentFilter = {}
+const NO_CASE_FILTER: SeriesCaseFilter = {}
 
-const invalid = (op: string, message: string): Error =>
-  apiError(INPUT_INVALID, { ok: false, op, code: "INPUT_INVALID", message, problems: [], retry_after_ms: null })
+export const SERIES_EVENT_TYPES: readonly ApiSeriesEvent["type"][] = ["series_status", "attempt_finished", "series_finished"]
 
-const found = <T>(value: T | null, op: string, what: string): Promise<T> => {
-  if (value === null) return Promise.reject(missing(op, what))
-  return Promise.resolve(value)
-}
+const isSeriesEventType = (value: unknown): value is ApiSeriesEvent["type"] => SERIES_EVENT_TYPES.some((type) => type === value)
 
-const validRequest = (request: LaunchRequest): boolean =>
-  Number.isInteger(request.cases) && Number.isInteger(request.repeats) && request.cases > 0 && request.repeats > 0
+const isSeriesEvent = (value: unknown): value is ApiSeriesEvent =>
+  isRecord(value) && typeof value["seq"] === "number" && typeof value["series_id"] === "string" && isSeriesEventType(value["type"])
 
-export const researchSource = (store: ResearchStore): ResearchSource => ({
-  experiments: (filter = NO_FILTER) => Promise.resolve(store.experiments(filter)),
-  experiment: (id) => found(store.experiment(id), "experiment_get", `Experiment ${id}`),
-  estimate: (id, request) => {
-    if (!validRequest(request)) return Promise.reject(invalid("series_estimate", "cases and repeats must be positive integers"))
-    return found(store.estimate(id, request), "series_estimate", `Experiment ${id}`)
-  },
-  startSeries: (id, request) => {
-    if (!validRequest(request)) return Promise.reject(invalid("series_start", "cases and repeats must be positive integers"))
-    return found(store.startSeries(id, request), "series_start", `Experiment ${id}`)
-  },
-  approveSeries: (id) => found(store.approveSeries(id), "series_approve", `Series ${id}`),
-  cancelSeries: (id) => found(store.cancelSeries(id), "series_cancel", `Series ${id}`),
-  series: (id) => found(store.series(id), "series_get", `Series ${id}`),
-  seriesCases: (id, filter = NO_FILTER) => found(store.seriesCases(id, filter), "series_cases", `Series ${id}`),
-  seriesOfExperiment: (id) => found(store.seriesOfExperiment(id), "series_list", `Experiment ${id}`),
-  startLook: (flowId, datasetId, caseNames) => {
-    if (caseNames.length === 0) return Promise.reject(invalid("series_start", "select at least one case"))
-    return found(store.startLook(flowId, datasetId, caseNames), "series_start", `Dataset ${datasetId}`)
-  },
+export const readSeriesEvent = (id: SeriesId) => (value: unknown): SeriesEvent | null =>
+  isSeriesEvent(value) && value.series_id === id ? seriesEventOf(value) : null
+
+export const seriesEventsUrl = (id: SeriesId, afterSeq: number): string =>
+  `${API_BASE}/series/${encodeURIComponent(id)}/events?after_seq=${String(afterSeq)}`
+
+export const seriesEventStream: SeriesEventStream = (id, afterSeq, onEvent) =>
+  subscribeEvents({ url: seriesEventsUrl(id, afterSeq), types: SERIES_EVENT_TYPES, read: readSeriesEvent(id), onEvent })
+
+const experimentQuery = (filter: ExperimentFilter, cursor: string | null) => ({
+  flow_id: filter.flow ?? null,
+  question: filter.question ?? null,
+  failure_mode: filter.failureMode ?? null,
+  cursor,
+  limit: MAX_PAGE,
 })
 
-export const researchStore = createResearchStore()
+const caseQuery = (filter: SeriesCaseFilter) => ({ failures: filter.failures ?? false, divergent: filter.divergent ?? false })
 
-export const research = researchSource(researchStore)
+export const research: ResearchSource = {
+  experiments: async (filter = NO_FILTER) => {
+    const rows = await everyPage(async (cursor) => unwrap(await api.GET("/api/experiments", { params: { query: experimentQuery(filter, cursor) } })))
+    return rows.map(experimentSummaryOf)
+  },
+  experiment: async (id) =>
+    experimentDetailOf(unwrap(await api.GET("/api/experiments/{experiment_id}", { params: { path: { experiment_id: id } } }))),
+  estimate: async (id, request) =>
+    estimateOf(unwrap(await api.POST("/api/experiments/{experiment_id}/estimate", { params: { path: { experiment_id: id } }, body: launchBody(request) }))),
+  startSeries: async (id, request) => {
+    const started = unwrap(await api.POST("/api/series", { body: { ...launchBody(request), experiment_id: id } }))
+    return ids.seriesId(started.series_id)
+  },
+  approveSeries: async (id) =>
+    seriesSummaryOf(unwrap(await api.POST("/api/series/{series_id}/approve", { params: { path: { series_id: id } } }))),
+  cancelSeries: async (id, reason) =>
+    seriesSummaryOf(unwrap(await api.POST("/api/series/{series_id}/cancel", { params: { path: { series_id: id } }, body: { reason: reason ?? null } }))),
+  series: async (id) =>
+    seriesDetailOf(unwrap(await api.GET("/api/series/{series_id}", { params: { path: { series_id: id } } })).series),
+  seriesCases: async (id, filter = NO_CASE_FILTER) => {
+    const rows = unwrap(await api.GET("/api/series/{series_id}/cases", { params: { path: { series_id: id }, query: caseQuery(filter) } }))
+    return rows.map(caseRowOf)
+  },
+  seriesOfExperiment: async (id) => {
+    const rows = await everyPage(async (cursor) =>
+      unwrap(await api.GET("/api/series", { params: { query: { experiment_id: id, cursor, limit: MAX_PAGE } } })))
+    return rows.map(seriesSummaryOf)
+  },
+  startLook: async (flowId, datasetId, caseNames) => {
+    const started = unwrap(await api.POST("/api/series", {
+      body: { on: "dev", look: { flow_id: flowId, dataset_id: datasetId, case_names: [...caseNames] } },
+    }))
+    return ids.seriesId(started.series_id)
+  },
+  events: seriesEventStream,
+}
