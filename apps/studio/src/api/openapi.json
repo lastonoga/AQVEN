@@ -27979,6 +27979,7 @@
             "enum": [
               "history",
               "prices",
+              "bound",
               "unknown"
             ],
             "title": "Usd Source"

@@ -123,7 +123,7 @@ describe("ExperimentScreen: launch", () => {
     expect(screen.getByText("Recommended N ≈ 52")).toBeTruthy()
     expect(screen.getByText("About 52 cases are needed for an interval within the 0.05 margin, but only 6 are available: expect a wide interval.")).toBeTruthy()
     expect(await estimateText()).toContain("Attempts36")
-    expect(await estimateText()).toContain("Spend$0.45")
+    expect(await estimateText()).toContain("Spend$0.45from past series")
     expect(await estimateText()).toContain("Spend cap $1.00")
     expect(screen.getByRole("note").textContent).toContain("these cases hold only 6")
     expect(screen.getByRole("button", { name: "Start" }).hasAttribute("disabled")).toBe(false)
@@ -140,6 +140,24 @@ describe("ExperimentScreen: launch", () => {
     expect(screen.getByRole("button", { name: "Start" }).hasAttribute("disabled")).toBe(false)
   })
 
+  it.each([
+    ["bound", "upper bound"],
+    ["prices", "provider prices"],
+  ] as const)("names a %s estimate next to the spend", async (source, label) => {
+    const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
+    if (experiment === undefined) throw new Error("no experiment")
+    server.use(
+      http.post(`${API_BASE}/experiments/:experimentId/estimate`, () =>
+        HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd_source: source }),
+      ),
+    )
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    await section("Launch")
+    await waitFor(async () => {
+      expect(await estimateText()).toContain(`Spend$0.45${label}`)
+    })
+  })
+
   it("says so when the models have no price and the series needs an approval", async () => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
@@ -151,6 +169,7 @@ describe("ExperimentScreen: launch", () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     await section("Launch")
     expect(await estimateText()).toContain("Spendno estimate")
+    expect(await estimateText()).not.toContain("no price")
     expect(await estimateText()).toContain("Timeno estimate")
     expect(screen.getByText(/have no price yet, so the spend cannot be estimated/)).toBeTruthy()
   })

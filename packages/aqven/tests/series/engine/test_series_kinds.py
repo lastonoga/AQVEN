@@ -1,4 +1,5 @@
 import asyncio
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
@@ -18,7 +19,7 @@ from aqven.engine import DbosEngineFacade
 from aqven.ports.engine import RunListQuery
 from aqven.runtime.address import ClientOpId
 from aqven.series.model import AttemptRecord, CheckState, OutcomeClass, SeriesRecord, SeriesStatus
-from aqven.series.views import LookTarget, SeriesListQuery, SeriesStartRequest
+from aqven.series.views import LookTarget, SeriesListQuery, SeriesStarted, SeriesStartRequest
 from aqven.spec import ArmId, DatasetId, ExperimentId, FlowId, SeriesSplit, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
@@ -38,6 +39,16 @@ async def finished(
     return record, await harness.services.store.attempts(started.series_id)
 
 
+async def unattended(
+    harness: SeriesHarness, request: SeriesStartRequest
+) -> tuple[SeriesStarted, SeriesRecord, tuple[AttemptRecord, ...]]:
+    started = await harness.service.start(request, AGENT)
+    await settled(harness.service, started.series_id)
+    record = await harness.services.store.series(started.series_id)
+    assert record is not None
+    return started, record, await harness.services.store.attempts(started.series_id)
+
+
 def check_states(attempts: tuple[AttemptRecord, ...]) -> dict[str, list[CheckState]]:
     return {attempt.case_name: [check.state for check in attempt.checks] for attempt in attempts}
 
@@ -46,10 +57,15 @@ def test_a_range_series_runs_from_the_recorded_node_outputs(tmp_path: Path) -> N
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
-        record, attempts = asyncio.run(
-            finished(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_range")))
+        started, record, attempts = asyncio.run(
+            unattended(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_range")))
         )
 
+    assert (started.status, started.estimate.usd_source, started.estimate.usd) == (
+        SeriesStatus.RUNNING,
+        "bound",
+        Decimal(0),
+    )
     assert record.status is SeriesStatus.DONE
     assert record.verdict is None
     assert [attempt.outcome for attempt in attempts] == [OutcomeClass.OK, OutcomeClass.OK]

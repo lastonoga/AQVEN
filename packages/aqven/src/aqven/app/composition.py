@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from starlette.types import ASGIApp
 
 from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
+from aqven.app.prices import LazyPriceLookup
 from aqven.app.runtime import ApplicationLaunch, LocalServer
 from aqven.check import CheckReport
 from aqven.compiler import compile_project
@@ -21,6 +22,7 @@ from aqven.ports.settings import SettingsStore
 from aqven.series.analysis import ScipySeriesAnalyst
 from aqven.series.findings import FileFindings
 from aqven.series.jobs import SeriesService
+from aqven.series.ports import ModelPrices
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
 from aqven.server import ServerExtensions, ServerOptions, create_app
@@ -98,24 +100,26 @@ class ProjectParts:
     jobs: SeriesService
 
 
-def project_parts(root: Path, settings: SettingsStore) -> ProjectParts:
+def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> ProjectParts:
     workspace = ProjectWorkspace(root, compiler=ReportCompiler())
     writer = WriteService(root)
     findings = FileFindings(writer, root)
-    series = build_series_services(root, workspace, settings, ScipySeriesAnalyst(), findings, engine_version())
+    analyst = ScipySeriesAnalyst()
+    series = build_series_services(root, workspace, settings, analyst, findings, prices, engine_version())
     return ProjectParts(workspace=workspace, writer=writer, series=series, jobs=SeriesService(series))
 
 
 @dataclass(slots=True)
 class ProjectAssembly:
     built: dict[Path, ProjectParts] = field(default_factory=dict[Path, ProjectParts])
+    prices: ModelPrices = field(default_factory=LazyPriceLookup)
 
     def parts(self, root: Path, settings: SettingsStore) -> ProjectParts:
         key = root.resolve()
         existing = self.built.get(key)
         if existing is not None:
             return existing
-        fresh = project_parts(key, settings)
+        fresh = project_parts(key, settings, self.prices)
         self.built[key] = fresh
         return fresh
 

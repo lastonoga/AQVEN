@@ -6,7 +6,7 @@ from aqven.engine.runtime import RUNTIME_SLOT
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.address import RunId
 from aqven.runtime.human import OpenWaitFilter
-from aqven.series.ports import FindingsSink, OpenWaits, SeriesAnalyst, SeriesStore
+from aqven.series.ports import FindingsSink, ModelPrices, OpenWaits, SeriesAnalyst, SeriesStore
 from aqven.series.split import SplitAssigner, WorkspacePackage
 from aqven.series.store import SqliteSeriesStore
 from aqven.server.workspace import ProjectWorkspace
@@ -22,6 +22,7 @@ class SeriesServices:
     analyst: SeriesAnalyst
     findings: FindingsSink
     waits: OpenWaits
+    prices: ModelPrices
     engine_version: str
 
 
@@ -40,6 +41,7 @@ def build_series_services(
     settings: SettingsStore,
     analyst: SeriesAnalyst,
     findings: FindingsSink,
+    prices: ModelPrices,
     engine_version: str,
 ) -> SeriesServices:
     return SeriesServices(
@@ -51,5 +53,6 @@ def build_series_services(
         analyst=analyst,
         findings=findings,
         waits=RuntimeWaits(),
+        prices=prices,
         engine_version=engine_version,
     )

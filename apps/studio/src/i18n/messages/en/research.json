@@ -242,6 +242,12 @@
       "active": "{series} · {done} of {total} attempts",
       "failed": "Could not do that: {reason}",
       "noEstimate": "no estimate",
+      "usdSource": {
+        "history": "from past series",
+        "prices": "provider prices",
+        "bound": "upper bound",
+        "unknown": "no price"
+      },
       "noPrice": "The models of this experiment have no price yet, so the spend cannot be estimated: the series will wait for your approval before it runs.",
       "cap": "Spend cap {cap}"
     },

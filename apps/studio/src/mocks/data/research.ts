@@ -255,6 +255,11 @@ const SEEDS: readonly SeriesSeed[] = [
 
 export const initialSeries = (): readonly SeriesState[] => SEEDS.map((item) => ({ ...item, approvedBy: null }))
 
+const EXPERIMENTS_WITH_SERIES: ReadonlySet<string> = new Set(SEEDS.flatMap((seed) => (seed.experiment === null ? [] : [seed.experiment])))
+
+const usdSourceOf = (experiment: ApiExperimentDetail): ApiSeriesEstimate["usd_source"] =>
+  EXPERIMENTS_WITH_SERIES.has(experiment.experiment_id) ? "history" : "bound"
+
 const unit = (key: string): number => {
   let hash = HASH_SEED
   for (const char of key) {
@@ -594,7 +599,7 @@ export const estimateFor = (experiment: ApiExperimentDetail, request: LaunchBody
     attempts,
     available,
     usd: money(usd),
-    usd_source: "prices",
+    usd_source: usdSourceOf(experiment),
     minutes: Math.max(1, Math.ceil((attempts * SECONDS_PER_ATTEMPT) / PARALLEL / SECONDS_PER_MINUTE)),
     half_width: hasMargin ? round(halfWidth(Math.max(cases, 1), repeats), 4) : null,
     mde: null,

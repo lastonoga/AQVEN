@@ -165,7 +165,7 @@ class SeriesEstimate(ResourceModel):
     attempts: int
     available: int
     usd: Decimal | None
-    usd_source: Literal["history", "prices", "unknown"]
+    usd_source: Literal["history", "prices", "bound", "unknown"]
     minutes: int | None
     half_width: float | None
     mde: float | None

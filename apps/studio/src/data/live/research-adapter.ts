@@ -216,6 +216,7 @@ export const estimateOf = (estimate: ApiSeriesEstimate): LaunchEstimate => ({
   variants: estimate.variants,
   attempts: estimate.attempts,
   usd: estimate.usd === null ? null : money(estimate.usd),
+  usdSource: estimate.usd_source,
   minutes: estimate.minutes,
   available: estimate.available,
   halfWidth: estimate.half_width,

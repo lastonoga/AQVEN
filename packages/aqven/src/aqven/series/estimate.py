@@ -1,3 +1,4 @@
+import asyncio
 import math
 import statistics
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -5,13 +6,12 @@ from dataclasses import dataclass, field
 from decimal import ROUND_CEILING, Decimal
 from typing import Final, Literal, Protocol
 
-from genai_prices import Usage, calc_price
-
 from aqven.ir import CompiledProject
 from aqven.ports.engine import ExecutionQuery, RunListQuery
 from aqven.runtime.address import RunId
 from aqven.runtime.executions import NodeExecution
 from aqven.runtime.runs import Page, RunSummary
+from aqven.series.bound import BoundPlan, TokenBound, attempt_bound
 from aqven.series.model import (
     COUNTED_OUTCOMES,
     AttemptRecord,
@@ -26,7 +26,7 @@ from aqven.series.model import (
     SeriesStatus,
     VariantPlanRecord,
 )
-from aqven.series.ports import SeriesStore
+from aqven.series.ports import ModelPrices, SeriesStore
 from aqven.series.protocol import ATTEMPT_SLOTS, CAP_HEADROOM
 from aqven.series.stats.power import MarginRequired, half_width, icc_of, mde, recommended_cases, spread_of
 from aqven.series.views import SeriesListQuery
@@ -43,6 +43,7 @@ from aqven.spec import (
     ThresholdQuestion,
     VariantId,
 )
+from aqven_llm import TokenPrice
 
 HISTORY_LIMIT: Final = 200
 PRICE_RUNS: Final = 20
@@ -58,7 +59,6 @@ JUDGE_TOKENS_IN: Final = 2000
 JUDGE_TOKENS_OUT: Final = 300
 CENT: Final = Decimal("0.01")
 MILLISECONDS_PER_MINUTE: Final = 60000
-MODEL_SEPARATOR: Final = ":"
 HOLDOUT_REUSED: Final = "holdout_reused"
 PRICE_UNKNOWN: Final = "price_unknown:{model}"
 HISTORY_SERIES_LIMIT: Final = 200
@@ -66,9 +66,11 @@ PASS: Final = 1.0
 FAIL: Final = 0.0
 DECIDED_STATES: Final = frozenset({CheckState.PASSED, CheckState.FAILED})
 
-type UsdSource = Literal["history", "prices", "unknown"]
+type UsdSource = Literal["history", "prices", "bound", "unknown"]
 type SpreadSource = Literal["history", "prior", "none"]
 type AttemptValue = Callable[[AttemptRecord], float | None]
+
+SOURCE_PRECEDENCE: Final[tuple[UsdSource, ...]] = ("unknown", "bound", "prices", "history")
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +174,7 @@ class EstimatePlan:
     base: CompiledProject
     cases_sha256: str
     warnings: tuple[str, ...] = ()
+    bound: BoundPlan | None = None
 
     @property
     def attempts(self) -> int:
@@ -388,20 +391,6 @@ def sized_recommendation(plan: EstimatePlan, spread: Spread, margin: float, need
     return Recommendation(cases=needed, repeats=plan.repeats, reason=EstimateReason.ENOUGH, text=text)
 
 
-def model_parts(model: str) -> tuple[str | None, str]:
-    provider, separator, name = model.partition(MODEL_SEPARATOR)
-    return (provider, name) if separator else (None, model)
-
-
-def token_price(model: str, tokens_in: float, tokens_out: float) -> Decimal | None:
-    provider, name = model_parts(model)
-    usage = Usage(input_tokens=round(tokens_in), output_tokens=round(tokens_out))
-    try:
-        return calc_price(usage, name, provider_id=provider).total_price
-    except LookupError:
-        return None
-
-
 def ceil_cents(amount: Decimal) -> Decimal:
     return max(CENT, (amount / CENT).to_integral_value(rounding=ROUND_CEILING) * CENT)
 
@@ -441,57 +430,106 @@ def mean_decimal(values: Sequence[Decimal]) -> Decimal | None:
     return sum(values, Decimal(0)) / len(values)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
+class VariantFacts:
+    variant: VariantPlanRecord
+    history: Sequence[AttemptRecord] = ()
+    sample: FlowSample | None = None
+    bound: tuple[TokenBound, ...] | None = None
+
+
+def recorded_usd(history: Sequence[AttemptRecord]) -> Decimal | None:
+    return mean_decimal([attempt.cost_usd + attempt.check_cost_usd for attempt in history if counted(attempt)])
+
+
+def sampled_nodes(variant: VariantPlanRecord, sample: FlowSample | None) -> tuple[tuple[str, NodeSample], ...]:
+    if sample is None:
+        return ()
+    return tuple(
+        (item.model, sample.nodes[item.node_id]) for item in variant.assignments if item.node_id in sample.nodes
+    )
+
+
+def priced_models(facts: VariantFacts, judges: Sequence[str]) -> tuple[str, ...]:
+    if recorded_usd(facts.history) is not None:
+        return ()
+    if sampled_nodes(facts.variant, facts.sample):
+        return (*(item.model for item in facts.variant.assignments), *judges)
+    return tuple(bound.model for bound in facts.bound or ())
+
+
+UNKNOWN_PRICE: Final = PricedAttempt(usd=None, source="unknown")
+
+
+@dataclass(frozen=True, slots=True)
 class VariantPricer:
-    base: CompiledProject
-    checks: tuple[CheckPlan, ...]
+    table: Mapping[str, TokenPrice]
+    judges: tuple[str, ...]
+
+    def price(self, facts: VariantFacts) -> PricedAttempt:
+        rules = (self.recorded, self.sampled, self.bounded)
+        found = (rule(facts) for rule in rules)
+        return next((priced for priced in found if priced is not None), UNKNOWN_PRICE)
+
+    def recorded(self, facts: VariantFacts) -> PricedAttempt | None:
+        usd = recorded_usd(facts.history)
+        return None if usd is None else PricedAttempt(usd=usd, source="history")
+
+    def sampled(self, facts: VariantFacts) -> PricedAttempt | None:
+        nodes = sampled_nodes(facts.variant, facts.sample)
+        if not nodes:
+            return None
+        priced = [(model, self._cost(model, node.tokens_in, node.tokens_out), node.cost_usd) for model, node in nodes]
+        unknown = tuple(model for model, price, _ in priced if price is None)
+        subject = sum((price if price is not None else recorded for _, price, recorded in priced), Decimal(0))
+        return PricedAttempt(usd=subject + self._typical_judges(), source="prices", unknown_models=unknown)
+
+    def bounded(self, facts: VariantFacts) -> PricedAttempt | None:
+        if facts.bound is None:
+            return None
+        unknown = tuple(dict.fromkeys(bound.model for bound in facts.bound if bound.model not in self.table))
+        if unknown:
+            return PricedAttempt(usd=None, source="unknown", unknown_models=unknown)
+        costs = (self.table[bound.model].cost(bound.tokens_in, bound.tokens_out) * bound.calls for bound in facts.bound)
+        return PricedAttempt(usd=sum(costs, Decimal(0)), source="bound")
+
+    def _cost(self, model: str, tokens_in: float, tokens_out: float) -> Decimal | None:
+        price = self.table.get(model)
+        return None if price is None else price.cost(round(tokens_in), round(tokens_out))
+
+    def _typical_judges(self) -> Decimal:
+        costs = (self._cost(model, JUDGE_TOKENS_IN, JUDGE_TOKENS_OUT) for model in self.judges)
+        return sum((cost for cost in costs if cost is not None), Decimal(0))
+
+
+@dataclass(slots=True)
+class CachedSampler:
     sampler: RunSampler | None
     samples: dict[str, FlowSample | None] = field(default_factory=dict[str, FlowSample | None])
 
-    async def price(self, variant: VariantPlanRecord, history: Sequence[AttemptRecord]) -> PricedAttempt:
-        recorded = mean_decimal([attempt.cost_usd + attempt.check_cost_usd for attempt in history if counted(attempt)])
-        if recorded is not None:
-            return PricedAttempt(usd=recorded, source="history")
-        sample = await self._sample(variant.flow_id)
-        if sample is None:
-            return PricedAttempt(usd=None, source="unknown")
-        return self._priced(variant, sample)
-
-    async def duration(self, variant: VariantPlanRecord) -> float | None:
-        sample = await self._sample(variant.flow_id)
-        return None if sample is None else sample.duration_ms
-
-    async def _sample(self, flow_id: str) -> FlowSample | None:
+    async def sample(self, flow_id: str) -> FlowSample | None:
         if self.sampler is None:
             return None
         if flow_id not in self.samples:
             self.samples[flow_id] = await self.sampler.sample(flow_id)
         return self.samples[flow_id]
 
-    def _priced(self, variant: VariantPlanRecord, sample: FlowSample) -> PricedAttempt:
-        nodes = [
-            (item.model, sample.nodes[item.node_id]) for item in variant.assignments if item.node_id in sample.nodes
-        ]
-        if not nodes:
-            return PricedAttempt(usd=None, source="unknown")
-        priced = [(model, token_price(model, node.tokens_in, node.tokens_out), node.cost_usd) for model, node in nodes]
-        unknown = tuple(model for model, price, _ in priced if price is None)
-        subject = sum((price if price is not None else recorded for _, price, recorded in priced), Decimal(0))
-        judges = self._judges()
-        return PricedAttempt(usd=subject + judges, source="prices", unknown_models=unknown)
 
-    def _judges(self) -> Decimal:
-        models = [self.base.agent(check.judge.agent).primary.model for check in self.checks if check.judge is not None]
-        prices = [token_price(model, JUDGE_TOKENS_IN, JUDGE_TOKENS_OUT) for model in models]
-        return sum((price for price in prices if price is not None), Decimal(0))
+def judge_models(plan: EstimatePlan) -> tuple[str, ...]:
+    return tuple(plan.base.agent(check.judge.agent).primary.model for check in plan.checks if check.judge is not None)
+
+
+async def bound_of(plan: BoundPlan | None, variant: VariantPlanRecord) -> tuple[TokenBound, ...] | None:
+    if plan is None:
+        return None
+    return await asyncio.to_thread(attempt_bound, plan, variant)
 
 
 def usd_source(priced: Sequence[PricedAttempt]) -> UsdSource:
-    if any(item.usd is None for item in priced):
+    sources: set[UsdSource] = {"unknown" if item.usd is None else item.source for item in priced}
+    if not sources:
         return "unknown"
-    if all(item.source == "history" for item in priced):
-        return "history"
-    return "prices"
+    return min(sources, key=SOURCE_PRECEDENCE.index)
 
 
 def total_usd(priced: Sequence[PricedAttempt], plan: EstimatePlan) -> Decimal | None:
@@ -516,20 +554,23 @@ def unknown_warnings(priced: Sequence[PricedAttempt]) -> tuple[str, ...]:
 @dataclass(frozen=True, slots=True)
 class SeriesEstimator:
     store: SeriesStore
+    prices: ModelPrices
     sampler: RunSampler | None = None
 
     async def estimate(
         self, plan: EstimatePlan, request_cap: Decimal | None, project_cap: Decimal, workers: int | None
     ) -> EstimateOutcome:
         history = await self._history(plan)
-        pricer = VariantPricer(plan.base, plan.checks, self.sampler)
-        priced = [await pricer.price(variant, history.get(variant.variant_id, ())) for variant in plan.variants]
+        samples = CachedSampler(self.sampler)
+        facts = [await self._facts(plan, variant, history, samples) for variant in plan.variants]
+        pricer = await self._pricer(plan, facts)
+        priced = [pricer.price(item) for item in facts]
         usd = total_usd(priced, plan)
         target = target_of(plan)
         spread = spread_for(target, history, plan.repeats)
         chosen = recommendation(plan, target, spread)
         decision = cap_decision(usd, request_cap, project_cap)
-        latency = history_latency(history) or await self._duration(pricer, plan)
+        latency = history_latency(history) or await self._duration(samples, plan)
         warnings = (*plan.warnings, *await self._reused(plan), *unknown_warnings(priced))
         estimate = SeriesEstimate(
             on=plan.on,
@@ -565,8 +606,30 @@ class SeriesEstimator:
             for variant in plan.variants
         }
 
-    async def _duration(self, pricer: VariantPricer, plan: EstimatePlan) -> float | None:
-        durations = [found for variant in plan.variants if (found := await pricer.duration(variant)) is not None]
+    async def _facts(
+        self,
+        plan: EstimatePlan,
+        variant: VariantPlanRecord,
+        history: Mapping[VariantId, tuple[AttemptRecord, ...]],
+        samples: CachedSampler,
+    ) -> VariantFacts:
+        recorded = history.get(variant.variant_id, ())
+        if recorded_usd(recorded) is not None:
+            return VariantFacts(variant=variant, history=recorded)
+        sample = await samples.sample(variant.flow_id)
+        if sampled_nodes(variant, sample):
+            return VariantFacts(variant=variant, history=recorded, sample=sample)
+        return VariantFacts(variant=variant, history=recorded, sample=sample, bound=await bound_of(plan.bound, variant))
+
+    async def _pricer(self, plan: EstimatePlan, facts: Sequence[VariantFacts]) -> VariantPricer:
+        judges = judge_models(plan)
+        models = tuple(dict.fromkeys(model for item in facts for model in priced_models(item, judges)))
+        table: Mapping[str, TokenPrice] = await self.prices.prices(models) if models else {}
+        return VariantPricer(table=table, judges=judges)
+
+    async def _duration(self, samples: CachedSampler, plan: EstimatePlan) -> float | None:
+        found = [await samples.sample(variant.flow_id) for variant in plan.variants]
+        durations = [sample.duration_ms for sample in found if sample is not None and sample.duration_ms is not None]
         return statistics.median(durations) if durations else None
 
     async def _reused(self, plan: EstimatePlan) -> tuple[str, ...]:
