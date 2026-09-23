@@ -147,6 +147,7 @@ export default defineConfig({
               label: "Connect & read a project",
               items: [
                 { slug: "mcp-cli/connect-an-agent" },
+                { slug: "mcp-cli/set-up-an-agent-outside-studio" },
                 { slug: "mcp-cli/read-project-structure" },
               ],
             },
