@@ -4,7 +4,6 @@ import * as ids from "@/data/ids"
 import { intervalText, marginText, metricName, metricValue, signedValue } from "./metrics"
 import {
   activeSeries,
-  assignmentRows,
   checkLaunch,
   experimentFlows,
   failureModes,
@@ -16,7 +15,6 @@ import {
   questionSentence,
   shortfallOf,
   shownRole,
-  sourceDetail,
   subjectText,
   tagPairs,
   variantsText,
@@ -199,37 +197,6 @@ describe("launch", () => {
     const awaiting = seriesSummary({ id: ids.seriesId("awaiting"), status: "awaiting_approval" })
     expect(activeSeries([done, awaiting])?.id).toBe("awaiting")
     expect(activeSeries([done])).toBeNull()
-  })
-})
-
-describe("what the experiment runs and measures", () => {
-  it("lists one row per node assignment and marks the first row of each variant", () => {
-    const rows = assignmentRows([
-      { id: ids.variantId("panel"), arm: null, role: "baseline", assignments: [
-        { node: ids.nodeId("judges__deepseek"), agent: { id: ids.agentId("deepseek"), model: "m1" }, overridden: false },
-        { node: ids.nodeId("judges__qwen"), agent: { id: ids.agentId("qwen"), model: "m2" }, overridden: false },
-      ] },
-      { id: ids.variantId("single_judge"), arm: ids.armId("single_judge"), role: "candidate", assignments: [{ node: ids.nodeId("judge"), agent: { id: ids.agentId("deepseek"), model: "m1" }, overridden: false }] },
-    ])
-    expect(rows.map((row) => [row.key, row.first])).toEqual([
-      ["panel:judges__deepseek", true],
-      ["panel:judges__qwen", false],
-      ["single_judge:judge", true],
-    ])
-  })
-
-  it("describes where each check comes from", () => {
-    const copy = {
-      builtin: (use: string, fields: string) => `${use} on ${fields}`,
-      builtinAll: (use: string) => `${use} on all`,
-      judge: (inference: string, agent: string, model: string) => `${inference} by ${agent} (${model})`,
-      judgeAgentless: (inference: string) => `${inference} by an unknown agent`,
-    }
-    expect(sourceDetail({ kind: "builtin", use: "expected", fields: ["intent", "reply"] }, copy)).toBe("expected on intent, reply")
-    expect(sourceDetail({ kind: "builtin", use: "expected", fields: [] }, copy)).toBe("expected on all")
-    expect(sourceDetail({ kind: "code", ref: "@root.code.support_case:promises" }, copy)).toBe("@root.code.support_case:promises")
-    expect(sourceDetail({ kind: "judge", inference: "critique", agent: { id: ids.agentId("deepseek"), model: "m1" }, validatedBy: null }, copy)).toBe("critique by deepseek (m1)")
-    expect(sourceDetail({ kind: "judge", inference: "critique", agent: null, validatedBy: null }, copy)).toBe("critique by an unknown agent")
   })
 })
 

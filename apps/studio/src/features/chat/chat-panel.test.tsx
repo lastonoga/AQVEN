@@ -18,8 +18,7 @@ const CREATED: ApiChatSession = {
 }
 
 const openAgentSettings = async (): Promise<HTMLElement> => {
-  const sections = await screen.findByRole("navigation", { name: "Project sections" })
-  fireEvent.click(within(sections).getByRole("link", { name: "Settings" }))
+  fireEvent.click(await screen.findByRole("link", { name: "Settings" }))
   const settings = await screen.findByRole("navigation", { name: "Settings sections" })
   fireEvent.click(within(settings).getByRole("link", { name: "Chat" }))
   await screen.findByRole("radiogroup", { name: "Chat backend" })

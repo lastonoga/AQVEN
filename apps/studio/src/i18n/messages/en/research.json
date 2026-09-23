@@ -143,70 +143,68 @@
     "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/"
   },
   "experiment": {
-    "files": "Defined in {spec}",
-    "notesShow": "Show notes",
-    "notesHide": "Hide notes",
-    "notesAria": "Notes of this experiment",
-    "failureMode": "failure mode {mode}",
     "guardrails": "Guardrails: {list}",
-    "run": {
-      "title": "What we run",
-      "subject": "Subject",
-      "subjectText": {
-        "flow": "the whole flow {flow}",
-        "range": "{flow}, nodes {range}",
-        "arm": "arm {arm}",
-        "armRange": "arm {arm}, nodes {range}"
-      },
-      "cases": "Cases",
-      "variants": "Variants",
-      "casesText": "{dataset} · {selected} of {total} cases · {dev} working, {holdout} held out",
-      "allCases": "all cases",
-      "openCases": "Open the cases",
-      "steps": "Steps of arm {arm}",
-      "stepsAria": "Steps of arm {arm}",
-      "variantsAria": "Variants of this experiment",
-      "column": {
-        "step": "#",
-        "node": "Node",
-        "kind": "Kind",
-        "agent": "Agent",
-        "model": "Model",
-        "description": "What it does",
-        "variant": "Variant",
-        "arm": "Arm"
-      },
-      "noAgent": "no agent",
-      "overridden": "overridden"
+    "question": {
+      "run": "Run",
+      "runPrice": "Run · {price}"
     },
-    "measure": {
-      "title": "How we measure",
-      "checks": "Checks",
-      "checksAria": "Checks of this experiment",
-      "metrics": "Metrics of the question",
-      "metricsAria": "Metrics of the question",
-      "builtins": "Built-in metrics of every series: {list}",
-      "noQuestionMetrics": "A look has no primary metric and no guardrails.",
-      "column": {
-        "check": "Check",
-        "kind": "Kind",
-        "source": "Source",
-        "detail": "Detail",
-        "trust": "Trust",
-        "metric": "Metric",
-        "role": "Role",
-        "direction": "Direction",
-        "margin": "Margin"
+    "canvas": {
+      "title": "What we test",
+      "hint": "Faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agent in each variant.",
+      "graphAria": "Graph of {graph}",
+      "arm": "arm {arm}",
+      "flow": "flow {flow}",
+      "swap": "swap: {agents}",
+      "noGraph": "The graph of this experiment could not be loaded",
+      "close": "Close",
+      "noAgent": "no agent",
+      "overridden": "overridden",
+      "outside": "Outside the tested range: this step does not run, its output comes from the case.",
+      "cases": "Cases: {selected} of {total} from {dataset}, {tags}; {dev} working, {holdout} held out",
+      "anyTag": "any tags",
+      "tagged": "tagged {tags}",
+      "openCases": "Open the cases",
+      "checks": "Checks: {list}",
+      "noChecks": "No checks: only the built-in metrics are measured",
+      "check": {
+        "judgeValidated": "{id} (judge, validated by {by})",
+        "judgeUnvalidated": "{id} (judge, not validated)",
+        "code": "{id} (code)",
+        "builtin": "{id} (built-in)"
+      }
+    },
+    "answer": {
+      "title": "Answer",
+      "look": "No verdict for a look: see the cases of the series.",
+      "gap": {
+        "look": "No verdict for a look: see the cases of the series.",
+        "pending": "The answer comes when the series finishes.",
+        "failed": "No answer: the series stopped on an error before it could measure.",
+        "none": "No answer: the series produced no usable measurement."
       },
-      "builtinDetail": "{use} on {fields}",
-      "builtinAll": "{use} on the whole output",
-      "judgeDetail": "{inference} · {agent} ({model})",
-      "judgeAgentless": "{inference}",
-      "validatedBy": "validated by {experiment}",
-      "unvalidated": "unvalidated judge",
-      "noTrust": "—",
-      "thresholdMargin": "{bound, select, above {above} other {below}} {value} ± {margin}",
-      "noMargin": "—"
+      "empty": "No series yet",
+      "emptyHint": "Run the experiment to get an answer.",
+      "fresh": "Run again on fresh cases",
+      "next": "Ask the agent for the next hypothesis",
+      "open": "Open series {ref}"
+    },
+    "comparison": {
+      "title": "Comparison",
+      "hint": "Primary metric of the latest series: dot = value, whisker = 95% CI",
+      "valueOf": "{metric}, 95% CI {interval}",
+      "whisker": "{variant}: {value}",
+      "costOfPass": "cost per pass {value}",
+      "stability": "{always} always, {flaky} flaky, {never} never",
+      "difference": "Difference",
+      "interval": "95% CI {interval}",
+      "margin": "margin {margin}",
+      "threshold": "{metric} {bound, select, above {above} other {below}} {value} ± {margin}"
+    },
+    "disagree": {
+      "title": "Cases where variants disagree",
+      "tally": "{variant} {passed}/{total}",
+      "all": "All {count} in the series",
+      "none": "The variants agree on every case so far."
     },
     "launch": {
       "title": "Launch",
@@ -226,40 +224,40 @@
         "no_history": "No earlier series to learn the spread from, so the plan size of {recommended} is used.",
         "short_of_cases": "About {recommended} cases are needed for an interval within the {margin} margin, but only {available} are available: expect a wide interval."
       },
-      "estimateAria": "Estimate of this launch",
-      "attempts": "Attempts",
-      "spend": "Spend",
-      "time": "Time",
+      "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+      "spend": "≈ {usd}",
       "minutes": "about {count, plural, one {# minute} other {# minutes}}",
-      "variantsNote": "{cases} × {repeats} × {variants, plural, one {# variant} other {# variants}}",
       "estimating": "Estimating…",
       "below": "Fewer cases than recommended ({recommended}): the series can still start, but expect a wide interval.",
       "belowAvailable": "Fewer cases than recommended ({recommended}), and these cases hold only {available}: add cases, or start anyway and expect a wide interval.",
       "approval": "This estimate is above the {cap} spend cap: the series will wait for your approval before it runs.",
-      "start": "Start",
       "approve": "Approve spend",
       "stop": "Stop",
       "active": "{series} · {done} of {total} attempts",
       "failed": "Could not do that: {reason}",
-      "noEstimate": "no estimate",
+      "noEstimate": "no price estimate",
       "noPrice": "The models of this experiment have no price yet, so the spend cannot be estimated: the series will wait for your approval before it runs.",
-      "cap": "Spend cap {cap}"
+      "cap": "Spend cap {cap}",
+      "size": "{cases} cases × {repeats} repeats",
+      "adjust": "Adjust",
+      "adjustAria": "Launch settings"
     },
     "history": {
       "title": "Series history",
       "aria": "Series of this experiment",
-      "empty": "No series yet",
-      "emptyHint": "Start one above: it runs the variants on the selected cases.",
-      "open": "Open series {ref}",
-      "column": {
-        "started": "Started",
-        "split": "On",
-        "size": "N×R",
-        "attempts": "Attempts",
-        "spend": "Spend",
-        "status": "Status",
-        "verdict": "Verdict"
-      }
+      "open": "Open series {ref}"
+    },
+    "details": {
+      "title": "Technical details",
+      "files": "Files",
+      "question": "Question",
+      "subject": "Subject",
+      "plan": "Plan",
+      "planText": "{cases} cases × {repeats} repeats",
+      "failureMode": "Failure mode",
+      "threshold": "{bound, select, above {above} other {below}} {value} ± {margin}",
+      "margin": "margin {margin}",
+      "notes": "Notes of this experiment"
     }
   },
   "series": {
@@ -348,5 +346,23 @@
       "running": "{count} running"
     },
     "live": "live"
+  },
+  "seriesList": {
+    "title": "Series",
+    "subtitle": "Every series of {project}: running ones first, then the newest",
+    "aria": "All series",
+    "empty": "No series yet",
+    "emptyHint": "Start one from an experiment, or look at cases of a flow.",
+    "open": "Open series {ref}",
+    "look": "look · {flow}",
+    "column": {
+      "status": "Status",
+      "experiment": "Experiment",
+      "on": "On",
+      "size": "N×R",
+      "spend": "Spend",
+      "verdict": "Verdict",
+      "started": "Started"
+    }
   }
 }

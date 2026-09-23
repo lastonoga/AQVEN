@@ -15,9 +15,9 @@ const hrefs = (container: HTMLElement): readonly (string | null)[] =>
     .map((link) => link.getAttribute("href"))
 
 describe("Landing", () => {
-  it("opens the flows of the launched project", async () => {
+  it("opens the graph of a flow of the launched project", async () => {
     const router = await renderRoute("/")
-    expect(router.state.location.pathname).toBe("/flows")
+    expect(router.state.location.pathname).toBe("/flows/support_case/canvas")
   })
 
   it("redirects an old English URL while preserving its query", async () => {

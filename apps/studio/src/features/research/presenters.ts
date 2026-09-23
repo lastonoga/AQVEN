@@ -1,6 +1,5 @@
 import type {
   CaseTags,
-  CheckSource,
   CompareQuestion,
   EstimateReason,
   ExperimentDetail,
@@ -8,7 +7,6 @@ import type {
   ExperimentQuestion,
   ExperimentSubject,
   ExperimentSummary,
-  ExperimentVariant,
   Guardrail,
   LatestSeries,
   LaunchEstimate,
@@ -22,7 +20,6 @@ import type {
   SeriesSummary,
   ThresholdBound,
   ThresholdQuestion,
-  VariantAssignment,
   VariantRole,
   VerdictState,
 } from "@/domain"
@@ -84,20 +81,6 @@ type ReasonValues = {
 }
 
 export type ReasonCopy = { readonly [K in EstimateReason]: (values: ReasonValues) => string }
-
-export type AssignmentRow = {
-  readonly key: string
-  readonly variant: ExperimentVariant
-  readonly assignment: VariantAssignment
-  readonly first: boolean
-}
-
-export type SourceCopy = {
-  readonly builtin: (use: string, fields: string) => string
-  readonly builtinAll: (use: string) => string
-  readonly judge: (inference: string, agent: string, model: string) => string
-  readonly judgeAgentless: (inference: string) => string
-}
 
 export type FilterPatch = { readonly [K in keyof ExperimentFilter]?: ExperimentFilter[K] | null }
 
@@ -179,22 +162,8 @@ export const experimentFlows = (flows: readonly string[], experiments: readonly 
 
 export const shownRole = (role: VariantRole, question: QuestionKind): VariantRole | null => (question === "look" ? null : role)
 
-export const assignmentRows = (variants: readonly ExperimentVariant[]): readonly AssignmentRow[] =>
-  variants.flatMap((variant) =>
-    variant.assignments.map((assignment, index) => ({ key: `${variant.id}:${assignment.node}`, variant, assignment, first: index === 0 })),
-  )
-
-export const sourceDetail = (source: CheckSource, copy: SourceCopy): string => {
-  if (source.kind === "code") return source.ref
-  if (source.kind === "judge") return source.agent === null ? copy.judgeAgentless(source.inference) : copy.judge(source.inference, source.agent.id, source.agent.model)
-  if (source.fields.length === 0) return copy.builtinAll(source.use)
-  return copy.builtin(source.use, source.fields.join(LIST_SEPARATOR))
-}
-
 export const questionMetrics = (metrics: readonly MetricColumn[]): readonly MetricColumn[] =>
   metrics.filter((column) => column.role === "primary" || column.role === "guardrail")
-
-export const builtinMetrics = (metrics: readonly MetricColumn[]): readonly MetricColumn[] => metrics.filter((column) => column.role === "builtin")
 
 export const tagPairs = (tags: CaseTags): readonly string[] => Object.entries(tags).map(([key, value]) => `${key}${TAG_JOIN}${value}`)
 
