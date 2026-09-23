@@ -13,7 +13,7 @@ Build, run, and debug flows visually in the browser, with the graph, the run tra
 
 ## Driving it through an MCP agent
 
-Point a coding agent at your project over MCP and have it create, run, and fix flows for you. Start with [MCP & CLI](/mcp-cli/).
+Point a coding agent at your project over MCP and have it create, run, and fix flows for you. Start with [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) — connect the server and paste one setup prompt — then the rest of [MCP & CLI](/mcp-cli/).
 
 ## Connecting a model or a tool
 

@@ -34,8 +34,8 @@ const requiredMarkers = [
   "Frequently asked questions.",
   "Is AQVEN open source?",
   "llms.txt",
-  "A week of manual tuning. Then one day and $30.",
-  "The loop around the model is.",
+  "I spent a week tuning it by hand. The next round took a day and $30.",
+  "The loop around it is.",
   "Kir Burkhanov",
 ];
 

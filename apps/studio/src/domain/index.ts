@@ -3,6 +3,7 @@ export type * from "./vocabulary"
 export type * from "./shared"
 export type * from "./setup"
 export type * from "./live"
+export type * from "./research"
 export { assertNever } from "./core"
 export {
   APPROVAL_DECISIONS,
@@ -26,4 +27,26 @@ export {
   WAIT_KINDS,
   WAIT_STATES,
 } from "./vocabulary"
+export {
+  ACTIVE_SERIES_STATUSES,
+  ATTEMPT_OUTCOMES,
+  BUILTIN_METRICS,
+  CELL_VERDICTS,
+  CHECK_KINDS,
+  CHECK_SOURCES,
+  ESTIMATE_REASONS,
+  METRIC_DIRECTIONS,
+  METRIC_ROLES,
+  METRIC_UNITS,
+  QUESTION_KINDS,
+  SERIES_SPLITS,
+  SERIES_STATUSES,
+  STABILITY_CLASSES,
+  SUBJECT_KINDS,
+  THRESHOLD_BOUNDS,
+  VARIANT_ROLES,
+  VERDICT_REASONS,
+  VERDICT_STATES,
+  isBuiltinMetric,
+} from "./research"
 export { AGENT_CHOICE_FIELDS, AGENT_KINDS, AGENT_LIMIT_FIELDS, PROVIDER_NAMES, SETTINGS_SECTIONS, SETUP_STEPS } from "./setup"

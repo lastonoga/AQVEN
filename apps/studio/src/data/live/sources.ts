@@ -28,6 +28,7 @@ import type {
 } from "@/domain"
 import type { SchemaPresentationResponse, SchemaPresentationTarget, SchemaRunSort } from "@/api/schema"
 import { API_BASE, api, unwrap } from "@/api/client"
+import { research } from "./research"
 
 export type RunSort = SchemaRunSort
 
@@ -170,40 +171,48 @@ const run = {
     unwrap(await api.POST("/api/runs/{run_id}/cancel", { params: { path: { run_id: runId } }, body: { reason } })),
 }
 
-const datasets = {
-  list: async () => everyPage(async (cursor) => unwrap(await api.GET("/api/datasets", { params: { query: { cursor, limit: MAX_PAGE } } }))),
-  detail: async (datasetId: string) =>
+const evals = {
+  list: async () => unwrap(await api.GET("/api/evals", { params: { query: { limit: MAX_PAGE } } })).items,
+  detail: async (evalId: string) => unwrap(await api.GET("/api/evals/{eval_id}", { params: { path: { eval_id: evalId } } })),
+  datasets: async () => everyPage(async (cursor) => unwrap(await api.GET("/api/datasets", { params: { query: { cursor, limit: MAX_PAGE } } }))),
+  dataset: async (datasetId: string) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}", { params: { path: { dataset_id: datasetId } } })),
-  cases: async (datasetId: string) => everyPage(async (cursor) =>
+  datasetCases: async (datasetId: string) => everyPage(async (cursor) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}/cases", { params: { path: { dataset_id: datasetId }, query: { cursor, limit: MAX_PAGE } } }))),
-  casesPage: async (datasetId: string, search: string | null, split: string | null, cursor: string | null, limit = 25) =>
-    unwrap(await api.GET("/api/datasets/{dataset_id}/cases", {
-      params: { path: { dataset_id: datasetId }, query: { search, split, cursor, limit } },
-    })),
-  caseDetail: async (datasetId: string, caseName: string) =>
+  datasetCase: async (datasetId: string, caseName: string) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}/cases/{case_name}", {
       params: { path: { dataset_id: datasetId, case_name: caseName } },
     })),
-  caseNames: async (datasetId: string, search: string | null, split: string | null) => everyPage(async (cursor) =>
+  datasetCaseNames: async (datasetId: string, search: string | null, split: string | null) => everyPage(async (cursor) =>
     unwrap(await api.GET("/api/datasets/{dataset_id}/case-names", {
       params: { path: { dataset_id: datasetId }, query: { search, split, cursor, limit: MAX_PAGE } },
     }))),
-  draft: async (flowId: FlowId) =>
+  draftDataset: async (flowId: FlowId) =>
     unwrap(await api.POST("/api/datasets/draft", { body: { flow_id: flowId } })),
-  create: async (request: ApiDatasetCreateRequest) =>
+  createDataset: async (request: ApiDatasetCreateRequest) =>
     unwrap(await api.POST("/api/datasets", { body: request })),
-  csvTemplate: async (flowId: FlowId) =>
+  datasetCsvTemplate: async (flowId: FlowId) =>
     unwrap(await api.GET("/api/datasets/import-csv/template", { params: { query: { flow_id: flowId } } })),
-  previewCsv: async (flowId: FlowId, datasetId: string, file: File) =>
+  previewDatasetCsv: async (flowId: FlowId, datasetId: string, file: File) =>
     unwrap(await api.POST("/api/datasets/import-csv/preview", {
       body: { dataset_id: datasetId, flow_id: flowId, file: file.name },
       bodySerializer: () => csvBody(flowId, datasetId, file),
     })),
-  importCsv: async (flowId: FlowId, datasetId: string, file: File) =>
+  importDatasetCsv: async (flowId: FlowId, datasetId: string, file: File) =>
     unwrap(await api.POST("/api/datasets/import-csv", {
       body: { dataset_id: datasetId, flow_id: flowId, file: file.name },
       bodySerializer: () => csvBody(flowId, datasetId, file),
     })),
+  runs: async (evalId: string | null) =>
+    unwrap(await api.GET("/api/eval-runs", { params: { query: { eval_id: evalId, limit: MAX_PAGE } } })).items,
+  run: async (evalRunId: string) =>
+    unwrap(await api.GET("/api/eval-runs/{eval_run_id}", { params: { path: { eval_run_id: evalRunId } } })),
+  cases: async (evalRunId: string) =>
+    unwrap(
+      await api.GET("/api/eval-runs/{eval_run_id}/cases", { params: { path: { eval_run_id: evalRunId }, query: { limit: MAX_PAGE } } }),
+    ).items,
+  gate: async (evalRunId: string) =>
+    unwrap(await api.GET("/api/eval-runs/{eval_run_id}/gate", { params: { path: { eval_run_id: evalRunId } } })),
 }
 
 const chat = {
@@ -262,6 +271,6 @@ export const chatEventsUrl = (sessionId: ChatSessionId, afterSeq: number | null)
     ? `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events`
     : `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events?after_seq=${String(afterSeq)}`
 
-export const liveSources = { project, flow, run, datasets, chat, settings, blob }
+export const liveSources = { project, flow, run, evals, research, chat, settings, blob }
 
 export type LiveSources = typeof liveSources

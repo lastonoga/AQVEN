@@ -1,6 +1,5 @@
 import { useEffect, useState, type JSX, type ReactNode } from "react"
 import { Link, useRouter } from "@tanstack/react-router"
-import { ArrowLeft } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ApiFlow, ApiProject, ApiProviderKey, ApiSecret, SettingsSection } from "@/domain"
 import { SETTINGS_SECTIONS } from "@/domain"
@@ -162,7 +161,8 @@ function ProjectSection({ project, flows }: SectionProps) {
 }
 
 function AgentsSection() {
-  return <ChatStatusPanel selectable />
+  const t = useTranslations("setup.settings.sections")
+  return <ChatStatusPanel selectable title={t("agents")} />
 }
 
 function ProvidersSection({ providers, secrets }: SectionProps) {
@@ -226,29 +226,20 @@ const SECTION_BODY: Readonly<Record<SettingsSection, (props: SectionProps) => Re
   updates: UpdatesSection,
 }
 
-export function SettingsNav({ section, onSectionChange }: { readonly section: SettingsSection; readonly onSectionChange?: (section: SettingsSection) => void }) {
+function SettingsNav({ section }: { readonly section: SettingsSection }) {
   const t = useTranslations("setup.settings")
   return (
     <nav aria-label={t("navAria")} className="flex flex-col">
-      {SETTINGS_SECTIONS.map((item) => {
-        const label = <Text role="meta">{t(`sections.${item}`)}</Text>
-        return (
-          onSectionChange === undefined ? (
-            <Link key={item} from={ROUTE_PATH.settings} to="." search={{ section: item }} resetScroll={false} aria-current={item === section ? "page" : undefined} className={NAV_ITEM_CLASS}>
-              {label}
-            </Link>
-          ) : (
-            <button key={item} type="button" aria-current={item === section ? "true" : undefined} className={NAV_ITEM_CLASS} onClick={() => { onSectionChange(item) }}>
-              {label}
-            </button>
-          )
-        )
-      })}
+      {SETTINGS_SECTIONS.map((item) => (
+        <Link key={item} from={ROUTE_PATH.settings} to="." search={{ section: item }} resetScroll={false} aria-current={item === section ? "page" : undefined} className={NAV_ITEM_CLASS}>
+          <Text role="meta">{t(`sections.${item}`)}</Text>
+        </Link>
+      ))}
     </nav>
   )
 }
 
-export function SettingsBody({ section, ...props }: SectionProps & { readonly section: SettingsSection }) {
+function SettingsBody({ section, ...props }: SectionProps & { readonly section: SettingsSection }) {
   const Body = SECTION_BODY[section]
   return (
     <div className="flex flex-col gap-4">
@@ -260,7 +251,7 @@ export function SettingsBody({ section, ...props }: SectionProps & { readonly se
 const EMPTY_PROVIDERS: readonly ApiProviderKey[] = []
 const EMPTY_SECRETS: readonly ApiSecret[] = []
 
-export function SettingsContent({
+function SettingsContent({
   project,
   flows,
   section,
@@ -319,21 +310,7 @@ export function SettingsContent({
 
 function SettingsHeader({ project }: { readonly project: string }) {
   const t = useTranslations("setup.settings")
-  return (
-    <Heading
-      size="page"
-      title={t("title")}
-      below={[`${project} · ${t("lead")}`]}
-      trailing={
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/">
-            <ArrowLeft />
-            {t("back")}
-          </Link>
-        </Button>
-      }
-    />
-  )
+  return <Heading size="page" title={t("title")} below={[`${project} · ${t("lead")}`]} />
 }
 
 export function SettingsScreen(): JSX.Element {
