@@ -161,6 +161,7 @@ export const liveTurnEvents: readonly ApiChatEvent[] = [
       model: "claude-haiku-4-5-20251001",
       tokens_in: 12,
       tokens_out: 1533,
+      thinking_tokens: 0,
       cache_read_tokens: 149197,
       cache_write_tokens: 10941,
       cost_usd: "0.22300950000000003"
@@ -188,6 +189,7 @@ export const liveTurnEvents: readonly ApiChatEvent[] = [
       model: "claude-haiku-4-5-20251001",
       tokens_in: 12,
       tokens_out: 1533,
+      thinking_tokens: 0,
       cache_read_tokens: 149197,
       cache_write_tokens: 10941,
       cost_usd: "0.22300950000000003"

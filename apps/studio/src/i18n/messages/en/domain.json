@@ -1,11 +1,8 @@
 {
   "flowTab": {
-    "canvas": "Nodes",
-    "nodes": "Nodes",
-    "datasets": "Datasets",
+    "canvas": "Graph",
     "runs": "Runs",
-    "review": "Review",
-    "evals": "Evals"
+    "cases": "Cases"
   },
   "nodeKind": {
     "llm": "LLM",

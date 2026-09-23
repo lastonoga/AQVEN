@@ -200,7 +200,7 @@ const spansAfter = (spans: ReasoningSpans, event: ApiChatEvent): ReasoningSpans 
   const at = Date.parse(event.at)
   if (Number.isNaN(at)) return spans
   if (event.type === "chat_reasoning_delta") return openSpan(spans, event.message_id, at)
-  if (event.type === "chat_usage") return countedSpan(spans, event.message_id, event.usage.thinking_tokens ?? 0)
+  if (event.type === "chat_usage") return countedSpan(spans, event.message_id, event.usage.thinking_tokens)
   return ENDS_THINKING.includes(event.type) ? closeSpans(spans, at) : spans
 }
 

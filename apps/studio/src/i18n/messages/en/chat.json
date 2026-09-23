@@ -89,5 +89,9 @@
     "effortAuto": "Auto",
     "modelAgentDefault": "Agent default",
     "forNextThread": "For a new thread"
+  },
+  "handoff": {
+    "sent": "Sent to the chat on the left.",
+    "failed": "Not sent: {reason}"
   }
 }

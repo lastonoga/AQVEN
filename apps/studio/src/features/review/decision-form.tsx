@@ -5,12 +5,12 @@ import type { ApiProblem } from "@/api/client"
 import { Actions, Text, Toolbar } from "@/components/studio"
 import { Separator } from "@/components/ui/separator"
 import { clientOpId, runId } from "@/data/ids"
-import { useReviewDecision } from "@/routes/-review-decision"
 import { FormFieldControl } from "./form-field"
 import type { ReviewEntry } from "./presenters"
+import { useReviewDecision } from "./review-decision"
 import { emptyDraft, RAW_FIELD, readPayload, readWaitForm, type AnswerDraft, type FieldValue, type FormField } from "./wait-form"
 
-export type DecisionFormProps = { readonly entry: ReviewEntry; readonly schema: ApiJsonObject | null }
+export type DecisionFormProps = { readonly entry: ReviewEntry; readonly schema: ApiJsonObject | null; readonly onResolved: () => void }
 
 const PAYLOAD_PATH = "payload"
 
@@ -19,13 +19,13 @@ const problemField = (problem: ApiProblem): string => (problem.path[0] === PAYLO
 const serverProblems = (problems: readonly ApiProblem[]): ReadonlyMap<string, string> =>
   new Map(problems.map((problem) => [problemField(problem), problem.message]))
 
-export function DecisionForm({ entry, schema }: DecisionFormProps) {
+export function DecisionForm({ entry, schema, onResolved }: DecisionFormProps) {
   const t = useTranslations("review")
   const form = readWaitForm(schema)
   const [draft, setDraft] = useState<AnswerDraft>(() => emptyDraft(form))
   const [invalid, setInvalid] = useState<readonly string[]>([])
   const [opId] = useState(clientOpId)
-  const { pending, failure, resume } = useReviewDecision()
+  const { pending, failure, resume } = useReviewDecision(onResolved)
 
   const rawField: FormField = { control: "json", name: RAW_FIELD, label: t("field.rawLabel"), required: true, nullable: false }
   const fields = form.kind === "fields" ? form.fields : [rawField]
