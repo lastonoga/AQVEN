@@ -27,3 +27,31 @@ confirm), and [how to follow and read a series](/studio/series/).
 
 **Chat & settings** covers the rest of the app: [how to use the AI chat in Studio](/studio/chat/) and
 [how to use Studio settings](/studio/settings/).
+
+## Server status
+
+The right end of Studio's top bar, next to the gear, shows whether the project server answers: a dot
+and a short label. **Connected** (green) means every check passed. **Needs attention** means a check
+found a problem: amber for a warning, red for an error. **Disconnected** (red) means the server did
+not answer two checks in a row.
+
+Click the label to see the AQVEN version, how long the server has been running, its process ID, the
+project folder, and one line for each of the four checks:
+
+- whether the project database answers;
+- whether the run engine, the part that runs and resumes workflows, answers. If it does not, the line
+  tells you to restart Studio;
+- errors and warnings in the project files, files Studio could not read, and whether the index has
+  caught up with your last edits;
+- providers in `aqven.yaml` that have no key, with a link to [Settings](/studio/settings/) where you
+  add the key.
+
+Studio asks the server every 5 seconds, and at once when you come back to the browser tab or the
+network comes back. It runs the four checks every 30 seconds. None of them calls a model.
+
+When the server stops answering, a red banner across the top of Studio says so. It shows the command
+that starts the server again for this project, for example `uv run {{CLI_COMMAND}} dev /path/to/project`,
+with a copy button. Studio keeps retrying every 5 seconds, and **Check now** retries at once. When the
+server answers again, the banner goes away, Studio reloads the data on the open page, and
+"Reconnected" appears for a few seconds. When the answer comes from a new server process, for example
+after you restarted it, the message is "The server restarted" instead.

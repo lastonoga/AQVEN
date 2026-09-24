@@ -5,41 +5,29 @@ from typing import Annotated, Final
 from fastapi import APIRouter, Body, Path
 
 from aqven.app.secret_declarations import SecretDeclaration, declared_secrets
-from aqven.app.secret_names import ProjectSecretNames, ProviderKeyName
+from aqven.app.secret_names import ProjectSecretNames
 from aqven.ports.identity import ASSIGNEE_SETTING, AssigneeSource, local_user
 from aqven.ports.settings import (
     SECRET_MASK,
     SETTING_KEY_PATTERN,
     SecretSettingWrite,
-    SecretSource,
     SettingKey,
     SettingRejected,
     SettingScope,
     SettingsStore,
     SettingView,
     SettingWrite,
-    mask_secret,
     resolve_secret,
 )
 from aqven.runtime.address import Problem, ResourceModel
 from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure, not_found
 from aqven.server.views.common import loaded_project
-from aqven.server.views.secrets import SecretStatus, secret_status
-from aqven.spec import ProviderName
+from aqven.server.views.secrets import ProviderKeyStatus, SecretStatus, provider_key_statuses, secret_status
 
 SECRETS_REST_ONLY: Final = "secrets stay outside MCP"
 
 type SettingKeyPath = Annotated[str, Path(pattern=SETTING_KEY_PATTERN)]
-
-
-class ProviderKeyStatus(ResourceModel):
-    provider: ProviderName
-    setting_key: str
-    env_var: str
-    declared: bool
-    source: SecretSource | None
-    masked: str | None
 
 
 class LocalUserView(ResourceModel):
@@ -65,18 +53,6 @@ def rejected(error: SettingRejected) -> ApiFailure:
     return ApiFailure("REQUEST_INVALID", f"{error}; fix: {error.hint}", problems=(problem,))
 
 
-async def provider_status(store: SettingsStore, environ: Mapping[str, str], name: ProviderKeyName) -> ProviderKeyStatus:
-    resolved = await resolve_secret(store, name.key, name.env_var, environ)
-    return ProviderKeyStatus(
-        provider=name.provider,
-        setting_key=name.key,
-        env_var=name.env_var,
-        declared=name.declared,
-        source=None if resolved is None else resolved.source,
-        masked=None if resolved is None else mask_secret(resolved.value.get_secret_value()),
-    )
-
-
 async def declaration_status(
     store: SettingsStore, environ: Mapping[str, str], declaration: SecretDeclaration
 ) -> SecretStatus:
@@ -97,8 +73,7 @@ def build_settings_router(context: ServerContext) -> APIRouter:
 
     @router.get("/providers", operation_id="provider_keys", openapi_extra=rest_only(SECRETS_REST_ONLY))
     async def provider_keys() -> tuple[ProviderKeyStatus, ...]:
-        providers = await asyncio.to_thread(names.providers)
-        return tuple([await provider_status(store, context.environ, name) for name in providers])
+        return await provider_key_statuses(store, context.environ, names)
 
     @router.get("/secrets", operation_id="secret_list", openapi_extra=rest_only(SECRETS_REST_ONLY))
     async def list_secrets() -> tuple[SecretStatus, ...]:

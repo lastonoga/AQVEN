@@ -1,15 +1,26 @@
+import asyncio
 from collections.abc import Mapping
 from typing import Final
 
 from aqven.app.secret_declarations import SecretDeclaration, SecretScope, declared_secrets
-from aqven.app.secret_names import ProjectSecretNames
+from aqven.app.secret_names import ProjectSecretNames, ProviderKeyName
 from aqven.ports.settings import ResolvedSecret, SecretSource, SettingsStore, mask_secret, resolve_secret
 from aqven.runtime.address import Problem, ResourceModel
 from aqven.server.views.common import loaded_project
 from aqven.server.workspace import WorkspaceState
+from aqven.spec import ProviderName
 
 SECRET_MISSING: Final = "SECRET_MISSING"
 SECRETS_PATH: Final = "secrets"
+
+
+class ProviderKeyStatus(ResourceModel):
+    provider: ProviderName
+    setting_key: str
+    env_var: str
+    declared: bool
+    source: SecretSource | None
+    masked: str | None
 
 
 class SecretStatus(ResourceModel):
@@ -22,6 +33,25 @@ class SecretStatus(ResourceModel):
     source: SecretSource | None
     masked: str | None
     set: bool
+
+
+async def provider_status(store: SettingsStore, environ: Mapping[str, str], name: ProviderKeyName) -> ProviderKeyStatus:
+    resolved = await resolve_secret(store, name.key, name.env_var, environ)
+    return ProviderKeyStatus(
+        provider=name.provider,
+        setting_key=name.key,
+        env_var=name.env_var,
+        declared=name.declared,
+        source=None if resolved is None else resolved.source,
+        masked=None if resolved is None else mask_secret(resolved.value.get_secret_value()),
+    )
+
+
+async def provider_key_statuses(
+    store: SettingsStore, environ: Mapping[str, str], names: ProjectSecretNames
+) -> tuple[ProviderKeyStatus, ...]:
+    providers = await asyncio.to_thread(names.providers)
+    return tuple([await provider_status(store, environ, name) for name in providers])
 
 
 def secret_status(declaration: SecretDeclaration, resolved: ResolvedSecret | None) -> SecretStatus:

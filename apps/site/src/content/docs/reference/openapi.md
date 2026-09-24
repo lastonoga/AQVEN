@@ -10,6 +10,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | Method | Path | Operation ID |
 | --- | --- | --- |
 | `GET` | `/api/ready` | `ready` |
+| `GET` | `/api/status` | `status_get` |
 | `GET` | `/api/project` | `project_get` |
 | `GET` | `/api/files` | `file_list` |
 | `GET` | `/api/files/{path}` | `file_get` |

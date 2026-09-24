@@ -17,6 +17,7 @@ from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles, DirectoryBlobStore
 from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
+from aqven.server.probes import StatusProbes, project_probes
 from aqven.server.routes.blobs import build_blobs_router
 from aqven.server.routes.datasets import build_datasets_router
 from aqven.server.routes.events import build_events_router
@@ -28,6 +29,7 @@ from aqven.server.routes.research import build_research_router
 from aqven.server.routes.runs import build_runs_router
 from aqven.server.routes.schemas import build_schemas_router
 from aqven.server.routes.settings import build_settings_router
+from aqven.server.routes.status import build_status_router
 from aqven.server.security import QueryTokenScrubber
 from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, watch_project
 from aqven.server.static import StudioBundle, default_studio, mount_studio
@@ -133,6 +135,7 @@ def build_lifespan(
 def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
     return (
         build_meta_router(context),
+        build_status_router(context),
         build_project_router(context),
         build_flows_router(context),
         build_runs_router(context),
@@ -156,6 +159,7 @@ def create_app(
     blobs: BlobFiles | None = None,
     workspace: ProjectWorkspace | None = None,
     series: SeriesJobs | None = None,
+    probes: StatusProbes | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
@@ -169,6 +173,7 @@ def create_app(
         environ=chosen.environ,
         engine_version=engine_version(),
         mcp_url=chosen.mcp_url,
+        probes=probes or project_probes(root),
         series=series,
     )
     app = FastAPI(
