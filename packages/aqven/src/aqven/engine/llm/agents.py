@@ -26,9 +26,10 @@ from aqven.engine.llm.prompts import (
     media_values,
     output_format,
 )
+from aqven.engine.llm.segments import ModelSlot
 from aqven.engine.llm.streaming import drain_events
 from aqven.engine.llm.tools import McpServers, ToolsetBuilder
-from aqven.ir import CompiledInference, TemplatePrompt
+from aqven.ir import CompiledAgent, CompiledInference, TemplatePrompt
 from aqven.ir.nodes import OutputMode
 from aqven.models.usage import usd_of_micros
 from aqven.policies.paths import read
@@ -38,6 +39,7 @@ from aqven.runtime.executions import PromptTrace
 from aqven.spec import AgentId, InferenceId, Limits, MediaValue, Modality, ModelSettingsSpec, RefRoot, parse_ref
 
 DEFAULT_REQUEST_LIMIT: Final = 50
+FIRST_SLOT: Final = ModelSlot()
 OPTIONAL_SUFFIX: Final = "?"
 MEDIA_TYPE_SEPARATOR: Final = "/"
 MEDIA_MODALITIES: Final[Mapping[str, Modality]] = {
@@ -125,7 +127,12 @@ class InferenceAgents:
         self.tools = ToolsetBuilder(self.code, self.tool_contexts, self.secrets, self, self.mcp_servers)
 
     async def prepare(
-        self, scope: ExecutionScope, call: InferenceCall, document: JsonObject, attempt_offset: int
+        self,
+        scope: ExecutionScope,
+        call: InferenceCall,
+        document: JsonObject,
+        attempt_offset: int,
+        slot: ModelSlot = FIRST_SLOT,
     ) -> PreparedRun:
         project = scope.project
         agent = project.agent(call.agent_id)
@@ -154,12 +161,12 @@ class InferenceAgents:
         tools = await self.tools.build(scope, agent, nested=call.nested)
         output_type = [plan.spec, DeferredToolRequests] if tools.deferred else [plan.spec]
         built = Agent[RunDeps, object](
-            await self.models.model(scope, agent, media_modalities(media_items)),
+            await self.models.model(scope, agent, media_modalities(media_items), slot.index),
             output_type=output_type,
             instructions=instructions,
             deps_type=RunDeps,
             name=agent.agent_id,
-            retries={"output": agent.output.retries},
+            retries={"output": output_retries(agent, slot)},
             toolsets=tools.toolsets,
         )
         built.output_validator(OutputGuard(self.code, self))
@@ -220,6 +227,10 @@ def model_settings(spec: ModelSettingsSpec | None) -> ModelSettings | None:
     if spec.provider_options is not None:
         settings["extra_body"] = spec.provider_options
     return settings
+
+
+def output_retries(agent: CompiledAgent, slot: ModelSlot) -> int:
+    return max(agent.output.retries - slot.retries_spent, 0)
 
 
 def response_count(messages: Iterable[ModelMessage]) -> int:

@@ -16,6 +16,7 @@ from aqven.spec import (
     DefaultOnTimeout,
     Effect,
     LlmNodeSpec,
+    OutcomePolicy,
     ToolNodeSpec,
     ToolSpec,
 )
@@ -33,6 +34,7 @@ def check_registry(context: CheckContext) -> Iterable[Diagnostic]:
             *_agent_references(context, source),
             *_subagents(context, agent_id, source),
             *_approval(source),
+            *_outcome_fallbacks(source),
             *_instructions(context, source),
         )
     )
@@ -140,6 +142,19 @@ def _approval(source: SourceSpec[AgentSpec]) -> Iterator[Diagnostic]:
     if isinstance(approval.on_timeout, DefaultOnTimeout):
         message = "policy: default is not allowed for approval: human silence does not approve a tool call"
         yield diagnostic(DiagnosticCode.E_HUMAN_DEFAULT_INVALID, source.path, ("approval", "on_timeout"), message)
+
+
+def _outcome_fallbacks(source: SourceSpec[AgentSpec]) -> Iterator[Diagnostic]:
+    agent = source.spec
+    if agent.fallback_models:
+        return
+    output = agent.output
+    policies = {"on_error": output.on_error, "on_refusal": output.on_refusal, "on_truncated": output.on_truncated}
+    fallbacks = [name for name, policy in policies.items() if policy is OutcomePolicy.FALLBACK]
+    for name in fallbacks:
+        message = f"output.{name} is fallback, but the agent has no fallback_models"
+        hint = f"add fallback_models to the agent or set output.{name}: retry or fail"
+        yield diagnostic(DiagnosticCode.E_OUTCOME_FALLBACK, source.path, ("output", name), message, hint=hint)
 
 
 def _instructions(context: CheckContext, source: SourceSpec[AgentSpec]) -> Iterator[Diagnostic]:
