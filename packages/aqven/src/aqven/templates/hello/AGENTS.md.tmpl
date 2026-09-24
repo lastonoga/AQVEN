@@ -167,7 +167,7 @@ findings show it works reliably. Run the loop yourself, round after round, and s
 | 2. Simplest flow | one `llm` step per real decision, `code` for the rest; `aqven check` is clean; `aqven prompt preview` is read for every `llm` node |
 | 3. Cases | the dataset of *Cases and checks* exists with `expected_output` and tags; `aqven check` is clean |
 | 4. Look | a `look` experiment with deterministic checks ran on `dev`, and every failing case is read |
-| 5. Error analysis | every failure has its first failing node and a failure mode, and new failing traces stop adding modes |
+| 5. Error analysis | the developer has read and noted the first traces; every failure has its first failing node and a failure mode the developer agreed; new failing traces stop adding modes |
 | 6. Fix the spec | what the prompt or the type never asked for is fixed there, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, its question and margin written before you see a number |
 | 8. Explore | series on `dev`, one change between series, until the change is done and the question is frozen |
@@ -184,16 +184,23 @@ Studio calls the two splits by their purpose. **Explore** runs working cases (`d
   attempt's `run_id`, `error` and `failed_checks`; `run_get` and `run_events` on that `run_id` show the first node
   that failed. Fix the first failure upstream: later ones often cascade from it. In a multi-step flow, count failures
   by (last node that succeeded, first node that failed) and start with the biggest cell.
-- Write one free-text note per failing trace about its first failure, then group the notes into failure modes: an id,
-  a one-line definition, a count, two or three `run_id`s. Keep them under "Failure modes" in the `experiment.md` of
-  the look experiment. The id becomes the `failure_mode` of every experiment that tests it, and the section of
-  `FINDINGS.md` its findings land in. Stop grouping when about 20 more failing traces add no new mode; few failures
-  means you need harder cases, not less reading.
+- The developer reads the first traces, not you. After the first look, hand the developer the failing runs first, then
+  a few passing ones: about 30 traces in total, or all of them if there are fewer. Give each its `run_id` and where to
+  open it in Studio (`/runs/<run_id>`), and ask for one short note per trace about the first thing that went wrong, or
+  "fine". You prepare, the developer judges: attach the first failing node you found, but the verdict on what went
+  wrong is the developer's note.
+- Group the developer's notes into failure modes: an id, a one-line definition, a count, two or three `run_id`s. Show
+  the list, and write it under "Failure modes" in the `experiment.md` of the look experiment only after the developer
+  agrees. The id becomes the `failure_mode` of every experiment that tests it, and the section of `FINDINGS.md` its
+  findings land in.
+- In later rounds, read new failing traces yourself and map each to a known mode. Bring the developer only the traces
+  that fit no known mode, and add a new mode only after the developer has read them. Stop when about 20 more failing
+  traces add no new mode; few failures means you need harder cases, not less reading.
 - Not everything deserves an experiment. The prompt or the type never asks for the behaviour: fix the prompt. An empty
   or literal placeholder in `prompt preview`: fix the binding. An infrastructure error: fix keys, limits or code. Only
   a failure on behaviour the flow clearly asks for becomes a hypothesis.
 - Rank the modes by count, then by harm, and test the riskiest first. Never write hypotheses from a generic list
-  ("hallucination", "toxicity") before you have read traces.
+  ("hallucination", "toxicity") before the developer has read traces.
 
 | Category | Claim to test | Setup |
 |---|---|---|
@@ -406,8 +413,9 @@ can check; weaken a type or a limit so a series passes; present a `dev` number a
 Stop and report `FINDINGS.md`, your decisions, the spend and the risks left when every "done" criterion from stage 1
 is `confirmed` on `holdout` and the regression look is clean; or a fresh exploration round finds no failure mode seen
 twice; or two rounds in a row moved neither quality, `cost_of_pass` nor p95; or the needed N is out of reach and a
-guard is in place; or the agreed budget is spent. Stop and ask the developer when a series awaits approval, when
-several variants trade quality against cost, or when "done" turns out not to be measurable.
+guard is in place; or the agreed budget is spent. Stop and ask the developer when traces are ready for notes, when a
+series awaits approval, when several variants trade quality against cost, or when "done" turns out not to be
+measurable.
 
 ## How to read `aqven check`
 

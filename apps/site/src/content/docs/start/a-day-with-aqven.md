@@ -64,36 +64,43 @@ support lead approves it. That becomes the `approvals` step.
 > Run it on a handful of cases and show me what fails.
 
 The agent starts a look: it runs the cases and shows each one with its checks, cost and trace, with no
-verdict. One attempt ends `failed` with `MODEL_RETRIES_EXHAUSTED` at `triage`. The `gemini` agent, a
-cheap model that can read the photos and invoices customers attach, wrote an observation longer than the
-200 characters the `Observation` type allows. It did so on its first answer and on both retries (`output.retries: 2`).
-
-The engine refused that output instead of passing it downstream. In Studio the run shows a red panel at
-`triage` with the error code and a hint that names two ways out: tighten the prompt, or raise `maxLength`
-in the type. Under the step are the three failed attempts, each with an excerpt of what the model
-returned.
+verdict. Then it hands the reading to me. It lines up the failing runs first, then a few passing ones,
+about 30 traces in all, or every one when there are fewer. Each line has the run id, where to open it in
+Studio and, for a failing run, the first step that failed, which the agent found in the run. It asks me
+for one short note per trace: the first thing that went wrong, or "fine". The agent prepares; the verdict
+is mine.
 
 ```text
+run_get         {"run_id": "<run_id>"}
 run_events      {"run_id": "<run_id>"}
-prompt_preview  {"flow_id": "support_case", "node_id": "triage"}
 ```
 
-The agent asks me before it touches the limit, because that decision is mine. My support lead reads the
-observations on the case record, so 200 characters stays. The preview shows that the model is already
-told `observations[].value: at most 200 characters`. The prompt asks for the right thing and the model
-sometimes ignores it, so this is a risk to measure, not a typo to fix. The failure mode gets a name,
-`triage_contract_broken`, and `AGENTS.md` uses this very hypothesis as its worked example: `gemini` on
-`triage` keeps its output contract in fewer than 95% of attempts, with `gpt` as the reference.
+One attempt ends `failed` with `MODEL_RETRIES_EXHAUSTED` at `triage`. The `gemini` agent, a cheap model
+that can read the photos and invoices customers attach, wrote an observation longer than the 200
+characters the `Observation` type allows. It did so on its first answer and on both retries
+(`output.retries: 2`). The engine refused that output instead of passing it downstream. In Studio the run
+shows a red panel at `triage` with the error code and a hint that names two ways out: tighten the prompt,
+or raise `maxLength` in the type. Under the step are the three failed attempts, each with an excerpt of
+what the model returned. My note: "triage wrote too much, three times".
+
+The agent groups my notes into failure modes: an id, a one-line definition, a count and two or three run
+ids. My note and the ones like it become `triage_contract_broken`. Before it proposes anything, the
+agent asks me about the limit, because that decision is mine. My support lead reads the observations on
+the case record, so 200 characters stays. `prompt_preview` shows that the model is already told
+`observations[].value: at most 200 characters`. The prompt asks for the right thing and the model
+sometimes ignores it, so this is a risk to measure, not a typo to fix. The agent shows me the list, I
+agree it, and only then does it go under "Failure modes" in the look's `experiment.md`. `AGENTS.md` uses
+this very hypothesis as its worked example: `gemini` on `triage` keeps its output contract in fewer than
+95% of attempts, with `gpt` as the reference.
 
 ## 11:30 — risky hypotheses
 
 > What else could break? Rank it by what it would cost me, and write each one down before you run
 > anything.
 
-The agent groups the failing traces into failure modes and writes one experiment per mode under
-`experiments/`. Each `experiment.yaml` states a claim with a number, picks its cases from a dataset, names
-its checks and sets a margin, all before any data. Each claim could come out against us, which is why it
-is worth a test:
+The agent writes one experiment per failure mode we agreed, under `experiments/`. Each `experiment.yaml`
+states a claim with a number, picks its cases from a dataset, names its checks and sets a margin, all
+before any data. Each claim could come out against us, which is why it is worth a test:
 
 - `reply_overpromise_risk`: the `polish` loop keeps the reply within the decision in more than 97% of
   attempts, margin 0.01. A refund nobody approved is my costliest mistake, and a rate of a few percent
@@ -135,12 +142,14 @@ The server puts each case of a dataset, for good, on one of two sides by a hash 
 are working cases, the rest are held out. Explore runs the working cases as often as needed. It gives
 numbers and a `signal`, never a finding: a finding is the verdict on held-out cases that goes on record.
 
-The agent reads each failing case down to the first step that failed, changes one thing and runs again.
-For the `triage` limit, one change is a variant that puts `gpt` on `triage` to see whether it keeps to
-200 characters. For replies that promise too much, it is a run-time check on the revise step,
-`promises_match_resolution` from `code/support_case.py`, which sends any such reply back for another try.
-If condensing helps only on `very_long` messages, the experiment's `experiment.md` already says what
-then: put the split behind a length switch.
+Now the agent reads the new failing cases itself, down to the first step that failed, and puts each under
+a mode we agreed. Only the ones that fit no known mode come to me, and a new mode joins the list after I
+have read them. Then it changes one thing and runs again. For the `triage` limit, one change is a
+variant that puts `gpt` on `triage` to see whether it keeps to 200 characters. For replies that promise
+too much, it is a run-time check on the revise step, `promises_match_resolution` from
+`code/support_case.py`, which sends any such reply back for another try. If condensing helps only on
+`very_long` messages, the experiment's `experiment.md` already says what then: put the split behind a
+length switch.
 
 In Studio, the **Series** tab lists every series. A series page fills in live: **Variants × metrics**
 shows a dot for each value and a whisker for its 95% interval, and **Stability** counts the cases that
@@ -204,11 +213,13 @@ budget is spent. Until then, tomorrow starts with `FINDINGS.md`.
 | Me | My agent |
 |---|---|
 | Said what the workflow is for and what "done" means in numbers | Asked the questions that change the build, in one message |
-| Read the graph, the runs and the failing cases in Studio | Wrote types, agents, nodes, prompts, the flow and tagged cases as files |
+| Read the graph and the runs in Studio | Wrote types, agents, nodes, prompts, the flow and tagged cases as files |
+| Read the first traces and wrote a note on each | Lined up the traces, failing first, each with its first failing step |
+| Agreed the failure modes before they were written down | Grouped my notes into failure modes |
 | Decided the 200-character limit is a requirement | Ran `{{CLI_COMMAND}} check` after every change and read the prompt previews |
-| Agreed the margins: how much quality a cheaper step may lose | Traced each failure to its first failing step and named the failure mode |
-| Held the spend: the $1.00 cap, and any approval above it | Wrote each hypothesis as an experiment before any data |
-| Said when a question was frozen and when to confirm | Explored on working cases, one change at a time |
+| Agreed the margins: how much quality a cheaper step may lose | Wrote each hypothesis as an experiment before any data |
+| Held the spend: the $1.00 cap, and any approval above it | Explored on working cases, one change at a time |
+| Said when a question was frozen and when to confirm | Read new failing traces itself and brought me only those that fit no known mode |
 | Chose a guard where the needed data was out of reach | Confirmed once on held-out cases and quoted the verdict |
 | Decided when to stop | Applied findings, kept regression cases, reported spend and risks |
 
