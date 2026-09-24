@@ -40,6 +40,7 @@ from aqven.server.resources import ArmFlowView
 from aqven.server.views.common import loaded_project, page_of
 from aqven.server.views.flows import loaded_flow_schemas
 from aqven.server.views.nodes import flow_node_summaries
+from aqven.server.views.prompts import flow_prompt_details
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import (
     AgentId,
@@ -417,6 +418,7 @@ def arm_flow(state: WorkspaceState, experiment_id: str, arm_id: str) -> ArmFlowV
         order=() if source is None else tuple(source.spec.order),
         nodes=flow_node_summaries(state, arm, scoped(loaded.experiment_id, arm_id)),
         schemas=loaded_flow_schemas(state, arm),
+        prompts=flow_prompt_details(state, arm),
     )
 
 

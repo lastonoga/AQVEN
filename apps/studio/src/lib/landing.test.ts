@@ -16,3 +16,13 @@ describe("landingFlow", () => {
     expect(landingFlow([])).toEqual({ kind: "project" })
   })
 })
+
+describe("landingFlow with a remembered flow", () => {
+  it("opens the remembered flow when the project still has it", () => {
+    expect(landingFlow(liveFlows, "judge_panel")).toEqual({ kind: "flow", flowId: "judge_panel" })
+  })
+
+  it("ignores a remembered flow the project no longer has", () => {
+    expect(landingFlow(liveFlows, "gone_flow")).toEqual({ kind: "flow", flowId: "support_case" })
+  })
+})

@@ -165,7 +165,7 @@ class SeriesEstimate(ResourceModel):
     attempts: int
     available: int
     usd: Decimal | None
-    usd_source: Literal["history", "prices", "unknown"]
+    usd_source: Literal["history", "prices", "bound", "unknown"]
     minutes: int | None
     half_width: float | None
     mde: float | None
@@ -447,6 +447,7 @@ class AttemptRecord(RecordModel):
     schema_valid_first_try: bool | None = None
     cost_usd: Decimal = Decimal(0)
     check_cost_usd: Decimal = Decimal(0)
+    unpriced_calls: int = Field(default=0, ge=0)
     tokens_in: int = Field(default=0, ge=0)
     tokens_out: int = Field(default=0, ge=0)
     latency_ms: int | None = None

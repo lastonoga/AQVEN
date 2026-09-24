@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Protocol
 
@@ -29,6 +29,11 @@ from aqven.series.views import (
 )
 from aqven.spec import ExperimentId, VariantId
 from aqven.write.model import WriteActor
+from aqven_llm import TokenPrice
+
+
+class ModelPrices(Protocol):
+    async def prices(self, models: Iterable[str]) -> Mapping[str, TokenPrice]: ...
 
 
 class SeriesStore(Protocol):
@@ -37,6 +42,8 @@ class SeriesStore(Protocol):
     async def series(self, series_id: SeriesId) -> SeriesRecord | None: ...
 
     async def update(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord: ...
+
+    async def settle(self, series_id: SeriesId, change: SeriesChange) -> SeriesRecord: ...
 
     async def search(self, query: SeriesListQuery, limit: int) -> tuple[SeriesRecord, ...]: ...
 

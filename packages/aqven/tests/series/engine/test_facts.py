@@ -19,7 +19,7 @@ from aqven.runtime.events import (
 from aqven.runtime.executions import AttemptCause, CheckOutcome, RunError
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import AttemptCauseKind, FinishedExecutionStatus
-from aqven.series.facts import RunTrace, event_cost, outcome_of, run_facts
+from aqven.series.facts import NO_SPEND, RunSpend, RunTrace, event_spend, outcome_of, run_facts, total_spend
 from aqven.series.model import (
     CaseSnapshot,
     CheckPlan,
@@ -86,6 +86,7 @@ def finished(
     wait: int,
     status: FinishedExecutionStatus = "ok",
     model: str | None = None,
+    unpriced: int = 0,
 ) -> NodeFinished:
     return NodeFinished(
         seq=seq,
@@ -104,6 +105,8 @@ def finished(
         cache_hit=False,
         degraded=False,
         checks_failed=0,
+        cost_source="unknown" if unpriced else "provider",
+        unpriced_calls=unpriced,
     )
 
 
@@ -127,20 +130,21 @@ def events(
         checks_captured(4, True, 2),
         finished(5, CLASSIFY, "0.010", 900, 300, model="openai:gpt-4o-mini"),
         started(6, NESTED, NodeKind.LLM),
-        finished(7, NESTED, "0.002", 400, 0, model="openai:gpt-4.1-mini"),
+        finished(7, NESTED, "0.002", 400, 0, model="openai:gpt-4.1-mini", unpriced=2),
         started(8, TIDY, NodeKind.CODE),
         finished(9, TIDY, "0.001", 50, 0, status=tidy_status),
     )
 
 
 def test_a_completed_run_counts_top_level_work_without_waits_and_actual_models() -> None:
-    usage = RunUsageTotals(cost_usd=Decimal("0.013"), tokens_in=30, tokens_out=15)
+    usage = RunUsageTotals(cost_usd=Decimal("0.013"), tokens_in=30, tokens_out=15, unpriced_calls=3)
     record = RunRecord(status="completed", output={"label": "tidy"}, usage=usage)
 
     facts = run_facts(RunTrace(events=events("schema_invalid"), flow=flow()), record)
 
     assert facts.outcome is OutcomeClass.OK
     assert (facts.cost_usd, facts.tokens_in, facts.tokens_out) == (Decimal("0.013"), 30, 15)
+    assert facts.unpriced_calls == 3
     assert (facts.latency_ms, facts.wait_ms) == (650, 300)
     assert facts.models == {"classify": "openai:gpt-4.1-mini"}
     assert facts.schema_valid_first_try is False
@@ -157,6 +161,7 @@ def test_a_failed_run_costs_the_sum_of_its_nodes_including_the_failed_one() -> N
     assert facts.outcome is OutcomeClass.SCHEMA_INVALID
     assert facts.cost_usd == Decimal("0.013")
     assert (facts.tokens_in, facts.tokens_out) == (30, 15)
+    assert facts.unpriced_calls == 2
     assert (facts.error_code, facts.first_failed_node) == ("MODEL_SCHEMA_MISMATCH", "tidy")
     assert facts.schema_valid_first_try is True
 
@@ -191,8 +196,15 @@ def test_uncounted_outcomes_have_no_first_try_schema_fact() -> None:
     assert facts.schema_valid_first_try is None
 
 
-def test_event_cost_sums_work_nodes_only() -> None:
-    assert event_cost(events()) == Decimal("0.013")
+def test_event_spend_sums_the_cost_and_unpriced_calls_of_work_nodes_only() -> None:
+    assert event_spend(events()) == RunSpend(cost_usd=Decimal("0.013"), unpriced_calls=2)
+
+
+def test_total_spend_adds_runs_and_is_empty_without_runs() -> None:
+    spends = [RunSpend(Decimal("0.01"), 1), RunSpend(Decimal("0.002"), 0), RunSpend(Decimal("0.003"), 2)]
+
+    assert total_spend(spends) == RunSpend(Decimal("0.015"), 3)
+    assert total_spend([]) == NO_SPEND
 
 
 def plan(check_id: str, kind: MetricKind, only_with_expected: bool = False) -> CheckPlan:

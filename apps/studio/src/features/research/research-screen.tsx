@@ -4,10 +4,11 @@ import { Empty, Heading, Matrix, Page, RowLink, Surface, Tag, Text, Toolbar, typ
 import { HandoffButton } from "@/features/chat-handoff"
 import { projectRouteApi, researchRouteApi, ROUTE_PATH } from "@/lib/routes"
 import { useSubjectCopy } from "./copy"
-import { experimentFlows, experimentRows, failureModes, type ExperimentRow, type ListCopy } from "./presenters"
+import { experimentRows, failureModes, hasNarrowing, type ExperimentRow, type ListCopy } from "./presenters"
 import { ResearchFilters } from "./research-filters"
 
 const TABLE_MIN_WIDTH = 866
+const WRAPPED = "line-clamp-2 wrap-anywhere"
 
 const hypothesesPrompt = (experiments: readonly ExperimentSummary[], filter: ExperimentFilter) => (): string =>
   [
@@ -40,13 +41,13 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "experiment",
       label: t("list.column.experiment"),
-      track: "minmax(200px,1.6fr)",
+      track: "minmax(200px,1.5fr)",
       render: (row) => (
         <div className="min-w-0">
           <Text as="div" role="cell" tone="default" weight="semibold" truncate>
             {row.id}
           </Text>
-          <Text as="div" role="caption" tone="neutral" truncate title={row.description}>
+          <Text as="div" role="caption" tone="neutral" className={WRAPPED} title={row.description}>
             {row.description}
           </Text>
         </div>
@@ -65,9 +66,9 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "subject",
       label: t("list.column.subject"),
-      track: "minmax(120px,1fr)",
+      track: "minmax(140px,1.2fr)",
       render: (row) => (
-        <Text as="div" role="cell" truncate title={row.subject}>
+        <Text as="div" role="cell" className={WRAPPED} title={row.subject}>
           {row.subject}
         </Text>
       ),
@@ -75,9 +76,9 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "variants",
       label: t("list.column.variants"),
-      track: "minmax(120px,1fr)",
+      track: "minmax(140px,1.4fr)",
       render: (row) => (
-        <Text as="div" role="cell" truncate title={row.variants}>
+        <Text as="div" role="cell" className={WRAPPED} title={row.variants}>
           {row.variants}
         </Text>
       ),
@@ -85,7 +86,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "verdict",
       label: t("list.column.verdict"),
-      track: "minmax(140px,0.9fr)",
+      track: "minmax(112px,0.6fr)",
       render: (row) =>
         row.latest === null ? (
           <Text role="cell" tone="neutral">
@@ -111,11 +112,19 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
   ]
 }
 
-function ExperimentTable({ experiments, filtered }: { readonly experiments: readonly ExperimentSummary[]; readonly filtered: boolean }) {
+function useEmptyTitle(filter: ExperimentFilter): string {
+  const t = useTranslations("research.list")
+  if (hasNarrowing(filter)) return t("empty")
+  if (filter.flow !== undefined) return t("emptyFlow", { flow: filter.flow })
+  return t("emptyAll")
+}
+
+function ExperimentTable({ experiments, filter }: { readonly experiments: readonly ExperimentSummary[]; readonly filter: ExperimentFilter }) {
   const t = useTranslations("research.list")
   const copy = useListCopy()
   const fields = useExperimentFields()
-  if (experiments.length === 0) return <Empty title={filtered ? t("empty") : t("emptyAll")} hint={t("emptyHint")} />
+  const emptyTitle = useEmptyTitle(filter)
+  if (experiments.length === 0) return <Empty title={emptyTitle} hint={t("emptyHint")} />
   const rows = experimentRows(experiments, copy)
   return (
     <Surface variant="panel" className="overflow-x-auto">
@@ -135,26 +144,21 @@ function ExperimentTable({ experiments, filtered }: { readonly experiments: read
 
 export function ResearchScreen() {
   const t = useTranslations("research.list")
-  const { project, flows } = projectRouteApi.useLoaderData()
+  const { project } = projectRouteApi.useLoaderData()
   const { experiments, all, filter } = researchRouteApi.useLoaderData()
-  const filtered = Object.keys(filter).length > 0
+  const subtitle = filter.flow === undefined ? t("subtitle", { project: project.package ?? project.root }) : t("subtitleFlow", { flow: filter.flow })
   return (
     <Page
       width="xl"
       header={
         <Toolbar wrap className="items-start gap-2.5" end={<HandoffButton label={t("suggest")} prompt={hypothesesPrompt(all, filter)} variant="default" />}>
-          <Heading size="page" title={t("title")} below={[t("subtitle", { project: project.package ?? project.root })]} />
+          <Heading size="page" title={t("title")} below={[subtitle]} />
         </Toolbar>
       }
     >
       <div className="flex flex-col gap-3">
-        <ResearchFilters
-          filter={filter}
-          flows={experimentFlows(flows.map((flow) => flow.flow_id), all)}
-          failureModes={failureModes(all)}
-          count={experiments.length}
-        />
-        <ExperimentTable experiments={experiments} filtered={filtered} />
+        <ResearchFilters filter={filter} failureModes={failureModes(all)} count={experiments.length} />
+        <ExperimentTable experiments={experiments} filter={filter} />
       </div>
     </Page>
   )

@@ -211,6 +211,7 @@ class SeriesProgress(ResourceModel):
 class SeriesSpend(ResourceModel):
     usd: Decimal
     cap_usd: Decimal
+    unpriced_attempts: int = Field(default=0, ge=0)
 
 
 class SeriesSummaryView(ResourceModel):

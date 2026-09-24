@@ -1,18 +1,29 @@
 import { useTranslations } from "use-intl"
-import type { QuestionKind, VariantRole } from "@/domain"
+import type { ExperimentQuestion, VariantId, VariantRole } from "@/domain"
 import { Tag } from "@/components/studio"
-import { shownRole } from "./presenters"
-import { ROLE_TONE } from "./tones"
+import { ROW_ROLE_TONE } from "./tones"
+import { rowRole, type RowRole } from "./variant-table"
 
-export type RoleTagProps = { readonly role: VariantRole; readonly question: QuestionKind }
+type RoleSize = "micro" | "xs"
 
-export function RoleTag({ role, question }: RoleTagProps) {
+export type RowRoleTagProps = { readonly role: RowRole; readonly size?: RoleSize }
+
+export type RoleTagProps = {
+  readonly variant: VariantId
+  readonly role: VariantRole
+  readonly question: ExperimentQuestion
+  readonly size?: RoleSize
+}
+
+export function RowRoleTag({ role, size = "micro" }: RowRoleTagProps) {
   const t = useTranslations("research.vocabulary.role")
-  const shown = shownRole(role, question)
-  if (shown === null) return null
   return (
-    <Tag size="micro" fill="tint" tone={ROLE_TONE[shown]}>
-      {t(shown)}
+    <Tag size={size} fill="tint" tone={ROW_ROLE_TONE[role]}>
+      {t(role)}
     </Tag>
   )
+}
+
+export function RoleTag({ variant, role, question, size }: RoleTagProps) {
+  return <RowRoleTag role={rowRole(question, { id: variant, role })} {...(size === undefined ? {} : { size })} />
 }

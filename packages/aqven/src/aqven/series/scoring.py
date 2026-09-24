@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
 from aqven.engine.checking import (
     CheckDefinition,
@@ -47,6 +47,7 @@ class JudgeReplyRecord(RecordModel):
     cost_usd: Decimal = ZERO
     run_id: RunId | None = None
     error: str | None = None
+    unpriced_calls: int = Field(default=0, ge=0)
 
     def reply(self) -> JudgeReply:
         return JudgeReply(output=self.output, cost_usd=self.cost_usd, run_id=self.run_id, error=self.error)

@@ -16,6 +16,7 @@ from aqven.engine.launching import settled_record, start_run_workflow
 from aqven.engine.listing import RunListing, WorkflowFilters
 from aqven.engine.llm.errors import LlmNodeError
 from aqven.engine.presentation import CurrentFormatterLoader, CurrentTemplateLoader, present_batch
+from aqven.engine.prices import launch_models
 from aqven.engine.projection import ExecutionFold, RunFold, fold_events
 from aqven.engine.protocol import RUN_FLOW_WORKFLOW
 from aqven.engine.reader import TERMINAL_DBOS_STATUSES, RunEventLog
@@ -297,6 +298,7 @@ class DbosEngineFacade:
         ir_hash = self.runtime.plans.register(plan)
         run_id = RunId(str(uuid.uuid7()))
         self.runtime.services.overrides.register(run_id, overrides)
+        await self.runtime.services.prices.warm(launch_models(plan, spec))
         await start_run_workflow(run_id, ir_hash, flow_input, spec)
         return RunStarted(
             run_id=run_id,

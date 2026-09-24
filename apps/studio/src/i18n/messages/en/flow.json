@@ -207,6 +207,7 @@
       "tokens": "Tokens",
       "seconds": "Seconds",
       "budget": "Budget"
-    }
+    },
+    "noSchema": "No schema is declared"
   }
 }

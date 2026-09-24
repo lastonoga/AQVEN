@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import type { AttemptOutcome, SeriesAttempt } from "@/domain"
 import * as ids from "@/data/ids"
-import { failedChecksOf, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, shareOf, spendTone, tallyTone, toggledFilter, verdictGap } from "./series-presenters"
-import { caseRow, seriesDetail } from "./test-support"
+import { failedChecksOf, hasFilter, hasFinished, isLowerBound, isPending, orderedAttempts, pendingOf, shareOf, spendTone, tallyTone, toggledFilter, unpricedSpend, verdictGap } from "./series-presenters"
+import { caseRow, seriesDetail, seriesSummary } from "./test-support"
 
 const attempt = (variant: string, repeat: number, outcome: AttemptOutcome): SeriesAttempt => ({
   run: ids.runId(`${variant}-${String(repeat)}`),
@@ -20,9 +20,21 @@ describe("series header", () => {
   it("fills the meters and warns as spend nears the cap", () => {
     expect(shareOf(58, 108)).toBeCloseTo(0.537)
     expect(shareOf(3, 0)).toBe(0)
-    expect(spendTone(seriesDetail({ spend: { usd: 0.4, capUsd: 1 } }))).toBe("neutral")
-    expect(spendTone(seriesDetail({ spend: { usd: 0.85, capUsd: 1 } }))).toBe("warning")
-    expect(spendTone(seriesDetail({ spend: { usd: 1.2, capUsd: 1 } }))).toBe("destructive")
+    expect(spendTone(seriesDetail({ spend: { usd: 0.4, capUsd: 1, unpricedAttempts: 0 } }))).toBe("neutral")
+    expect(spendTone(seriesDetail({ spend: { usd: 0.85, capUsd: 1, unpricedAttempts: 0 } }))).toBe("warning")
+    expect(spendTone(seriesDetail({ spend: { usd: 1.2, capUsd: 1, unpricedAttempts: 0 } }))).toBe("destructive")
+  })
+
+  it("calls the spend a lower bound once an attempt ran on a model without a price", () => {
+    expect(isLowerBound({ unpricedAttempts: 0 })).toBe(false)
+    expect(isLowerBound({ unpricedAttempts: 2 })).toBe(true)
+  })
+
+  it("adds up the unpriced attempts of the series that have any", () => {
+    const spend = (unpricedAttempts: number) => ({ usd: 0.1, capUsd: 1, unpricedAttempts })
+    const series = [seriesSummary({ spend: spend(0) }), seriesSummary({ spend: spend(3) }), seriesSummary({ spend: spend(2) })]
+    expect(unpricedSpend(series)).toEqual({ attempts: 5, series: 2 })
+    expect(unpricedSpend([])).toEqual({ attempts: 0, series: 0 })
   })
 
   it("explains a missing verdict by the question and the status", () => {

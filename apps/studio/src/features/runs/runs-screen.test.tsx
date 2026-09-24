@@ -120,6 +120,7 @@ describe("RunsScreen", () => {
     await renderRoute(RUNS)
     expect(await screen.findByText("No runs yet")).toBeTruthy()
     expect(screen.queryByRole("combobox", { name: /^Run #/ })).toBeNull()
+    expect(screen.queryByText("Select a run to see its executions")).toBeNull()
   })
 
   it("filters the available runs by reference", async () => {

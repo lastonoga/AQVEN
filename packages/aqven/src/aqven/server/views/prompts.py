@@ -8,7 +8,7 @@ from liquid.static_analysis import TemplateAnalysis
 
 from aqven.check.templates import OUTPUT_FORMAT, IncludeLoader, prompt_environment
 from aqven.diagnostics import Diagnostic
-from aqven.loader import LoadedInference, LoadedProject, include_candidates, text_file
+from aqven.loader import LoadedFlow, LoadedInference, LoadedProject, include_candidates, text_file
 from aqven.runtime.runs import Page
 from aqven.server.errors import not_found
 from aqven.server.resources import (
@@ -21,7 +21,7 @@ from aqven.server.resources import (
 )
 from aqven.server.views.common import diagnostics_in, loaded_flow, loaded_project, page_of
 from aqven.server.workspace import WorkspaceState
-from aqven.spec import InferenceId, InferenceSpec, LlmNodeSpec, NodeId
+from aqven.spec import InferenceId, InferenceSpec, LlmNodeSpec, NodeId, NodeSpec
 
 PROMPT_KEY: Final = "prompt"
 VARIANTS_PREFIX: Final = "variants/"
@@ -115,14 +115,22 @@ def summary_of(state: WorkspaceState, flow_id: str, node_id: str, facts: PromptF
     )
 
 
+def llm_facts(project: LoadedProject, spec: NodeSpec) -> PromptFacts | None:
+    return inference_facts(project, spec.inference) if isinstance(spec, LlmNodeSpec) else None
+
+
+def flow_llm_facts(project: LoadedProject, flow: LoadedFlow) -> Iterator[tuple[str, PromptFacts]]:
+    for node_id, node in sorted(flow.nodes.items()):
+        facts = llm_facts(project, node.spec)
+        if facts is not None:
+            yield node_id, facts
+
+
 def llm_prompts(state: WorkspaceState) -> Iterator[tuple[str, str, PromptFacts]]:
     project = loaded_project(state)
     for flow_id, flow in sorted(project.flows.items()):
-        for node_id, node in sorted(flow.nodes.items()):
-            spec = node.spec
-            facts = inference_facts(project, spec.inference) if isinstance(spec, LlmNodeSpec) else None
-            if facts is not None:
-                yield flow_id, node_id, facts
+        for node_id, facts in flow_llm_facts(project, flow):
+            yield flow_id, node_id, facts
 
 
 def prompt_summaries(
@@ -167,7 +175,15 @@ def prompt_slots(facts: PromptFacts) -> tuple[PromptSlot, ...]:
 
 
 def prompt_detail(state: WorkspaceState, flow_id: str, node_id: str) -> PromptDetail:
-    facts = node_facts(state, flow_id, node_id)
+    return detail_of(state, flow_id, node_id, node_facts(state, flow_id, node_id))
+
+
+def flow_prompt_details(state: WorkspaceState, flow: LoadedFlow) -> dict[str, PromptDetail]:
+    project = loaded_project(state)
+    return {node_id: detail_of(state, flow.flow_id, node_id, facts) for node_id, facts in flow_llm_facts(project, flow)}
+
+
+def detail_of(state: WorkspaceState, flow_id: str, node_id: str, facts: PromptFacts) -> PromptDetail:
     summary = summary_of(state, flow_id, node_id, facts)
     slots = prompt_slots(facts)
     source = None if facts.text is None else PromptSourceText(text=facts.text, file_hash=summary.file_hash)

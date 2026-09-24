@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useTranslations } from "use-intl"
-import type { ApiDatasetCase, ExperimentDetail } from "@/domain"
+import type { ApiDatasetCase, CaseTags, ExperimentDetail } from "@/domain"
 import {
   ChoiceGroup,
   Expander,
@@ -18,7 +18,7 @@ import {
 } from "@/components/studio"
 import { MediaOutput, type OutputMedia } from "@/components/studio/media-output"
 import { ROUTE_PATH } from "@/lib/routes"
-import { hasContext, hasExpected, tagTokens, toggleName } from "./model"
+import { caseTags, hasContext, hasExpected, tagTokens, toggleName } from "./model"
 
 export type CaseDetailProps = {
   readonly id: string
@@ -49,6 +49,20 @@ function CaseValue({ value }: { readonly value: unknown }) {
 
 function Hint({ children }: { readonly children: ReactNode }) {
   return <Text as="p" role="hint" tone="neutral">{children}</Text>
+}
+
+function TagsLine({ tags }: { readonly tags: CaseTags }) {
+  const t = useTranslations("cases.detail")
+  const tokens = tagTokens(tags)
+  if (tokens.length === 0) return null
+  return (
+    <div role="group" aria-label={t("tags")} className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <Text role="label" tone="neutral" className="mr-1">{t("tags")}</Text>
+      {tokens.map((token) => (
+        <Tag key={token} size="sm" fill="ground">{token}</Tag>
+      ))}
+    </div>
+  )
 }
 
 function NodeOutputs({ outputs }: { readonly outputs: Readonly<Record<string, unknown>> }) {
@@ -147,6 +161,7 @@ export function CaseDetail({ id, item, experiments, run }: CaseDetailProps) {
   ]
   return (
     <section id={id} aria-label={t("aria", { name: item.name })} className="flex flex-col gap-4 border-t border-border bg-background-subtle px-4 py-3.5">
+      <TagsLine tags={caseTags(item)} />
       <ValueDisplayProvider mode={mode}>
         <SectionStack sections={sections} gap="md" />
       </ValueDisplayProvider>

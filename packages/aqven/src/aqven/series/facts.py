@@ -1,6 +1,7 @@
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
+from functools import reduce
 from typing import Final
 
 from pydantic import Field, JsonValue
@@ -85,6 +86,7 @@ class RunFacts(RecordModel):
     cost_usd: Decimal = ZERO
     tokens_in: int = Field(default=0, ge=0)
     tokens_out: int = Field(default=0, ge=0)
+    unpriced_calls: int = Field(default=0, ge=0)
     latency_ms: int | None = None
     wait_ms: int = Field(default=0, ge=0)
     models: dict[str, str] = Field(default_factory=dict[str, str])
@@ -131,6 +133,24 @@ def is_top_level(flow: CompiledFlow, address: ExecutionAddress) -> bool:
     return address.node_id in flow.order and all(part is None for part in nested)
 
 
+@dataclass(frozen=True, slots=True)
+class RunSpend:
+    cost_usd: Decimal = ZERO
+    unpriced_calls: int = 0
+
+    def plus(self, other: RunSpend) -> RunSpend:
+        return RunSpend(
+            cost_usd=self.cost_usd + other.cost_usd, unpriced_calls=self.unpriced_calls + other.unpriced_calls
+        )
+
+
+NO_SPEND: Final = RunSpend()
+
+
+def total_spend(spends: Iterable[RunSpend]) -> RunSpend:
+    return reduce(RunSpend.plus, spends, NO_SPEND)
+
+
 def summed_cost(trace: RunTrace, record: RunRecord) -> tuple[Decimal, int, int]:
     if record.status == "completed":
         return record.usage.cost_usd, record.usage.tokens_in, record.usage.tokens_out
@@ -140,6 +160,12 @@ def summed_cost(trace: RunTrace, record: RunRecord) -> tuple[Decimal, int, int]:
         sum(event.tokens_in for event in nodes),
         sum(event.tokens_out for event in nodes),
     )
+
+
+def summed_unpriced(trace: RunTrace, record: RunRecord) -> int:
+    if record.status == "completed":
+        return record.usage.unpriced_calls
+    return sum(event.unpriced_calls for event in trace.usage_nodes())
 
 
 def working_latency(trace: RunTrace) -> int | None:
@@ -195,6 +221,7 @@ def run_facts(trace: RunTrace, record: RunRecord) -> RunFacts:
         cost_usd=cost,
         tokens_in=tokens_in,
         tokens_out=tokens_out,
+        unpriced_calls=summed_unpriced(trace, record),
         latency_ms=working_latency(trace),
         wait_ms=waited(trace),
         models=actual_models(trace),
@@ -207,7 +234,11 @@ def inspection_of(facts: RunFacts, judge_inputs: Mapping[str, JsonObject]) -> At
     return AttemptInspection(**facts.model_dump(), judge_inputs=dict(judge_inputs))
 
 
-def event_cost(events: Sequence[RunEvent]) -> Decimal:
+def event_spend(events: Sequence[RunEvent]) -> RunSpend:
     kinds = {address_key(event.address): event.kind for event in events if isinstance(event, NodeStarted)}
-    finished = (event for event in events if isinstance(event, NodeFinished))
-    return sum((event.cost_usd for event in finished if kinds.get(address_key(event.address)) in USAGE_KINDS), ZERO)
+    finished = [event for event in events if isinstance(event, NodeFinished)]
+    billed = [event for event in finished if kinds.get(address_key(event.address)) in USAGE_KINDS]
+    return RunSpend(
+        cost_usd=sum((event.cost_usd for event in billed), ZERO),
+        unpriced_calls=sum(event.unpriced_calls for event in billed),
+    )

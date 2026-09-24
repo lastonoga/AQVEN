@@ -9,12 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectRouteRouteImport } from './routes/_project/route'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as ProjectIndexRouteImport } from './routes/_project/index'
 import { Route as ProjectSettingsRouteImport } from './routes/_project/settings'
-import { Route as ProjectFlowsIndexRouteImport } from './routes/_project/flows/index'
 import { Route as ProjectFlowsFlowIdRouteRouteImport } from './routes/_project/flows/$flowId/route'
 import { Route as ProjectResearchIndexRouteImport } from './routes/_project/research/index'
 import { Route as ProjectRunsRunIdRouteImport } from './routes/_project/runs/$runId'
@@ -23,13 +22,9 @@ import { Route as ProjectFlowsFlowIdCanvasRouteImport } from './routes/_project/
 import { Route as ProjectFlowsFlowIdCasesRouteImport } from './routes/_project/flows/$flowId/cases'
 import { Route as ProjectFlowsFlowIdRunsRouteImport } from './routes/_project/flows/$flowId/runs'
 import { Route as ProjectResearchExperimentsExperimentIdRouteImport } from './routes/_project/research/experiments/$experimentId'
+import { Route as ProjectResearchSeriesIndexRouteImport } from './routes/_project/research/series/index'
 import { Route as ProjectResearchSeriesSeriesIdRouteImport } from './routes/_project/research/series/$seriesId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProjectRouteRoute = ProjectRouteRouteImport.update({
   id: '/_project',
   getParentRoute: () => rootRouteImport,
@@ -44,14 +39,14 @@ const SetupRoute = SetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectIndexRoute = ProjectIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectRouteRoute,
+} as any)
 const ProjectSettingsRoute = ProjectSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => ProjectRouteRoute,
-} as any)
-const ProjectFlowsIndexRoute = ProjectFlowsIndexRouteImport.update({
-  id: '/flows/',
-  path: '/flows/',
   getParentRoute: () => ProjectRouteRoute,
 } as any)
 const ProjectFlowsFlowIdRouteRoute = ProjectFlowsFlowIdRouteRouteImport.update({
@@ -96,6 +91,12 @@ const ProjectResearchExperimentsExperimentIdRoute =
     path: '/research/experiments/$experimentId',
     getParentRoute: () => ProjectRouteRoute,
   } as any)
+const ProjectResearchSeriesIndexRoute =
+  ProjectResearchSeriesIndexRouteImport.update({
+    id: '/research/series/',
+    path: '/research/series/',
+    getParentRoute: () => ProjectRouteRoute,
+  } as any)
 const ProjectResearchSeriesSeriesIdRoute =
   ProjectResearchSeriesSeriesIdRouteImport.update({
     id: '/research/series/$seriesId',
@@ -104,13 +105,12 @@ const ProjectResearchSeriesSeriesIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof ProjectIndexRoute
   '/demo': typeof DemoRoute
   '/setup': typeof SetupRoute
   '/settings': typeof ProjectSettingsRoute
   '/flows/$flowId': typeof ProjectFlowsFlowIdRouteRouteWithChildren
   '/runs/$runId': typeof ProjectRunsRunIdRoute
-  '/flows/': typeof ProjectFlowsIndexRoute
   '/research/': typeof ProjectResearchIndexRoute
   '/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
   '/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
@@ -118,14 +118,14 @@ export interface FileRoutesByFullPath {
   '/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
   '/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
   '/flows/$flowId/': typeof ProjectFlowsFlowIdIndexRoute
+  '/research/series/': typeof ProjectResearchSeriesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/demo': typeof DemoRoute
   '/setup': typeof SetupRoute
   '/settings': typeof ProjectSettingsRoute
+  '/': typeof ProjectIndexRoute
   '/runs/$runId': typeof ProjectRunsRunIdRoute
-  '/flows': typeof ProjectFlowsIndexRoute
   '/research': typeof ProjectResearchIndexRoute
   '/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
   '/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
@@ -133,17 +133,17 @@ export interface FileRoutesByTo {
   '/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
   '/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
   '/flows/$flowId': typeof ProjectFlowsFlowIdIndexRoute
+  '/research/series': typeof ProjectResearchSeriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_project': typeof ProjectRouteRouteWithChildren
   '/demo': typeof DemoRoute
   '/setup': typeof SetupRoute
   '/_project/settings': typeof ProjectSettingsRoute
+  '/_project/': typeof ProjectIndexRoute
   '/_project/flows/$flowId': typeof ProjectFlowsFlowIdRouteRouteWithChildren
   '/_project/runs/$runId': typeof ProjectRunsRunIdRoute
-  '/_project/flows/': typeof ProjectFlowsIndexRoute
   '/_project/research/': typeof ProjectResearchIndexRoute
   '/_project/flows/$flowId/canvas': typeof ProjectFlowsFlowIdCanvasRoute
   '/_project/flows/$flowId/cases': typeof ProjectFlowsFlowIdCasesRoute
@@ -151,6 +151,7 @@ export interface FileRoutesById {
   '/_project/research/experiments/$experimentId': typeof ProjectResearchExperimentsExperimentIdRoute
   '/_project/research/series/$seriesId': typeof ProjectResearchSeriesSeriesIdRoute
   '/_project/flows/$flowId/': typeof ProjectFlowsFlowIdIndexRoute
+  '/_project/research/series/': typeof ProjectResearchSeriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,7 +162,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/flows/$flowId'
     | '/runs/$runId'
-    | '/flows/'
     | '/research/'
     | '/flows/$flowId/canvas'
     | '/flows/$flowId/cases'
@@ -169,14 +169,14 @@ export interface FileRouteTypes {
     | '/research/experiments/$experimentId'
     | '/research/series/$seriesId'
     | '/flows/$flowId/'
+    | '/research/series/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/demo'
     | '/setup'
     | '/settings'
+    | '/'
     | '/runs/$runId'
-    | '/flows'
     | '/research'
     | '/flows/$flowId/canvas'
     | '/flows/$flowId/cases'
@@ -184,16 +184,16 @@ export interface FileRouteTypes {
     | '/research/experiments/$experimentId'
     | '/research/series/$seriesId'
     | '/flows/$flowId'
+    | '/research/series'
   id:
     | '__root__'
-    | '/'
     | '/_project'
     | '/demo'
     | '/setup'
     | '/_project/settings'
+    | '/_project/'
     | '/_project/flows/$flowId'
     | '/_project/runs/$runId'
-    | '/_project/flows/'
     | '/_project/research/'
     | '/_project/flows/$flowId/canvas'
     | '/_project/flows/$flowId/cases'
@@ -201,10 +201,10 @@ export interface FileRouteTypes {
     | '/_project/research/experiments/$experimentId'
     | '/_project/research/series/$seriesId'
     | '/_project/flows/$flowId/'
+    | '/_project/research/series/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   ProjectRouteRoute: typeof ProjectRouteRouteWithChildren
   DemoRoute: typeof DemoRoute
   SetupRoute: typeof SetupRoute
@@ -212,13 +212,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_project': {
       id: '/_project'
       path: ''
@@ -240,18 +233,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_project/': {
+      id: '/_project/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof ProjectIndexRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
     '/_project/settings': {
       id: '/_project/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof ProjectSettingsRouteImport
-      parentRoute: typeof ProjectRouteRoute
-    }
-    '/_project/flows/': {
-      id: '/_project/flows/'
-      path: '/flows'
-      fullPath: '/flows/'
-      preLoaderRoute: typeof ProjectFlowsIndexRouteImport
       parentRoute: typeof ProjectRouteRoute
     }
     '/_project/flows/$flowId': {
@@ -310,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectResearchExperimentsExperimentIdRouteImport
       parentRoute: typeof ProjectRouteRoute
     }
+    '/_project/research/series/': {
+      id: '/_project/research/series/'
+      path: '/research/series'
+      fullPath: '/research/series/'
+      preLoaderRoute: typeof ProjectResearchSeriesIndexRouteImport
+      parentRoute: typeof ProjectRouteRoute
+    }
     '/_project/research/series/$seriesId': {
       id: '/_project/research/series/$seriesId'
       path: '/research/series/$seriesId'
@@ -342,23 +342,25 @@ const ProjectFlowsFlowIdRouteRouteWithChildren =
 
 interface ProjectRouteRouteChildren {
   ProjectSettingsRoute: typeof ProjectSettingsRoute
+  ProjectIndexRoute: typeof ProjectIndexRoute
   ProjectFlowsFlowIdRouteRoute: typeof ProjectFlowsFlowIdRouteRouteWithChildren
   ProjectRunsRunIdRoute: typeof ProjectRunsRunIdRoute
-  ProjectFlowsIndexRoute: typeof ProjectFlowsIndexRoute
   ProjectResearchIndexRoute: typeof ProjectResearchIndexRoute
   ProjectResearchExperimentsExperimentIdRoute: typeof ProjectResearchExperimentsExperimentIdRoute
   ProjectResearchSeriesSeriesIdRoute: typeof ProjectResearchSeriesSeriesIdRoute
+  ProjectResearchSeriesIndexRoute: typeof ProjectResearchSeriesIndexRoute
 }
 
 const ProjectRouteRouteChildren: ProjectRouteRouteChildren = {
   ProjectSettingsRoute: ProjectSettingsRoute,
+  ProjectIndexRoute: ProjectIndexRoute,
   ProjectFlowsFlowIdRouteRoute: ProjectFlowsFlowIdRouteRouteWithChildren,
   ProjectRunsRunIdRoute: ProjectRunsRunIdRoute,
-  ProjectFlowsIndexRoute: ProjectFlowsIndexRoute,
   ProjectResearchIndexRoute: ProjectResearchIndexRoute,
   ProjectResearchExperimentsExperimentIdRoute:
     ProjectResearchExperimentsExperimentIdRoute,
   ProjectResearchSeriesSeriesIdRoute: ProjectResearchSeriesSeriesIdRoute,
+  ProjectResearchSeriesIndexRoute: ProjectResearchSeriesIndexRoute,
 }
 
 const ProjectRouteRouteWithChildren = ProjectRouteRoute._addFileChildren(
@@ -366,7 +368,6 @@ const ProjectRouteRouteWithChildren = ProjectRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   ProjectRouteRoute: ProjectRouteRouteWithChildren,
   DemoRoute: DemoRoute,
   SetupRoute: SetupRoute,

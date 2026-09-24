@@ -41,21 +41,16 @@ describe("ResearchScreen", () => {
     expect((await rowOf("intent_escalation_agents")).textContent).toContain("arm escalation · escalate")
   })
 
-  it("filters by flow, question and failure mode through the address", async () => {
-    const router = await renderRoute("/research")
-    await table()
-    fireEvent.change(screen.getByRole("combobox", { name: "Flow" }), { target: { value: "judge_panel" } })
-    await waitFor(() => {
-      expect(router.state.location.search).toEqual({ flow: "judge_panel" })
-    })
-    await waitFor(async () => {
-      expect(await experimentIds()).toEqual([
-        "Open experiment judge_panel_agents",
-        "Open experiment panel_aa_noise",
-        "Open experiment panel_failure_scan",
-        "Open experiment panel_single_judge",
-      ])
-    })
+  it("lists the experiments of the flow picked in the top bar and filters them by question and failure mode", async () => {
+    const router = await renderRoute("/research?flow=%22judge_panel%22")
+    expect(await experimentIds()).toEqual([
+      "Open experiment judge_panel_agents",
+      "Open experiment panel_aa_noise",
+      "Open experiment panel_failure_scan",
+      "Open experiment panel_single_judge",
+    ])
+    expect(screen.getByText(/^Experiments on judge_panel/)).toBeTruthy()
+    expect(screen.queryByRole("combobox", { name: "Flow" })).toBeNull()
     fireEvent.change(screen.getByRole("combobox", { name: "Question" }), { target: { value: "compare" } })
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ flow: "judge_panel", question: "compare" })
@@ -64,9 +59,15 @@ describe("ResearchScreen", () => {
     expect(await screen.findByText("No experiments match these filters")).toBeTruthy()
     fireEvent.click(screen.getByRole("link", { name: "Clear filters" }))
     await waitFor(() => {
-      expect(router.state.location.search).toEqual({})
+      expect(router.state.location.search).toEqual({ flow: "judge_panel" })
     })
-    expect(await experimentIds()).toHaveLength(13)
+    expect(await experimentIds()).toHaveLength(4)
+  })
+
+  it("says when the picked flow has no experiments yet", async () => {
+    server.use(http.get(`${API_BASE}/experiments`, () => HttpResponse.json({ items: [], next_cursor: null, total_estimate: 0 })))
+    await renderRoute("/research?flow=%22judge_panel%22")
+    expect(await screen.findByText("No experiments on judge_panel yet")).toBeTruthy()
   })
 
   it("offers the failure modes of the project in the filter", async () => {

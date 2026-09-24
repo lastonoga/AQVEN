@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react"
+import type { ReactNode } from "react"
 import { useTranslations } from "use-intl"
 import type { ApiNodeDetail, ApiPromptDetail, ApiPromptSlot, FlowId } from "@/domain"
 import * as ids from "@/data/ids"
-import { Dot, Empty, NODE_KIND, PropertyList, SectionStack, SidePanel, StructuredValue, Surface, Tag, ValueDisplayProvider, type ChoiceItem, type PropertyRow, type SectionSpec } from "@/components/studio"
+import { Empty, PropertyList, SectionStack, StructuredValue, Surface, Tag, type PropertyRow, type SectionSpec } from "@/components/studio"
 import { SchemaCard, ScrollBox } from "@/features/call-sheet"
 import { isJsonObject, schemaTypeLabel } from "@/features/nodes"
-import { PresentationModeChoice, type PresentationMode } from "@/features/runs"
+import { InspectorPanel, type InspectorPage } from "./inspector-panel"
 import { specDescription, specFacts } from "./node-facts"
 import { AgentSections } from "./node-agent-sections"
 import { NodeDisplayExample } from "./node-display-example"
@@ -13,6 +13,11 @@ import { NodeDisplayExample } from "./node-display-example"
 type InspectorTranslator = ReturnType<typeof useTranslations<"flow.inspector">>
 type InspectorTab = "definition" | "input" | "prompt" | "output" | "config" | "problems"
 type DisplaySide = "input" | "output"
+type FieldInfo = { readonly types: Readonly<Record<string, string>>; readonly descriptions: Readonly<Record<string, string>> }
+type PromptContext = { readonly descriptions: Readonly<Record<string, string>>; readonly variants: readonly SectionSpec[] }
+
+const NO_FIELDS: FieldInfo = { types: {}, descriptions: {} }
+const NO_PROMPT_CONTEXT: PromptContext = { descriptions: {}, variants: [] }
 
 const TABS: readonly InspectorTab[] = ["definition", "input", "prompt", "output", "config", "problems"]
 
@@ -32,7 +37,7 @@ const textSection = (id: string, title: string, value: string | null): readonly 
 const plainSection = (id: string, title: string, value: string): readonly SectionSpec[] =>
   value === "" ? [] : [{ id, title, body: { kind: "text", lines: [[value]], variant: "plain" } }]
 
-const schemaSection = (id: string, title: string, schema: unknown, raw: boolean, fields: { readonly types: Readonly<Record<string, string>>; readonly descriptions: Readonly<Record<string, string>> }, showAllowedValues = false, fieldDetails: Readonly<Record<string, ReactNode>> = {}): readonly SectionSpec[] =>
+const schemaSection = (id: string, title: string, schema: unknown, raw: boolean, fields: FieldInfo, showAllowedValues = false, fieldDetails: Readonly<Record<string, ReactNode>> = {}): readonly SectionSpec[] =>
   schema === null || schema === undefined ? [] : [{
     id,
     title,
@@ -48,7 +53,7 @@ const declaredFields = (detail: ApiNodeDetail, side: "in" | "out"): unknown => {
   return spec[side] ?? null
 }
 
-const fieldInfo = (detail: ApiNodeDetail, side: "in" | "out"): { readonly types: Readonly<Record<string, string>>; readonly descriptions: Readonly<Record<string, string>> } => {
+const fieldInfo = (detail: ApiNodeDetail, side: "in" | "out"): FieldInfo => {
   const fields = declaredFields(detail, side)
   if (!Array.isArray(fields)) return { types: {}, descriptions: {} }
   const entries = fields.filter((field: unknown) => field !== null && typeof field === "object" && "name" in field)
@@ -95,7 +100,7 @@ const inputSections = (detail: ApiNodeDetail, t: InspectorTranslator, raw: boole
   ...schemaSection("input-schema", t("inSchema"), detail.in_schema, raw, fieldInfo(detail, "in")),
   ...(raw || detail.in_schema === null ? valueSection("declared-inputs", t("declaredInputs"), declaredFields(detail, "in")) : []),
   ...(raw ? valueSection("bindings", t("bindings"), detail.bindings) : properties("bindings", t("bindings"), bindingRows(detail))),
-  ...schemaSection("form-schema", t("formSchema"), detail.form_schema, raw, { types: {}, descriptions: {} }),
+  ...schemaSection("form-schema", t("formSchema"), detail.form_schema, raw, NO_FIELDS),
   ...displaySections(detail, "input", t),
 ]
 
@@ -134,7 +139,7 @@ const promptVariants = (detail: ApiNodeDetail, t: InspectorTranslator, raw: bool
   }))
 }
 
-const promptSections = (detail: ApiNodeDetail, prompt: ApiPromptDetail | null, t: InspectorTranslator, raw: boolean): readonly SectionSpec[] => {
+const promptSections = (prompt: ApiPromptDetail | null, t: InspectorTranslator, raw: boolean, context: PromptContext): readonly SectionSpec[] => {
   if (prompt === null) return []
   if (raw) return [...valueSection("prompt-raw", t("prompt"), {
     inference: prompt.inference_id,
@@ -144,15 +149,15 @@ const promptSections = (detail: ApiNodeDetail, prompt: ApiPromptDetail | null, t
     slots: prompt.slots,
     unused_inputs: prompt.unused_inputs,
     analysis: prompt.analysis,
-  }), ...promptVariants(detail, t, true)]
+  }), ...context.variants]
   return [
     ...properties("prompt-kind", t("promptKind"), [
       { key: t("format"), value: prompt.path === null ? t("function") : t("template") },
       ...optionalRow(t("inference"), prompt.inference_id),
       ...optionalRow(t("level"), prompt.level === null ? null : String(prompt.level)),
     ]),
-    ...(prompt.slots.length === 0 ? [] : [{ id: "prompt-slots", title: t("promptInputs"), body: { kind: "node" as const, node: <PromptSlots slots={prompt.slots} descriptions={fieldInfo(detail, "in").descriptions} t={t} /> } }]),
-    ...promptVariants(detail, t, false),
+    ...(prompt.slots.length === 0 ? [] : [{ id: "prompt-slots", title: t("promptInputs"), body: { kind: "node" as const, node: <PromptSlots slots={prompt.slots} descriptions={context.descriptions} t={t} /> } }]),
+    ...context.variants,
     ...textSection("prompt-source", t("templateSource"), prompt.source?.text ?? null),
   ]
 }
@@ -444,44 +449,69 @@ const problemSections = (detail: ApiNodeDetail, t: InspectorTranslator): readonl
     body: { kind: "properties", rows: [{ key: t("problem"), value: problem.message, tone: "destructive" }] },
   }))
 
+const nodePromptSections = (detail: ApiNodeDetail, prompt: ApiPromptDetail | null, t: InspectorTranslator, raw: boolean): readonly SectionSpec[] =>
+  promptSections(prompt, t, raw, { descriptions: fieldInfo(detail, "in").descriptions, variants: promptVariants(detail, t, raw) })
+
+const hasAgent = (detail: ApiNodeDetail): boolean => detail.agent_spec !== null && detail.agent_spec !== undefined
+
+type TabBodyProps = { readonly flowId: FlowId; readonly detail: ApiNodeDetail; readonly prompt: ApiPromptDetail | null; readonly raw: boolean }
+
+const TAB_SECTIONS: Readonly<Record<InspectorTab, (props: TabBodyProps, t: InspectorTranslator) => readonly SectionSpec[]>> = {
+  definition: ({ detail }, t) => definitionSections(detail, t),
+  input: ({ detail, raw }, t) => inputSections(detail, t, raw),
+  prompt: ({ detail, prompt, raw }, t) => nodePromptSections(detail, prompt, t, raw),
+  output: ({ detail, raw, flowId }, t) => outputSections(detail, t, raw, flowId),
+  config: ({ detail, raw }, t) => configSections(detail, t, raw),
+  problems: ({ detail }, t) => problemSections(detail, t),
+}
+
+function NodeTabBody({ tab, ...props }: TabBodyProps & { readonly tab: InspectorTab }) {
+  const t = useTranslations("flow.inspector")
+  const sections = TAB_SECTIONS[tab](props, t)
+  const agent = tab === "config" && hasAgent(props.detail)
+  return (
+    <div className="space-y-6">
+      {agent ? <AgentSections detail={props.detail} raw={props.raw} /> : null}
+      {sections.length === 0 && !agent ? <Empty title={t("noPrompt")} /> : null}
+      {sections.length > 0 ? <SectionStack sections={sections} gap="lg" /> : null}
+    </div>
+  )
+}
+
 function InspectorContent({ flowId, detail, prompt, onClose }: { readonly flowId: FlowId; readonly detail: ApiNodeDetail; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {
   const t = useTranslations("flow.inspector")
-  const [selected, setSelected] = useState<InspectorTab>("definition")
-  const [mode, setMode] = useState<PresentationMode>("formatted")
   const available = TABS.filter((tab) => (tab !== "prompt" || detail.prompt !== null) && (tab !== "problems" || detail.problems.length > 0))
-  const active = available.includes(selected) ? selected : "definition"
-  const kind = NODE_KIND[detail.kind]
-  const items: readonly ChoiceItem<InspectorTab>[] = available.map((tab) => ({ value: tab, label: tab === "config" && detail.agent_spec !== null && detail.agent_spec !== undefined ? t("tabs.agent") : t(`tabs.${tab}`) }))
-  const sections: readonly SectionSpec[] = active === "definition" ? definitionSections(detail, t)
-    : active === "input" ? inputSections(detail, t, mode === "raw")
-    : active === "prompt" ? promptSections(detail, prompt, t, mode === "raw")
-    : active === "output" ? outputSections(detail, t, mode === "raw", flowId)
-    : active === "config" ? configSections(detail, t, mode === "raw")
-    : problemSections(detail, t)
-
+  const label = (tab: InspectorTab): string => (tab === "config" && hasAgent(detail) ? t("tabs.agent") : t(`tabs.${tab}`))
+  const pages: readonly InspectorPage<InspectorTab>[] = available.map((tab) => ({
+    value: tab,
+    label: label(tab),
+    render: (raw) => <NodeTabBody tab={tab} flowId={flowId} detail={detail} prompt={prompt} raw={raw} />,
+  }))
   return (
-    <SidePanel
-      open
-      onOpenChange={(open) => { if (!open) onClose() }}
-      leading={<Dot tone={kind.tone} />}
+    <InspectorPanel
+      kind={detail.kind}
       title={detail.node_id}
       description={specDescription(detail)}
-      aside={<Tag size="sm" tone={kind.tone} fill="tint">{kind.code}</Tag>}
       closeLabel={t("closeAria")}
-      tabs={{ label: t("tabsAria"), items, value: active, onValueChange: setSelected }}
-    >
-      <ValueDisplayProvider mode={mode === "raw" ? "json" : "flat"}>
-        <div className="mb-3 flex justify-end gap-2">
-          <PresentationModeChoice mode={mode} onValueChange={setMode} />
-        </div>
-        <div className="space-y-6">
-          {active === "config" && detail.agent_spec !== null && detail.agent_spec !== undefined ? <AgentSections detail={detail} raw={mode === "raw"} /> : null}
-          {sections.length === 0 && (active !== "config" || detail.agent_spec === null || detail.agent_spec === undefined) ? <Empty title={t("noPrompt")} /> : null}
-          {sections.length > 0 ? <SectionStack sections={sections} gap="lg" /> : null}
-        </div>
-      </ValueDisplayProvider>
-    </SidePanel>
+      tabsLabel={t("tabsAria")}
+      pages={pages}
+      onClose={onClose}
+    />
   )
+}
+
+export function PromptBody({ prompt, raw }: { readonly prompt: ApiPromptDetail; readonly raw: boolean }) {
+  const t = useTranslations("flow.inspector")
+  return <SectionStack sections={promptSections(prompt, t, raw, NO_PROMPT_CONTEXT)} gap="lg" />
+}
+
+export type SchemaBodyProps = { readonly id: string; readonly title: string; readonly schema: unknown; readonly raw: boolean; readonly allowedValues?: boolean }
+
+export function SchemaBody({ id, title, schema, raw, allowedValues = false }: SchemaBodyProps) {
+  const t = useTranslations("flow.inspector")
+  const sections = schemaSection(id, title, schema, raw, NO_FIELDS, allowedValues)
+  if (sections.length === 0) return <Empty title={t("noSchema")} />
+  return <SectionStack sections={sections} gap="lg" />
 }
 
 export function NodeInspector({ flowId, detail, prompt, onClose }: { readonly flowId: FlowId; readonly detail: ApiNodeDetail | null; readonly prompt: ApiPromptDetail | null; readonly onClose: () => void }) {

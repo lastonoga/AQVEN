@@ -1,4 +1,4 @@
-import type { AttemptOutcome, CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesStatus, VariantId, VariantTally } from "@/domain"
+import type { AttemptOutcome, CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesSpend, SeriesStatus, SeriesSummary, VariantId, VariantTally } from "@/domain"
 import type { Tone } from "@/components/studio"
 
 export type VerdictGap = "look" | "pending" | "failed" | "none"
@@ -18,6 +18,15 @@ export const spendTone = (series: Pick<SeriesDetail, "spend">): Tone => {
   if (share >= 1) return "destructive"
   if (share >= SPEND_WARNING_SHARE) return "warning"
   return "neutral"
+}
+
+export type UnpricedSpend = { readonly attempts: number; readonly series: number }
+
+export const isLowerBound = (spend: Pick<SeriesSpend, "unpricedAttempts">): boolean => spend.unpricedAttempts > 0
+
+export const unpricedSpend = (series: readonly Pick<SeriesSummary, "spend">[]): UnpricedSpend => {
+  const bounded = series.filter((item) => isLowerBound(item.spend))
+  return { attempts: bounded.reduce((total, item) => total + item.spend.unpricedAttempts, 0), series: bounded.length }
 }
 
 export const verdictGap = (series: Pick<SeriesDetail, "question" | "status">): VerdictGap => {
