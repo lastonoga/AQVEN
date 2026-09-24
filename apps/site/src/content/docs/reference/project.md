@@ -64,8 +64,6 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
-| `input` | `('text' \| 'image' \| 'audio' \| 'video' \| 'document')[] \| null` | No | `None` | — |
-| `output` | `('text' \| 'image' \| 'audio' \| 'video' \| 'document')[] \| null` | No | `None` | — |
 | `tools` | `boolean \| null` | No | `None` | — |
 | `json_schema_output` | `boolean \| null` | No | `None` | — |
 

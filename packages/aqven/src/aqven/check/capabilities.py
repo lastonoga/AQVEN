@@ -15,7 +15,6 @@ from aqven.spec import (
     AgentId,
     InferenceSpec,
     LlmNodeSpec,
-    Modality,
     PiiClass,
     ProviderSpec,
     TypeId,
@@ -38,7 +37,7 @@ class Usage:
 
 def check_capabilities(context: CheckContext) -> Iterable[Diagnostic]:
     types: Types = {type_id: source.spec for type_id, source in context.project.types.items()}
-    usages = (item for usage in _usages(context) for item in (*_image_output(usage, types), *_pii(usage, types)))
+    usages = (item for usage in _usages(context) for item in _pii(usage, types))
     outputs = (
         item
         for loaded in context.project.inferences.values()
@@ -71,19 +70,6 @@ def _usages(context: CheckContext) -> Iterator[Usage]:
         if inference is None or agent is None:
             continue
         yield Usage(file, path, inference, AgentId(agent_id), agent)
-
-
-def _image_output(usage: Usage, types: Types) -> Iterator[Diagnostic]:
-    if IMAGE not in fields_contained_types(usage.inference.out, types):
-        return
-    unsupported = [model.model for model in usage.agent.models if Modality.IMAGE not in model.profile.output]
-    if not unsupported:
-        return
-    message = (
-        f"an Image output requires image generation, but models of agent {usage.agent_id} do not support it: "
-        f"{', '.join(unsupported)}"
-    )
-    yield diagnostic(DiagnosticCode.E_MODALITY_UNSUPPORTED, usage.file, usage.path, message)
 
 
 def _pii(usage: Usage, types: Types) -> Iterator[Diagnostic]:

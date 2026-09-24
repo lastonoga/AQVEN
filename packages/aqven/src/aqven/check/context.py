@@ -13,14 +13,13 @@ from aqven.spec import (
     InferenceId,
     InferenceSpec,
     ModelFamily,
-    ModelProfile,
     ModelString,
     ProjectSpec,
     ProviderSpec,
     ToolId,
     ToolSpec,
     TypeModels,
-    resolve_profile,
+    model_family,
 )
 
 PROVIDER_SEPARATOR = ":"
@@ -30,7 +29,7 @@ PROVIDER_SEPARATOR = ":"
 class ResolvedModel:
     model: ModelString
     provider: ProviderSpec | None
-    profile: ModelProfile
+    family: ModelFamily
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,11 +39,11 @@ class ResolvedAgent:
 
     @property
     def family(self) -> ModelFamily:
-        return self.models[0].profile.family
+        return self.models[0].family
 
     @property
     def families(self) -> frozenset[ModelFamily]:
-        return frozenset(model.profile.family for model in self.models)
+        return frozenset(model.family for model in self.models)
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,14 +93,13 @@ def resolve_agents(project: LoadedProject) -> Mapping[AgentId, ResolvedAgent]:
 
 
 def _models(agent: AgentSpec, providers: Mapping[str, ProviderSpec]) -> tuple[ResolvedModel, ...]:
-    declared = [(providers.get(model.partition(PROVIDER_SEPARATOR)[0]), model) for model in _listed(agent)]
-    return tuple(_model(agent, provider, model) for provider, model in declared)
+    return tuple(_model(providers, model) for model in _listed(agent))
 
 
 def _listed(agent: AgentSpec) -> tuple[ModelString, ...]:
     return (agent.model, *(agent.fallback_models or ()))
 
 
-def _model(agent: AgentSpec, provider: ProviderSpec | None, model: ModelString) -> ResolvedModel:
-    declared = None if provider is None else provider.capabilities
-    return ResolvedModel(model=model, provider=provider, profile=resolve_profile(model, agent.capabilities, declared))
+def _model(providers: Mapping[str, ProviderSpec], model: ModelString) -> ResolvedModel:
+    provider = providers.get(model.partition(PROVIDER_SEPARATOR)[0])
+    return ResolvedModel(model=model, provider=provider, family=model_family(model))

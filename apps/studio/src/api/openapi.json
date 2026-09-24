@@ -11602,17 +11602,13 @@
           },
           "provider": {
             "$ref": "#/components/schemas/ProviderText"
-          },
-          "capabilities": {
-            "$ref": "#/components/schemas/ModelCapabilities"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "model",
-          "provider",
-          "capabilities"
+          "provider"
         ],
         "title": "AgentModel"
       },
@@ -11784,16 +11780,6 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Limits"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "capabilities": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CapabilityOverride"
               },
               {
                 "type": "null"
@@ -12937,62 +12923,6 @@
           "project",
           "default"
         ]
-      },
-      "CapabilityOverride": {
-        "properties": {
-          "family": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ModelFamily"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "input": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Modality"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input"
-          },
-          "output": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Modality"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Output"
-          },
-          "strict": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Strict"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "CapabilityOverride"
       },
       "CaseDraft": {
         "properties": {
@@ -22997,49 +22927,6 @@
         ],
         "title": "MissingRangeData"
       },
-      "Modality": {
-        "type": "string",
-        "enum": [
-          "text",
-          "image",
-          "audio",
-          "video",
-          "document"
-        ],
-        "title": "Modality"
-      },
-      "ModalitySet": {
-        "items": {
-          "$ref": "#/components/schemas/Modality"
-        },
-        "type": "array"
-      },
-      "ModelCapabilities": {
-        "properties": {
-          "family": {
-            "$ref": "#/components/schemas/ModelFamily"
-          },
-          "input": {
-            "$ref": "#/components/schemas/ModalitySet"
-          },
-          "output": {
-            "$ref": "#/components/schemas/ModalitySet"
-          },
-          "strict": {
-            "type": "boolean",
-            "title": "Strict"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "family",
-          "input",
-          "output",
-          "strict"
-        ],
-        "title": "ModelCapabilities"
-      },
       "ModelErrorDetails": {
         "properties": {
           "agent": {
@@ -23314,13 +23201,35 @@
         ],
         "title": "NarrowNodeSpec"
       },
+      "NodeAgentModel": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "family": {
+            "$ref": "#/components/schemas/ModelFamily"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "provider",
+          "family"
+        ],
+        "title": "NodeAgentModel"
+      },
       "NodeAgentRuntime": {
         "properties": {
           "models": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/AgentModel"
+                  "$ref": "#/components/schemas/NodeAgentModel"
                 },
                 "type": "array"
               },
@@ -27084,34 +26993,6 @@
       },
       "ProviderCapabilitiesSpec": {
         "properties": {
-          "input": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Modality"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input"
-          },
-          "output": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Modality"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Output"
-          },
           "tools": {
             "anyOf": [
               {

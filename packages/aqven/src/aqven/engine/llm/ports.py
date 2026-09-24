@@ -11,8 +11,9 @@ from aqven.ir import CompiledAgent, CompiledInference, CompiledTool
 from aqven.ports.execution import ExecutionScope
 from aqven.runtime.address import ExecutionAddress, ResourceModel
 from aqven.runtime.human import ToolApprovalDecision
+from aqven.runtime.options import CallMedia
 from aqven.runtime.steps import ToolContext
-from aqven.spec import MediaValue, Modality, SecretRef, ToolApprovalSpec
+from aqven.spec import MediaValue, SecretRef, ToolApprovalSpec
 
 
 class InferenceModels(Protocol):
@@ -26,9 +27,7 @@ class CodeLoader(Protocol):
 
 
 class ModelSource(Protocol):
-    async def model(
-        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
-    ) -> Model: ...
+    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: CallMedia, start: int = 0) -> Model: ...
 
 
 class SecretSource(Protocol):

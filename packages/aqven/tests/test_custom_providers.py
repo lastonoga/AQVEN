@@ -25,7 +25,7 @@ from aqven.models import CallPolicy, cassette_policy, chain_links, guard_model
 from aqven.models.providers import custom_options, declared_capabilities, key_variable
 from aqven.ports.models import provider_env_var
 from aqven.runtime import CassetteConfig, CassetteMode
-from aqven.spec import AgentId, Modality, ProviderName, ProviderSpec
+from aqven.spec import AgentId, ProviderName, ProviderSpec
 from aqven.testing import copy_project
 from aqven_llm import OPENAI_COMPATIBLE, CustomProvider, ProviderContext, ProviderModelFactory, ProviderOptions
 
@@ -103,10 +103,6 @@ CODE_PROVIDER: Final = f'''- id: "acme"
   params:
     region: "eu"
   capabilities:
-    input:
-    - "text"
-    output:
-    - "text"
     tools: false
     json_schema_output: false
   data_policy:
@@ -254,17 +250,6 @@ def test_a_catalog_provider_without_an_adapter_is_unknown(tmp_path: Path) -> Non
 
     assert [item.path for item in found] == [("providers", 2, "id")]
     assert found[0].hint is not None and "openai_compatible" in found[0].hint
-
-
-def test_declared_capabilities_reach_the_model_profile(tmp_path: Path) -> None:
-    entry = CODE_PROVIDER.replace('  input:\n    - "text"', '  input:\n    - "text"\n    - "image"')
-    root = project_with(tmp_path, entry)
-    context = context_of(root)
-
-    profile = context.agents[AgentId("writer")].models[0].profile
-
-    assert profile.input == frozenset({Modality.TEXT, Modality.IMAGE})
-    assert profile.output == frozenset({Modality.TEXT})
 
 
 def test_a_provider_shipped_as_a_package_is_known_to_the_check(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

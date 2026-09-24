@@ -1,17 +1,10 @@
 import pkgutil
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from functools import cache
 from typing import Final, cast
 
-from aqven.spec import Modality, ProviderCapabilitiesSpec, ProviderKind, ProviderSpec, SecretRef
-from aqven_llm import (
-    MODALITIES,
-    OPENAI_COMPATIBLE,
-    ModalityName,
-    ProviderCapabilities,
-    ProviderFactory,
-    ProviderOptions,
-)
+from aqven.spec import ProviderCapabilitiesSpec, ProviderKind, ProviderSpec, SecretRef
+from aqven_llm import OPENAI_COMPATIBLE, ProviderCapabilities, ProviderFactory, ProviderOptions
 
 type FactoryOfKind = Callable[[ProviderSpec], ProviderFactory | None]
 
@@ -47,8 +40,6 @@ def declared_capabilities(spec: ProviderCapabilitiesSpec | None) -> ProviderCapa
         return None
     default = ProviderCapabilities()
     return ProviderCapabilities(
-        input=_modalities(spec.input, default.input),
-        output=_modalities(spec.output, default.output),
         tools=default.tools if spec.tools is None else spec.tools,
         json_schema_output=default.json_schema_output if spec.json_schema_output is None else spec.json_schema_output,
     )
@@ -87,9 +78,3 @@ def custom_options(spec: ProviderSpec) -> ProviderOptions:
         capabilities=declared_capabilities(spec.capabilities),
         api_key_env=key_variable(spec.api_key),
     )
-
-
-def _modalities(declared: Sequence[Modality] | None, default: frozenset[ModalityName]) -> frozenset[ModalityName]:
-    if declared is None:
-        return default
-    return frozenset(MODALITIES[item.value] for item in declared if item.value in MODALITIES)

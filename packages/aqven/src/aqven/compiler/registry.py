@@ -23,7 +23,6 @@ from aqven.ir import (
     CompiledToolSource,
     JsonSchema,
     McpToolSource,
-    ModelCapabilities,
 )
 from aqven.loader import LoadedInference, SourceSpec, YamlPath, include_candidates
 from aqven.spec import AgentId, AgentSpec, InferenceId, McpServerId, McpServerSpec, ToolId, ToolSpec, parse_model
@@ -165,17 +164,7 @@ def tool_schema(context: CompileContext, tool_id: ToolId, side: Side) -> JsonSch
 
 
 def _agent_model(resolved: ResolvedModel) -> AgentModel:
-    profile = resolved.profile
-    return AgentModel(
-        model=resolved.model,
-        provider=parse_model(resolved.model).provider,
-        capabilities=ModelCapabilities(
-            family=profile.family,
-            input=tuple(sorted(profile.input)),
-            output=tuple(sorted(profile.output)),
-            strict=profile.strict,
-        ),
-    )
+    return AgentModel(model=resolved.model, provider=parse_model(resolved.model).provider)
 
 
 def _instructions(context: CompileContext, source: SourceSpec[AgentSpec]) -> str | None:

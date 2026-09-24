@@ -37,20 +37,8 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `subagents` | `SubagentSpec[] \| null` | No | `None` | — |
 | `approval` | `ToolApprovalSpec \| null` | No | `None` | — |
 | `limits` | `Limits \| null` | No | `None` | — |
-| `capabilities` | `CapabilityOverride \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/AgentSpec.json)
-
-## CapabilityOverride
-
-| YAML field | Type | Required | Default | Constraints |
-| --- | --- | --- | --- | --- |
-| `family` | `'openai' \| 'anthropic' \| 'google' \| 'deepseek' \| 'qwen' \| 'moonshot' \| 'zhipu' \| 'xai' \| 'meta' \| 'mistral' \| 'other' \| null` | No | `None` | — |
-| `input` | `('text' \| 'image' \| 'audio' \| 'video' \| 'document')[] \| null` | No | `None` | — |
-| `output` | `('text' \| 'image' \| 'audio' \| 'video' \| 'document')[] \| null` | No | `None` | — |
-| `strict` | `boolean \| null` | No | `None` | — |
-
-[JSON Schema](/reference/schemas/CapabilityOverride.json)
 
 ## DefaultOnTimeout
 

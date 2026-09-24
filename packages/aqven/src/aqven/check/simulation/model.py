@@ -14,9 +14,9 @@ from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import ToolDefinition
 
 from aqven.check.simulation.values import PNG_PIXEL, Schema, ValueFactory
-from aqven.ir import AgentModel, CompiledProject
+from aqven.ir import CompiledProject
 from aqven.ports.models import ModelFactory
-from aqven.runtime.options import ModelRoute
+from aqven.runtime.options import ModelCall, ModelRoute
 from aqven.spec import Modality
 
 SIMULATION_MODEL: Final = "aqven-simulation"
@@ -100,5 +100,5 @@ class SimulatedModelFactory:
 class SimulatedModelFactories:
     values: ValueFactory = field(default_factory=ValueFactory)
 
-    def factory(self, project: CompiledProject, route: ModelRoute | None, choice: AgentModel) -> ModelFactory:
-        return SimulatedModelFactory(self.values, Modality.IMAGE in choice.capabilities.output)
+    def factory(self, project: CompiledProject, route: ModelRoute | None, call: ModelCall) -> ModelFactory:
+        return SimulatedModelFactory(self.values, Modality.IMAGE in call.media.output)

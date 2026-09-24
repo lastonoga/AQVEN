@@ -32,7 +32,7 @@ from aqven.ports.execution import ExecutionScope
 from aqven.ports.models import ModelFactory, model_provider, provider_env_var
 from aqven.ports.prices import NO_PRICES, CachedPrices
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
-from aqven.runtime.options import ModelCall, ModelRoute
+from aqven.runtime.options import CallMedia, ModelCall, ModelRoute
 from aqven.runtime.replay import ProviderFault
 from aqven.spec import Modality, ProviderName, ProviderSpec
 from aqven.spec import OpenRouterRouting as RoutingSpec
@@ -64,7 +64,7 @@ def explain_empty_key(message: str, env_var: str | None, environ: Mapping[str, s
 
 
 class ModelFactories(Protocol):
-    def factory(self, project: CompiledProject, route: ModelRoute | None, choice: AgentModel) -> ModelFactory: ...
+    def factory(self, project: CompiledProject, route: ModelRoute | None, call: ModelCall) -> ModelFactory: ...
 
 
 class FaultingModel(StreamFirstModel):
@@ -127,10 +127,10 @@ def key_requirement(project: CompiledProject, provider: str) -> KeyRequirement:
 class ProjectModelFactories:
     http_client: HttpClientFactory = default_http_client
 
-    def factory(self, project: CompiledProject, route: ModelRoute | None, choice: AgentModel) -> ModelFactory:
+    def factory(self, project: CompiledProject, route: ModelRoute | None, call: ModelCall) -> ModelFactory:
         providers = {str(spec.id): provider_options(spec, route) for spec in project.providers}
-        actual = choice.model if route is None else route.model
-        overrides = {actual: ModelOverride(media=MEDIA_OUTPUTS[Modality.IMAGE in choice.capabilities.output])}
+        actual = call.model.model if route is None else route.model
+        overrides = {actual: ModelOverride(media=MEDIA_OUTPUTS[Modality.IMAGE in call.media.output])}
         return ProviderModelFactory(providers=providers, overrides=overrides, http_client=self.http_client)
 
 
@@ -177,12 +177,10 @@ def uses_tools(agent: CompiledAgent) -> bool:
     return bool(agent.tools or agent.mcp_servers or agent.subagents)
 
 
-def model_route(
-    spec: RunSpec | None, agent: CompiledAgent, choice: AgentModel, media: frozenset[Modality]
-) -> ModelRoute | None:
+def model_route(spec: RunSpec | None, call: ModelCall) -> ModelRoute | None:
     if spec is None or spec.models is None:
         return None
-    return spec.models.route(ModelCall(model=choice, uses_tools=uses_tools(agent), media=media))
+    return spec.models.route(call)
 
 
 def choice_faults(spec: RunSpec | None, choice: AgentModel) -> tuple[ProviderFault, ...]:
@@ -205,9 +203,7 @@ class EngineModelSource:
     budgets: RunBudgets | None = None
     prices: CachedPrices = NO_PRICES
 
-    async def model(
-        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
-    ) -> Model:
+    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: CallMedia, start: int = 0) -> Model:
         spec = scope_run_spec(scope)
         choices = enumerate(chain_choices(agent, start), start)
         return model_chain([await self._choice(scope, spec, agent, choice, media, index) for index, choice in choices])
@@ -218,14 +214,15 @@ class EngineModelSource:
         spec: RunSpec | None,
         agent: CompiledAgent,
         choice: AgentModel,
-        media: frozenset[Modality],
+        media: CallMedia,
         position: int,
     ) -> Model:
-        route = model_route(spec, agent, choice, media)
+        call = ModelCall(model=choice, uses_tools=uses_tools(agent), media=media)
+        route = model_route(spec, call)
         actual = choice.model if route is None else route.model
         requirement = key_requirement(scope.project, model_provider(actual))
         api_key = await self.keys.key(actual, scope.mode == REPLAY_MODE, requirement)
-        factory = self.factories.factory(scope.project, route, choice)
+        factory = self.factories.factory(scope.project, route, call)
         provider_model = factory.build(actual, settings=None, api_key=api_key)
         secrets = () if api_key is None else (api_key,)
         cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=secrets)

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 import httpx2
 from pydantic import BaseModel, ConfigDict, Field
@@ -37,30 +37,36 @@ class ModelRoute(BaseModel):
     zdr: bool | None = None
 
 
+TEXT_OUTPUT: Final = frozenset({Modality.TEXT})
+
+
+@dataclass(frozen=True, slots=True)
+class CallMedia:
+    input: frozenset[Modality] = frozenset()
+    output: frozenset[Modality] = TEXT_OUTPUT
+
+
 @dataclass(frozen=True, slots=True)
 class ModelCall:
     model: AgentModel
     uses_tools: bool
-    media: frozenset[Modality]
+    media: CallMedia
 
 
 class CapabilityRoute(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     models: frozenset[str] = frozenset()
-    input: frozenset[Modality] = frozenset()
-    output: frozenset[Modality] = frozenset()
     media: frozenset[Modality] = frozenset()
+    output: frozenset[Modality] = frozenset()
     tools: bool | None = None
     route: ModelRoute
 
     def matches(self, call: ModelCall) -> bool:
-        capabilities = call.model.capabilities
         return (
             (not self.models or call.model.model in self.models)
             and (self.tools is None or self.tools == call.uses_tools)
-            and self.input <= set(capabilities.input)
-            and self.output <= set(capabilities.output)
-            and self.media <= call.media
+            and self.media <= call.media.input
+            and self.output <= call.media.output
         )
 
 

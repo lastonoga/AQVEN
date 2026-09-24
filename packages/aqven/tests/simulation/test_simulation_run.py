@@ -6,6 +6,9 @@ from typing import Final
 import httpx2
 import pytest
 from pydantic import BaseModel, JsonValue
+from pydantic_ai import BinaryImage
+from pydantic_ai.messages import FilePart, ModelMessage, ModelRequest, ModelResponsePart, TextPart, UserPromptPart
+from pydantic_ai.models import ModelRequestParameters
 from simulation_project import break_code, project_plan, project_report, simulation_project
 
 from aqven.check.simulation import SimulationOptions, simulate_project, simulation_engine
@@ -32,14 +35,16 @@ from aqven.engine import configure_local_engines, shutdown_local_engines
 from aqven.engine.assembly import standard_engine_setup
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.loading import CodeLoader
-from aqven.runtime import NodeStarted, Project, RunOptions, node_output
-from aqven.spec import FlowId
+from aqven.ir import AgentModel, CompiledProject
+from aqven.runtime import CallMedia, ModelCall, NodeStarted, Project, RunOptions, node_output
+from aqven.spec import FlowId, Modality, ModelString, ProviderName
 
 FLOW: Final = FlowId("intake")
 NODES: Final = frozenset(
     {"clean", "reply", "review", "review__recheck", "review__recheck__redo", "review__recheck__trim"}
 )
 WARM_REPLY: Final[dict[str, JsonValue]] = {"text": "warm answer", "mood": "warm", "score": 0.4}
+UNLISTED_MODEL: Final = "openrouter:acme/sketch-9"
 
 
 def codes(found: tuple[Diagnostic, ...]) -> list[DiagnosticCode]:
@@ -180,3 +185,20 @@ def test_no_cache_rewrites_the_stored_entry(tmp_path: Path) -> None:
     assert simulate_project(project_report(root)) == (stale,)
     assert simulate_project(project_report(root), SimulationOptions(use_cache=False)) == ()
     assert read_cache(cache_file(root)).flows[FLOW].diagnostics == ()
+
+
+def simulated_part(output: frozenset[Modality]) -> ModelResponsePart:
+    model = AgentModel(model=ModelString(UNLISTED_MODEL), provider=ProviderName("openrouter"))
+    call = ModelCall(model=model, uses_tools=False, media=CallMedia(output=output))
+    factory = SimulatedModelFactories().factory(CompiledProject(package="shop", description="shop"), None, call)
+    simulated = factory.build(UNLISTED_MODEL, settings=None, api_key=None)
+    messages: list[ModelMessage] = [ModelRequest(parts=[UserPromptPart("draw")])]
+    return asyncio.run(simulated.request(messages, None, ModelRequestParameters())).parts[0]
+
+
+def test_the_simulator_answers_with_an_image_when_the_call_outputs_one() -> None:
+    painted = simulated_part(frozenset({Modality.IMAGE}))
+    written = simulated_part(frozenset({Modality.TEXT}))
+
+    assert isinstance(painted, FilePart) and isinstance(painted.content, BinaryImage)
+    assert isinstance(written, TextPart)

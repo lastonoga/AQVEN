@@ -59,9 +59,6 @@ export type SpecOrigin = (typeof SPEC_ORIGINS)[number]
 export const SETTING_SCOPES = ["studio", "project"] as const
 export type SettingScope = (typeof SETTING_SCOPES)[number]
 
-export const MODALITIES = ["text", "image", "audio", "video", "document"] as const
-export type Modality = (typeof MODALITIES)[number]
-
 export const MODEL_FAMILIES = [
   "openai",
   "anthropic",
@@ -98,7 +95,6 @@ export type EngineVocabularyIsCurrent = [
   Verified<SameSet<Schemas["LineageRelation"], LineageRelation>>,
   Verified<SameSet<Schemas["SpecOrigin"], SpecOrigin>>,
   Verified<SameSet<Schemas["SettingScope"], SettingScope>>,
-  Verified<SameSet<Schemas["Modality"], Modality>>,
   Verified<SameSet<Schemas["ModelFamily"], ModelFamily>>,
   Verified<SameNumbers<Schemas["PromptLevel-Input"], PromptLevel>>,
 ]

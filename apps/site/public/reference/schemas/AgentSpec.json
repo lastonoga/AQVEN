@@ -35,66 +35,6 @@
       "title": "AgentOutputSpec",
       "type": "object"
     },
-    "CapabilityOverride": {
-      "additionalProperties": false,
-      "properties": {
-        "family": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ModelFamily"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "input": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/$defs/Modality"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Input"
-        },
-        "output": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/$defs/Modality"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Output"
-        },
-        "strict": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Strict"
-        }
-      },
-      "title": "CapabilityOverride",
-      "type": "object"
-    },
     "DefaultOnTimeout": {
       "additionalProperties": false,
       "properties": {
@@ -228,34 +168,6 @@
       },
       "title": "Limits",
       "type": "object"
-    },
-    "Modality": {
-      "enum": [
-        "text",
-        "image",
-        "audio",
-        "video",
-        "document"
-      ],
-      "title": "Modality",
-      "type": "string"
-    },
-    "ModelFamily": {
-      "enum": [
-        "openai",
-        "anthropic",
-        "google",
-        "deepseek",
-        "qwen",
-        "moonshot",
-        "zhipu",
-        "xai",
-        "meta",
-        "mistral",
-        "other"
-      ],
-      "title": "ModelFamily",
-      "type": "string"
     },
     "ModelField": {
       "pattern": "^[a-z][a-z0-9_-]{0,62}:[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$",
@@ -453,17 +365,6 @@
       "anyOf": [
         {
           "$ref": "#/$defs/ToolApprovalSpec"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "capabilities": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/CapabilityOverride"
         },
         {
           "type": "null"

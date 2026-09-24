@@ -8,9 +8,11 @@ from pydantic_ai import BinaryImage, NativeOutput, PromptedOutput, ToolOutput
 from aqven.ir import CompiledAgent
 from aqven.ir.nodes import OutputMode
 from aqven.runtime.events import OutputPartKind
-from aqven.spec import Image
+from aqven.runtime.options import TEXT_OUTPUT
+from aqven.spec import Image, Modality
 
 OUTPUT_TOOL_NAME: Final = "final_result"
+IMAGE_OUTPUT: Final = frozenset({Modality.IMAGE})
 
 type OutputSpec = ToolOutput[BaseModel] | NativeOutput[BaseModel] | PromptedOutput[BaseModel] | type[BinaryImage]
 
@@ -68,5 +70,5 @@ def agent_output_mode(agent: CompiledAgent) -> OutputMode:
     return agent.output.mode
 
 
-def agent_strict(agent: CompiledAgent) -> bool:
-    return agent.output.strict and agent.primary.capabilities.strict
+def output_media(plan: OutputPlan) -> frozenset[Modality]:
+    return TEXT_OUTPUT if plan.image_field is None else IMAGE_OUTPUT

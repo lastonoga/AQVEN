@@ -15,7 +15,6 @@ from llm_harness import (
     agent,
     answer_inference,
     answer_node,
-    capabilities,
     llm_bed,
     request_texts,
     tool_call,
@@ -141,7 +140,7 @@ def source(models: Mapping[str, Model]) -> EngineModelSource:
 
 
 def choice(model: str) -> AgentModel:
-    return AgentModel(model=ModelString(model), provider=ProviderName("openrouter"), capabilities=capabilities())
+    return AgentModel(model=ModelString(model), provider=ProviderName("openrouter"))
 
 
 def looker(models: Sequence[str], output: CompiledAgentOutput) -> CompiledAgent:

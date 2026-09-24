@@ -1,6 +1,6 @@
 from typing import Annotated, Final, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, JsonValue
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from aqven.spec import (
     CODE_REF_PATTERN,
@@ -11,7 +11,6 @@ from aqven.spec import (
     CodeRef,
     DynamicLimits,
     InferenceId,
-    Modality,
     OnFail,
 )
 
@@ -24,13 +23,6 @@ type RefText = Annotated[str, Field(pattern=REF_PATTERN)]
 type TypeRefText = Annotated[str, Field(pattern=TYPE_REF_PATTERN)]
 type PolicyName = Annotated[str, Field(pattern=NAME_PATTERN)]
 type FieldName = Annotated[str, Field(pattern=NAME_PATTERN)]
-
-
-def _sorted_modalities(values: tuple[Modality, ...]) -> tuple[Modality, ...]:
-    return tuple(sorted(set(values)))
-
-
-type ModalitySet = Annotated[tuple[Modality, ...], AfterValidator(_sorted_modalities)]
 
 
 class IrModel(BaseModel):
