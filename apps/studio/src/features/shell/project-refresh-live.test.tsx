@@ -49,7 +49,12 @@ const quiet = async (): Promise<void> => {
   })
 }
 
-const seriesTable = (): Promise<HTMLElement> => screen.findByRole("table", { name: "All series" })
+const SERIES_TABLE = /^Series on /
+
+const seriesTables = (): Promise<HTMLElement[]> => screen.findAllByRole("table", { name: SERIES_TABLE })
+
+const listedLink = async (id: string): Promise<HTMLElement | undefined> =>
+  (await seriesTables()).flatMap((table) => within(table).queryAllByRole("link", { name: seriesLink(id) }))[0]
 
 describe("project channel refreshes research pages in place", () => {
   beforeEach(() => {
@@ -68,7 +73,7 @@ describe("project channel refreshes research pages in place", () => {
     let rows: readonly ApiSeriesSummary[] = [first]
     server.use(http.get(`${API_BASE}/series`, () => HttpResponse.json({ items: rows, next_cursor: null, total_estimate: rows.length })))
     await renderRoute("/research/series")
-    expect(within(await seriesTable()).getByRole("link", { name: seriesLink(first.series_id) })).toBeTruthy()
+    expect(await listedLink(first.series_id)).toBeDefined()
     expect(screen.queryByRole("link", { name: seriesLink(second.series_id) })).toBeNull()
 
     rows = [second, first]
@@ -96,7 +101,7 @@ describe("project channel refreshes research pages in place", () => {
   it("leaves an unrelated page alone for an experiment edit and reloads it for any other file", async () => {
     const listed = requestsTo(`${API_BASE}/series`)
     await renderRoute("/research/series")
-    await seriesTable()
+    await seriesTables()
     const loaded = listed.count()
     const experimentFile = `experiments/${EXPERIMENT}/experiment.yaml`
 
@@ -113,7 +118,9 @@ describe("project channel refreshes research pages in place", () => {
 
   it("keeps one project stream across research pages and opens no stream per series", async () => {
     const router = await renderRoute("/research/series")
-    fireEvent.click(within(await seriesTable()).getByRole("link", { name: seriesLink(RESEARCH_SERIES.escalationRunning) }))
+    const running = await listedLink(RESEARCH_SERIES.escalationRunning)
+    if (running === undefined) throw new Error("the running series is not listed")
+    fireEvent.click(running)
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(`/research/series/${RESEARCH_SERIES.escalationRunning}`)
     })
