@@ -1,6 +1,6 @@
 import pkgutil
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -79,17 +79,30 @@ def _mapped(models: Mapping[str, type[BaseModel]], inference: CompiledInference,
     return found
 
 
+def chain_choices(agent: CompiledAgent, start: int) -> tuple[AgentModel, ...]:
+    choices = agent.models[start:]
+    if not choices:
+        message = f"agent {agent.agent_id} has no model at position {start} of its model chain"
+        raise LlmNodeError(LlmFailureCode.PROVIDER_ERROR, message)
+    return choices
+
+
+def model_chain(models: Sequence[Model]) -> Model:
+    if len(models) == 1:
+        return models[0]
+    return FallbackModel(models[0], *models[1:])
+
+
 @dataclass(frozen=True, slots=True)
 class FactoryModelSource:
     factory: ModelFactory
     settings: SettingsStore
     environ: Mapping[str, str]
 
-    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
-        built = [await self._build(choice) for choice in agent.models]
-        if len(built) == 1:
-            return built[0]
-        return FallbackModel(built[0], *built[1:])
+    async def model(
+        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
+    ) -> Model:
+        return model_chain([await self._build(choice) for choice in chain_choices(agent, start)])
 
     async def _build(self, choice: AgentModel) -> Model:
         env_var = provider_env_var(choice.provider)

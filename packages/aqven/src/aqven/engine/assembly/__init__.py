@@ -38,7 +38,7 @@ from aqven.engine.llm import FAILURE_BY_EXCEPTION, LlmDependencies, LlmFailureCo
 from aqven.engine.llm.tools import LiveMcpServers
 from aqven.engine.policies import PolicyFactory
 from aqven.engine.runtime import ToolServices
-from aqven.models import AmbiguousReplay, CassetteMiss, RefusedOutput, TruncatedOutput
+from aqven.models import AmbiguousReplay, CassetteMiss, ErroredOutput, RefusedOutput, TruncatedOutput
 from aqven.models.rate import ProviderLimiters
 from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingsStore
@@ -49,6 +49,7 @@ ENGINE_FAILURES: Final[Mapping[type[BaseException], LlmFailureCode]] = {
     **FAILURE_BY_EXCEPTION,
     TruncatedOutput: LlmFailureCode.TRUNCATED,
     RefusedOutput: LlmFailureCode.REFUSAL,
+    ErroredOutput: LlmFailureCode.PROVIDER_ERROR,
     CassetteMiss: LlmFailureCode.CASSETTE_MISS,
     AmbiguousReplay: LlmFailureCode.AMBIGUOUS_REPLAY,
 }

@@ -1,5 +1,5 @@
 from aqven.models.backoff import BackoffModel, BackoffPolicy, is_transient
-from aqven.models.callsite import CallSite, call_site, current_call_site
+from aqven.models.callsite import CallSite, call_site, current_call_site, reissued_call_site
 from aqven.models.cassette import (
     CASSETTE_BEHAVIORS,
     LIVE_BEHAVIOR,
@@ -26,9 +26,15 @@ from aqven.models.chain import (
     chain_links,
     guard_model,
 )
-from aqven.models.declared import MODEL_REF_METADATA, DeclaredModel, declared_model_ref
+from aqven.models.declared import (
+    MODEL_POSITION_METADATA,
+    MODEL_REF_METADATA,
+    DeclaredModel,
+    declared_model_ref,
+    declared_position,
+)
 from aqven.models.limiter import LimiterModel, UsageBudget
-from aqven.models.outcome import OUTCOME_GATES, OutcomeGateModel, RefusedOutput, TruncatedOutput
+from aqven.models.outcome import OUTCOME_GATES, ErroredOutput, OutcomeGateModel, RefusedOutput, TruncatedOutput
 from aqven.models.providers import (
     CUSTOM_KINDS,
     ProviderFactoryUnavailable,
@@ -56,6 +62,7 @@ __all__ = [
     "CUSTOM_KINDS",
     "CHAIN_ORDER",
     "LIVE_BEHAVIOR",
+    "MODEL_POSITION_METADATA",
     "MODEL_REF_METADATA",
     "NODE_USAGE",
     "NO_REDACTION",
@@ -75,6 +82,7 @@ __all__ = [
     "ContextUsageSink",
     "DeclaredModel",
     "DirectoryCassetteStore",
+    "ErroredOutput",
     "GuardedModelFactory",
     "LimiterModel",
     "MemoryCassetteStore",
@@ -107,12 +115,14 @@ __all__ = [
     "chain_links",
     "current_call_site",
     "declared_model_ref",
+    "declared_position",
     "drain",
     "guard_model",
     "key_variable",
     "is_transient",
     "node_usage_log",
     "provider_factory",
+    "reissued_call_site",
     "request_key",
     "response_cost",
 ]

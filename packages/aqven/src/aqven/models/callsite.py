@@ -9,16 +9,20 @@ from pydantic import JsonValue
 from aqven.runtime.address import ExecutionAddress
 
 FIRST_ATTEMPT: Final = 1
+FIRST_ISSUE: Final = 0
 
 
 @dataclass(frozen=True, slots=True)
 class CallSite:
     address: ExecutionAddress | None
     attempt: int = FIRST_ATTEMPT
+    reissue: int = FIRST_ISSUE
 
     def as_json(self) -> JsonValue:
         address = None if self.address is None else self.address.model_dump(mode="json")
-        return {"address": address, "attempt": self.attempt}
+        located: dict[str, JsonValue] = {"address": address, "attempt": self.attempt}
+        reissued: dict[str, JsonValue] = {} if self.reissue == FIRST_ISSUE else {"reissue": self.reissue}
+        return {**located, **reissued}
 
     @property
     def node_id(self) -> str | None:
@@ -35,10 +39,19 @@ def current_call_site() -> CallSite:
 
 
 @contextmanager
-def call_site(address: ExecutionAddress | None, attempt: int = FIRST_ATTEMPT) -> Generator[CallSite]:
-    site = CallSite(address=address, attempt=attempt)
+def call_site(
+    address: ExecutionAddress | None, attempt: int = FIRST_ATTEMPT, reissue: int = FIRST_ISSUE
+) -> Generator[CallSite]:
+    site = CallSite(address=address, attempt=attempt, reissue=reissue)
     token = _CURRENT_CALL_SITE.set(site)
     try:
         yield site
     finally:
         _CURRENT_CALL_SITE.reset(token)
+
+
+@contextmanager
+def reissued_call_site(reissue: int) -> Generator[CallSite]:
+    site = current_call_site()
+    with call_site(site.address, site.attempt, reissue) as reissued:
+        yield reissued

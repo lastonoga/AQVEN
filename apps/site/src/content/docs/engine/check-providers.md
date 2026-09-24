@@ -174,7 +174,7 @@ aqven models check: nope is neither an agent of the project nor a provider:model
 ## See also
 
 - [What happens when a model is called](/concepts/what-happens-when-a-model-is-called/) — the repair
-  retry `output.strict: false` leans on, and the three outcomes decided before it ever runs.
+  retry `output.strict: false` leans on, and the four outcomes decided before it ever runs.
 - [How to find a model's real structural limits](/engine/check-shapes/) — the companion question this
   page doesn't answer: how deep a supported, strict-capable mode actually nests correctly.
 - [How to call a model](/engine/llm-node/) — where an agent's `model`, `fallback_models`, and

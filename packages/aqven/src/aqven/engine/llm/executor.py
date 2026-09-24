@@ -1,5 +1,5 @@
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Final, Literal, assert_never
@@ -14,7 +14,7 @@ from pydantic_ai import (
     ToolDenied,
     capture_run_messages,
 )
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ModelResponse, ToolCallPart
+from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ModelResponse, ToolCallPart, UserContent
 from pydantic_ai.run import AgentRunResult
 from pydantic_ai.usage import RunUsage
 
@@ -25,6 +25,19 @@ from aqven.engine.llm.allowed import DEFAULT_MAX_ENUM
 from aqven.engine.llm.dynamic import TypeAnnotations
 from aqven.engine.llm.errors import FAILURE_BY_EXCEPTION, LlmFailureCode, LlmNodeError, abandon_cause, failure_code
 from aqven.engine.llm.failures import FailureAnalysis, FailureContext
+from aqven.engine.llm.outcomes import (
+    OUTCOME_CAUSES,
+    Abandonment,
+    GiveUp,
+    abandonment,
+    answered_slot,
+    given_up_error,
+    outcome_failure,
+    outcome_message,
+    outcome_step,
+    reissued_history,
+    reissued_state,
+)
 from aqven.engine.llm.ports import (
     ApprovalGate,
     ApprovalRequest,
@@ -39,12 +52,15 @@ from aqven.engine.llm.ports import (
 )
 from aqven.engine.llm.segments import (
     AttemptFailure,
+    ModelSlot,
     PendingToolCall,
+    SegmentAbandoned,
     SegmentCompleted,
     SegmentDeferred,
     SegmentFailed,
     SegmentOutcome,
     SegmentResult,
+    SegmentStart,
     SegmentState,
     ToolCallResult,
     ToolCallRetried,
@@ -56,6 +72,7 @@ from aqven.engine.llm.telemetry import report_attempt_failure, report_node_failu
 from aqven.engine.llm.tools import ExternalTools, McpServers
 from aqven.engine.llm.watch import DEFAULT_STREAM_IDLE_SECONDS, CallWatch
 from aqven.ir import CompiledLlmNode
+from aqven.models.callsite import FIRST_ISSUE, reissued_call_site
 from aqven.models.declared import declared_model_ref
 from aqven.models.usage import UsageLog, node_usage_log
 from aqven.ports.execution import (
@@ -146,7 +163,7 @@ class LlmSegmentRunner:
         await scope.events.emit(
             partial(_captured_input_event, scope.address, node.agent, node.inference, "bound", bound, {})
         )
-        prepared = await self.agents.prepare(scope, call, bound, state.attempt_offset)
+        prepared = await self.agents.prepare(scope, call, bound, state.attempt_offset, state.slot)
         await scope.events.emit(
             partial(
                 _captured_input_event,
@@ -158,49 +175,137 @@ class LlmSegmentRunner:
                 prepared.variants,
             )
         )
-        resumed = state.messages_json is not None
-        if not resumed:
+        if state.start == "prompt":
             await scope.events.emit(partial(_captured_prompt_event, scope.address, prepared.prompt_trace))
-        analysis = FailureAnalysis(_failure_context(scope, node, prepared), prepared.deps.guard_failures)
         sink = _output_sink(scope.output, self.delta_batch_ms)
-        observer = StreamObserver(sink, prepared.plan.text_kind, prepared.plan.output_tools)
-        history = _history(state, prepared)
-        base = len(history or ())
-        watch = CallWatch(prepared.seconds, self.stream_idle_seconds)
-        with capture_run_messages() as captured:
+        live = LiveCall(
+            scope=scope,
+            state=state,
+            prepared=prepared,
+            analysis=FailureAnalysis(_failure_context(scope, node, prepared, state.slot), prepared.deps.guard_failures),
+            observer=StreamObserver(sink, prepared.plan.text_kind, prepared.plan.output_tools),
+            sink=sink,
+            history=_history(state, prepared),
+            usage=usage,
+            log=log,
+            watch=CallWatch(prepared.seconds, self.stream_idle_seconds),
+        )
+        entry = RUN_ENTRIES[state.start](state, prepared)
+        with capture_run_messages() as captured, reissued_call_site(_reissue_mark(state)):
             try:
-                async with watch.guard():
+                async with live.watch.guard():
                     result = await prepared.agent.run(
-                        None if resumed else prepared.prompt,
-                        message_history=history,
-                        deferred_tool_results=_deferred_results(state) if resumed else None,
+                        entry.prompt,
+                        message_history=live.history,
+                        deferred_tool_results=entry.deferred,
                         deps=prepared.deps,
                         usage=usage,
                         usage_limits=prepared.limits,
                         model_settings=prepared.settings,
-                        event_stream_handler=watch.watched(observer),
+                        event_stream_handler=live.watch.watched(live.observer),
                     )
             except Exception as caught:
-                error = watch.explain(caught, analysis.context)
-                code = failure_code(error, self.failures)
-                analysis.collect(captured, base, state.attempt_offset)
-                analysis.collect_final(captured, base, state.attempt_offset, error)
-                await observer.abandon(analysis.last_kind or abandon_cause(code))
-                await sink.flush()
-                await _emit_checks(scope, prepared.deps.checks)
-                if code is None:
-                    raise
-                failed = FailedCall(error, code, _last_model(captured[base:]), _node_usage(usage, log))
-                return _failed_segment(scope.address, analysis, failed)
+                return await self._interrupted(live, captured, live.watch.explain(caught, live.analysis.context))
         await sink.flush()
         await _emit_checks(scope, prepared.deps.checks)
-        analysis.collect(result.all_messages(), base, state.attempt_offset)
+        live.analysis.collect(result.all_messages(), live.base, state.attempt_offset)
         messages = result.new_messages()
         attempts = response_count(messages)
         output = await self.output_of(scope, prepared, result.output)
         outcome = _outcome(output, result, prepared, state.attempt_offset + attempts)
-        failures = _attempt_failures(scope.address, analysis, exhausted=False)
-        return SegmentResult(outcome=outcome, usage=_node_usage(usage, log), attempts=attempts, failures=failures)
+        failures = _attempt_failures(scope.address, live.analysis, exhausted=False)
+        return SegmentResult(outcome=outcome, usage=live.node_usage, attempts=attempts, failures=failures)
+
+    async def _interrupted(self, live: LiveCall, captured: list[ModelMessage], error: Exception) -> SegmentResult:
+        found = abandonment(error, captured[live.base :])
+        if found is None:
+            return await self._failed(live, captured, error)
+        return await self._abandoned(live, captured, found)
+
+    async def _failed(self, live: LiveCall, captured: list[ModelMessage], error: Exception) -> SegmentResult:
+        offset = live.state.attempt_offset
+        code = failure_code(error, self.failures)
+        live.analysis.collect(captured, live.base, offset)
+        live.analysis.collect_final(captured, live.base, offset, error)
+        await live.observer.abandon(live.analysis.last_kind or abandon_cause(code))
+        await live.sink.flush()
+        await _emit_checks(live.scope, live.prepared.deps.checks)
+        if code is None:
+            raise error
+        failed = FailedCall(error, code, _last_model(captured[live.base :]), live.node_usage)
+        return _failed_segment(live.scope.address, live.analysis, failed)
+
+    async def _abandoned(self, live: LiveCall, captured: list[ModelMessage], found: Abandonment) -> SegmentResult:
+        offset = live.state.attempt_offset
+        live.analysis.collect(captured, live.base, offset)
+        await live.observer.abandon(OUTCOME_CAUSES[found.outcome])
+        await live.sink.flush()
+        await _emit_checks(live.scope, live.prepared.deps.checks)
+        attempts = response_count(captured[live.base :])
+        attempt = offset + attempts
+        model = declared_model_ref(found.response) or live.analysis.context.model
+        abandoned = SegmentAbandoned(
+            outcome=found.outcome,
+            message=outcome_message(found, model),
+            messages_json=ModelMessagesTypeAdapter.dump_json(reissued_history(captured)).decode(),
+            attempt=attempt,
+            slot=answered_slot(live.state.slot, found.response, len(live.analysis.failures)),
+            model=model,
+            details=live.analysis.response_details(found.response, attempt, model),
+        )
+        failures = _attempt_failures(live.scope.address, live.analysis, exhausted=False)
+        return SegmentResult(outcome=abandoned, usage=live.node_usage, attempts=attempts, failures=failures)
+
+
+@dataclass(frozen=True, slots=True)
+class LiveCall:
+    scope: ExecutionScope
+    state: SegmentState
+    prepared: PreparedRun
+    analysis: FailureAnalysis
+    observer: StreamObserver
+    sink: OutputSink
+    history: list[ModelMessage] | None
+    usage: RunUsage
+    log: UsageLog
+    watch: CallWatch
+
+    @property
+    def base(self) -> int:
+        return len(self.history or ())
+
+    @property
+    def node_usage(self) -> NodeUsage:
+        return _node_usage(self.usage, self.log)
+
+
+@dataclass(frozen=True, slots=True)
+class RunEntry:
+    prompt: str | Sequence[UserContent] | None
+    deferred: DeferredToolResults | None = None
+
+
+def _prompt_entry(state: SegmentState, prepared: PreparedRun) -> RunEntry:
+    return RunEntry(prepared.prompt)
+
+
+def _deferred_entry(state: SegmentState, prepared: PreparedRun) -> RunEntry:
+    return RunEntry(None, _deferred_results(state))
+
+
+def _reissue_entry(state: SegmentState, prepared: PreparedRun) -> RunEntry:
+    return RunEntry(None)
+
+
+RUN_ENTRIES: Final[Mapping[SegmentStart, Callable[[SegmentState, PreparedRun], RunEntry]]] = {
+    "prompt": _prompt_entry,
+    "deferred": _deferred_entry,
+    "reissue": _reissue_entry,
+}
+
+
+def _reissue_mark(state: SegmentState) -> int:
+    return state.attempt_offset if state.start == "reissue" else FIRST_ISSUE
 
 
 @dataclass(slots=True)
@@ -252,8 +357,31 @@ class LlmNodeExecutor:
                     return NodeFailed(error=error, usage=usage, model=outcome.model)
                 case SegmentDeferred():
                     state = await self._resume(node, scope, state, result, outcome)
+                case SegmentAbandoned():
+                    step = await self._abandoned(node, scope, state, result, outcome)
+                    if isinstance(step, RunError):
+                        return NodeFailed(error=step, usage=usage, model=outcome.model)
+                    state = step
                 case _:
                     assert_never(outcome)
+
+    async def _abandoned(
+        self,
+        node: CompiledLlmNode,
+        scope: ExecutionScope,
+        state: SegmentState,
+        result: SegmentResult,
+        outcome: SegmentAbandoned,
+    ) -> SegmentState | RunError:
+        step = outcome_step(scope.project.agent(node.agent), outcome)
+        failure = outcome_failure(outcome, step)
+        _report_attempt(scope.address, failure)
+        await _emit_failures(scope, (failure,))
+        if isinstance(step, GiveUp):
+            error = given_up_error(scope.address, outcome, step)
+            report_node_failure(scope.address, error.code, error.message, error.hint, error.details)
+            return error
+        return reissued_state(state, result, outcome, step)
 
     async def _resume(
         self,
@@ -271,6 +399,8 @@ class LlmNodeExecutor:
             segment=state.segment + 1,
             attempt_offset=attempt_offset,
             approval_round=approval_round,
+            start="deferred",
+            slot=state.slot,
             messages_json=outcome.messages_json,
             approvals=dict(decisions),
             call_results=results,
@@ -315,12 +445,14 @@ def llm_node_executor(dependencies: LlmDependencies) -> LlmNodeExecutor:
     return LlmNodeExecutor(segments, dependencies.steps, dependencies.approvals, external)
 
 
-def _failure_context(scope: ExecutionScope, node: CompiledLlmNode, prepared: PreparedRun) -> FailureContext:
+def _failure_context(
+    scope: ExecutionScope, node: CompiledLlmNode, prepared: PreparedRun, slot: ModelSlot
+) -> FailureContext:
     agent = scope.project.agent(node.agent)
     inference = scope.project.inference(node.inference)
     return FailureContext(
         agent_id=agent.agent_id,
-        model=agent.primary.model,
+        model=agent.models[slot.index].model,
         mode=prepared.plan.mode,
         output_tools=prepared.plan.output_tools,
         schema=prepared.deps.shaped.model.model_json_schema(),
@@ -340,9 +472,13 @@ def _attempt_failures(
         for attempt, cause, action in analysis.attempt_failures(exhausted)
     )
     for failure in failures:
-        cause = failure.cause
-        report_attempt_failure(address, cause.code or cause.kind, cause.message, cause.hint, cause.details)
+        _report_attempt(address, failure)
     return failures
+
+
+def _report_attempt(address: ExecutionAddress, failure: AttemptFailure) -> None:
+    cause = failure.cause
+    report_attempt_failure(address, cause.code or cause.kind, cause.message, cause.hint, cause.details)
 
 
 @dataclass(frozen=True, slots=True)
