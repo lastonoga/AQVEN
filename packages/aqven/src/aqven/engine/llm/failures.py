@@ -14,7 +14,7 @@ from aqven.engine.llm.failure_context import FailureContext, FinalError
 from aqven.engine.llm.instructions import Schema
 from aqven.engine.llm.output_shape import output_shape
 from aqven.engine.llm.provider_faults import ProviderFailure, provider_failure
-from aqven.engine.llm.rejections import schema_rejection
+from aqven.engine.llm.rejections import media_rejection, schema_rejection
 from aqven.engine.llm.shape_hints import mis_shape_hint, path_text, rejection_hint
 from aqven.ir.nodes import OutputMode
 from aqven.models.redaction import PATTERN_ORDER, PatternRedactor
@@ -327,6 +327,22 @@ def schema_rejected(error: BaseException, context: FailureContext) -> FinalError
     )
 
 
+def media_rejected(error: BaseException, context: FailureContext) -> FinalError | None:
+    failure = provider_failure(error)
+    if failure is None:
+        return None
+    rule = media_rejection(failure)
+    if rule is None:
+        return None
+    model = context.declared_model(failure.model)
+    return FinalError(
+        code=MODEL_FEATURE_UNSUPPORTED,
+        message=f"model {model} refused a request with {rule.medium}: {failure.described()}",
+        hint=f"this model may not accept {rule.medium}; choose a model that does in {context.agent_location}",
+        details=provider_details(context, failure, model, None),
+    )
+
+
 def feature_unsupported(error: BaseException, context: FailureContext) -> FinalError | None:
     if isinstance(error, UserError) and CLIENT_UNSUPPORTED_SUFFIX in str(error):
         return FinalError(
@@ -386,6 +402,7 @@ type FinalRule = Callable[[BaseException, FailureContext], FinalError | None]
 FINAL_RULES: Final[tuple[FinalRule, ...]] = (
     node_error_with_hint,
     schema_rejected,
+    media_rejected,
     feature_unsupported,
     provider_error,
 )

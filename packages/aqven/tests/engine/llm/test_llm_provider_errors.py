@@ -221,6 +221,56 @@ def test_a_feature_refusal_is_not_mistaken_for_a_schema_rejection() -> None:
     assert final.code == "MODEL_FEATURE_UNSUPPORTED"
 
 
+OPENROUTER_IMAGE_REFUSAL: Final[JsonValue] = {
+    "error": {"message": "No endpoints found that support image input", "code": 404}
+}
+OPENAI_IMAGE_REFUSAL: Final[JsonValue] = {
+    "message": "Invalid content type. image_url is only supported by certain models.",
+    "type": "invalid_request_error",
+    "param": "messages.[0].content.[1].type",
+    "code": None,
+}
+VLLM_IMAGE_REFUSAL: Final[JsonValue] = {
+    "object": "error",
+    "message": "At most 0 image(s) may be provided in one request.",
+    "code": 400,
+}
+OPENROUTER_AUDIO_REFUSAL: Final[JsonValue] = {
+    "error": {"message": "No endpoints found that support input audio", "code": 404}
+}
+
+
+@pytest.mark.parametrize(
+    ("status", "body", "medium"),
+    [
+        pytest.param(404, OPENROUTER_IMAGE_REFUSAL, "images", id="openrouter_image"),
+        pytest.param(400, OPENAI_IMAGE_REFUSAL, "images", id="openai_image"),
+        pytest.param(400, VLLM_IMAGE_REFUSAL, "images", id="vllm_image"),
+        pytest.param(404, OPENROUTER_AUDIO_REFUSAL, "audio", id="openrouter_audio"),
+    ],
+)
+def test_a_provider_refusing_input_media_names_the_media_and_the_way_out(
+    status: int, body: JsonValue, medium: str
+) -> None:
+    final = FailureAnalysis(looker()).final_error(http_error(status, body), "provider_error", "raw")
+
+    assert final.code == "MODEL_FEATURE_UNSUPPORTED"
+    assert final.message.startswith(f"model some/model refused a request with {medium}: the provider answered HTTP")
+    assert final.hint == f"this model may not accept {medium}; choose a model that does in {LOOKER_FILE}"
+    assert final.details is not None and final.details.status_code == status
+
+
+def test_the_openrouter_image_refusal_reads_as_one_sentence() -> None:
+    error = http_error(404, OPENROUTER_IMAGE_REFUSAL, "amazon/nova-lite-v1")
+
+    final = FailureAnalysis(looker()).final_error(error, "provider_error", "raw")
+
+    assert final.message == (
+        "model amazon/nova-lite-v1 refused a request with images: "
+        "the provider answered HTTP 404: No endpoints found that support image input"
+    )
+
+
 def test_other_provider_errors_keep_the_upstream_message_and_move_the_body_to_details() -> None:
     body = {
         "message": "Provider returned error",
