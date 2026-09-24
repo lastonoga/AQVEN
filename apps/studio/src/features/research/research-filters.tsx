@@ -23,9 +23,8 @@ export type ResearchFiltersProps = {
 
 const ANY = ""
 const SELECT_CLASS = "h-8 min-w-36 rounded-lg border border-input bg-card px-2.5 font-mono text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+const NO_FILTER: ExperimentFilter = {}
 const parseQuestion = parseEnum(QUESTION_KINDS)
-
-const flowOnly = (filter: ExperimentFilter): ExperimentFilter => (filter.flow === undefined ? {} : { flow: filter.flow })
 
 function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
   const t = useTranslations("research.list")
@@ -79,7 +78,7 @@ export function ResearchFilters({ filter, failureModes, count }: ResearchFilters
       />
       {hasNarrowing(filter) ? (
         <Text role="link" tone="neutral" asChild>
-          <Link to={ROUTE_PATH.research} search={flowOnly(filter)}>
+          <Link to={ROUTE_PATH.research} search={NO_FILTER}>
             {t("list.clear")}
           </Link>
         </Text>

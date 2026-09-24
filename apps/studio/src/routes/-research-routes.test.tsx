@@ -15,13 +15,26 @@ const loaded = (matches: readonly Loaded[], routeId: string): unknown => matches
 const ARM_RUN = `${RESEARCH_SERIES.critiqueDev.slice(0, 24)}0001${RESEARCH_SERIES.critiqueDev.slice(-8)}`
 
 describe("research routes", () => {
-  it("loads the experiments filtered by the flow in the search", async () => {
+  it("loads the experiments of every flow filtered by the question in the search and drops a flow", async () => {
     const router = await renderRoute("/research?flow=judge_panel&question=compare")
     await waitFor(() => {
       expect(loaded(router.state.matches, "/_project/research/")).toMatchObject({
-        experiments: [{ id: "judge_panel_agents" }, { id: "panel_aa_noise" }, { id: "panel_single_judge" }],
-        filter: { flow: "judge_panel", question: "compare" },
+        experiments: [
+          { id: "intent_ballot_pair" },
+          { id: "intent_split_long_messages" },
+          { id: "judge_panel_agents" },
+          { id: "panel_aa_noise" },
+          { id: "panel_single_judge" },
+        ],
       })
+    })
+    expect(loaded(router.state.matches, "/_project/research/")).toHaveProperty("filter", { question: "compare" })
+  })
+
+  it("loads every series of the project whatever flow the address names", async () => {
+    const router = await renderRoute("/research/series?flow=judge_panel")
+    await waitFor(() => {
+      expect(loaded(router.state.matches, "/_project/research/series/")).toHaveProperty("series.length", Object.keys(RESEARCH_SERIES).length)
     })
   })
 

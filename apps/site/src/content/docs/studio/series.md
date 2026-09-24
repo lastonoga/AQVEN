@@ -12,10 +12,12 @@ read what it found down to a single attempt. The meaning of each number is on
 
 ## Steps
 
-- **Find it on the Series tab.** In Research, **Series** lists every series of the project, running ones
-  first, then the newest. The columns are **Status**, **Experiment** (a look shows as `look · <flow>`),
-  **On** (dev or holdout), **N×R**, **Spend**, **Verdict** and **Started**. The flow picker narrows the
-  list to one flow's experiments. An experiment page lists its own series under **Series history**.
+- **Find it on the Series tab.** In Research, **Series** lists every series of the project in one section
+  per flow, ordered by flow name. Each section is a heading with the flow name and the number of series,
+  then a table. Series of an arm come last, under **Arms**. Inside a section, running ones come first, then
+  the newest. The columns are **Status**, **Experiment** (a look shows as `look · <flow>`), **On** (dev or
+  holdout), **N×R**, **Spend**, **Verdict** and **Started**. An experiment page lists its own series under
+  **Series history**.
 - **Read the header.** The title names the series: "Series … of this experiment", or "Look at N cases" with
   the dataset and the stages for a look. Tags show the status, and **live** while Studio follows it. Below
   them are the size and variants and when it started and finished. **Attempts** shows the progress.
@@ -40,7 +42,9 @@ read what it found down to a single attempt. The meaning of each number is on
 - **Read the cases.** **Cases** lists every case with each variant's tally ("3 of 3"), its failed checks
   and its spend. Filter it to **Failures**, or to **Variants disagree** when there is more than one
   variant, or show **All cases**. Open a case to see each attempt: variant, repeat, outcome (passed,
-  failed, error, waiting, running), failed checks, error, spend, latency, and a link to its run.
+  failed, error, waiting, running), failed checks, error, spend, latency, and a link to its run. Hover a
+  failed check to see what it is: a code check shows its `module:function`, a built-in check its name and
+  the fields it reads, and a judge its inference, its agent and the experiment that validated it.
 - **Follow an attempt to its run.** The run link opens the ordinary run page for that attempt, with its
   timeline, the failed attempts of each node and the exact prompt. See
   [How to investigate a run](/studio/investigate-a-run/).

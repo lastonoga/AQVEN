@@ -15,10 +15,11 @@ describe("live research source", () => {
       const url = new URL(request.url)
       if (url.pathname === `${API_BASE}/experiments`) queries.push(Object.fromEntries(url.searchParams))
     })
-    const experiments = await research.experiments({ flow: ids.flowId("judge_panel"), question: "compare" })
+    const experiments = await research.experiments({ question: "compare", failureMode: "panel_wrong_winner" })
     server.events.removeAllListeners()
-    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_single_judge"])
-    expect(queries[0]).toMatchObject({ flow_id: "judge_panel", question: "compare" })
+    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_single_judge"])
+    expect(queries[0]).toMatchObject({ question: "compare", failure_mode: "panel_wrong_winner" })
+    expect(queries[0]).not.toHaveProperty("flow_id")
   })
 
   it("rejects a missing experiment or series with a not found error", async () => {

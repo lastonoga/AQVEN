@@ -3,14 +3,16 @@ import { Link } from "@tanstack/react-router"
 import { ChevronRight } from "lucide-react"
 import { useTranslations } from "use-intl"
 import { cn } from "cn"
-import type { SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, VariantId } from "@/domain"
+import type { CheckId, ExperimentCheck, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, VariantId } from "@/domain"
 import { ChoiceLink, ChoiceList, Empty, Matrix, Surface, Tag, Text, type MatrixField } from "@/components/studio"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { runRef, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
+import { useCheckHintCopy } from "./copy"
 import { ResearchSection } from "./layout"
 import { metricValue } from "./metrics"
 import { tagPairs } from "./presenters"
-import { CASE_FILTER_KEYS, failedChecksOf, hasErrors, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, tallyOf, tallyTone, toggledFilter, type CaseFilterKey } from "./series-presenters"
+import { CASE_FILTER_KEYS, checkHint, failedChecksOf, hasErrors, hasFilter, hasFinished, isPending, orderedAttempts, pendingOf, tallyOf, tallyTone, toggledFilter, type CaseFilterKey } from "./series-presenters"
 import { OUTCOME_TONE } from "./tones"
 
 export type SeriesCasesProps = {
@@ -84,8 +86,24 @@ function AttemptError({ attempt }: { readonly attempt: SeriesAttempt }) {
   )
 }
 
-function CheckTags({ checks }: { readonly checks: readonly string[] }) {
-  if (checks.length === 0) {
+function FailedCheck({ check, hint }: { readonly check: CheckId; readonly hint: string | null }) {
+  const tag = (
+    <Tag size="micro" fill="tint" tone="destructive">
+      {check}
+    </Tag>
+  )
+  if (hint === null) return tag
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{tag}</TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function CheckTags({ failed, known }: { readonly failed: readonly CheckId[]; readonly known: readonly ExperimentCheck[] }) {
+  const copy = useCheckHintCopy()
+  if (failed.length === 0) {
     return (
       <Text role="cell" tone="neutral">
         {EMPTY_MARK}
@@ -94,16 +112,14 @@ function CheckTags({ checks }: { readonly checks: readonly string[] }) {
   }
   return (
     <div className="flex min-w-0 flex-wrap gap-1">
-      {checks.map((check) => (
-        <Tag key={check} size="micro" fill="tint" tone="destructive">
-          {check}
-        </Tag>
+      {failed.map((check) => (
+        <FailedCheck key={check} check={check} hint={checkHint(known, check, copy)} />
       ))}
     </div>
   )
 }
 
-function useAttemptFields(attempts: readonly SeriesAttempt[]): readonly MatrixField<SeriesAttempt>[] {
+function useAttemptFields(attempts: readonly SeriesAttempt[], checks: readonly ExperimentCheck[]): readonly MatrixField<SeriesAttempt>[] {
   const t = useTranslations("research")
   const errorFields: readonly MatrixField<SeriesAttempt>[] = hasErrors(attempts)
     ? [{ id: "error", label: t("series.cases.attempt.error"), track: ERROR_TRACK, render: (attempt) => <AttemptError attempt={attempt} /> }]
@@ -130,7 +146,7 @@ function useAttemptFields(attempts: readonly SeriesAttempt[]): readonly MatrixFi
         </Tag>
       ),
     },
-    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(160px,1.4fr)", render: (attempt) => <CheckTags checks={attempt.failedChecks} /> },
+    { id: "failed", label: t("series.cases.attempt.failed"), track: "minmax(160px,1.4fr)", render: (attempt) => <CheckTags failed={attempt.failedChecks} known={checks} /> },
     ...errorFields,
     { id: "usd", label: t("series.cases.attempt.usd"), track: "80px", align: "end", render: (attempt) => <Text role="cell">{usd(attempt.usd)}</Text> },
     {
@@ -147,7 +163,7 @@ function useAttemptFields(attempts: readonly SeriesAttempt[]): readonly MatrixFi
 function AttemptsTable({ row, series }: { readonly row: SeriesCaseRow; readonly series: SeriesDetail }) {
   const t = useTranslations("research.series.cases")
   const attempts = orderedAttempts(row.attempts, series.variants)
-  const fields = useAttemptFields(attempts)
+  const fields = useAttemptFields(attempts, series.checks)
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
@@ -235,7 +251,7 @@ function CaseRow({ row, series, template, open, onToggle }: CaseRowProps) {
         {series.variants.map((variant) => (
           <Tally key={variant} row={row} variant={variant} />
         ))}
-        <CheckTags checks={failedChecksOf(row)} />
+        <CheckTags failed={failedChecksOf(row)} known={series.checks} />
         <Text role="cell" tone="neutral" className="text-right">
           {hasFinished(row) ? usd(row.usd) : EMPTY_MARK}
         </Text>

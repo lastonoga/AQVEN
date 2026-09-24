@@ -30,9 +30,7 @@
     "nodes": "{count, plural, one {# node} other {# nodes}}",
     "run": "run {run}",
     "neverRun": "never run",
-    "current": "OPEN",
-    "all": "All experiments",
-    "allMeta": "Every flow, arm-only experiments included"
+    "current": "OPEN"
   },
   "empty": {
     "title": "No flows yet",
