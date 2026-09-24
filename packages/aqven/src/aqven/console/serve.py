@@ -8,6 +8,7 @@ from aqven.app.console_log.dev_console import DevConsoleObserver
 from aqven.app.console_log.install import dev_console_setup, install_console
 from aqven.app.console_log.levels import LevelProfile
 from aqven.app.environment import RuntimeSettings
+from aqven.app.hang_watch import LoopHangWatch
 from aqven.app.options import ServerOptions
 from aqven.app.runtime import LocalServer, UvicornLogging
 
@@ -30,6 +31,7 @@ def with_dev_console(server: LocalServer, profile: LevelProfile) -> LocalServer:
         server,
         uvicorn_logging=UvicornLogging(level=profile.uvicorn, access_log=profile.access_log),
         observer=DevConsoleObserver(),
+        hang_watch=LoopHangWatch(),
     )
 
 
