@@ -37,6 +37,7 @@ from aqven.app.observation import LaunchObserver, SilentObserver
 from aqven.app.options import ServerOptions
 from aqven.app.runtime_file import ServerRecord, remove_server_record, server_record, write_server_record
 from aqven.app.settings_store import LocalSettingsStore, open_settings_store
+from aqven.app.stream_guard import StreamDisconnectGuard
 from aqven.console.secrets import SecretRow, build_report
 from aqven.console.style import bold, cyan, dim, green, red
 from aqven.ports.chat import ChatEffort, ChatPermissionMode
@@ -274,7 +275,7 @@ class LocalServer:
         self, application: ASGIApp, record: ServerRecord, access: AccessPolicy, options: ServerOptions
     ) -> ASGIApp:
         identity = ServerIdentity(pid=record.pid, project_root=record.project_root, headless=options.headless)
-        return AccessGuard(HealthEndpoint(application, self.readiness, identity), access)
+        return StreamDisconnectGuard(AccessGuard(HealthEndpoint(application, self.readiness, identity), access))
 
     async def _run(
         self,
