@@ -3,6 +3,7 @@ import subprocess
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from importlib import resources
 from pathlib import Path
 from typing import Final
@@ -334,6 +335,32 @@ def test_mutation_is_reported(shop: Path, name: str) -> None:
 
     assert mutation.expected in found(report)
     assert not report.ok
+
+
+def with_research_cap(root: Path, cap: str) -> None:
+    project = root / "aqven.yaml"
+    project.write_text(f"{project.read_text(encoding='utf-8')}research:\n  spend_cap_usd: {cap}\n", encoding="utf-8")
+
+
+@pytest.mark.parametrize("cap", ["-0.01", '"lots"', "true", ".nan", ".inf"])
+def test_check_rejects_a_research_cap_that_is_not_dollars(shop: Path, cap: str) -> None:
+    with_research_cap(shop, cap)
+
+    report = check_project(shop)
+
+    assert diagnostics_of(report, DiagnosticCode.E_SPEC_INVALID) == [("aqven.yaml", ("research", "spend_cap_usd"))]
+    assert not report.ok
+
+
+def test_check_accepts_a_research_cap_in_dollars(shop: Path) -> None:
+    with_research_cap(shop, "2.50")
+
+    report = check_project(shop)
+
+    assert report.ok
+    assert report.project is not None
+    research = report.project.project.spec.research
+    assert research is not None and research.spend_cap_usd == Decimal("2.50")
 
 
 def test_outcome_fallback_points_at_the_policy_without_fallback_models(shop: Path) -> None:

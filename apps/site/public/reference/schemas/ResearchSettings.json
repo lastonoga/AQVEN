@@ -1,0 +1,23 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "spend_cap_usd": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Spend Cap Usd"
+    }
+  },
+  "required": [
+    "spend_cap_usd"
+  ],
+  "title": "ResearchSettings",
+  "type": "object"
+}

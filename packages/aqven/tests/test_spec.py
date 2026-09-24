@@ -415,7 +415,17 @@ CANONICAL_NODE_KEYS: dict[type[BaseModel], tuple[str, ...]] = {
         "in",
         "out",
     ),
-    ProjectSpec: ("apiVersion", "kind", "description", "package", "providers", "policies", "limits", "renames"),
+    ProjectSpec: (
+        "apiVersion",
+        "kind",
+        "description",
+        "package",
+        "providers",
+        "policies",
+        "limits",
+        "research",
+        "renames",
+    ),
     FlowSpec: (
         "apiVersion",
         "kind",

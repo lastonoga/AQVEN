@@ -242,6 +242,232 @@
         "x-aqven-rest-only": "project status"
       }
     },
+    "/api/project/research": {
+      "get": {
+        "summary": "Get Research Budget",
+        "operationId": "research_budget_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchBudgetView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "x-aqven-rest-only": "a person sets the research spend cap in Studio"
+      },
+      "put": {
+        "summary": "Put Research Budget",
+        "operationId": "research_budget_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchBudgetWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchBudgetView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "x-aqven-rest-only": "a person sets the research spend cap in Studio"
+      }
+    },
     "/api/files": {
       "get": {
         "summary": "List Files",
@@ -12538,6 +12764,14 @@
         ],
         "title": "CancelResult"
       },
+      "CapSource": {
+        "type": "string",
+        "enum": [
+          "override",
+          "project",
+          "default"
+        ]
+      },
       "CapabilityOverride": {
         "properties": {
           "family": {
@@ -19534,6 +19768,10 @@
           "last_good_content_hash"
         ],
         "title": "FileEntry"
+      },
+      "FileHash": {
+        "type": "string",
+        "pattern": "^sha256-[0-9a-f]{64}$"
       },
       "FileKind": {
         "type": "string",
@@ -27032,6 +27270,113 @@
         "type": "string",
         "pattern": "^\\$(input|in|out|item|index|case|acc|iter|loop|ok|failed|branch\\.[a-z][a-z0-9_]{0,62}|run\\.context\\.(date|time_zone|locale|tenant_id)|[a-z][a-z0-9_]{0,62}\\.out)(\\.[a-z][a-z0-9_]{0,62}|\\[\\*\\]|\\[[0-9]{1,4}\\])*$"
       },
+      "ResearchBudgetView": {
+        "properties": {
+          "spend_cap_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spend Cap Usd"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CapSource"
+          },
+          "project_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Usd"
+          },
+          "default_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Default Usd"
+          },
+          "override_problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Problem"
+          },
+          "project_file": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "spend_cap_usd",
+          "source",
+          "project_usd",
+          "default_usd",
+          "override_problem",
+          "project_file"
+        ],
+        "title": "ResearchBudgetView"
+      },
+      "ResearchBudgetWrite": {
+        "properties": {
+          "research": {
+            "$ref": "#/components/schemas/ResearchSettings"
+          },
+          "file_hash": {
+            "$ref": "#/components/schemas/FileHash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "research",
+          "file_hash"
+        ],
+        "title": "ResearchBudgetWrite"
+      },
+      "ResearchSettings": {
+        "properties": {
+          "spend_cap_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Spend Cap Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spend_cap_usd"
+        ],
+        "title": "ResearchSettings"
+      },
       "ResolvedAllowedSet": {
         "properties": {
           "type_id": {
@@ -28966,6 +29311,16 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Project Cap Usd"
+          },
+          "project_cap_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CapSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cap_usd": {
             "type": "string",
