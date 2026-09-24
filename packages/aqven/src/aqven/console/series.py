@@ -19,6 +19,7 @@ from aqven.console.command import EXIT_FAILED, EXIT_OK, EXIT_USAGE, PATH_HELP, P
 from aqven.console.project_env import open_project
 from aqven.series.model import (
     SETTLED_STATUSES,
+    ApprovalReason,
     MatrixRow,
     MetricCell,
     MetricColumn,
@@ -49,7 +50,7 @@ STATUS_EXITS: Final[Mapping[SeriesStatus, int]] = {
 USAGE_CODES: Final = frozenset({"NOT_FOUND", "NOT_RUNNABLE", "INPUT_INVALID", "REQUEST_INVALID"})
 SHOWN_ROLES: Final = frozenset({MetricRole.PRIMARY, MetricRole.GUARDRAIL, MetricRole.CHECK})
 ALWAYS_SHOWN: Final = frozenset({SeriesMetric.SUCCESS_RATE.value})
-USD_SOURCE_NOTES: Final[Mapping[str, str]] = {"bound": " (upper bound)"}
+USD_SOURCE_NOTES: Final[Mapping[str, str]] = {"bound": " (rough estimate)"}
 
 
 def positive_int(text: str) -> int:
@@ -207,14 +208,25 @@ def failed_lines(series: SeriesDetailView, link: str) -> Iterator[str]:
     yield f"each attempt run names its error in Studio: {link}"
 
 
-def approval_reason(series: SeriesDetailView) -> str:
-    estimate = series.estimate
-    project_cap = usd(estimate.project_cap_usd)
-    if estimate.usd is None:
-        return f"there is no cost estimate, and the series may spend up to {usd(series.spend.cap_usd)}"
-    if estimate.usd > estimate.project_cap_usd:
-        return f"the estimate {estimate_usd(estimate)} is above the project spend cap {project_cap}"
+def cap_reason(series: SeriesDetailView) -> str:
+    project_cap = usd(series.estimate.project_cap_usd)
     return f"the series cap {usd(series.spend.cap_usd)} is above the project spend cap {project_cap}"
+
+
+def spend_reason(series: SeriesDetailView) -> str:
+    spent = series.spend.usd if series.pause is None else series.pause.spent_usd
+    return f"it spent {usd(spent)} of its {usd(series.spend.cap_usd)} cap and paused before its next attempts"
+
+
+APPROVAL_REASONS: Final[Mapping[ApprovalReason, Callable[[SeriesDetailView], str]]] = {
+    ApprovalReason.CAP_ABOVE_PROJECT: cap_reason,
+    ApprovalReason.SPEND_NEAR_CAP: spend_reason,
+}
+
+
+def approval_reason(series: SeriesDetailView) -> str:
+    reason = ApprovalReason.CAP_ABOVE_PROJECT if series.pause is None else series.pause.reason
+    return APPROVAL_REASONS[reason](series)
 
 
 def approval_lines(series: SeriesDetailView, link: str) -> Iterator[str]:

@@ -1,6 +1,7 @@
 import importlib
 import sys
 from collections.abc import Mapping
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
@@ -14,6 +15,7 @@ DEV_CASES: Final = ("always_1", "never_1", "sometimes_1", "plain_2")
 HOLDOUT_CASES: Final = ("always_3", "plain_1")
 RANGE_CASES: Final = ("range_1", "range_4")
 REVIEW_CASES: Final = ("always_1",)
+ABOVE_PROJECT_CAP: Final = Decimal("5.00")
 
 PROJECT: Final = f"""apiVersion: "aqven/v1"
 kind: "Project"

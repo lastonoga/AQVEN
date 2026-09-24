@@ -281,16 +281,15 @@
       "estimating": "estimating the price…",
       "estimateFailed": "no estimate: {reason}",
       "none": "—",
-      "sign": "{source, select, bound {≤} other {≈}}",
+      "sign": "{source, select, bound {~} other {≈}}",
       "source": {
         "history": "from past series",
         "prices": "at provider prices",
-        "bound": "upper bound",
+        "bound": "rough estimate",
         "unknown": "no price estimate"
       },
       "cap": "cap {cap}",
-      "approval": "over the {cap} cap: needs your approval",
-      "noPrice": "needs your approval",
+      "approval": "over the {cap} cap: pauses near it for your approval",
       "run": "Run",
       "approve": "Approve spend",
       "stop": "Stop",
@@ -299,7 +298,7 @@
       "estimate": {
         "history": "≈ {usd} from past series",
         "prices": "≈ {usd} at provider prices",
-        "bound": "≤ {usd} upper bound",
+        "bound": "~ {usd} rough estimate",
         "unknown": "no price estimate"
       }
     },
@@ -352,6 +351,14 @@
         "openRun": "Open the run of {name}, repeat {repeat}"
       }
     }
+  },
+  "pause": {
+    "aria": "Spend paused near the cap",
+    "spent": "Spent {spent} of {cap} — the series paused.",
+    "continueUpTo": "Continue up to $<cap></cap>?",
+    "capAria": "New spend cap in dollars",
+    "continue": "Continue",
+    "stop": "Stop"
   },
   "series": {
     "lookTitle": "Look at {count, plural, one {# case} other {# cases}}",

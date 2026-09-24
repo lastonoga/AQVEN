@@ -30,6 +30,7 @@ export {
 } from "./vocabulary"
 export {
   ACTIVE_SERIES_STATUSES,
+  APPROVAL_REASONS,
   ATTEMPT_OUTCOMES,
   BUILTIN_METRICS,
   CELL_VERDICTS,

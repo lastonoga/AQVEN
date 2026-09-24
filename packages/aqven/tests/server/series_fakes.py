@@ -167,7 +167,9 @@ class FakeSeriesJobs:
         default_factory=list[tuple[SeriesStartRequest, WriteActor]]
     )
     gets: list[SeriesGetRequest] = field(default_factory=list[SeriesGetRequest])
-    approvals: list[tuple[SeriesId, WriteActor]] = field(default_factory=list[tuple[SeriesId, WriteActor]])
+    approvals: list[tuple[SeriesId, WriteActor, Decimal | None]] = field(
+        default_factory=list[tuple[SeriesId, WriteActor, Decimal | None]]
+    )
     cancels: list[SeriesCancelRequest] = field(default_factory=list[SeriesCancelRequest])
     estimates: list[tuple[ExperimentId, LaunchRequest]] = field(
         default_factory=list[tuple[ExperimentId, LaunchRequest]]
@@ -213,11 +215,13 @@ class FakeSeriesJobs:
         self._view(series_id)
         return ()
 
-    async def approve(self, series_id: SeriesId, actor: WriteActor) -> SeriesSummaryView:
+    async def approve(
+        self, series_id: SeriesId, actor: WriteActor, cap_usd: Decimal | None = None
+    ) -> SeriesSummaryView:
         view = self._view(series_id)
         if view.status is not SeriesStatus.AWAITING_APPROVAL:
             raise ApiFailure("SERIES_STATE_CONFLICT", f"series {series_id} is {view.status}, not awaiting approval")
-        self.approvals.append((series_id, actor))
+        self.approvals.append((series_id, actor, cap_usd))
         return summary(view)
 
     async def cancel(self, request: SeriesCancelRequest) -> SeriesSummaryView:

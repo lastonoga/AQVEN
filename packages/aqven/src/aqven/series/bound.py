@@ -24,6 +24,7 @@ from aqven.ir import (
 )
 from aqven.ports.execution import ScopeFrame
 from aqven.preview import PreviewError, PromptPreview, PromptPreviewRequest, preview_prompt, sample_document
+from aqven.preview.prompt import attachments
 from aqven.runtime.address import JsonObject
 from aqven.series.model import CaseSnapshot, CheckPlan, JudgePlan, SubjectRecord, VariantPlanRecord
 from aqven.series.plans import JUDGE_NODE, scope_nodes, top_level
@@ -32,6 +33,8 @@ from aqven.spec import FlowId, NodeId, VariantId
 
 CHARS_PER_TOKEN: Final = 4
 DEFAULT_OUTPUT_TOKENS: Final = 4096
+TYPICAL_OUTPUT_TOKENS: Final = 1000
+MEDIA_PART_TOKENS: Final = 1600
 JUDGE_PROMPT_TOKENS: Final = 2000
 SINGLE_CALL: Final = 1
 CASE_PAYLOAD: Final = frozenset({"inputs", "context", "node_outputs"})
@@ -185,15 +188,21 @@ class TemplateSize:
 PROMPT_MEASURES: Final[tuple[PromptMeasure, ...]] = (RenderedPrompt(), TemplateSize())
 
 
+def media_tokens(project: CompiledProject, node: CompiledLlmNode, scope: CaseScope) -> int:
+    document = node_document(project, node, scope)
+    return len(attachments(project.inference(node.inference), document.values)) * MEDIA_PART_TOKENS
+
+
 def prompt_tokens(project: CompiledProject, flow_id: FlowId, node: CompiledLlmNode, scope: CaseScope) -> int:
     measured = (measure.chars(project, flow_id, node, scope) for measure in PROMPT_MEASURES)
-    return tokens(next((found for found in measured if found is not None), scope.chars))
+    text = tokens(next((found for found in measured if found is not None), scope.chars))
+    return text + media_tokens(project, node, scope)
 
 
 def output_tokens(agent: CompiledAgent) -> int:
     settings = agent.settings
     limit = None if settings is None else settings.max_tokens
-    return DEFAULT_OUTPUT_TOKENS if limit is None else limit
+    return min(limit or DEFAULT_OUTPUT_TOKENS, TYPICAL_OUTPUT_TOKENS)
 
 
 def loop_cap(node: CompiledNode, scope: CaseScope) -> int:

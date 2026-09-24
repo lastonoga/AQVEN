@@ -32,6 +32,7 @@ from aqven.series.feed import SeriesKey, SeriesProgressNotice, series_key
 from aqven.series.ids import attempt_id, judge_run_id, key_of, subject_run_id
 from aqven.series.model import (
     AnalysisInput,
+    ApprovalReason,
     AttemptRecord,
     AttemptState,
     CheckValue,
@@ -40,6 +41,7 @@ from aqven.series.model import (
     RecordModel,
     SeriesChange,
     SeriesId,
+    SeriesPause,
     SeriesRecord,
     SeriesSnapshot,
     SeriesStatus,
@@ -51,6 +53,7 @@ from aqven.series.ports import SeriesStore
 from aqven.series.presenter import attempt_error
 from aqven.series.protocol import (
     APPROVAL_RECV_SECONDS,
+    APPROVAL_THRESHOLD,
     APPROVAL_TOPIC,
     ATTEMPT_SLOTS,
     LOOKAHEAD,
@@ -82,6 +85,7 @@ from aqven.spec import ExperimentId, FlowId, LookQuestion, SeriesSplit, VariantI
 PREPARE_STEP: Final = "aqven.series.prepare"
 ANNOUNCE_STEP: Final = "aqven.series.announce"
 APPROVED_STEP: Final = "aqven.series.mark_approved"
+PAUSE_STEP: Final = "aqven.series.pause"
 FINALIZE_STEP: Final = "aqven.series.finalize"
 OPEN_STEP: Final = "aqven.series.open_attempt"
 INSPECT_STEP: Final = "aqven.series.inspect_attempt"
@@ -132,6 +136,10 @@ class StatusMark(RecordModel):
 
 class ApprovalMessage(RecordModel):
     approved_by: str
+    cap_usd: Decimal | None = None
+
+    def cap_or(self, current: Decimal) -> Decimal:
+        return current if self.cap_usd is None else self.cap_usd
 
 
 def utc_now() -> datetime:
@@ -182,25 +190,22 @@ class SpendLedger:
     cap: Decimal
     reserve: Decimal
     spent: Decimal = ZERO
-    stopped: bool = False
+
+    def committed(self, pending: int) -> Decimal:
+        return self.spent + self.reserve * pending
 
     def headroom(self, pending: int) -> Decimal:
-        return self.cap - self.spent - self.reserve * pending
+        return self.cap - self.committed(pending)
 
     def open_for(self, pending: int) -> bool:
-        if self.headroom(pending) > 0:
-            return True
-        self.stopped = True
-        return False
+        return self.committed(pending) < self.cap * APPROVAL_THRESHOLD
 
     def limit_micros(self, pending: int) -> int:
         return max(1, math.ceil(self.headroom(pending) * MICROS))
 
     def add(self, usd: Decimal) -> None:
         self.spent += usd
-
-    def stop_cause(self, cursor: int, total: int) -> StopCause:
-        return StopCause.BUDGET_CUT if self.stopped and cursor < total else StopCause.COMPLETED
+        self.reserve = max(self.reserve, usd)
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,6 +313,10 @@ class AttemptWindow:
     def active(self) -> bool:
         return self.cursor < self.run.total or bool(self.pending)
 
+    @property
+    def paused(self) -> bool:
+        return not self.pending and self.cursor < self.run.total
+
     def room(self) -> bool:
         return self.cursor < self.run.total and len(self.pending) < LOOKAHEAD
 
@@ -328,46 +337,56 @@ class AttemptWindow:
         return summary
 
     def driven(self) -> DrivenAttempts:
-        return DrivenAttempts(
-            stop=self.ledger.stop_cause(self.cursor, self.run.total), spent=self.ledger.spent, done=self.done
-        )
+        return DrivenAttempts(stop=StopCause.COMPLETED, spent=self.ledger.spent, done=self.done)
 
 
-async def drive_attempts(series_id: SeriesId, run: SeriesRun, stream: SeriesStream) -> DrivenAttempts:
-    window = AttemptWindow(series_id, run, SpendLedger(cap=run.cap_usd, reserve=run.per_attempt_usd or ZERO))
+async def drive_attempts(series_id: SeriesId, run: SeriesRun, stream: SeriesStream, cap: Decimal) -> DrivenAttempts:
+    window = AttemptWindow(series_id, run, SpendLedger(cap=cap, reserve=run.per_attempt_usd or ZERO))
     while window.active:
         await window.fill()
-        if not window.pending:
-            break
+        if window.paused:
+            window.ledger.cap = await spend_gate(series_id, window.ledger, stream)
+            continue
         summary = await window.next_finished()
         await stream.write(AttemptEventBuilder(series_id, summary, window.done, run.total, window.ledger.spent))
         active_series().feed.publish(progress_notice(series_id, run, window.done, window.ledger.spent))
     return window.driven()
 
 
-def approver_of(message: object) -> str | None:
+def approval_of(message: object) -> ApprovalMessage | None:
     if message is None:
         return None
     try:
-        return ApprovalMessage.model_validate(message).approved_by
+        return ApprovalMessage.model_validate(message)
     except ValidationError:
         return None
 
 
-async def wait_for_approval() -> str:
+async def wait_for_approval() -> ApprovalMessage:
     while True:
-        approver = approver_of(await DBOS.recv_async(APPROVAL_TOPIC, timeout_seconds=APPROVAL_RECV_SECONDS))
-        if approver is not None:
-            return approver
+        approval = approval_of(await DBOS.recv_async(APPROVAL_TOPIC, timeout_seconds=APPROVAL_RECV_SECONDS))
+        if approval is not None:
+            return approval
 
 
-async def approval_gate(series_id: SeriesId, run: SeriesRun, stream: SeriesStream) -> None:
-    if not run.needs_approval:
-        return
-    waiting = StatusMark.model_validate(await announce(series_id, SeriesStatus.AWAITING_APPROVAL.value))
+async def approval_after(series_id: SeriesId, waiting: StatusMark, stream: SeriesStream) -> ApprovalMessage:
     await stream.write(StatusEventBuilder(series_id, waiting))
-    approved = StatusMark.model_validate(await mark_approved(series_id, await wait_for_approval()))
+    approval = await wait_for_approval()
+    approved = StatusMark.model_validate(await mark_approved(series_id, approval.model_dump(mode="json")))
     await stream.write(StatusEventBuilder(series_id, approved))
+    return approval
+
+
+async def approval_gate(series_id: SeriesId, run: SeriesRun, stream: SeriesStream) -> Decimal:
+    if not run.needs_approval:
+        return run.cap_usd
+    waiting = StatusMark.model_validate(await announce(series_id, SeriesStatus.AWAITING_APPROVAL.value))
+    return (await approval_after(series_id, waiting, stream)).cap_or(run.cap_usd)
+
+
+async def spend_gate(series_id: SeriesId, ledger: SpendLedger, stream: SeriesStream) -> Decimal:
+    waiting = StatusMark.model_validate(await pause_series(series_id, str(ledger.spent)))
+    return (await approval_after(series_id, waiting, stream)).cap_or(ledger.cap)
 
 
 @DBOS.step(name=PREPARE_STEP)
@@ -388,13 +407,26 @@ async def announce(series_id: str, status: str) -> JsonObject:
     return StatusMark(status=wanted, at=utc_now()).model_dump(mode="json")
 
 
+@DBOS.step(name=PAUSE_STEP)
+async def pause_series(series_id: str, spent_usd: str) -> JsonObject:
+    store = active_series().store
+    record = await require_series(store, SeriesId(series_id))
+    if record.status is SeriesStatus.RUNNING:
+        pause = SeriesPause(reason=ApprovalReason.SPEND_NEAR_CAP, spent_usd=Decimal(spent_usd))
+        await store.update(record.series_id, SeriesChange(status=SeriesStatus.AWAITING_APPROVAL, pause=pause))
+    return StatusMark(status=SeriesStatus.AWAITING_APPROVAL, at=utc_now()).model_dump(mode="json")
+
+
 @DBOS.step(name=APPROVED_STEP)
-async def mark_approved(series_id: str, approved_by: str) -> JsonObject:
+async def mark_approved(series_id: str, message: JsonObject) -> JsonObject:
     store = active_series().store
     now = utc_now()
+    approval = ApprovalMessage.model_validate(message)
     record = await require_series(store, SeriesId(series_id))
     if record.status is SeriesStatus.AWAITING_APPROVAL:
-        change = SeriesChange(status=SeriesStatus.RUNNING, approved_by=approved_by, approved_at=now)
+        change = SeriesChange(
+            status=SeriesStatus.RUNNING, approved_by=approval.approved_by, approved_at=now, cap_usd=approval.cap_usd
+        )
         await store.update(record.series_id, change)
     return StatusMark(status=SeriesStatus.RUNNING, at=now).model_dump(mode="json")
 
@@ -512,8 +544,8 @@ async def run_series(series_id: str) -> JsonObject:
     identity = SeriesId(series_id)
     run = SeriesRun.model_validate(await prepare_series(series_id))
     stream = SeriesStream()
-    await approval_gate(identity, run, stream)
-    driven = await drive_attempts(identity, run, stream)
+    cap = await approval_gate(identity, run, stream)
+    driven = await drive_attempts(identity, run, stream, cap)
     finish = SeriesFinish.model_validate(await finalize_series(series_id, driven.model_dump(mode="json")))
     await stream.write(FinishedEventBuilder(identity, finish))
     await DBOS.close_stream_async(SERIES_EVENTS_STREAM)

@@ -20,6 +20,7 @@ from aqven.console.series import (
     EXIT_HUMAN,
     SeriesCommandRequest,
     SeriesRunner,
+    approval_reason,
     done_lines,
     failed_lines,
     progress_line,
@@ -28,6 +29,7 @@ from aqven.console.series import (
     studio_link,
 )
 from aqven.series import (
+    ApprovalReason,
     EstimateReason,
     ExperimentOrigin,
     QuestionView,
@@ -37,6 +39,7 @@ from aqven.series import (
     SeriesGetResult,
     SeriesId,
     SeriesMatrix,
+    SeriesPause,
     SeriesProgress,
     SeriesSpend,
     SeriesStarted,
@@ -195,9 +198,16 @@ async def test_approval_and_a_waiting_human_print_the_studio_link() -> None:
     _, human, _ = await drive(FakeServer(SeriesStatus.RUNNING, iter(((SeriesStatus.WAITING_HUMAN, 2),))))
 
     link = f"{BASE}/research/series/{SERIES}?access_token={TOKEN}"
-    assert "the estimate $2.40 is above the project spend cap $1.00" in approval
+    assert "the series cap $3.00 is above the project spend cap $1.00" in approval
     assert link in approval
     assert f"waits for a human answer in 1 attempt: {link}" in human
+
+
+def test_a_series_paused_near_its_cap_names_what_it_spent() -> None:
+    pause = SeriesPause(reason=ApprovalReason.SPEND_NEAR_CAP, spent_usd=Decimal("2.71"))
+    paused = detail(SeriesStatus.AWAITING_APPROVAL, 9).model_copy(update={"pause": pause})
+
+    assert approval_reason(paused) == "it spent $2.71 of its $3.00 cap and paused before its next attempts"
 
 
 @pytest.mark.parametrize(
@@ -377,7 +387,9 @@ def test_an_upper_bound_estimate_is_named_in_the_started_line() -> None:
     bounded = estimate().model_copy(update={"usd_source": "bound"})
     running = started(SeriesStatus.RUNNING)
 
-    assert "estimate $2.40 (upper bound), cap $3.00" in started_line(running.model_copy(update={"estimate": bounded}))
+    assert "estimate $2.40 (rough estimate), cap $3.00" in started_line(
+        running.model_copy(update={"estimate": bounded})
+    )
     assert "estimate $2.40, cap $3.00" in started_line(running)
 
 

@@ -12,10 +12,20 @@ from series_fixture import CRITIC_MODEL, WRITER_MODEL, write_project
 from series_prices import FIXTURE_PRICES, FixedPrices
 
 from aqven.compiler import compile_root
-from aqven.ir import BuiltinPolicy, CompiledFlow, CompiledLlmNode, CompiledMapNode, CompiledProject, RefBinding
+from aqven.ir import (
+    BuiltinPolicy,
+    CompiledFlow,
+    CompiledLlmNode,
+    CompiledMapNode,
+    CompiledProject,
+    FieldIr,
+    LiteralBinding,
+    RefBinding,
+)
 from aqven.runtime.address import RunId
 from aqven.series.bound import (
-    DEFAULT_OUTPUT_TOKENS,
+    MEDIA_PART_TOKENS,
+    TYPICAL_OUTPUT_TOKENS,
     BoundPlan,
     CaseScope,
     TokenBound,
@@ -23,8 +33,8 @@ from aqven.series.bound import (
     calls_of,
     largest_case,
 )
-from aqven.series.estimate import EstimatePlan as Plan
 from aqven.series.estimate import (
+    ESTIMATE_MARGIN,
     FlowSample,
     NodeSample,
     PricedAttempt,
@@ -33,10 +43,10 @@ from aqven.series.estimate import (
     VariantFacts,
     VariantPricer,
     cap_decision,
-    ceil_cents,
     minutes_for,
     usd_source,
 )
+from aqven.series.estimate import EstimatePlan as Plan
 from aqven.series.model import (
     Assignment,
     AttemptId,
@@ -58,10 +68,12 @@ from aqven.series.settings import DEFAULT_CAP, ProjectCap
 from aqven.series.views import SeriesListQuery
 from aqven.spec import (
     AgentId,
+    BlobId,
     ExperimentId,
     FlowId,
     InferenceId,
     LookQuestion,
+    MediaValue,
     ModelSettingsSpec,
     NodeId,
     NoninferiorQuestion,
@@ -84,6 +96,7 @@ SHOP_CRITIC: Final = "openai:gpt-5.6-terra"
 RECHECK_ITERATIONS: Final = 2
 SCHEMA: Final[dict[str, JsonValue]] = {"type": "object"}
 OUTPUT_CAP: Final = 128
+LONG_OUTPUT_CAP: Final = 16_000
 
 
 def variant(variant_id: str, role: VariantRole) -> VariantPlanRecord:
@@ -205,29 +218,20 @@ class FixedSampler:
 
 
 @pytest.mark.parametrize(
-    ("usd", "request_cap", "needs", "cap"),
+    ("request_cap", "needs", "cap"),
     [
-        (Decimal("0.40"), None, False, Decimal("0.50")),
-        (Decimal("0.90"), None, False, Decimal("1.00")),
-        (Decimal("3.00"), None, True, Decimal("3.75")),
-        (None, None, True, Decimal("1.00")),
-        (Decimal("0.40"), Decimal("0.60"), False, Decimal("0.60")),
-        (Decimal("0.40"), Decimal("2.00"), True, Decimal("2.00")),
-        (None, Decimal("0.60"), True, Decimal("0.60")),
-        (Decimal(0), None, False, Decimal("0.01")),
+        (None, False, Decimal("1.00")),
+        (Decimal("0.60"), False, Decimal("0.60")),
+        (Decimal("1.00"), False, Decimal("1.00")),
+        (Decimal("2.00"), True, Decimal("2.00")),
     ],
 )
-def test_the_cap_follows_the_estimate_request_and_project_cap(
-    usd: Decimal | None, request_cap: Decimal | None, needs: bool, cap: Decimal
+def test_only_a_requested_cap_above_the_project_cap_waits_for_approval(
+    request_cap: Decimal | None, needs: bool, cap: Decimal
 ) -> None:
-    decision = cap_decision(usd, request_cap, Decimal("1.00"))
+    decision = cap_decision(request_cap, Decimal("1.00"))
 
     assert (decision.needs_approval, decision.cap_usd) == (needs, cap)
-
-
-def test_cents_round_up() -> None:
-    assert ceil_cents(Decimal("0.501")) == Decimal("0.51")
-    assert ceil_cents(Decimal("0.5")) == Decimal("0.50")
 
 
 def test_minutes_divide_by_the_attempt_lanes() -> None:
@@ -270,7 +274,7 @@ def test_a_look_recommends_the_requested_cases() -> None:
     assert outcome.estimate.recommended.reason is EstimateReason.LOOK
     assert outcome.estimate.recommended.cases == 3
     assert (outcome.estimate.usd, outcome.estimate.usd_source) == (None, "unknown")
-    assert outcome.estimate.needs_approval
+    assert not outcome.estimate.needs_approval
 
 
 def test_a_rate_pair_uses_the_prior_spread_without_history() -> None:
@@ -329,7 +333,7 @@ def test_history_without_a_known_price_does_not_price_the_attempts() -> None:
     outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, DEFAULT_CAP, None))
 
     assert (outcome.estimate.usd_source, outcome.estimate.usd) == ("unknown", None)
-    assert outcome.estimate.needs_approval
+    assert not outcome.estimate.needs_approval
 
 
 def test_history_prices_the_attempts_from_the_priced_ones_only() -> None:
@@ -365,7 +369,7 @@ def test_history_of_infrastructure_errors_does_not_price_the_attempts() -> None:
     assert outcome.estimate.usd_source == "unknown"
     assert outcome.estimate.usd is None
     assert outcome.estimate.minutes is None
-    assert outcome.estimate.needs_approval
+    assert not outcome.estimate.needs_approval
 
 
 def test_recorded_runs_price_each_variant_through_its_assigned_model() -> None:
@@ -395,7 +399,7 @@ def test_the_bound_reads_the_rendered_prompt_of_the_case_and_the_output_cap(tmp_
     short = triage_bound(project, ticket_case("short", "printer jam"))
     long = triage_bound(project, ticket_case("long", "printer jam " * 15))
 
-    assert (short.model, short.tokens_out, short.calls) == (WRITER_MODEL, DEFAULT_OUTPUT_TOKENS, 1)
+    assert (short.model, short.tokens_out, short.calls) == (WRITER_MODEL, TYPICAL_OUTPUT_TOKENS, 1)
     assert long.tokens_in > short.tokens_in > 0
     assert largest_case([ticket_case("short", "a"), ticket_case("long", "a" * 90)]) == ticket_case("long", "a" * 90)
 
@@ -414,7 +418,47 @@ def test_the_output_cap_of_the_agent_bounds_the_output_tokens(tmp_path: Path) ->
     assert bound.tokens_out == OUTPUT_CAP
 
 
-def test_a_first_series_is_priced_on_the_upper_bound(tmp_path: Path) -> None:
+def test_a_large_output_cap_counts_a_typical_answer(tmp_path: Path) -> None:
+    project = capped_writer(compile_root(write_project(tmp_path)), LONG_OUTPUT_CAP)
+
+    bound = triage_bound(project, ticket_case("short", "printer jam"))
+
+    assert bound.tokens_out == TYPICAL_OUTPUT_TOKENS
+
+
+def with_photo(project: CompiledProject) -> CompiledProject:
+    inference_id = InferenceId("classify")
+    inference = project.inference(inference_id)
+    photo = FieldIr(name="photo", type="Image", description="Photo of the ticket")
+    blob = BlobId(f"sha256-{'a' * 64}")
+    value = MediaValue(media_type="image/png", blob_id=blob, size_bytes=12, name="photo.png")
+    node_id = NodeId("classify")
+    flow = project.flows[FlowId("triage")]
+    node = flow.node(node_id)
+    assert isinstance(node, CompiledLlmNode)
+    bound_photo = LiteralBinding(name="photo", value=value.model_dump(mode="json", by_alias=True))
+    shown = node.model_copy(update={"inputs": (*node.inputs, bound_photo)})
+    changed = flow.model_copy(update={"nodes": {**flow.nodes, node_id: shown}})
+    fields = inference.model_copy(update={"input_fields": (*inference.input_fields, photo)})
+    return project.model_copy(
+        update={
+            "inferences": {**project.inferences, inference_id: fields},
+            "flows": {**project.flows, flow.flow_id: changed},
+        }
+    )
+
+
+def test_every_media_part_of_the_prompt_adds_its_tokens(tmp_path: Path) -> None:
+    project = compile_root(write_project(tmp_path))
+    case = ticket_case("short", "printer jam")
+
+    plain = triage_bound(project, case)
+    pictured = triage_bound(with_photo(project), case)
+
+    assert pictured.tokens_in == plain.tokens_in + MEDIA_PART_TOKENS
+
+
+def test_a_first_series_is_priced_on_the_rough_estimate_with_its_margin(tmp_path: Path) -> None:
     project = compile_root(write_project(tmp_path))
     case = ticket_case("long", "printer jam " * 15)
     bounded = replace(plan(noninferior(0.1), cases=2, repeats=1), bound=BoundPlan(base=project, case=case))
@@ -423,7 +467,7 @@ def test_a_first_series_is_priced_on_the_upper_bound(tmp_path: Path) -> None:
     outcome = asyncio.run(estimator.estimate(bounded, None, DEFAULT_CAP, None))
 
     bound = triage_bound(project, case)
-    per_attempt = FIXTURE_PRICES[WRITER_MODEL].cost(bound.tokens_in, bound.tokens_out)
+    per_attempt = FIXTURE_PRICES[WRITER_MODEL].cost(bound.tokens_in, bound.tokens_out) * ESTIMATE_MARGIN
     assert (outcome.estimate.usd_source, outcome.estimate.usd) == ("bound", per_attempt * 2 * 2)
     assert outcome.per_attempt_usd == per_attempt
     assert not outcome.estimate.needs_approval
@@ -436,7 +480,7 @@ def test_a_bound_charges_every_call_with_its_request_price() -> None:
 
     priced = pricer.price(VariantFacts(variant=variant("writer", VariantRole.BASELINE), bound=(bound,)))
 
-    assert priced == PricedAttempt(usd=price.cost(100, 10) * 3, source="bound")
+    assert priced == PricedAttempt(usd=price.cost(100, 10) * 3 * ESTIMATE_MARGIN, source="bound")
 
 
 def test_an_unpriced_model_leaves_the_bound_unknown(tmp_path: Path) -> None:
@@ -450,7 +494,7 @@ def test_an_unpriced_model_leaves_the_bound_unknown(tmp_path: Path) -> None:
     assert (estimate.usd, estimate.usd_source) == (None, "unknown")
     assert estimate.warnings == (f"price_unknown:{WRITER_MODEL}",)
     assert prices.asked == [(WRITER_MODEL,)]
-    assert estimate.needs_approval
+    assert not estimate.needs_approval
 
 
 def flow_record(project: CompiledProject, flow_id: FlowId) -> tuple[VariantPlanRecord, CompiledProject]:
@@ -481,7 +525,7 @@ def test_a_loop_multiplies_its_body_calls_by_the_iteration_cap() -> None:
     bounds = shop_bounds(note_case("a note"))
 
     assert {model: bound.calls for model, bound in bounds.items()} == {SHOP_WRITER: 1, SHOP_CRITIC: RECHECK_ITERATIONS}
-    assert bounds[SHOP_CRITIC].tokens_out == DEFAULT_OUTPUT_TOKENS
+    assert bounds[SHOP_CRITIC].tokens_out == TYPICAL_OUTPUT_TOKENS
 
 
 def test_an_input_the_case_cannot_resolve_adds_the_whole_case_to_the_prompt() -> None:
