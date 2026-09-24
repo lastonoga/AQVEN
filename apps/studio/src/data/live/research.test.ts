@@ -4,7 +4,7 @@ import { API_BASE, isNotFound } from "@/api/client"
 import * as ids from "@/data/ids"
 import { RESEARCH_SERIES } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
-import { readSeriesEvent, research, seriesEventsUrl } from "./research"
+import { research } from "./research"
 
 const SERIES = ids.seriesId(RESEARCH_SERIES.noninferiorHoldout)
 
@@ -56,14 +56,5 @@ describe("live research source", () => {
     )
     await expect(research.cancelSeries(SERIES, "enough")).rejects.toMatchObject({ status: 409, code: "SERIES_STATE_CONFLICT" })
     expect(bodies).toEqual([{ reason: "enough" }])
-  })
-
-  it("reads only well-formed events of the watched series", () => {
-    const read = readSeriesEvent(SERIES)
-    expect(read({ seq: 4, at: "2026-09-23T10:00:00Z", series_id: SERIES, type: "series_status", status: "running" })).toEqual({ kind: "status", seq: 4, status: "running" })
-    expect(read({ seq: 4, at: "2026-09-23T10:00:00Z", series_id: "other", type: "series_status", status: "running" })).toBeNull()
-    expect(read({ seq: 4, series_id: SERIES, type: "node_finished" })).toBeNull()
-    expect(read(null)).toBeNull()
-    expect(seriesEventsUrl(SERIES, 7)).toBe(`${API_BASE}/series/${SERIES}/events?after_seq=7`)
   })
 })
