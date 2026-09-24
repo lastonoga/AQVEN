@@ -37,5 +37,5 @@
     "hint": "Ask the agent in the chat to write the first flow, or create a flow.yaml in a new folder under flows/ by hand.",
     "ask": "Ask the agent to write a flow"
   },
-  "crumbsAria": "Project and flow"
+  "crumbsAria": "Project"
 }
