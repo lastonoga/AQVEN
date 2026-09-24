@@ -12,6 +12,7 @@ from aqven.engine.blobs import FileBlobStore
 from aqven.engine.config import EnginePaths, dbos_config, dbos_log_level
 from aqven.engine.dbos_logs import route_dbos_logs
 from aqven.engine.errors import EngineBusy
+from aqven.engine.events import UNWATCHED_RUNS, RunWatch
 from aqven.engine.executors.tool import McpCaller, ToolsetMcpCaller
 from aqven.engine.extensions import EngineExtensions
 from aqven.engine.loading import CodeLoader
@@ -50,6 +51,7 @@ class EngineSetup:
     max_parallel: int | None = None
     workflows: tuple[HostWorkflow, ...] = ()
     prices: PriceCache = NO_PRICES
+    watch: RunWatch = UNWATCHED_RUNS
 
 
 def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
@@ -71,6 +73,7 @@ def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
         human_layer=extensions.human_layer,
         services=services,
         summaries=RunSummaries(SqliteRunSummaryStore.open(paths.state / SUMMARY_DATABASE)),
+        watch=setup.watch,
     )
 
 

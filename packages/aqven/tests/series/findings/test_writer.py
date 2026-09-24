@@ -10,6 +10,7 @@ from aqven.loader import read_strict_yaml
 from aqven.loader.aliases import AliasScope
 from aqven.runtime.address import ClientOpId
 from aqven.series import SeriesId, SeriesVerdict
+from aqven.series.feed import FindingNotice, ResearchNotice
 from aqven.series.findings import (
     FINDINGS_FILE,
     FileFindings,
@@ -89,6 +90,14 @@ def project(tmp_path: Path) -> Path:
     write_experiment(root, noninferior_case(), "reply_noninferior_mistral")
     write_experiment(root, threshold_case(), "reply_overpromise_risk")
     return root
+
+
+@dataclass(slots=True)
+class RecordingFeed:
+    notices: list[ResearchNotice] = field(default_factory=list[ResearchNotice])
+
+    def publish(self, notice: ResearchNotice) -> None:
+        self.notices.append(notice)
 
 
 def writer(root: Path, sink: CollectingSink | None = None, validator: TreeValidator | None = None) -> WriteService:
@@ -215,3 +224,32 @@ async def test_the_shadow_check_accepts_a_finding_file(project: Path) -> None:
 
     assert path is not None
     assert (project / path).is_file()
+
+
+@pytest.mark.asyncio
+async def test_a_written_finding_is_announced_with_its_file_and_the_summary(project: Path) -> None:
+    case = noninferior_case()
+    feed = RecordingFeed()
+
+    path = await FileFindings(writer(project), project, feed).publish(case.record, case.attempts)
+
+    assert path is not None
+    assert feed.notices == [
+        FindingNotice(
+            experiment_id=ExperimentId("reply_noninferior_mistral"),
+            series_id=case.record.series_id,
+            paths=(path, FINDINGS_FILE),
+        )
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_series_that_writes_no_finding_announces_nothing(project: Path) -> None:
+    case = noninferior_case()
+    feed = RecordingFeed()
+    dev = case.record.model_copy(update={"on": SeriesSplit.DEV})
+
+    written = await FileFindings(writer(project), project, feed).publish(dev, case.attempts)
+
+    assert written is None
+    assert feed.notices == []

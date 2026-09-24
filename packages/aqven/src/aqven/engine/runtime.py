@@ -8,6 +8,7 @@ from pydantic_ai.usage import UsageLimits
 from aqven.engine.blobs import FileBlobStore
 from aqven.engine.config import EnginePaths
 from aqven.engine.errors import EngineNotLaunched
+from aqven.engine.events import UNWATCHED_RUNS, RunWatch
 from aqven.engine.extensions import HumanLayer
 from aqven.engine.forking import root_run_id
 from aqven.engine.loading import CodeLoader
@@ -102,6 +103,7 @@ class EngineRuntime:
     human_layer: HumanLayer
     services: ToolServices
     summaries: RunSummaries
+    watch: RunWatch = UNWATCHED_RUNS
 
 
 @dataclass(slots=True)

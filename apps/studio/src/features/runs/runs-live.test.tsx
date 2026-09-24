@@ -13,6 +13,7 @@ vi.mock("@/features/chat", () => ({
 }))
 
 const RUN_PAGE = `/flows/support_case/runs?run=${COMPLETED_RUN_ID}`
+const RUN_EVENTS = `/api/runs/${COMPLETED_RUN_ID}/events`
 const REF = `#${COMPLETED_RUN_ID.slice(-6)}`
 
 type Phase = "prepare" | "triage" | "done"
@@ -64,8 +65,8 @@ describe("RunsScreen live events", () => {
     const title = await heading()
     expect(statusTags(title)).toContain("Live")
     expect(statusTags(title)).toContain("RUNNING")
-    const source = FakeEventSource.latest()
-    expect(source.url).toBe(`/api/runs/${COMPLETED_RUN_ID}/events?after_seq=${String(lastSeq())}`)
+    const source = FakeEventSource.latestOn(RUN_EVENTS)
+    expect(source.url).toBe(`${RUN_EVENTS}?after_seq=${String(lastSeq())}`)
     expect(screen.getByRole("heading", { name: "prepare" })).toBeTruthy()
     expect(screen.queryByRole("heading", { name: "triage" })).toBeNull()
 
@@ -85,14 +86,14 @@ describe("RunsScreen live events", () => {
       expect(statusTags(screen.getByRole("heading", { name: `Run ${REF}` }))).toContain("Completed · 1 step failed")
     })
     expect(statusTags(screen.getByRole("heading", { name: `Run ${REF}` }))).not.toContain("Live")
-    expect(FakeEventSource.opened).toHaveLength(1)
+    expect(FakeEventSource.on(RUN_EVENTS)).toHaveLength(1)
   })
 
   it("does not subscribe to a finished run", async () => {
     phase = "done"
     await renderRoute(RUN_PAGE)
     await heading()
-    expect(FakeEventSource.opened).toHaveLength(0)
+    expect(FakeEventSource.on(RUN_EVENTS)).toHaveLength(0)
     expect(screen.queryByRole("button", { name: "Cancel run" })).toBeNull()
   })
 })

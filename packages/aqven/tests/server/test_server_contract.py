@@ -53,7 +53,16 @@ def test_event_catalog_is_discriminated_union() -> None:
     assert run_items["discriminator"]["propertyName"] == "type"
     assert "run_finished" in run_items["discriminator"]["mapping"]
     assert "node_output_delta" in run_items["discriminator"]["mapping"]
-    assert set(spec_items["discriminator"]["mapping"]) == {"files_changed", "diagnostics_changed", "resync"}
+    assert set(spec_items["discriminator"]["mapping"]) == {
+        "files_changed",
+        "diagnostics_changed",
+        "resync",
+        "series_started",
+        "series_progress",
+        "series_status_changed",
+        "finding_written",
+        "experiment_changed",
+    }
     series_items = schemas["SeriesEvent"]
     assert set(series_items["discriminator"]["mapping"]) == {"series_status", "attempt_finished", "series_finished"}
 

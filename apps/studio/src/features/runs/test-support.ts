@@ -24,6 +24,16 @@ export class FakeEventSource {
     return source
   }
 
+  static on(path: string): readonly FakeEventSource[] {
+    return FakeEventSource.opened.filter((source) => source.url.startsWith(path))
+  }
+
+  static latestOn(path: string): FakeEventSource {
+    const source = FakeEventSource.on(path).at(-1)
+    if (source === undefined) throw new Error(`no event source was opened on ${path}`)
+    return source
+  }
+
   addEventListener(type: string, listener: Listener): void {
     this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener])
   }
