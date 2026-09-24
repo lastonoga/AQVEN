@@ -1,6 +1,6 @@
 ---
 title: How to read the dev console
-description: What the terminal running the project server prints for runs, steps, retries, series and file changes, how to see more or less of it, and where the full log is kept.
+description: What the terminal running the project server prints for runs, steps, retries, series and file changes, how to see more or less of it, where the full log is kept, and where the thread stacks of a stuck server go.
 ---
 
 ## When you need this
@@ -68,6 +68,27 @@ List every retry of the day with its hint:
 ```bash
 jq -c 'select(.event == "step_retry") | {node, code, hint, agent_file}' .aqven/logs/dev.jsonl
 ```
+
+## When the server stops answering
+
+If Studio loads nothing while the terminal is quiet, look at the stacks file before you restart. The
+`stacks` line of the start-up banner names it and the command that fills it, for example
+`kill -USR1 48213 or an event loop stall over 5s → .aqven/logs/stacks-48213.txt`, where `48213` is the
+server's process id.
+
+- A watchdog thread asks the server's event loop to answer every half second. When the loop has not
+  answered for more than 5 seconds, it appends the stacks of all threads to `.aqven/logs/stacks-<pid>.txt`,
+  once per stall, and the console prints one `▲` warning with how long the loop has been stuck, for example
+  `event loop has not answered for 5.2s; thread stacks appended to .aqven/logs/stacks-48213.txt`. When the
+  loop answers again, the file gets a line with the total stall, such as `event loop answered after 12.4s`.
+- Take a snapshot yourself with `kill -USR1 <pid>` when the loop still answers but something is slow. The
+  stacks of all threads are appended right away, even while the loop is stuck. Windows has no `SIGUSR1`;
+  there only the watchdog writes the file.
+- Read the event-loop thread first: the one whose bottom frames are in `asyncio/runners.py` and
+  `run_forever`. Its top frames show the code that holds the loop. Worker threads carry their names, such as
+  `[aqven-loop-watchdog]` or `[dbos-executor-_1]`. Every entry that the watchdog writes starts with a `===`
+  line with the time; a `SIGUSR1` snapshot is appended as it is. The file lives next to `dev.jsonl` in
+  `.aqven/logs/`, one file per server process.
 
 ## What stays hidden at the default level
 

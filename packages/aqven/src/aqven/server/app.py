@@ -32,7 +32,7 @@ from aqven.server.routes.schemas import build_schemas_router
 from aqven.server.routes.settings import build_settings_router
 from aqven.server.routes.status import build_status_router
 from aqven.server.security import QueryTokenScrubber
-from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, watch_project
+from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, supervise_watcher
 from aqven.server.static import StudioBundle, default_studio, mount_studio
 from aqven.server.workspace import ProjectCompiler, ProjectWorkspace
 from aqven.write import WriteService
@@ -104,7 +104,7 @@ async def spec_watcher(hub: SpecEventHub, root: Path, options: ServerOptions) ->
         await hub.close()
         return
     stop = asyncio.Event()
-    task = asyncio.create_task(watch_project(hub, root, stop, options.watch_debounce_ms))
+    task = asyncio.create_task(supervise_watcher(hub, root, stop, options.watch_debounce_ms))
     signal = options.shutdown_signal
     early_close = None if signal is None else asyncio.create_task(_close_hub_on_signal(signal, hub))
     try:

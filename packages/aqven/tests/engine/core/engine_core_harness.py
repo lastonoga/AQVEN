@@ -81,7 +81,7 @@ class StampService:
 class StaticPlanSource:
     plan: CompiledProject
 
-    def current(self) -> CompiledProject:
+    async def current(self) -> CompiledProject:
         return self.plan
 
 

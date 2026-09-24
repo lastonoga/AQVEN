@@ -1,15 +1,26 @@
 import asyncio
 import json
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from server_fakes import copy_fixture
 from sse_frames import parse_frames
+from watchfiles import Change
 
-from aqven.server import ProjectWorkspace, ServerOptions, SpecEventHub, server_context
+from aqven.loader import project as loader_project
+from aqven.server import ProjectWorkspace, ServerOptions, SpecEventHub, server_context, spec_channel
 from aqven.server.app import spec_watcher
-from aqven.server.spec_channel import DiagnosticsChanged, FilesChanged, SpecResync, watch_project
+from aqven.server.spec_channel import (
+    DiagnosticsChanged,
+    FilesChanged,
+    SpecEvent,
+    SpecResync,
+    supervise_watcher,
+    watch_project,
+)
 
 
 def edit_prompt(root: Path) -> Path:
@@ -184,3 +195,66 @@ def test_spec_channel_events_are_published_with_their_schemas(server_client: Tes
     }
     assert schemas["series_status_changed"]["properties"]["status"]["$ref"].endswith("SeriesStatus")
     assert schemas["files_changed"]["properties"]["changes"]["items"]["$ref"].endswith("FileChange")
+
+
+def test_hub_refresh_survives_a_file_deleted_mid_rebuild(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    ghost = root / "fragments/ghost.md"
+    listed = loader_project.project_files
+
+    def listing_then_delete(folder: Path) -> tuple[str, ...]:
+        files = listed(folder)
+        ghost.unlink(missing_ok=True)
+        return files
+
+    async def scenario() -> None:
+        hub = SpecEventHub(ProjectWorkspace(root))
+        await hub.prime()
+        ghost.write_text("appears and vanishes", encoding="utf-8")
+        edit_prompt(root)
+        monkeypatch.setattr(loader_project, "project_files", listing_then_delete)
+        event, *_ = await hub.refresh()
+        monkeypatch.undo()
+        assert isinstance(event, FilesChanged)
+        assert "flows/intake/nodes/reply/reply.prompt.md" in {change.path for change in event.changes}
+        edit_prompt(root)
+        assert await hub.refresh() != ()
+
+    asyncio.run(scenario())
+
+
+def test_watcher_keeps_watching_after_a_refresh_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    calls: list[int] = []
+
+    async def refresh(self: SpecEventHub) -> tuple[SpecEvent, ...]:
+        calls.append(len(calls))
+        if len(calls) == 2:
+            raise FileNotFoundError("datasets/zz_perf_probe.yaml")
+        return ()
+
+    async def batches(*paths: Path | str, **options: object) -> AsyncGenerator[set[tuple[Change, str]]]:
+        for index in range(3):
+            yield {(Change.modified, f"{paths[0]}/file-{index}.yaml")}
+
+    monkeypatch.setattr(SpecEventHub, "refresh", refresh)
+    monkeypatch.setattr(spec_channel, "AWATCH", batches)
+    hub = SpecEventHub(ProjectWorkspace(root))
+    asyncio.run(watch_project(hub, root, asyncio.Event(), simulate=False))
+    assert calls == [0, 1, 2, 3]
+
+
+def test_supervisor_restarts_a_watcher_that_died(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    started: list[int] = []
+
+    async def dying_watch(hub: SpecEventHub, folder: Path, stop: asyncio.Event, debounce_ms: int) -> None:
+        started.append(debounce_ms)
+        if len(started) == 1:
+            raise OSError("watch backend lost the root")
+        stop.set()
+
+    monkeypatch.setattr(spec_channel, "watch_project", dying_watch)
+    hub = SpecEventHub(ProjectWorkspace(root))
+    asyncio.run(supervise_watcher(hub, root, asyncio.Event(), debounce_ms=50, restart_seconds=0.0))
+    assert started == [50, 50]

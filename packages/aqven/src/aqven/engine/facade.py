@@ -56,7 +56,7 @@ CONTEXT_PROBLEM: Final = "CONTEXT_KEY_MISSING"
 
 
 class PlanSource(Protocol):
-    def current(self) -> CompiledProject: ...
+    async def current(self) -> CompiledProject: ...
 
 
 def missing_context_keys(flow: CompiledFlow, spec: RunSpec) -> tuple[RunContextKey, ...]:
@@ -228,7 +228,7 @@ class DbosEngineFacade:
     async def start_run(self, request: RunStartRequest, *, dataset_item_id: str | None = None) -> RunStarted:
         if request.at != WORKING_COPY or request.dataset_item_id is not None:
             raise EngineError("NOT_RUNNABLE", "a run can start only from the working copy with an explicit input")
-        plan = self._current_plan()
+        plan = await self._current_plan()
         if request.flow_id not in plan.flows:
             raise EngineError("NOT_FOUND", f"flow {request.flow_id} is not in the plan")
         try:
@@ -368,16 +368,8 @@ class DbosEngineFacade:
         error = fold.error or run_error
         plan = self.runtime.plans.find(IrHash(view.call.ir_hash))
         allowed_sets = recorded_allowed_sets(plan, fold) if include_payloads != "none" else ()
-        schema_source: Literal["run", "current", "unavailable"] = "run" if plan is not None else "unavailable"
-        if plan is None and self.plan_source is not None:
-            try:
-                plan = self._current_plan()
-                schema_source = "current"
-            except EngineError:
-                pass
         node = plan.flow(view.call.spec.flow_id).nodes.get(NodeId(address.node_id)) if plan is not None else None
-        if node is None:
-            schema_source = "unavailable"
+        schema_source: Literal["run", "unavailable"] = "unavailable" if node is None else "run"
         return ExecutionDetail(
             **execution.model_dump(exclude={"input_ref", "output_ref"}),
             input_ref=None if include_payloads == "none" else execution.input_ref,
@@ -455,11 +447,11 @@ class DbosEngineFacade:
         await self._status(run_id)
         return await self.runtime.human_layer.wait_detail(run_id, address)
 
-    def _current_plan(self) -> CompiledProject:
+    async def _current_plan(self) -> CompiledProject:
         if self.plan_source is None:
             raise EngineError("NOT_RUNNABLE", "working copy plan source is not connected")
         try:
-            return self.plan_source.current()
+            return await self.plan_source.current()
         except Exception as error:
             raise EngineError("NOT_RUNNABLE", f"working copy does not compile: {error}") from error
 
