@@ -1,6 +1,8 @@
 import asyncio
+import logging
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from importlib import import_module
@@ -35,6 +37,8 @@ DEFAULT_WINDOW: Final = 1000
 GIT_BATCH_LIMIT: Final = 200
 DEFAULT_DEBOUNCE_MS: Final = 250
 WATCHER_ID: Final = "watchfiles"
+WATCHER_RESTART_SECONDS: Final = 1.0
+WATCH_LOGGER: Final = logging.getLogger("aqven.server.watch")
 
 type ChangeKind = Literal["added", "modified", "deleted"]
 type ActorKind = Literal["human", "agent", "fs", "git", "system"]
@@ -347,11 +351,38 @@ class ProjectChangeFilter(DefaultFilter):
         return super().__call__(change, path)
 
 
+async def refresh_guarded(hub: SpecEventHub) -> None:
+    try:
+        await hub.refresh()
+    except Exception:
+        WATCH_LOGGER.exception("project watcher could not refresh the workspace; it keeps watching")
+
+
 async def watch_project(
     hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS, simulate: bool = True
 ) -> None:
     if simulate and hub.simulation is None:
         hub.simulation = SimulationFeed(SubprocessSimulation(root))
-    await hub.refresh()
+    await refresh_guarded(hub)
     async for _ in AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop):
-        await hub.refresh()
+        await refresh_guarded(hub)
+
+
+async def supervise_watcher(
+    hub: SpecEventHub,
+    root: Path,
+    stop: asyncio.Event,
+    debounce_ms: int = DEFAULT_DEBOUNCE_MS,
+    restart_seconds: float = WATCHER_RESTART_SECONDS,
+) -> None:
+    while not stop.is_set():
+        try:
+            await watch_project(hub, root, stop, debounce_ms)
+        except Exception:
+            WATCH_LOGGER.exception("project watcher stopped; restarting in %.1fs", restart_seconds)
+        await _pause(stop, restart_seconds)
+
+
+async def _pause(stop: asyncio.Event, seconds: float) -> None:
+    with suppress(TimeoutError):
+        await asyncio.wait_for(stop.wait(), seconds)

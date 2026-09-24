@@ -21,6 +21,7 @@ from aqven.loader import (
     type_id_for,
     validation_diagnostics,
 )
+from aqven.loader import project as loader_project
 from aqven.spec import (
     AgentId,
     ArmId,
@@ -597,3 +598,25 @@ def test_invalid_experiment_file_still_owns_its_arms(shop: Path) -> None:
     assert result.project is not None
     assert result.project.experiments == {}
     assert FlowId("audit") not in result.project.flows
+
+
+def test_a_file_deleted_between_listing_and_reading_is_skipped(shop: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ghosts = (shop / "shared/ghost.yaml", shop / "shared/ghost.md")
+    ghosts[0].write_text(VALID_YAML, encoding="utf-8")
+    ghosts[1].write_text("gone soon", encoding="utf-8")
+    listed = loader_project.project_files
+
+    def listing_then_delete(root: Path) -> tuple[str, ...]:
+        files = listed(root)
+        for ghost in ghosts:
+            ghost.unlink()
+        return files
+
+    monkeypatch.setattr(loader_project, "project_files", listing_then_delete)
+
+    result = load_project(shop)
+
+    assert result.project is not None
+    assert TypeId("ghost") not in result.project.types
+    assert "shared/ghost.md" not in result.project.texts
+    assert {"shared/tone.md", PROMPT} <= set(result.project.texts)
