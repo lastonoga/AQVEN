@@ -71,10 +71,10 @@ tests/                                 offline tests of the example, at the proj
    not a bug report — only a node whose *last* attempt still failed after `output.retries` ran out is worth
    investigating. `--live` also proves whether `output.strict: true` would hold for a model: every mode it probes runs
    with strict enforcement forced on, so a mode it reports `ok` for has already worked strict against the real
-   provider. `aqven check` still refuses `output.strict: true` unless every model the agent can reach — `model` and
-   each of `fallback_models` — is one AQVEN already trusts for it (`E_STRICT_UNSUPPORTED`); an unverified model needs
-   `capabilities.strict: true` on the agent first, and that trust applies to every model in the list, not just the
-   one you probed. Neither check tells you how deep a model's structured output actually nests correctly — before
+   provider. `aqven check` does not judge what a model accepts — strict output, images, audio, documents: the provider
+   decides, and a refusal comes back as the step's error with the provider's own message. A model outside AQVEN's own
+   list is sent strict output only when the agent sets `capabilities.strict: true`, and that applies to every model in
+   the list, not just the one you probed. Neither check tells you how deep a model's structured output actually nests correctly — before
    trusting a model with a real schema that nests objects, carries an array of objects, or leans on a large enum,
    run `aqven models shapes <agent> --live`: it finds the model's real nesting depth, list length and enum size by
    asking it to place literal tokens at each position and checking they came back exactly where asked, not what the
@@ -435,8 +435,7 @@ Every diagnostic has a code, a file with a path inside it, a message and often a
 
 Examples: `E_REF_MISSING` (a binding points at something that does not exist), `E_BINDING_TYPE` (the bound value does
 not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `E_PROMPT_MISSING`,
-`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `E_STRICT_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`,
-`W_GENERATED_STALE`.
+`E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`, `W_GENERATED_STALE`.
 
 Experiments and datasets: `E_FLOW_UNKNOWN`, `E_ARM_UNKNOWN`, `E_RANGE_INVALID` (a `from`/`to` that is not a range of
 top-level nodes), `E_VARIANT_INVALID` (an agent swap outside the range), `E_AGENT_UNKNOWN`, `E_DATASET_UNKNOWN`,
