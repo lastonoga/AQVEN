@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Final
@@ -12,6 +12,7 @@ from aqven.log_support import address_label, short_id
 from aqven.runtime.address import ExecutionAddress, RunId
 from aqven.runtime.events import (
     InferenceInputCaptured,
+    MapItemRecovered,
     NodeAttemptFailed,
     NodeFinished,
     NodeSuspended,
@@ -20,11 +21,14 @@ from aqven.runtime.events import (
     RunStartedEvent,
 )
 from aqven.runtime.executions import ModelErrorDetails
+from aqven.runtime.vocabulary import ItemRecoveryDecision
 
 type AddressKey = tuple[str, str | None, int | None, int | None]
 type RunLine = Callable[[RunEvent, RunTranscript], ConsoleEvent | None]
 
 MILLISECONDS: Final = 1000
+RECOVERED_WORDS: Final[Mapping[ItemRecoveryDecision, str]] = {"default": "replaced", "skip": "skipped"}
+MIXED_RECOVERY: Final = "recovered"
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +65,7 @@ class RunTranscript:
     agents: dict[AddressKey, str] = field(default_factory=dict[AddressKey, str])
     agent_files: dict[str, str] = field(default_factory=dict[str, str])
     failed_steps: int = 0
+    recovered: list[ItemRecoveryDecision] = field(default_factory=list[ItemRecoveryDecision])
 
     @property
     def short(self) -> str:
@@ -197,6 +202,43 @@ def node_finished(event: RunEvent, transcript: RunTranscript) -> ConsoleEvent | 
     )
 
 
+def item_recovered(event: RunEvent, transcript: RunTranscript) -> ConsoleEvent | None:
+    if not isinstance(event, MapItemRecovered):
+        return None
+    recovery = event.recovery
+    transcript.recovered.append(recovery.decision)
+    fields: dict[str, JsonValue] = {
+        "recovered_item": recovery.item_index,
+        "decision": recovery.decision,
+        "policy": recovery.policy,
+        "code": recovery.error.code,
+    }
+    return ConsoleEvent(
+        kind="item_recovered",
+        glyph="↷",
+        tone="notice",
+        text=joined(
+            f"{address_label(event.address)} item {recovery.item_index} {RECOVERED_WORDS[recovery.decision]}",
+            f"by {recovery.policy}",
+        ),
+        details=(f"{recovery.error.code}: {one_line(recovery.error.message)}",),
+        fields=step_fields(event, transcript, event.address, fields),
+    )
+
+
+def recovered_word(decisions: Sequence[ItemRecoveryDecision]) -> str:
+    kinds = frozenset(decisions)
+    return RECOVERED_WORDS[decisions[0]] if len(kinds) == 1 else MIXED_RECOVERY
+
+
+def failures_text(failed_steps: int, recovered: Sequence[ItemRecoveryDecision]) -> str | None:
+    if failed_steps == 0:
+        return None
+    if failed_steps != len(recovered):
+        return f"{plural(failed_steps, 'step')} failed"
+    return f"{plural(failed_steps, 'item')} {recovered_word(recovered)}"
+
+
 def node_suspended(event: RunEvent, transcript: RunTranscript) -> ConsoleEvent | None:
     if not isinstance(event, NodeSuspended):
         return None
@@ -223,7 +265,7 @@ def run_finished(event: RunEvent, transcript: RunTranscript) -> ConsoleEvent | N
     error = event.error
     text = joined(
         f"run {transcript.short} {event.status}",
-        None if failed_steps == 0 else f"{plural(failed_steps, 'step')} failed",
+        failures_text(failed_steps, transcript.recovered),
         None if duration_ms is None else duration_text(duration_ms),
         tokens_text(event.tokens_in, event.tokens_out),
         cost_text(event.cost_usd),
@@ -234,6 +276,8 @@ def run_finished(event: RunEvent, transcript: RunTranscript) -> ConsoleEvent | N
         **base_fields(event, transcript),
         "status": event.status,
         "failed_steps": failed_steps,
+        "items_replaced": transcript.recovered.count("default"),
+        "items_skipped": transcript.recovered.count("skip"),
         "duration_ms": duration_ms,
         "tokens_in": event.tokens_in,
         "tokens_out": event.tokens_out,
@@ -258,6 +302,7 @@ RUN_LINES: Final[Mapping[str, RunLine]] = {
     "node_attempt_failed": attempt_failed,
     "node_finished": node_finished,
     "node_suspended": node_suspended,
+    "map_item_recovered": item_recovered,
     "run_finished": run_finished,
 }
 
