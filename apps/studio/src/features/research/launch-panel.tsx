@@ -162,7 +162,6 @@ function Summary({ experiment, launch }: { readonly experiment: ExperimentDetail
 
 function LaunchForm({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
   const t = useTranslations("research.experiment.launch")
-  const splits = useTranslations("research.vocabulary.splitChoice")
   const reasons = useReasonCopy()
   const id = useId()
   const notices = `${id}-notices`
@@ -207,16 +206,21 @@ function LaunchForm({ experiment, launch }: { readonly experiment: ExperimentDet
           />
         </FieldRow>
         <FieldRow label={t("split")}>
-          <ChoiceGroup<SeriesSplit>
-            appearance="segmented"
-            size="sm"
-            label={t("split")}
-            value={draft.on}
-            items={SERIES_SPLITS.map((split) => ({ value: split, label: splits(split) }))}
-            onValueChange={(on) => {
-              launch.update({ on, cases: String(plannedCases(experiment, on)) })
-            }}
-          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <ChoiceGroup<SeriesSplit>
+              appearance="segmented"
+              size="sm"
+              label={t("split")}
+              value={draft.on}
+              items={SERIES_SPLITS.map((split) => ({ value: split, label: t(`purpose.${split}`) }))}
+              onValueChange={(on) => {
+                launch.update({ on, cases: String(plannedCases(experiment, on)) })
+              }}
+            />
+            <Text role="meta" tone="neutral">
+              {t("purposeHint")}
+            </Text>
+          </div>
         </FieldRow>
       </div>
       <NoticeLine id={notices} notices={noticesOf(launch, experiment, t, reasons)} />
