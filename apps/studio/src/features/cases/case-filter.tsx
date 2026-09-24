@@ -1,8 +1,10 @@
+import { X } from "lucide-react"
 import { useTranslations } from "use-intl"
 import { Tag, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { tagToken, type TagFacet } from "./model"
+import { parseTagToken, type TagFacet } from "./model"
+import { TagFilterMenu } from "./tag-filter-menu"
 
 export type CaseFilterBarProps = {
   readonly facets: readonly TagFacet[]
@@ -15,36 +17,22 @@ export type CaseFilterBarProps = {
   readonly onClear: () => void
 }
 
-type FacetGroupProps = {
-  readonly facet: TagFacet
-  readonly tags: readonly string[]
-  readonly onToggleTag: (token: string) => void
-}
-
-function FacetGroup({ facet, tags, onToggleTag }: FacetGroupProps) {
+function FilterChip({ token, onRemove }: { readonly token: string; readonly onRemove: () => void }) {
   const t = useTranslations("cases.filter")
+  const pair = parseTagToken(token)
+  const text = pair === null ? token : t("chip", { key: pair.key, value: pair.value })
   return (
-    <div role="group" aria-label={t("tagsAria", { key: facet.key })} className="flex min-w-0 flex-wrap items-center gap-1">
-      <Text role="cell" tone="neutral" className="mr-0.5">{facet.key}</Text>
-      {facet.values.map(({ value, count }) => {
-        const token = tagToken(facet.key, value)
-        const pressed = tags.includes(token)
-        return (
-          <Tag key={value} asChild interactive size="md" tone={pressed ? "llm" : "neutral"} fill={pressed ? "soft" : "outline"} detail={count}>
-            <button
-              type="button"
-              aria-pressed={pressed}
-              aria-label={t("tagChip", { tag: token, count })}
-              onClick={() => {
-                onToggleTag(token)
-              }}
-            >
-              {value}
-            </button>
-          </Tag>
-        )
-      })}
-    </div>
+    <Tag size="md" tone="llm" fill="soft" className="pr-1">
+      {text}
+      <button
+        type="button"
+        aria-label={t("remove", { tag: text })}
+        onClick={onRemove}
+        className="inline-flex size-4 items-center justify-center rounded-xs opacity-70 outline-none hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <X aria-hidden className="size-3" />
+      </button>
+    </Tag>
   )
 }
 
@@ -52,27 +40,34 @@ export function CaseFilterBar({ facets, tags, query, shown, total, onToggleTag, 
   const t = useTranslations("cases.filter")
   const active = tags.length > 0 || query.trim().length > 0
   return (
-    <section aria-label={t("aria")} className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Input
-          aria-label={t("search")}
-          placeholder={t("search")}
-          value={query}
-          onChange={(event) => {
-            onQueryChange(event.target.value)
+    <section aria-label={t("aria")} className="flex min-w-0 flex-wrap items-center gap-2">
+      <Input
+        aria-label={t("search")}
+        placeholder={t("search")}
+        value={query}
+        onChange={(event) => {
+          onQueryChange(event.target.value)
+        }}
+        className="h-7 w-64"
+      />
+      {facets.length === 0 ? null : <TagFilterMenu facets={facets} tags={tags} onToggleTag={onToggleTag} />}
+      {tags.map((token) => (
+        <FilterChip
+          key={token}
+          token={token}
+          onRemove={() => {
+            onToggleTag(token)
           }}
-          className="h-7 w-64"
         />
-        <Text role="meta" tone="neutral">{t("shown", { shown, total })}</Text>
-        {active ? <Button type="button" size="xs" variant="ghost" onClick={onClear}>{t("clear")}</Button> : null}
-      </div>
-      {facets.length === 0 ? null : (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-          {facets.map((facet) => (
-            <FacetGroup key={facet.key} facet={facet} tags={tags} onToggleTag={onToggleTag} />
-          ))}
-        </div>
-      )}
+      ))}
+      <Text role="meta" tone="neutral" className="ml-1">
+        {t("shown", { shown, total })}
+      </Text>
+      {active ? (
+        <Button type="button" size="xs" variant="ghost" onClick={onClear}>
+          {t("clear")}
+        </Button>
+      ) : null}
     </section>
   )
 }

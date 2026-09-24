@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import { API_BASE } from "@/api/client"
 import { liveChatSessions } from "@/mocks/data/chat"
 import { liveDatasets } from "@/mocks/data/datasets"
+import { liveFlowDetails } from "@/mocks/data/project"
 import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
 
@@ -14,6 +15,7 @@ vi.mock("@/features/chat", () => ({
 type Loaded = { readonly routeId: string; readonly loaderData?: unknown }
 
 const CASES = "/flows/support_case/cases"
+const LAST_STAGE = liveFlowDetails.support_case?.order.at(-1) ?? ""
 const SERIES_ROUTE = "/_project/research/series/$seriesId"
 
 const TAGGED_CASES = [
@@ -52,7 +54,20 @@ const rowOf = (list: HTMLElement, name: string): HTMLElement => {
   return row
 }
 
-const chip = (tag: string): HTMLElement => screen.getByRole("button", { name: new RegExp(`^${tag},`, "u") })
+const selectionBar = (): HTMLElement => screen.getByRole("region", { name: "Selected cases" })
+
+const pickStage = (label: "From stage" | "To stage", node: string): void => {
+  fireEvent.change(within(selectionBar()).getByRole("combobox", { name: label }), { target: { value: node } })
+}
+
+const pickTag = async (key: string, value: string): Promise<void> => {
+  fireEvent.click(screen.getByRole("button", { name: "Filter" }))
+  fireEvent.click(await screen.findByRole("option", { name: new RegExp(`^${key}`, "u") }))
+  fireEvent.click(await screen.findByRole("option", { name: new RegExp(`^${value}`, "u") }))
+  await waitFor(() => {
+    expect(screen.queryByRole("listbox")).toBeNull()
+  })
+}
 
 const loaded = (matches: readonly Loaded[], routeId: string): unknown => matches.find((match) => match.routeId === routeId)?.loaderData
 
@@ -63,14 +78,15 @@ const settled = async (router: { readonly state: { readonly status: string } }):
 }
 
 describe("CasesScreen", () => {
-  it("lists every case with its tags, the expected mark and the node_outputs count", async () => {
+  it("lists every case on one line with its tag values, the expected mark and the node_outputs count", async () => {
     useTaggedCases()
     await renderRoute(CASES)
     const list = await caseList()
     expect(rowNames(list)).toEqual(TAGGED_CASES.map((item) => item.name))
     const first = rowOf(list, "strip_flicker_credit")
-    expect(within(first).getByText("lamp_kind=smart_wifi")).toBeTruthy()
-    expect(within(first).getByText("regression=no")).toBeTruthy()
+    const tags = within(first).getByText("smart_wifi · amazon · no")
+    expect(tags.getAttribute("title")).toBe("lamp_kind=smart_wifi, channel=amazon, regression=no")
+    expect(tags.className).toContain("truncate")
     expect(within(first).getByTitle("Has an expected output").textContent).toBe("✓")
     expect(within(first).getByTitle("No saved node outputs").textContent).toBe("—")
     const second = rowOf(list, "bulb_app_offline_advice")
@@ -80,33 +96,55 @@ describe("CasesScreen", () => {
     expect(screen.getByText("Cases of this flow")).toBeTruthy()
     expect(screen.queryByText("Grouped runs")).toBeNull()
     expect(screen.queryByRole("table")).toBeNull()
+    expect(screen.queryByRole("region", { name: "Selected cases" })).toBeNull()
+    expect(screen.queryByRole("combobox", { name: "From stage" })).toBeNull()
   })
 
-  it("filters by tag chips: any value of one key, every key at once, kept in the URL", async () => {
+  it("filters by tags picked from the Filter menu: any value of one key, every key at once, kept in the URL", async () => {
     useTaggedCases()
     const router = await renderRoute(CASES)
     const list = await caseList()
-    fireEvent.click(chip("channel=storefront"))
+    await pickTag("channel", "storefront")
     await waitFor(() => {
       expect(rowNames(list)).toEqual(["bulb_app_offline_advice"])
     })
     expect(router.state.location.search).toEqual({ tag: ["channel=storefront"] })
-    expect(chip("channel=storefront").getAttribute("aria-pressed")).toBe("true")
-    fireEvent.click(chip("channel=ozon"))
+    expect(screen.getByRole("button", { name: "Remove filter channel: storefront" })).toBeTruthy()
+    await pickTag("channel", "ozon")
     await waitFor(() => {
       expect(rowNames(list)).toEqual(["bulb_app_offline_advice", "lamp_crushed_box_reship"])
     })
-    fireEvent.click(chip("lamp_kind=mains"))
+    await pickTag("lamp_kind", "mains")
     await waitFor(() => {
       expect(rowNames(list)).toEqual(["lamp_crushed_box_reship"])
     })
     expect(screen.getByText("1 of 3 cases")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Remove filter lamp_kind: mains" }))
+    await waitFor(() => {
+      expect(rowNames(list)).toEqual(["bulb_app_offline_advice", "lamp_crushed_box_reship"])
+    })
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" }))
     await waitFor(() => {
       expect(rowNames(list)).toEqual(TAGGED_CASES.map((item) => item.name))
     })
     expect(router.state.location.search).toEqual({})
     await settled(router)
+  })
+
+  it("marks the values already filtered on and goes back to the tag dimensions", async () => {
+    useTaggedCases()
+    await renderRoute(`${CASES}?tag=${encodeURIComponent(JSON.stringify(["regression=yes"]))}`)
+    await caseList()
+    expect(screen.getByRole("button", { name: "Remove filter regression: yes" })).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }))
+    const dimensions = await screen.findByRole("listbox", { name: "Tag dimensions" })
+    expect(within(dimensions).getAllByRole("option").map((option) => option.textContent)).toEqual(["lamp_kind2 values", "channel3 values", "regression2 values"])
+    fireEvent.click(within(dimensions).getByRole("option", { name: /^regression/u }))
+    const values = await screen.findByRole("listbox", { name: "Values of regression" })
+    expect(within(values).getByRole("option", { name: /^yes/u }).getAttribute("data-checked")).toBe("true")
+    expect(within(values).getByRole("option", { name: /^no/u }).getAttribute("data-checked")).toBe("false")
+    fireEvent.click(screen.getByRole("button", { name: "All tags" }))
+    expect(await screen.findByRole("listbox", { name: "Tag dimensions" })).toBeTruthy()
   })
 
   it("opens with the tag filter from the URL and filters by a part of the name", async () => {
@@ -134,6 +172,7 @@ describe("CasesScreen", () => {
       expect(router.state.location.search).toEqual({ case: "strip_flicker_credit" })
     })
     expect(toggle.getAttribute("aria-expanded")).toBe("true")
+    expect(within(within(detail).getByRole("group", { name: "Tags" })).getByText("lamp_kind=smart_wifi")).toBeTruthy()
     expect(within(detail).getAllByRole("heading").map((heading) => heading.textContent)).toEqual([
       "Input",
       "Context",
@@ -176,16 +215,17 @@ describe("CasesScreen", () => {
     expect(within(detail).getAllByRole("link").map((link) => link.textContent)).toContain("reply_look")
   })
 
-  it("runs the selected cases as a look series and opens it", async () => {
+  it("runs the selected cases as a look series from the bar at the bottom and opens it", async () => {
     useTaggedCases()
     const router = await renderRoute(CASES)
     const list = await caseList()
-    const run = screen.getByRole("button", { name: "Run selected (0)" })
-    expect(run).toHaveProperty("disabled", true)
+    expect(screen.queryByRole("button", { name: /^Run \d/u })).toBeNull()
     fireEvent.click(within(list).getByRole("checkbox", { name: "Select lamp_crushed_box_reship" }))
     fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
-    expect(screen.getByText("2 selected")).toBeTruthy()
-    const start = screen.getByRole("button", { name: "Run selected (2)" })
+    const bar = selectionBar()
+    expect(within(bar).getByText("2 selected")).toBeTruthy()
+    expect(within(bar).getByText("Whole flow")).toBeTruthy()
+    const start = within(bar).getByRole("button", { name: "Run 2" })
     expect(start).toHaveProperty("disabled", false)
     fireEvent.click(start)
     await waitFor(() => {
@@ -203,17 +243,59 @@ describe("CasesScreen", () => {
     await settled(router)
   })
 
-  it("selects the shown cases at once and clears the selection", async () => {
+  it("runs the selected cases as a look over a narrower range when each has the saved outputs it needs", async () => {
+    useTaggedCases()
+    const router = await renderRoute(CASES)
+    const list = await caseList()
+    fireEvent.click(within(list).getByRole("checkbox", { name: "Select bulb_app_offline_advice" }))
+    expect(within(selectionBar()).getByRole("combobox", { name: "From stage" })).toHaveProperty("value", "prepare")
+    expect(within(selectionBar()).getByRole("combobox", { name: "To stage" })).toHaveProperty("value", LAST_STAGE)
+    pickStage("From stage", "triage")
+    expect(await within(selectionBar()).findByText("Earlier stages come from node_outputs")).toBeTruthy()
+    const run = within(selectionBar()).getByRole("button", { name: "Run 1" })
+    expect(run).toHaveProperty("disabled", false)
+    fireEvent.click(run)
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(/^\/research\/series\/.+/u)
+    })
+    await waitFor(() => {
+      expect(loaded(router.state.matches, SERIES_ROUTE)).toMatchObject({
+        series: { origin: { kind: "look", cases: ["bulb_app_offline_advice"], range: { from: "triage", to: LAST_STAGE } } },
+      })
+    })
+    expect(await screen.findByText(`stages triage → ${LAST_STAGE}`, { exact: false })).toBeTruthy()
+    await settled(router)
+  })
+
+  it("names in one line the selected cases that block a narrower range and runs it once they are deselected", async () => {
+    useTaggedCases()
+    await renderRoute(CASES)
+    const list = await caseList()
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select the shown cases" }))
+    pickStage("To stage", "triage")
+    pickStage("From stage", "triage")
+    const blocked = await within(selectionBar()).findByText("2 cases lack node_outputs for this start: strip_flicker_credit, lamp_crushed_box_reship")
+    expect(blocked.getAttribute("title")).toBe("strip_flicker_credit ($prepare.out); lamp_crushed_box_reship ($prepare.out)")
+    expect(within(selectionBar()).getByText("Cannot start here")).toBeTruthy()
+    expect(within(selectionBar()).getByRole("button", { name: "Run 3" })).toHaveProperty("disabled", true)
+    fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
+    fireEvent.click(within(list).getByRole("checkbox", { name: "Select lamp_crushed_box_reship" }))
+    expect(await within(selectionBar()).findByText("Earlier stages come from node_outputs")).toBeTruthy()
+    expect(within(selectionBar()).getByRole("button", { name: "Run 1" })).toHaveProperty("disabled", false)
+  })
+
+  it("selects the shown cases at once and clears the selection from the bar", async () => {
     useTaggedCases()
     await renderRoute(`${CASES}?tag=${encodeURIComponent(JSON.stringify(["regression=yes"]))}`)
     const list = await caseList()
     fireEvent.click(screen.getByRole("checkbox", { name: "Select the shown cases" }))
-    expect(screen.getByText("2 selected")).toBeTruthy()
+    expect(within(selectionBar()).getByText("2 selected")).toBeTruthy()
     expect(within(list).getByRole("checkbox", { name: "Select bulb_app_offline_advice" })).toHaveProperty("checked", true)
     expect(screen.getByRole("checkbox", { name: "Deselect the shown cases" })).toHaveProperty("checked", true)
-    expect(screen.getByRole("button", { name: "Run selected (2)" })).toHaveProperty("disabled", false)
-    fireEvent.click(screen.getByRole("button", { name: "Clear selection" }))
-    expect(screen.getByRole("button", { name: "Run selected (0)" })).toHaveProperty("disabled", true)
+    expect(within(selectionBar()).getByRole("button", { name: "Run 2" })).toHaveProperty("disabled", false)
+    fireEvent.click(within(selectionBar()).getByRole("button", { name: "Clear" }))
+    expect(screen.queryByRole("region", { name: "Selected cases" })).toBeNull()
+    expect(within(list).getByRole("checkbox", { name: "Select bulb_app_offline_advice" })).toHaveProperty("checked", false)
   })
 
   it("reports a series that could not start and stays on the cases", async () => {
@@ -225,8 +307,8 @@ describe("CasesScreen", () => {
     const router = await renderRoute(CASES)
     const list = await caseList()
     fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_flicker_credit" }))
-    fireEvent.click(screen.getByRole("button", { name: "Run selected (1)" }))
-    expect((await screen.findByRole("alert")).textContent).toContain("The selected cases could not start")
+    fireEvent.click(within(selectionBar()).getByRole("button", { name: "Run 1" }))
+    expect((await within(selectionBar()).findByRole("alert")).textContent).toContain("The selected cases could not start")
     expect(router.state.location.pathname).toBe(CASES)
   })
 
@@ -234,9 +316,10 @@ describe("CasesScreen", () => {
     const router = await renderRoute(`${CASES}?dataset=planted_defect_replies&case=strip_heat_clean`)
     const list = await caseList()
     expect(screen.getByText("Cases without a flow: experiments run them on an arm, not from here")).toBeTruthy()
-    expect(screen.getByText("Only cases of this flow run from here.")).toBeTruthy()
     fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_heat_clean" }))
-    expect(screen.getByRole("button", { name: "Run selected (1)" })).toHaveProperty("disabled", true)
+    expect(within(selectionBar()).getByText("Only cases of this flow run from here")).toBeTruthy()
+    expect(within(selectionBar()).queryByRole("combobox", { name: "From stage" })).toBeNull()
+    expect(within(selectionBar()).getByRole("button", { name: "Run 1" })).toHaveProperty("disabled", true)
     const detail = screen.getByRole("region", { name: "Case strip_heat_clean" })
     expect(within(detail).queryByRole("heading", { name: "Run this case" })).toBeNull()
     expect(within(detail).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/research/experiments/critique_planted_defects"])
@@ -287,7 +370,7 @@ describe("CasesScreen", () => {
     expect(await screen.findByText("No datasets yet")).toBeTruthy()
     expect(screen.getByRole("button", { name: "Upload CSV" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "Ask the agent to write cases" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "Run selected (0)" })).toHaveProperty("disabled", true)
+    expect(screen.queryByRole("button", { name: /^Run/u })).toBeNull()
     expect(screen.queryByRole("combobox", { name: /Selected dataset/u })).toBeNull()
   })
 })

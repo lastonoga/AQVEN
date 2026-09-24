@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react"
+import { useState } from "react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { SEPARATOR } from "@/lib/format"
 import { Heading } from "./heading"
 import { Marker } from "./marker"
+import { NumberStepper } from "./number-stepper"
 import { PropertyList } from "./property-list"
 import { MetaLine, Rich } from "./rich"
 import { Meter } from "./stat"
@@ -10,6 +12,7 @@ import { Surface } from "./surface"
 import { Tag } from "./tag"
 import { Text } from "./text"
 import { TextBlock } from "./text-block"
+import { Tile, TileNote, TileValue } from "./tile"
 
 describe("Tag", () => {
   it("keeps leading and detail around an asChild element", () => {
@@ -173,5 +176,38 @@ describe("Surface and Marker", () => {
   it("labels a marker as an image", () => {
     render(<Marker shape="end" tone="neutral" label="end of trace" />)
     expect(screen.getByRole("img", { name: "end of trace" }).textContent).toBe("∎")
+  })
+})
+
+describe("Tile", () => {
+  it("names the group by its small label and shows the value large with its trail", () => {
+    render(
+      <Tile label="Cases">
+        <TileValue trail="of 12">12</TileValue>
+        <TileNote tone="warning">below the recommended 52</TileNote>
+      </Tile>,
+    )
+    const tile = screen.getByRole("group", { name: "Cases" })
+    expect(within(tile).getByText("12").className).toContain("text-3xl")
+    expect(within(tile).getByText("of 12")).toBeTruthy()
+    expect(within(tile).getByText("below the recommended 52").getAttribute("data-tone")).toBe("warning")
+  })
+})
+
+function Stepper({ initial }: { readonly initial: string }) {
+  const [value, setValue] = useState(initial)
+  return <NumberStepper label="Repeats" value={value} min={1} max={3} invalid={false} decreaseLabel="Fewer" increaseLabel="More" onChange={setValue} />
+}
+
+describe("NumberStepper", () => {
+  it("steps within its bounds and disables the button at each end", () => {
+    render(<Stepper initial="2" />)
+    const input = screen.getByRole("spinbutton", { name: "Repeats" })
+    fireEvent.click(screen.getByRole("button", { name: "More" }))
+    expect(input).toHaveProperty("value", "3")
+    expect(screen.getByRole("button", { name: "More" })).toHaveProperty("disabled", true)
+    fireEvent.change(input, { target: { value: "1" } })
+    expect(screen.getByRole("button", { name: "Fewer" })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: "More" })).toHaveProperty("disabled", false)
   })
 })

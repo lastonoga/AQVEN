@@ -5,15 +5,19 @@ import { intervalText, marginText, metricName, metricValue, signedValue } from "
 import {
   activeSeries,
   checkLaunch,
+  decisionRules,
   failureModes,
   guardrailSentences,
+  hypothesisText,
   latestBadge,
   launchReason,
   planLaunch,
+  plannedAttempts,
   plannedCases,
   questionSentence,
   shortfallOf,
-  shownRole,
+  spendEstimate,
+  splitShare,
   subjectText,
   tagPairs,
   variantsText,
@@ -158,6 +162,38 @@ describe("the question in plain words", () => {
   })
 })
 
+describe("the decision rule", () => {
+  it("bounds the difference of a non-inferiority question and each guardrail by the direction of the metric", () => {
+    expect(decisionRules(PAIR, METRICS, QUESTION.builtin)).toEqual([
+      { kind: "primary", metric: "critique", op: "atLeast", bound: "−0.05" },
+      { kind: "guardrail", metric: "cost of pass", op: "atMost", bound: "+20%" },
+    ])
+  })
+
+  it("asks a comparison for a gain in the good direction", () => {
+    const higher: ExperimentQuestion = { ...PAIR, kind: "compare", guardrails: [] }
+    expect(decisionRules(higher, METRICS, QUESTION.builtin)).toEqual([{ kind: "primary", metric: "critique", op: "atLeast", bound: "+0.05" }])
+    const lower: ExperimentQuestion = { ...PAIR, kind: "compare", primary: "latency_p95_ms", direction: "lower_is_better", margin: 1500, guardrails: [] }
+    expect(decisionRules(lower, [column("latency_p95_ms", "primary", "ms", 1500)], QUESTION.builtin)).toEqual([
+      { kind: "primary", metric: "latency p95 ms", op: "atMost", bound: "−1.50 s" },
+    ])
+  })
+
+  it("keeps a threshold as its bound and gives a look no verdict", () => {
+    const metric = ids.checkId("label")
+    const threshold: ExperimentQuestion = { kind: "threshold", metric, bound: "below", value: 0.1, margin: 0.02, variant: null }
+    expect(decisionRules(threshold, [column(metric, "primary", "rate", 0.02)], QUESTION.builtin)).toEqual([
+      { kind: "threshold", metric: "label", op: "atMost", value: "0.10", margin: "0.02" },
+    ])
+    expect(decisionRules({ kind: "look" }, [], QUESTION.builtin)).toEqual([{ kind: "look" }])
+  })
+
+  it("states the hypothesis by its description, or by the question when there is none", () => {
+    expect(hypothesisText({ description: "mistral holds up", question: PAIR, metrics: METRICS }, QUESTION)).toBe("mistral holds up")
+    expect(hypothesisText({ description: "", question: PAIR, metrics: METRICS }, QUESTION)).toBe("mistral not worse than gpt on critique by 0.05")
+  })
+})
+
 describe("launch", () => {
   it("explains the recommended number of cases by its reason", () => {
     expect(launchReason(estimate({}), METRICS, REASON)).toBe("wide 12 ±0.12 > 0.05, need 65")
@@ -172,6 +208,12 @@ describe("launch", () => {
     expect(shortfallOf(estimate({}))).toBe("belowAvailable")
     expect(shortfallOf(estimate({ recommended: { cases: 10, repeats: 3, reason: "wide" }, request: { on: "dev", cases: 8, repeats: 3 } }))).toBe("below")
     expect(shortfallOf(estimate({ belowRecommended: false }))).toBeNull()
+  })
+
+  it("keeps where the spend estimate comes from and treats a missing price as no estimate", () => {
+    expect(spendEstimate({ usd: 0.45, usdSource: "history" })).toEqual({ source: "history", usd: "$0.45" })
+    expect(spendEstimate({ usd: 0.45, usdSource: "bound" })).toEqual({ source: "bound", usd: "$0.45" })
+    expect(spendEstimate({ usd: null, usdSource: "prices" })).toEqual({ source: "unknown", usd: "" })
   })
 
   it("accepts whole numbers of cases up to the selection and repeats up to 20", () => {
@@ -191,20 +233,23 @@ describe("launch", () => {
     expect(plannedCases({ ...experiment, plan: { cases: 2, repeats: 1 } }, "dev")).toBe(2)
   })
 
+  it("counts the attempts from the estimate, or from the request while it loads", () => {
+    expect(plannedAttempts(estimate({ attempts: 72 }), { on: "dev", cases: 2, repeats: 1 }, 2)).toBe(72)
+    expect(plannedAttempts(null, { on: "dev", cases: 6, repeats: 3 }, 2)).toBe(36)
+    expect(plannedAttempts(null, null, 2)).toBeNull()
+  })
+
+  it("sizes each split as a share of the cases", () => {
+    expect(splitShare(6, 12)).toBe("50%")
+    expect(splitShare(1, 3)).toBe("33%")
+    expect(splitShare(0, 0)).toBe("0%")
+  })
+
   it("finds the series that is still active", () => {
     const done = seriesSummary({ status: "done" })
     const awaiting = seriesSummary({ id: ids.seriesId("awaiting"), status: "awaiting_approval" })
     expect(activeSeries([done, awaiting])?.id).toBe("awaiting")
     expect(activeSeries([done])).toBeNull()
-  })
-})
-
-describe("variant roles", () => {
-  it("shows no role for the variant of a look and keeps the role elsewhere", () => {
-    expect(shownRole("other", "look")).toBeNull()
-    expect(shownRole("baseline", "noninferior")).toBe("baseline")
-    expect(shownRole("candidate", "threshold")).toBe("candidate")
-    expect(shownRole("other", "compare")).toBe("other")
   })
 })
 

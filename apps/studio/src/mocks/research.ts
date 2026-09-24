@@ -19,6 +19,7 @@ import {
   type Attempt,
   type LaunchBody,
   type LookSeed,
+  type LookStages,
   type SeriesState,
 } from "./data/research"
 
@@ -72,11 +73,17 @@ const textAt = (body: Readonly<Record<string, unknown>>, key: string): string =>
   return typeof value === "string" ? value : ""
 }
 
+const stagesOf = (look: Readonly<Record<string, unknown>>): LookStages | null => {
+  const start = textAt(look, "start_node")
+  const end = textAt(look, "end_node")
+  return start === "" || end === "" ? null : { start, end }
+}
+
 const lookOf = (body: unknown): LookSeed | null => {
   if (!isRecord(body) || !isRecord(body["look"])) return null
   const look = body["look"]
   const names = Array.isArray(look["case_names"]) ? look["case_names"].filter((name): name is string => typeof name === "string") : []
-  return { flow: textAt(look, "flow_id"), dataset: textAt(look, "dataset_id"), cases: names }
+  return { flow: textAt(look, "flow_id"), dataset: textAt(look, "dataset_id"), cases: names, stages: stagesOf(look) }
 }
 
 const byStart = (left: SeriesState, right: SeriesState): number => Date.parse(right.startedAt) - Date.parse(left.startedAt)

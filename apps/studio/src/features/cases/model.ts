@@ -14,24 +14,31 @@ export type TagFacet = { readonly key: string; readonly values: readonly TagValu
 
 export type CaseFilter = { readonly tags: readonly string[]; readonly query: string }
 
-type TagPair = { readonly key: string; readonly value: string }
+export type TagPair = { readonly key: string; readonly value: string }
+
+export type TagSummary = { readonly values: readonly string[]; readonly hidden: number }
 
 const TAG_SEPARATOR = "="
 const NO_TAGS: CaseTags = {}
 
 export const tagToken = (key: string, value: string): string => `${key}${TAG_SEPARATOR}${value}`
 
-const tagPair = (token: string): TagPair | null => {
+export const parseTagToken = (token: string): TagPair | null => {
   const at = token.indexOf(TAG_SEPARATOR)
   if (at <= 0) return null
   return { key: token.slice(0, at), value: token.slice(at + 1) }
 }
 
-export const isTagToken = (token: string): boolean => tagPair(token) !== null
+export const isTagToken = (token: string): boolean => parseTagToken(token) !== null
 
 export const caseTags = (item: ApiDatasetCase): CaseTags => item.tags ?? NO_TAGS
 
 export const tagTokens = (tags: CaseTags): readonly string[] => Object.entries(tags).map(([key, value]) => tagToken(key, value))
+
+export const tagSummary = (tags: CaseTags, limit: number): TagSummary => {
+  const values = Object.values(tags)
+  return { values: values.slice(0, limit), hidden: Math.max(0, values.length - limit) }
+}
 
 export const hasExpected = (item: ApiDatasetCase): boolean => item.expected_output !== undefined && item.expected_output !== null
 
@@ -59,7 +66,7 @@ export const tagFacets = (cases: readonly ApiDatasetCase[]): readonly TagFacet[]
 const groupByKey = (tokens: readonly string[]): ReadonlyMap<string, ReadonlySet<string>> => {
   const groups = new Map<string, Set<string>>()
   tokens.forEach((token) => {
-    const pair = tagPair(token)
+    const pair = parseTagToken(token)
     if (pair === null) return
     const values = groups.get(pair.key) ?? new Set<string>()
     values.add(pair.value)

@@ -1,13 +1,12 @@
-import { Play } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ExperimentDetail, SeriesSummary } from "@/domain"
-import { Actions, Heading, type TagSpec } from "@/components/studio"
-import { joinMeta } from "@/lib/format"
-import { useQuestionCopy } from "./copy"
+import { Heading, type TagSpec } from "@/components/studio"
+import { useQuestionCopy, useSpendText } from "./copy"
 import { Failure } from "./layout"
 import { guardrailSentences, questionSentence } from "./presenters"
+import { RunButton } from "./run-button"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
-import { priceOf, type Launch } from "./use-launch"
+import type { Launch } from "./use-launch"
 
 const LIST_JOIN = "; "
 
@@ -18,25 +17,11 @@ function useLatestTags(latest: SeriesSummary | null): readonly TagSpec[] {
   return [{ children: t(`verdict.${latest.verdict.state}`), tone: VERDICT_TONE[latest.verdict.state], fill: "soft" }]
 }
 
-export function RunButton({ launch }: { readonly launch: Launch }) {
+function HeaderRun({ launch }: { readonly launch: Launch }) {
   const t = useTranslations("research.experiment.question")
-  const price = priceOf(launch.estimate)
-  const { request } = launch
-  return (
-    <Actions
-      actions={[
-        {
-          id: "run",
-          label: price === null ? t("run") : t("runPrice", { price }),
-          variant: "default",
-          icon: Play,
-          disabled: request === null,
-          pending: launch.action.pending("start"),
-          ...(request === null ? {} : { onClick: () => { launch.start(request) } }),
-        },
-      ]}
-    />
-  )
+  const spendText = useSpendText()
+  const { estimate } = launch
+  return <RunButton launch={launch} label={estimate.kind === "ready" ? t("runEstimate", { estimate: spendText(estimate.estimate) }) : t("run")} />
 }
 
 export function ExperimentQuestion({ experiment, latest, launch }: { readonly experiment: ExperimentDetail; readonly latest: SeriesSummary | null; readonly launch: Launch }) {
@@ -54,9 +39,9 @@ export function ExperimentQuestion({ experiment, latest, launch }: { readonly ex
         wrap
         below={[
           guards.length === 0 ? null : <span key="guards">{t("guardrails", { list: guards.join(LIST_JOIN) })}</span>,
-          <span key="about">{joinMeta([experiment.id, experiment.description])}</span>,
+          <span key="about">{experiment.id}</span>,
         ].filter((line) => line !== null)}
-        trailing={<RunButton launch={launch} />}
+        trailing={<HeaderRun launch={launch} />}
       />
       {state.kind === "failed" ? <Failure message={t("launch.failed", { reason: state.message })} /> : null}
     </div>

@@ -82,12 +82,14 @@ describe("SeriesScreen header and verdict", () => {
   it("calls the spend a lower bound when attempts ran on a model without a known price", async () => {
     await renderRoute(seriesPath("splitInconclusive"))
     expect(await screen.findByText("Lower bound: 6 attempts ran on a model without a known price")).toBeTruthy()
+    expect(screen.getByText(/^≥ \$\d+\.\d+ of \$1\.00 cap$/)).toBeTruthy()
   })
 
   it("says nothing about a lower bound when every attempt was priced", async () => {
     await renderRoute(seriesPath("noninferiorHoldout"))
     expect(await screen.findByText("36 of 36 attempts")).toBeTruthy()
     expect(screen.queryByText(/Lower bound/)).toBeNull()
+    expect(screen.queryByText(/^≥ /)).toBeNull()
   })
 
   it("states the verdict with the differences behind it and where the finding was written", async () => {
@@ -335,13 +337,13 @@ describe("SeriesScreen waits", () => {
     expect(screen.getAllByText("1 waiting")).toHaveLength(2)
   })
 
-  it("tags no role on the variant of a look in the matrix and the stability table", async () => {
+  it("tags the variant of a look as tested, like the experiment page, in the matrix and the stability table", async () => {
     await renderRoute(seriesPath("lookWaiting"))
     const matrix = await screen.findByRole("table", { name: "Metrics by variant" })
     const [row] = within(matrix).getAllByRole("row").slice(1)
-    expect(within(row ?? document.body).getAllByRole("cell")[0]?.textContent).toBe("current")
+    expect(within(row ?? document.body).getAllByRole("cell")[0]?.textContent).toBe("currenttested")
     const stability = screen.getByRole("table", { name: "Stability by variant" })
-    expect(within(within(stability).getAllByRole("row")[1] ?? document.body).getAllByRole("cell")[0]?.textContent).toBe("current")
+    expect(within(within(stability).getAllByRole("row")[1] ?? document.body).getAllByRole("cell")[0]?.textContent).toBe("currenttested")
     expect(screen.queryByText("other")).toBeNull()
   })
 

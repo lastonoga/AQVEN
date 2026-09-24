@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import type { ExperimentDetail, LaunchEstimate, LaunchRequest } from "@/domain"
-import { usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { availableOn, checkLaunch, draftOf, plannedCases, type LaunchCheck, type LaunchDraft } from "./presenters"
 import { useLaunchEstimate, type EstimateState } from "./use-launch-estimate"
@@ -16,11 +15,6 @@ export type Launch = {
   readonly action: ResearchAction
   readonly update: (patch: Partial<LaunchDraft>) => void
   readonly start: (request: LaunchRequest) => void
-}
-
-export const priceOf = (state: EstimateState): string | null => {
-  if (state.kind !== "ready" || state.estimate.usd === null) return null
-  return usd(state.estimate.usd)
 }
 
 export const freshRequest = (experiment: Pick<ExperimentDetail, "cases" | "plan">, request: LaunchRequest | null): LaunchRequest | null => {
