@@ -100,3 +100,46 @@ def test_failed_node_and_run_print_the_hint_under_the_error() -> None:
         *DETAIL_LINES,
     ]
     assert text_line(run).splitlines()[1:] == list(DETAIL_LINES)
+
+
+def test_a_rejected_output_type_prints_the_provider_status_and_code() -> None:
+    details = ModelErrorDetails(
+        agent="looker",
+        model="openrouter:google/gemini-2.5-flash-lite",
+        output_mode="tool",
+        status_code=400,
+        provider="Google AI Studio",
+        provider_code="INVALID_ARGUMENT",
+        provider_response='{"message": "Provider returned error"}',
+    )
+    error = RunError(
+        code="OUTPUT_SCHEMA_REJECTED",
+        message="openrouter:google/gemini-2.5-flash-lite rejected the output type LookOut of step look",
+        address=ADDRESS,
+        hint="LookOut is too complex for the structured output of this model",
+        details=details,
+    )
+    finished = NodeFinished(
+        seq=4,
+        at=AT,
+        run_id=RUN,
+        address=ADDRESS,
+        status="failed",
+        attempt=1,
+        output_ref=None,
+        cost_usd=Decimal(0),
+        tokens_in=0,
+        tokens_out=0,
+        latency_ms=9,
+        model=None,
+        cache_hit=False,
+        degraded=False,
+        checks_failed=0,
+        error=error,
+    )
+
+    assert text_line(finished).splitlines()[1:] == [
+        "    hint: LookOut is too complex for the structured output of this model",
+        "    agent: looker, model: openrouter:google/gemini-2.5-flash-lite, output mode: tool, "
+        "provider: Google AI Studio, HTTP status: 400, provider code: INVALID_ARGUMENT",
+    ]

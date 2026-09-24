@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
-import type { ApiExecutionAddress, ApiRunError, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
-import { Heading, RUN_STATUS_TONE, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
+import type { ApiExecutionAddress, ApiRunError, ApiRunEvent, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
+import { Heading, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
 import { joinMeta, runRef } from "@/lib/format"
@@ -10,8 +10,12 @@ import { ROUTE_PATH } from "@/lib/routes"
 import { isBinaryMedia, StageTimeline, valueCell, type RowKey, type TraceRun, type ValueCell } from "@/features/trace"
 import type { BlobText } from "@/features/call-sheet"
 import { WaitsInline } from "@/features/review"
+import { useStepLabel } from "./error-copy"
+import { ErrorPanel } from "./error-panel"
 import type { ExpectedCase } from "./expected"
 import { ExpectedVsActual } from "./expected-view"
+import { FailedStepsBanner } from "./failed-steps-banner"
+import { failedSteps, isListedFailure, type FailedStep } from "./failed-steps"
 import {
   costText,
   doneCount,
@@ -21,6 +25,7 @@ import {
   tokensText,
   totalCount,
 } from "./presenters"
+import { runStatusLook, useRunStatusText } from "./run-status"
 
 export type RunDetailProps = {
   readonly snapshot: ApiRunSnapshot
@@ -70,18 +75,19 @@ function ArmLine({ arm }: { readonly arm: ArmFlow }) {
 export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps) {
   const t = useTranslations("runs.run")
   const liveLabel = useTranslations("runs.live")("badge")
-  const status = useTranslations("domain.runStatus")
+  const statusText = useRunStatusText()
   const mode = useTranslations("domain.runMode")
   const origin = useTranslations("domain.specOrigin")
   const relative = useRelativeTime("long")
   const lineage = snapshot.lineage
   const seriesId = snapshot.series_id ?? null
+  const look = runStatusLook(snapshot.status, snapshot.node_counts)
   return (
     <Heading
       size="page"
       title={t("title", { ref: runRef(snapshot.run_id) })}
       tags={[
-        { children: status(snapshot.status), tone: RUN_STATUS_TONE[snapshot.status] },
+        { children: statusText(look), tone: look.tone },
         ...(live ? [liveTag(liveLabel)] : []),
         { children: mode(snapshot.mode), tone: "neutral", fill: "outline" },
       ]}
@@ -169,20 +175,9 @@ function RunWaits({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
 
 function RunError({ error }: { readonly error: ApiRunError }) {
   const t = useTranslations("runs.outcome")
-  return (
-    <Surface variant="well" padding="md" className="mb-3.5">
-      <Heading
-        size="block"
-        title={t("error")}
-        tags={[{ children: error.code, tone: "destructive" }]}
-        below={[
-          error.message,
-          error.address === null ? null : t("errorAt", { node: error.address.node_id }),
-          typeof error.hint === "string" ? t("hintLine", { hint: error.hint }) : null,
-        ].filter((line) => line !== null)}
-      />
-    </Surface>
-  )
+  const stepLabel = useStepLabel()
+  const where = error.address === null ? null : t("errorAt", { node: stepLabel(error.address) })
+  return <ErrorPanel error={error} scope="run" where={where} className="mb-3.5" />
 }
 
 type RunOutputProps = {
@@ -215,12 +210,26 @@ function RunOutput({ output, blobs, expected }: RunOutputProps) {
   )
 }
 
-export function RunOverview({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
+export type RunOverviewProps = {
+  readonly snapshot: ApiRunSnapshot
+  readonly events: readonly ApiRunEvent[]
+  readonly onOpenCall: (address: ApiExecutionAddress, row: RowKey) => void
+}
+
+const OPEN_STEP_ROW: RowKey = "call"
+
+const unlistedError = (error: ApiRunError | null, steps: readonly FailedStep[]): ApiRunError | null =>
+  error === null || isListedFailure(error, steps) ? null : error
+
+export function RunOverview({ snapshot, events, onOpenCall }: RunOverviewProps) {
+  const steps = failedSteps(events)
+  const runError = unlistedError(snapshot.error, steps)
   return (
     <div className="min-w-0">
       <RunMetrics snapshot={snapshot} />
       <RunWaits snapshot={snapshot} />
-      {snapshot.error === null ? null : <RunError error={snapshot.error} />}
+      {runError === null ? null : <RunError error={runError} />}
+      <FailedStepsBanner steps={steps} status={snapshot.status} onOpen={(address) => { onOpenCall(address, OPEN_STEP_ROW) }} />
     </div>
   )
 }

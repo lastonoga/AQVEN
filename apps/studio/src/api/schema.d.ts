@@ -1822,6 +1822,8 @@ export interface components {
             truncated: boolean;
         };
         /** @enum {string} */
+        ChatDelivery: "next_step" | "after_turn";
+        /** @enum {string} */
         ChatEffort: "low" | "medium" | "high" | "xhigh" | "max";
         /** @enum {string} */
         ChatErrorCode: "auth_required" | "rate_limited" | "billing" | "backend_unavailable" | "invalid_request" | "internal";
@@ -1849,7 +1851,7 @@ export interface components {
             /** Retryable */
             retryable: boolean;
         };
-        ChatEvent: components["schemas"]["ChatTurnStarted"] | components["schemas"]["ChatTextDelta"] | components["schemas"]["ChatReasoningDelta"] | components["schemas"]["ChatToolCallStarted"] | components["schemas"]["ChatToolCallArgsDelta"] | components["schemas"]["ChatToolCallFinished"] | components["schemas"]["ChatFileEdit"] | components["schemas"]["ChatCommand"] | components["schemas"]["ChatApprovalRequested"] | components["schemas"]["ChatApprovalResolved"] | components["schemas"]["ChatStatus"] | components["schemas"]["ChatUsageReported"] | components["schemas"]["ChatErrorRaised"] | components["schemas"]["ChatTurnFinished"];
+        ChatEvent: components["schemas"]["ChatTurnStarted"] | components["schemas"]["ChatMessageQueued"] | components["schemas"]["ChatMessageDelivered"] | components["schemas"]["ChatTextDelta"] | components["schemas"]["ChatReasoningDelta"] | components["schemas"]["ChatToolCallStarted"] | components["schemas"]["ChatToolCallArgsDelta"] | components["schemas"]["ChatToolCallFinished"] | components["schemas"]["ChatFileEdit"] | components["schemas"]["ChatCommand"] | components["schemas"]["ChatApprovalRequested"] | components["schemas"]["ChatApprovalResolved"] | components["schemas"]["ChatStatus"] | components["schemas"]["ChatUsageReported"] | components["schemas"]["ChatErrorRaised"] | components["schemas"]["ChatTurnFinished"];
         /** @enum {string} */
         ChatFileChange: "added" | "modified" | "deleted";
         /** ChatFileEdit */
@@ -1877,6 +1879,51 @@ export interface components {
             change: components["schemas"]["ChatFileChange"];
             /** Diff */
             diff: string;
+        };
+        /** ChatMessageDelivered */
+        ChatMessageDelivered: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Session Id */
+            session_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "chat_message_delivered";
+            /** Client Op Id */
+            client_op_id: string;
+        };
+        /** ChatMessageQueued */
+        ChatMessageQueued: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Session Id */
+            session_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "chat_message_queued";
+            /** Client Op Id */
+            client_op_id: string;
+            /** Text */
+            text: string;
+            delivery: components["schemas"]["ChatDelivery"];
         };
         /** ChatMessageRequest */
         ChatMessageRequest: {
@@ -4738,6 +4785,15 @@ export interface components {
              * @default []
              */
             violations: components["schemas"]["Problem"][];
+            /** Status Code */
+            status_code?: number | null;
+            /** Provider */
+            provider?: string | null;
+            /** Provider Code */
+            provider_code?: string | null;
+            /** Provider Response */
+            provider_response?: string | null;
+            output_shape?: components["schemas"]["OutputShape"] | null;
         };
         /**
          * ModelFamily
@@ -5373,6 +5429,24 @@ export interface components {
         OutputModeSource: "declared" | "profile" | "known_model" | "fallback_models";
         /** @enum {string} */
         OutputPartKind: "text" | "reasoning" | "tool_call_args" | "output_json";
+        /** OutputShape */
+        OutputShape: {
+            /**
+             * Depth
+             * @default 0
+             */
+            depth: number;
+            /** Deepest Path */
+            deepest_path?: string | null;
+            /** Max Items */
+            max_items?: number | null;
+            /** Max Items Path */
+            max_items_path?: string | null;
+            /** Enum Size */
+            enum_size?: number | null;
+            /** Enum Path */
+            enum_path?: string | null;
+        };
         /** Page[ChatSession] */
         Page_ChatSession_: {
             /** Items */
@@ -7261,12 +7335,15 @@ export type SchemaChatApprovalResolved = components['schemas']['ChatApprovalReso
 export type SchemaChatBackendChoice = components['schemas']['ChatBackendChoice'];
 export type SchemaChatBackendWrite = components['schemas']['ChatBackendWrite'];
 export type SchemaChatCommand = components['schemas']['ChatCommand'];
+export type SchemaChatDelivery = components['schemas']['ChatDelivery'];
 export type SchemaChatEffort = components['schemas']['ChatEffort'];
 export type SchemaChatErrorCode = components['schemas']['ChatErrorCode'];
 export type SchemaChatErrorRaised = components['schemas']['ChatErrorRaised'];
 export type SchemaChatEvent = components['schemas']['ChatEvent'];
 export type SchemaChatFileChange = components['schemas']['ChatFileChange'];
 export type SchemaChatFileEdit = components['schemas']['ChatFileEdit'];
+export type SchemaChatMessageDelivered = components['schemas']['ChatMessageDelivered'];
+export type SchemaChatMessageQueued = components['schemas']['ChatMessageQueued'];
 export type SchemaChatMessageRequest = components['schemas']['ChatMessageRequest'];
 export type SchemaChatModel = components['schemas']['ChatModel'];
 export type SchemaChatModelCatalog = components['schemas']['ChatModelCatalog'];
@@ -7517,6 +7594,7 @@ export type SchemaOutputMode = components['schemas']['OutputMode'];
 export type SchemaOutputModeSetting = components['schemas']['OutputModeSetting'];
 export type SchemaOutputModeSource = components['schemas']['OutputModeSource'];
 export type SchemaOutputPartKind = components['schemas']['OutputPartKind'];
+export type SchemaOutputShape = components['schemas']['OutputShape'];
 export type SchemaPageChatSession = components['schemas']['Page_ChatSession_'];
 export type SchemaPageDatasetCase = components['schemas']['Page_DatasetCase_'];
 export type SchemaPageDatasetSummary = components['schemas']['Page_DatasetSummary_'];

@@ -5,9 +5,10 @@ import { useTranslations } from "use-intl"
 import { Dot, Surface, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { AssistantMessage } from "./assistant-message"
-import type { ChatFailure, ChatState } from "./chat-events"
+import type { ChatFailure, ChatState, QueuedMessage } from "./chat-events"
 import { Composer } from "./composer"
 import { Hint } from "./hint"
+import { QueuedMessages } from "./queued-messages"
 import { useThinkingNow } from "./reasoning-context"
 import { UserMessage } from "./user-message"
 
@@ -63,12 +64,19 @@ function ThreadFailure({ failure }: { readonly failure: ChatFailure | null }) {
   )
 }
 
-export function Thread({ failure, state }: { readonly failure: ChatFailure | null; readonly state: ChatState }) {
+export type ThreadProps = {
+  readonly failure: ChatFailure | null
+  readonly state: ChatState
+  readonly queued: readonly QueuedMessage[]
+}
+
+export function Thread({ failure, state, queued }: ThreadProps) {
   return (
     <ThreadPrimitive.Root className="flex min-h-0 flex-1 flex-col">
       <ThreadPrimitive.Viewport className="flex min-h-0 flex-1 flex-col overflow-y-auto scroll-smooth">
         <div className="flex flex-col gap-4 px-3 pt-3.5 pb-4">
           <ThreadPrimitive.Messages>{({ message }) => MESSAGE_VIEW[message.role]}</ThreadPrimitive.Messages>
+          <QueuedMessages queued={queued} />
         </div>
         <Surface variant="plain" asChild>
           <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto">

@@ -30,6 +30,7 @@ type ChatErrorCode = Literal[
     "internal",
 ]
 type ChatStopReason = Literal["end_turn", "interrupted", "max_turns", "error"]
+type ChatDelivery = Literal["next_step", "after_turn"]
 type LoginState = Literal["logged_in", "logged_out", "unknown"]
 type LoginMethod = Literal["subscription", "api_key"]
 
@@ -126,6 +127,18 @@ class ChatTurnStarted(ChatEventBase):
     text: str
     backend: AgentBackendKind = "claude"
     model: str | None = None
+
+
+class ChatMessageQueued(ChatEventBase):
+    type: Literal["chat_message_queued"] = "chat_message_queued"
+    client_op_id: ClientOpId
+    text: str
+    delivery: ChatDelivery
+
+
+class ChatMessageDelivered(ChatEventBase):
+    type: Literal["chat_message_delivered"] = "chat_message_delivered"
+    client_op_id: ClientOpId
 
 
 class ChatTextDelta(ChatEventBase):
@@ -228,6 +241,8 @@ class ChatTurnFinished(ChatEventBase):
 
 type ChatEvent = Annotated[
     ChatTurnStarted
+    | ChatMessageQueued
+    | ChatMessageDelivered
     | ChatTextDelta
     | ChatReasoningDelta
     | ChatToolCallStarted
@@ -246,6 +261,8 @@ type ChatEvent = Annotated[
 
 type ChatEventType = Literal[
     "chat_turn_started",
+    "chat_message_queued",
+    "chat_message_delivered",
     "chat_text_delta",
     "chat_reasoning_delta",
     "chat_tool_call_started",

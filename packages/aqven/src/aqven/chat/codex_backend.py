@@ -169,10 +169,7 @@ class CodexAgentBackend:
         known = self._runtime.journal.turn_of_operation(session_id, message.client_op_id)
         if known is not None:
             return known
-        runner = self._runner(stored)
-        if runner.busy:
-            raise ChatFailure("CHAT_STATE_CONFLICT", f"chat session {session_id} is already running a turn")
-        return runner.begin_turn(message.client_op_id, message.text)
+        return await self._runner(stored).send(message.client_op_id, message.text)
 
     def events(self, session_id: ChatSessionId, after_seq: int = 0) -> AsyncIterator[ChatEvent]:
         self._require(session_id)

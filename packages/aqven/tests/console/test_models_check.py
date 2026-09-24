@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from io import StringIO
@@ -14,8 +15,10 @@ from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
 
 from aqven.cli import main
 from aqven.console.command import OutputFormat
-from aqven.console.models import ModelsCheckRequest, check_models
+from aqven.console.models import ModelsCheckRequest, check_models, project_models
+from aqven.console.project_env import load_project_env, project_env_file
 from aqven.engine.llm import OUTPUT_TOOL_NAME
+from aqven.loader import load_project
 from aqven.runtime.address import JsonObject
 from aqven.testing import copy_project
 from aqven_llm import ProviderModelFactory
@@ -25,6 +28,7 @@ CHEAP: Final = "shared/cheap.yaml"
 QWEN: Final = "openrouter:qwen/qwen3.8-max-0902"
 GPT_OSS: Final = "openrouter:openai/gpt-oss-20b"
 LLAMA: Final = "together:meta-llama/Llama-3.3-70B-Instruct-Turbo"
+OPENROUTER_KEY: Final = "OPENROUTER_API_KEY"
 ANSWER: Final = '{"label": "refund", "rating": 4}'
 OPENROUTER_PROVIDER: Final = """- id: "openrouter"
   api_key: "ref:env/OPENROUTER_API_KEY"
@@ -203,3 +207,44 @@ def test_provider_options_must_be_valid_json(shop: Path, capsys: pytest.CaptureF
     assert main(["models", "check", "cheap", "--project", str(shop), "--provider-options", "not json"]) == 1
 
     assert "not valid JSON" in capsys.readouterr().err
+
+
+def test_the_project_env_key_replaces_an_empty_one_in_the_environment(
+    shop: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(OPENROUTER_KEY, "")
+    project_env_file(shop).write_text(f"{OPENROUTER_KEY}=sk-or-from-file\n", encoding="utf-8")
+    loaded = load_project(shop).project
+    assert loaded is not None
+
+    load_project_env(shop)
+    model = asyncio.run(project_models(loaded).build(QWEN))
+
+    assert model.model_name == QWEN.partition(":")[2]
+
+
+def test_live_check_says_the_key_variable_is_empty_when_the_project_env_lacks_it_too(
+    shop: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv(OPENROUTER_KEY, "")
+
+    assert check_models(request(shop, "cheap", live=True), out=StringIO()) == 1
+
+    assert capsys.readouterr().err == (
+        "aqven models check: no API key for provider 'openrouter': set OPENROUTER_API_KEY in the project .env file "
+        "or in the environment; OPENROUTER_API_KEY is set to an empty string in the environment, which counts as "
+        f"unset, and {project_env_file(shop).as_posix()} has no value for it\n"
+    )
+
+
+def test_live_check_without_the_key_anywhere_names_the_variable_to_set(
+    shop: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv(OPENROUTER_KEY, raising=False)
+
+    assert check_models(request(shop, "cheap", live=True), out=StringIO()) == 1
+
+    assert capsys.readouterr().err == (
+        "aqven models check: no API key for provider 'openrouter': set OPENROUTER_API_KEY in the project .env file "
+        "or in the environment\n"
+    )

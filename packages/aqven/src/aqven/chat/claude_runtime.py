@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterable, AsyncIterator, Callable
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -11,12 +11,13 @@ from aqven.chat.claude_cli import LoginProbe
 from aqven.chat.claude_options import ClaudeOptionsFactory
 from aqven.chat.feed import ChatSignals
 from aqven.chat.journal import ChatJournal, Clock, IdFactory
+from aqven.runtime.address import JsonObject
 
 
 class ClaudeClient(Protocol):
     async def connect(self) -> None: ...
 
-    async def query(self, prompt: str) -> None: ...
+    async def query(self, prompt: str | AsyncIterable[JsonObject]) -> None: ...
 
     def receive_messages(self) -> AsyncIterator[Message]: ...
 

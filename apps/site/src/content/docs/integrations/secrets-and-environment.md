@@ -23,8 +23,9 @@ secrets](/engine/secrets/) is where you confirm it, see every secret the project
 - Set the value in `.env`: one line, `NAME=the-real-value`, no quotes needed. Or export it in the shell
   instead, `export NAME=the-real-value`, if you'd rather not keep it in a file at all — a project reads
   both.
-- When both are set, the shell environment wins. `.env` only fills in names the shell doesn't already have,
-  so exporting a variable before you run anything overrides whatever `.env` says for that same name.
+- When both are set, the shell environment wins. `.env` fills in names the shell doesn't have or has set to
+  an empty string (an empty value counts as unset), so exporting a non-empty variable before you run anything
+  overrides whatever `.env` says for that same name.
 - `.env.example` is a snapshot from when the project was created — it doesn't grow automatically as you add
   tools or MCP servers that declare their own secrets later. Add the new variable's name to it yourself, so
   a teammate cloning the project knows it's expected, then set the real value the same way.

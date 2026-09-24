@@ -329,7 +329,9 @@ NewType creates simple unique types with almost zero runtime overhead.
 
 ## load_project_env
 
-`def load_project_env(root: 'Path') -> 'bool'`
+`def load_project_env(root: 'Path', environ: 'MutableMapping[str, str] | None' = None) -> 'bool'`
+
+Load the project `.env` file into the environment of the process.
 
 ## local_app_lifespan
 

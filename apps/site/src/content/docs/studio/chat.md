@@ -42,9 +42,16 @@ from a terminal, while watching every command, file edit, and tool call as it ha
   current approval mode requires your decision before a command runs or a file gets written, the tool's
   card grows a bar with **Allow** and **Deny** buttons and a short line saying what it's asking
   permission for. Nothing happens until you answer.
-- **Interrupt a running turn** by clicking the composer's button while the agent is working — it
-  replaces the send button for as long as a turn is in progress, and clicking it stops the agent where it
-  is.
+- **Keep writing while the agent works.** The text box and **Send** stay available during a turn: press
+  Enter or click Send, and the message shows up at the bottom of the thread, marked **Queued — the agent
+  reads it at its next step**. The agent picks it up as soon as the command or tool call it's running
+  finishes, and from that point the message sits in the conversation like any other you wrote. If the
+  agent was already writing its final answer, it reads your message right after that answer ends, as a new
+  turn. A message marked **Queued — sent after this turn** waits for the current turn to end and then
+  starts the next one: Codex does this when it can't take new input yet, for example in the first moment
+  of a turn.
+- **Stop a running turn** with the square button next to Send. It stops the agent where it is. Messages
+  you queued aren't dropped — the agent reads them next, in a new turn.
 - The **Add context** button next to the composer and each message's **more actions** (`⋯`) button don't
   do anything yet — they're placeholders reserved for later.
 

@@ -18,6 +18,15 @@ from aqven.runtime.vocabulary import (
 from aqven.spec import MediaValue, NodeKind, OnFail, PromptLevel, TypeId
 
 
+class OutputShape(ResourceModel):
+    depth: Annotated[int, Field(ge=0)] = 0
+    deepest_path: str | None = None
+    max_items: Annotated[int, Field(ge=0)] | None = None
+    max_items_path: str | None = None
+    enum_size: Annotated[int, Field(ge=0)] | None = None
+    enum_path: str | None = None
+
+
 class ModelErrorDetails(ResourceModel):
     agent: str | None = None
     model: str | None = None
@@ -25,6 +34,11 @@ class ModelErrorDetails(ResourceModel):
     attempt: Annotated[int, Field(ge=1)] | None = None
     raw_excerpt: str | None = None
     violations: tuple[Problem, ...] = ()
+    status_code: Annotated[int, Field(ge=100, le=599)] | None = None
+    provider: str | None = None
+    provider_code: str | None = None
+    provider_response: str | None = None
+    output_shape: OutputShape | None = None
 
 
 class RunError(ResourceModel):

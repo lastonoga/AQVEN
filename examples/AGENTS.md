@@ -80,6 +80,10 @@ tests/                                 offline tests of the example, at the proj
    asking it to place literal tokens at each position and checking they came back exactly where asked, not what the
    provider's docs claim. It never stops on a transient provider hiccup — only a genuine wrong-shape answer counts
    as the limit — but every call is still billed and it needs `--live`, there is no free mode. Both commands also take `--provider-options '<json>'`, merged into the request body — run the same target with and without it to find out whether a provider-level setting like OpenRouter's `{"provider": {"require_parameters": true}}` actually changes what a model can do, instead of assuming it does.
+   A step that fails with `OUTPUT_SCHEMA_REJECTED` never reached the model: the provider refused its output type as
+   too complex. The error's hint names the deepest nesting, the largest `maxItems` and the largest enum of that type.
+   Lower them, pin another `output.mode`, or add a `fallback_models` entry from another model family; a retry to the
+   same model gets the same refusal.
 7. API keys live in `lumen/.env`, which is gitignored; variables of the process environment take
    precedence. You can read and edit `.env` directly. Before adding or changing a key, check the
    provider's own documentation for its exact variable name and format instead of guessing one. Never put
@@ -355,10 +359,10 @@ report the spend of every round.
 ### Reading a series
 
 - A failed attempt is either a result or noise. `schema_invalid` (`MODEL_SCHEMA_MISMATCH`, `MODEL_INVALID_JSON`,
-  `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_RETRIES_EXHAUSTED`), `model_fail` (a run-time check failed, the output was
-  truncated) and `refusal` are counted: the attempt fails `success_rate` and every binary check. `provider_error`,
-  `timeout`, `provider_key_missing`, `INTERNAL` and the like are infrastructure errors: not counted, and above 5% of
-  the attempts the series is `invalid`.
+  `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_RETRIES_EXHAUSTED`, `OUTPUT_SCHEMA_REJECTED`), `model_fail` (a run-time check
+  failed, the output was truncated) and `refusal` are counted: the attempt fails `success_rate` and every binary
+  check. `provider_error`, `timeout`, `MODEL_STREAM_STALLED`, `provider_key_missing`, `INTERNAL` and the like are
+  infrastructure errors: not counted, and above 5% of the attempts the series is `invalid`.
 - A counted failure is the engine working: it refuses invalid output instead of passing it on. The gemini agent
   (`gemini-2.5-flash-lite`, `output.retries: 2`) on `support_case.triage` broke the `maxLength: 200` of an
   observation three times in a row, the run ended `MODEL_RETRIES_EXHAUSTED`, and the series counted it against

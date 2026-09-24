@@ -80,5 +80,6 @@
   "stage": {
     "calls": "{count, plural, =0 {single call} one {# call} other {# calls}}",
     "pending": "not started"
-  }
+  },
+  "failedItems": "{failed} of {total} failed"
 }

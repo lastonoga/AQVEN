@@ -122,8 +122,8 @@ Every attempt ends in one of these outcomes, and only some of them count:
 | Outcome | Examples | Counts toward the metrics |
 |---|---|---|
 | passed | the run completed and every check passed | yes |
-| failed | a check failed; the model's output broke the output type even after its retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`, invalid JSON); a refusal; a truncated answer | yes, as a failure |
-| infrastructure error | a missing provider key, a provider error, a timeout, an unsupported model feature, broken code | no |
+| failed | a check failed; the model's output broke the output type even after its retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`, invalid JSON); the provider refused the output type as too complex for the model (`OUTPUT_SCHEMA_REJECTED`); a refusal; a truncated answer | yes, as a failure |
+| infrastructure error | a missing provider key, a provider error, a timeout, a model that stopped streaming its answer (`MODEL_STREAM_STALLED`), an unsupported model feature, broken code | no |
 
 An output the engine refuses is the model's failure, not bad luck. In one series on the showcase,
 `gemini-2.5-flash-lite` on the `triage` step broke the 200-character limit of an observation's `value`

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "use-intl"
-import { Dot, EXECUTION_STATUS_TONE, Text, type Tone } from "@/components/studio"
+import { Dot, Text, type Tone } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { TraceRun } from "@/features/trace"
+import { stageFailedBelow, stageTone, type StageRun, type TraceRun } from "@/features/trace"
 import { PresentationModeSwitch } from "./presentation-state"
 
 type NavNode = {
@@ -27,6 +27,17 @@ const SCROLL_OFFSET = 64
 const URL_UPDATE_DELAY = 120
 const PROGRAMMATIC_SCROLL_PAUSE = 400
 
+type StatusCopy = {
+  readonly status: (status: StageRun["status"]) => string
+  readonly failedInside: (status: string, count: number) => string
+}
+
+const stageStatusText = (stage: StageRun, copy: StatusCopy): string => {
+  const failed = stageFailedBelow(stage)
+  const status = copy.status(stage.status)
+  return failed === 0 ? status : copy.failedInside(status, failed)
+}
+
 const scrollToNode = (node: NavNode): void => {
   document.getElementById(node.anchor)?.scrollIntoView({ block: "start", behavior: "auto" })
 }
@@ -35,13 +46,17 @@ export function RunNodeNavigator({ trace, focusedStage, onFocusStage, stepAction
   const t = useTranslations("runs.navigation")
   const status = useTranslations("domain.executionStatus")
   const pending = useTranslations("runs.execution")("pending")
+  const copy: StatusCopy = {
+    status: (value) => status(value),
+    failedInside: (value, count) => t("failedInside", { status: value, count }),
+  }
   const nodes: readonly NavNode[] = [
     ...trace.stages.map((stage) => ({
       id: stage.id,
       anchor: `stage-${stage.id}`,
       name: stage.nodeId,
-      status: status(stage.status),
-      tone: EXECUTION_STATUS_TONE[stage.status],
+      status: stageStatusText(stage, copy),
+      tone: stageTone(stage),
     })),
     ...trace.pending.map((nodeId) => ({
       id: `pending-${nodeId}`,

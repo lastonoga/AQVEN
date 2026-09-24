@@ -27,6 +27,9 @@ def _explanation(hint: str | None, details: ModelErrorDetails | None) -> Iterato
             ("model", details.model),
             ("output mode", details.output_mode),
             ("attempt", details.attempt),
+            ("provider", details.provider),
+            ("HTTP status", details.status_code),
+            ("provider code", details.provider_code),
         )
         if value is not None
     ]

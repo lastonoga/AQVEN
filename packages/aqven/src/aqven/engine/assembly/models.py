@@ -51,6 +51,16 @@ REPLAY_MODE: Final = "replay"
 FAULT_STATUS: Final = 503
 FAULT_BODY: Final = "aqven provider fault injected by the run options"
 MEDIA_OUTPUTS: Final[Mapping[bool, MediaOutput | None]] = {True: MediaOutput(image=True), False: None}
+PROJECT_DOTENV: Final = "the project .env"
+EMPTY_KEY_NOTE: Final = (
+    "{env_var} is set to an empty string in the environment, which counts as unset, and {dotenv} has no value for it"
+)
+
+
+def explain_empty_key(message: str, env_var: str | None, environ: Mapping[str, str], dotenv: str) -> str:
+    if env_var is None or environ.get(env_var) != "":
+        return message
+    return f"{message}; {EMPTY_KEY_NOTE.format(env_var=env_var, dotenv=dotenv)}"
 
 
 class ModelFactories(Protocol):
@@ -147,7 +157,8 @@ class ProviderKeys:
             return REPLAY_API_KEY
         named = needed.env_var or f"the variable of the api_key ref of provider {provider} in aqven.yaml"
         message = f"no API key for provider {provider} ({model}): set {named} in the project .env or the environment"
-        raise LlmNodeError(LlmFailureCode.PROVIDER_KEY_MISSING, message)
+        explained = explain_empty_key(message, needed.env_var, self.environ, PROJECT_DOTENV)
+        raise LlmNodeError(LlmFailureCode.PROVIDER_KEY_MISSING, explained)
 
     async def _resolved(self, model: str, env_var: str | None) -> SecretStr | None:
         if self.settings is None:

@@ -8,6 +8,7 @@ export type ChatState = EventOf<"chat_status">["state"]
 export type ChatToolStatus = EventOf<"chat_tool_call_finished">["status"]
 export type ChatFileChange = EventOf<"chat_file_edit">["change"]
 export type ChatErrorCode = EventOf<"chat_error">["code"]
+export type ChatDelivery = EventOf<"chat_message_queued">["delivery"]
 
 export type ToolFacet =
   | {
@@ -49,8 +50,11 @@ type ChatMessage =
   | { readonly kind: "user"; readonly id: string; readonly text: string }
   | { readonly kind: "assistant"; readonly id: string; readonly parts: readonly ChatPart[]; readonly settled: boolean }
 
+export type QueuedMessage = { readonly id: string; readonly text: string; readonly delivery: ChatDelivery }
+
 export type ChatTranscript = {
   readonly messages: readonly ChatMessage[]
+  readonly queued: readonly QueuedMessage[]
   readonly state: ChatState
   readonly lastSeq: number
   readonly failure: ChatFailure | null
@@ -59,6 +63,7 @@ export type ChatTranscript = {
 
 export const EMPTY_TRANSCRIPT: ChatTranscript = {
   messages: [],
+  queued: [],
   state: "idle",
   lastSeq: 0,
   failure: null,
@@ -94,14 +99,38 @@ const proseText = (parts: readonly ChatPart[], kind: ProsePart["kind"], index: n
   return parts.map((part) => (part.kind === kind && part.index === index ? { ...part, text: part.text + delta } : part))
 }
 
+const withoutQueued = (queued: readonly QueuedMessage[], id: string): readonly QueuedMessage[] => queued.filter((message) => message.id !== id)
+
+const queueMessage = (queued: readonly QueuedMessage[], message: QueuedMessage): readonly QueuedMessage[] => {
+  const known = queued.some((entry) => entry.id === message.id)
+  if (!known) return [...queued, message]
+  return queued.map((entry) => (entry.id === message.id ? message : entry))
+}
+
+const deliverQueued = (transcript: ChatTranscript, id: string): ChatTranscript => {
+  const delivered = transcript.queued.find((message) => message.id === id)
+  if (delivered === undefined) return transcript
+  return {
+    ...transcript,
+    queued: withoutQueued(transcript.queued, id),
+    messages: [...transcript.messages, { kind: "user", id, text: delivered.text }],
+  }
+}
+
 type Fold<K extends ChatEventType> = (transcript: ChatTranscript, event: EventOf<K>) => ChatTranscript
 
 const FOLD: { readonly [K in ChatEventType]: Fold<K> } = {
   chat_turn_started: (transcript, event) => ({
     ...transcript,
     failure: null,
+    queued: withoutQueued(transcript.queued, event.client_op_id),
     messages: [...transcript.messages, { kind: "user", id: event.client_op_id, text: event.text }],
   }),
+  chat_message_queued: (transcript, event) => ({
+    ...transcript,
+    queued: queueMessage(transcript.queued, { id: event.client_op_id, text: event.text, delivery: event.delivery }),
+  }),
+  chat_message_delivered: (transcript, event) => deliverQueued(transcript, event.client_op_id),
   chat_text_delta: (transcript, event) => withAssistant(transcript, event.message_id, (parts) => proseText(parts, "text", event.part_index, event.delta)),
   chat_reasoning_delta: (transcript, event) =>
     withAssistant(transcript, event.message_id, (parts) => proseText(parts, "reasoning", event.part_index, event.delta)),

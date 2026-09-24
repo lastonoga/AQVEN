@@ -1,16 +1,17 @@
-from collections.abc import MutableMapping
+import os
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import Final
 
-from dotenv import dotenv_values, load_dotenv, set_key, unset_key
+from dotenv import dotenv_values, set_key, unset_key
 from pydantic import SecretStr
 
 from aqven.app.host_os import ensure_private_file
 from aqven.app.locations import GITIGNORE_FILE
-from aqven.ports.settings import PROJECT_ENV_FILE, EnvName, env_name, project_env_file
+from aqven.ports.settings import PROJECT_ENV_FILE, EnvName, env_name, project_env_file, resolved_of
 
 DOTENV_QUOTE_MODE: Final = "always"
 DOTENV_ENCODING: Final = "utf-8"
@@ -42,11 +43,35 @@ def ensure_env_ignored(root: Path) -> bool:
     return True
 
 
-def load_project_env(root: Path) -> bool:
+def value_to_load(environ: Mapping[str, str], name: str, from_dotenv: str | None) -> str | None:
+    resolved = resolved_of(from_dotenv or "", environ.get(name, ""))
+    if resolved is None or resolved.source == "environment":
+        return None
+    return resolved.value.get_secret_value()
+
+
+def load_project_env(root: Path, environ: MutableMapping[str, str] | None = None) -> bool:
+    """Load the project `.env` file into the environment of the process.
+
+    A variable from `.env` is loaded when the environment lacks it or holds an empty string, because an empty
+    value counts as unset, the same rule the server applies to provider keys. A non-empty environment value wins
+    over `.env`. Values are read literally, without `${VAR}` interpolation, and empty `.env` values are skipped.
+
+    Args:
+        root: Project root that holds the `.env` file.
+        environ: Environment to fill; the environment of the process, `os.environ`, when omitted.
+
+    Returns:
+        `True` when the project has a `.env` file with at least one variable, `False` otherwise.
+    """
     env_file = project_env_file(root)
     if not env_file.is_file():
         return False
-    return load_dotenv(env_file, override=False, interpolate=False)
+    target = os.environ if environ is None else environ
+    values = dotenv_values(env_file, interpolate=False, encoding=DOTENV_ENCODING)
+    loaded = ((name, value_to_load(target, name, value)) for name, value in values.items())
+    target.update({name: value for name, value in loaded if value is not None})
+    return bool(values)
 
 
 def valid_entry(raw_name: str, raw_value: str | None) -> DotenvEntry | None:

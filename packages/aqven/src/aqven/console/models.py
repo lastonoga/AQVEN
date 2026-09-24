@@ -14,7 +14,8 @@ from pydantic_ai.models import Model
 
 from aqven.check.output_modes import MODE_PREFERENCE, AgentModes, ModelModes, agent_modes
 from aqven.console.command import EXIT_FAILED, EXIT_OK, PATH_HELP, Command, OutputFormat
-from aqven.console.project_env import open_project
+from aqven.console.project_env import open_project, project_env_file
+from aqven.engine.assembly.models import explain_empty_key
 from aqven.engine.llm.probe import ModelBuilder, ModelProbe, ModeProbe, ModeProber
 from aqven.engine.llm.shape_probe import ShapeAxisResult, ShapeCase, ShapeProber, ShapeReport
 from aqven.loader import LoadedProject, load_project
@@ -128,6 +129,12 @@ def model_settings_of(provider_options: JsonObject | None) -> ModelSettings | No
     return None if provider_options is None else ModelSettings(extra_body=provider_options)
 
 
+def live_error_text(error: Exception, root: Path) -> str:
+    if not isinstance(error, MissingProviderKey):
+        return str(error)
+    return explain_empty_key(str(error), error.env_var, os.environ, project_env_file(root).as_posix())
+
+
 @dataclass(frozen=True, slots=True)
 class ProjectModels:
     providers: Mapping[str, ProviderOptions]
@@ -239,7 +246,7 @@ def check_models(request: ModelsCheckRequest, build: ModelBuilder | None = None,
         settings = model_settings_of(request.provider_options)
         probes = asyncio.run(probe_targets(targets, _builder(loaded.project, request, build), settings))
     except (TargetNotFound, *LIVE_ERRORS) as error:
-        print(f"{PROGRAM}: {error}", file=sys.stderr)
+        print(f"{PROGRAM}: {live_error_text(error, request.root)}", file=sys.stderr)
         return EXIT_FAILED
     report = build_report(targets, probes, request.live)
     print(RENDERERS[request.output](report), file=sys.stdout if out is None else out)
@@ -386,7 +393,7 @@ def shapes_models(request: ModelsShapesRequest, build: ModelBuilder | None = Non
         settings = model_settings_of(request.provider_options)
         reports = asyncio.run(probe_shape_targets(targets, live_build, settings))
     except (TargetNotFound, *LIVE_ERRORS) as error:
-        print(f"{SHAPES_PROGRAM}: {error}", file=sys.stderr)
+        print(f"{SHAPES_PROGRAM}: {live_error_text(error, request.root)}", file=sys.stderr)
         return EXIT_FAILED
     report = build_shapes_report(targets, reports)
     print(SHAPES_RENDERERS[request.output](report), file=sys.stdout if out is None else out)

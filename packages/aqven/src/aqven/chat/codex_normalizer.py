@@ -76,7 +76,9 @@ def patch_status(status: PatchApplyStatus) -> ChatToolStatus:
 
 class CodexNormalizer:
     def __init__(self, message_id: ChatMessageId, model: str | None) -> None:
+        self._turn_message_id = message_id
         self._message_id = message_id
+        self._messages = 1
         self._model = model
         self._started: set[str] = set()
         self._text_items: set[str] = set()
@@ -84,6 +86,10 @@ class CodexNormalizer:
         self._outputs: dict[str, str] = {}
         self._file_items: dict[str, FileChangeThreadItem] = {}
         self.last_usage: ChatUsage | None = None
+
+    def start_next_message(self) -> None:
+        self._messages += 1
+        self._message_id = ChatMessageId(f"{self._turn_message_id}-{self._messages}")
 
     def ensure_tool(self, item_id: str, identity: ToolIdentity) -> ChatEventBuilders:
         if item_id in self._started:
