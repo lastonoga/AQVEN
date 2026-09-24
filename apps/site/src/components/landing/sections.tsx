@@ -203,7 +203,7 @@ const LOOP_STEPS: { actor: LoopActor; title: string; body: string }[] = [
   {
     actor: "Agent",
     title: "Bet on the riskiest failure.",
-    body: "It reads the failing runs, groups them into failure modes, and turns the riskiest into a hypothesis with a metric and a margin, written down before any number comes back.",
+    body: "It lines up the failing runs for you to read, groups your notes into failure modes you agree, and turns the riskiest into a hypothesis with a metric and a margin, written down before any number comes back.",
   },
   {
     actor: "AQVEN",

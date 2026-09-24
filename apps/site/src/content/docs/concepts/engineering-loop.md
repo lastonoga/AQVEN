@@ -58,12 +58,14 @@ said mattered". It's what tells you the fix is safe to ship.
 
 One incident is one pass through the loop. Building a flow that holds takes several passes, and a coding
 agent can run them for you. You give it the task and what "done" means in numbers. The agent builds the
-simplest flow, runs a look over the cases, and reads every failure down to its first failing node. It
-fixes what the prompt never asked for, and turns each remaining failure mode into an experiment. It
-explores on working cases, confirms once on held-out cases, and applies the finding. Then it starts the
-next round on fresh cases. It stops when every "done" criterion is confirmed, or the budget is spent, and
-reports `FINDINGS.md` and the risks left. [How an agent takes a task to a reliable
-flow](/mcp-cli/research-loop/) is that loop, stage by stage.
+simplest flow, runs a look over the cases, and traces every failure to its first failing node. Then you
+read the first traces and note the first thing that went wrong in each; the agent groups your notes into
+failure modes and writes them down once you agree. It fixes what the prompt never asked for, and turns
+each remaining failure mode into an experiment. It explores on working cases, confirms once on held-out
+cases, and applies the finding. Then it starts the next round on fresh cases, maps new failures to the
+known modes itself, and brings you only the ones that fit none. It stops when every "done" criterion is
+confirmed, or the budget is spent, and reports `FINDINGS.md` and the risks left. [How an agent takes a
+task to a reliable flow](/mcp-cli/research-loop/) is that loop, stage by stage.
 
 ## How this shapes what you do
 

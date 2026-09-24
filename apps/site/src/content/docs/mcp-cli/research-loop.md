@@ -33,7 +33,7 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | 2. Simplest flow | one `llm` step per real decision, `code` for the rest; `{{CLI_COMMAND}} check` is clean; `{{CLI_COMMAND}} prompt preview` is read for every `llm` node |
 | 3. Cases | a dataset with `expected_output` and tags exists; `{{CLI_COMMAND}} check` is clean |
 | 4. Explore | a `look` experiment with deterministic checks ran on working cases, and every failing case is read (`include_cases: true`) |
-| 5. Error analysis | every failure has its first failing node and a failure mode, and new failing traces stop adding modes |
+| 5. Error analysis | you have read and noted the first traces; every failure has its first failing node and a failure mode you agreed; new failing traces stop adding modes |
 | 6. Fix the spec | what the prompt never asked for is fixed in the prompt or the type, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, written before any number |
 | 8. Explore | series on working cases, one change between series, until the change is done and the question is fixed |
@@ -49,18 +49,25 @@ cap. Above it, the agent tells you the amount and waits: only a person approves 
   error and its `run_id`; `run_get` and `run_events` show the first node that failed. Fix the first
   failure upstream, because later ones often cascade from it. In a multi-step flow, count failures by the
   last node that succeeded and the first that failed, and start with the biggest count.
-- **Group the notes into failure modes.** Write one note per failing trace about its first failure. Then
-  group the notes into failure modes: an id, a one-line definition, a count, and two or three `run_id`s.
-  They go under "Failure modes" in the look experiment's `experiment.md`. The id becomes the
-  `failure_mode` of every experiment that tests it, and the section of `FINDINGS.md` its findings land
-  in. Stop when about 20 more failing traces add no new mode. Few failures means the cases are too easy,
-  not that the flow is done.
+- **You read the first traces, not the agent.** After the first look, the agent hands you the failing
+  runs first, then a few passing ones: about 30 traces in total, or all of them if there are fewer. Each
+  comes with its `run_id` and where to open it in Studio. You write one short note per trace about the
+  first thing that went wrong, or "fine". The agent prepares and you judge: it may attach the first
+  failing node of each failure, but what went wrong is your note.
+- **The agent groups your notes into failure modes**: an id, a one-line definition, a count, and two or
+  three `run_id`s. It shows you the list, and writes it under "Failure modes" in the look experiment's
+  `experiment.md` only after you agree. The id becomes the `failure_mode` of every experiment that tests
+  it, and the section of `FINDINGS.md` its findings land in.
+- **Later rounds bring you only what's new.** The agent reads new failing traces itself and maps them to
+  the known modes. It brings you only the traces that fit no known mode, and adds a new mode only after
+  you have read them. Stop when about 20 more failing traces add no new mode. Few failures means the
+  cases are too easy, not that the flow is done.
 - **Not everything deserves an experiment.** The prompt or type never asks for the behavior: fix the
   prompt. An empty or literal placeholder in the prompt preview: fix the binding. An infrastructure
   error: fix the key, the limit or the code. Only a failure on behavior the flow clearly asks for becomes
   a hypothesis.
 - **Rank the modes by count, then by harm.** Never start from a generic list ("hallucination",
-  "toxicity") before reading traces.
+  "toxicity") before you have read traces.
 
 A real one: in a series over the showcase's support cases, `gemini-2.5-flash-lite` on the `triage` step
 broke the 200-character limit of an observation three times in a row. That was its first answer and both
@@ -167,14 +174,15 @@ The agent stops and reports `FINDINGS.md`, its decisions and the risks left when
 - the needed number of cases is out of reach and a guard is in place;
 - the agreed budget is spent.
 
-It stops and asks you when a series waits for approval, or when variants trade quality against cost. It
-also asks when "done" turns out not to be measurable.
+It stops and asks you when traces are ready for your notes, when a series waits for approval, or when
+variants trade quality against cost. It also asks when "done" turns out not to be measurable.
 
 ## What the engine leaves to the agent
 
 Some rules above are discipline, not enforcement:
 
 - **Failure modes.** No file type holds them, so they live in the look experiment's `experiment.md`.
+  Nothing checks that you read the first traces or agreed the list.
 - **Equal budgets.** The server doesn't check that a multi-call arm is compared against an arm with the
   same number of calls.
 - **Stability.** pass^k and the flaky share are shown but can't be a question's metric, so they never
