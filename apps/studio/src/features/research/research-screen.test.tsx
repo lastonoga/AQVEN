@@ -9,24 +9,71 @@ vi.mock("@/features/chat", () => ({
   ChatPanel: () => null,
 }))
 
-const table = (): Promise<HTMLElement> => screen.findByRole("table", { name: "Experiments" })
+const OPEN_PREFIX = "Open experiment "
+
+const openLink = (id: string): Promise<HTMLElement> => screen.findByRole("link", { name: `${OPEN_PREFIX}${id}` })
 
 const rowOf = async (id: string): Promise<HTMLElement> => {
-  const rows = within(await table()).getAllByRole("row")
-  const row = rows.find((item) => within(item).queryByText(id) !== null)
-  if (row === undefined) throw new Error(`No row for ${id}`)
+  const row = (await openLink(id)).closest("[role=row]")
+  if (!(row instanceof HTMLElement)) throw new Error(`No row for ${id}`)
   return row
 }
 
-const experimentIds = async (): Promise<readonly string[]> =>
-  within(await table())
+const sectionOf = (name: string): Promise<HTMLElement> => screen.findByRole("region", { name })
+
+const sectionTitles = async (): Promise<readonly string[]> => {
+  await screen.findAllByRole("table")
+  return screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)
+}
+
+const experimentsIn = async (name: string): Promise<readonly string[]> =>
+  within(within(await sectionOf(name)).getByRole("table", { name: `Experiments on ${name}` }))
     .getAllByRole("link")
-    .map((link) => link.getAttribute("aria-label") ?? "")
+    .map((link) => (link.getAttribute("aria-label") ?? "").replace(OPEN_PREFIX, ""))
+
+const captureHandoffs = (): unknown[] => {
+  const sent: unknown[] = []
+  server.use(
+    http.post(`${API_BASE}/chat/sessions/:sessionId/messages`, async ({ request }) => {
+      const body: unknown = await request.json()
+      sent.push(typeof body === "object" && body !== null && "text" in body ? body.text : null)
+      return HttpResponse.json({ turn_id: "turn-1", accepted_at: "2026-09-18T03:00:00Z" }, { status: 202 })
+    }),
+  )
+  return sent
+}
+
+const clickWhenReady = async (button: HTMLElement): Promise<void> => {
+  await waitFor(() => {
+    expect(button.hasAttribute("disabled")).toBe(false)
+  })
+  fireEvent.click(button)
+}
 
 describe("ResearchScreen", () => {
-  it("lists every experiment with its question, subject, variants, last series and spend", async () => {
+  it("shows every experiment of the project in one section per flow, ordered by flow name with arms last", async () => {
     await renderRoute("/research")
-    expect(await experimentIds()).toHaveLength(13)
+    expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Arms"])
+    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_failure_scan", "panel_single_judge"])
+    expect(await experimentsIn("support_case")).toEqual(["reply_look", "reply_noninferior_mistral", "reply_overpromise_risk", "reply_stage_budget"])
+    expect(within(await sectionOf("support_case")).getByText("4 experiments")).toBeTruthy()
+    expect(screen.getByText("13 experiments")).toBeTruthy()
+  })
+
+  it("files experiments whose subject is an arm under arms, even when their cases belong to a flow", async () => {
+    await renderRoute("/research")
+    expect(await experimentsIn("Arms")).toEqual([
+      "critique_planted_defects",
+      "critique_recall_by_agent",
+      "intent_ballot_pair",
+      "intent_escalation_agents",
+      "intent_split_long_messages",
+    ])
+    expect(within(await sectionOf("Arms")).getByText("5 experiments")).toBeTruthy()
+  })
+
+  it("shows the question, subject, variants, last series and spend of each experiment", async () => {
+    await renderRoute("/research")
     const row = await rowOf("reply_noninferior_mistral")
     expect(row.textContent).toContain("not worse")
     expect(row.textContent).toContain("support_case · polish")
@@ -41,74 +88,76 @@ describe("ResearchScreen", () => {
     expect((await rowOf("intent_escalation_agents")).textContent).toContain("arm escalation · escalate")
   })
 
-  it("lists the experiments of the flow picked in the top bar and filters them by question and failure mode", async () => {
-    const router = await renderRoute("/research?flow=%22judge_panel%22")
-    expect(await experimentIds()).toEqual([
-      "Open experiment judge_panel_agents",
-      "Open experiment panel_aa_noise",
-      "Open experiment panel_failure_scan",
-      "Open experiment panel_single_judge",
-    ])
-    expect(screen.getByText(/^Experiments on judge_panel/)).toBeTruthy()
-    expect(screen.queryByRole("combobox", { name: "Flow" })).toBeNull()
+  it("filters every section by question and failure mode and hides the flows left empty", async () => {
+    const router = await renderRoute("/research")
+    await sectionTitles()
     fireEvent.change(screen.getByRole("combobox", { name: "Question" }), { target: { value: "compare" } })
     await waitFor(() => {
-      expect(router.state.location.search).toEqual({ flow: "judge_panel", question: "compare" })
+      expect(router.state.location.search).toEqual({ question: "compare" })
     })
-    fireEvent.change(screen.getByRole("combobox", { name: "Failure mode" }), { target: { value: "intent_misread" } })
+    await waitFor(async () => {
+      expect(await sectionTitles()).toEqual(["judge_panel", "Arms"])
+    })
+    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_single_judge"])
+    expect(await experimentsIn("Arms")).toEqual(["intent_ballot_pair", "intent_split_long_messages"])
+    fireEvent.change(screen.getByRole("combobox", { name: "Failure mode" }), { target: { value: "reply_quality" } })
     expect(await screen.findByText("No experiments match these filters")).toBeTruthy()
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull()
     fireEvent.click(screen.getByRole("link", { name: "Clear filters" }))
     await waitFor(() => {
-      expect(router.state.location.search).toEqual({ flow: "judge_panel" })
+      expect(router.state.location.search).toEqual({})
     })
-    expect(await experimentIds()).toHaveLength(4)
-  })
-
-  it("says when the picked flow has no experiments yet", async () => {
-    server.use(http.get(`${API_BASE}/experiments`, () => HttpResponse.json({ items: [], next_cursor: null, total_estimate: 0 })))
-    await renderRoute("/research?flow=%22judge_panel%22")
-    expect(await screen.findByText("No experiments on judge_panel yet")).toBeTruthy()
+    await waitFor(async () => {
+      expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Arms"])
+    })
   })
 
   it("offers the failure modes of the project in the filter", async () => {
     await renderRoute("/research?question=%22threshold%22")
-    await table()
+    expect(await sectionTitles()).toEqual(["support_case", "Arms"])
     const options = within(screen.getByRole("combobox", { name: "Failure mode" })).getAllByRole("option")
     expect(options.map((option) => option.textContent)).toEqual(["all", "intent_misread", "judge_misses_defect", "overpromise", "panel_wrong_winner", "reply_quality"])
-    expect(await experimentIds()).toEqual([
-      "Open experiment critique_planted_defects",
-      "Open experiment critique_recall_by_agent",
-      "Open experiment reply_overpromise_risk",
-      "Open experiment reply_stage_budget",
-    ])
+    expect(await experimentsIn("support_case")).toEqual(["reply_overpromise_risk", "reply_stage_budget"])
+    expect(await experimentsIn("Arms")).toEqual(["critique_planted_defects", "critique_recall_by_agent"])
   })
 
   it("opens an experiment from its row", async () => {
     const router = await renderRoute("/research")
-    fireEvent.click(within(await table()).getByRole("link", { name: "Open experiment judge_panel_agents" }))
+    fireEvent.click(await openLink("judge_panel_agents"))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/research/experiments/judge_panel_agents")
     })
   })
 
-  it("hands the hypotheses to the chat with the experiments that already exist", async () => {
-    const sent: unknown[] = []
-    server.use(
-      http.post(`${API_BASE}/chat/sessions/:sessionId/messages`, async ({ request }) => {
-        const body: unknown = await request.json()
-        sent.push(typeof body === "object" && body !== null && "text" in body ? body.text : null)
-        return HttpResponse.json({ turn_id: "turn-1", accepted_at: "2026-09-18T03:00:00Z" }, { status: 202 })
-      }),
-    )
-    await renderRoute("/research?flow=%22support_case%22")
-    const button = await screen.findByRole("button", { name: "Suggest hypotheses" })
-    await waitFor(() => {
-      expect(button.hasAttribute("disabled")).toBe(false)
-    })
-    fireEvent.click(button)
-    expect((await screen.findByRole("status")).textContent).toBe("Sent to the chat on the left.")
+  it("hands hypotheses about one flow to the chat from the heading of its section", async () => {
+    const sent = captureHandoffs()
+    await renderRoute("/research")
+    await clickWhenReady(within(await sectionOf("judge_panel")).getByRole("button", { name: "Suggest hypotheses" }))
+    expect((await within(await sectionOf("judge_panel")).findByRole("status")).textContent).toBe("Sent to the chat on the left.")
     expect(String(sent[0])).toContain("Suggest hypotheses worth testing")
     expect(String(sent[0])).toContain("reply_noninferior_mistral")
-    expect(String(sent[0])).toContain("Focus on the flow support_case.")
+    expect(String(sent[0])).toContain("Focus on the flow judge_panel.")
+    expect(String(sent[0])).not.toContain("support_case.")
+  })
+
+  it("hands project-wide hypotheses from the page header and offers none on the arms section", async () => {
+    const sent = captureHandoffs()
+    await renderRoute("/research?failureMode=%22intent_misread%22")
+    expect(await sectionTitles()).toEqual(["Arms"])
+    expect(within(await sectionOf("Arms")).queryByRole("button")).toBeNull()
+    const [pageButton] = screen.getAllByRole("button", { name: "Suggest hypotheses" })
+    if (pageButton === undefined) throw new Error("no page-level hypotheses button")
+    await clickWhenReady(pageButton)
+    expect((await screen.findByRole("status")).textContent).toBe("Sent to the chat on the left.")
+    expect(String(sent[0])).not.toContain("Focus on the flow")
+    expect(String(sent[0])).toContain("Focus on the failure mode intent_misread.")
+  })
+
+  it("says so when the project has no experiments yet", async () => {
+    server.use(http.get(`${API_BASE}/experiments`, () => HttpResponse.json({ items: [], next_cursor: null, total_estimate: 0 })))
+    await renderRoute("/research")
+    expect(await screen.findByText("No experiments yet")).toBeTruthy()
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull()
+    expect(screen.getByRole("button", { name: "Suggest hypotheses" })).toBeTruthy()
   })
 })

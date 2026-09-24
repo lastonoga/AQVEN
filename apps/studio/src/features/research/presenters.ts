@@ -173,11 +173,9 @@ const patched = <T>(current: T | undefined, next: T | null | undefined): T | nul
 }
 
 export const withFilter = (filter: ExperimentFilter, patch: FilterPatch): ExperimentFilter => {
-  const flow = patched(filter.flow, patch.flow)
   const question = patched(filter.question, patch.question)
   const failureMode = patched(filter.failureMode, patch.failureMode)
   return {
-    ...(flow === null ? {} : { flow }),
     ...(question === null ? {} : { question }),
     ...(failureMode === null ? {} : { failureMode }),
   }

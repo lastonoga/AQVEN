@@ -40,6 +40,25 @@ const SUB_CENT_ROW: ApiSeriesCaseRow = {
   ],
 }
 
+const UNKNOWN_CHECK = "retired_check"
+
+const FAILED_CHECKS_ROW: ApiSeriesCaseRow = {
+  name: "strip_flicker_credit",
+  split: "holdout",
+  tags: {},
+  variants: [
+    { variant_id: "gpt", passed: 0, total: 1, failed_checks: ["critique"], usd: "0.01" },
+    { variant_id: "mistral", passed: 0, total: 1, failed_checks: ["promises", UNKNOWN_CHECK], usd: "0.01" },
+  ],
+  usd: "0.02",
+  failing: true,
+  divergent: false,
+  attempts: [
+    { run_id: "01a0c100-0000-7000-8000-00000000bb01", variant_id: "gpt", repeat: 1, passed: false, outcome: "failed", failed_checks: ["critique"], usd: "0.01", latency_ms: 900, error: null },
+    { run_id: "01a0c100-0000-7000-8000-00000000bb02", variant_id: "mistral", repeat: 1, passed: false, outcome: "failed", failed_checks: ["promises", UNKNOWN_CHECK], usd: "0.01", latency_ms: 700, error: null },
+  ],
+}
+
 const failedWithoutVerdict = (): ApiSeriesDetail => {
   const state = initialSeries().find((series) => series.id === RESEARCH_SERIES.panelFailed)
   if (state === undefined) throw new Error("missing failed series fixture")
@@ -358,5 +377,46 @@ describe("SeriesScreen waits", () => {
     await renderRoute(seriesPath("noninferiorHoldout"))
     await caseButtons()
     expect(screen.queryByRole("region", { name: "Embedded waits" })).toBeNull()
+  })
+})
+
+describe("SeriesScreen failed check hints", () => {
+  const serveFailedChecks = (): void => {
+    server.use(http.get(`${API_BASE}/series/:seriesId/cases`, () => HttpResponse.json([FAILED_CHECKS_ROW])))
+  }
+
+  const caseList = (): Promise<HTMLElement> => screen.findByRole("list", { name: "Cases of this series" })
+
+  const hover = (tag: HTMLElement): void => {
+    fireEvent.pointerMove(tag)
+  }
+
+  it("explains a failed judge check of a case on hover", async () => {
+    serveFailedChecks()
+    await renderRoute(seriesPath("noninferiorHoldout"))
+    const tag = within(await caseList()).getByText("critique")
+    expect(screen.queryByRole("tooltip")).toBeNull()
+    hover(tag)
+    expect((await screen.findByRole("tooltip")).textContent).toBe("Judge · inference critique · agent deepseek · validated by critique_planted_defects")
+  })
+
+  it("explains a failed code check of an attempt on hover", async () => {
+    serveFailedChecks()
+    await renderRoute(seriesPath("noninferiorHoldout"))
+    const attempts = await openFirstCase()
+    hover(within(attempts).getByText("promises"))
+    expect((await screen.findByRole("tooltip")).textContent).toBe("Code check · lumen.code.support_case:reply_keeps_resolution")
+  })
+
+  it("shows no hint for a failed check the experiment does not declare", async () => {
+    serveFailedChecks()
+    await renderRoute(seriesPath("noninferiorHoldout"))
+    const list = await caseList()
+    const unknown = within(list).getByText(UNKNOWN_CHECK)
+    hover(unknown)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole("tooltip")).toBeNull()
+    expect(unknown.hasAttribute("data-state")).toBe(false)
+    expect(within(list).getByText("promises").hasAttribute("data-state")).toBe(true)
   })
 })
