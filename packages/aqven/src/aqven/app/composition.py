@@ -9,7 +9,7 @@ from fastapi import APIRouter, FastAPI
 from pydantic import SecretStr
 from starlette.types import ASGIApp
 
-from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
+from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch, PlanSources
 from aqven.app.observation import ObservationTargets
 from aqven.app.prices import LazyPriceLookup, SharedPrices
 from aqven.app.runtime import ApplicationLaunch, LocalServer
@@ -45,7 +45,7 @@ from aqven.server.mcp import (
 from aqven.server.research_relay import ResearchRelay, research_lifespan
 from aqven.server.security import AccessPolicy
 from aqven.server.views.runs import RunStartService
-from aqven.server.workspace import ProjectWorkspace
+from aqven.server.workspace import ProjectWorkspace, WorkspacePlanSource
 from aqven.write import WriteService
 
 
@@ -253,9 +253,26 @@ class ServerApplicationFactory:
         return assemble_app(launch, self.features, self.extra, self.assembly)
 
 
+@dataclass(frozen=True, slots=True)
+class WorkspacePlanSources:
+    assembly: ProjectAssembly
+
+    def __call__(self, launch: EngineLaunch) -> PlanSource:
+        return WorkspacePlanSource(self.assembly.parts(launch.project_root, launch.settings).workspace)
+
+
+@dataclass(frozen=True, slots=True)
+class FixedPlanSources:
+    source: PlanSource
+
+    def __call__(self, launch: EngineLaunch) -> PlanSource:
+        return self.source
+
+
 def priced_engine_host(assembly: ProjectAssembly, plan_source: PlanSource | None = None) -> DbosEngineHost:
     setup = replace(standard_engine_setup(prices=assembly.prices), watch=SeriesRunWatch())
-    return DbosEngineHost(setup=setup, plan_source=plan_source)
+    sources: PlanSources = WorkspacePlanSources(assembly) if plan_source is None else FixedPlanSources(plan_source)
+    return DbosEngineHost(setup=setup, plan_sources=sources)
 
 
 def studio_server(

@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol
@@ -20,6 +21,13 @@ class EngineLaunch:
     settings: SettingsStore
 
 
+type PlanSources = Callable[[EngineLaunch], PlanSource]
+
+
+def project_plan_source(launch: EngineLaunch) -> PlanSource:
+    return ProjectPlanSource(launch.project_root)
+
+
 class EngineHost(Protocol):
     async def start(self, launch: EngineLaunch) -> EngineFacade: ...
 
@@ -29,7 +37,7 @@ class EngineHost(Protocol):
 @dataclass(slots=True)
 class DbosEngineHost:
     setup: EngineSetup = field(default_factory=standard_engine_setup)
-    plan_source: PlanSource | None = None
+    plan_sources: PlanSources = project_plan_source
     lifecycle: EngineLifecycle | None = None
 
     async def start(self, launch: EngineLaunch) -> EngineFacade:
@@ -41,8 +49,7 @@ class DbosEngineHost:
         runtime = await asyncio.to_thread(lifecycle.launch)
         self.lifecycle = lifecycle
         await runtime.summaries.warm()
-        plan_source = self.plan_source if self.plan_source is not None else ProjectPlanSource(launch.project_root)
-        return DbosEngineFacade(runtime=runtime, plan_source=plan_source)
+        return DbosEngineFacade(runtime=runtime, plan_source=self.plan_sources(launch))
 
     async def stop(self) -> None:
         lifecycle = self.lifecycle

@@ -9,6 +9,7 @@ from anyio import to_thread
 from pydantic import JsonValue
 
 from aqven.check import CheckReport, check_project
+from aqven.compiler import compile_project
 from aqven.ir.hashing import canonical_json
 from aqven.ir.plan import CompiledProject
 from aqven.loader import ProjectIndex, build_index, file_hash, project_files
@@ -124,3 +125,14 @@ class ProjectWorkspace:
             fresh = await to_thread.run_sync(build_state, self.root, snapshot, generation, self.compiler, self.clock)
             self._state = fresh
             return fresh
+
+
+@dataclass(frozen=True, slots=True)
+class WorkspacePlanSource:
+    workspace: ProjectWorkspace
+
+    async def current(self) -> CompiledProject:
+        state = await self.workspace.state()
+        if state.compiled is not None:
+            return state.compiled
+        return await to_thread.run_sync(compile_project, state.report)
