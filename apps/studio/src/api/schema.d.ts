@@ -1023,7 +1023,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/experiments/{experiment_id}/estimate": {
+    "/api/experiments/{experiment_id}/launch-plan": {
         parameters: {
             query?: never;
             header?: never;
@@ -1032,8 +1032,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Estimate Series */
-        post: operations["series_estimate"];
+        /** Plan Series */
+        post: operations["series_launch_plan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3615,11 +3615,6 @@ export interface components {
             attempts: number;
             degenerate?: components["schemas"]["DegenerateReason"] | null;
         };
-        /**
-         * EstimateReason
-         * @enum {string}
-         */
-        EstimateReason: "look" | "wide" | "enough" | "no_margin" | "no_history" | "short_of_cases";
         /** EventCatalog */
         EventCatalog: {
             /**
@@ -4569,6 +4564,50 @@ export interface components {
             on: components["schemas"]["SeriesSplit"];
             status: components["schemas"]["SeriesStatus"];
             verdict: components["schemas"]["VerdictState"] | null;
+        };
+        /** LaunchPlan */
+        LaunchPlan: {
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: number;
+            /** Attempts */
+            attempts: number;
+            /** Available */
+            available: number;
+            /** Half Width */
+            half_width: number | null;
+            /** Mde */
+            mde: number | null;
+            /** Margin */
+            margin: number | null;
+            /** Spread */
+            spread: number | null;
+            /**
+             * Spread Source
+             * @enum {string}
+             */
+            spread_source: "history" | "prior" | "none";
+            /** Icc */
+            icc: number;
+            recommended: components["schemas"]["Recommendation"];
+            /** Below Recommended */
+            below_recommended: boolean;
+            /** Needs Approval */
+            needs_approval: boolean;
+            /** Project Cap Usd */
+            project_cap_usd: string;
+            project_cap_source?: components["schemas"]["CapSource"] | null;
+            /** Cap Usd */
+            cap_usd: string;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
         };
         /** LaunchRequest */
         LaunchRequest: {
@@ -6231,10 +6270,15 @@ export interface components {
             cases: number;
             /** Repeats */
             repeats: number;
-            reason: components["schemas"]["EstimateReason"];
+            reason: components["schemas"]["RecommendationReason"];
             /** Text */
             text: string;
         };
+        /**
+         * RecommendationReason
+         * @enum {string}
+         */
+        RecommendationReason: "look" | "wide" | "enough" | "no_margin" | "no_history" | "short_of_cases";
         /** RecordType */
         RecordType: {
             /**
@@ -6789,7 +6833,7 @@ export interface components {
             thresholds: components["schemas"]["ThresholdCell"][];
             /** Aggregates */
             aggregates: components["schemas"]["VariantAggregates"][];
-            estimate: components["schemas"]["SeriesEstimate"];
+            launch: components["schemas"]["LaunchPlan"];
             /** Needs Approval */
             needs_approval: boolean;
             /** Approved By */
@@ -6798,59 +6842,6 @@ export interface components {
             finding_path: string | null;
             /** Error */
             error: string | null;
-        };
-        /** SeriesEstimate */
-        SeriesEstimate: {
-            on: components["schemas"]["SeriesSplit"];
-            /** Cases */
-            cases: number;
-            /** Repeats */
-            repeats: number;
-            /** Variants */
-            variants: number;
-            /** Attempts */
-            attempts: number;
-            /** Available */
-            available: number;
-            /** Usd */
-            usd: string | null;
-            /**
-             * Usd Source
-             * @enum {string}
-             */
-            usd_source: "history" | "prices" | "bound" | "unknown";
-            /** Minutes */
-            minutes: number | null;
-            /** Half Width */
-            half_width: number | null;
-            /** Mde */
-            mde: number | null;
-            /** Margin */
-            margin: number | null;
-            /** Spread */
-            spread: number | null;
-            /**
-             * Spread Source
-             * @enum {string}
-             */
-            spread_source: "history" | "prior" | "none";
-            /** Icc */
-            icc: number;
-            recommended: components["schemas"]["Recommendation"];
-            /** Below Recommended */
-            below_recommended: boolean;
-            /** Needs Approval */
-            needs_approval: boolean;
-            /** Project Cap Usd */
-            project_cap_usd: string;
-            project_cap_source?: components["schemas"]["CapSource"] | null;
-            /** Cap Usd */
-            cap_usd: string;
-            /**
-             * Warnings
-             * @default []
-             */
-            warnings: string[];
         };
         SeriesEvent: components["schemas"]["SeriesStatusEvent"] | components["schemas"]["AttemptFinishedEvent"] | components["schemas"]["SeriesFinishedEvent"];
         /** SeriesFinishedEvent */
@@ -6993,7 +6984,7 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
             pause?: components["schemas"]["SeriesPause"] | null;
-            estimate: components["schemas"]["SeriesEstimate"];
+            launch: components["schemas"]["LaunchPlan"];
         };
         /** SeriesStartedEvent */
         SeriesStartedEvent: {
@@ -7825,7 +7816,6 @@ export type SchemaEnumType = components['schemas']['EnumType'];
 export type SchemaEnumValue = components['schemas']['EnumValue'];
 export type SchemaEscalateOnTimeout = components['schemas']['EscalateOnTimeout'];
 export type SchemaEstimate = components['schemas']['Estimate'];
-export type SchemaEstimateReason = components['schemas']['EstimateReason'];
 export type SchemaEventCatalog = components['schemas']['EventCatalog'];
 export type SchemaEventSchemas = components['schemas']['EventSchemas'];
 export type SchemaExampleSpec = components['schemas']['ExampleSpec'];
@@ -7894,6 +7884,7 @@ export type SchemaJsonSchema = components['schemas']['JsonSchema'];
 export type SchemaJsonValue = components['schemas']['JsonValue'];
 export type SchemaJudgeEvaluator = components['schemas']['JudgeEvaluator'];
 export type SchemaLatestSeries = components['schemas']['LatestSeries'];
+export type SchemaLaunchPlan = components['schemas']['LaunchPlan'];
 export type SchemaLaunchRequest = components['schemas']['LaunchRequest'];
 export type SchemaLimits = components['schemas']['Limits'];
 export type SchemaLineage = components['schemas']['Lineage'];
@@ -8030,6 +8021,7 @@ export type SchemaQuestionKind = components['schemas']['QuestionKind'];
 export type SchemaQuestionView = components['schemas']['QuestionView'];
 export type SchemaReadyState = components['schemas']['ReadyState'];
 export type SchemaRecommendation = components['schemas']['Recommendation'];
+export type SchemaRecommendationReason = components['schemas']['RecommendationReason'];
 export type SchemaRecordType = components['schemas']['RecordType'];
 export type SchemaRefBinding = components['schemas']['RefBinding'];
 export type SchemaRefText = components['schemas']['RefText'];
@@ -8074,7 +8066,6 @@ export type SchemaSeriesApproveBody = components['schemas']['SeriesApproveBody']
 export type SchemaSeriesCancelBody = components['schemas']['SeriesCancelBody'];
 export type SchemaSeriesCaseRow = components['schemas']['SeriesCaseRow'];
 export type SchemaSeriesDetailView = components['schemas']['SeriesDetailView'];
-export type SchemaSeriesEstimate = components['schemas']['SeriesEstimate'];
 export type SchemaSeriesEvent = components['schemas']['SeriesEvent'];
 export type SchemaSeriesFinishedEvent = components['schemas']['SeriesFinishedEvent'];
 export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
@@ -14907,7 +14898,7 @@ export interface operations {
             };
         };
     };
-    series_estimate: {
+    series_launch_plan: {
         parameters: {
             query?: never;
             header?: never;
@@ -14928,7 +14919,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SeriesEstimate"];
+                    "application/json": components["schemas"]["LaunchPlan"];
                 };
             };
             /** @description Bad Request */

@@ -133,7 +133,7 @@ def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSumm
 
 
 def started_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesStarted:
-    return SeriesStarted(**summary_view(record, facts).model_dump(), estimate=record.estimate)
+    return SeriesStarted(**summary_view(record, facts).model_dump(), launch=record.launch)
 
 
 def direction_of(metric: str, declared: MetricDirection | None) -> MetricDirection:
@@ -244,7 +244,7 @@ def detail_view(
         contrasts=analysis.contrasts,
         thresholds=analysis.thresholds,
         aggregates=analysis.variants,
-        estimate=record.estimate,
+        launch=record.launch,
         needs_approval=record.needs_approval,
         approved_by=record.approved_by,
         finding_path=record.finding_path,

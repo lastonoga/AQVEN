@@ -284,18 +284,20 @@ def test_an_unknown_experiment_is_not_found(research_client: TestClient) -> None
     assert response.json()["code"] == "NOT_FOUND"
 
 
-def test_estimate_and_start_go_through_the_series_service(
+def test_the_launch_plan_and_start_go_through_the_series_service(
     research_client: TestClient, series_jobs: FakeSeriesJobs
 ) -> None:
-    estimate = research_client.post(f"/api/experiments/{EXPERIMENT}/estimate", json={"on": "holdout", "cases": 3})
+    plan = research_client.post(f"/api/experiments/{EXPERIMENT}/launch-plan", json={"on": "holdout", "cases": 3})
     started = research_client.post("/api/series", json={"experiment_id": EXPERIMENT, "repeats": 2})
 
-    assert estimate.status_code == 200
-    assert estimate.json()["on"] == "holdout"
-    assert series_jobs.estimates[0][1].cases == 3
+    assert plan.status_code == 200
+    assert plan.json()["on"] == "holdout"
+    assert plan.json()["recommended"]["cases"] == 60
+    assert "usd" not in plan.json()
+    assert series_jobs.plans[0][1].cases == 3
     assert started.status_code == 201
     assert started.json()["series_id"] == SERIES_ID
-    assert started.json()["estimate"]["attempts"] == 16
+    assert started.json()["launch"]["attempts"] == 16
     request, actor = series_jobs.starts[0]
     assert (request.repeats, actor.kind) == (2, "human")
 

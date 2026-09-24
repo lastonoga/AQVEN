@@ -63,8 +63,8 @@ before the data. A series then answers it: see [How to run a series](/engine/run
   latency as lower-is-better. For a check where lower is better, set `direction: "lower_is_better"` on
   the question or the guardrail that reads it.
 - **`plan` is the size you recommend,** not a limit: `cases` (unset means every selected case) and
-  `repeats`, at most 20. A series may run on fewer or more. Its estimate shows how many cases the margin
-  needs.
+  `repeats`, at most 20. A series may run on fewer or more. Its launch plan shows how many cases the
+  margin needs.
 - **Run `{{CLI_COMMAND}} check`.** It validates every experiment before a series may run it. See the table
   at the end.
 

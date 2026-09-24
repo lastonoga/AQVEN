@@ -100,7 +100,7 @@
     },
     "budget": {
       "title": "Research budget",
-      "description": "A series whose estimated cost is above this cap, or has no estimate, waits for your approval before it starts.",
+      "description": "A series whose spend nears this cap pauses before its next attempts and waits for your approval to continue. A series asked to run with a higher cap waits for your approval before it starts.",
       "loading": "Loading the research budget…",
       "loadError": "The research budget could not be loaded.",
       "retry": "Try again",

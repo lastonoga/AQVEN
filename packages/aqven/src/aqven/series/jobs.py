@@ -7,9 +7,7 @@ from typing import Final
 
 from dbos import DBOS, SetWorkflowID, WorkflowStatus
 
-from aqven.app.workers import InvalidWorkerCount, configured_workers
 from aqven.engine.errors import EngineNotLaunched
-from aqven.engine.facade import DbosEngineFacade
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry
 from aqven.engine.prices import plan_models
@@ -17,10 +15,9 @@ from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, active_runtime
 from aqven.ir import IrHash, IrLookupError
 from aqven.runtime.address import RunId
 from aqven.runtime.runs import Page
-from aqven.series.bound import BoundPlan, largest_case
-from aqven.series.estimate import CatalogRunSampler, EstimateOutcome, EstimatePlan, SeriesEstimator
 from aqven.series.events import SeriesEventLog
 from aqven.series.ids import new_series_id
+from aqven.series.launch import LaunchInputs, LaunchPlanBuilder
 from aqven.series.model import (
     SETTLED_STATUSES,
     TERMINAL_STATUSES,
@@ -29,9 +26,9 @@ from aqven.series.model import (
     AttemptRecord,
     AttemptState,
     ExperimentOrigin,
+    LaunchPlan,
     SeriesAnalysis,
     SeriesChange,
-    SeriesEstimate,
     SeriesId,
     SeriesPause,
     SeriesPlanRecord,
@@ -193,9 +190,8 @@ def closing_event(record: SeriesRecord, last_seq: int) -> SeriesFinishedEvent | 
     )
 
 
-def series_record(series_id: SeriesId, planned: PlannedSeries, outcome: EstimateOutcome, now: datetime) -> SeriesRecord:
+def series_record(series_id: SeriesId, planned: PlannedSeries, launch: LaunchPlan, now: datetime) -> SeriesRecord:
     draft = planned.draft
-    estimate = outcome.estimate
     plan = SeriesPlanRecord(
         subject=draft.subject,
         question=draft.question,
@@ -205,7 +201,6 @@ def series_record(series_id: SeriesId, planned: PlannedSeries, outcome: Estimate
         package=planned.package,
         repeats=draft.repeats,
         case_count=len(planned.cases),
-        per_attempt_usd=outcome.per_attempt_usd,
         snapshot=planned.snapshot,
     )
     return SeriesRecord(
@@ -214,20 +209,20 @@ def series_record(series_id: SeriesId, planned: PlannedSeries, outcome: Estimate
         flow_id=draft.flow_id,
         dataset_id=draft.dataset_id,
         on=draft.on,
-        status=SeriesStatus.AWAITING_APPROVAL if estimate.needs_approval else SeriesStatus.RUNNING,
+        status=SeriesStatus.AWAITING_APPROVAL if launch.needs_approval else SeriesStatus.RUNNING,
         plan=plan,
-        estimate=estimate,
-        cap_usd=estimate.cap_usd,
-        needs_approval=estimate.needs_approval,
+        launch=launch,
+        cap_usd=launch.cap_usd,
+        needs_approval=launch.needs_approval,
         created_at=now,
-        pause=START_PAUSE if estimate.needs_approval else None,
+        pause=START_PAUSE if launch.needs_approval else None,
     )
 
 
-def estimate_plan(planned: PlannedSeries) -> EstimatePlan:
+def launch_inputs(planned: PlannedSeries) -> LaunchInputs:
     draft = planned.draft
     experiment = draft.experiment
-    return EstimatePlan(
+    return LaunchInputs(
         experiment_id=draft.experiment_id,
         question=draft.question,
         on=draft.on,
@@ -237,21 +232,8 @@ def estimate_plan(planned: PlannedSeries) -> EstimatePlan:
         planned_cases=None if experiment is None else experiment.source.spec.plan.cases,
         variants=tuple(build.record for build in planned.variants),
         checks=planned.checks,
-        base=planned.base,
         cases_sha256=planned.snapshot.cases_sha256,
         warnings=planned.choice.warnings,
-        bound=bound_plan(planned),
-    )
-
-
-def bound_plan(planned: PlannedSeries) -> BoundPlan:
-    return BoundPlan(
-        base=planned.base,
-        projects={build.record.variant_id: build.plan for build in planned.variants},
-        judges=planned.judges.plan,
-        checks=planned.checks,
-        case=largest_case(planned.cases),
-        subject=planned.draft.subject,
     )
 
 
@@ -295,7 +277,7 @@ async def launch_series(series_id: SeriesId) -> None:
 class SeriesService:
     services: SeriesServices
 
-    async def estimate(self, experiment_id: ExperimentId, request: LaunchRequest) -> SeriesEstimate:
+    async def launch_plan(self, experiment_id: ExperimentId, request: LaunchRequest) -> LaunchPlan:
         start = SeriesStartRequest(
             experiment_id=experiment_id,
             on=request.on,
@@ -303,8 +285,7 @@ class SeriesService:
             repeats=request.repeats,
             cap_usd=request.cap_usd,
         )
-        planned = await self._planned(start, None)
-        return (await self._estimated(planned, request.cap_usd)).estimate
+        return await self._launch(await self._planned(start, None), request.cap_usd)
 
     async def start(self, request: SeriesStartRequest, actor: WriteActor) -> SeriesStarted:
         series_id = new_series_id(request.client_op_id)
@@ -315,8 +296,8 @@ class SeriesService:
             return await self._started(existing)
         runtime = launched_runtime()
         planned = await self._planned(request, runtime.plans)
-        outcome = await self._estimated(planned, request.cap_usd)
-        record = series_record(series_id, planned, outcome, utc_now())
+        launch = await self._launch(planned, request.cap_usd)
+        record = series_record(series_id, planned, launch, utc_now())
         created = await self.services.store.create(record, planned.cases)
         current = record if created else await self._record(series_id)
         await self._warm(current)
@@ -427,11 +408,9 @@ class SeriesService:
         )
         return await planner.plan(plan_request(request), PlanningState(state.report, state.snapshot), registrar)
 
-    async def _estimated(self, planned: PlannedSeries, request_cap: Decimal | None) -> EstimateOutcome:
-        runtime = optional_runtime()
-        sampler = None if runtime is None else CatalogRunSampler(DbosEngineFacade(runtime=runtime))
-        estimator = SeriesEstimator(store=self.services.store, prices=self.services.prices, sampler=sampler)
-        return await estimator.estimate(estimate_plan(planned), request_cap, await self._cap(), await self._workers())
+    async def _launch(self, planned: PlannedSeries, request_cap: Decimal | None) -> LaunchPlan:
+        builder = LaunchPlanBuilder(store=self.services.store)
+        return await builder.build(launch_inputs(planned), request_cap, await self._cap())
 
     async def _cap(self) -> ProjectCap:
         state = await self.services.workspace.state()
@@ -439,12 +418,6 @@ class SeriesService:
             return await project_spend_cap(self.services.settings, research_of(state.report.project))
         except InvalidSpendCap as error:
             raise ApiFailure("NOT_RUNNABLE", str(error)) from error
-
-    async def _workers(self) -> int | None:
-        try:
-            return await configured_workers(self.services.settings)
-        except InvalidWorkerCount:
-            return None
 
     async def _record(self, series_id: SeriesId) -> SeriesRecord:
         record = await self.services.store.series(series_id)

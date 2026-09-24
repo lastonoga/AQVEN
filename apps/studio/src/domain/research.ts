@@ -80,11 +80,8 @@ export type StabilityClass = (typeof STABILITY_CLASSES)[number]
 export const ATTEMPT_OUTCOMES = ["passed", "failed", "error", "waiting", "running"] as const
 export type AttemptOutcome = (typeof ATTEMPT_OUTCOMES)[number]
 
-export const ESTIMATE_REASONS = ["look", "wide", "enough", "no_margin", "no_history", "short_of_cases"] as const
-export type EstimateReason = (typeof ESTIMATE_REASONS)[number]
-
-export const USD_SOURCES = ["history", "prices", "bound", "unknown"] as const
-export type UsdSource = (typeof USD_SOURCES)[number]
+export const RECOMMENDATION_REASONS = ["look", "wide", "enough", "no_margin", "no_history", "short_of_cases"] as const
+export type RecommendationReason = (typeof RECOMMENDATION_REASONS)[number]
 
 export const APPROVAL_REASONS = ["cap_above_project", "spend_near_cap"] as const
 export type ApprovalReason = (typeof APPROVAL_REASONS)[number]
@@ -227,15 +224,12 @@ export type ExperimentFilter = {
 
 export type LaunchRequest = { readonly on: SeriesSplit; readonly cases: number; readonly repeats: number }
 
-export type LaunchRecommendation = { readonly cases: number; readonly repeats: number; readonly reason: EstimateReason }
+export type LaunchRecommendation = { readonly cases: number; readonly repeats: number; readonly reason: RecommendationReason }
 
-export type LaunchEstimate = {
+export type LaunchPlan = {
   readonly request: LaunchRequest
   readonly variants: number
   readonly attempts: number
-  readonly usd: number | null
-  readonly usdSource: UsdSource
-  readonly minutes: number | null
   readonly available: number
   readonly halfWidth: number | null
   readonly margin: number | null

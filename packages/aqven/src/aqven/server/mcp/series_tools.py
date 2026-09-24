@@ -16,9 +16,10 @@ from aqven.write.model import WriteActor
 MCP_ACTOR: Final = WriteActor(kind="agent", id="mcp")
 SERIES_START_DESCRIPTION: Final = (
     "Starts a series of an experiment, or a look over named cases of a flow dataset, on dev or holdout cases, and "
-    "returns at once with the estimate and the status: running, or awaiting_approval when the cap_usd you passed is "
-    "above the project spend cap and a human approves it in Studio. The estimate is information only. Every attempt "
-    "calls the models live. Then call series_get with wait_seconds."
+    "returns at once with the launch plan and the status: running, or awaiting_approval when the cap_usd you passed "
+    "is above the project spend cap and a human approves it in Studio. The launch plan counts the attempts, "
+    "recommends a number of cases with its reason and names the cap; it has no price, since spend is known only as "
+    "attempts finish. Every attempt calls the models live. Then call series_get with wait_seconds."
 )
 SERIES_GET_DESCRIPTION: Final = (
     "Status, spend, per-variant metrics with 95% CI and the verdict of a series. wait_seconds holds the answer until "

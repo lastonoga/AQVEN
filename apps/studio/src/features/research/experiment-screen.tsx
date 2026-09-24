@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { ExperimentDetail, LaunchEstimate, LaunchRequest, SeriesSummary } from "@/domain"
+import type { ExperimentDetail, LaunchPlan, LaunchRequest, SeriesSummary } from "@/domain"
 import { Page } from "@/components/studio"
 import { experimentRouteApi } from "@/lib/routes"
 import { ExperimentAnswer } from "./experiment-answer"
@@ -18,7 +18,7 @@ type ExperimentPageProps = {
   readonly experiment: ExperimentDetail
   readonly series: readonly SeriesSummary[]
   readonly initial: LaunchRequest
-  readonly estimate: LaunchEstimate | null
+  readonly plan: LaunchPlan | null
 }
 
 type StepSlotProps = {
@@ -35,9 +35,9 @@ function StepSlot({ experiment, views, selection, latest, onClose }: StepSlotPro
   return <StepInspector key={`${selection.graph}/${selection.node}`} facts={facts} latest={latest} onClose={onClose} />
 }
 
-function ExperimentPage({ experiment, series, initial, estimate }: ExperimentPageProps) {
+function ExperimentPage({ experiment, series, initial, plan }: ExperimentPageProps) {
   const { graphs, latest } = experimentRouteApi.useLoaderData()
-  const launch = useLaunch(experiment, initial, estimate)
+  const launch = useLaunch(experiment, initial, plan)
   const [selection, setSelection] = useState<StepSelection | null>(null)
   const views = graphViews(experiment, graphs)
   const detail = latest?.series ?? null
@@ -68,6 +68,6 @@ function ExperimentPage({ experiment, series, initial, estimate }: ExperimentPag
 }
 
 export function ExperimentScreen() {
-  const { experiment, series, launch, estimate } = experimentRouteApi.useLoaderData()
-  return <ExperimentPage key={experiment.id} experiment={experiment} series={series} initial={launch} estimate={estimate} />
+  const { experiment, series, launch, plan } = experimentRouteApi.useLoaderData()
+  return <ExperimentPage key={experiment.id} experiment={experiment} series={series} initial={launch} plan={plan} />
 }

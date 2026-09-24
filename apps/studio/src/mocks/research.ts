@@ -11,9 +11,9 @@ import {
   CASE_NAMES,
   datasetOf,
   detailOf,
-  estimateFor,
   experimentOf,
   initialSeries,
+  launchPlanFor,
   subjectFlowOf,
   summaryOf,
   type Attempt,
@@ -149,24 +149,24 @@ const freshSeries = (fields: Pick<SeriesState, "experiment" | "look" | "on" | "r
 })
 
 const startExperiment = (experiment: ApiExperimentDetail, body: LaunchBody) => {
-  const estimate = estimateFor(experiment, body)
-  const names = (CASE_NAMES[experiment.cases.dataset_id]?.[estimate.on] ?? []).slice(0, estimate.cases)
+  const launch = launchPlanFor(experiment, body)
+  const names = (CASE_NAMES[experiment.cases.dataset_id]?.[launch.on] ?? []).slice(0, launch.cases)
   const series = freshSeries({
     experiment: experiment.experiment_id,
     look: null,
-    on: estimate.on,
-    repeats: estimate.repeats,
+    on: launch.on,
+    repeats: launch.repeats,
     cases: names,
-    status: estimate.needs_approval ? "awaiting_approval" : "running",
+    status: launch.needs_approval ? "awaiting_approval" : "running",
   })
   states = [...states, series]
-  return { ...summaryOf(series), estimate }
+  return { ...summaryOf(series), launch }
 }
 
 const startLook = (look: LookSeed) => {
   const series = freshSeries({ experiment: null, look, on: "dev", repeats: 1, cases: look.cases, status: "running" })
   states = [...states, series]
-  return { ...summaryOf(series), estimate: detailOf(series).estimate }
+  return { ...summaryOf(series), launch: detailOf(series).launch }
 }
 
 const CASE_FILTERS: Readonly<Record<string, (row: ApiSeriesCaseRow) => boolean>> = {
@@ -319,10 +319,10 @@ export const researchHandlers = [
     return served(armFlowOf(experiment, arm))
   }),
 
-  http.post(`${API_BASE}/experiments/:experimentId/estimate`, async ({ params, request }) => {
+  http.post(`${API_BASE}/experiments/:experimentId/launch-plan`, async ({ params, request }) => {
     const experiment = experimentOf(text(params, "experimentId"))
-    if (experiment === null) return failure(NOT_FOUND, "series_estimate", "NOT_FOUND", `experiment ${text(params, "experimentId")} not found`)
-    return served(estimateFor(experiment, launchOf(await request.json())))
+    if (experiment === null) return failure(NOT_FOUND, "series_launch_plan", "NOT_FOUND", `experiment ${text(params, "experimentId")} not found`)
+    return served(launchPlanFor(experiment, launchOf(await request.json())))
   }),
 
   http.post(`${API_BASE}/series`, async ({ request }) => {

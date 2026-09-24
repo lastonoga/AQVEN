@@ -26,16 +26,17 @@ from aqven.console.series import (
     progress_line,
     run_series_command,
     started_line,
+    started_lines,
     studio_link,
 )
 from aqven.series import (
     ApprovalReason,
-    EstimateReason,
     ExperimentOrigin,
+    LaunchPlan,
     QuestionView,
     Recommendation,
+    RecommendationReason,
     SeriesDetailView,
-    SeriesEstimate,
     SeriesGetResult,
     SeriesId,
     SeriesMatrix,
@@ -58,24 +59,21 @@ TOKEN: Final = "series-token-0123456789"
 VERDICT: Final = "Signal on dev, not a finding: alt answers as often as base."
 
 
-def estimate() -> SeriesEstimate:
-    return SeriesEstimate(
+def launch_plan() -> LaunchPlan:
+    return LaunchPlan(
         on=SeriesSplit.DEV,
         cases=4,
         repeats=2,
         variants=2,
         attempts=16,
         available=4,
-        usd=Decimal("2.40"),
-        usd_source="prices",
-        minutes=2,
         half_width=None,
         mde=None,
         margin=0.05,
         spread=None,
         spread_source="none",
         icc=0.3,
-        recommended=Recommendation(cases=4, repeats=2, reason=EstimateReason.NO_HISTORY, text="no history"),
+        recommended=Recommendation(cases=4, repeats=2, reason=RecommendationReason.NO_HISTORY, text="no history"),
         below_recommended=False,
         needs_approval=False,
         project_cap_usd=Decimal("1.00"),
@@ -109,7 +107,7 @@ def detail(status: SeriesStatus, done: int) -> SeriesDetailView:
         contrasts=(),
         thresholds=(),
         aggregates=(),
-        estimate=estimate(),
+        launch=launch_plan(),
         needs_approval=status is SeriesStatus.AWAITING_APPROVAL,
         approved_by=None,
         finding_path=None,
@@ -119,7 +117,7 @@ def detail(status: SeriesStatus, done: int) -> SeriesDetailView:
 
 def started(status: SeriesStatus) -> SeriesStarted:
     summary = SeriesSummaryView.model_validate(detail(status, 0).model_dump())
-    return SeriesStarted.model_validate({**summary.model_dump(), "estimate": estimate()})
+    return SeriesStarted.model_validate({**summary.model_dump(), "launch": launch_plan()})
 
 
 def error_body(code: str, status: int) -> httpx2.Response:
@@ -383,14 +381,24 @@ async def test_a_series_failed_by_infrastructure_errors_exits_one() -> None:
     assert f"each attempt run names its error in Studio: {BASE}/research/series/{SERIES}" in out
 
 
-def test_an_upper_bound_estimate_is_named_in_the_started_line() -> None:
-    bounded = estimate().model_copy(update={"usd_source": "bound"})
-    running = started(SeriesStatus.RUNNING)
+def test_the_started_line_names_the_plan_and_the_cap_without_a_price() -> None:
+    line = started_line(started(SeriesStatus.RUNNING))
 
-    assert "estimate $2.40 (rough estimate), cap $3.00" in started_line(
-        running.model_copy(update={"estimate": bounded})
+    assert line == (
+        f"series {SERIES} started on dev: 16 attempts (4 cases × 2 repeats × 2 variants), cap $3.00, status running"
     )
-    assert "estimate $2.40, cap $3.00" in started_line(running)
+
+
+def test_a_launch_below_the_recommended_cases_says_so() -> None:
+    running = started(SeriesStatus.RUNNING)
+    recommended = Recommendation(cases=60, repeats=2, reason=RecommendationReason.WIDE, text="about 60 cases")
+    short = running.launch.model_copy(update={"recommended": recommended, "below_recommended": True})
+
+    assert list(started_lines(running)) == [started_line(running)]
+    assert list(started_lines(running.model_copy(update={"launch": short}))) == [
+        started_line(running),
+        "below the recommended 60 cases: about 60 cases",
+    ]
 
 
 def test_the_progress_line_calls_a_spend_with_unpriced_attempts_a_lower_bound() -> None:

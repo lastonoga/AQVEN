@@ -8,11 +8,11 @@ from aqven.series.model import (
     AttemptRecord,
     AttemptState,
     CaseSnapshot,
-    EstimateReason,
     ExperimentOrigin,
+    LaunchPlan,
     OutcomeClass,
     Recommendation,
-    SeriesEstimate,
+    RecommendationReason,
     SeriesId,
     SeriesPlanRecord,
     SeriesRecord,
@@ -30,24 +30,21 @@ EXPERIMENT: Final = ExperimentId("triage_agents")
 WRITER: Final = VariantId("writer")
 
 
-def estimate() -> SeriesEstimate:
-    return SeriesEstimate(
+def launch_plan() -> LaunchPlan:
+    return LaunchPlan(
         on=SeriesSplit.DEV,
         cases=2,
         repeats=1,
         variants=1,
         attempts=2,
         available=2,
-        usd=None,
-        usd_source="unknown",
-        minutes=None,
         half_width=None,
         mde=None,
         margin=None,
         spread=None,
         spread_source="none",
         icc=0.3,
-        recommended=Recommendation(cases=2, repeats=1, reason=EstimateReason.LOOK, text="look"),
+        recommended=Recommendation(cases=2, repeats=1, reason=RecommendationReason.LOOK, text="look"),
         below_recommended=False,
         needs_approval=True,
         project_cap_usd=Decimal("1.00"),
@@ -87,7 +84,6 @@ def record(series_id: str, created_at: datetime, experiment: str = EXPERIMENT) -
         package="series_shop",
         repeats=1,
         case_count=2,
-        per_attempt_usd=None,
         snapshot=snapshot,
     )
     return SeriesRecord(
@@ -98,7 +94,7 @@ def record(series_id: str, created_at: datetime, experiment: str = EXPERIMENT) -
         on=SeriesSplit.DEV,
         status=SeriesStatus.AWAITING_APPROVAL,
         plan=plan,
-        estimate=estimate(),
+        launch=launch_plan(),
         cap_usd=Decimal("1.00"),
         needs_approval=True,
         created_at=created_at,

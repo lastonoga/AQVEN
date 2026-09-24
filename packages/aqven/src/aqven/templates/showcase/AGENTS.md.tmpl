@@ -176,7 +176,7 @@ findings show it works reliably. Run the loop yourself, round after round, and s
 | 6. Fix the spec | what the prompt or the type never asked for is fixed there, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, its question and margin written before you see a number |
 | 8. Explore | series on `dev`, one change between series, until the change is done and the question is frozen |
-| 9. Confirm | one series on `holdout`, with `cases` from the estimate's `recommended.cases` when the split has them |
+| 9. Confirm | one series on `holdout`, with `cases` from the launch plan's `recommended.cases` when the split has them |
 | 10. Apply | the flow is changed, regression cases are added, the decision is recorded; then stage 4 on fresh cases, or stop |
 
 Studio calls the two splits by their purpose. **Explore** runs working cases (`dev`): numbers without a finding.
@@ -277,7 +277,7 @@ plan:
   binary check passed), `cost_usd`, `cost_of_pass`, `latency_p50_ms`, `latency_p95_ms`, `schema_valid_first_try`,
   `infra_error_rate`.
 - `plan` — `cases` and `repeats` (at most 20): the size you recommend. A series may run another size, and its
-  estimate says what size the question needs.
+  launch plan says what size the question needs.
 
 | `kind` | Keys | `confirmed` means |
 |---|---|---|
@@ -325,7 +325,7 @@ server when needed.
 
 1. `aqven check` is clean: a series refuses to start (`NOT_RUNNABLE`) on a project with errors, or when a case cannot
    run for a variant, before a single model call.
-2. `series_start` returns at once with the estimate and the status; `series_get` with `wait_seconds` waits until the
+2. `series_start` returns at once with the launch plan and the status; `series_get` with `wait_seconds` waits until the
    status settles, and after a timeout returns the current snapshot, so call it again.
 3. Do not edit the flow, its agents and prompts, the experiment, the dataset or the code while a series runs: the
    series ends `invalid` with `inputs_changed`.
@@ -349,12 +349,12 @@ server when needed.
 | `signal` | the series ran on `dev` (`dev_split`), or the deciding check is a judge without `validated_by` (`judge_not_validated`) | a number to steer by, not a finding; for `judge_not_validated`, validate the judge first |
 | `invalid` | cancelled, `inputs_changed`, more than 5% infrastructure errors, or no data | fix the cause and run again |
 
-**Spend.** The estimate carries `usd` with its `usd_source` (`history` of past series, provider `prices`, a rough
-`bound`, or `unknown`), `minutes`, `recommended` cases with its reason, `below_recommended` and warnings such as
-`short_of_cases` and `holdout_reused`. The estimate is information: a series starts at once whatever it says; there is
-no estimate-only tool. Pass `cap_usd` to keep a series inside the budget agreed in stage 1: near its cap a series
-pauses in `awaiting_approval` until a person lets it spend more. `spend.unpriced_attempts` above 0 makes `spend.usd` a
-lower bound. You never approve spend or raise the project cap; report the spend of every round.
+**Spend.** The launch plan carries the `attempts`, the `recommended` cases with its reason, `below_recommended`, the
+`cap_usd` and warnings such as `short_of_cases` and `holdout_reused`. It has no price: what a series costs is known only
+from its attempts as they finish. A series starts at once whatever the plan says; there is no plan-only tool. Pass
+`cap_usd` to keep a series inside the budget agreed in stage 1: near its cap a series pauses in `awaiting_approval`
+until a person lets it spend more. `spend.unpriced_attempts` above 0 makes `spend.usd` a lower bound. You never approve
+spend or raise the project cap; report the spend of every round.
 
 ### Reading a series
 

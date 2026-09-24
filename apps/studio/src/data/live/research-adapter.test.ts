@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { ApiSeriesCaseRow, ApiSeriesDetail, ApiSubject } from "@/domain"
 import { liveExperiments } from "@/mocks/data/experiments"
-import { caseRowsOf, detailOf, estimateFor, initialSeries, RESEARCH_SERIES } from "@/mocks/data/research"
+import { caseRowsOf, detailOf, initialSeries, launchPlanFor, RESEARCH_SERIES } from "@/mocks/data/research"
 import {
   caseRowOf,
-  estimateOf,
   experimentDetailOf,
   experimentSummaryOf,
+  launchPlanOf,
   metricId,
   money,
   seriesDetailOf,
@@ -96,11 +96,11 @@ describe("research adapter", () => {
     expect(detail.flow).toBeNull()
   })
 
-  it("keeps a missing price and time of the estimate as null", () => {
-    const api = estimateFor(experiment("reply_noninferior_mistral"), { on: "dev" })
-    expect(estimateOf(api)).toMatchObject({ request: { on: "dev", cases: 6, repeats: 3 }, usd: 0.45, usdSource: "history", capUsd: 1, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } })
-    expect(estimateOf({ ...api, usd_source: "bound" })).toMatchObject({ usdSource: "bound" })
-    expect(estimateOf({ ...api, usd: null, minutes: null })).toMatchObject({ usd: null, minutes: null })
+  it("maps the launch plan with its recommendation and cap, and no price", () => {
+    const api = launchPlanFor(experiment("reply_noninferior_mistral"), { on: "dev" })
+    const plan = launchPlanOf(api)
+    expect(plan).toMatchObject({ request: { on: "dev", cases: 6, repeats: 3 }, attempts: 36, capUsd: 1, belowRecommended: true, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } })
+    expect(Object.keys(plan)).not.toContain("usd")
   })
 
   it("maps a look series with its flow, dataset, cases and range", () => {
