@@ -24,7 +24,8 @@ type AttemptCauseKind = Literal[
     "feature_unsupported",
 ]
 type AttemptAction = Literal["retry", "repair", "fallback", "none"]
-type CallOutcome = Literal["ok", "refusal", "truncated"]
+type CallOutcome = Literal["ok", "refusal", "truncated", "error"]
+type AbandonedOutcome = Literal["refusal", "truncated", "error"]
 type CostSource = Literal["provider", "prices", "genai", "unknown"]
 type LineageRelation = Literal["fork", "replay"]
 type SpecOrigin = Literal["working_copy", "release"]

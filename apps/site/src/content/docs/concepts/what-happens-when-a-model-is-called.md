@@ -1,22 +1,24 @@
 ---
 title: What happens when a model is called
-description: Every model call lands on one of three outcomes before AQVEN parses anything, and only two kinds of retry happen for you.
+description: Every model call lands on one of four outcomes before AQVEN parses anything, and each agent decides whether an error, a refusal or a truncation fails the node, retries the model, or falls back to the next one.
 ---
 
 ## In short
 
-Every model call ends in one of three outcomes — `ok`, `refusal`, or `truncated` — decided from the
-provider's own finish reason before AQVEN tries to parse anything out of the response. Two kinds of
+Every model call ends in one of four outcomes — `ok`, `error`, `refusal`, or `truncated` — decided from
+the provider's own finish reason before AQVEN tries to parse anything out of the response. Two kinds of
 retry happen automatically: a transport-level retry for network and HTTP failures, and a
-structured-output repair retry when the response is `ok` but doesn't match the schema. Neither one
-retries a refusal or a truncation by sending the prompt again — today, a refusal or a truncation simply
-fails the node.
+structured-output repair retry when the response is `ok` but doesn't match the schema. The other three
+outcomes follow a policy you set per agent: `fail` the node, `retry` the same model, or `fallback` to the
+next model. By default an `error` is retried, and a `refusal` or a `truncated` answer fails the node.
 
-## Three outcomes, decided before any parsing
+## Four outcomes, decided before any parsing
 
 Before AQVEN tries to read structured output out of a response, it checks the finish reason the provider
 sent back with it:
 
+- The provider ended the response with an error — for example, the model wrote a broken tool call and
+  the provider reported `MALFORMED_FUNCTION_CALL` — the call is `error`.
 - The provider ran out of room and cut the answer off mid-way — the call is `truncated`.
 - The provider declined to answer at all — the call is `refusal`.
 - Anything else — the call is `ok`, and only now does AQVEN go on to parse the response into the shape
@@ -25,12 +27,14 @@ sent back with it:
 This ordering is deliberate: a response can't be checked for outcome after it's already been parsed,
 because a truncated JSON object can look like valid, complete JSON right up until a field is missing. By
 deciding the outcome first, from the finish reason rather than from whether parsing happened to succeed,
-a cut-off answer can never get silently "repaired" into an object that looks complete but isn't.
+a cut-off or broken answer can never get silently "repaired" into an object that looks complete but
+isn't. It also means your checks only ever see a response that finished normally.
 
 ## Two retries that happen automatically
 
-Two different problems get retried, at two different layers, and neither one touches a refusal or a
-truncation.
+Two different problems get retried, at two different layers, and neither one is triggered by an `error`,
+a `refusal` or a `truncated` answer — those follow the agent's outcome policy, described in the next
+section.
 
 **Transport-level retry** covers the call never really completing: a rate limit, a request timeout, a
 server error, a dropped connection. AQVEN retries these itself, honoring the provider's `retry-after`
@@ -40,8 +44,8 @@ a bad request, for instance — is never retried; only failures that look transi
 **Structured-output repair retry** covers a different problem: the call came back `ok`, but what it
 returned doesn't match the schema your node declared. AQVEN re-prompts the model with the validation
 errors so it can fix its own output, up to a bounded number of extra attempts you set per agent. This
-only fires on the `ok` branch — a response that was refused or truncated never reaches this step, because
-the outcome check already stopped it.
+only fires on the `ok` branch — a response that ended with an error, was refused or was truncated never
+reaches this step, because the outcome check already stopped it.
 
 The [showcase](/start/quickstart/) project's `gpt` agent (`agents/gpt.yaml`) raises this bound above the default of 1, for an
 agent that drafts a long answer and revises it against critique before a final call:
@@ -64,16 +68,54 @@ Here's the transport retry in action: a call gets back a `429` response with `re
 row, then succeeds on the third attempt — each retry waits the two seconds the provider asked for, not a
 guess.
 
-## A refusal or a truncation fails the node
+## What an agent does with an error, a refusal or a truncation
 
-This is the part worth stating plainly: neither retry mechanism above re-sends the prompt after a
-refusal or a truncation. There's no built-in step that asks for more room and tries again, and no
-built-in fallback to a model with a larger context window. A `refusal` or `truncated` outcome fails the
-node, the same run turn it happened on, full stop.
+Each agent chooses what happens after each of the three bad outcomes, with one field per outcome under
+`output`:
 
-If your workflow needs to survive a refusal or a truncation, that recovery is something you build into
-the flow yourself — routing to a fallback path after the node fails, for example — not something AQVEN
-does for you underneath the node.
+| Field | Outcome | Default |
+|---|---|---|
+| `on_error` | `error` | `retry` |
+| `on_refusal` | `refusal` | `fail` |
+| `on_truncated` | `truncated` | `fail` |
+
+Each field takes one of three values:
+
+- `fail` — the node fails on the same run turn, with the outcome as its error code (`provider_error`,
+  `refusal`, or `truncated`) and a hint that names the field to change in the agent file.
+- `retry` — AQVEN sends the same request to the same model again. The bad response is dropped: it is
+  not part of the conversation the model sees next, and your checks never see it. These retries share
+  the `output.retries` budget with repair retries, so one model answers at most `output.retries + 1`
+  times for a node. When the budget is used up, the node fails.
+- `fallback` — AQVEN sends the same request to the next model in the agent's `fallback_models`. That
+  model starts with its own full `output.retries` budget. When no model is left, the node fails.
+
+An agent whose primary model sometimes ends a response with an error, and which has a second model to
+fall back on:
+
+```yaml
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Sorts a support ticket into a queue"
+model: "openrouter:google/gemini-2.5-flash-lite"
+fallback_models:
+- "openrouter:openai/gpt-oss-20b"
+output:
+  retries: 3
+  on_error: "fallback"
+```
+
+When the first model ends a response with an error, this agent doesn't spend its three retries asking the
+same model again: it sends the same request to the fallback model, which gets its own three retries. A
+refusal or a truncation still fails the node, because `on_refusal` and `on_truncated` keep their
+default. `aqven check` rejects `fallback` on an agent that has no `fallback_models`
+(`E_OUTCOME_FALLBACK`).
+
+Every attempt that ends this way shows up in the run history as a failed attempt, with its cause
+(`provider_error`, `refusal`, or `truncated`) and what AQVEN did next (`retry`, `fallback`, or `none`). If
+the node streams its output, the text of the dropped attempt is marked as discarded, the same way as
+after a repair retry. The tokens and cost the provider reported for the dropped attempt still count
+toward the node's usage.
 
 ## What gets redacted, and when
 
@@ -95,18 +137,19 @@ against those five patterns.
 
 ## How this shapes what you do
 
-Don't build your own retry loop around network errors or schema mismatches — both are already handled
-the same way for every model call in the project. Do build your own handling for a refusal or a
-truncation if your workflow needs to survive one: check for that failure after the node and route around
-it, because AQVEN won't retry the same prompt or fall back to another model for you. And don't rely on
-every call's full prompt and response being scrubbed of personal data — only a failed attempt's captured
-output is, and only for the five patterns listed above.
+Don't build your own retry loop around network errors, schema mismatches or provider errors — all three
+are already handled the same way for every model call in the project. Do choose an outcome policy per
+agent: `fallback` when another model is likely to succeed where the first one failed, `retry` when the
+failure looks random, and `fail` when a refusal or a cut-off answer should stop the workflow so that the
+flow can route around the failed node. And don't rely on every call's full prompt and response being
+scrubbed of personal data — only a failed attempt's captured output is, and only for the five patterns
+listed above.
 
 ## See also
 
 - [What this is built on](/concepts/what-this-is-built-on/) — the reader-facing summary of these same
-  three behaviors, and everything else AQVEN takes as-is versus adds itself.
-- [Agent specification](/reference/agents/) — the literal `output.retries`, `on_refusal`, and
+  behaviors, and everything else AQVEN takes as-is versus adds itself.
+- [Agent specification](/reference/agents/) — the literal `output.retries`, `on_error`, `on_refusal`, and
   `on_truncated` fields, their types, and their defaults.
 - [How to check your model providers are configured](/engine/check-providers/) — what `output.strict`
   does instead of leaning on this retry, and what `aqven check` requires before it compiles.

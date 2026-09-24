@@ -3193,7 +3193,7 @@ export const liveNodeDetails: Readonly<Record<string, ApiNodeDetail>> = {
       "kind": "Agent",
       "description": "Gemini agent",
       "model": "openrouter:google/gemini-2.5-flash-lite",
-      "output": { "mode": "auto", "strict": true, "retries": 1, "on_refusal": "fail", "on_truncated": "fail" }
+      "output": { "mode": "auto", "strict": true, "retries": 1, "on_error": "retry", "on_refusal": "fail", "on_truncated": "fail" }
     },
     "spec": {
       "apiVersion": "aqven/v1",

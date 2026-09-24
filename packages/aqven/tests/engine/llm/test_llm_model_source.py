@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from llm_harness import FakeScope, agent, answer_inference, answer_node, project
+from llm_harness import FakeScope, agent, answer_inference, answer_node, capabilities, project
 from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.messages import ModelMessage, ModelRequest, UserPromptPart
 from pydantic_ai.models import Model, ModelRequestParameters
@@ -16,15 +16,17 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from aqven.engine.assembly import EngineModelSource, ProviderKeys
 from aqven.engine.request import RunSpec
 from aqven.engine.runtime import RunBudgets
-from aqven.models import declared_model_ref
+from aqven.ir import AgentModel
+from aqven.models import declared_model_ref, declared_position
 from aqven.models.usage import node_usage_log
 from aqven.runtime import CapabilityRoute, CassetteConfig, CassetteMode, ModelProfile, ModelRoute
 from aqven.runtime.address import RunId
-from aqven.spec import FlowId, Limits
+from aqven.spec import FlowId, Limits, ModelString, ProviderName
 from aqven.testing.engines import FixedModels, offline_environment
 
 DECLARED: Final = "openrouter:openai/gpt-oss-20b"
 ROUTED: Final = "openai:gpt-5.4-mini"
+SECOND: Final = "openrouter:qwen/qwen3-32b"
 PRICED_NAME: Final = "gpt-4o-mini"
 ROOT_RUN: Final = RunId("run-7")
 BRANCH_RUN: Final = RunId("run-7::fan#left")
@@ -129,3 +131,25 @@ def test_run_budgets_follow_the_root_run_and_are_dropped_after_it() -> None:
     assert shared.limits.request_limit == 3
     assert budgets.budget(ROOT_RUN, None) is None
     assert budgets.entries == {}
+
+
+def test_the_chain_can_start_at_a_fallback_model_and_stamps_its_position() -> None:
+    fallback = AgentModel(model=ModelString(SECOND), provider=ProviderName("openrouter"), capabilities=capabilities())
+    two = agent(models=(*agent().models, fallback))
+    factories = FixedModels(
+        {
+            DECLARED: FunctionModel(stream_function=reply, model_name=PRICED_NAME),
+            SECOND: FunctionModel(stream_function=reply, model_name=PRICED_NAME),
+        }
+    )
+    model_source = EngineModelSource(factories, ProviderKeys(None, offline_environment()))
+    run_scope = scope(RunSpec(flow_id=FlowId("support")))
+    messages: list[ModelMessage] = [ModelRequest(parts=[UserPromptPart("hello")])]
+
+    first = asyncio.run(model_source.model(run_scope, two, frozenset()))
+    second = asyncio.run(model_source.model(run_scope, two, frozenset(), 1))
+    answered = asyncio.run(second.request(messages, None, ModelRequestParameters()))
+    primary = asyncio.run(first.request(messages, None, ModelRequestParameters()))
+
+    assert (declared_model_ref(answered), declared_position(answered)) == (SECOND, 1)
+    assert (declared_model_ref(primary), declared_position(primary)) == (DECLARED, 0)

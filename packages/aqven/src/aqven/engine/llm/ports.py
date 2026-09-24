@@ -26,7 +26,9 @@ class CodeLoader(Protocol):
 
 
 class ModelSource(Protocol):
-    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model: ...
+    async def model(
+        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
+    ) -> Model: ...
 
 
 class SecretSource(Protocol):

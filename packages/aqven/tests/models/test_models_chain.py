@@ -46,6 +46,7 @@ from aqven.models import (
     CassettePolicy,
     CassetteStore,
     DirectoryCassetteStore,
+    ErroredOutput,
     GuardedModelFactory,
     MemoryCassetteStore,
     MissingProviderKey,
@@ -64,6 +65,7 @@ from aqven.models import (
     request_key,
 )
 from aqven.models.cassette import CASSETTE_BEHAVIORS
+from aqven.models.outcome import gate_response
 from aqven.models.rate import RateLimiter
 from aqven.ports.prices import NO_PRICES, CachedPrices
 from aqven.ports.settings import provider_key_setting
@@ -205,6 +207,41 @@ def test_refusal_is_not_retried() -> None:
         asyncio.run(agent.run("judge"))
 
     assert inner.streams == 1
+
+
+def test_error_finish_raises_errored_output_with_the_native_reason() -> None:
+    script = Script(
+        chunks=(Chunk(text="looping"),),
+        finish_reason="error",
+        provider_details={"finish_reason": "MALFORMED_FUNCTION_CALL"},
+    )
+    inner = ScriptedModel([script])
+    agent = verdict_agent(guarded(inner, policy()))
+
+    with pytest.raises(ErroredOutput) as raised:
+        asyncio.run(agent.run("judge"))
+
+    assert raised.value.reason == "MALFORMED_FUNCTION_CALL"
+    assert raised.value.response.finish_reason == "error"
+    assert inner.streams == 1
+
+
+@pytest.mark.parametrize(
+    ("details", "reason"),
+    [
+        ({"native_finish_reason": "MALFORMED_FUNCTION_CALL"}, "MALFORMED_FUNCTION_CALL"),
+        ({"error": "upstream failed"}, "upstream failed"),
+        (None, "error"),
+    ],
+)
+def test_the_gate_turns_an_error_finish_into_errored_output(details: dict[str, str] | None, reason: str) -> None:
+    response = ModelResponse(parts=[TextPart("partial")], finish_reason="error", provider_details=details)
+
+    with pytest.raises(ErroredOutput) as raised:
+        gate_response(response, None)
+
+    assert raised.value.reason == reason
+    assert str(raised.value) == f"error: {reason}"
 
 
 def test_record_then_replay_strict_streams_the_same_events(tmp_path: Path) -> None:

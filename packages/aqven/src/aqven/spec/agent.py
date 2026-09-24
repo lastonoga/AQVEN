@@ -43,6 +43,7 @@ class AgentOutputSpec(SpecModel):
     mode: OutputModeSetting = OutputModeSetting.AUTO
     strict: bool = True
     retries: int = Field(default=1, ge=0, le=5)
+    on_error: OutcomePolicy = OutcomePolicy.RETRY
     on_refusal: OutcomePolicy = OutcomePolicy.FAIL
     on_truncated: OutcomePolicy = OutcomePolicy.FAIL
 

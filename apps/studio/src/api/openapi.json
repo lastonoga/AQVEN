@@ -11101,6 +11101,10 @@
             "title": "Retries",
             "default": 1
           },
+          "on_error": {
+            "$ref": "#/components/schemas/OutcomePolicy",
+            "default": "retry"
+          },
           "on_refusal": {
             "$ref": "#/components/schemas/OutcomePolicy",
             "default": "fail"
@@ -12355,7 +12359,8 @@
         "enum": [
           "ok",
           "refusal",
-          "truncated"
+          "truncated",
+          "error"
         ]
       },
       "CancelRequest": {
@@ -14702,6 +14707,10 @@
             "minimum": 0,
             "title": "Retries",
             "default": 1
+          },
+          "on_error": {
+            "$ref": "#/components/schemas/OutcomePolicy",
+            "default": "retry"
           },
           "on_refusal": {
             "$ref": "#/components/schemas/OutcomePolicy",
@@ -17274,6 +17283,7 @@
           "E_HUMAN_FORM_TYPE",
           "E_HUMAN_DEFAULT_INVALID",
           "E_APPROVAL_TOOL",
+          "E_OUTCOME_FALLBACK",
           "E_DYNAMIC_LIMITS",
           "E_DYNAMIC_SOURCE",
           "E_DYNAMIC_VALUE_TYPE",
@@ -24107,6 +24117,7 @@
         "type": "string",
         "enum": [
           "fail",
+          "retry",
           "fallback"
         ],
         "title": "OutcomePolicy"

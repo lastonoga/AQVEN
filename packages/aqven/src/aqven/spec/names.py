@@ -120,6 +120,7 @@ class OnFail(StrEnum):
 
 class OutcomePolicy(StrEnum):
     FAIL = "fail"
+    RETRY = "retry"
     FALLBACK = "fallback"
 
 

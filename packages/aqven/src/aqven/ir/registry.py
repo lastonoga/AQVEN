@@ -66,6 +66,7 @@ class CompiledAgentOutput(IrModel):
     instruction: str | None = None
     strict: bool = True
     retries: Annotated[int, Field(ge=0, le=5)] = 1
+    on_error: OutcomePolicy = OutcomePolicy.RETRY
     on_refusal: OutcomePolicy = OutcomePolicy.FAIL
     on_truncated: OutcomePolicy = OutcomePolicy.FAIL
 
