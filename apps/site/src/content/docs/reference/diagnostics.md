@@ -50,7 +50,6 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_TOOL_UNKNOWN` | `error` | — |
 | `E_PROVIDER_UNKNOWN` | `error` | — |
 | `E_MODALITY_UNSUPPORTED` | `error` | — |
-| `E_STRICT_UNSUPPORTED` | `error` | — |
 | `E_TEXT_OUTPUT` | `error` | — |
 | `E_SECRET_LITERAL` | `error` | — |
 | `E_SECRET_REF_SYNTAX` | `error` | — |
