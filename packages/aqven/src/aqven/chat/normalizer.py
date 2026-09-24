@@ -51,6 +51,7 @@ from aqven.chat.turn_cost import TurnCostMeter
 from aqven.chat.turn_usage import TurnUsageMeter
 from aqven.ports.chat import (
     ChatErrorCode,
+    ChatFinishReason,
     ChatMessageId,
     ChatState,
     ChatStopReason,
@@ -126,6 +127,7 @@ class ClaudeEventNormalizer:
         self._message_id: ChatMessageId | None = None
         self._model: str | None = None
         self._streamed: set[str] = set()
+        self._replayed_blocks: dict[ChatMessageId, int] = {}
         self._blocks: dict[int, _Block] = {}
         self._started: set[ChatToolCallId] = set()
         self._tools: dict[ChatToolCallId, _ToolCall] = {}
@@ -173,6 +175,7 @@ class ClaudeEventNormalizer:
         self._blocks.clear()
         self._denied.clear()
         self._streamed.clear()
+        self._replayed_blocks.clear()
         self._started.clear()
         self._tools.clear()
         self._interrupting = False
@@ -200,9 +203,15 @@ class ClaudeEventNormalizer:
         self._error_reported = True
         return (error_raised(code, message, retryable),)
 
-    def finished(self, stop_reason: ChatStopReason, duration_ms: int, usage: ChatUsage | None) -> ChatEventBuilders:
+    def finished(
+        self,
+        stop_reason: ChatStopReason,
+        duration_ms: int,
+        usage: ChatUsage | None,
+        reason: ChatFinishReason | None = None,
+    ) -> ChatEventBuilders:
         self._interrupting = False
-        return (*self.transition("idle"), turn_finished(stop_reason, duration_ms, usage, self.agent))
+        return (*self.transition("idle"), turn_finished(stop_reason, duration_ms, usage, self.agent, reason))
 
     def normalize(self, message: Message) -> ChatEventBuilders:
         return dispatch(self._message_routes, message)
@@ -288,9 +297,11 @@ class ClaudeEventNormalizer:
         message_id = ChatMessageId(message.message_id) if message.message_id else self._current_message()
         replay = message.parent_tool_use_id is None and message.message_id not in self._streamed
         self._model = message.model
+        first = self._replayed_blocks.get(message_id, 0)
+        self._replayed_blocks[message_id] = first + len(message.content)
         blocks = tuple(
             builder
-            for index, block in enumerate(message.content)
+            for index, block in enumerate(message.content, start=first)
             for builder in dispatch(self._assistant_routes(message_id, index, replay), block)
         )
         return (*blocks, *self._assistant_error(message))

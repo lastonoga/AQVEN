@@ -28,6 +28,9 @@ service or do anything asynchronous, that's a `tool` node instead — a `code` n
   record type for you from the node's `out` list, so you import it rather than define it. Run
   `{{CLI_COMMAND}} generate` (or `{{CLI_COMMAND}} check`, which does this too) any time you change
   `in` or `out` to regenerate that type.
+- Edit the function while `{{CLI_COMMAND}} dev` is running and just run the flow again: the server notices
+  that the project's Python files changed and imports them afresh for the next run — the step, the modules
+  it imports, and the generated types. There's no server to restart.
 
 ### Example
 

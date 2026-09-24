@@ -220,6 +220,8 @@ const chat = {
     ),
   interrupt: async (sessionId: ChatSessionId) =>
     unwrap(await api.POST("/api/chat/sessions/{session_id}/interrupt", { params: { path: { session_id: sessionId } } })),
+  transcript: async (sessionId: ChatSessionId, query: { readonly before_seq?: number; readonly limit?: number }) =>
+    unwrap(await api.GET("/api/chat/sessions/{session_id}/transcript", { params: { path: { session_id: sessionId }, query } })),
 }
 
 const SECRET_SCOPE: SettingScope = "project"

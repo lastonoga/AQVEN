@@ -50,8 +50,28 @@ from a terminal, while watching every command, file edit, and tool call as it ha
   turn. A message marked **Queued — sent after this turn** waits for the current turn to end and then
   starts the next one: Codex does this when it can't take new input yet, for example in the first moment
   of a turn.
+- **Long threads open fast and look exactly as they did live.** Opening a thread, switching back to it, or
+  reloading the page shows its newest turns right away: every thinking block, every tool call with its full
+  arguments and result, commands with their output, file edits with their diffs, and the answers — nothing is
+  summarised or left out. Scroll up and earlier turns load by themselves as you get near the top; there's no
+  button to press. New activity keeps streaming in at the bottom as usual.
 - **Stop a running turn** with the square button next to Send. It stops the agent where it is. Messages
   you queued aren't dropped — the agent reads them next, in a new turn.
+- **If Stop doesn't take, use Reset.** When the thread still shows **Working…** a few seconds after you
+  pressed Stop, the square button turns into **Reset**. Reset doesn't wait for the agent: Studio closes the
+  agent's process, marks the turn stopped, and unlocks the composer. Your next message starts the agent
+  again and it carries on with the same conversation.
+- **The agent can carry on by itself.** If it started a command in the background during a turn, it may
+  wake up after that turn ended — when the command finishes — and keep working. That work shows up as a new
+  turn you didn't write a message for, opened by a line reading **The agent continued on its own**, and
+  Stop works on it like on any other turn.
+- **A server stop or restart never leaves a thread stuck.** If the Studio server stops while a turn is
+  running, the turn shows as stopped as soon as the server is back, instead of **Working…** forever. Send a
+  message to go on; the agent resumes the conversation where it left off.
+- **The agent can't stop or restart the server it runs in.** A command that would kill the project server,
+  or start another `{{CLI_COMMAND}} dev` or `{{CLI_COMMAND}} serve`, is refused and the agent is told why —
+  that server is what keeps the chat alive. It never needs a restart to use new code: the next run picks up
+  whatever the agent or you changed in the project's Python files — code steps, tools, generated types.
 - The **Add context** button next to the composer and each message's **more actions** (`⋯`) button don't
   do anything yet — they're placeholders reserved for later.
 
