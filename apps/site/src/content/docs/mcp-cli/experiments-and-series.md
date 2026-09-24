@@ -24,19 +24,20 @@ flow](/mcp-cli/research-loop/) is the order to use them in, round after round.
   single model call.
 - **`series_start`** takes exactly one of `experiment_id` or `look` (below), plus `on` (`dev` or
   `holdout`, `dev` by default) and, optionally, `cases`, `repeats` (at most 20), `cap_usd` and a
-  `client_op_id`. It returns at once with the series summary and the `estimate`: attempts, dollars,
-  minutes, the expected interval half-width and the recommended number of cases. Sending the same
+  `client_op_id`. It returns at once with the series summary and the `launch` plan: attempts, the
+  expected interval half-width, the recommended number of cases and the cap. It has no price: what a
+  series costs depends on the models and is known only from its attempts as they finish. Sending the same
   `client_op_id` again returns the same series instead of starting a second one.
 - **The status after `series_start` is `running` or `awaiting_approval`.** A series starts by itself,
-  whatever its estimate, under the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by
+  under the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by
   default; a local override on the project server wins on that computer) or the `cap_usd` you pass. Only
   a `cap_usd` above the project cap waits for a person before anything runs. While it runs, a series whose
   spend reaches 90% of its cap starts no new attempts, lets the running ones finish and waits in
   `awaiting_approval` with `pause.reason` `spend_near_cap` and `pause.spent_usd`. There is no MCP tool for
   approving: tell the user what it spent, and they continue it with a higher cap in Studio or with
-  `POST /api/series/{series_id}/approve`. There is no estimate-only tool either: the estimate is
+  `POST /api/series/{series_id}/approve`. There is no plan-only tool either: the launch plan is
   information. A person who wants it first reads it in Studio's Launch panel, or from
-  `POST /api/experiments/{experiment_id}/estimate`.
+  `POST /api/experiments/{experiment_id}/launch-plan`.
 - **`series_get`** takes a `series_id` and `wait_seconds` (0 to 50). With `wait_seconds` above 0 it
   holds the answer until the series is `done`, `cancelled`, `failed`, `awaiting_approval` or
   `waiting_human`, or until the time runs out, and then returns the current snapshot. Call it again
@@ -94,10 +95,10 @@ only the working ones and counts the rest in `hidden_cases`.
 
 In the [showcase](/start/quickstart/) project, `reply_overpromise_risk` asks whether the `polish` range
 of `support_case` keeps its `promises` check above 0.97 with a margin of 0.01. Before starting it on two
-working (`dev`) cases, repeated twice, look at the estimate `series_start` would return. Studio asks the same
-question with `POST /api/experiments/reply_overpromise_risk/estimate` and the body
+working (`dev`) cases, repeated twice, look at the launch plan `series_start` would return. Studio asks the
+same question with `POST /api/experiments/reply_overpromise_risk/launch-plan` and the body
 `{"on": "dev", "cases": 2, "repeats": 2}`. The response below is real, trimmed, from AQVEN's example
-project `lumen` with no price history and no provider key, on a machine without network. The showcase
+project `lumen` with no series history and no provider key, on a machine without network. The showcase
 template is the same project under your package name, and the salt of the split is the package name, so
 your count of working cases can differ by one or two:
 
@@ -109,9 +110,6 @@ your count of working cases can differ by one or two:
   "variants": 1,
   "attempts": 4,
   "available": 6,
-  "usd": "0.0047567880",
-  "usd_source": "bound",
-  "minutes": null,
   "half_width": 0.24352108850049436,
   "margin": 0.01,
   "recommended": {
@@ -128,12 +126,9 @@ your count of working cases can differ by one or two:
 }
 ```
 
-`usd_source` says where the dollars come from: `history` (earlier series of this experiment), `prices`
-(the token counts of past runs of the flow at today's prices), `bound` or `unknown`. With no series of
-this experiment yet, `usd_source` is `bound`: a rough estimate from the rendered prompt
-of the largest planned case and a typical answer (the agent's `max_tokens`, at most 1,000 tokens), times
-the loop caps and fan-out and a 1.5 margin, priced per token. OpenRouter's price list was out of reach here, so the price came from the `genai-prices` table
-bundled with the engine. `project_cap_source` says where the project cap came from: `project` for
+The plan has no dollars: what an attempt costs depends on the models it calls, so the series learns it
+from its own attempts as they finish, and the cap keeps the total in check. `project_cap_source` says
+where the project cap came from: `project` for
 `aqven.yaml`, as here, `override` for a local override, `default` when neither sets it. No `cap_usd` was
 passed, so `needs_approval` is `false` and the series cap is the project cap:
 `series_start` with the same `on`, `cases` and `repeats` starts the series as `running` at once, with a

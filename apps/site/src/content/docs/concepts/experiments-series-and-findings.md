@@ -106,31 +106,24 @@ before your first message. An agent you start yourself should read it before it 
 
 ## What a series costs
 
-Every attempt calls the models, so a series shows its **estimate** before it runs: attempts, dollars and
-minutes. The dollars have a source, and Studio labels it:
+Every attempt calls the models, and what it costs depends on the models it calls, so a series has no
+price before it runs. Its **launch plan** shows what it will run instead: the attempts (cases × repeats ×
+variants), the recommended number of cases and the cap. The spend is counted as the attempts finish.
 
-| `usd_source` | Where the number comes from | Studio shows |
-|---|---|---|
-| `history` | the average cost of the same variant's attempts in earlier series of this experiment | ≈ from past series |
-| `prices` | the token counts of past runs of the flow, at today's token prices | ≈ at provider prices |
-| `bound` | a rough estimate when nothing has run yet: the rendered prompt of the largest case plus 1,600 tokens per image or file in, a typical answer out (the agent's `max_tokens`, at most 1,000), times loop caps and fan-out, times 1.5 | ~ rough estimate |
-| `unknown` | a model of the series has no known price | no price estimate |
+The cost of a finished call comes from the provider's own report first. Without one, the call is priced by
+the provider's own price list (OpenRouter's public model list), then by the `genai-prices` table bundled
+with the engine. A call that nothing prices is counted as unknown, not free. When some attempts ran on such
+a model, the spend of the series is a lower bound, and every surface says so.
 
-When variants differ, the series shows the least certain source of them. A token price comes from the
-provider's own price list first (OpenRouter's public model list), then from the `genai-prices` table
-bundled with the engine. The cost of a finished call comes from the provider's own report first. A call
-that nothing prices is counted as unknown, not free. When some attempts ran on such a model, the spend of
-the series is a lower bound, and every surface says so.
-
-The estimate is information only; what a series actually spends decides when a person is asked. The
-project spend cap lives in `aqven.yaml` as `research.spend_cap_usd`, $1.00 in every new project and $1.00
+What a series actually spends decides when a person is asked. The project spend cap lives in `aqven.yaml` as `research.spend_cap_usd`, $1.00 in every new project and $1.00
 when the block is missing. A local override with the same key on the project server wins on that computer
 only.
 
 The cap works like this:
 
-- **Every series starts at once**, whatever its estimate, with the project cap as its own cap.
-- **Near the cap it pauses.** When the spend plus a reserve for each running attempt reaches 90% of the
+- **Every series starts at once**, with the project cap as its own cap.
+- **Near the cap it pauses.** When the spend plus a reserve for each running attempt (the most a finished
+  attempt of the series has cost) reaches 90% of the
   series cap, the series starts no new attempts, lets the running ones finish and waits in
   `awaiting_approval`, with `pause.reason` `spend_near_cap` and `pause.spent_usd`. A person continues it
   with a higher cap (double the old one unless they type another) or stops it. An agent can start a series

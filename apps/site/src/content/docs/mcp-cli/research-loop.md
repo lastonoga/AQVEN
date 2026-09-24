@@ -37,7 +37,7 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | 6. Fix the spec | what the prompt never asked for is fixed in the prompt or the type, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, written before any number |
 | 8. Explore | series on working cases, one change between series, until the change is done and the question is fixed |
-| 9. Confirm | one series on held-out cases, with `cases` from the estimate's recommendation when the half has them; `verdict.text` quoted |
+| 9. Confirm | one series on held-out cases, with `cases` from the launch plan's recommendation when the half has them; `verdict.text` quoted |
 | 10. Apply | the flow changes, regression cases are added, the decision is recorded; then stage 4 on fresh cases, or stop |
 
 Stages 4 to 10 are one round. A series starts by itself, and pauses when its spend reaches 90% of the

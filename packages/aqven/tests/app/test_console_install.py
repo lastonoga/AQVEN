@@ -28,7 +28,7 @@ from aqven.app.options import server_options
 from aqven.cli import EXIT_USAGE, build_parser, main
 from aqven.runtime.events import RunEvent
 from aqven.runtime.runs import Page, RunStarted, RunStartRequest
-from aqven.series.model import SeriesEstimate, SeriesId, SeriesStatus
+from aqven.series.model import LaunchPlan, SeriesId, SeriesStatus
 from aqven.series.views import (
     LaunchRequest,
     SeriesCancelRequest,
@@ -232,7 +232,7 @@ class ScriptedSeries:
     def __init__(self, events: Sequence[SeriesEvent]) -> None:
         self.scripted = tuple(events)
 
-    async def estimate(self, experiment_id: ExperimentId, request: LaunchRequest) -> SeriesEstimate:
+    async def launch_plan(self, experiment_id: ExperimentId, request: LaunchRequest) -> LaunchPlan:
         unused_series()
 
     async def start(self, request: SeriesStartRequest, actor: WriteActor) -> SeriesStarted:

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import { API_BASE } from "@/api/client"
 import { liveExperiments } from "@/mocks/data/experiments"
 import type { ApiSeriesSummary } from "@/domain"
-import { estimateFor, initialSeries, RESEARCH_SERIES, summaryOf } from "@/mocks/data/research"
+import { initialSeries, launchPlanFor, RESEARCH_SERIES, summaryOf } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
 
@@ -16,7 +16,7 @@ const section = (name: string): Promise<HTMLElement> => screen.findByRole("regio
 
 const nodeBox = (graph: HTMLElement, name: string): HTMLElement | null => within(graph).getByText(name).closest(".react-flow__node")
 
-const RUN = /^Run( · .+)?$/
+const RUN = "Run"
 
 const cellsOf = (row: HTMLElement, role: "columnheader" | "cell"): readonly string[] => within(row).queryAllByRole(role).map((cell) => cell.textContent)
 
@@ -41,13 +41,13 @@ const launchSummary = async (): Promise<HTMLElement> => within(await section("La
 const launchRun = async (): Promise<HTMLElement> => within(await section("Launch")).getByRole("button", { name: "Run" })
 
 describe("ExperimentScreen: question", () => {
-  it("titles the page with the question, the verdict of the latest series and a run button with the price", async () => {
+  it("titles the page with the question, the verdict of the latest series and a run button", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     expect(await screen.findByRole("heading", { level: 1, name: "Variant mistral is not worse than variant gpt on critique by more than 0.05" })).toBeTruthy()
     expect(screen.queryByText(/^Guardrails:/)).toBeNull()
     expect(screen.getAllByText("reply_noninferior_mistral").length).toBeGreaterThan(0)
     expect(screen.getAllByText("confirmed")[0]).toBeTruthy()
-    expect(screen.getByRole("button", { name: "Run · ≈ $0.45 from past series" }).hasAttribute("disabled")).toBe(false)
+    expect(screen.getAllByRole("button", { name: RUN }).map((button) => button.hasAttribute("disabled"))).toEqual([false, false])
   })
 })
 
@@ -349,7 +349,7 @@ describe("ExperimentScreen: launch", () => {
     expect(repeatsInput()).toHaveProperty("value", "3")
     expect(within(launch).getByRole("radio", { name: "Explore · working cases" }).getAttribute("aria-checked")).toBe("true")
     const summary = await launchSummary()
-    expect(summary.textContent).toBe("36 attempts · ≈ $0.45 from past series · cap $1.00")
+    expect(summary.textContent).toBe("36 attempts · 6 cases × 3 repeats × 2 variants · cap $1.00, pauses near it for your approval")
     expect(summary.compareDocumentPosition(await launchRun()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect((await launchRun()).hasAttribute("disabled")).toBe(false)
   })
@@ -364,20 +364,20 @@ describe("ExperimentScreen: launch", () => {
     expect(repeatsInput()).toHaveProperty("value", "4")
     expect((await launchSummary()).textContent).toMatch(/^40 attempts · /)
     await waitFor(async () => {
-      expect((await launchSummary()).textContent).toBe("40 attempts · ≈ $0.50 from past series · cap $1.00")
+      expect((await launchSummary()).textContent).toBe("40 attempts · 5 cases × 4 repeats × 2 variants · cap $1.00, pauses near it for your approval")
     })
   })
 
-  it("keeps the last estimate dimmed while it re-estimates and asks once after the steps settle", async () => {
+  it("keeps the last plan dimmed while it re-plans and asks once after the steps settle", async () => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     const launch = await section("Launch")
     const asked = vi.fn()
     server.use(
-      http.post(`${API_BASE}/experiments/:experimentId/estimate`, () => {
+      http.post(`${API_BASE}/experiments/:experimentId/launch-plan`, () => {
         asked()
-        return HttpResponse.json(estimateFor(experiment, { on: "dev", cases: 6, repeats: 6 }))
+        return HttpResponse.json(launchPlanFor(experiment, { on: "dev", cases: 6, repeats: 6 }))
       }),
     )
     const more = within(launch).getByRole("button", { name: "More repeats" })
@@ -385,16 +385,16 @@ describe("ExperimentScreen: launch", () => {
     fireEvent.click(more)
     fireEvent.click(more)
     const summary = await launchSummary()
-    expect(summary.textContent).toBe("72 attempts · ≈ $0.45 from past series · cap $1.00")
+    expect(summary.textContent).toBe("72 attempts · 6 cases × 6 repeats × 2 variants · cap $1.00, pauses near it for your approval")
     expect(summary.querySelector("[aria-busy=true]")).toBeTruthy()
     await waitFor(() => {
       expect(summary.querySelector("[aria-busy=true]")).toBeNull()
     })
-    expect(summary.textContent).toBe("72 attempts · ≈ $0.90 from past series · cap $1.00")
+    expect(summary.textContent).toBe("72 attempts · 6 cases × 6 repeats × 2 variants · cap $1.00, pauses near it for your approval")
     expect(asked).toHaveBeenCalledTimes(1)
   })
 
-  it("re-estimates a smaller launch and keeps it runnable with a warning", async () => {
+  it("re-plans a smaller launch and keeps it runnable with a warning", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     fireEvent.change(casesInput(), { target: { value: "3" } })
     await waitFor(async () => {
@@ -402,33 +402,22 @@ describe("ExperimentScreen: launch", () => {
     })
     expect(await within(await section("Launch")).findByText("52 recommended, only 6 here: expect a wide interval")).toBeTruthy()
     expect((await launchRun()).hasAttribute("disabled")).toBe(false)
-    expect(screen.getByRole("button", { name: /^Run · / }).hasAttribute("disabled")).toBe(false)
+    expect(screen.getAllByRole("button", { name: RUN }).map((button) => button.hasAttribute("disabled"))).toEqual([false, false])
   })
 
-  it("still runs up to the cap when the models have no price", async () => {
+  it("says why the planned cases are enough when the plan meets the recommendation", async () => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
+    const enough = { cases: 6, repeats: 3, reason: "enough", text: "enough" }
     server.use(
-      http.post(`${API_BASE}/experiments/:experimentId/estimate`, () =>
-        HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd: null, minutes: null, usd_source: "unknown" }),
+      http.post(`${API_BASE}/experiments/:experimentId/launch-plan`, () =>
+        HttpResponse.json({ ...launchPlanFor(experiment, { on: "dev" }), half_width: 0.04, recommended: enough, below_recommended: false }),
       ),
     )
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    expect((await launchSummary()).textContent).toBe("36 attempts · no price estimate · cap $1.00")
-    expect(screen.getByRole("button", { name: "Run · no price estimate" })).toBeTruthy()
-  })
-
-  it.each([
-    ["history", "≈ $0.45 from past series"],
-    ["prices", "≈ $0.45 at provider prices"],
-    ["bound", "~ $0.45 rough estimate"],
-  ] as const)("names where a %s estimate comes from in the launch and on the run button", async (source, label) => {
-    const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
-    if (experiment === undefined) throw new Error("no experiment")
-    server.use(http.post(`${API_BASE}/experiments/:experimentId/estimate`, () => HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd_source: source })))
-    await renderRoute("/research/experiments/reply_noninferior_mistral")
-    expect((await launchSummary()).textContent).toBe(`36 attempts · ${label} · cap $1.00`)
-    expect(screen.getByRole("button", { name: `Run · ${label}` })).toBeTruthy()
+    const launch = await section("Launch")
+    expect(await within(launch).findByText(/^At 6 cases the expected interval is ±.+, inside the .+ margin\.$/)).toBeTruthy()
+    expect(within(launch).queryByText(/recommended/)).toBeNull()
   })
 
   it("refuses a size outside the cases of the split", async () => {
@@ -461,7 +450,7 @@ describe("ExperimentScreen: launch", () => {
   it("approves the spend of a waiting series, then stops it", async () => {
     await renderRoute("/research/experiments/reply_overpromise_risk")
     const launch = await section("Launch")
-    expect((await launchSummary()).textContent).toMatch(/ · over the \$1\.00 cap: pauses near it for your approval$/)
+    expect((await launchSummary()).textContent).toMatch(/ · cap \$1\.00, pauses near it for your approval$/)
     expect(within(launch).getByText("AWAITING APPROVAL")).toBeTruthy()
     fireEvent.click(within(launch).getByRole("button", { name: "Approve spend" }))
     expect(await within(launch).findByText("RUNNING")).toBeTruthy()

@@ -10,17 +10,17 @@ from aqven.series import (
     TERMINAL_STATUSES,
     AttemptFinishedEvent,
     AttemptId,
-    EstimateReason,
     ExperimentOrigin,
+    LaunchPlan,
     LaunchRequest,
     OutcomeClass,
     QuestionView,
     Recommendation,
+    RecommendationReason,
     SeriesCancelRequest,
     SeriesCaseRow,
     SeriesCasesQuery,
     SeriesDetailView,
-    SeriesEstimate,
     SeriesEvent,
     SeriesFinishedEvent,
     SeriesGetRequest,
@@ -48,24 +48,21 @@ KNOWN_EXPERIMENT: Final = ExperimentId("reply_quality")
 CAP: Final = Decimal("0.53")
 
 
-def series_estimate(on: SeriesSplit = SeriesSplit.DEV) -> SeriesEstimate:
-    return SeriesEstimate(
+def launch_plan(on: SeriesSplit = SeriesSplit.DEV) -> LaunchPlan:
+    return LaunchPlan(
         on=on,
         cases=4,
         repeats=2,
         variants=2,
         attempts=16,
         available=4,
-        usd=Decimal("0.12"),
-        usd_source="prices",
-        minutes=2,
         half_width=0.2,
         mde=0.3,
         margin=0.05,
         spread=0.5,
         spread_source="prior",
         icc=0.3,
-        recommended=Recommendation(cases=60, repeats=2, reason=EstimateReason.WIDE, text="about 60 cases"),
+        recommended=Recommendation(cases=60, repeats=2, reason=RecommendationReason.WIDE, text="about 60 cases"),
         below_recommended=True,
         needs_approval=False,
         project_cap_usd=Decimal("1.00"),
@@ -109,7 +106,7 @@ def detail(
         contrasts=(),
         thresholds=(),
         aggregates=(),
-        estimate=series_estimate(),
+        launch=launch_plan(),
         needs_approval=status is SeriesStatus.AWAITING_APPROVAL,
         approved_by=None,
         finding_path=None,
@@ -122,7 +119,7 @@ def summary(view: SeriesDetailView) -> SeriesSummaryView:
 
 
 def started(view: SeriesDetailView) -> SeriesStarted:
-    return SeriesStarted.model_validate({**summary(view).model_dump(), "estimate": view.estimate})
+    return SeriesStarted.model_validate({**summary(view).model_dump(), "launch": view.launch})
 
 
 def series_events(series_id: SeriesId) -> tuple[SeriesEvent, ...]:
@@ -171,9 +168,7 @@ class FakeSeriesJobs:
         default_factory=list[tuple[SeriesId, WriteActor, Decimal | None]]
     )
     cancels: list[SeriesCancelRequest] = field(default_factory=list[SeriesCancelRequest])
-    estimates: list[tuple[ExperimentId, LaunchRequest]] = field(
-        default_factory=list[tuple[ExperimentId, LaunchRequest]]
-    )
+    plans: list[tuple[ExperimentId, LaunchRequest]] = field(default_factory=list[tuple[ExperimentId, LaunchRequest]])
     event_reads: list[int] = field(default_factory=list[int])
     queries: list[SeriesListQuery] = field(default_factory=list[SeriesListQuery])
 
@@ -183,11 +178,11 @@ class FakeSeriesJobs:
             raise missing(series_id)
         return view
 
-    async def estimate(self, experiment_id: ExperimentId, request: LaunchRequest) -> SeriesEstimate:
+    async def launch_plan(self, experiment_id: ExperimentId, request: LaunchRequest) -> LaunchPlan:
         if experiment_id != KNOWN_EXPERIMENT:
             raise ApiFailure("NOT_FOUND", f"experiment {experiment_id} is not in the project")
-        self.estimates.append((experiment_id, request))
-        return series_estimate(request.on)
+        self.plans.append((experiment_id, request))
+        return launch_plan(request.on)
 
     async def start(self, request: SeriesStartRequest, actor: WriteActor) -> SeriesStarted:
         if request.experiment_id != KNOWN_EXPERIMENT:

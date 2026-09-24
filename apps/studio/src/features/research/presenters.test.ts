@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ExperimentQuestion, LaunchEstimate, MetricColumn } from "@/domain"
+import type { ExperimentQuestion, LaunchPlan, MetricColumn } from "@/domain"
 import * as ids from "@/data/ids"
 import { intervalText, marginText, metricName, metricValue, signedValue } from "./metrics"
 import {
@@ -15,7 +15,6 @@ import {
   plannedCases,
   questionSentence,
   shortfallOf,
-  spendEstimate,
   splitShare,
   subjectText,
   tagPairs,
@@ -75,13 +74,10 @@ const PAIR: ExperimentQuestion = {
 
 const METRICS: readonly MetricColumn[] = [column(ids.checkId("critique"), "primary", "score", 0.05), column("cost_of_pass", "guardrail", "usd", 0.2, true)]
 
-const estimate = (fields: Partial<LaunchEstimate>): LaunchEstimate => ({
+const plan = (fields: Partial<LaunchPlan>): LaunchPlan => ({
   request: { on: "dev", cases: 12, repeats: 3 },
   variants: 2,
   attempts: 72,
-  usd: 0.91,
-  usdSource: "prices",
-  minutes: 2,
   available: 12,
   halfWidth: 0.12,
   margin: 0.05,
@@ -193,24 +189,18 @@ describe("the decision rule", () => {
 
 describe("launch", () => {
   it("explains the recommended number of cases by its reason", () => {
-    expect(launchReason(estimate({}), METRICS, REASON)).toBe("wide 12 ±0.12 > 0.05, need 65")
-    expect(launchReason(estimate({ halfWidth: 0.04, recommended: { cases: 12, repeats: 3, reason: "enough" } }), METRICS, REASON)).toBe("enough ±0.04 < 0.05")
-    expect(launchReason(estimate({ halfWidth: null, margin: null, recommended: { cases: 5, repeats: 1, reason: "look" } }), [], REASON)).toBe("look")
-    expect(launchReason(estimate({ recommended: { cases: 8, repeats: 3, reason: "no_margin" } }), METRICS, REASON)).toBe("plan 8")
-    expect(launchReason(estimate({ recommended: { cases: 8, repeats: 3, reason: "no_history" } }), METRICS, REASON)).toBe("no history, plan 8")
-    expect(launchReason(estimate({ available: 6, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } }), METRICS, REASON)).toBe("need 52 of 6 within 0.05")
+    expect(launchReason(plan({}), METRICS, REASON)).toBe("wide 12 ±0.12 > 0.05, need 65")
+    expect(launchReason(plan({ halfWidth: 0.04, recommended: { cases: 12, repeats: 3, reason: "enough" } }), METRICS, REASON)).toBe("enough ±0.04 < 0.05")
+    expect(launchReason(plan({ halfWidth: null, margin: null, recommended: { cases: 5, repeats: 1, reason: "look" } }), [], REASON)).toBe("look")
+    expect(launchReason(plan({ recommended: { cases: 8, repeats: 3, reason: "no_margin" } }), METRICS, REASON)).toBe("plan 8")
+    expect(launchReason(plan({ recommended: { cases: 8, repeats: 3, reason: "no_history" } }), METRICS, REASON)).toBe("no history, plan 8")
+    expect(launchReason(plan({ available: 6, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } }), METRICS, REASON)).toBe("need 52 of 6 within 0.05")
   })
 
   it("warns below the recommendation and says when the selection is too small for it", () => {
-    expect(shortfallOf(estimate({}))).toBe("belowAvailable")
-    expect(shortfallOf(estimate({ recommended: { cases: 10, repeats: 3, reason: "wide" }, request: { on: "dev", cases: 8, repeats: 3 } }))).toBe("below")
-    expect(shortfallOf(estimate({ belowRecommended: false }))).toBeNull()
-  })
-
-  it("keeps where the spend estimate comes from and treats a missing price as no estimate", () => {
-    expect(spendEstimate({ usd: 0.45, usdSource: "history" })).toEqual({ source: "history", usd: "$0.45" })
-    expect(spendEstimate({ usd: 0.45, usdSource: "bound" })).toEqual({ source: "bound", usd: "$0.45" })
-    expect(spendEstimate({ usd: null, usdSource: "prices" })).toEqual({ source: "unknown", usd: "" })
+    expect(shortfallOf(plan({}))).toBe("belowAvailable")
+    expect(shortfallOf(plan({ recommended: { cases: 10, repeats: 3, reason: "wide" }, request: { on: "dev", cases: 8, repeats: 3 } }))).toBe("below")
+    expect(shortfallOf(plan({ belowRecommended: false }))).toBeNull()
   })
 
   it("accepts whole numbers of cases up to the selection and repeats up to 20", () => {
@@ -230,8 +220,8 @@ describe("launch", () => {
     expect(plannedCases({ ...experiment, plan: { cases: 2, repeats: 1 } }, "dev")).toBe(2)
   })
 
-  it("counts the attempts from the estimate, or from the request while it loads", () => {
-    expect(plannedAttempts(estimate({ attempts: 72 }), { on: "dev", cases: 2, repeats: 1 }, 2)).toBe(72)
+  it("counts the attempts from the launch plan, or from the request while it loads", () => {
+    expect(plannedAttempts(plan({ attempts: 72 }), { on: "dev", cases: 2, repeats: 1 }, 2)).toBe(72)
     expect(plannedAttempts(null, { on: "dev", cases: 6, repeats: 3 }, 2)).toBe(36)
     expect(plannedAttempts(null, null, 2)).toBeNull()
   })

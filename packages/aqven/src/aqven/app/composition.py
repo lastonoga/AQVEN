@@ -11,7 +11,7 @@ from starlette.types import ASGIApp
 
 from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch, PlanSources
 from aqven.app.observation import ObservationTargets
-from aqven.app.prices import LazyPriceLookup, SharedPrices
+from aqven.app.prices import LazyPriceLookup
 from aqven.app.runtime import ApplicationLaunch, LocalServer
 from aqven.check import CheckReport
 from aqven.compiler import compile_project
@@ -20,11 +20,12 @@ from aqven.engine.facade import PlanSource
 from aqven.ir import CompiledProject
 from aqven.loader.roots import project_workspace
 from aqven.ports.engine import EngineFacade
+from aqven.ports.prices import PriceCache
 from aqven.ports.settings import SettingsStore
 from aqven.series.analysis import ScipySeriesAnalyst
 from aqven.series.findings import FileFindings
 from aqven.series.jobs import SeriesService
-from aqven.series.ports import ModelPrices, SeriesJobs
+from aqven.series.ports import SeriesJobs
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
 from aqven.series.watch import SeriesRunWatch
@@ -108,13 +109,13 @@ class ProjectParts:
     research: ResearchRelay
 
 
-def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> ProjectParts:
+def project_parts(root: Path, settings: SettingsStore) -> ProjectParts:
     workspace = ProjectWorkspace(root, compiler=ReportCompiler())
     writer = WriteService(root)
     research = ResearchRelay()
     findings = FileFindings(writer, root, research)
     analyst = ScipySeriesAnalyst()
-    series = build_series_services(root, workspace, settings, analyst, findings, prices, engine_version(), research)
+    series = build_series_services(root, workspace, settings, analyst, findings, engine_version(), research)
     return ProjectParts(
         workspace=workspace, writer=writer, series=series, jobs=SeriesService(series), research=research
     )
@@ -123,14 +124,14 @@ def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> P
 @dataclass(slots=True)
 class ProjectAssembly:
     built: dict[Path, ProjectParts] = field(default_factory=dict[Path, ProjectParts])
-    prices: SharedPrices = field(default_factory=LazyPriceLookup)
+    prices: PriceCache = field(default_factory=LazyPriceLookup)
 
     def parts(self, root: Path, settings: SettingsStore) -> ProjectParts:
         key = root.resolve()
         existing = self.built.get(key)
         if existing is not None:
             return existing
-        fresh = project_parts(key, settings, self.prices)
+        fresh = project_parts(key, settings)
         self.built[key] = fresh
         return fresh
 

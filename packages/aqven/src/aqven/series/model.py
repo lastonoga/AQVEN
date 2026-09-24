@@ -134,7 +134,7 @@ class DegenerateReason(StrEnum):
     NUMERIC = "numeric"
 
 
-class EstimateReason(StrEnum):
+class RecommendationReason(StrEnum):
     LOOK = "look"
     WIDE = "wide"
     ENOUGH = "enough"
@@ -160,20 +160,17 @@ class RecordModel(BaseModel):
 class Recommendation(ResourceModel):
     cases: int
     repeats: int
-    reason: EstimateReason
+    reason: RecommendationReason
     text: str
 
 
-class SeriesEstimate(ResourceModel):
+class LaunchPlan(ResourceModel):
     on: SeriesSplit
     cases: int
     repeats: int
     variants: int
     attempts: int
     available: int
-    usd: Decimal | None
-    usd_source: Literal["history", "prices", "bound", "unknown"]
-    minutes: int | None
     half_width: float | None
     mde: float | None
     margin: float | None
@@ -370,7 +367,6 @@ class SeriesPlanRecord(RecordModel):
     package: str
     repeats: int = Field(ge=1, le=MAX_REPEATS)
     case_count: int = Field(ge=1)
-    per_attempt_usd: Decimal | None
     snapshot: SeriesSnapshot
 
 
@@ -399,7 +395,7 @@ class SeriesRecord(RecordModel):
     on: SeriesSplit
     status: SeriesStatus
     plan: SeriesPlanRecord
-    estimate: SeriesEstimate
+    launch: LaunchPlan
     cap_usd: Decimal
     needs_approval: bool
     created_at: AwareDatetime

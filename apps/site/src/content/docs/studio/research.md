@@ -33,8 +33,8 @@ series, approve its spend, and ask the chat for the next hypothesis.
   Each hypothesis comes with its failure mode, question, metric and margin, subject, variants as agents,
   checks and cases by tags. The agent writes no file until you pick one. Then it writes
   `experiments/<experiment_id>/experiment.yaml` and runs `{{CLI_COMMAND}} check`.
-- **Open an experiment.** The header states the question in words and holds a **Run** button with the
-  estimate. The page below reads top to bottom:
+- **Open an experiment.** The header states the question in words and holds a **Run** button. The page
+  below reads top to bottom:
 
   | Block | What it shows |
   |---|---|
@@ -44,17 +44,17 @@ series, approve its spend, and ask the chat for the next hypothesis.
   | **Answer** | the verdict of the latest series as its sentence, with **Run again on fresh cases**, **Ask the agent for the next hypothesis** and a link to the series |
   | **Comparison** | the primary metric of the latest series per variant: dot for the value, whisker for the 95% interval, cost per pass and stability, the difference against the margin |
   | **Cases where variants disagree** | each such case with every variant's tally |
-  | **Launch** | purpose, cases, repeats, the estimate and the cap |
+  | **Launch** | purpose, cases, repeats, the attempts, the recommended size and the cap |
   | **Series history** | every series of this experiment, with its state and spend |
   | **Technical details** | the files, question, subject, plan, failure mode, and the notes from `experiment.md` |
 
 - **Launch to explore or confirm.** **Purpose** is **Explore · working cases** or **Confirm · held-out
   cases**. Explore gives numbers without a finding. Confirm gives a verdict written to `FINDINGS.md`.
   Choose **Cases** out of the ones available on that side, and **Repeats**. The panel shows the attempts
-  and the estimate with its source: ≈ from past series, ≈ at provider prices, ~ rough estimate, or no
-  price estimate. It explains the recommended size, for example "At 12 cases the expected interval is
-  ±0.18, wider than the 0.05 margin". Above the project spend cap, it says the series will pause near the
-  cap for your approval. **Run** starts the series and opens it.
+  as cases × repeats × variants and the cap, and says that the series pauses near the cap for your
+  approval. It shows no price: what a series costs depends on the models, and it is known only from the
+  attempts as they finish. It explains the recommended size, for example "At 12 cases the expected
+  interval is ±0.18, wider than the 0.05 margin". **Run** starts the series and opens it.
 - **Continue or stop a paused series.** A series whose spend reaches 90% of its cap pauses, here and on its
   own page, with one line: "Spent $0.91 of $1.00 — the series paused. Continue up to $2.00?". Change the
   amount if you want, then click **Continue** to run the remaining attempts under the new cap, or **Stop**.

@@ -1,7 +1,6 @@
 import type {
   CaseTags,
   CompareQuestion,
-  EstimateReason,
   ExperimentDetail,
   ExperimentFilter,
   ExperimentQuestion,
@@ -9,18 +8,18 @@ import type {
   ExperimentSummary,
   Guardrail,
   LatestSeries,
-  LaunchEstimate,
+  LaunchPlan,
   LaunchRequest,
   MetricColumn,
   MetricDirection,
   NodeRange,
   NoninferiorQuestion,
+  RecommendationReason,
   SeriesSplit,
   SeriesStatus,
   SeriesSummary,
   ThresholdBound,
   ThresholdQuestion,
-  UsdSource,
   VerdictState,
 } from "@/domain"
 import { ACTIVE_SERIES_STATUSES } from "@/domain"
@@ -80,7 +79,7 @@ type ReasonValues = {
   readonly margin: string
 }
 
-export type ReasonCopy = { readonly [K in EstimateReason]: (values: ReasonValues) => string }
+export type ReasonCopy = { readonly [K in RecommendationReason]: (values: ReasonValues) => string }
 
 export type FilterPatch = { readonly [K in keyof ExperimentFilter]?: ExperimentFilter[K] | null }
 
@@ -263,16 +262,16 @@ export const hypothesisText = (experiment: Pick<ExperimentDetail, "description" 
 
 const primaryColumn = (metrics: readonly MetricColumn[]): MetricColumn | null => metrics.find((column) => column.role === "primary") ?? null
 
-export const launchReason = (estimate: LaunchEstimate, metrics: readonly MetricColumn[], copy: ReasonCopy): string => {
+export const launchReason = (plan: LaunchPlan, metrics: readonly MetricColumn[], copy: ReasonCopy): string => {
   const primary = primaryColumn(metrics)
   const unit = primary?.unit ?? "score"
   const relative = primary?.relative ?? false
-  return copy[estimate.recommended.reason]({
-    cases: estimate.request.cases,
-    recommended: estimate.recommended.cases,
-    available: estimate.available,
-    halfWidth: estimate.halfWidth === null ? "" : marginText(estimate.halfWidth, unit, relative),
-    margin: estimate.margin === null ? "" : marginText(estimate.margin, unit, relative),
+  return copy[plan.recommended.reason]({
+    cases: plan.request.cases,
+    recommended: plan.recommended.cases,
+    available: plan.available,
+    halfWidth: plan.halfWidth === null ? "" : marginText(plan.halfWidth, unit, relative),
+    margin: plan.margin === null ? "" : marginText(plan.margin, unit, relative),
   })
 }
 
@@ -294,18 +293,13 @@ export const checkLaunch = (draft: LaunchDraft, available: number): LaunchCheck 
   return { kind: "valid", request: { on: draft.on, cases, repeats } }
 }
 
-export type SpendEstimate = { readonly source: UsdSource; readonly usd: string }
-
-export const spendEstimate = (estimate: Pick<LaunchEstimate, "usd" | "usdSource">): SpendEstimate =>
-  estimate.usd === null ? { source: "unknown", usd: "" } : { source: estimate.usdSource, usd: usd(estimate.usd) }
-
-export const shortfallOf = (estimate: LaunchEstimate): "below" | "belowAvailable" | null => {
-  if (!estimate.belowRecommended) return null
-  return estimate.recommended.cases > estimate.available ? "belowAvailable" : "below"
+export const shortfallOf = (plan: LaunchPlan): "below" | "belowAvailable" | null => {
+  if (!plan.belowRecommended) return null
+  return plan.recommended.cases > plan.available ? "belowAvailable" : "below"
 }
 
-export const plannedAttempts = (estimate: LaunchEstimate | null, request: LaunchRequest | null, variants: number): number | null => {
-  if (estimate !== null) return estimate.attempts
+export const plannedAttempts = (plan: LaunchPlan | null, request: LaunchRequest | null, variants: number): number | null => {
+  if (plan !== null) return plan.attempts
   if (request === null) return null
   return request.cases * request.repeats * variants
 }

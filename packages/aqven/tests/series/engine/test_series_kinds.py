@@ -1,5 +1,4 @@
 import asyncio
-from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
@@ -60,11 +59,7 @@ def test_a_range_series_runs_from_the_recorded_node_outputs(tmp_path: Path) -> N
             unattended(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_range")))
         )
 
-    assert (started.status, started.estimate.usd_source, started.estimate.usd) == (
-        SeriesStatus.RUNNING,
-        "bound",
-        Decimal(0),
-    )
+    assert started.status is SeriesStatus.RUNNING
     assert record.status is SeriesStatus.DONE
     assert record.verdict is None
     assert [attempt.outcome for attempt in attempts] == [OutcomeClass.OK, OutcomeClass.OK]

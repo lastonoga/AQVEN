@@ -9,9 +9,9 @@ from aqven.series.model import (
     AttemptId,
     AttemptOutcome,
     Contrast,
+    LaunchPlan,
     MetricColumn,
     OutcomeClass,
-    SeriesEstimate,
     SeriesId,
     SeriesMatrix,
     SeriesOrigin,
@@ -236,7 +236,7 @@ class SeriesSummaryView(ResourceModel):
 
 
 class SeriesStarted(SeriesSummaryView):
-    estimate: SeriesEstimate
+    launch: LaunchPlan
 
 
 class StabilityRow(ResourceModel):
@@ -254,7 +254,7 @@ class SeriesDetailView(SeriesSummaryView):
     contrasts: tuple[Contrast, ...]
     thresholds: tuple[ThresholdCell, ...]
     aggregates: tuple[VariantAggregates, ...]
-    estimate: SeriesEstimate
+    launch: LaunchPlan
     needs_approval: bool
     approved_by: str | None
     finding_path: str | None

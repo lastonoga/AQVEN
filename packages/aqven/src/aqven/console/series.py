@@ -20,11 +20,11 @@ from aqven.console.project_env import open_project
 from aqven.series.model import (
     SETTLED_STATUSES,
     ApprovalReason,
+    LaunchPlan,
     MatrixRow,
     MetricCell,
     MetricColumn,
     MetricRole,
-    SeriesEstimate,
     SeriesId,
     SeriesStatus,
 )
@@ -50,7 +50,6 @@ STATUS_EXITS: Final[Mapping[SeriesStatus, int]] = {
 USAGE_CODES: Final = frozenset({"NOT_FOUND", "NOT_RUNNABLE", "INPUT_INVALID", "REQUEST_INVALID"})
 SHOWN_ROLES: Final = frozenset({MetricRole.PRIMARY, MetricRole.GUARDRAIL, MetricRole.CHECK})
 ALWAYS_SHOWN: Final = frozenset({SeriesMetric.SUCCESS_RATE.value})
-USD_SOURCE_NOTES: Final[Mapping[str, str]] = {"bound": " (rough estimate)"}
 
 
 def positive_int(text: str) -> int:
@@ -117,10 +116,6 @@ def usd(value: Decimal | None) -> str:
     return f"${cents:f}" if cents == value else f"${value.normalize():f}"
 
 
-def estimate_usd(estimate: SeriesEstimate) -> str:
-    return f"{usd(estimate.usd)}{USD_SOURCE_NOTES.get(estimate.usd_source, '')}"
-
-
 def number(value: float | None) -> str:
     return "n/a" if value is None else format(value, NUMBER_FORMAT)
 
@@ -130,14 +125,24 @@ def counted(count: int, noun: str) -> str:
 
 
 def started_line(started: SeriesStarted) -> str:
-    estimate = started.estimate
+    launch = started.launch
     shape = " × ".join(
-        (counted(estimate.cases, "case"), counted(estimate.repeats, "repeat"), counted(estimate.variants, "variant"))
+        (counted(launch.cases, "case"), counted(launch.repeats, "repeat"), counted(launch.variants, "variant"))
     )
     return (
-        f"series {started.series_id} started on {started.on}: {counted(estimate.attempts, 'attempt')} ({shape}), "
-        f"estimate {estimate_usd(estimate)}, cap {usd(started.spend.cap_usd)}, status {started.status}"
+        f"series {started.series_id} started on {started.on}: {counted(launch.attempts, 'attempt')} ({shape}), "
+        f"cap {usd(started.spend.cap_usd)}, status {started.status}"
     )
+
+
+def recommendation_lines(launch: LaunchPlan) -> Iterator[str]:
+    if launch.below_recommended:
+        yield f"below the recommended {counted(launch.recommended.cases, 'case')}: {launch.recommended.text}"
+
+
+def started_lines(started: SeriesStarted) -> Iterator[str]:
+    yield started_line(started)
+    yield from recommendation_lines(started.launch)
 
 
 def spent_text(spend: SeriesSpend) -> str:
@@ -209,7 +214,7 @@ def failed_lines(series: SeriesDetailView, link: str) -> Iterator[str]:
 
 
 def cap_reason(series: SeriesDetailView) -> str:
-    project_cap = usd(series.estimate.project_cap_usd)
+    project_cap = usd(series.launch.project_cap_usd)
     return f"the series cap {usd(series.spend.cap_usd)} is above the project spend cap {project_cap}"
 
 
@@ -266,7 +271,8 @@ class SeriesRunner:
 
     async def _run(self, request: SeriesCommandRequest) -> int:
         started = await self.client.series_start(request.start_request())
-        self._say(request, started_line(started))
+        for line in started_lines(started):
+            self._say(request, line)
         settled = await self._settled(request, started.series_id)
         final = await self._final(request, settled)
         self._publish(request, final)

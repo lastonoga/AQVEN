@@ -123,11 +123,10 @@ the variants table with its swap, `polish › revise: agent gpt → agent mistra
 a **validated** tag that points to `critique_planted_defects`. The tag only says which test vouches for
 the judge, so I want that test confirmed before I trust this question. I read the margins closely,
 because they are business decisions: 0.05 is how much reply quality I will give up for a cheaper step.
-The **Launch** panel shows the price before anything is spent. In AQVEN's own copy of this project, with
-nothing run yet, a held-out series was priced at ~ $0.0084 for `intent_split_long_messages` and
-~ $0.052 for `reply_noninferior_mistral`. Both are rough estimates, because there is no past run to learn
-from, and your numbers will move with the day's model prices. Both are far under the project's $1.00
-spend cap, and a series that nears the cap pauses for me anyway. I tell the agent to go.
+The **Launch** panel shows what a series will run before anything is spent: the attempts, as cases ×
+repeats × variants, the recommended size and the cap. It shows no price, because what a series costs
+depends on the models and is known only as its attempts finish. The project's spend cap is $1.00, and a
+series that nears its cap pauses for me. I tell the agent to go.
 
 ## 13:30 — explore on working cases
 
@@ -166,10 +165,10 @@ and the margin stay put; moving them after seeing data makes a new experiment.
 series_start  {"experiment_id": "intent_split_long_messages", "on": "holdout", "cases": 3, "repeats": 1, "cap_usd": 0.05}
 ```
 
-The estimate warns that three cases is below the recommended size. The estimate and the five-cent cap are
-both under the project's $1.00 cap, so the series starts on its own, and it stops if it reaches five
-cents. A series estimated above $1.00, or one with no price at all, would wait in **AWAITING APPROVAL**:
-the agent tells me, and only I can click **Approve spend**. The agent has no tool for it.
+The launch plan warns that three cases is below the recommended size. The five-cent cap is under the
+project's $1.00 cap, so the series starts on its own, and it pauses near five cents. A cap above $1.00
+would wait in **AWAITING APPROVAL** before the first attempt, and a series that nears its cap waits
+there too: the agent tells me, and only I can let it spend more. The agent has no tool for it.
 
 Six attempts later the series has spent $0.00096. The verdict is `inconclusive`, reason `uninformative`:
 both versions got all three cases right. Three of three still leaves each version a 95% interval from
@@ -199,7 +198,7 @@ how knowledge adds up: the agent reads it before any change, builds on what is c
 it again unless the flow changed. A finding speaks only for the flow, prompts and models it ran on.
 
 One question has a limit I can see. `reply_overpromise_risk` wants a margin of 0.01. At two repeats per
-case its estimate recommended about 1187 cases, and only six working cases were available. The agent says
+case its launch plan recommended about 1187 cases, and only six working cases were available. The agent says
 so instead of pretending, and I make the call: the guards stay, the run-time check on the revise step and
 my support lead's approval.
 

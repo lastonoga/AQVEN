@@ -84,16 +84,16 @@ has a single cell.
 
 ## How many cases
 
-Before a series starts, its estimate gives the expected half-width of the interval at the chosen size, and
+Before a series starts, its launch plan gives the expected half-width of the interval at the chosen size, and
 a recommended number of cases: the smallest N whose interval fits inside the margin. The spread behind
 that number comes from earlier series of the experiment when there are some. A narrow margin is
 expensive. `reply_overpromise_risk` in AQVEN's example project asks for a margin of 0.01. At two repeats
-its estimate recommended about 1187 cases, and six working cases were available. You can run below the
+its launch plan recommended about 1187 cases, and six working cases were available. You can run below the
 recommended size, but expect `inconclusive`.
 
 The answer to `inconclusive` for lack of cases (`below_mde`) is never to run the same held-out cases again
 until the verdict flips. Every extra look at the same data is another ticket in the lottery of false
-confirmations. Write fresh cases and run a new held-out series of the size the estimate recommends. If that
+confirmations. Write fresh cases and run a new held-out series of the size the launch plan recommends. If that
 size is out of reach, the answer stays unclear, and a structural guard, such as a code check, a `switch` or
 a runtime check, is the fix, not more data.
 

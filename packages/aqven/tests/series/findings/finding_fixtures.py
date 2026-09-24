@@ -13,9 +13,9 @@ from aqven.series import (
     CheckPlan,
     Contrast,
     Estimate,
-    EstimateReason,
     ExperimentOrigin,
     JudgePlan,
+    LaunchPlan,
     MatrixRow,
     MetricCell,
     MetricColumn,
@@ -23,8 +23,8 @@ from aqven.series import (
     MetricUnit,
     OutcomeClass,
     Recommendation,
+    RecommendationReason,
     SeriesAnalysis,
-    SeriesEstimate,
     SeriesId,
     SeriesMatrix,
     SeriesPlanRecord,
@@ -139,24 +139,21 @@ def critique_check(validated: bool) -> CheckPlan:
     return CheckPlan(check_id="critique", kind=MetricKind.CONTINUOUS, evaluator={}, judge=judge)
 
 
-def series_estimate() -> SeriesEstimate:
-    return SeriesEstimate(
+def launch_plan() -> LaunchPlan:
+    return LaunchPlan(
         on=SeriesSplit.HOLDOUT,
         cases=len(CASES),
         repeats=REPEATS,
         variants=2,
         attempts=len(CASES) * REPEATS * 2,
         available=len(CASES),
-        usd=Decimal("0.29"),
-        usd_source="prices",
-        minutes=4,
         half_width=0.02,
         mde=0.03,
         margin=0.05,
         spread=0.25,
         spread_source="prior",
         icc=0.3,
-        recommended=Recommendation(cases=12, repeats=3, reason=EstimateReason.ENOUGH, text="12 cases are enough"),
+        recommended=Recommendation(cases=12, repeats=3, reason=RecommendationReason.ENOUGH, text="12 cases are enough"),
         below_recommended=False,
         needs_approval=False,
         project_cap_usd=Decimal("1.00"),
@@ -274,7 +271,6 @@ def plan(question: Question, validated: bool) -> SeriesPlanRecord:
         package="lumen",
         repeats=REPEATS,
         case_count=len(CASES),
-        per_attempt_usd=Decimal("0.004"),
         snapshot=SeriesSnapshot(
             experiment_sha256="sha256-" + "e" * 64,
             dataset_sha256="sha256-" + "d" * 64,
@@ -303,7 +299,7 @@ def record_of(
         on=SeriesSplit.HOLDOUT,
         status=SeriesStatus.DONE,
         plan=plan(question, validated),
-        estimate=series_estimate(),
+        launch=launch_plan(),
         cap_usd=Decimal("0.37"),
         needs_approval=False,
         created_at=CREATED,
