@@ -1,4 +1,4 @@
-import type { ExperimentSubject, ExperimentSummary, FlowId, SeriesSummary } from "@/domain"
+import type { ExperimentSubject, ExperimentSummary, FlowId } from "@/domain"
 
 export type FlowGroup<T> = { readonly flow: FlowId | null; readonly items: readonly T[] }
 
@@ -19,5 +19,3 @@ export const flowGroupKey = (group: FlowGroup<unknown>): string => group.flow ??
 export const subjectFlow = (subject: ExperimentSubject): FlowId | null => ("flow" in subject ? subject.flow : null)
 
 export const experimentFlow = (experiment: ExperimentSummary): FlowId | null => subjectFlow(experiment.subject)
-
-export const seriesFlow = (series: SeriesSummary): FlowId | null => series.flow

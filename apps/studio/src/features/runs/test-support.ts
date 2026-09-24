@@ -1,4 +1,5 @@
 import type { ApiExecution, ApiExecutionAddress, ApiExecutionDetail, ApiRunError, ApiRunEvent, ApiRunSnapshot } from "@/domain"
+import { runFeed } from "@/api/events"
 import { COMPLETED_RUN_ID, liveRunEvents, liveRunSnapshots } from "@/mocks/data/runs"
 
 type Listener = (event: Event) => void
@@ -24,13 +25,13 @@ export class FakeEventSource {
     return source
   }
 
-  static on(path: string): readonly FakeEventSource[] {
-    return FakeEventSource.opened.filter((source) => source.url.startsWith(path))
+  static on(fragment: string): readonly FakeEventSource[] {
+    return FakeEventSource.opened.filter((source) => source.url.includes(fragment))
   }
 
-  static latestOn(path: string): FakeEventSource {
-    const source = FakeEventSource.on(path).at(-1)
-    if (source === undefined) throw new Error(`no event source was opened on ${path}`)
+  static latestOn(fragment: string): FakeEventSource {
+    const source = FakeEventSource.on(fragment).at(-1)
+    if (source === undefined) throw new Error(`no event source was opened on ${fragment}`)
     return source
   }
 
@@ -43,8 +44,9 @@ export class FakeEventSource {
   }
 
   emit(event: ApiRunEvent): void {
-    const message = new MessageEvent(event.type, { data: JSON.stringify(event) })
-    this.listeners.get(event.type)?.forEach((listener) => {
+    const feed = runFeed(event.run_id)
+    const message = new MessageEvent(feed, { data: JSON.stringify(event) })
+    this.listeners.get(feed)?.forEach((listener) => {
       listener(message)
     })
   }
