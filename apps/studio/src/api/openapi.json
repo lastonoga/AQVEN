@@ -22687,6 +22687,18 @@
             "type": "integer",
             "minimum": 0,
             "title": "Cancelled"
+          },
+          "items_replaced": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Items Replaced",
+            "default": 0
+          },
+          "items_skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Items Skipped",
+            "default": 0
           }
         },
         "type": "object",

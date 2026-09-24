@@ -5015,6 +5015,16 @@ export interface components {
             suspended: number;
             /** Cancelled */
             cancelled: number;
+            /**
+             * Items Replaced
+             * @default 0
+             */
+            items_replaced: number;
+            /**
+             * Items Skipped
+             * @default 0
+             */
+            items_skipped: number;
         };
         /** NodeDetail */
         NodeDetail: {

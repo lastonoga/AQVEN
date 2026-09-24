@@ -328,11 +328,13 @@ def test_map_recovery_projects_onto_the_map_execution_and_its_node_finished() ->
     assert finished.degraded
     [recovered] = _recovered(scope)
 
-    [execution] = fold_events((started, *scope.sink.events, finished)).executions_view()
+    fold = fold_events((started, *scope.sink.events, finished))
+    [execution] = fold.executions_view()
 
     assert execution.status == "ok"
     assert execution.degraded
     assert execution.recovered_items == (recovered.recovery,)
+    assert (fold.node_counts().items_replaced, fold.node_counts().items_skipped) == (1, 0)
 
     plain_finish = finished.model_copy(update={"degraded": False})
     [kept] = fold_events((started, recovered, plain_finish)).executions_view()
@@ -340,3 +342,4 @@ def test_map_recovery_projects_onto_the_map_execution_and_its_node_finished() ->
     assert kept.degraded
     assert kept.recovered_items == (recovered.recovery,)
     assert fold_events((started, plain_finish)).executions_view()[0].recovered_items == ()
+    assert fold_events((started, plain_finish)).node_counts().items_replaced == 0

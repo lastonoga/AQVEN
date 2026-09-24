@@ -140,6 +140,7 @@ class RunFold:
         order = self.started.order if self.started is not None else ()
         pending = sum(1 for node_id in order if node_id not in started)
         counts = {status: statuses.count(status) for status in EXECUTION_STATUSES}
+        decisions = [recovery.decision for fold in self.executions.values() for recovery in fold.recovered_items]
         return NodeCounts(
             pending=counts["pending"] + pending,
             running=counts["running"],
@@ -148,6 +149,8 @@ class RunFold:
             skipped=counts["skipped"],
             suspended=counts["suspended"],
             cancelled=counts["cancelled"],
+            items_replaced=decisions.count("default"),
+            items_skipped=decisions.count("skip"),
         )
 
     def answer_statuses(self, answers: Sequence[tuple[ExecutionAddress, int]]) -> tuple[HumanAnswerStatus, ...]:

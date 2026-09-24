@@ -1,7 +1,7 @@
 import { useTranslations } from "use-intl"
-import type { ApiNodeCounts, ApiRunSnapshot, RunStatus } from "@/domain"
+import type { ApiNodeCounts, RunStatus } from "@/domain"
 import { RUN_STATUS_TONE, type Tone } from "@/components/studio"
-import { nodeFailures, type RecoveredDecision } from "./node-failures"
+import type { RecoveredDecision } from "./node-failures"
 
 export type RunStatusLook =
   | { readonly kind: "plain"; readonly status: RunStatus; readonly tone: Tone }
@@ -27,18 +27,18 @@ const LOOK_TEXT: { readonly [K in LookKind]: LookText<K> } = {
 
 const absorbedFailures = (status: RunStatus, counts: ApiNodeCounts): number => (status === "completed" ? counts.failed : 0)
 
-export const runStatusLook = (status: RunStatus, counts: ApiNodeCounts): RunStatusLook => {
-  const failed = absorbedFailures(status, counts)
-  if (failed > 0) return { kind: "partial", failed, tone: PARTIAL_TONE }
-  return { kind: "plain", status, tone: RUN_STATUS_TONE[status] }
+const recoveredDecision = (counts: ApiNodeCounts): RecoveredDecision => {
+  if (counts.items_skipped === 0) return "default"
+  if (counts.items_replaced === 0) return "skip"
+  return "mixed"
 }
 
-export const snapshotStatusLook = (snapshot: ApiRunSnapshot): RunStatusLook => {
-  const look = runStatusLook(snapshot.status, snapshot.node_counts)
-  if (look.kind !== "partial") return look
-  const failures = nodeFailures(snapshot)
-  if (failures.kind !== "recovered") return look
-  return { kind: "recovered", count: failures.count, decision: failures.decision, tone: PARTIAL_TONE }
+export const runStatusLook = (status: RunStatus, counts: ApiNodeCounts): RunStatusLook => {
+  const failed = absorbedFailures(status, counts)
+  const recovered = counts.items_replaced + counts.items_skipped
+  if (failed === 0) return { kind: "plain", status, tone: RUN_STATUS_TONE[status] }
+  if (failed !== recovered) return { kind: "partial", failed, tone: PARTIAL_TONE }
+  return { kind: "recovered", count: recovered, decision: recoveredDecision(counts), tone: PARTIAL_TONE }
 }
 
 const lookText = <K extends LookKind>(look: LookOf<K>, copy: StatusCopy): string => {

@@ -186,7 +186,7 @@ export const faceSnapshot = (): ApiRunSnapshot => ({
   flow_id: "face_review",
   status: "completed",
   mode: "live",
-  node_counts: { pending: 0, running: 0, ok: FACE_ITEMS + 1, failed: 1, skipped: 0, suspended: 0, cancelled: 0 },
+  node_counts: { pending: 0, running: 0, ok: FACE_ITEMS + 1, failed: 1, skipped: 0, suspended: 0, cancelled: 0, items_replaced: 0, items_skipped: 0 },
   lineage: null,
   dataset_item_id: null,
   selected_nodes: null,
