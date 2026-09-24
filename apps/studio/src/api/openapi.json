@@ -4511,8 +4511,8 @@
     },
     "/api/events/spec": {
       "get": {
-        "summary": "Server-sent stream of spec changes",
-        "description": "A text/event-stream that stays open and pushes a frame per spec change; it is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.",
+        "summary": "Server-sent stream of project changes: spec files and research",
+        "description": "A text/event-stream that stays open and pushes a frame per spec change and per research fact: a series started, its progress at most once a second, a status change, a finding written, an experiment's files changed. It is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.",
         "operationId": "spec_events",
         "parameters": [
           {
@@ -18698,6 +18698,62 @@
           "cancelled"
         ]
       },
+      "ExperimentChangeKind": {
+        "type": "string",
+        "enum": [
+          "added",
+          "modified",
+          "deleted"
+        ]
+      },
+      "ExperimentChanged": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "tree_hash": {
+            "type": "string",
+            "title": "Tree Hash"
+          },
+          "type": {
+            "type": "string",
+            "const": "experiment_changed",
+            "title": "Type",
+            "default": "experiment_changed"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "change": {
+            "$ref": "#/components/schemas/ExperimentChangeKind"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Paths"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "tree_hash",
+          "experiment_id",
+          "change",
+          "paths"
+        ],
+        "title": "ExperimentChanged"
+      },
       "ExperimentDetailView": {
         "properties": {
           "experiment_id": {
@@ -19573,6 +19629,55 @@
           "summary"
         ],
         "title": "FilesChanged"
+      },
+      "FindingWritten": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "tree_hash": {
+            "type": "string",
+            "title": "Tree Hash"
+          },
+          "type": {
+            "type": "string",
+            "const": "finding_written",
+            "title": "Type",
+            "default": "finding_written"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Paths"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "tree_hash",
+          "experiment_id",
+          "series_id",
+          "paths"
+        ],
+        "title": "FindingWritten"
       },
       "FinishedExecutionStatus": {
         "type": "string",
@@ -28914,6 +29019,84 @@
         ],
         "title": "SeriesProgress"
       },
+      "SeriesProgressEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "tree_hash": {
+            "type": "string",
+            "title": "Tree Hash"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "series_progress",
+            "title": "Type",
+            "default": "series_progress"
+          },
+          "done": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Done"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Total"
+          },
+          "spend_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spend Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "tree_hash",
+          "series_id",
+          "experiment_id",
+          "flow_id",
+          "done",
+          "total",
+          "spend_usd"
+        ],
+        "title": "SeriesProgressEvent"
+      },
       "SeriesSpend": {
         "properties": {
           "usd": {
@@ -29142,6 +29325,76 @@
         ],
         "title": "SeriesStarted"
       },
+      "SeriesStartedEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "tree_hash": {
+            "type": "string",
+            "title": "Tree Hash"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "series_started",
+            "title": "Type",
+            "default": "series_started"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "tree_hash",
+          "series_id",
+          "experiment_id",
+          "flow_id",
+          "status",
+          "total"
+        ],
+        "title": "SeriesStartedEvent"
+      },
       "SeriesStatus": {
         "type": "string",
         "enum": [
@@ -29153,6 +29406,81 @@
           "failed"
         ],
         "title": "SeriesStatus"
+      },
+      "SeriesStatusChanged": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "tree_hash": {
+            "type": "string",
+            "title": "Tree Hash"
+          },
+          "series_id": {
+            "type": "string",
+            "title": "Series Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "series_status_changed",
+            "title": "Type",
+            "default": "series_status_changed"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeriesStatus"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "tree_hash",
+          "series_id",
+          "experiment_id",
+          "flow_id",
+          "status",
+          "previous"
+        ],
+        "title": "SeriesStatusChanged"
       },
       "SeriesStatusEvent": {
         "properties": {
@@ -29563,14 +29891,34 @@
           },
           {
             "$ref": "#/components/schemas/SpecResync"
+          },
+          {
+            "$ref": "#/components/schemas/SeriesStartedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/SeriesProgressEvent"
+          },
+          {
+            "$ref": "#/components/schemas/SeriesStatusChanged"
+          },
+          {
+            "$ref": "#/components/schemas/FindingWritten"
+          },
+          {
+            "$ref": "#/components/schemas/ExperimentChanged"
           }
         ],
         "discriminator": {
           "propertyName": "type",
           "mapping": {
             "diagnostics_changed": "#/components/schemas/DiagnosticsChanged",
+            "experiment_changed": "#/components/schemas/ExperimentChanged",
             "files_changed": "#/components/schemas/FilesChanged",
-            "resync": "#/components/schemas/SpecResync"
+            "finding_written": "#/components/schemas/FindingWritten",
+            "resync": "#/components/schemas/SpecResync",
+            "series_progress": "#/components/schemas/SeriesProgressEvent",
+            "series_started": "#/components/schemas/SeriesStartedEvent",
+            "series_status_changed": "#/components/schemas/SeriesStatusChanged"
           }
         }
       },
