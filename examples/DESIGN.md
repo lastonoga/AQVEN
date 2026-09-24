@@ -15,7 +15,7 @@ either accepts it (and then an ADR is written) or it changes.
 |---|---|---|
 | O1 | One example covering every pattern and execution mode; reusable parts are part of the example | the `support_case` workflow and the `judge_panel` workflow it calls (§4–§5) |
 | O2 | An `llm` node references an agent; the model and its settings live only on the agent (`provider:model`) | `agents/<id>.yaml`, `agents/resolver/resolver.yaml`, §6.2 |
-| O3 | Agents, tools and MCP servers are module registry files; nodes do not configure tools; `aqven.yaml` holds the project and the providers; model capabilities come from a built-in profile table | §6.1–§6.4 |
+| O3 | Agents, tools and MCP servers are module registry files; nodes do not configure tools; `aqven.yaml` holds the project and the providers; model capabilities come from a built-in profile table (removed 2026-09-25: the provider decides) | §6.1–§6.4 |
 | O4 | Limits and budgets are optional everywhere; no key means no limit | the `limits` key on the project, a workflow, a node and an agent; in the example, only on the `resolver` agent |
 | O5 | Inference post-checks: built-in and your own, `on_fail: retry \| fail \| flag`; the engine uses `output_validator` + `ModelRetry` | §6.5 |
 | O6 | Output is always structured JSON; there is no text mode | `E_TEXT_OUTPUT`, §9.4 |
@@ -314,8 +314,8 @@ The `requires` contract: `families_distinct {nodes: [judges__deepseek, judges__q
 `field_before {nodes: [judges__deepseek, judges__qwen, judges__llama, decide__tie_break], first: rationale, second:
 scores}`. The tie-break is run by `gpt`, a family one of the authors also uses (`drafts__gpt`), so `decide__tie_break`
 is excluded from `family_disjoint_from_input`: the owner's decision of 2026-09-17 about the cheapest models removed
-the fifth-family `grok` agent. A node's family is the family of its agent's model and of its fallbacks, by the profile
-table (§6.4). The `nodes` key on `field_before` is a **proposal — not in an ADR** (03 §4.3).
+the fifth-family `grok` agent. A node's family is the family of its agent's model and of its fallbacks, from the
+model's provider or vendor prefix (§6.4). The `nodes` key on `field_before` is a **proposal — not in an ADR** (03 §4.3).
 
 ## 6. Module registries
 
@@ -394,12 +394,11 @@ on_refusal = fail|retry|fallback, on_truncated = fail|retry|fallback}`,
 `instructions?` (the path `./<agent>.instructions.md` from the agent file, level 1), `tools?`, `mcp_servers?`,
 `subagents?[] {name, description, agent, inference}` (a subagent's inference sits in the folder of the agent that
 calls it: `agents/resolver/research_policy.inference.yaml`), `approval? {tools, assignee, timeout_seconds, on_timeout}`
-(`default` is forbidden), `limits?`, and `capabilities? {family, input, output, strict}` — an override of the profile
-table. The set of keys is O2; their names are a **proposal — not in an ADR**.
+(`default` is forbidden) and `limits?`. The set of keys is O2; their names are a **proposal — not in an ADR**.
 
 | Agent | Model | Family | `output` | Notable | Where |
 |---|---|---|---|---|---|
-| `gemini` | `openrouter:google/gemini-2.5-flash-lite` | google | `auto → tool`, strict false, retries 2 | `capabilities.input: [text, image, audio, video, document]`; temperature 0.2 | `triage`, `record__extract`, `drafts__gemini` |
+| `gemini` | `openrouter:google/gemini-2.5-flash-lite` | google | `auto → tool`, strict false, retries 2 | temperature 0.2 | `triage`, `record__extract`, `drafts__gemini` |
 | `llama` | `openrouter:meta-llama/llama-3.1-8b-instruct` | meta | `auto → tool`, strict false | temperature 0.2 | `vote__ballot`, and in `panel`: `judges__llama` |
 | `mistral` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false, retries 2 | temperature 0.2; formerly the `claude` agent | `drafts__mistral`, `polish__critique`; the candidate reviser of `reply_noninferior_mistral` |
 | `gpt` | `openrouter:openai/gpt-oss-20b` | openai | `auto → tool`, strict false, retries 4 | temperature 0.3, max_tokens 4000 | `drafts__gpt`, `polish__revise`, and in `panel`: `decide__tie_break` |
@@ -458,22 +457,15 @@ them as `@root.tools.functions:<function>` (O20, O22).
 `POST /v1/audio/speech`, the clip is Together `POST /v2/videos` with polling; the speech model and the polling path
 have not been verified.
 
-### 6.4. The model profile table
+### 6.4. Models: no capability table
 
-A model's capabilities (`family`, `input`, `output`, `strict`) come from the built-in table `aqven.spec.profiles`,
-keyed by the model string; an unknown model gets the "text only, no strict" profile, and its family comes from the
-provider or the vendor prefix (`meta-llama/` → meta, `x-ai/` → xai, `moonshotai/` → moonshot, `deepseek/`,
-`deepseek-ai/` → deepseek, `qwen/`, `Qwen/` → qwen, `z-ai/` → zhipu, `mistralai/` → mistral). An agent overrides it
-with the `capabilities` key. The shape of the table is a **proposal — not in an ADR** (O3).
-
-None of the example's models are in the table: the text models get the default profile with a family from the vendor
-prefix, and `gemini` and `painter` declare `capabilities` themselves.
-
-| Model | `input` | `output` | `strict` | Source |
-|---|---|---|---|---|
-| `openrouter:google/gemini-2.5-flash-lite` | text, image, audio, video, document | text | false | the `capabilities` of the `gemini` agent |
-| `openrouter:google/gemini-3.1-flash-lite-image`, `openrouter:openai/gpt-5-image-mini` | text, image | text, image | false | the `capabilities` of the `painter` agent |
-| `openrouter:openai/gpt-oss-20b`, `openrouter:mistralai/mistral-nemo`, `openrouter:deepseek/deepseek-v4-flash-0731`, `openrouter:qwen/qwen3-30b-a3b-instruct-2507`, `openrouter:meta-llama/llama-3.1-8b-instruct` | text | text | false | the default profile |
+AQVEN keeps no table of what a model can do (the owner's decision of 2026-09-25, the amendment to ADR-0026): a model
+receives what the workflow describes — the media of the node's `in`, an image request when the node's `out` is
+`Image`, `output.strict` as the agent sets it — and the provider decides; a refusal is the step's error. The model
+family that the `families_distinct` and `family_disjoint_from_input` contracts compare comes from the provider or the
+vendor prefix in `aqven.spec.model_ref` (`openai:`, `anthropic:`, `google:`; `meta-llama/` → meta, `x-ai/` → xai,
+`moonshotai/` → moonshot, `deepseek/`, `deepseek-ai/` → deepseek, `qwen/`, `Qwen/` → qwen, `z-ai/` → zhipu,
+`mistralai/` → mistral; anything else is `other`).
 
 ### 6.5. Inferences — `<id>.inference.yaml`, `kind: Inference`
 
@@ -822,7 +814,7 @@ The goal is less code: everything the example does not use is removed.
 
 | Module | Change |
 |---|---|
-| `aqven.spec` | New kinds `Inference`, `Agent`, `Tool`, `McpServer` (the modules `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `profiles.py` (the table of §6.4, `parse_model`, `resolve_profile`); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` plus `on_fail` and `threshold`; `ExperimentCheck` = `EvaluatorRef` plus `id`, `kind` and `validated_by`. `ProjectSpec` loses `defaults`, `models`, `roles` and `mcp_servers`; `ProviderSpec.id` is the provider name. An `llm` node is `inference?` (absent means `<node>.inference.yaml` beside `<node>.node.yaml`) plus `agent` plus bindings; `tool` is `tool` plus bindings; `call` is the called workflow plus bindings (O17). No `determinism` or `ttl_ms` on `code` nodes and tools (O12). One `Limits` instead of `Budget`, `AgentLimits`, `timeout_ms` and `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — with no iteration block, `stop_when`, `stagnation`, `score`, `quorum` or `on_branch_error`; `max_iter` is required. `map` has no `max_items`. Removed: `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, roles and the catalogue, `ToolCallRecord`, `via` projections, shared prompts by key, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. The builder: `Inference` instead of `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
+| `aqven.spec` | New kinds `Inference`, `Agent`, `Tool`, `McpServer` (the modules `inference.py`, `agent.py`, `tool.py`, `mcp.py`); `model_ref.py` (`parse_model` and the model family from the prefix, §6.4); `policy.py` (`PolicyRef {use \| run, with}`, `EvaluatorRef {use \| run \| inference + agent, with}`); `VariantSlot`; `CheckSpec` = `EvaluatorRef` plus `on_fail` and `threshold`; `ExperimentCheck` = `EvaluatorRef` plus `id`, `kind` and `validated_by`. `ProjectSpec` loses `defaults`, `models`, `roles` and `mcp_servers`; `ProviderSpec.id` is the provider name. An `llm` node is `inference?` (absent means `<node>.inference.yaml` beside `<node>.node.yaml`) plus `agent` plus bindings; `tool` is `tool` plus bindings; `call` is the called workflow plus bindings (O17). No `determinism` or `ttl_ms` on `code` nodes and tools (O12). One `Limits` instead of `Budget`, `AgentLimits`, `timeout_ms` and `retry`. `parallel {body, join}`, `map {over, body, concurrency, on_item_error}`, `loop {body, init, max_iter, stop, select, out}` — with no iteration block, `stop_when`, `stagnation`, `score`, `quorum` or `on_branch_error`; `max_iter` is required. `map` has no `max_items`. Removed: `OutputContract`, `Overrides`, `OutputMode`, `Archetype`, `SchemaProfile`, roles and the catalogue, `ToolCallRecord`, `via` projections, shared prompts by key, `MaxItemsAtMost`, `FlowPolicies`, `NodeDefaults`, `IdType.source`. The builder: `Inference` instead of `Signature`, `llm(node_id, *, inference, agent, bind, description)`, `tool(node_id, *, tool, bind, description)` |
 | `aqven.policies` | The slot contracts (`JoinPolicy`, `StopPolicy`, `SelectPolicy`, `ItemErrorPolicy`, `Evaluator`), the decisions (`Wait`, `Done`, `Fail`, `Continue`, `Stop`, `Skip`, `Default`), `EvalContext`, `Verdict`, and the `BUILTINS` registry |
 | `aqven.loader` | Done (O14, O15, O22): the recursive search for `*.yaml` with `apiVersion: aqven/v1`, sorting by `kind`, an id as the file name up to the first dot (the folder name for `flow.yaml`), `E_KIND_PATH_MISMATCH` from the suffix, uniqueness per kind, a node belonging to the nearest `flow.yaml` above it, the implicit `<node>.inference.yaml` beside `<node>.node.yaml`, the texts `<inference>.prompt.md` and `<inference>.variants/<slot>/*.md` by the inference prefix, includes resolved from the file, the inference folder or the root, and a bare name in `run` meaning `<id>.py` beside it, loaded by file path. Done (O17, O18, O20): calling a workflow from a `call` node (`CallNodeSpec.flow`, the `requires` contract on `FlowSpec`); an explicit `prompt` and variant as a path to a `.md`; `W_PROMPT_SHADOWED`; the code reference aliases in `aliases.py`. Left: `@flow/` in `{% include %}` (§14) |
 | `aqven.codegen` | Done (O19, O22): `aqven generate` writes into `types.py` at the module root the type models, `<Inference>In`/`<Inference>Out` for every inference, `<Tool>In`/`<Tool>Out` for every tool with `run`, and `<Workflow><Node>In`/`<Workflow><Node>Out` for every `code` step; `aqven check` generates before checking; `W_GENERATED_STALE`; and the pytest plugin regenerates before conftest |
@@ -881,5 +873,3 @@ from `lumen.code`, is allowed.
 13. In the defect scenarios `judges__qwen` does not keep `rationale` within 600 characters and truncates its JSON at
     `max_tokens: 1500`; the panel carries on with two judges under the `agreeing_verdicts` policy. Whether to raise
     the model or the limit is the owner's call.
-14. The example's model strings are not in the built-in profile table `aqven.spec.profiles`; `gemini` and `painter`
-    declare `capabilities` themselves.
