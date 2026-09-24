@@ -1,6 +1,6 @@
 import os
 import shutil
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -196,6 +196,9 @@ class FakeEngine:
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
         return Page[RunSummary](items=(), next_cursor=None, total_estimate=0)
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        return {}
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncGenerator[RunEvent]:
         for event in self.log:

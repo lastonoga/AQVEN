@@ -1,5 +1,5 @@
 import shutil
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -210,6 +210,14 @@ class FakeEngine:
             if query.flow_id is None or snapshot.flow_id == query.flow_id
         )
         return Page[RunSummary](items=rows[: query.limit], next_cursor=None, total_estimate=len(rows))
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        rows = [
+            RunSummary.model_validate(snapshot.model_dump())
+            for snapshot in self.runs.values()
+            if snapshot.flow_id in flow_ids
+        ]
+        return {row.flow_id: row for row in reversed(rows)}
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         self._run(run_id)

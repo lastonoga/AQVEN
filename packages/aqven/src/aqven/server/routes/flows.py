@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Annotated, Final
 
 from fastapi import APIRouter, Header, Query
@@ -11,10 +12,10 @@ from aqven.engine.selection import (
     range_missing,
     range_references,
 )
-from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineError, RunListQuery
+from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineError
 from aqven.preview import PromptPreview
 from aqven.runtime.address import RequestModel, ResourceModel
-from aqven.runtime.runs import Page
+from aqven.runtime.runs import Page, RunSummary
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure
 from aqven.server.resources import (
@@ -103,15 +104,20 @@ class ManualRangePreview(ResourceModel):
     ranges: tuple[ManualRangePair, ...]
 
 
-async def last_run(context: ServerContext, flow_id: str) -> RunBrief | None:
+def run_brief(summary: RunSummary) -> RunBrief:
+    return RunBrief(run_id=summary.run_id, status=summary.status, started_at=summary.started_at)
+
+
+async def last_runs(context: ServerContext, flow_ids: Sequence[str]) -> dict[str, RunBrief]:
     try:
-        page = await context.facade.list_runs(RunListQuery(flow_id=FlowId(flow_id), limit=1))
+        latest = await context.facade.latest_runs(tuple(FlowId(flow_id) for flow_id in flow_ids))
     except EngineError:
-        return None
-    latest = next(iter(page.items), None)
-    if latest is None:
-        return None
-    return RunBrief(run_id=latest.run_id, status=latest.status, started_at=latest.started_at)
+        return {}
+    return {flow_id: run_brief(summary) for flow_id, summary in latest.items()}
+
+
+async def last_run(context: ServerContext, flow_id: str) -> RunBrief | None:
+    return (await last_runs(context, (flow_id,))).get(flow_id)
 
 
 PROJECT_FILES: Final = "project files: the agent reads them directly"
@@ -127,10 +133,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
         limit: Annotated[int, Query(ge=1, le=MAX_PAGE_LIMIT)] = DEFAULT_PAGE_LIMIT,
     ) -> Page[FlowSummary]:
         state = await context.workspace.state()
-        flow_ids = sorted(loaded_project(state).flows)
-        runs: dict[str, RunBrief] = {
-            flow_id: brief for flow_id in flow_ids if (brief := await last_run(context, flow_id)) is not None
-        }
+        runs = await last_runs(context, sorted(loaded_project(state).flows))
         rows = [
             row for row in flow_summaries(state, runs) if compile_status is None or row.compile_status == compile_status
         ]

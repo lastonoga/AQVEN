@@ -1,6 +1,6 @@
 import asyncio
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Final, Protocol
@@ -120,6 +120,13 @@ def confirmation(current: WaitRecord, request: ResumeRequest) -> Confirmation:
     return settled_error(current.state)
 
 
+def waits_by_run(entries: Sequence[WaitIndexEntry]) -> Mapping[RunId, tuple[HumanWait, ...]]:
+    grouped: dict[RunId, list[HumanWait]] = {}
+    for entry in entries:
+        grouped.setdefault(entry.run_id, []).append(entry_wait(entry))
+    return {run_id: tuple(waits) for run_id, waits in grouped.items()}
+
+
 def not_waiting(run_id: RunId, address: ExecutionAddress) -> EngineError:
     return EngineError(
         "NOT_WAITING",
@@ -154,6 +161,11 @@ class HumanWaits:
     async def waits(self, run_id: RunId) -> tuple[HumanWait, ...]:
         entries = await self.index.search(WaitQuery(run_id=run_id))
         return tuple(entry_wait(entry) for entry in entries)
+
+    async def waits_of(self, run_ids: Sequence[RunId]) -> Mapping[RunId, tuple[HumanWait, ...]]:
+        if not run_ids:
+            return {}
+        return waits_by_run(await self.index.search(WaitQuery(run_ids=tuple(run_ids))))
 
     async def wait_detail(self, run_id: RunId, address: ExecutionAddress) -> HumanWaitDetail:
         _, record = await self._located(run_id, address)

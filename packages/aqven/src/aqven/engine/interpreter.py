@@ -612,7 +612,7 @@ async def guarded_flow(state: RunState, frame: FlowFrame) -> NodeOutcome:
 
 async def interpret(runtime: EngineRuntime, ir_hash: IrHash, flow_input: JsonObject, spec: RunSpec) -> RunRecord:
     run_id = RunId(DBOS.workflow_id or "")
-    sink = StreamEventSink(run_id=run_id)
+    sink = StreamEventSink(run_id=run_id, observer=runtime.summaries.projection(run_id))
     plan = runtime.plans.find(ir_hash)
     if plan is None:
         return await finish(sink, failed_record(PLAN_MISSING, f"plan snapshot {ir_hash} is not in the store"))

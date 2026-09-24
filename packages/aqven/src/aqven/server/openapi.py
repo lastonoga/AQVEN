@@ -1,5 +1,5 @@
 import json
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Mapping, Sequence
 from pathlib import Path
 from typing import Final, NoReturn
 
@@ -26,6 +26,7 @@ from aqven.runtime.runs import (
 )
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.app import ServerOptions, create_app
+from aqven.spec import FlowId
 
 CONTRACT_ONLY: Final = "app built only to export the contract"
 CONTRACT_TOKEN: Final = "contract-only"
@@ -44,6 +45,9 @@ class ContractEngine:
         unavailable()
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
+        unavailable()
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
         unavailable()
 
     def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
