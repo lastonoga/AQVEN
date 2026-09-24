@@ -11,6 +11,7 @@ from pydantic import BaseModel, JsonValue, TypeAdapter
 from pydantic_core import to_jsonable_python
 
 from aqven.codegen import GENERATED_MODULE
+from aqven.engine.code_freshness import PROJECT_CODE
 from aqven.engine.errors import CodeLoadError, CodeSignatureError
 from aqven.runtime.address import JsonObject
 from aqven.spec import BUILTIN_ANNOTATIONS, parse_type_ref
@@ -46,6 +47,7 @@ class CodeLoader:
         expected = self.module_file(module_name)
         if expected is None:
             raise CodeLoadError(ref, f"module {module_name} is not in the project directory {self.root}")
+        PROJECT_CODE.refresh(self.root)
         self._ensure_search_path()
         try:
             module = importlib.import_module(module_name)
