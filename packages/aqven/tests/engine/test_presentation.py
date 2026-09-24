@@ -532,7 +532,7 @@ class RecordingPlanSource:
     plan: CompiledProject
     calls: list[str] = field(default_factory=list[str])
 
-    def current(self) -> CompiledProject:
+    async def current(self) -> CompiledProject:
         self.calls.append("current")
         return self.plan
 
