@@ -1,3 +1,5 @@
+import pydantic_ai
+
 from aqven_llm.adapters import (
     ENTRY_POINT_GROUP,
     MODALITIES,
@@ -129,3 +131,5 @@ __all__ = [
     "split_model",
     "split_provider",
 ]
+
+pydantic_ai.BANNER_ENABLED = False
