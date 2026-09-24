@@ -47,18 +47,51 @@ describe("ExperimentScreen: what we test", () => {
     expect(within(graph).getByText("flow support_case")).toBeTruthy()
   })
 
-  it("opens a drawer with the agent and model of each variant on the clicked node", async () => {
+  it("opens the clicked step in a sidebar beside the page, not inside the canvas, and closes it", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     const graph = await section("Graph of support_case")
     fireEvent.click(await within(graph).findByText("revise"))
-    const drawer = await screen.findByRole("dialog", { name: "polish__revise" })
-    expect(within(drawer).getByText("openrouter:openai/gpt-oss-20b")).toBeTruthy()
-    expect(within(drawer).getAllByText("openrouter:mistralai/mistral-nemo")).toHaveLength(1)
-    expect(within(drawer).getByText("overridden")).toBeTruthy()
-    fireEvent.click(within(drawer).getByRole("button", { name: "Close" }))
+    const sidebar = await screen.findByRole("dialog", { name: "polish__revise" })
+    expect((await section("What we test")).contains(sidebar)).toBe(false)
+    expect(nodeBox(graph, "revise")?.querySelector("[aria-current=true]")).toBeTruthy()
+    expect(nodeBox(graph, "panel")?.querySelector("[aria-current=true]")).toBeNull()
+    expect(within(sidebar).getByRole("tablist", { name: "Step details" }).textContent).toBe("AgentsInputPromptOutputResults")
+    expect(within(sidebar).getByText("openrouter:openai/gpt-oss-20b")).toBeTruthy()
+    expect(within(sidebar).getAllByText("openrouter:mistralai/mistral-nemo")).toHaveLength(1)
+    expect(within(sidebar).getByText("overridden")).toBeTruthy()
+    fireEvent.click(within(sidebar).getByRole("button", { name: "Close step details" }))
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "polish__revise" })).toBeNull()
     })
+  })
+
+  it("shows the prompt of a flow step and the results of the step in the latest series", async () => {
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    fireEvent.click(await within(await section("Graph of support_case")).findByText("revise"))
+    const sidebar = await screen.findByRole("dialog", { name: "polish__revise" })
+    fireEvent.mouseDown(within(sidebar).getByRole("tab", { name: "Prompt" }))
+    expect(await within(sidebar).findByText("Template source")).toBeTruthy()
+    fireEvent.mouseDown(within(sidebar).getByRole("tab", { name: "Results" }))
+    const gpt = await within(sidebar).findByRole("region", { name: "gpt" })
+    expect(within(gpt).getAllByRole("listitem")).toHaveLength(4)
+    expect(within(gpt).getByText(/^4 of 4 ok · median /)).toBeTruthy()
+    expect(new Set(within(gpt).getAllByText(/ · repeat 1$/).map((item) => item.textContent)).size).toBe(4)
+    expect(within(sidebar).getByRole("region", { name: "mistral" })).toBeTruthy()
+    expect(within(sidebar).getByRole("link", { name: /^Open series/ }).getAttribute("href")).toBe(`/research/series/${RESEARCH_SERIES.noninferiorHoldout}`)
+  })
+
+  it("shows the fields and the prompt of an arm step", async () => {
+    await renderRoute("/research/experiments/intent_split_long_messages")
+    const graph = await section("Graph of one_step")
+    expect(nodeBox(graph, "classify_message")?.textContent).toMatch(/1 input.*3 outputs/)
+    fireEvent.click(await within(graph).findByText("classify_message"))
+    const sidebar = await screen.findByRole("dialog", { name: "classify_message" })
+    fireEvent.mouseDown(within(sidebar).getByRole("tab", { name: "Input" }))
+    expect(within(sidebar).getByText("message")).toBeTruthy()
+    fireEvent.mouseDown(within(sidebar).getByRole("tab", { name: "Output" }))
+    expect(within(sidebar).getByText("intent")).toBeTruthy()
+    fireEvent.mouseDown(within(sidebar).getByRole("tab", { name: "Prompt" }))
+    expect(within(sidebar).getByText(/You decide the intent of a case to the support desk/)).toBeTruthy()
   })
 
   it("says so when the clicked node is outside the tested range", async () => {
@@ -66,6 +99,13 @@ describe("ExperimentScreen: what we test", () => {
     fireEvent.click(await within(await section("Graph of support_case")).findByText("triage"))
     const drawer = await screen.findByRole("dialog", { name: "triage" })
     expect(within(drawer).getByText(/Outside the tested range/)).toBeTruthy()
+  })
+
+  it("describes a flow step with the description of its node, like the graph inspector", async () => {
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    fireEvent.click(await within(await section("Graph of support_case")).findByText("triage"))
+    const sidebar = await screen.findByRole("dialog", { name: "triage" })
+    expect(await within(sidebar).findByText(/^Разбирает текст обращения и все вложения/)).toBeTruthy()
   })
 
   it("stacks one graph per arm with its variants above it", async () => {
@@ -108,11 +148,12 @@ describe("ExperimentScreen: answer", () => {
     expect(within(await section("Answer")).getByText("The answer comes when the series finishes.")).toBeTruthy()
   })
 
-  it("offers the run when there is no series yet", async () => {
+  it("points to the one run button when there is no series yet", async () => {
     await renderRoute("/research/experiments/reply_look")
     const answer = await section("Answer")
     expect(within(answer).getByText("No series yet")).toBeTruthy()
-    expect(within(answer).getByRole("button", { name: RUN })).toBeTruthy()
+    expect(within(answer).queryByRole("button", { name: RUN })).toBeNull()
+    expect(screen.getAllByRole("button", { name: RUN })).toHaveLength(1)
     expect(screen.queryByRole("region", { name: "Comparison" })).toBeNull()
     expect(screen.queryByRole("region", { name: "Series history" })).toBeNull()
   })

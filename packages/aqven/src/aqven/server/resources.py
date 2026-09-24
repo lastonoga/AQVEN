@@ -174,16 +174,6 @@ class NodeSummary(ResourceModel):
     downstream: tuple[str, ...]
 
 
-class ArmFlowView(ResourceModel):
-    experiment_id: ExperimentId
-    arm_id: ArmId
-    flow_id: FlowId
-    description: str | None
-    order: tuple[str, ...]
-    nodes: tuple[NodeSummary, ...]
-    schemas: FlowSchemas
-
-
 class NodeBindingView(ResourceModel):
     slot: str
     ref: str | None
@@ -302,3 +292,14 @@ class PromptDetail(PromptSummary):
     unused_inputs: tuple[str, ...]
     variant_files: tuple[str, ...]
     problems: tuple[Diagnostic, ...]
+
+
+class ArmFlowView(ResourceModel):
+    experiment_id: ExperimentId
+    arm_id: ArmId
+    flow_id: FlowId
+    description: str | None
+    order: tuple[str, ...]
+    nodes: tuple[NodeSummary, ...]
+    schemas: FlowSchemas
+    prompts: dict[str, PromptDetail]

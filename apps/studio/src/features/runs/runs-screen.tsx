@@ -32,6 +32,8 @@ import { useLiveRun } from "./use-live-run"
 
 type RunsBodyProps = {
   readonly starting: boolean
+  readonly list: RunList
+  readonly noRuns: boolean
   readonly flowId: FlowId
   readonly schemas: ApiFlowSchemas
   readonly order: readonly string[]
@@ -68,10 +70,15 @@ function CompareMissing({ runId, onStop }: { readonly runId: RunId; readonly onS
   )
 }
 
-function RunsBody({ starting, flowId, schemas, order, today, snapshot, events, blobs, trace, expected, compare, selectedKey, onOpenCall, onStarted, onCancel }: RunsBodyProps) {
+function NoRunSelected({ list, noRuns }: { readonly list: RunList; readonly noRuns: boolean }) {
   const t = useTranslations("runs")
+  if (noRuns) return <Empty title={t(`lists.${list}.empty`)} hint={t(`lists.${list}.emptyHint`)} />
+  return <Empty title={t("selectRun")} />
+}
+
+function RunsBody({ starting, list, noRuns, flowId, schemas, order, today, snapshot, events, blobs, trace, expected, compare, selectedKey, onOpenCall, onStarted, onCancel }: RunsBodyProps) {
   if (starting) return <StartRun key={flowId} flowId={flowId} schemas={schemas} order={order} previousRun={snapshot} today={today} onStarted={onStarted} onCancel={onCancel} />
-  if (snapshot === null || trace === null) return <Empty title={t("selectRun")} />
+  if (snapshot === null || trace === null) return <NoRunSelected list={list} noRuns={noRuns} />
   if (compare.kind === "missing") return <CompareMissing runId={compare.runId} onStop={compare.onStop} />
   if (compare.kind === "ready") {
     return (
@@ -249,6 +256,8 @@ export function RunsScreen(): JSX.Element {
       <Page width="xl" header={header} beforeSticky={starting || snapshot === null ? null : <RunOverview snapshot={snapshot} />} sticky={sticky}>
         <RunsBody
           starting={starting}
+          list={list}
+          noRuns={runs.length === 0}
           flowId={params.flowId}
           schemas={schemas}
           order={flow.order}

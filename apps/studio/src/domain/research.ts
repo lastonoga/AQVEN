@@ -1,5 +1,5 @@
 import type { AgentId, ArmId, CheckId, DatasetId, ExperimentId, FilePath, FlowId, IsoDateTime, NodeId, RunId, SeriesId, VariantId } from "./core"
-import type { ApiFlowSchemas, ApiNode } from "./live"
+import type { ApiFlowSchemas, ApiNode, ApiPromptDetail } from "./live"
 import type { NodeKind } from "./vocabulary"
 
 export const QUESTION_KINDS = ["look", "threshold", "compare", "noninferior"] as const
@@ -357,4 +357,5 @@ export type ArmFlow = {
   readonly description: string | null
   readonly nodes: readonly ApiNode[]
   readonly schemas: ApiFlowSchemas
+  readonly prompts: Readonly<Record<string, ApiPromptDetail>>
 }

@@ -6,7 +6,6 @@ import { Actions, Empty, Heading, Surface, Text, Toolbar, type TagSpec } from "@
 import { Button } from "@/components/ui/button"
 import { HandoffButton } from "@/features/chat-handoff"
 import { ROUTE_PATH } from "@/lib/routes"
-import { RunButton } from "./experiment-question"
 import { seriesRef } from "./presenters"
 import { verdictGap } from "./series-presenters"
 import { VERDICT_TONE } from "./tones"
@@ -69,9 +68,8 @@ export function ExperimentAnswer({ experiment, latest, launch }: AnswerProps) {
   const t = useTranslations("research")
   if (latest === null) {
     return (
-      <section aria-label={t("experiment.answer.title")} className="flex flex-col items-start gap-3">
+      <section aria-label={t("experiment.answer.title")} className="flex flex-col gap-3">
         <Empty title={t("experiment.answer.empty")} hint={t("experiment.answer.emptyHint")} />
-        <RunButton launch={launch} />
       </section>
     )
   }

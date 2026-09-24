@@ -5,7 +5,6 @@ import { intervalText, marginText, metricName, metricValue, signedValue } from "
 import {
   activeSeries,
   checkLaunch,
-  experimentFlows,
   failureModes,
   guardrailSentences,
   latestBadge,
@@ -122,7 +121,6 @@ describe("experiment list rows", () => {
   it("collects the flows and failure modes offered by the filters", () => {
     const experiments = [experimentSummary({}), experimentSummary({ id: ids.experimentId("arm_only"), flow: null, failureMode: "intent_misread" }), experimentSummary({ failureMode: null })]
     expect(failureModes(experiments)).toEqual(["intent_misread", "reply_quality"])
-    expect(experimentFlows(["judge_panel"], experiments)).toEqual(["judge_panel", "support_case"])
   })
 
   it("sets, keeps and clears one filter at a time", () => {

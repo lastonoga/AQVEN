@@ -2,10 +2,9 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useTranslations } from "use-intl"
 import { QUESTION_KINDS, type ExperimentFilter } from "@/domain"
 import { Text, Toolbar } from "@/components/studio"
-import * as ids from "@/data/ids"
 import { parseEnum } from "@/lib/search"
 import { ROUTE_PATH } from "@/lib/routes"
-import { withFilter } from "./presenters"
+import { hasNarrowing, withFilter } from "./presenters"
 
 type FilterOption = { readonly value: string; readonly label: string }
 
@@ -18,7 +17,6 @@ type FilterSelectProps = {
 
 export type ResearchFiltersProps = {
   readonly filter: ExperimentFilter
-  readonly flows: readonly string[]
   readonly failureModes: readonly string[]
   readonly count: number
 }
@@ -27,7 +25,7 @@ const ANY = ""
 const SELECT_CLASS = "h-8 min-w-36 rounded-lg border border-input bg-card px-2.5 font-mono text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 const parseQuestion = parseEnum(QUESTION_KINDS)
 
-const hasAnyFilter = (filter: ExperimentFilter): boolean => Object.keys(filter).length > 0
+const flowOnly = (filter: ExperimentFilter): ExperimentFilter => (filter.flow === undefined ? {} : { flow: filter.flow })
 
 function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
   const t = useTranslations("research.list")
@@ -55,7 +53,7 @@ function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
   )
 }
 
-export function ResearchFilters({ filter, flows, failureModes, count }: ResearchFiltersProps) {
+export function ResearchFilters({ filter, failureModes, count }: ResearchFiltersProps) {
   const t = useTranslations("research")
   const navigate = useNavigate()
   const apply = (next: ExperimentFilter): void => {
@@ -63,14 +61,6 @@ export function ResearchFilters({ filter, flows, failureModes, count }: Research
   }
   return (
     <Toolbar wrap aria-label={t("list.filtersAria")} role="group" className="gap-x-4 gap-y-2" end={<Text role="hint" tone="neutral">{t("list.count", { count })}</Text>}>
-      <FilterSelect
-        label={t("list.flow")}
-        value={filter.flow}
-        options={flows.map((flow) => ({ value: flow, label: flow }))}
-        onChange={(value) => {
-          apply(withFilter(filter, { flow: value === null ? null : ids.flowId(value) }))
-        }}
-      />
       <FilterSelect
         label={t("list.question")}
         value={filter.question}
@@ -87,9 +77,9 @@ export function ResearchFilters({ filter, flows, failureModes, count }: Research
           apply(withFilter(filter, { failureMode: value }))
         }}
       />
-      {hasAnyFilter(filter) ? (
+      {hasNarrowing(filter) ? (
         <Text role="link" tone="neutral" asChild>
-          <Link to={ROUTE_PATH.research} search={{}}>
+          <Link to={ROUTE_PATH.research} search={flowOnly(filter)}>
             {t("list.clear")}
           </Link>
         </Text>

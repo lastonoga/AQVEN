@@ -154,11 +154,10 @@ export const withFilter = (filter: ExperimentFilter, patch: FilterPatch): Experi
   }
 }
 
+export const hasNarrowing = (filter: ExperimentFilter): boolean => filter.question !== undefined || filter.failureMode !== undefined
+
 export const failureModes = (experiments: readonly ExperimentSummary[]): readonly string[] =>
   [...new Set(experiments.flatMap((experiment) => (experiment.failureMode === null ? [] : [experiment.failureMode])))].sort()
-
-export const experimentFlows = (flows: readonly string[], experiments: readonly ExperimentSummary[]): readonly string[] =>
-  [...new Set([...flows, ...experiments.flatMap((experiment) => (experiment.flow === null ? [] : [experiment.flow]))])].sort()
 
 export const shownRole = (role: VariantRole, question: QuestionKind): VariantRole | null => (question === "look" ? null : role)
 

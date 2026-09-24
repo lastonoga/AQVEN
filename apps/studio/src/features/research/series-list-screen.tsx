@@ -1,5 +1,5 @@
 import { useFormatter, useTranslations } from "use-intl"
-import type { SeriesSummary } from "@/domain"
+import type { FlowId, SeriesSummary } from "@/domain"
 import { Empty, Heading, Matrix, Page, RowLink, Surface, Tag, Text, type MatrixField } from "@/components/studio"
 import { usd } from "@/lib/format"
 import { projectRouteApi, ROUTE_PATH, seriesListRouteApi } from "@/lib/routes"
@@ -77,10 +77,10 @@ function useListFields(): readonly MatrixField<SeriesSummary>[] {
   ]
 }
 
-function SeriesTable({ series }: { readonly series: readonly SeriesSummary[] }) {
+function SeriesTable({ series, flow }: { readonly series: readonly SeriesSummary[]; readonly flow: FlowId | null }) {
   const t = useTranslations("research.seriesList")
   const fields = useListFields()
-  if (series.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
+  if (series.length === 0) return <Empty title={flow === null ? t("empty") : t("emptyFlow", { flow })} hint={t("emptyHint")} />
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
@@ -100,10 +100,11 @@ function SeriesTable({ series }: { readonly series: readonly SeriesSummary[] }) 
 export function SeriesListScreen() {
   const t = useTranslations("research.seriesList")
   const { project } = projectRouteApi.useLoaderData()
-  const { series } = seriesListRouteApi.useLoaderData()
+  const { series, flow } = seriesListRouteApi.useLoaderData()
+  const subtitle = flow === null ? t("subtitle", { project: project.package ?? project.root }) : t("subtitleFlow", { flow })
   return (
-    <Page width="xl" header={<Heading size="page" title={t("title")} below={[t("subtitle", { project: project.package ?? project.root })]} />}>
-      <SeriesTable series={seriesListOrder(series)} />
+    <Page width="xl" header={<Heading size="page" title={t("title")} below={[subtitle]} />}>
+      <SeriesTable series={seriesListOrder(series)} flow={flow} />
     </Page>
   )
 }

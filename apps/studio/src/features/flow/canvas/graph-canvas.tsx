@@ -31,6 +31,7 @@ export type GraphCanvasProps = {
   readonly onToggleLegend: () => void
   readonly dimmed?: ReadonlySet<string>
   readonly pageScroll?: boolean
+  readonly focusInset?: number
 }
 
 const NODE_TYPES = { step: StepNode, container: ContainerNode } satisfies NodeTypes
@@ -48,12 +49,14 @@ const litNodes = (nodes: readonly CanvasNode[], dimmed: ReadonlySet<string>): re
   return lit.length === 0 ? nodes : lit
 }
 
-function FocusedNode({ graph, selected }: { readonly graph: CanvasGraph; readonly selected: string | null }) {
-  useNodeFocus(selected === null ? null : absoluteBox(graph.nodes, selected))
+type FocusedNodeProps = { readonly graph: CanvasGraph; readonly selected: string | null; readonly inset: number }
+
+function FocusedNode({ graph, selected, inset }: FocusedNodeProps) {
+  useNodeFocus(selected === null ? null : absoluteBox(graph.nodes, selected), inset)
   return null
 }
 
-export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend, dimmed = NONE_DIMMED, pageScroll = false }: GraphCanvasProps) {
+export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend, dimmed = NONE_DIMMED, pageScroll = false, focusInset = 0 }: GraphCanvasProps) {
   const t = useTranslations("flow.canvas")
   const [hovered, setHovered] = useState<string | null>(null)
   const fitOptions = fitViewOptions(litNodes(graph.nodes, dimmed))
@@ -93,7 +96,7 @@ export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend,
           onNodeMouseLeave={leaveNode}
         >
           <Background variant={BackgroundVariant.Dots} gap={DOT_GAP} size={1} color="var(--border)" bgColor="var(--background-subtle)" />
-          <FocusedNode graph={graph} selected={selected} />
+          <FocusedNode graph={graph} selected={selected} inset={focusInset} />
           <Panel position="top-right" className="m-3.5">
             <Legend open={legend} onToggle={onToggleLegend} />
           </Panel>

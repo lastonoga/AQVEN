@@ -340,4 +340,5 @@ export const armFlowOf = (view: ApiArmFlow): ArmFlow => ({
   description: view.description,
   nodes: view.nodes,
   schemas: view.schemas,
+  prompts: view.prompts,
 })

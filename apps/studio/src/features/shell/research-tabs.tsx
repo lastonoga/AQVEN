@@ -1,14 +1,15 @@
 import { useTranslations } from "use-intl"
 import { ChoiceLink, ChoiceList } from "@/components/studio"
-import { RESEARCH_TABS, RESEARCH_TAB_ROUTE, useCurrentResearchTab } from "./navigation"
+import { RESEARCH_TABS, RESEARCH_TAB_ROUTE, researchSearch, useCurrentResearchTab } from "./navigation"
+import type { FlowScope } from "./selected-flow"
 
-export function ResearchTabs() {
+export function ResearchTabs({ selected }: { readonly selected: FlowScope }) {
   const t = useTranslations("shell.researchTabs")
   const current = useCurrentResearchTab()
   return (
-    <ChoiceList appearance="segmented" label={t("navAria")}>
+    <ChoiceList appearance="tabs" label={t("navAria")}>
       {RESEARCH_TABS.map((tab) => (
-        <ChoiceLink key={tab} appearance="segmented" to={RESEARCH_TAB_ROUTE[tab]} selected={tab === current}>
+        <ChoiceLink key={tab} appearance="tabs" to={RESEARCH_TAB_ROUTE[tab]} search={researchSearch(selected)} selected={tab === current}>
           {t(tab)}
         </ChoiceLink>
       ))}

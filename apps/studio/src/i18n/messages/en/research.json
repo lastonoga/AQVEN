@@ -114,7 +114,6 @@
     "subtitle": "Experiments of {project}: a question, its variants and the series that answer it",
     "suggest": "Suggest hypotheses",
     "filtersAria": "Filter experiments",
-    "flow": "Flow",
     "question": "Question",
     "failureMode": "Failure mode",
     "any": "all",
@@ -140,7 +139,9 @@
     "open": "Open experiment {id}",
     "empty": "No experiments match these filters",
     "emptyAll": "No experiments yet",
-    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/"
+    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/",
+    "subtitleFlow": "Experiments on {flow}: a question, its variants and the series that answer it",
+    "emptyFlow": "No experiments on {flow} yet"
   },
   "experiment": {
     "guardrails": "Guardrails: {list}",
@@ -150,13 +151,12 @@
     },
     "canvas": {
       "title": "What we test",
-      "hint": "Faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agent in each variant.",
+      "hint": "Faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agents, inputs, outputs, prompt and results.",
       "graphAria": "Graph of {graph}",
       "arm": "arm {arm}",
       "flow": "flow {flow}",
       "swap": "swap: {agents}",
       "noGraph": "The graph of this experiment could not be loaded",
-      "close": "Close",
       "noAgent": "no agent",
       "overridden": "overridden",
       "outside": "Outside the tested range: this step does not run, its output comes from the case.",
@@ -183,7 +183,7 @@
         "none": "No answer: the series produced no usable measurement."
       },
       "empty": "No series yet",
-      "emptyHint": "Run the experiment to get an answer.",
+      "emptyHint": "Run the experiment from the top of the page to get an answer.",
       "fresh": "Run again on fresh cases",
       "next": "Ask the agent for the next hypothesis",
       "open": "Open series {ref}"
@@ -258,6 +258,36 @@
       "threshold": "{bound, select, above {above} other {below}} {value} ± {margin}",
       "margin": "margin {margin}",
       "notes": "Notes of this experiment"
+    },
+    "step": {
+      "tabsAria": "Step details",
+      "close": "Close step details",
+      "tabs": {
+        "agents": "Agents",
+        "input": "Input",
+        "prompt": "Prompt",
+        "output": "Output",
+        "results": "Results"
+      },
+      "inputs": "Inputs",
+      "outputs": "Outputs",
+      "noPrompt": "This step has no prompt",
+      "promptLoading": "Loading the prompt…",
+      "promptFailed": "The prompt could not be loaded: {reason}",
+      "results": {
+        "none": "No series yet",
+        "noneHint": "Run the experiment to see what this step does in each variant.",
+        "loading": "Loading the results of the latest series…",
+        "failed": "The results could not be loaded: {reason}",
+        "intro": "From the latest series: up to {count} attempts of each variant.",
+        "openSeries": "Open series {ref}",
+        "notRun": "This step did not run in these attempts: its output comes from the case.",
+        "ok": "{ok} of {total} ok",
+        "latency": "median {value}",
+        "spend": "{value} spent",
+        "attempt": "{name} · repeat {repeat}",
+        "openRun": "Open the run of {name}, repeat {repeat}"
+      }
     }
   },
   "series": {
@@ -363,6 +393,8 @@
       "spend": "Spend",
       "verdict": "Verdict",
       "started": "Started"
-    }
+    },
+    "subtitleFlow": "Series of the experiments on {flow}: running ones first, then the newest",
+    "emptyFlow": "No series on {flow} yet"
   }
 }

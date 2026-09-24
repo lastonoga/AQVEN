@@ -1,13 +1,9 @@
 import { useMatchRoute } from "@tanstack/react-router"
+import type { FlowId } from "@/domain"
 import { ROUTE_PATH } from "@/lib/routes"
 
 export const PROJECT_MODES = ["flow", "research"] as const
 export type ProjectMode = (typeof PROJECT_MODES)[number]
-
-export const MODE_ROUTE = {
-  flow: ROUTE_PATH.home,
-  research: ROUTE_PATH.research,
-} as const satisfies Readonly<Record<ProjectMode, string>>
 
 export const FLOW_TABS = ["canvas", "runs", "cases"] as const
 export type FlowTab = (typeof FLOW_TABS)[number]
@@ -25,6 +21,10 @@ export const RESEARCH_TAB_ROUTE = {
   experiments: ROUTE_PATH.research,
   series: ROUTE_PATH.seriesList,
 } as const satisfies Readonly<Record<ResearchTab, string>>
+
+export type ResearchSearch = { readonly flow?: FlowId }
+
+export const researchSearch = (flow: FlowId | null): ResearchSearch => (flow === null ? {} : { flow })
 
 const DEFAULT_TAB: FlowTab = "canvas"
 

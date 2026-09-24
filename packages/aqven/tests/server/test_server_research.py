@@ -256,6 +256,16 @@ def test_an_arm_serves_its_nodes_and_schemas_for_the_run_view(research_client: T
     assert "answer" in schemas["nodes"]["draft"]["out"]["properties"]
 
 
+def test_an_arm_serves_the_prompt_of_each_llm_step(research_client: TestClient) -> None:
+    prompts = research_client.get(f"/api/experiments/{EXPERIMENT}/arms/{ARM}").json()["prompts"]
+
+    assert sorted(prompts) == ["draft", "polish"]
+    draft = prompts["draft"]
+    assert (draft["flow_id"], draft["node_id"], draft["inference_id"]) == (ARM, "draft", "reply")
+    assert draft["source"]["text"] == research_client.get(f"/api/raw/{draft['path']}").text
+    assert [slot["name"] for slot in draft["slots"]] == ["question"]
+
+
 @pytest.mark.parametrize(
     "path", [f"/api/experiments/{EXPERIMENT}/arms/nothing", f"/api/experiments/nothing/arms/{ARM}"]
 )
