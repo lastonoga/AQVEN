@@ -21,6 +21,7 @@ MODULE: Final = PACKAGE
 TOKENS: Final = ("__package__", "__project__", "__aqven_requirement__", "__uv_sources__")
 TEXT_SUFFIXES: Final = frozenset({".py", ".yaml", ".md", ".json", ".toml", ".example", ".gitignore"})
 COPY_IGNORED: Final = ("__pycache__", ".aqven", "cassettes", "*.pyc")
+MONOREPO_MARKERS: Final = ("corepack", "pnpm", "repository root")
 
 
 def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -96,6 +97,12 @@ def test_showcase_project_keeps_no_template_tokens(created: Path) -> None:
     assert [path for path in written if path.suffix == TEMPLATE_SUFFIX] == []
     assert [path for path in texts if any(token in path.read_text(encoding="utf-8") for token in TOKENS)] == []
     assert (created / MODULE / "samples" / "flow_strip_controller.jpg").read_bytes()[:2] == b"\xff\xd8"
+
+
+def test_showcase_rules_carry_no_monorepo_commands(created: Path) -> None:
+    rules = "\n".join((created / name).read_text(encoding="utf-8") for name in ("AGENTS.md", "CLAUDE.md"))
+
+    assert [marker for marker in MONOREPO_MARKERS if marker in rules] == []
 
 
 def test_showcase_project_renames_the_package_everywhere(created: Path) -> None:

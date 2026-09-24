@@ -14,8 +14,8 @@ that answer, and what happens if you change the input or the prompt and rerun ju
 
 - Open a flow's runs screen and pick a run from the picker at the top — search by run reference,
   status, or the dataset case it used. If nothing is selected yet, Studio shows the most recent run.
-  Two buttons next to the picker start a new one: `Start a run` sends you to
-  [datasets](/studio/datasets/) to pick a saved case, `Enter input manually` opens a form on this same
+  Two buttons next to the picker start a new one: `Start a run` sends you to the flow's
+  [Cases](/studio/cases/) tab to pick a saved case, `Enter input manually` opens a form on this same
   screen instead.
 - The header above the timeline shows the run's status and mode, when it started, and the spec hash it
   ran against. If this run was forked from another one, a `forked from` link takes you there; if the
@@ -49,6 +49,17 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   who it waited on and what they answered). A formatted/raw switch above the panel's body — same
   mechanism as the [node inspector](/studio/understand-the-graph/) — flips every section between a
   readable view and the raw JSON.
+- **Turn a run into a case with `To cases`.** Once you've found a wrong answer, lock it in: `To cases`
+  opens "Draft a case from this run". The engine turns the run's input, its context and the outputs of its
+  top-level nodes into a dataset case of this flow, and **Hand the case to the chat** sends the draft to
+  the chat. The agent keeps only the `node_outputs` the case needs, names and tags it, and asks you for
+  the `expected_output` before it writes the file. A flow without a dataset gets a new one with this case
+  first. An experiment that selects the case by its tags then keeps checking the fix.
+- **Compare agents on a step.** When the stage you're on calls a model, the stage navigator shows
+  `Compare agents on <step>`. It hands the chat a prompt to write a `compare` or `noninferior`
+  experiment for that step. The step's current agents become the baseline, other agents from `agents/`
+  become candidate variants, and the cases come from the dataset this run used. See
+  [How to write an experiment](/engine/experiments/).
 - To start a manual run, drag the start and end handles on the node range picker to choose which stages
   to run, or click a single node to run only that one stage — the same node you just found to be at
   fault, with a changed prompt or a changed input, is a valid range of one. Studio checks live whether
@@ -83,8 +94,8 @@ loop's footer names which pass it kept.
   side panel borrows its formatted/raw switch from.
 - [How to customize a node's display in Studio](/engine/display-templates/) — what builds the
   formatted view of a node's input and output, instead of the raw JSON.
-- [How to work with datasets in Studio](/studio/datasets/) — where `Start a run` sends you to pick a
-  case.
+- [How to work with cases in Studio](/studio/cases/) — where `Start a run` sends you to pick a case, and
+  where a case drafted with `To cases` shows up.
 - [How to respond to a human-review request](/studio/respond-to-a-review/) — what to do with a run
   that's waiting on a person.
 - [How to pause for a person](/engine/human-node/) — what a human node actually is.

@@ -253,8 +253,47 @@ export const RegressionCaseSchematic = () => (
       <span className="font-mono text-[10px] text-muted-foreground">datasets/route_ticket_cases.yaml</span>
     </div>
     <span className="flex shrink-0 items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 font-mono text-[10px] text-success">
-      <CircleCheck className="size-3" aria-hidden="true" /> regression test
+      <CircleCheck className="size-3" aria-hidden="true" /> regression: yes
     </span>
+  </div>
+);
+
+const CONTRACT_TRIES = [1, 2, 3];
+
+export const ContractBreakSchematic = () => (
+  <div className="flex flex-col gap-3 rounded-lg border border-border bg-background-subtle p-4">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <span className="flex flex-wrap items-center gap-2">
+        <span className="rounded border border-llm-border bg-llm-bg px-2 py-0.5 font-mono text-xs font-medium text-llm">
+          triage
+        </span>
+        <span className="font-mono text-[10px] text-muted-foreground">gemini-2.5-flash-lite</span>
+      </span>
+      <span className="font-mono text-[10px] text-muted-foreground">output.retries: 2</span>
+    </div>
+    <span className="font-mono text-[10px] text-muted-foreground">
+      types/records/observation.yaml · value: maxLength 200
+    </span>
+    <div className="flex flex-col gap-1">
+      {CONTRACT_TRIES.map((attempt) => (
+        <div
+          key={attempt}
+          className="flex items-center gap-3 rounded-md border border-border bg-card px-2.5 py-1.5"
+        >
+          <span className="shrink-0 font-mono text-[10px] text-muted-foreground">try {attempt}</span>
+          <span className="min-w-0 flex-1 font-mono text-[10px] break-words text-foreground">
+            observations[].value over 200 chars
+          </span>
+          <span className="shrink-0 font-mono text-[10px] text-destructive">refused</span>
+        </div>
+      ))}
+    </div>
+    <div className="flex items-start gap-2 rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2">
+      <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" aria-hidden="true" />
+      <p className="font-mono text-xs leading-relaxed break-words text-destructive">
+        MODEL_RETRIES_EXHAUSTED: counted as schema_invalid, a failed attempt
+      </p>
+    </div>
   </div>
 );
 

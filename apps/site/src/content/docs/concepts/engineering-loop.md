@@ -1,6 +1,6 @@
 ---
 title: "The engineering loop: from incident to verified fix"
-description: From an unexpected result to a verified fix — understand, investigate, test the change.
+description: From an unexpected result to a verified fix — understand, investigate, test the change — and the same loop run in rounds until a flow holds.
 ---
 
 ## In short
@@ -38,36 +38,50 @@ step name that could mean any of several different runs inside the same executio
 ## Test: make sure you didn't break anything else
 
 Once you know what to change, the harder question is whether the change is actually safe. Fixing the
-one example you happened to see doesn't answer that — it only proves you fixed that one case.
+one example you happened to see doesn't answer that. It only proves you fixed that one case.
 
 That's what a saved, representative set of cases is for, and an experiment that states the question
-before you look at any result. Which flow or range of nodes runs, on which cases, with which checks,
-and what counts as good: "better than the current agent by at least 0.05", or "not worse by more than
-0.05, and no more than 20% dearer per passing answer". A series then runs every case for every variant,
-several times, and reports a verdict from a 95% interval against the margin you wrote down: confirmed,
-refuted, or inconclusive when there isn't enough data to tell. Nothing is eyeballed, and the margin
-can't be moved after you've seen the numbers.
+before you look at any result. It says which flow or range of nodes runs, on which cases, with which
+checks, and what counts as good. For example: "better than the current agent by at least 0.05", or "not
+worse by more than 0.05, and no more than 20% dearer per passing answer". A series then runs every case
+for every variant, several times, and reports a verdict from a 95% interval against the margin you wrote
+down. The verdict is confirmed, refuted, or inconclusive when there isn't enough data to tell. Nothing is
+eyeballed, and the margin can't be moved after you've seen the numbers.
 
-The cases are split in half. The working half is for searching: run it as often as you like, and it
-gives you signals, not answers. The held-out half is for deciding: one series when the change is done.
+The cases are split in half. The working half is for exploring: run it as often as you like, and it
+gives you signals, not answers. The held-out half is for confirming: one series when the change is done.
 That series writes a finding into the project, and the project's `FINDINGS.md` collects every finding so
 far. That's the difference between "I fixed the one case I saw" and "I tested this against everything I
-said mattered," and it's what tells you the fix is safe to ship.
+said mattered". It's what tells you the fix is safe to ship.
+
+## The loop runs in rounds
+
+One incident is one pass through the loop. Building a flow that holds takes several passes, and a coding
+agent can run them for you. You give it the task and what "done" means in numbers. The agent builds the
+simplest flow, runs a look over the cases, and reads every failure down to its first failing node. It
+fixes what the prompt never asked for, and turns each remaining failure mode into an experiment. It
+explores on working cases, confirms once on held-out cases, and applies the finding. Then it starts the
+next round on fresh cases. It stops when every "done" criterion is confirmed, or the budget is spent, and
+reports `FINDINGS.md` and the risks left. [How an agent takes a task to a reliable
+flow](/mcp-cli/research-loop/) is that loop, stage by stage.
 
 ## How this shapes what you do
 
 This loop isn't abstract. [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/)
-walks through it by hand, on AQVEN's own example project: opening the graph to understand it, tracing a
-wrong answer to the one step responsible even though it's buried inside a loop, and checking the fix
-with a series before shipping it.
+walks through it by hand, on AQVEN's own example project. It opens the graph to understand it, traces a
+wrong answer to the one step responsible even though it's buried inside a loop, and checks the fix with
+a series before shipping it.
 
-The saved cases and the series that make the Test step real have their own how-to pages:
-[datasets in Studio](/studio/datasets/), [research in Studio](/studio/research/), and
+The saved cases and the series that make the Test step real have their own pages:
+[cases in Studio](/studio/cases/), [Research in Studio](/studio/research/),
+[how to write an experiment](/engine/experiments/), and
 [experiments and series as an agent](/mcp-cli/experiments-and-series/).
 
 ## See also
 
 - [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) — the same loop, done by
   hand, on a real example.
+- [Experiments, series and findings](/concepts/experiments-series-and-findings/) — the pieces behind the
+  Test step.
 - [What this is built on](/concepts/what-this-is-built-on/) — what AQVEN takes as-is versus adds on
   top, including the guarantees every model call gets.

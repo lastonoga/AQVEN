@@ -20,6 +20,19 @@ and fix step by step instead of treating as one opaque prompt.
 - **Working in Studio** — build, run, and debug flows visually in the browser. [Studio](/studio/)
 - **Driving it through an MCP agent** — point a coding agent at your project and have it build and fix flows for you. [MCP & CLI](/mcp-cli/)
 
+## From a task to a flow that holds
+
+You give a coding agent a task and say what "done" means in numbers. The agent builds the simplest flow,
+checks it, and runs it over saved cases. It reads every failure down to the step that caused it, and turns
+each risk into an experiment: one question, written in a file before any data. It explores on working
+cases, then confirms once on held-out cases the server kept aside. Each verdict on held-out cases becomes a
+finding in the project's `FINDINGS.md`. The agent repeats this, round after round, until the findings show the
+flow works reliably, or the budget is spent. You watch every run and every series in Studio, and you
+approve any spend above the project's cap. [A day with AQVEN](/start/a-day-with-aqven/) follows one
+such day on the showcase project, prompt by prompt. See
+[How an agent takes a task to a reliable flow](/mcp-cli/research-loop/) and
+[Experiments, series and findings](/concepts/experiments-series-and-findings/).
+
 ## `aqven new`: a wizard first, a template if you ask for one
 
 On a real terminal, `aqven new my_project` doesn't just drop files on disk — it asks a short series of

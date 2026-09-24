@@ -1,83 +1,79 @@
 ---
-title: How to read research in Studio
-description: Browse a project's experiments, launch a series with its estimate, approve spend above the cap, and read a series' verdict, metric matrix and cases.
+title: How to use Research in Studio
+description: Switch to Research, browse experiments, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
 ---
 
 ## When you need this
 
-Use this once a fix has worked on the one case you saw and you need to know whether it holds up. An
-experiment asks one question of a flow, a range of its nodes or a small arm. A series answers it by
-running every selected case, for every variant, several times. Studio's **Research** section is where a
-person reads those experiments and series, launches a series and approves its spend. This is the
-[Test step of the engineering loop](/concepts/engineering-loop/).
-
-:::caution[Research is being connected to the project server]
-The project server already runs series ([the agent's side](/mcp-cli/experiments-and-series/) and
-`{{CLI_COMMAND}} series` both work). Studio's Research screens don't read from it yet. Until they do,
-approve a series that waits for approval with `POST /api/series/{series_id}/approve` on the project
-server.
-:::
+Use Research once a fix has worked on the one case you saw and you need to know whether it holds. An
+experiment asks one question of a flow, a range of its nodes or a small arm. A series answers it by running
+the selected cases, for every variant, several times. Research is where you read experiments, launch a
+series, approve its spend, and ask the chat for the next hypothesis.
 
 ## Steps
 
-- **Open Research** from the project navigation, next to the flows. The list shows every experiment
-  in the project: its question, its subject (a flow, a range like `support_case · polish`, or an arm),
-  its variants, the verdict of its last series and how many series it has had and what they cost.
-  Filter it by flow, by question or by failure mode.
-- **An experiment page reads its file for you.** "What we run" names the subject, the cases (the dataset,
-  and how many of its cases the tag filter selects), and the variants with the agent and model on every
-  node, marking the nodes a variant overrides. "How we measure" lists the checks, each built-in, code or
-  a judge. A judge shows the experiment it was validated by, or is flagged as an unvalidated judge. Below
-  them are the metrics of the question with their role, direction and margin. **Show notes** opens the
-  experiment's `experiment.md`.
-- **Launch picks the size and shows the estimate before anything runs.** Choose the cases to run on
-  (`dev` or `holdout`), N cases and R repeats. Studio shows the attempts (N × R × variants), the expected
-  spend and time, and a recommended N with the reason. For example, "At 12 cases the expected interval is
-  ±0.18, wider than the 0.05 margin: the verdict will likely be inconclusive." You can still start below
-  the recommended size. If the estimate is above the project spend cap, the launch says so, and the series
-  waits for your approval before it runs a single attempt.
-- **Approve spend or stop a series from its page.** A series that waits for approval shows **Approve
-  spend**. That button is the only way a series above the cap runs: an agent over MCP can start a series,
-  but it can't approve one. **Stop** cancels a series. Queued attempts never start, and calls already
-  running finish and are paid for.
-- **Spend counts every call it can price, and says when it can't.** A call's cost comes from the
-  provider's own report, then the provider's price list (OpenRouter's public model list), then the
-  `genai-prices` table. A call none of them prices is unknown, not free. When some attempts ran on such a
-  model, the series page says the spend is a lower bound and how many attempts it leaves out, and the
-  experiment's series history marks that spend with ≥.
-- **The verdict comes first, as a sentence.** A finished series shows its verdict: confirmed, refuted,
-  inconclusive, invalid, or a signal. The sentence is the one the server wrote, the same text an agent
-  quotes. A look has no verdict, and a series on working (`dev`) cases gives at most a signal. Only a
-  series on held-out (`holdout`) cases writes a finding into the project.
-- **Variants × metrics is the matrix behind the verdict.** Each row is a variant. Each column is a
-  metric: the primary metric first, then guardrails, the other checks, and the built-in metrics every
-  series measures (success rate, cost per attempt, cost per pass, latency p50 and p95, valid on first
-  try, infrastructure errors). A cell draws the value as a dot and the 95% interval as a whisker, on a
-  scale shared by its column, colored by the cell's verdict.
-- **Stability and cases show where the average hides something.** Stability counts, per variant, the
-  cases that passed every repeat, never passed, or sometimes passed. The cases table lists every case
-  with its per-variant tally and failed checks. Filter it to **Failures** or to **Variants disagree**,
-  and open a case to see each attempt with a link to its own run.
+- **Switch to Research.** The project header has two modes, **Flow** and **Research**. Research has two
+  tabs: **Experiments** and **Series**. The flow picker narrows both to one flow, and **All experiments**
+  shows every flow, arm-only experiments included. The chat panel stays open in both modes.
+- **Browse the experiments.** Each row shows the experiment id with its description, the question kind
+  (look, threshold, better, not worse), the subject (a flow, a range like `support_case · polish`, or an
+  arm), the variants, the state of the last series, and how many series ran and what they cost. Filter by
+  **Question** or **Failure mode**.
+- **Suggest hypotheses** hands a prompt to the chat. It asks the agent to read the flows, their cases and
+  the experiments already there, and to propose hypotheses. Each hypothesis comes with its failure mode,
+  question, metric and margin, subject, variants as agents, checks and cases by tags. The agent writes no
+  file until you pick one. Then it writes `experiments/<experiment_id>/experiment.yaml` and runs
+  `{{CLI_COMMAND}} check`.
+- **Open an experiment.** The header states the question in words and holds a **Run** button with the
+  estimate. The page below reads top to bottom:
+
+  | Block | What it shows |
+  |---|---|
+  | **What we test** | the **Hypothesis** card, or **Goal** for a look, with the experiment's description and its decision rule. Below it: the variants table (role, difference from the baseline, steps, agents and models), then the facts. |
+  | Facts | the cases selected out of the dataset, with the working and held-out split and the tags; the checks, each built-in, code or judge, and whether a judge is validated; where the subject runs |
+  | Graphs | one graph per variant. Steps outside the tested range are faded, and a swap line marks where a variant puts another agent. Click a step for its **Agents**, **Input**, **Prompt**, **Output** and **Results** from the latest series. |
+  | **Answer** | the verdict of the latest series as its sentence, with **Run again on fresh cases**, **Ask the agent for the next hypothesis** and a link to the series |
+  | **Comparison** | the primary metric of the latest series per variant: dot for the value, whisker for the 95% interval, cost per pass and stability, the difference against the margin |
+  | **Cases where variants disagree** | each such case with every variant's tally |
+  | **Launch** | purpose, cases, repeats, the estimate and the cap |
+  | **Series history** | every series of this experiment, with its state and spend |
+  | **Technical details** | the files, question, subject, plan, failure mode, and the notes from `experiment.md` |
+
+- **Launch to explore or confirm.** **Purpose** is **Explore · working cases** or **Confirm · held-out
+  cases**. Explore gives numbers without a finding. Confirm gives a verdict written to `FINDINGS.md`.
+  Choose **Cases** out of the ones available on that side, and **Repeats**. The panel shows the attempts
+  and the estimate with its source: ≈ from past series, ≈ at provider prices, ≤ upper bound, or no price
+  estimate. It explains the recommended size, for example "At 12 cases the expected interval is ±0.18,
+  wider than the 0.05 margin". Above the project spend cap, it says the series needs your approval.
+  **Run** starts the series and opens it.
+- **Approve spend or stop.** A series that waits for approval shows **Approve spend**, here and on its own
+  page. That button is the only way a series above the cap runs: an agent can start a series but can't
+  approve one. **Stop** cancels a running series. Calls already running finish and are paid for.
+- **Use the answer.** **Run again on fresh cases** starts a series on the held-out cases at the plan's
+  size. Every finished held-out series on the same cases is counted in the finding, so add new cases
+  before you run it for a second answer. **Ask the agent for the next hypothesis** hands the chat the
+  experiment, the latest verdict and the same answer format as **Suggest hypotheses**.
 
 ### Example
 
-Open the [showcase](/start/quickstart/) project's **Research** section and select
-`reply_noninferior_mistral`: is mistral on the revision step of the `polish` loop no worse than gpt, by
-the critic's score, within 0.05? Launch it on `dev`. The estimate shows the attempts across both variants
-and the spend. It also warns that the dev half of this small dataset holds fewer cases than a 0.05 margin
-needs, so the verdict will likely be inconclusive. Once the series finishes, it gives a signal rather than a finding,
-because it ran on working cases. Its matrix shows the `critique` score of both variants with their
-intervals, and the cases table filtered to **Variants disagree** lists the cases where the two agents
-parted ways. When the change is final, launch it once on `holdout`: that series writes a finding under
-`experiments/reply_noninferior_mistral/findings/` and adds a line to the project's `FINDINGS.md`.
+Open the showcase project, switch to **Research**, and open `reply_noninferior_mistral`. The Hypothesis
+reads "mistral in the revision step of the polish loop is not worse than gpt by the critic's score, and a
+passing reply costs at most 20% more". The variants table shows one swap, `polish__revise: agent gpt →
+agent mistral`. The facts show all twelve cases of `support_case_cases`, split between working and
+held-out. The `critique` judge is marked as validated by `critique_planted_defects`.
+
+In **Launch**, keep **Explore · working cases** and click **Run**. The series gives a `signal`, not a
+finding, whatever its numbers, and you can repeat it after every change to the revision prompt. When the
+change is final, switch to **Confirm · held-out cases** and run it once. That series writes a finding
+under `experiments/reply_noninferior_mistral/findings/` and adds a line to `FINDINGS.md`.
 
 ## See also
 
-- [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/): the same series,
-  started and read over MCP.
-- [How to work with datasets in Studio](/studio/datasets/): where the cases an experiment selects come
-  from.
-- [How to write a custom evaluator](/engine/custom-evaluator/): a check an experiment scores on every
-  attempt.
-- [How to investigate a run](/studio/investigate-a-run/): what opens when you follow an attempt's run
-  link.
+- [How to follow and read a series in Studio](/studio/series/): the page a launch opens on, and the
+  Series tab.
+- [How to work with cases in Studio](/studio/cases/): where the cases an experiment selects come from.
+- [How to write an experiment](/engine/experiments/): every key behind the blocks above.
+- [How a series decides](/concepts/how-a-series-decides/): the intervals and margins behind the
+  Comparison and the Answer.
+- [How to use the AI chat in Studio](/studio/chat/): where **Suggest hypotheses** and **Ask the agent for
+  the next hypothesis** land.
