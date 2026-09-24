@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { API_BASE } from "@/api/client"
@@ -155,6 +155,31 @@ describe("Project shell", () => {
     expect(router.state.location.pathname).toBe("/settings")
     expect(currentOf(await navLinks("Project modes"))).toEqual([null, null])
     expect(screen.getByRole("link", { name: "Settings" }).getAttribute("aria-current")).toBe("page")
+  })
+
+  it("shows the project server status before the gear", async () => {
+    await renderRoute(`${FLOWS}/support_case/canvas`)
+    const status = await screen.findByRole("button", { name: "Server status: Connected" })
+    const gear = screen.getByRole("link", { name: "Settings" })
+    expect(status.compareDocumentPosition(gear) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.queryByText("Studio lost the connection to the project server.")).toBeNull()
+  })
+
+  it("puts the lost-connection banner above the chat and the workspace", async () => {
+    server.use(http.get(`${API_BASE}/health`, () => HttpResponse.error()))
+    await renderRoute(`${FLOWS}/support_case/canvas`)
+    const status = await screen.findByRole("button", { name: "Server status: Checking" })
+    await waitFor(() => {
+      expect(status.getAttribute("aria-busy")).toBe("false")
+    })
+    act(() => {
+      window.dispatchEvent(new Event("focus"))
+    })
+    const banner = (await screen.findByText("Studio lost the connection to the project server.")).closest("[role=alert]")
+    expect(banner?.textContent).toContain(`uv run aqven dev ${liveProject.root}`)
+    const workspace = screen.getByRole("navigation", { name: "Project and flow" })
+    expect(banner?.compareDocumentPosition(workspace)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screen.getByRole("button", { name: "Server status: Disconnected" })).toBeTruthy()
   })
 
   it("loads the model keys once when settings open", async () => {

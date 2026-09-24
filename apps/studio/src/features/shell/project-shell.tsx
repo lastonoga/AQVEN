@@ -4,6 +4,7 @@ import type { ApiFlow, ApiProject } from "@/domain"
 import { SplitPane, Surface, type SplitPanel } from "@/components/studio"
 import { ChatPanel } from "@/features/chat"
 import { ChatHandoffProvider } from "@/features/chat-handoff"
+import { ServerDownBanner, ServerHealthProvider, ServerNoticeToast } from "@/features/health"
 import { projectRouteApi } from "@/lib/routes"
 import { ProjectBar } from "./project-bar"
 
@@ -25,19 +26,26 @@ function Workspace({ project, flows }: { readonly project: ApiProject; readonly 
 
 export function ProjectShell() {
   const { project, flows } = projectRouteApi.useLoaderData()
+  const { api } = projectRouteApi.useRouteContext()
   const t = useTranslations("shell")
   const panels: readonly SplitPanel[] = [
     { ...CHAT_PANEL, content: <ChatPanel /> },
     { ...WORKSPACE_PANEL, content: <Workspace project={project} flows={flows} /> },
   ]
   return (
-    <ChatHandoffProvider>
-      <div className="relative h-full min-w-[1180px] overflow-hidden">
-        <Surface variant="plain" aria-hidden className="dark absolute inset-0" />
-        <div className="relative h-full">
-          <SplitPane id="shell" orientation="horizontal" handle="ghost" handleClassName="dark" handleLabel={t("resizeChatAria")} panels={panels} />
+    <ServerHealthProvider source={api.server}>
+      <ChatHandoffProvider>
+        <div className="relative h-full min-w-[1180px] overflow-hidden">
+          <Surface variant="plain" aria-hidden className="dark absolute inset-0" />
+          <div className="relative flex h-full flex-col">
+            <ServerDownBanner fallbackRoot={project.root} />
+            <div className="min-h-0 flex-1">
+              <SplitPane id="shell" orientation="horizontal" handle="ghost" handleClassName="dark" handleLabel={t("resizeChatAria")} panels={panels} />
+            </div>
+          </div>
         </div>
-      </div>
-    </ChatHandoffProvider>
+        <ServerNoticeToast />
+      </ChatHandoffProvider>
+    </ServerHealthProvider>
   )
 }

@@ -16,6 +16,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Status */
+        get: operations["status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/project": {
         parameters: {
             query?: never;
@@ -6770,6 +6787,16 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** ServerStatus */
+        ServerStatus: {
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Checks */
+            checks: components["schemas"]["StatusCheck"][];
+        };
         /** SettingDeleted */
         SettingDeleted: {
             scope: components["schemas"]["SettingScope"];
@@ -6918,6 +6945,21 @@ export interface components {
          * @enum {string}
          */
         StatMethod: "wilson" | "kish_wilson" | "beta_binomial" | "t_case_means" | "bca_case_means" | "bootstrap_ratio" | "bootstrap_quantile" | "exact_sign" | "paired_t" | "paired_bca" | "paired_bootstrap_ratio" | "paired_bootstrap_quantile";
+        /** StatusCheck */
+        StatusCheck: {
+            id: components["schemas"]["StatusCheckId"];
+            state: components["schemas"]["StatusState"];
+            /** Counts */
+            counts: {
+                [key: string]: components["schemas"]["Count"];
+            };
+            names: components["schemas"]["StatusNames"];
+        };
+        /** @enum {string} */
+        StatusCheckId: "database" | "engine" | "project" | "model_keys";
+        StatusNames: string[];
+        /** @enum {string} */
+        StatusState: "ok" | "warning" | "error";
         /** @enum {string} */
         StructuredMode: "tool" | "native" | "prompted";
         /** SubagentSpec */
@@ -7708,6 +7750,7 @@ export type SchemaSeriesStatus = components['schemas']['SeriesStatus'];
 export type SchemaSeriesStatusEvent = components['schemas']['SeriesStatusEvent'];
 export type SchemaSeriesSummaryView = components['schemas']['SeriesSummaryView'];
 export type SchemaSeriesVerdict = components['schemas']['SeriesVerdict'];
+export type SchemaServerStatus = components['schemas']['ServerStatus'];
 export type SchemaSettingDeleted = components['schemas']['SettingDeleted'];
 export type SchemaSettingKeyText = components['schemas']['SettingKeyText'];
 export type SchemaSettingKind = components['schemas']['SettingKind'];
@@ -7728,6 +7771,10 @@ export type SchemaSpecVersionInfo = components['schemas']['SpecVersionInfo'];
 export type SchemaStability = components['schemas']['Stability'];
 export type SchemaStabilityRow = components['schemas']['StabilityRow'];
 export type SchemaStatMethod = components['schemas']['StatMethod'];
+export type SchemaStatusCheck = components['schemas']['StatusCheck'];
+export type SchemaStatusCheckId = components['schemas']['StatusCheckId'];
+export type SchemaStatusNames = components['schemas']['StatusNames'];
+export type SchemaStatusState = components['schemas']['StatusState'];
 export type SchemaStructuredMode = components['schemas']['StructuredMode'];
 export type SchemaSubagentSpec = components['schemas']['SubagentSpec'];
 export type SchemaSubjectKind = components['schemas']['SubjectKind'];
@@ -7788,6 +7835,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReadyState"];
+                };
+            };
+        };
+    };
+    status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerStatus"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };
