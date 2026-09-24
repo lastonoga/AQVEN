@@ -1,8 +1,10 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from dbos import DBOSConfig
 
+from aqven.engine.dbos_logs import DBOS_LOGGER_NAME
 from aqven.engine.protocol import (
     APPLICATION_NAME,
     BLOBS_DIRECTORY,
@@ -39,6 +41,13 @@ class EnginePaths:
     def ensure(self) -> None:
         for directory in (self.state, self.plans, self.blobs):
             directory.mkdir(parents=True, exist_ok=True)
+
+
+def dbos_log_level(configured: str | None = None) -> str:
+    if configured is not None:
+        return configured
+    level = logging.getLogger(DBOS_LOGGER_NAME).level
+    return DBOS_LOG_LEVEL if level == logging.NOTSET else logging.getLevelName(level)
 
 
 def dbos_config(paths: EnginePaths, *, log_level: str = DBOS_LOG_LEVEL) -> DBOSConfig:
