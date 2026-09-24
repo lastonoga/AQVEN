@@ -3,7 +3,8 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it, vi } from "vitest"
 import { API_BASE } from "@/api/client"
 import { liveExperiments } from "@/mocks/data/experiments"
-import { estimateFor, RESEARCH_SERIES } from "@/mocks/data/research"
+import type { ApiSeriesSummary } from "@/domain"
+import { estimateFor, initialSeries, RESEARCH_SERIES, summaryOf } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
 import { renderRoute } from "@/test/render-route"
 
@@ -404,23 +405,23 @@ describe("ExperimentScreen: launch", () => {
     expect(screen.getByRole("button", { name: /^Run · / }).hasAttribute("disabled")).toBe(false)
   })
 
-  it("says so when the models have no price and the series needs an approval", async () => {
+  it("still runs up to the cap when the models have no price", async () => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
     server.use(
       http.post(`${API_BASE}/experiments/:experimentId/estimate`, () =>
-        HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd: null, minutes: null, usd_source: "unknown", needs_approval: true }),
+        HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd: null, minutes: null, usd_source: "unknown" }),
       ),
     )
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    expect((await launchSummary()).textContent).toBe("36 attempts · no price estimate · needs your approval")
+    expect((await launchSummary()).textContent).toBe("36 attempts · no price estimate · cap $1.00")
     expect(screen.getByRole("button", { name: "Run · no price estimate" })).toBeTruthy()
   })
 
   it.each([
     ["history", "≈ $0.45 from past series"],
     ["prices", "≈ $0.45 at provider prices"],
-    ["bound", "≤ $0.45 upper bound"],
+    ["bound", "~ $0.45 rough estimate"],
   ] as const)("names where a %s estimate comes from in the launch and on the run button", async (source, label) => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
@@ -460,7 +461,7 @@ describe("ExperimentScreen: launch", () => {
   it("approves the spend of a waiting series, then stops it", async () => {
     await renderRoute("/research/experiments/reply_overpromise_risk")
     const launch = await section("Launch")
-    expect((await launchSummary()).textContent).toMatch(/ · over the \$1\.00 cap: needs your approval$/)
+    expect((await launchSummary()).textContent).toMatch(/ · over the \$1\.00 cap: pauses near it for your approval$/)
     expect(within(launch).getByText("AWAITING APPROVAL")).toBeTruthy()
     fireEvent.click(within(launch).getByRole("button", { name: "Approve spend" }))
     expect(await within(launch).findByText("RUNNING")).toBeTruthy()
@@ -470,6 +471,40 @@ describe("ExperimentScreen: launch", () => {
       expect(within(launch).queryByRole("button", { name: "Stop" })).toBeNull()
     })
     expect(within(await section("Series history")).getByText("CANCELLED")).toBeTruthy()
+  })
+})
+
+describe("ExperimentScreen: a series paused near its cap", () => {
+  const pausedSummary = (): ApiSeriesSummary => {
+    const state = initialSeries().find((series) => series.id === RESEARCH_SERIES.escalationRunning)
+    if (state === undefined) throw new Error("missing running series fixture")
+    return {
+      ...summaryOf(state),
+      status: "awaiting_approval",
+      spend: { usd: "0.91", cap_usd: "1.00", unpriced_attempts: 0 },
+      pause: { reason: "spend_near_cap", spent_usd: "0.91" },
+    }
+  }
+
+  it("continues it from the launch panel up to double the cap", async () => {
+    const approved: unknown[] = []
+    const paused = pausedSummary()
+    server.use(
+      http.get(`${API_BASE}/series`, () => HttpResponse.json({ items: [paused], next_cursor: null, total_estimate: 1 })),
+      http.post(`${API_BASE}/series/:seriesId/approve`, async ({ request }) => {
+        approved.push(await request.json())
+        return HttpResponse.json({ ...paused, status: "running", pause: null })
+      }),
+    )
+    await renderRoute("/research/experiments/intent_escalation_agents")
+    const launch = await section("Launch")
+    const pause = await within(launch).findByRole("group", { name: "Spend paused near the cap" })
+    expect(pause.textContent).toContain("Spent $0.91 of $1.00 — the series paused. Continue up to $?")
+    expect(within(launch).queryByRole("button", { name: "Approve spend" })).toBeNull()
+    fireEvent.click(within(pause).getByRole("button", { name: "Continue" }))
+    await waitFor(() => {
+      expect(approved).toEqual([{ cap_usd: 2 }])
+    })
   })
 })
 
