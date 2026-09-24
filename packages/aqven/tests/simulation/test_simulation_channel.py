@@ -1,5 +1,6 @@
 import asyncio
 import io
+import os
 import sys
 from collections.abc import Sequence
 from contextlib import redirect_stdout
@@ -23,6 +24,8 @@ from aqven.server.spec_channel import DiagnosticsChanged, SimulationFeed, watch_
 
 TRIM_FILE: Final = "flows/intake/nodes/review/trim.node.yaml"
 SIMULATED: Final = diagnostic(DiagnosticCode.E_SIM_NODE_FAILED, TRIM_FILE, ("node",), "node trim failed")
+SLEEPING_PYTHON: Final = "#!/bin/sh\necho $$ > simulation.pid\nexec sleep 30\n"
+PID_FILE: Final = "simulation.pid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,11 +42,31 @@ class FakeSimulation:
         return self.found
 
 
+@dataclass(slots=True)
+class TrackedSimulation:
+    run_seconds: float
+    reap_seconds: float
+    starts: int = 0
+    running: int = 0
+    most: int = 0
+
+    async def __call__(self) -> tuple[Diagnostic, ...]:
+        self.starts += 1
+        self.running += 1
+        self.most = max(self.most, self.running)
+        try:
+            await asyncio.sleep(self.run_seconds)
+        finally:
+            await asyncio.sleep(self.reap_seconds)
+            self.running -= 1
+        return ()
+
+
 def test_hub_publishes_simulation_diagnostics(tmp_path: Path) -> None:
     root = simulation_project(tmp_path, "sim_shop_channel")
 
     async def scenario() -> None:
-        feed = SimulationFeed(FakeSimulation((SIMULATED,)))
+        feed = SimulationFeed(FakeSimulation((SIMULATED,)), delay_seconds=0.0)
         hub = SpecEventHub(ProjectWorkspace(root), simulation=feed)
         await hub.prime()
         assert feed.task is not None
@@ -72,7 +95,7 @@ def test_a_file_change_clears_the_previous_simulation(tmp_path: Path) -> None:
     root = simulation_project(tmp_path, "sim_shop_change")
 
     async def scenario() -> None:
-        feed = SimulationFeed(FakeSimulation((SIMULATED,)))
+        feed = SimulationFeed(FakeSimulation((SIMULATED,)), delay_seconds=0.0)
         hub = SpecEventHub(ProjectWorkspace(root), simulation=feed)
         await hub.prime()
         assert feed.task is not None
@@ -162,3 +185,72 @@ def test_simulation_only_prints_no_static_diagnostics(tmp_path: Path) -> None:
     code, printed = checked(["check", str(root), "--simulation-only", "--no-cache"])
     assert code == EXIT_OK
     assert printed.strip() == "errors: 0, warnings: 0"
+
+
+def test_cancelling_a_simulation_kills_its_process(tmp_path: Path) -> None:
+    python = tmp_path / "sleeping-python"
+    python.write_text(SLEEPING_PYTHON, encoding="utf-8")
+    python.chmod(0o755)
+    root = tmp_path / "project"
+    root.mkdir()
+    pid_file = root / PID_FILE
+
+    async def scenario() -> int:
+        task = asyncio.create_task(SubprocessSimulation(root, python=str(python))())
+        async with asyncio.timeout(10):
+            while not pid_file.is_file() or not pid_file.read_text(encoding="utf-8").strip():
+                await asyncio.sleep(0.02)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        return int(pid_file.read_text(encoding="utf-8"))
+
+    pid = asyncio.run(scenario())
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)
+
+
+def test_two_quick_schedules_start_one_simulation() -> None:
+    async def scenario() -> TrackedSimulation:
+        tracked = TrackedSimulation(run_seconds=0.01, reap_seconds=0.0)
+        feed = SimulationFeed(tracked, delay_seconds=0.1)
+        hub = SpecEventHub(ProjectWorkspace(Path("unused")), simulation=feed)
+        feed.schedule(hub, "sha256-first")
+        await asyncio.sleep(0.03)
+        feed.schedule(hub, "sha256-second")
+        assert feed.task is not None
+        await feed.task
+        return tracked
+
+    tracked = asyncio.run(scenario())
+    assert tracked.starts == 1
+
+
+def test_a_new_simulation_starts_only_after_the_cancelled_one_is_reaped() -> None:
+    async def scenario() -> TrackedSimulation:
+        tracked = TrackedSimulation(run_seconds=5.0, reap_seconds=0.1)
+        feed = SimulationFeed(tracked, delay_seconds=0.0)
+        hub = SpecEventHub(ProjectWorkspace(Path("unused")), simulation=feed)
+        feed.schedule(hub, "sha256-first")
+        await asyncio.sleep(0.05)
+        tracked.run_seconds = 0.01
+        feed.schedule(hub, "sha256-second")
+        assert feed.task is not None
+        await feed.task
+        return tracked
+
+    tracked = asyncio.run(scenario())
+    assert (tracked.starts, tracked.most) == (2, 1)
+
+
+def test_a_closed_hub_schedules_no_simulation(tmp_path: Path) -> None:
+    root = simulation_project(tmp_path, "sim_shop_closed")
+
+    async def scenario() -> SimulationFeed:
+        feed = SimulationFeed(FakeSimulation((SIMULATED,)), delay_seconds=0.0)
+        hub = SpecEventHub(ProjectWorkspace(root), simulation=feed)
+        await hub.close()
+        await hub.prime()
+        return feed
+
+    assert asyncio.run(scenario()).task is None
