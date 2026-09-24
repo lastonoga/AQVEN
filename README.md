@@ -126,6 +126,9 @@ Claude Code and Cursor are already writing your AI workflows. Give them somethin
 - **It can't wire two steps together wrong.** Types don't match, the check fails — before
   production does.
 - **It has to pass a check before it can say it's done.**
+- **It keeps testing until the workflow holds.** It turns each risk into an experiment, explores it
+  on working cases, confirms once on held-out cases, and keeps the verdict in `FINDINGS.md`. AQVEN
+  runs the attempts and does the statistics; a series above your spend cap waits for you.
 - **The docs are written for it,** not only for you — including a machine-readable
   [`llms.txt`](https://aqvenstudio.com/llms.txt).
 
@@ -143,7 +146,7 @@ Every part of an AI workflow, as files in your project.
 | **Providers** | 28 model providers through [Pydantic AI](https://ai.pydantic.dev/) — OpenAI, Anthropic, Google, OpenRouter, Mistral, DeepSeek, Groq, Together AI, and more |
 | **Tools** | Python functions or MCP servers, with declared `read` / `write` / `external` effects |
 | **Human review** | A workflow step that waits on a person, with a timeout and a default |
-| **Datasets and experiments** | Real cases and experiments that compare variants on them, so a change is proven before it ships |
+| **Datasets and experiments** | Tagged cases split into working and held-out halves, and experiments that test a hypothesis across agents and write the verdict to `FINDINGS.md` |
 | **Durable execution** | Built on [DBOS](https://www.dbos.dev/) — a run survives a crash and resumes where it left off |
 
 → [Full documentation](https://aqvenstudio.com)

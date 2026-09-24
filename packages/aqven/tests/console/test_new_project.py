@@ -28,6 +28,19 @@ PACKAGE: Final = "demo_shop"
 MODULE: Final = PACKAGE
 TOKENS: Final = ("__package__", "__project__", "__aqven_requirement__", "__uv_sources__")
 FAKE_UV: Final = "/opt/uv/bin/uv"
+AGENT_RULES: Final = (
+    "aqven check",
+    "flow_patch",
+    "types.py",
+    ".env",
+    "From a task to a reliable flow",
+    "failure_mode",
+    "series_start",
+    "holdout",
+    "FINDINGS.md",
+    "When to stop",
+)
+CLAUDE_TOOLS: Final = ("series_start", "series_get", "series_cancel", "run_events")
 
 
 def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -112,8 +125,10 @@ def test_new_writes_project_settings_for_uv_git_and_agents(created: Path) -> Non
     defaults = {"AQVEN_STUDIO=true", "AQVEN_HOST=127.0.0.1", "AQVEN_PORT=5180", "AQVEN_OPEN_BROWSER=false"}
     assert defaults <= set(environment)
     assert servers["aqven"] == {"type": "stdio", "command": "uv", "args": ["run", "aqven", "mcp", MODULE]}
-    assert (created / "CLAUDE.md").read_text(encoding="utf-8").startswith("@AGENTS.md\n")
-    assert all(rule in agents for rule in ("aqven check", "flow_patch", "types.py", ".env"))
+    claude = (created / "CLAUDE.md").read_text(encoding="utf-8")
+    assert claude.startswith("@AGENTS.md\n")
+    assert [rule for rule in AGENT_RULES if rule not in agents] == []
+    assert [tool for tool in CLAUDE_TOOLS if tool not in claude] == []
     assert 'id: "openrouter"' in project_file and "ref:env/OPENROUTER_API_KEY" in project_file
     assert 'model: "openrouter:openai/gpt-oss-20b"' in agent_file and "mode:" not in agent_file
 

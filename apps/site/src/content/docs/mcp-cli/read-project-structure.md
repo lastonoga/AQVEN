@@ -20,9 +20,15 @@ own file tools instead.
   just be a second, MCP-shaped way to read information your agent's file tools already read directly and
   more flexibly — list a directory, grep across every node for a field, open one file. AQVEN's MCP server
   says as much in its own instructions to a connecting agent: flow definitions are files in the project,
-  read them with your own Read, Grep, and Glob. The 18 MCP tools this project exposes are for the things
-  file tools can't do — running a check, starting a run, applying a structural edit atomically — not for
-  reading files a second way.
+  read them with your own Read, Grep, and Glob. The 16 MCP tools this project exposes are for the things
+  file tools can't do — running a check, starting a run or a series, applying a structural edit
+  atomically — not for reading files a second way.
+- **Read `FINDINGS.md` before you propose a change.** It sits at the module root, next to `aqven.yaml`,
+  and it is what the project already knows: every finding of a series on held-out cases, grouped by
+  failure mode, with the cases, repeats and models it holds for. Studio's chat agent gets it with
+  `AGENTS.md` and `CLAUDE.md`. Experiments are files too: `experiments/<experiment_id>/experiment.yaml`
+  with its notes in `experiment.md`, its arms in `arms/<arm_id>/`, and its findings in `findings/`.
+  Datasets are `datasets/<dataset_id>.yaml`.
 - **Use whatever your agent calls "Read", "Grep", and "Glob".** List `flows/` to see what flows exist,
   glob `flows/*/nodes/*.yaml` to see every node across all of them, grep for a node id or a field name
   across the tree, read one `flow.yaml` or `<node_id>.yaml` to see its shape. This is the same file
@@ -78,6 +84,8 @@ node:triage .` from a terminal — see how to read that output on
   and `{{CLI_COMMAND}} refs`, with real output.
 - [How to edit a flow's structure as an agent](/mcp-cli/edit-a-flow/) — what to do once you've found what
   to change.
+- [Experiments, series and findings](/concepts/experiments-series-and-findings/) — what a finding in
+  `FINDINGS.md` holds, and why it is never edited by hand.
 - [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/) — getting an agent connected in the
   first place.
 - [Files as source of truth](/concepts/files-as-source-of-truth/) — why the files themselves, not a

@@ -1,12 +1,14 @@
 import {
   Blocks,
   ChartLine,
+  CircleCheck,
   Database,
   FileText,
   Globe,
   Layers,
   Lock,
   Rocket,
+  RotateCw,
   Settings,
   Shield,
   Sparkles,
@@ -28,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import {
   CheckBeforeItRunsSchematic,
+  ContractBreakSchematic,
   CostLatencySchematic,
   SeriesVerdictSchematic,
   MiniCheckPassedSchematic,
@@ -81,7 +84,7 @@ const GUARDS: { heading: string; body: string; visual: React.ReactNode }[] = [
   },
   {
     heading: "Fix a bug once. It stays fixed.",
-    body: "A bug you fixed without a case for it comes back next edit. Pin the exact input that broke it as a dataset case, and the fix survives the next change, yours or your agent's.",
+    body: "A bug you fixed without a case for it comes back next edit. Turn the run that broke into a case tagged regression, and after each change, yours or your agent's, one experiment over that tag runs them all again.",
     visual: <RegressionCaseSchematic />,
   },
   {
@@ -178,6 +181,153 @@ export const StudioEvidence = () => (
   </Section>
 );
 
+type LoopActor = "You" | "Agent" | "AQVEN";
+
+const ACTOR_STYLE: Record<LoopActor, string> = {
+  You: "border-border bg-accent text-foreground",
+  Agent: "border-llm-border bg-llm-bg text-llm",
+  AQVEN: "border-border bg-background text-muted-foreground",
+};
+
+const LOOP_STEPS: { actor: LoopActor; title: string; body: string }[] = [
+  {
+    actor: "You",
+    title: "State the task.",
+    body: "What goes in, what comes out, and what counts as done.",
+  },
+  {
+    actor: "Agent",
+    title: "Build it and run it.",
+    body: "Flows, nodes and prompts as files. aqven check passes first, then every run leaves a full trace.",
+  },
+  {
+    actor: "Agent",
+    title: "Bet on the riskiest failure.",
+    body: "It reads the failing runs, groups them into failure modes, and turns the riskiest into a hypothesis with a metric and a margin, written down before any number comes back.",
+  },
+  {
+    actor: "AQVEN",
+    title: "Explore on working cases.",
+    body: "The experiment runs every case on every variant, several times. The agent reads 95% intervals, not one lucky run.",
+  },
+  {
+    actor: "Agent",
+    title: "Fix the flow.",
+    body: "One change at a time, measured again on the same working cases.",
+  },
+  {
+    actor: "AQVEN",
+    title: "Confirm on held-out cases.",
+    body: "Cases the agent never tuned on. The verdict: confirmed, refuted or inconclusive.",
+  },
+  {
+    actor: "Agent",
+    title: "Keep the finding.",
+    body: "The verdict is written to FINDINGS.md and the case that broke stays in the dataset. Rounds repeat until everything you called done is confirmed.",
+  },
+];
+
+const LOOP_LIMITS = [
+  "Only a series on held-out cases writes a finding. On working cases the verdict stays a signal.",
+  "AQVEN runs the attempts and does the statistics. The agent quotes the verdict; it never computes one.",
+  "A series that would cost more than your spend cap waits for you in Studio.",
+  "A finding edited by hand fails aqven check.",
+];
+
+const LoopStep = ({ index, step, last }: { index: number; step: (typeof LOOP_STEPS)[number]; last: boolean }) => (
+  <li className="flex gap-4">
+    <span className="flex flex-col items-center">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card font-mono text-xs font-medium text-foreground">
+        {index + 1}
+      </span>
+      {!last && <span aria-hidden="true" className="my-1 w-px flex-1 bg-border" />}
+    </span>
+    <div className="flex min-w-0 flex-col gap-1 pb-7">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <h3 className="font-medium tracking-tight">{step.title}</h3>
+        <span
+          className={cn(
+            "rounded-full border px-2 py-0.5 font-mono text-[10px] font-medium",
+            ACTOR_STYLE[step.actor],
+          )}
+        >
+          {step.actor}
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground">{step.body}</p>
+    </div>
+  </li>
+);
+
+export const ResearchLoop = () => (
+  <Section>
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+      <Badge variant="secondary">The research loop</Badge>
+      <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl lg:text-5xl">
+        Your agent keeps testing until the workflow holds.
+      </h2>
+      <p className="text-muted-foreground lg:text-lg">
+        You state the task. The agent builds the workflow, runs it, bets on what could break and
+        tests each bet across agents. AQVEN runs the experiments and writes the verdicts. Round
+        after round, until the workflow is reliable and you can see why.
+      </p>
+    </div>
+    <div className="mx-auto mt-14 grid max-w-6xl items-start gap-10 lg:mt-20 lg:grid-cols-2">
+      <div className="flex flex-col">
+        <ol>
+          {LOOP_STEPS.map((step, index) => (
+            <LoopStep key={step.title} index={index} step={step} last={index === LOOP_STEPS.length - 1} />
+          ))}
+        </ol>
+        <span className="ml-12 flex items-center gap-1.5 self-start rounded-full border border-border bg-background-subtle px-3 py-1 font-mono text-xs text-muted-foreground">
+          <RotateCw className="size-3" aria-hidden="true" /> next round, on fresh cases
+        </span>
+      </div>
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Caught by an experiment, not by a customer.</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <ContractBreakSchematic />
+            <p className="text-muted-foreground">
+              In the showcase example, the triage step runs on gemini-2.5-flash-lite. During an
+              experiment it wrote an observation longer than the 200 characters its type allows,
+              three tries in a row. The engine refused the output each time, as designed, and the
+              attempt counted as a failure of the model, not of the infrastructure. The prompt
+              already stated the limit, so this is a risk to measure, not a typo: the agent&rsquo;s
+              next experiment tests how often triage breaks its contract, with another agent beside it.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">What the agent can&rsquo;t fake.</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-3">
+              {LOOP_LIMITS.map((limit) => (
+                <li key={limit} className="flex items-start gap-2.5">
+                  <CircleCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
+                  <span className="text-sm text-muted-foreground">{limit}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+    <div className="mt-14 flex flex-col items-center justify-center gap-2 sm:flex-row">
+      <Button variant="outline" size="lg" asChild>
+        <a href="/studio/research/">Research in Studio</a>
+      </Button>
+      <Button size="lg" asChild>
+        <a href="/mcp-cli/research-loop/">How the agent&rsquo;s loop works</a>
+      </Button>
+    </div>
+  </Section>
+);
+
 export const Comparison = () => (
   <Section className="bg-background-subtle">
     <div className="mx-auto max-w-3xl text-center">
@@ -268,6 +418,11 @@ const FAQS = [
     question: "Can my coding agent actually edit these workflows?",
     answer:
       "Yes, that's the point. Every flow, node and prompt is a plain file your agent can read, edit and check, the same way it already edits your application code.",
+  },
+  {
+    question: "Can my coding agent test the workflow on its own?",
+    answer:
+      "Yes. It starts experiments through the project's MCP tools or the aqven series command, and AQVEN runs the attempts and computes the statistics. It explores on working cases as often as it needs, and only a series on held-out cases writes a finding. A series that would cost more than your spend cap waits for your approval in Studio.",
   },
   {
     question: "Does AQVEN replace my application, or run alongside it?",
@@ -432,13 +587,13 @@ export const INSIDE_FEATURES = [
   {
     icon: <Database className="size-5" />,
     title: "Datasets",
-    description: "The cases that must keep working.",
-    href: "/studio/datasets/",
+    description: "Tagged cases, split into working and held-out.",
+    href: "/studio/cases/",
   },
   {
     icon: <ChartLine className="size-5" />,
     title: "Experiments",
-    description: "Answer a question before you ship a change.",
+    description: "Hypotheses tested across agents, with a verdict.",
     href: "/studio/research/",
   },
   {

@@ -21,8 +21,9 @@ screen when a result isn't what you expected), and
 [how to respond to a human-review request](/studio/respond-to-a-review/) (the one screen here where you
 submit something, not just read).
 
-**Test** covers proving a fix actually helped: [how to work with datasets](/studio/datasets/) and
-[how to read research](/studio/research/), the experiments and the series that answer them.
+**Cases & research** covers proving a fix actually helped: [how to work with cases](/studio/cases/),
+[how to use Research](/studio/research/) (the experiments, and launching a series to explore or
+confirm), and [how to follow and read a series](/studio/series/).
 
 **Chat & settings** covers the rest of the app: [how to use the AI chat in Studio](/studio/chat/) and
 [how to check Studio's settings](/studio/settings/).
