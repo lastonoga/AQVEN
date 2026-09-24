@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from series_fixture import CRITIC_MODEL, write_project
-from series_harness import ScriptedModels, SeriesHarness, series_engine, settled
+from series_fixture import ABOVE_PROJECT_CAP, CRITIC_MODEL, write_project
+from series_harness import ScriptedModels, SeriesHarness, reached, series_engine, settled
 from series_prices import FIXTURE_PRICES, FixedPrices
 
 from aqven.compiler import compile_root
@@ -13,10 +13,11 @@ from aqven.engine import DbosEngineFacade, RunSpec
 from aqven.engine.runtime import NO_OVERRIDES
 from aqven.ports.engine import RunListQuery
 from aqven.series.events import SeriesEventLog
-from aqven.series.model import SeriesStatus
+from aqven.series.model import ApprovalReason, SeriesStatus
 from aqven.series.settings import RESEARCH_SCOPE, SPEND_CAP_KEY
 from aqven.series.views import (
     LaunchRequest,
+    SeriesCancelRequest,
     SeriesEvent,
     SeriesStarted,
     SeriesStartRequest,
@@ -46,12 +47,35 @@ async def experiment_runs(harness: SeriesHarness) -> int:
     return len(page.items)
 
 
-async def gated(
-    harness: SeriesHarness, root: Path
-) -> tuple[SeriesStarted, int, int, list[SeriesSummaryView | BaseException], SeriesStatus, tuple[SeriesEvent, ...]]:
+async def estimated_above_the_cap(harness: SeriesHarness, root: Path) -> tuple[SeriesStarted, SeriesSummaryView]:
     await priced_history(harness, root)
     await harness.settings.set_value(RESEARCH_SCOPE, SPEND_CAP_KEY, TINY_PROJECT_CAP)
     started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    paused = await reached(harness.service, started.series_id, SeriesStatus.AWAITING_APPROVAL)
+    await harness.service.cancel(SeriesCancelRequest(series_id=started.series_id))
+    return started, paused.series
+
+
+def test_an_estimate_above_the_project_cap_starts_at_once_and_pauses_on_actual_spend(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
+        started, paused = asyncio.run(estimated_above_the_cap(harness, root))
+
+    estimate = started.estimate
+    assert started.status is SeriesStatus.RUNNING
+    assert estimate.usd is not None and estimate.usd > estimate.project_cap_usd
+    assert not estimate.needs_approval
+    assert estimate.cap_usd == estimate.project_cap_usd == started.spend.cap_usd
+    assert paused.pause is not None and paused.pause.reason is ApprovalReason.SPEND_NEAR_CAP
+    assert paused.progress.done > 0
+
+
+async def gated(
+    harness: SeriesHarness,
+) -> tuple[SeriesStarted, int, int, list[SeriesSummaryView | BaseException], SeriesStatus, tuple[SeriesEvent, ...]]:
+    request = SeriesStartRequest(experiment_id=ExperimentId("triage_agents"), cap_usd=ABOVE_PROJECT_CAP)
+    started = await harness.service.start(request, AGENT)
     await asyncio.sleep(QUIET_SECONDS)
     attempts_before = len(await harness.services.store.attempts(started.series_id))
     runs_before = await experiment_runs(harness)
@@ -67,17 +91,16 @@ async def gated(
     return started, attempts_before, runs_before, approvals, done.series.status, events
 
 
-def test_an_estimate_above_the_project_cap_waits_for_one_human_approval(tmp_path: Path) -> None:
+def test_a_series_cap_above_the_project_cap_waits_for_one_human_approval(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
-        started, attempts_before, runs_before, approvals, status, events = asyncio.run(gated(harness, root))
+        started, attempts_before, runs_before, approvals, status, events = asyncio.run(gated(harness))
 
     estimate = started.estimate
     assert started.status is SeriesStatus.AWAITING_APPROVAL
-    assert estimate.usd_source == "prices"
-    assert estimate.usd is not None and estimate.usd > estimate.project_cap_usd
-    assert estimate.needs_approval
+    assert started.pause is not None and started.pause.reason is ApprovalReason.CAP_ABOVE_PROJECT
+    assert (estimate.needs_approval, estimate.cap_usd) == (True, ABOVE_PROJECT_CAP)
     assert (attempts_before, runs_before) == (0, 0)
     accepted = [item for item in approvals if isinstance(item, SeriesSummaryView)]
     rejected = [item for item in approvals if isinstance(item, ApiFailure)]
@@ -90,7 +113,6 @@ def test_an_estimate_above_the_project_cap_waits_for_one_human_approval(tmp_path
 
 async def approve_running(harness: SeriesHarness) -> None:
     started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_solo")), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     await settled(harness.service, started.series_id)
     await harness.service.approve(started.series_id, HUMAN)
 
@@ -110,7 +132,7 @@ async def first_start(harness: SeriesHarness) -> tuple[SeriesStarted, SeriesStat
     return started, done.series.status
 
 
-def test_a_first_series_starts_on_an_upper_bound_under_the_project_cap(tmp_path: Path) -> None:
+def test_a_first_series_starts_on_a_rough_estimate(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
@@ -133,5 +155,5 @@ def test_an_unpriced_judge_leaves_the_first_series_without_an_estimate(tmp_path:
         estimate = asyncio.run(harness.service.estimate(ExperimentId("triage_agents"), request))
 
     assert (estimate.usd, estimate.usd_source) == (None, "unknown")
-    assert estimate.needs_approval
+    assert not estimate.needs_approval
     assert f"price_unknown:{CRITIC_MODEL}" in estimate.warnings

@@ -17,6 +17,7 @@ from aqven.series.model import (
     CheckState,
     OutcomeClass,
     SeriesAnalysis,
+    SeriesPause,
     SeriesRecord,
     SeriesStatus,
     SeriesVerdict,
@@ -105,6 +106,10 @@ def waiting_attempts(record: SeriesRecord, attempts: Sequence[AttemptRecord], wa
     return sum(1 for row in attempts if row.state is AttemptState.RUNNING and row.run_id in waiting)
 
 
+def shown_pause(record: SeriesRecord) -> SeriesPause | None:
+    return record.pause if record.status is SeriesStatus.AWAITING_APPROVAL else None
+
+
 def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSummaryView:
     return SeriesSummaryView(
         series_id=record.series_id,
@@ -123,6 +128,7 @@ def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSumm
         waits=facts.waits,
         started_at=record.created_at,
         finished_at=record.finished_at,
+        pause=shown_pause(record),
     )
 
 

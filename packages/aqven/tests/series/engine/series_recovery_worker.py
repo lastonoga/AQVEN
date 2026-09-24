@@ -33,7 +33,6 @@ def slow_models(log: Path) -> ScriptedModels:
 
 async def start(harness: SeriesHarness, series_file: Path) -> None:
     started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), HUMAN)
-    await harness.service.approve(started.series_id, HUMAN)
     series_file.write_text(started.series_id, encoding="utf-8")
     deadline = time.monotonic() + WAIT_SECONDS
     while time.monotonic() < deadline:

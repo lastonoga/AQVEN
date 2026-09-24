@@ -148,6 +148,11 @@ class StopCause(StrEnum):
     BUDGET_CUT = "budget_cut"
 
 
+class ApprovalReason(StrEnum):
+    CAP_ABOVE_PROJECT = "cap_above_project"
+    SPEND_NEAR_CAP = "spend_near_cap"
+
+
 class RecordModel(BaseModel):
     model_config = RECORD_CONFIG
 
@@ -277,6 +282,11 @@ class SeriesVerdict(ResourceModel):
     text: str
 
 
+class SeriesPause(ResourceModel):
+    reason: ApprovalReason
+    spent_usd: Decimal
+
+
 class SeriesAnalysis(ResourceModel):
     variants: tuple[VariantAggregates, ...]
     matrix: SeriesMatrix
@@ -401,10 +411,13 @@ class SeriesRecord(RecordModel):
     analysis: SeriesAnalysis | None = None
     finding_path: str | None = None
     error: str | None = None
+    pause: SeriesPause | None = None
 
 
 class SeriesChange(RecordModel):
     status: SeriesStatus | None = None
+    cap_usd: Decimal | None = None
+    pause: SeriesPause | None = None
     approved_by: str | None = None
     approved_at: AwareDatetime | None = None
     finished_at: AwareDatetime | None = None
