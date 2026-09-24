@@ -165,15 +165,16 @@ class SimulationFeed:
     task: asyncio.Task[None] | None = None
 
     def schedule(self, hub: SpecEventHub, tree_hash: str) -> None:
-        previous = self.cancel()
+        previous = self.task
+        self.cancel()
         self.task = asyncio.create_task(self._publish(hub, tree_hash, previous))
 
-    def cancel(self) -> asyncio.Task[None] | None:
+    def cancel(self) -> bool:
         task = self.task
-        self.task = None
-        if task is not None and not task.done():
-            task.cancel()
-        return task
+        if task is None or task.done():
+            return False
+        task.cancel()
+        return True
 
     async def _publish(self, hub: SpecEventHub, tree_hash: str, previous: asyncio.Task[None] | None) -> None:
         await asyncio.sleep(self.delay_seconds)
@@ -212,8 +213,11 @@ class SpecEventHub:
         if not self.primed:
             await self.prime()
             return ()
+        held = self._hold_simulation()
         state = await self.workspace.state()
         changes = file_changes(self.snapshot, state.snapshot)
+        if held and not changes:
+            self._simulate(state.snapshot.tree_hash)
         if not changes:
             return ()
         self.simulated = ()
@@ -244,6 +248,9 @@ class SpecEventHub:
         if self.simulation is not None:
             self.simulation.cancel()
         await self._notify()
+
+    def _hold_simulation(self) -> bool:
+        return self.simulation is not None and self.simulation.cancel()
 
     def _simulate(self, tree_hash: str) -> None:
         if self.simulation is None or self.closed:

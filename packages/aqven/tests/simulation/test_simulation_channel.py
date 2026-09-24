@@ -2,6 +2,7 @@ import asyncio
 import io
 import os
 import sys
+import time
 from collections.abc import Sequence
 from contextlib import redirect_stdout
 from dataclasses import dataclass
@@ -11,11 +12,13 @@ from typing import Final
 import pytest
 from simulation_project import break_code, simulation_project
 
+from aqven.check import CheckReport
 from aqven.check.simulation.report import PROJECT_FILE
 from aqven.cli import main
 from aqven.console.command import EXIT_FAILED, EXIT_OK
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.server import ProjectWorkspace, SpecEventHub
+from aqven.server import workspace as workspace_module
 from aqven.server.mcp.check_tools import AqvenCheckInput, RunnerSettings, check_command
 from aqven.server.mcp.paths import ProjectPaths
 from aqven.server.mcp.processes import ProcessOutcome
@@ -254,3 +257,47 @@ def test_a_closed_hub_schedules_no_simulation(tmp_path: Path) -> None:
         return feed
 
     assert asyncio.run(scenario()).task is None
+
+
+def test_a_refresh_postpones_the_pending_simulation_until_the_tree_settles(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = simulation_project(tmp_path, "sim_shop_postpone")
+    real = workspace_module.check_project
+
+    def slow_rebuild(folder: Path) -> CheckReport:
+        time.sleep(0.3)
+        return real(folder)
+
+    async def scenario() -> tuple[TrackedSimulation, SpecEventHub, str]:
+        tracked = TrackedSimulation(run_seconds=0.0, reap_seconds=0.0)
+        feed = SimulationFeed(tracked, delay_seconds=0.05)
+        hub = SpecEventHub(ProjectWorkspace(root), simulation=feed)
+        await hub.prime()
+        primed = hub.snapshot.tree_hash
+        (root / "fragments/extra.md").write_text("more", encoding="utf-8")
+        monkeypatch.setattr(workspace_module, "check_project", slow_rebuild)
+        await hub.refresh()
+        assert feed.task is not None
+        await feed.task
+        return tracked, hub, primed
+
+    tracked, hub, primed = asyncio.run(scenario())
+    assert tracked.starts == 1
+    assert hub.snapshot.tree_hash != primed
+
+
+def test_a_refresh_without_changes_keeps_the_held_simulation(tmp_path: Path) -> None:
+    root = simulation_project(tmp_path, "sim_shop_unchanged")
+
+    async def scenario() -> TrackedSimulation:
+        tracked = TrackedSimulation(run_seconds=0.0, reap_seconds=0.0)
+        feed = SimulationFeed(tracked, delay_seconds=0.1)
+        hub = SpecEventHub(ProjectWorkspace(root), simulation=feed)
+        await hub.prime()
+        assert await hub.refresh() == ()
+        assert feed.task is not None
+        await feed.task
+        return tracked
+
+    assert asyncio.run(scenario()).starts == 1
