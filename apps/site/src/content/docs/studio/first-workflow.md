@@ -40,30 +40,28 @@ For the showcase template that's `support_case`, so that's the canvas you land o
 
 ## 2. Check your setup
 
-Before running anything, open Studio's setup screen: add `/setup` to the address bar. It has three tabs.
+Before running anything, open Studio's setup screen: add `/setup` to the address bar. It has three steps.
 
-- **Agent** shows whether the coding agent behind Studio's chat panel is signed in, and how — a
-  subscription or an API key — with a button to check again if it looks wrong.
-- **Providers** lists every model provider the project's flows can call, each with the environment
-  variable it reads, where its value resolved from (your shell environment or the project's `.env`
-  file), and a masked preview of the key. A provider your flows actually use but that has no resolved
-  key gets a warning here — the same key you'd otherwise only discover was missing when a run failed on
-  it.
-- **Workflow** lists every flow in the project as a card you can click, `support_case` and `judge_panel`
+- **Chat agent** says in one line whether the coding agent behind Studio's chat panel is signed in. If
+  it isn't, the line comes with the command to run in a terminal, and **Check again** looks once more.
+- **Model keys** lists every model provider the project can call, each with the environment variable it
+  reads and a masked preview of the key: saved in the project's `.env` file, set in your shell, or not
+  set. A key that is not set has an **Add key** button: paste the key, click **Save**, and Studio writes
+  it to `.env`. If no key is set at all, a warning says so.
+- **Workflows** lists every flow in the project as a card you can click, `support_case` and `judge_panel`
   for the showcase template. Clicking one opens its canvas — this is how you get to a flow Studio didn't
   land you on automatically.
 
-If a key is missing, copy the project's `.env.example` to `.env` (if you haven't already) and set it
-there; the Providers tab reflects the change on its next check.
+The same key rows are on the [Settings](/studio/settings/) page, behind the gear in Studio's top bar.
 
 ### Check
 
-The Agent tab reads "SIGNED IN" (or tells you clearly that it isn't), and the Providers tab shows at
-least one provider with a resolved key — `OPENROUTER_API_KEY` for the showcase template's default.
+The Chat agent step says "Signed in" (or tells you clearly that it isn't), and the Model keys step shows
+at least one key with a masked value — `OPENROUTER_API_KEY` for the showcase template's default.
 
 ## 3. Open a flow's canvas
 
-If you want the flow Studio didn't land you on, go back to the Setup screen's Workflow tab and click it;
+If you want the flow Studio didn't land you on, go back to the Setup screen's Workflows step and click it;
 otherwise you're already looking at one. Either way, you now have a flow's canvas open in your browser,
 with nothing left to install or type to get there.
 

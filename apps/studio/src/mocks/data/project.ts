@@ -1,4 +1,4 @@
-import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiType, ApiTypeDetail } from "@/domain"
+import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiSetting, ApiType, ApiTypeDetail } from "@/domain"
 
 export const liveProject: ApiProject = {
   "root": "/Users/kirunya/Projects/my/ai-workflows-automate/examples/lumen",
@@ -1245,6 +1245,18 @@ export const liveSecrets: readonly ApiSecret[] = [
     "source": null,
     "masked": null,
     "set": false
+  }
+]
+
+export const liveProjectSettings: readonly ApiSetting[] = [
+  {
+    "scope": "project",
+    "key": "providers.openrouter.api_key",
+    "kind": "secret",
+    "value": null,
+    "masked": "••••0860",
+    "env_var": "OPENROUTER_API_KEY",
+    "updated_at": "2026-09-18T06:08:51.526651Z"
   }
 ]
 

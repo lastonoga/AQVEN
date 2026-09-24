@@ -219,16 +219,24 @@ const chat = {
     unwrap(await api.POST("/api/chat/sessions/{session_id}/interrupt", { params: { path: { session_id: sessionId } } })),
 }
 
+const SECRET_SCOPE: SettingScope = "project"
+
+const writeSetting = async (scope: SettingScope, key: SettingKey, body: ApiSettingWrite) =>
+  unwrap(await api.PUT("/api/settings/{scope}/{key}", { params: { path: { scope, key } }, body }))
+
+const clearSetting = async (scope: SettingScope, key: SettingKey) =>
+  unwrap(await api.DELETE("/api/settings/{scope}/{key}", { params: { path: { scope, key } } }))
+
 const settings = {
   providers: async () => unwrap(await api.GET("/api/settings/providers")),
   secrets: async () => unwrap(await api.GET("/api/settings/secrets")),
   list: async (scope: SettingScope) => unwrap(await api.GET("/api/settings/{scope}", { params: { path: { scope } } })),
   read: async (scope: SettingScope, key: SettingKey) =>
     unwrap(await api.GET("/api/settings/{scope}/{key}", { params: { path: { scope, key } } })),
-  write: async (scope: SettingScope, key: SettingKey, body: ApiSettingWrite) =>
-    unwrap(await api.PUT("/api/settings/{scope}/{key}", { params: { path: { scope, key } }, body })),
-  clear: async (scope: SettingScope, key: SettingKey) =>
-    unwrap(await api.DELETE("/api/settings/{scope}/{key}", { params: { path: { scope, key } } })),
+  write: writeSetting,
+  clear: clearSetting,
+  putSecret: async (key: SettingKey, secret: string) => writeSetting(SECRET_SCOPE, key, { kind: "secret", secret }),
+  deleteSetting: async (key: SettingKey) => clearSetting(SECRET_SCOPE, key),
 }
 
 const blob = {
