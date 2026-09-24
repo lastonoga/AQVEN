@@ -23,7 +23,7 @@ from aqven.engine.llm import (
     llm_node_executor,
 )
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
-from aqven.engine.llm.ports import SegmentWork, ToolCallWork
+from aqven.engine.llm.ports import ModelSource, SegmentWork, ToolCallWork
 from aqven.ir import (
     AgentModel,
     CompiledAgent,
@@ -487,6 +487,7 @@ def llm_bed(
     max_enum: int = 50,
     delta_batch_ms: int = 80,
     models: Callable[[ScriptedModel], Model] | None = None,
+    source: ModelSource | None = None,
 ) -> LlmBed:
     scripted = ScriptedModel(turns)
     compiled, flow = project(node, agents, inferences, tools)
@@ -495,7 +496,7 @@ def llm_bed(
     approvals = ScriptedApprovals(approve, expire)
     steps = RecordingSteps()
     dependencies = LlmDependencies(
-        models=FixedModels(models(scripted) if models is not None else scripted.model()),
+        models=model_source(scripted, models, source),
         inference_models=MODELS,
         tool_contexts=contexts,
         approvals=approvals,
@@ -506,6 +507,16 @@ def llm_bed(
         delta_batch_ms=delta_batch_ms,
     )
     return LlmBed(scripted, scope, llm_node_executor(dependencies), contexts, approvals, steps)
+
+
+def model_source(
+    scripted: ScriptedModel, models: Callable[[ScriptedModel], Model] | None, source: ModelSource | None
+) -> ModelSource:
+    if source is not None:
+        return source
+    if models is not None:
+        return FixedModels(models(scripted))
+    return FixedModels(scripted.model())
 
 
 def no_bad_words(value: BaseModel, context: object, params: NoParams) -> Verdict:
