@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -36,6 +36,7 @@ from aqven.runtime import (
     node_address,
 )
 from aqven.runtime.presentation import PresentationRequest, PresentationResponse
+from aqven.spec import FlowId
 
 RUN_ID: Final = RunId("01999c2a-5e10-7b3c-9d4e-6f7a8b9c0d1e")
 FORK_ID: Final = RunId("01999c2a-7f21-7c4d-8e5f-7a8b9c0d1e2f")
@@ -163,6 +164,10 @@ class ScriptedEngine:
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
         rows = (RunSummary.model_validate(snapshot(self.resumed).model_dump()),)
         return Page[RunSummary](items=rows[: query.limit], next_cursor=None, total_estimate=1)
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        row = RunSummary.model_validate(snapshot(self.resumed).model_dump())
+        return {row.flow_id: row} if row.flow_id in flow_ids else {}
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         self._known(run_id)

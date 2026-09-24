@@ -101,14 +101,22 @@ def ordered_rows(rows: Sequence[RunSummary], sort: RunSort, order: Sequence[RunI
     return sorted(rows, key=lambda row: (ranks.get(row.run_id, unranked), -row.started_at.timestamp(), row.run_id))
 
 
-def page_of(rows: Sequence[RunSummary], cursor: str | None, limit: int) -> Page[RunSummary]:
-    start = int(cursor) if cursor is not None and cursor.isdigit() else FIRST_PAGE
+def cursor_start(cursor: str | None) -> int:
+    return int(cursor) if cursor is not None and cursor.isdigit() else FIRST_PAGE
+
+
+def window_page(items: tuple[RunSummary, ...], start: int, limit: int, total: int) -> Page[RunSummary]:
     following = start + limit
     return Page[RunSummary](
-        items=tuple(rows[start:following]),
-        next_cursor=str(following) if following < len(rows) else None,
-        total_estimate=len(rows),
+        items=items,
+        next_cursor=str(following) if following < total else None,
+        total_estimate=total,
     )
+
+
+def page_of(rows: Sequence[RunSummary], cursor: str | None, limit: int) -> Page[RunSummary]:
+    start = cursor_start(cursor)
+    return window_page(tuple(rows[start : start + limit]), start, limit, len(rows))
 
 
 @dataclass(frozen=True, slots=True)

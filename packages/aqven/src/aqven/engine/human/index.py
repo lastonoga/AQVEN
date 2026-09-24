@@ -1,4 +1,5 @@
 import asyncio
+import json
 import sqlite3
 from collections.abc import Callable, Generator, Sequence
 from contextlib import closing, contextmanager
@@ -32,6 +33,7 @@ class WaitIndexEntry(ResourceModel):
 
 class WaitQuery(RequestModel):
     run_id: RunId | None = None
+    run_ids: tuple[RunId, ...] | None = None
     state: WaitState | None = "waiting"
     assignee: str | None = None
     deadline_before: AwareDatetime | None = None
@@ -123,6 +125,10 @@ def _run_rule(query: WaitQuery) -> SqlCondition | None:
     return None if query.run_id is None else ("run_id = ?", query.run_id)
 
 
+def _runs_rule(query: WaitQuery) -> SqlCondition | None:
+    return None if query.run_ids is None else ("run_id IN (SELECT value FROM json_each(?))", json.dumps(query.run_ids))
+
+
 def _state_rule(query: WaitQuery) -> SqlCondition | None:
     return None if query.state is None else ("state = ?", query.state)
 
@@ -145,6 +151,7 @@ def _upcoming_rule(query: WaitQuery) -> SqlCondition | None:
 
 CONDITION_RULES: Final[tuple[ConditionRule, ...]] = (
     _run_rule,
+    _runs_rule,
     _state_rule,
     _assignee_rule,
     _deadline_rule,
