@@ -2,7 +2,7 @@
   "onboarding": {
     "brand": "AQVEN Studio",
     "title": "Set up {project}",
-    "lead": "Studio runs inside the project it was launched in. Check the chat agent, check the model keys your workflows need, then open a workflow.",
+    "lead": "Studio runs inside the project it was launched in. Check the chat agent, add the model keys your workflows need, then open a workflow.",
     "stepsAria": "Setup steps",
     "steps": {
       "agent": "1 · Chat agent",
@@ -20,52 +20,57 @@
       "claude": "Claude Agent",
       "codex": "Codex"
     },
-    "backend": "Agent",
     "selectBackend": "Chat backend",
     "loading": "Loading the selected agent…",
     "backendLoadFailed": "Could not load the selected agent",
     "switching": "Switching agent…",
     "retry": "Try again",
-    "checking": "Checking agent sign-in…",
+    "checking": "Checking the sign-in…",
+    "checkFailed": "The sign-in could not be checked.",
     "selectHint": "New threads use this agent. Existing Claude and Codex threads stay in this project.",
-    "state": "Sign-in",
-    "states": {
-      "logged_in": "SIGNED IN",
-      "logged_out": "SIGNED OUT",
-      "unknown": "UNKNOWN"
-    },
-    "method": "Method",
-    "methods": {
-      "subscription": "subscription",
-      "api_key": "API key"
-    },
-    "account": "Account",
-    "detail": "Detail",
-    "none": "—",
+    "signedIn": "Signed in to {backend}.",
+    "signedInAs": "Signed in to {backend} as {account}.",
+    "signedOut": "Not signed in to {backend}. Run this in a terminal, then check again:",
+    "unknown": "Could not tell whether {backend} is signed in.",
     "checkAgain": "Check again"
   },
-  "providers": {
+  "keys": {
     "title": "Model keys",
-    "description": "Workflow nodes call models with these keys. A key comes from the process environment, or from the .env file of this project.",
-    "missingNote": "No model key resolves yet. Export the environment variable, or add it to the .env file of this project.",
+    "description": "Your workflows call models through these providers.",
+    "missingNote": "No model key is set yet. Add one so your workflows can call a model.",
     "declared": "declared by this project",
-    "notSet": "not set · {variable}",
-    "source": {
-      "environment": "ENV",
-      "dotenv": ".ENV FILE",
-      "missing": "NOT SET"
+    "loading": "Loading model keys…",
+    "loadError": "Model keys could not be loaded.",
+    "retry": "Try again",
+    "savedInDotenv": "{masked} · saved in .env",
+    "fromShell": "{masked} · from your shell",
+    "notSet": "Not set",
+    "shellNote": "{variable} is set in the shell that started Studio. Change it there.",
+    "shadowNote": "The value saved in .env is not used while the shell sets {variable}.",
+    "add": "Add key",
+    "replace": "Replace",
+    "remove": "Remove",
+    "save": "Save",
+    "cancel": "Cancel",
+    "inputAria": "New value for {variable}",
+    "placeholder": "Paste the key",
+    "failed": "The key was not saved. {message}",
+    "rejected": {
+      "SECRET_SCOPE_UNSUPPORTED": "Keys are saved only in the .env file of this project.",
+      "NOT_A_SECRET_KEY": "This setting has no environment variable, so it cannot hold a key.",
+      "SECRET_KEY_NEEDS_SECRET": "This setting holds a key, not a plain value.",
+      "SECRET_VALUE_INVALID": "The key has a line break in it. Paste it again as one line."
     }
   },
   "secrets": {
-    "title": "Project secrets",
-    "description": "Tools, MCP servers and providers of this project read these secrets by name. A secret that does not resolve fails the run with SECRET_MISSING.",
-    "declaredBy": "{name} · {scope} {by}",
+    "title": "Other secrets",
+    "description": "Tools and MCP servers of this project read these secrets.",
+    "usedBy": "Used by {users}",
     "scope": {
-      "provider": "provider",
-      "tool": "tool",
-      "mcp_server": "MCP server"
-    },
-    "empty": "This project declares no secrets."
+      "provider": "provider {name}",
+      "tool": "tool {name}",
+      "mcp_server": "MCP server {name}"
+    }
   },
   "workflow": {
     "title": "Workflows",
@@ -80,44 +85,25 @@
   },
   "settings": {
     "title": "Settings",
-    "lead": "Settings of this project and of Studio on this computer.",
-    "loadError": "Settings could not be loaded.",
-    "loading": "Loading settings…",
-    "retry": "Try again",
-    "navAria": "Settings sections",
-    "sections": {
-      "project": "Project",
-      "agents": "Chat",
-      "providers": "Model keys",
-      "mcp": "MCP connections",
-      "updates": "Updates"
+    "lead": "{project} · AQVEN {version}",
+    "agent": {
+      "title": "Your coding agent",
+      "description": "Projects made with aqven new include .mcp.json, so Claude Code started in the project folder connects on its own.",
+      "claudeCode": "Claude Code started in another folder",
+      "claudeCodeHint": "Run this once in that folder.",
+      "otherClients": "Cursor, Claude Desktop and other clients",
+      "otherClientsHint": "Add this server to the MCP config of the client."
     },
-    "project": {
-      "title": "Project",
-      "description": "Studio serves the project it was launched in. To work on another project, run the same command in its folder.",
-      "anotherProject": "Open another project"
+    "chat": {
+      "title": "Studio chat",
+      "description": "The chat panel runs Claude Code or Codex on this computer with your own sign-in. Studio never reads or stores your credentials."
     },
-    "mcp": {
-      "server": "AQVEN MCP server",
-      "serverDescription": "External agents get the same tools as the Studio chat. The HTTP endpoint needs this launch's token, so agents connect through aqven mcp, which reads it or starts the server in the background.",
-      "address": "Address",
-      "auth": "Access",
-      "authValue": "Bearer token from .aqven/server.json",
-      "none": "—",
-      "connect": "Connect an agent",
-      "claudeCode": "Claude Code",
-      "claudeCodeHint": "Run once in the folder you start Claude Code from.",
-      "stdio": "Cursor, Claude Desktop and other stdio clients",
-      "stdioHint": "Add this server to the MCP config of the client."
-    },
-    "updates": {
-      "title": "Updates",
-      "description": "Studio ships inside the aqven package of the environment of this project.",
-      "installed": "Installed engine",
-      "uv": "With uv",
-      "uvHint": "Then restart aqven studio.",
-      "pip": "With pip",
-      "pipHint": "Then restart aqven studio."
+    "about": {
+      "title": "About",
+      "folder": "Folder",
+      "version": "AQVEN version",
+      "update": "Update",
+      "updateHint": "Run this in the project folder, then restart Studio."
     }
   }
 }

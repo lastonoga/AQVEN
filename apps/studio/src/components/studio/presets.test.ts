@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { EXECUTION_STATUSES, NODE_KINDS, RUN_STATUSES } from "@/domain"
 import {
-  COMPILE_STATUS_TONE,
   EXECUTION_STATUS_TONE,
-  INDEX_STATUS_TONE,
   NODE_KIND,
   PROVENANCE,
   RUN_STATUS_TONE,
@@ -43,12 +41,9 @@ describe("presets", () => {
     ])
   })
 
-  it("marks broken compiles and timed-out waits as destructive", () => {
-    expect(COMPILE_STATUS_TONE.invalid).toBe("destructive")
-    expect(COMPILE_STATUS_TONE.not_runnable).toBe("warning")
+  it("marks timed-out waits and errors as destructive", () => {
     expect(WAIT_STATE_TONE.timed_out).toBe("destructive")
     expect(WAIT_STATE_TONE.waiting).toBe("warning")
-    expect(INDEX_STATUS_TONE.degraded).toBe("warning")
     expect(SEVERITY_TONE.error).toBe("destructive")
   })
 
@@ -62,8 +57,6 @@ describe("presets", () => {
     const used = [
       ...tonesOf(RUN_STATUS_TONE),
       ...tonesOf(EXECUTION_STATUS_TONE),
-      ...tonesOf(COMPILE_STATUS_TONE),
-      ...tonesOf(INDEX_STATUS_TONE),
       ...tonesOf(WAIT_STATE_TONE),
       ...tonesOf(SEVERITY_TONE),
       ...Object.values(NODE_KIND).map((spec) => spec.tone),

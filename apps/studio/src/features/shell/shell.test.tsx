@@ -151,13 +151,13 @@ describe("Project shell", () => {
     const gear = await screen.findByRole("link", { name: "Settings" })
     expect(hrefOf(gear)).toBe("/settings")
     fireEvent.click(gear)
-    expect(await screen.findByRole("navigation", { name: "Settings sections" })).toBeTruthy()
+    expect(await screen.findByRole("heading", { name: "Settings", level: 1 })).toBeTruthy()
     expect(router.state.location.pathname).toBe("/settings")
     expect(currentOf(await navLinks("Project modes"))).toEqual([null, null])
     expect(screen.getByRole("link", { name: "Settings" }).getAttribute("aria-current")).toBe("page")
   })
 
-  it("loads provider settings only when their section opens", async () => {
+  it("loads the model keys once when settings open", async () => {
     const reads = { providers: 0, secrets: 0 }
     server.use(
       http.get("*/api/settings/providers", () => {
@@ -170,22 +170,18 @@ describe("Project shell", () => {
       }),
     )
     await renderRoute("/settings")
-    const nav = await screen.findByRole("navigation", { name: "Settings sections" })
-    expect(reads).toEqual({ providers: 0, secrets: 0 })
-    fireEvent.click(within(nav).getByRole("link", { name: "Model keys" }))
-    await waitFor(() => {
-      expect(reads.providers).toBe(1)
-    })
-    expect(reads.secrets).toBe(1)
+    expect(await screen.findByRole("group", { name: "openrouter" })).toBeTruthy()
+    expect(reads).toEqual({ providers: 1, secrets: 1 })
   })
 
   it("keeps settings usable when providers fail and retries them", async () => {
     server.use(http.get("*/api/settings/providers", () => HttpResponse.error()))
-    await renderRoute("/settings?section=providers")
-    expect((await screen.findByRole("alert")).textContent).toContain("Settings could not be loaded")
+    await renderRoute("/settings")
+    expect((await screen.findByRole("alert")).textContent).toContain("Model keys could not be loaded")
+    expect(screen.getByRole("heading", { name: "About" })).toBeTruthy()
     server.use(http.get("*/api/settings/providers", () => HttpResponse.json(liveProviders)))
     fireEvent.click(screen.getByRole("button", { name: "Try again" }))
-    expect(await screen.findByText("Project secrets")).toBeTruthy()
+    expect(await screen.findByText("Other secrets")).toBeTruthy()
   })
 
   it("renders not found for a flow the engine does not know", async () => {

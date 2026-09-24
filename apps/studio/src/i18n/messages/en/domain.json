@@ -39,17 +39,6 @@
     "experiment": "experiment",
     "dryrun": "dry run"
   },
-  "compileStatus": {
-    "ok": "ok",
-    "not_runnable": "not runnable",
-    "invalid": "invalid",
-    "unreadable": "unreadable"
-  },
-  "indexStatus": {
-    "ready": "ready",
-    "building": "building",
-    "degraded": "degraded"
-  },
   "waitKind": {
     "form": "form",
     "tool_approval": "tool approval"

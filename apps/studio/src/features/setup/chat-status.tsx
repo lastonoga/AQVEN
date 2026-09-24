@@ -1,44 +1,147 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "@tanstack/react-router"
 import { RefreshCw } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiChatStatus } from "@/domain"
-import { PropertyList, TitledPanel, type PropertyRow } from "@/components/studio"
+import type { ApiChatBackendKind, ApiChatStatus } from "@/domain"
+import { Dot, Text, TitledPanel, type Tone } from "@/components/studio"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ChatBackendSwitch, useChatBackend } from "@/features/chat-backend"
-import type { Translator } from "@/i18n/translator"
-import { LOGIN_STATE_TONE } from "./presenters"
+import { messageOf } from "@/lib/errors"
+import { CommandLine } from "./command-line"
+import { LOGIN_COMMANDS, LOGIN_STATE_TONE, type LoginState } from "./presenters"
 
-const statusRows = (status: ApiChatStatus, t: Translator<"setup.agent">): readonly PropertyRow[] => [
-  { key: t("backend"), value: t(`names.${status.backend}`) },
-  { key: t("state"), value: t(`states.${status.state}`), tone: LOGIN_STATE_TONE[status.state] },
-  { key: t("method"), value: status.method === null ? t("none") : t(`methods.${status.method}`) },
-  { key: t("account"), value: status.account ?? t("none") },
-  { key: t("detail"), value: status.detail ?? t("none") },
-]
+type StatusResult = {
+  readonly backend: ApiChatBackendKind
+  readonly revision: number
+  readonly status: ApiChatStatus | null
+  readonly error: string | null
+}
 
-export function ChatStatusPanel({ selectable = false, title }: { readonly selectable?: boolean; readonly title?: string }) {
+export type ChatStatusPanelProps = {
+  readonly selectable?: boolean
+  readonly title?: string
+  readonly description?: string
+}
+
+function StatusLine({ tone, children }: { readonly tone: Tone; readonly children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Dot tone={tone} />
+      <Text role="meta">{children}</Text>
+    </div>
+  )
+}
+
+function SignedIn({ status }: { readonly status: ApiChatStatus }) {
+  const t = useTranslations("setup.agent")
+  const backend = t(`names.${status.backend}`)
+  const line = status.account === null ? t("signedIn", { backend }) : t("signedInAs", { backend, account: status.account })
+  return <StatusLine tone={LOGIN_STATE_TONE.logged_in}>{line}</StatusLine>
+}
+
+function SignedOut({ status }: { readonly status: ApiChatStatus }) {
+  const t = useTranslations("setup.agent")
+  return (
+    <>
+      <StatusLine tone={LOGIN_STATE_TONE.logged_out}>{t("signedOut", { backend: t(`names.${status.backend}`) })}</StatusLine>
+      <CommandLine command={LOGIN_COMMANDS[status.backend]} />
+    </>
+  )
+}
+
+function Unknown({ status }: { readonly status: ApiChatStatus }) {
+  const t = useTranslations("setup.agent")
+  return (
+    <>
+      <StatusLine tone={LOGIN_STATE_TONE.unknown}>{t("unknown", { backend: t(`names.${status.backend}`) })}</StatusLine>
+      {status.detail === null ? null : (
+        <Text as="p" role="hint" tone="neutral" className="wrap-anywhere">
+          {status.detail}
+        </Text>
+      )}
+    </>
+  )
+}
+
+const STATUS_BODY: Readonly<Record<LoginState, (props: { readonly status: ApiChatStatus }) => ReactNode>> = {
+  logged_in: SignedIn,
+  logged_out: SignedOut,
+  unknown: Unknown,
+}
+
+function StatusBody({ pending, status, error }: { readonly pending: boolean; readonly status: ApiChatStatus | null; readonly error: string | null }) {
+  const t = useTranslations("setup.agent")
+  if (pending) return <p role="status" className="text-sm text-muted-foreground">{t("checking")}</p>
+  if (error !== null) {
+    return (
+      <p role="alert" className="text-xs text-destructive">
+        {t("checkFailed")} {error}
+      </p>
+    )
+  }
+  if (status === null) return null
+  const Body = STATUS_BODY[status.state]
+  return <Body status={status} />
+}
+
+function BackendLoad() {
+  const t = useTranslations("setup.agent")
+  const { backend, error, retry } = useChatBackend()
+  if (backend !== null) return null
+  if (error === null) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner aria-hidden="true" />
+        {t("loading")}
+      </p>
+    )
+  }
+  return (
+    <Alert variant="destructive">
+      <AlertTitle>{t("backendLoadFailed")}</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+      <Button variant="outline" size="sm" className="mt-3" onClick={retry}>
+        {t("retry")}
+      </Button>
+    </Alert>
+  )
+}
+
+function BackendChoice() {
+  const t = useTranslations("setup.agent")
+  return (
+    <div className="flex flex-col gap-2">
+      <ChatBackendSwitch />
+      <p className="text-xs text-muted-foreground">{t("selectHint")}</p>
+    </div>
+  )
+}
+
+export function ChatStatusPanel({ selectable = false, title, description }: ChatStatusPanelProps) {
   const t = useTranslations("setup.agent")
   const { api } = useRouter().options.context
-  const { backend, error: backendError, retry } = useChatBackend()
-  const [result, setResult] = useState<{ readonly backend: ApiChatStatus["backend"]; readonly revision: number; readonly status: ApiChatStatus | null; readonly error: string | null } | null>(null)
+  const { backend } = useChatBackend()
+  const [result, setResult] = useState<StatusResult | null>(null)
   const [revision, setRevision] = useState(0)
   const current = result !== null && result.backend === backend && result.revision === revision ? result : null
   const pending = backend !== null && current === null
-  const status = current?.status ?? null
-  const error = current?.error ?? null
 
   useEffect(() => {
     if (backend === null) return
     let live = true
-    void api.chat.status().then((current) => {
-      if (live) setResult({ backend, revision, status: current, error: null })
-    }).catch((reason: unknown) => {
-      if (live) setResult({ backend, revision, status: null, error: String(reason) })
-    })
-    return () => { live = false }
+    void api.chat.status().then(
+      (status) => {
+        if (live) setResult({ backend, revision, status, error: null })
+      },
+      (reason: unknown) => {
+        if (live) setResult({ backend, revision, status: null, error: messageOf(reason) })
+      },
+    )
+    return () => {
+      live = false
+    }
   }, [api, backend, revision])
 
   const recheck = (
@@ -47,36 +150,20 @@ export function ChatStatusPanel({ selectable = false, title }: { readonly select
       size="xs"
       disabled={pending || backend === null}
       aria-busy={pending}
-      onClick={() => { setRevision((current) => current + 1) }}
+      onClick={() => {
+        setRevision((value) => value + 1)
+      }}
     >
       {pending ? <Spinner aria-hidden="true" /> : <RefreshCw />}
       {t("checkAgain")}
     </Button>
   )
   return (
-    <TitledPanel size="section" title={title ?? t("title")} below={[t("description")]} trailing={recheck}>
-      {selectable ? (
-        <div className="flex flex-col gap-2 border-b border-border px-3 py-3">
-          <ChatBackendSwitch />
-          <p className="text-xs text-muted-foreground">{t("selectHint")}</p>
-        </div>
-      ) : null}
-      {!selectable && backend === null && backendError !== null ? (
-        <div className="p-3">
-          <Alert variant="destructive">
-            <AlertTitle>{t("backendLoadFailed")}</AlertTitle>
-            <AlertDescription>{backendError}</AlertDescription>
-            <Button variant="outline" size="sm" className="mt-3" onClick={retry}>{t("retry")}</Button>
-          </Alert>
-        </div>
-      ) : null}
-      {!selectable && backend === null && backendError === null ? (
-        <p role="status" className="flex items-center gap-2 px-3 py-4 text-sm text-muted-foreground"><Spinner aria-hidden="true" />{t("loading")}</p>
-      ) : null}
-      {error === null ? null : <p role="alert" className="px-3 py-2 text-xs text-destructive">{error}</p>}
-      {pending ? (
-        <p role="status" className="px-3 py-4 text-sm text-muted-foreground">{t("checking")}</p>
-      ) : status === null ? null : <PropertyList rows={statusRows(status, t)} />}
+    <TitledPanel size="section" title={title ?? t("title")} below={[description ?? t("description")]} trailing={recheck}>
+      <div className="flex flex-col gap-3 p-3">
+        {selectable ? <BackendChoice /> : <BackendLoad />}
+        <StatusBody pending={pending} status={current?.status ?? null} error={current?.error ?? null} />
+      </div>
     </TitledPanel>
   )
 }

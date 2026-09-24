@@ -17,9 +17,8 @@ closing your terminal, restarting your machine, or switching away to work on som
   recently ran, or, if you haven't run anything in this project yet, the one with the most nodes.
 - There's no in-app project picker or "recent projects" list — which project Studio serves is decided
   entirely by which folder you ran the command in.
-- To point Studio at a different project, open its settings (the dropdown at the top of the chat panel
-  → **Studio settings**) and look at the **Project** section. It shows the exact command to open another
-  project — run it in that other project's own folder, the same way you started this one.
+- To point Studio at a different project, stop it and run the same command in that other project's own
+  folder, the same way you started this one. Studio settings has no project switcher either.
 
 ### Example
 
@@ -38,5 +37,5 @@ its biggest flow.
 
 - [Your first workflow in Studio](/studio/first-workflow/) — the from-scratch path: creating a project
   and opening Studio on it for the very first time.
-- [How to check Studio's settings](/studio/settings/) — the Project section's exact command for opening
-  another project, and everything else that screen shows.
+- [How to use Studio settings](/studio/settings/) — the folder and AQVEN version of the project Studio
+  is serving, next to its model keys and agent setup.

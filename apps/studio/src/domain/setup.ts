@@ -6,8 +6,13 @@ export type AgentKind = (typeof AGENT_KINDS)[number]
 export const SETUP_STEPS = ["agent", "providers", "workflow"] as const
 export type SetupStep = (typeof SETUP_STEPS)[number]
 
-export const SETTINGS_SECTIONS = ["project", "agents", "providers", "mcp", "updates"] as const
-export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
+export const SETTING_REJECTION_CODES = [
+  "SECRET_SCOPE_UNSUPPORTED",
+  "NOT_A_SECRET_KEY",
+  "SECRET_KEY_NEEDS_SECRET",
+  "SECRET_VALUE_INVALID",
+] as const
+export type SettingRejectionCode = (typeof SETTING_REJECTION_CODES)[number]
 
 export const PROVIDER_NAMES = ["openai", "anthropic", "google", "openrouter", "together"] as const
 export type ProviderName = (typeof PROVIDER_NAMES)[number]

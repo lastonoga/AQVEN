@@ -26,4 +26,4 @@ submit something, not just read).
 confirm), and [how to follow and read a series](/studio/series/).
 
 **Chat & settings** covers the rest of the app: [how to use the AI chat in Studio](/studio/chat/) and
-[how to check Studio's settings](/studio/settings/).
+[how to use Studio settings](/studio/settings/).
