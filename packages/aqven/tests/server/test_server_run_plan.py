@@ -53,6 +53,29 @@ def test_the_workspace_plan_source_reuses_the_compiled_state(tmp_path: Path) -> 
     assert len(compiler.compiled) == 1
 
 
+def test_the_workspace_plan_source_launches_the_state_the_start_guards_checked(tmp_path: Path) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    compiler = CountingCompiler()
+    workspace = ProjectWorkspace(root, compiler=compiler)
+
+    async def scenario() -> tuple[CompiledProject | None, CompiledProject]:
+        checked = await workspace.state()
+        prompt = root / "flows/intake/nodes/reply/reply.prompt.md"
+        prompt.write_text(prompt.read_text(encoding="utf-8") + "\nEdited after the check.\n", encoding="utf-8")
+        return checked.compiled, await WorkspacePlanSource(workspace).current()
+
+    checked, launched = asyncio.run(scenario())
+    assert launched is checked
+    assert len(compiler.compiled) == 1
+
+
+def test_the_workspace_plan_source_builds_the_state_when_none_exists(tmp_path: Path) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    compiler = CountingCompiler()
+    plan = asyncio.run(WorkspacePlanSource(ProjectWorkspace(root, compiler=compiler)).current())
+    assert compiler.compiled == [plan]
+
+
 def test_start_run_launches_the_workspace_compiled_state_without_compiling_again(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
