@@ -1,6 +1,8 @@
 from aqven.server.chat.extension import ChatServerParts, ChatSessionDefaults, studio_chat_parts
 from aqven.server.chat.router import (
+    CHAT_FEED,
     ChatApprovalReply,
+    ChatEventFeed,
     ChatRoute,
     ChatRouteContext,
     ChatSessionCreate,
@@ -9,7 +11,9 @@ from aqven.server.chat.router import (
 )
 
 __all__ = [
+    "CHAT_FEED",
     "ChatApprovalReply",
+    "ChatEventFeed",
     "ChatRoute",
     "ChatRouteContext",
     "ChatServerParts",

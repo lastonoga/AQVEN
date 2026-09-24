@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterable, Callable, Coroutine, Mapping
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Final
@@ -6,6 +6,7 @@ from typing import Annotated, Final
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.routing import APIRoute
 from fastapi.sse import EventSourceResponse, ServerSentEvent
+from pydantic import BaseModel
 
 from aqven.chat.backend_registry import BackendRegistry
 from aqven.chat.backend_selection import ChatBackendChoice, ChatBackendWrite
@@ -41,6 +42,7 @@ from aqven.server.errors import ERROR_RESPONSES, ApiErrorCode, ApiFailure
 from aqven.server.routes.runs import event_cursor
 from aqven.spec import FlowId
 
+CHAT_FEED: Final[str] = "chat"
 CHAT_PREFIX: Final[str] = "/api/chat"
 CHAT_REST_ONLY: Final[str] = "studio chat agent"
 CHAT_SSE_REST_ONLY: Final[str] = "sse transport"
@@ -98,6 +100,24 @@ class ChatApprovalReply(RequestModel):
 
 def chat_frame(event: ChatEvent) -> ServerSentEvent:
     return ServerSentEvent(data=event, event=event.type, id=str(event.seq))
+
+
+@dataclass(frozen=True, slots=True)
+class ChatEventFeed:
+    registry: BackendRegistry
+    sessions: ChatJournal
+    keyed: bool = True
+
+    async def follow(self, key: str | None, after_seq: int) -> AsyncIterator[BaseModel]:
+        stored = None if key is None else self.sessions.get_session(ChatSessionId(key))
+        if stored is None:
+            return
+        session = stored.session
+        try:
+            async for event in self.registry.for_session(session).events(session.session_id, after_seq):
+                yield event
+        except ChatFailure:
+            return
 
 
 def build_chat_router(

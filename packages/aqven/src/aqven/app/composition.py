@@ -31,8 +31,9 @@ from aqven.series.watch import SeriesRunWatch
 from aqven.server import ServerExtensions, ServerOptions, create_app
 from aqven.server.app import LifespanFactory
 from aqven.server.app import process_environment as launch_environ
-from aqven.server.chat import ChatSessionDefaults, studio_chat_parts
+from aqven.server.chat import CHAT_FEED, ChatSessionDefaults, studio_chat_parts
 from aqven.server.context import engine_version
+from aqven.server.event_feeds import EventFeed, EventFeeds
 from aqven.server.mcp import (
     McpPorts,
     ProjectPaths,
@@ -84,12 +85,14 @@ class ApplicationParts:
     mounts: Mapping[str, ASGIApp] = field(default_factory=dict[str, ASGIApp])
     lifespans: tuple[LifespanFactory, ...] = ()
     routers: tuple[APIRouter, ...] = ()
+    feeds: EventFeeds = field(default_factory=dict[str, EventFeed])
 
     def plus(self, other: ApplicationParts) -> ApplicationParts:
         return ApplicationParts(
             mounts={**self.mounts, **other.mounts},
             lifespans=(*self.lifespans, *other.lifespans),
             routers=(*self.routers, *other.routers),
+            feeds={**self.feeds, **other.feeds},
         )
 
 
@@ -194,7 +197,7 @@ def chat_parts(launch: ApplicationLaunch) -> ApplicationParts:
         ),
         shutdown_signal=launch.shutdown_signal,
     )
-    return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,))
+    return ApplicationParts(lifespans=(chat.lifespan,), routers=(chat.router,), feeds={CHAT_FEED: chat.feed})
 
 
 def feature_builders(features: StudioFeatures, project: ProjectParts) -> tuple[PartsBuilder, ...]:
@@ -234,7 +237,7 @@ def assemble_app(
         watched.settings,
         parts.routers,
         options=options,
-        extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),
+        extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans, feeds=parts.feeds),
         workspace=project.workspace,
         series=project.jobs,
     )

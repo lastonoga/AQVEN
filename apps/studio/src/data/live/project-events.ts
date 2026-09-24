@@ -1,6 +1,6 @@
 import type { ApiSpecEvent } from "@/domain"
-import { API_BASE } from "@/api/client"
-import { isRecord, subscribeEvents, type Unsubscribe } from "@/lib/sse"
+import { followFeed, SPEC_FEED } from "@/api/events"
+import { isRecord, type Unsubscribe } from "@/lib/sse"
 
 export type ProjectEventType = ApiSpecEvent["type"]
 
@@ -17,8 +17,6 @@ const EVENT_TYPES: Readonly<Record<ProjectEventType, ProjectEventType>> = {
   experiment_changed: "experiment_changed",
 }
 
-export const PROJECT_EVENT_TYPES: readonly ProjectEventType[] = Object.values(EVENT_TYPES)
-
 const isProjectEventType = (value: unknown): value is ProjectEventType => typeof value === "string" && Object.hasOwn(EVENT_TYPES, value)
 
 const isProjectEvent = (value: unknown): value is ApiSpecEvent =>
@@ -26,7 +24,4 @@ const isProjectEvent = (value: unknown): value is ApiSpecEvent =>
 
 export const readProjectEvent = (value: unknown): ApiSpecEvent | null => (isProjectEvent(value) ? value : null)
 
-export const projectEventsUrl = (): string => `${API_BASE}/events/spec`
-
-export const projectEventStream: ProjectEventStream = (onEvent) =>
-  subscribeEvents({ url: projectEventsUrl(), types: PROJECT_EVENT_TYPES, read: readProjectEvent, onEvent })
+export const projectEventStream: ProjectEventStream = (onEvent) => followFeed({ feed: SPEC_FEED, after: 0, read: readProjectEvent, onEvent })
