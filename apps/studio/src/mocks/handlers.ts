@@ -241,6 +241,13 @@ const rangeOrder = (flowId: string, start: string | null, end: string | null): r
   return first < 0 || last < first ? [] : order.slice(first, last + 1)
 }
 
+const nodeSchemasOf = (flowId: string) =>
+  Object.fromEntries(
+    Object.entries(liveNodeDetails)
+      .filter(([key]) => key.startsWith(`${flowId}/`))
+      .map(([key, detail]) => [key.slice(flowId.length + 1), { in: detail.in_schema, out: detail.out_schema, form: detail.form_schema }]),
+  )
+
 export const handlers = [
   ...researchHandlers,
 
@@ -264,7 +271,7 @@ export const handlers = [
     const flowId = text(params, "flowId")
     const flow = liveFlowDetails[flowId]
     if (flow === undefined) return notFound("flow_schemas", `flow ${flowId} is not in the project`)
-    return served({ flow_id: flowId, input: FLOW_INPUT_SCHEMA, output: {}, context: flow.context, nodes: {} })
+    return served({ flow_id: flowId, input: FLOW_INPUT_SCHEMA, output: {}, context: flow.context, nodes: nodeSchemasOf(flowId) })
   }),
 
   http.get(`${API_BASE}/flows/:flowId/nodes`, ({ params }) => {

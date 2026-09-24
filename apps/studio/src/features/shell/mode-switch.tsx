@@ -1,16 +1,52 @@
+import type { ReactNode } from "react"
 import { useTranslations } from "use-intl"
 import { ChoiceLink, ChoiceList } from "@/components/studio"
-import { MODE_ROUTE, PROJECT_MODES, type ProjectMode } from "./navigation"
+import { ROUTE_PATH } from "@/lib/routes"
+import { PROJECT_MODES, researchSearch, type ProjectMode } from "./navigation"
+import type { FlowScope } from "./selected-flow"
 
-export function ModeSwitch({ mode }: { readonly mode: ProjectMode | null }) {
+type ModeLinkProps = { readonly selected: FlowScope; readonly current: boolean; readonly children: ReactNode }
+
+function FlowModeLink({ selected, current, children }: ModeLinkProps) {
+  if (selected === null) {
+    return (
+      <ChoiceLink appearance="segmented" size="sm" to={ROUTE_PATH.home} selected={current}>
+        {children}
+      </ChoiceLink>
+    )
+  }
+  return (
+    <ChoiceLink appearance="segmented" size="sm" to={ROUTE_PATH.canvas} params={{ flowId: selected }} selected={current}>
+      {children}
+    </ChoiceLink>
+  )
+}
+
+function ResearchModeLink({ selected, current, children }: ModeLinkProps) {
+  return (
+    <ChoiceLink appearance="segmented" size="sm" to={ROUTE_PATH.research} search={researchSearch(selected)} selected={current}>
+      {children}
+    </ChoiceLink>
+  )
+}
+
+const MODE_LINK: Readonly<Record<ProjectMode, (props: ModeLinkProps) => ReactNode>> = {
+  flow: FlowModeLink,
+  research: ResearchModeLink,
+}
+
+export function ModeSwitch({ mode, selected }: { readonly mode: ProjectMode | null; readonly selected: FlowScope }) {
   const t = useTranslations("shell.modes")
   return (
-    <ChoiceList appearance="segmented" label={t("navAria")}>
-      {PROJECT_MODES.map((item) => (
-        <ChoiceLink key={item} appearance="segmented" to={MODE_ROUTE[item]} selected={item === mode}>
-          {t(item)}
-        </ChoiceLink>
-      ))}
+    <ChoiceList appearance="segmented" label={t("navAria")} className="shrink-0">
+      {PROJECT_MODES.map((item) => {
+        const ModeLink = MODE_LINK[item]
+        return (
+          <ModeLink key={item} selected={selected} current={item === mode}>
+            {t(item)}
+          </ModeLink>
+        )
+      })}
     </ChoiceList>
   )
 }

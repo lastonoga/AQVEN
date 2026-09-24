@@ -3,15 +3,13 @@ import { Link } from "@tanstack/react-router"
 import { ArrowUpRight } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ExperimentCheck, ExperimentDetail, QuestionKind } from "@/domain"
-import { Empty, NODE_KIND, SidePanel, Surface, Tag, Text } from "@/components/studio"
-import { buildGraph, GraphCanvas } from "@/features/flow"
+import { Empty, SIDE_PANEL_WIDTH, Surface, Text } from "@/components/studio"
+import { buildGraph, GraphCanvas, withFieldCounts } from "@/features/flow"
 import { ROUTE_PATH } from "@/lib/routes"
-import { graphViews, markSwaps, nodeFacts, type GraphView, type NodeAgent, type NodeFacts, type SubjectGraph } from "./graph-model"
-import { FactList, ResearchSection } from "./layout"
+import { markSwaps, type GraphView, type StepSelection } from "./graph-model"
+import { ResearchSection } from "./layout"
 import { tagPairs } from "./presenters"
 import { RoleTag } from "./role-tag"
-
-type Selection = { readonly graph: string; readonly node: string }
 
 type GraphBlockProps = {
   readonly view: GraphView
@@ -20,6 +18,13 @@ type GraphBlockProps = {
   readonly legend: boolean
   readonly onSelect: (node: string) => void
   readonly onToggleLegend: () => void
+}
+
+export type ExperimentCanvasProps = {
+  readonly experiment: ExperimentDetail
+  readonly views: readonly GraphView[]
+  readonly selection: StepSelection | null
+  readonly onSelect: (selection: StepSelection) => void
 }
 
 const LIST_JOIN = ", "
@@ -45,73 +50,23 @@ function GraphTitle({ view, question }: { readonly view: GraphView; readonly que
 
 function GraphBlock({ view, question, selected, legend, onSelect, onToggleLegend }: GraphBlockProps) {
   const t = useTranslations("research.experiment.canvas")
-  const graph = markSwaps(buildGraph(view.source.nodes, view.source.order), view.swaps, (agents) => t("swap", { agents }))
+  const graph = withFieldCounts(markSwaps(buildGraph(view.source.nodes, view.source.order), view.swaps, (agents) => t("swap", { agents })), view.source.schemas)
   return (
-    <section aria-label={t("graphAria", { graph: view.source.key })} className="flex min-w-0 flex-col gap-1.5">
+    <section aria-label={t("graphAria", { graph: view.source.key })} className="flex min-w-0 flex-col gap-2">
       <GraphTitle view={view} question={question} />
       <Surface variant="panel" className="relative h-80 overflow-hidden">
-        <GraphCanvas graph={graph} selected={selected} legend={legend} dimmed={view.dimmed} pageScroll onSelect={onSelect} onToggleLegend={onToggleLegend} />
+        <GraphCanvas
+          graph={graph}
+          selected={selected}
+          legend={legend}
+          dimmed={view.dimmed}
+          pageScroll
+          focusInset={SIDE_PANEL_WIDTH}
+          onSelect={onSelect}
+          onToggleLegend={onToggleLegend}
+        />
       </Surface>
     </section>
-  )
-}
-
-function AgentValue({ agent }: { readonly agent: NodeAgent }) {
-  const t = useTranslations("research.experiment.canvas")
-  return (
-    <>
-      <Text role="cell" tone={agent.agent === null ? "neutral" : "default"} weight="semibold">
-        {agent.agent ?? t("noAgent")}
-      </Text>
-      {agent.model === null ? null : (
-        <Text role="data" tone="neutral" className="wrap-anywhere">
-          {agent.model}
-        </Text>
-      )}
-      {agent.overridden ? (
-        <Tag size="micro" fill="tint" tone="llm">
-          {t("overridden")}
-        </Tag>
-      ) : null}
-    </>
-  )
-}
-
-function NodeBody({ facts }: { readonly facts: NodeFacts }) {
-  const t = useTranslations("research.experiment.canvas")
-  return (
-    <div className="flex flex-col gap-3">
-      {facts.outside ? (
-        <Text as="p" role="hint" tone="neutral">
-          {t("outside")}
-        </Text>
-      ) : null}
-      <FactList facts={facts.agents.map((agent) => ({ id: agent.variant, label: agent.variant, value: <AgentValue agent={agent} /> }))} />
-    </div>
-  )
-}
-
-function NodeDrawer({ facts, onClose }: { readonly facts: NodeFacts | null; readonly onClose: () => void }) {
-  const t = useTranslations("research.experiment.canvas")
-  return (
-    <SidePanel
-      open={facts !== null}
-      onOpenChange={(open) => {
-        if (!open) onClose()
-      }}
-      title={facts?.id ?? ""}
-      description={facts?.description ?? null}
-      leading={
-        facts === null ? null : (
-          <Tag size="sm" tone={NODE_KIND[facts.kind].tone}>
-            {NODE_KIND[facts.kind].code}
-          </Tag>
-        )
-      }
-      closeLabel={t("close")}
-    >
-      {facts === null ? null : <NodeBody facts={facts} />}
-    </SidePanel>
   )
 }
 
@@ -164,15 +119,12 @@ function ChecksLine({ checks }: { readonly checks: readonly ExperimentCheck[] })
   )
 }
 
-function Graphs({ experiment, views }: { readonly experiment: ExperimentDetail; readonly views: readonly GraphView[] }) {
+function Graphs({ experiment, views, selection, onSelect }: ExperimentCanvasProps) {
   const t = useTranslations("research.experiment.canvas")
-  const [selection, setSelection] = useState<Selection | null>(null)
   const [legend, setLegend] = useState(false)
   if (views.length === 0) return <Empty title={t("noGraph")} />
-  const view = views.find((item) => item.source.key === selection?.graph)
-  const facts = view === undefined || selection === null ? null : nodeFacts(experiment, view, selection.node)
   return (
-    <div className="relative flex min-w-0 flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-5">
       {views.map((item) => (
         <GraphBlock
           key={item.source.key}
@@ -181,28 +133,23 @@ function Graphs({ experiment, views }: { readonly experiment: ExperimentDetail; 
           selected={selection?.graph === item.source.key ? selection.node : null}
           legend={legend}
           onSelect={(node) => {
-            setSelection({ graph: item.source.key, node })
+            onSelect({ graph: item.source.key, node })
           }}
           onToggleLegend={() => {
             setLegend((open) => !open)
           }}
         />
       ))}
-      <NodeDrawer
-        facts={facts}
-        onClose={() => {
-          setSelection(null)
-        }}
-      />
     </div>
   )
 }
 
-export function ExperimentCanvas({ experiment, graphs }: { readonly experiment: ExperimentDetail; readonly graphs: readonly SubjectGraph[] }) {
+export function ExperimentCanvas(props: ExperimentCanvasProps) {
   const t = useTranslations("research.experiment.canvas")
+  const { experiment } = props
   return (
     <ResearchSection title={t("title")} description={t("hint")}>
-      <Graphs experiment={experiment} views={graphViews(experiment, graphs)} />
+      <Graphs {...props} />
       <CasesLine experiment={experiment} />
       <ChecksLine checks={experiment.checks} />
     </ResearchSection>

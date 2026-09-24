@@ -1383,6 +1383,10 @@ export interface components {
             /** Nodes */
             nodes: components["schemas"]["NodeSummary"][];
             schemas: components["schemas"]["FlowSchemas"];
+            /** Prompts */
+            prompts: {
+                [key: string]: components["schemas"]["PromptDetail"];
+            };
         };
         /** ArmStepView */
         ArmStepView: {

@@ -1,11 +1,17 @@
-import type { AgentRef, ApiNode, ArmId, ArmStep, ExperimentDetail, ExperimentSubject, ExperimentVariant, NodeKind, NodeRange, VariantId } from "@/domain"
-import type { CanvasGraph } from "@/features/flow"
+import type { AgentRef, ApiNode, ApiPromptDetail, ArmId, ArmStep, ExperimentDetail, ExperimentSubject, ExperimentVariant, FlowId, NodeKind, NodeRange, VariantId } from "@/domain"
+import type { CanvasGraph, FlowStepSchemas, StepSchemas } from "@/features/flow"
+
+export type PromptSource =
+  | { readonly kind: "flow"; readonly flow: FlowId }
+  | { readonly kind: "arm"; readonly prompts: Readonly<Record<string, ApiPromptDetail>> }
 
 export type SubjectGraph = {
   readonly key: string
   readonly arm: ArmId | null
   readonly nodes: readonly ApiNode[]
   readonly order: readonly string[]
+  readonly schemas: FlowStepSchemas
+  readonly prompts: PromptSource
 }
 
 export type GraphView = {
@@ -22,12 +28,23 @@ export type NodeAgent = {
   readonly overridden: boolean
 }
 
+export type StepPrompt =
+  | { readonly kind: "none" }
+  | { readonly kind: "ready"; readonly prompt: ApiPromptDetail }
+  | { readonly kind: "remote"; readonly flow: FlowId; readonly node: string }
+
+export type StepDescription =
+  | { readonly kind: "ready"; readonly text: string | null }
+  | { readonly kind: "remote"; readonly flow: FlowId; readonly node: string }
+
 export type NodeFacts = {
   readonly id: string
   readonly kind: NodeKind
-  readonly description: string | null
+  readonly description: StepDescription
   readonly outside: boolean
   readonly agents: readonly NodeAgent[]
+  readonly schemas: StepSchemas | null
+  readonly prompt: StepPrompt
 }
 
 type Fallback = { readonly agent: string | null; readonly model: string | null }
@@ -120,14 +137,43 @@ export const markSwaps = (graph: CanvasGraph, swaps: ReadonlyMap<string, string>
   }),
 })
 
+const NO_PROMPT: StepPrompt = { kind: "none" }
+
+const armPrompt = (prompts: Readonly<Record<string, ApiPromptDetail>>, node: string): StepPrompt => {
+  const prompt = prompts[node]
+  return prompt === undefined ? NO_PROMPT : { kind: "ready", prompt }
+}
+
+const promptOf = (source: PromptSource, node: ApiNode): StepPrompt => {
+  if (node.inference === null) return NO_PROMPT
+  if (source.kind === "arm") return armPrompt(source.prompts, node.node_id)
+  return { kind: "remote", flow: source.flow, node: node.node_id }
+}
+
+const descriptionOf = (experiment: Pick<ExperimentDetail, "arms">, source: SubjectGraph, node: string): StepDescription => {
+  if (source.prompts.kind === "flow") return { kind: "remote", flow: source.prompts.flow, node }
+  return { kind: "ready", text: stepOf(experiment, source.arm, node)?.description ?? null }
+}
+
 export const nodeFacts = (experiment: Pick<ExperimentDetail, "arms">, view: GraphView, id: string): NodeFacts | null => {
   const node = byNode(view.source.nodes).get(id)
   if (node === undefined) return null
   return {
     id,
     kind: node.kind,
-    description: stepOf(experiment, view.source.arm, id)?.description ?? null,
+    description: descriptionOf(experiment, view.source, id),
     outside: view.dimmed.has(id),
     agents: nodeAgents(view.variants, id, fallbackOf(experiment, view.source, node)),
+    schemas: view.source.schemas[id] ?? null,
+    prompt: promptOf(view.source.prompts, node),
   }
+}
+
+export type StepSelection = { readonly graph: string; readonly node: string }
+
+export const selectedFacts = (experiment: Pick<ExperimentDetail, "arms">, views: readonly GraphView[], selection: StepSelection | null): NodeFacts | null => {
+  if (selection === null) return null
+  const view = views.find((item) => item.source.key === selection.graph)
+  if (view === undefined) return null
+  return nodeFacts(experiment, view, selection.node)
 }

@@ -71,6 +71,15 @@ describe("SeriesListScreen", () => {
     })
   })
 
+  it("lists only the series of the flow picked in the top bar", async () => {
+    await renderRoute(`${SERIES_LIST}?flow=%22judge_panel%22`)
+    const rows = await listed()
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.length).toBeLessThan(summaries.size)
+    expect(rows.every((summary) => summary.flow_id === "judge_panel")).toBe(true)
+    expect(screen.getByText(/^Series of the experiments on judge_panel/)).toBeTruthy()
+  })
+
   it("says so when the project has no series", async () => {
     server.use(http.get(`${API_BASE}/series`, () => HttpResponse.json({ items: [], next_cursor: null, total_estimate: 0 })))
     await renderRoute(SERIES_LIST)

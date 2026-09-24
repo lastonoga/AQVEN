@@ -34,7 +34,7 @@ export type CanvasFlowNode = StepFlowNode | ContainerFlowNode
 export type CanvasFlowEdge = Edge<FlowEdgeRenderData, "flow">
 
 const MARKER_SIZE = 14
-const FIT_PADDING = "32px"
+const FIT_PADDING: FitViewOptions["padding"] = { top: "56px", right: "32px", bottom: "64px", left: "32px" }
 const FIT_MAX_ZOOM = 1
 const EMPTY_PORTS: NodePorts = { in: [], out: [], bottom: [] }
 

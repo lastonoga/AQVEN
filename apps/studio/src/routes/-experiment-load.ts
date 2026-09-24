@@ -1,5 +1,6 @@
 import type { ExperimentArm, ExperimentDetail, FlowId, SeriesCaseRow, SeriesDetail, SeriesSummary } from "@/domain"
 import type { LiveSources } from "@/data/live/sources"
+import { stepSchemas } from "@/features/flow"
 import type { SubjectGraph } from "@/features/research"
 
 export type LatestSeries = { readonly series: SeriesDetail; readonly disagreements: readonly SeriesCaseRow[] }
@@ -8,13 +9,20 @@ const NO_GRAPHS: readonly SubjectGraph[] = []
 const DIVERGENT = { divergent: true }
 
 const flowGraph = async (api: LiveSources, flowId: FlowId): Promise<SubjectGraph> => {
-  const [detail, nodes] = await Promise.all([api.flow.detail(flowId), api.flow.nodes(flowId)])
-  return { key: flowId, arm: null, nodes, order: detail.order }
+  const [detail, nodes, schemas] = await Promise.all([api.flow.detail(flowId), api.flow.nodes(flowId), api.flow.schemas(flowId)])
+  return { key: flowId, arm: null, nodes, order: detail.order, schemas: stepSchemas(schemas), prompts: { kind: "flow", flow: flowId } }
 }
 
 const armGraph = async (api: LiveSources, experiment: ExperimentDetail, arm: ExperimentArm): Promise<SubjectGraph> => {
   const flow = await api.research.armFlow(experiment.id, arm.id)
-  return { key: arm.id, arm: arm.id, nodes: flow.nodes, order: arm.steps.map((step) => step.node) }
+  return {
+    key: arm.id,
+    arm: arm.id,
+    nodes: flow.nodes,
+    order: arm.steps.map((step) => step.node),
+    schemas: stepSchemas(flow.schemas),
+    prompts: { kind: "arm", prompts: flow.prompts },
+  }
 }
 
 const subjectGraphs = (api: LiveSources, experiment: ExperimentDetail): Promise<readonly SubjectGraph[]> => {

@@ -11380,6 +11380,13 @@
           },
           "schemas": {
             "$ref": "#/components/schemas/FlowSchemas"
+          },
+          "prompts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PromptDetail"
+            },
+            "type": "object",
+            "title": "Prompts"
           }
         },
         "type": "object",
@@ -11390,7 +11397,8 @@
           "description",
           "order",
           "nodes",
-          "schemas"
+          "schemas",
+          "prompts"
         ],
         "title": "ArmFlowView"
       },

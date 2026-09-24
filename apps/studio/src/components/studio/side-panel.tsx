@@ -21,10 +21,14 @@ export type SidePanelProps<V extends string> = {
   readonly children: ReactNode
 }
 
+export const SIDE_PANEL_WIDTH = 520
+
 const CONTENT_CLASS = cn(
   surfaceVariants({ variant: "sheet" }),
-  "absolute inset-y-0 right-0 z-20 flex h-full min-h-0 w-[520px] max-w-[88%] flex-col outline-none max-[1179px]:fixed",
+  "absolute inset-y-0 right-0 z-20 flex h-full min-h-0 max-w-[88%] flex-col outline-none max-[1179px]:fixed",
 )
+
+const CONTENT_STYLE = { width: SIDE_PANEL_WIDTH }
 
 const MISSING_DESCRIPTION = { "aria-describedby": undefined }
 
@@ -97,6 +101,7 @@ export function SidePanel<V extends string>({
       <SheetContent
         ref={contentRef}
         className={CONTENT_CLASS}
+        style={CONTENT_STYLE}
         onInteractOutside={preventOutsideClose}
         onOpenAutoFocus={(event) => {
           event.preventDefault()
