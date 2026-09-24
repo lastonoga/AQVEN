@@ -6,7 +6,8 @@ description: Pick a backend, start a thread, and let an agent run commands, edit
 ## When you need this
 
 Use the chat panel when you want an agent to actually work on the project you have open — not just
-answer questions about it. It sits docked next to the canvas, and it runs your own local install of
+answer questions about it. It stays docked beside every page of the project, in both Flow and Research
+mode, and it runs your own local install of
 Claude Code or Codex: never a hosted API, and Studio never reads or stores your credentials itself. Use
 it to ask for an edit, hand it a bug to chase down, or drive the whole project the way you'd drive it
 from a terminal, while watching every command, file edit, and tool call as it happens.
@@ -67,7 +68,7 @@ permission now runs the command on its own and shows you the exit code.
 - [How to check Studio's settings](/studio/settings/) — where the chat backend is chosen and switched.
 - [How to check a project before committing](/engine/check/) — the command the example asks the agent
   to run.
-- [How to read research in Studio](/studio/research/) — where a check you asked the agent to add shows
-  up once a series scores it.
+- [How to use Research in Studio](/studio/research/) — where a check you asked the agent to add shows
+  up once a series scores it, and where **Suggest hypotheses** hands the chat its next task.
 - [How to read a workflow's graph](/studio/understand-the-graph/) — the canvas the chat panel sits next
   to.

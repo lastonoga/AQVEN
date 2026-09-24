@@ -10,6 +10,7 @@ import {
   Comparison,
   FAQ,
   Problem,
+  ResearchLoop,
   Stack,
   StudioEvidence,
   Testimonial,
@@ -43,7 +44,7 @@ const menu = [
     <title>AQVEN: The source-available workbench for AI workflows</title>
     <meta
       name="description"
-      content="Built for humans and coding agents. Build your AI workflow, check it before it runs, and see exactly what it did."
+      content="Built for humans and coding agents. Build your AI workflow, check it before it runs, see exactly what it did, and let your agent test it with experiments until it holds."
     />
     <link rel="icon" href="/favicon.svg" />
     <script is:inline>
@@ -92,6 +93,7 @@ const menu = [
         features={AGENT_FEATURES}
       />
 
+      <ResearchLoop />
       <Comparison />
       <Stack />
       <Providers />
@@ -134,7 +136,7 @@ const menu = [
           title: "Improve",
           links: [
             { name: "Runs", href: "/studio/investigate-a-run/" },
-            { name: "Datasets", href: "/studio/datasets/" },
+            { name: "Cases", href: "/studio/cases/" },
             { name: "Experiments", href: "/studio/research/" },
             { name: "Debugging", href: "/concepts/finding-the-node-that-went-wrong/" },
           ],

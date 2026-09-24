@@ -6,8 +6,8 @@ description: Register AQVEN's MCP server and paste one setup prompt into Claude 
 ## When you need this
 
 Studio's [chat panel](/studio/chat/) prepares its agent before your first message. It starts the agent in
-the project folder, adds the project's `AGENTS.md` and `CLAUDE.md` to the agent's instructions, connects
-the `aqven` MCP server, and blocks reads of `.env` files and `.aqven/server.json`.
+the project folder, adds the project's `AGENTS.md`, `CLAUDE.md` and `FINDINGS.md` to the agent's
+instructions, connects the `aqven` MCP server, and blocks reads of `.env` files and `.aqven/server.json`.
 
 An agent you start yourself — in a terminal, an editor, or a desktop app — gets only what its own client
 picks up. Use this page when you'd rather work in that agent directly: register the server once, paste one
@@ -82,9 +82,9 @@ This folder is an AQVEN project. Before any task, set yourself up the way AQVEN 
 
 1. Find the project. This folder should hold pyproject.toml, AGENTS.md and CLAUDE.md. The AQVEN module is the folder that contains aqven.yaml, usually one level below this one; call its path <package>. Every {{CLI_COMMAND}} command takes that folder as its path. If you find no aqven.yaml here or below, stop and ask me where the project is.
 
-2. Read the rules. Read AGENTS.md and CLAUDE.md in full, even if your client already loaded one of them. Treat both as binding instructions for this whole session. Where they disagree with a habit of yours, follow the files.
+2. Read the rules. Read AGENTS.md and CLAUDE.md in full, even if your client already loaded one of them. Treat both as binding instructions for this whole session. Where they disagree with a habit of yours, follow the files. Then read FINDINGS.md in <package> if it exists: it is what this project already knows from its experiments, and you never edit it.
 
-3. Connect the aqven MCP server. Look for its tools: aqven_check, flow_patch, prompt_preview, run_start.
+3. Connect the aqven MCP server. Look for its tools: aqven_check, flow_patch, prompt_preview, run_start, series_start.
    - If you have them, call aqven_check and go to step 4.
    - If you don't, the server is not connected. Do what applies to you, then stop:
      - Claude Code: .mcp.json already declares the server. Ask me to approve it with /mcp and restart the session.
@@ -117,3 +117,5 @@ connected instead, do what it asked in step 3, restart the session, and paste th
   once the agent is connected.
 - [How to check and test a project as an agent](/mcp-cli/check-and-test/) — the tools the agent runs after
   every change.
+- [How an agent takes a task to a reliable flow](/mcp-cli/research-loop/) — what to hand the agent next,
+  and the rounds it runs.

@@ -46,7 +46,13 @@ function parsePage(path) {
 
 const pages = markdownFiles(docsRoot).map(parsePage).sort((a, b) => a.slug.localeCompare(b.slug));
 const expected = new Map(pages.map((page) => [join(markdownRoot, page.slug), page.markdown]));
-const startOrder = ["start/index.md", "start/quickstart.md", "start/engineering-loop-walkthrough.md", "start/where-next.md"];
+const startOrder = [
+  "start/index.md",
+  "start/quickstart.md",
+  "start/engineering-loop-walkthrough.md",
+  "start/a-day-with-aqven.md",
+  "start/where-next.md",
+];
 const link = (page) => `- [${page.title}](${baseUrl}/llms/${page.slug}): ${page.description}`;
 const section = (name, selected) => (selected.length ? `## ${name}\n\n${selected.map(link).join("\n")}\n` : "");
 const AREAS = [

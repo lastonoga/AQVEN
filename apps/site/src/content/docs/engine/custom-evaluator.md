@@ -110,10 +110,12 @@ plus the 0.01 margin.
 
 - [Built-in policies and evaluators](/reference/built-in-policies/): the eleven evaluators that ship
   with AQVEN, and the signature every custom one shares.
+- [How to write an experiment](/engine/experiments/): the other kinds of checks, and the question a
+  check's metric answers.
 - [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/): where an
   experiment's checks are scored, attempt by attempt.
-- [How to read research in Studio](/studio/research/): the matrix where a check's pass rate shows up
-  with its interval.
+- [How to follow and read a series in Studio](/studio/series/): the matrix where a check's pass rate
+  shows up with its interval.
 - [How to give an agent a tool](/engine/tool-node/): the same `module:function` reference shape, and
   where `ctx.blobs` lives if a check needs to inspect media instead of text.
 - [How to write a step in Python](/engine/code-node/): the node kind a custom evaluator's own logic

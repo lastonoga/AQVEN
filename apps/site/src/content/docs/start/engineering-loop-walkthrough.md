@@ -7,8 +7,7 @@ description: One example, three moves — see the graph, find the cause, verify 
 
 You will have opened the same project from the quickstart in your browser, looked at its graph, run
 a case that exposes a real gap in how it handles a customer's wording, traced that run down to the
-exact node responsible, and seen what a series of the project's experiments actually tells you before
-you ship a fix.
+exact node responsible, and seen how a case, an experiment and a series prove a fix before you ship it.
 
 ## Before you start
 
@@ -63,19 +62,37 @@ one specific field, on one specific node, that you can go fix.
 
 ## 3. Test: verify the fix
 
-Fixing that one node's prompt so it recognizes "gets hot" as overheating is easy. Knowing the fix didn't
-quietly break something else is the harder part. That's what experiments and series are for.
+Fixing that one node's prompt so it recognizes "gets hot" as overheating is easy. Knowing the fix holds on
+more than the one case you typed, and didn't quietly break something else, is the harder part. That's
+what experiments and series are for.
 
-An experiment is a file that writes the question down before any data: which flow or range of nodes
-runs, on which saved cases, with which checks, and what counts as good. For example: "the reply keeps
-its promises within the decision on more than 97% of attempts, with a margin of 0.01." A series runs it:
-every selected case, for every variant, several times, each attempt an ordinary run you can open like
-the one above. The result isn't just a score, it's a verdict. `confirmed` means the 95% interval cleared
-the bound by more than the margin you declared. `refuted` means the effect is within the margin or
-reversed. `inconclusive` means there aren't enough cases to tell. Iterate on the working (`dev`) half of
-the cases. When the fix is done, run one series on the held-out half. That series writes a finding into
-the project, and that finding is what tells you the fix is safe to ship, not just that it fixed the one
-case you happened to test by hand.
+1. **Keep the case.** On the run, click `To cases`. Studio drafts a dataset case from the run: its input,
+   context and the outputs of its top-level nodes. The chat writes it into the flow's dataset with tags,
+   after asking you for the expected output: a record with the symptom `overheating` and the safety flag
+   set.
+2. **Write the question before the data.** Ask the chat for an experiment on the step you fixed. The
+   question could be: on the cases tagged for this wording, does the record come out right in more than
+   90% of attempts, with a margin of 0.05? The experiment names the range of nodes that runs, the cases by
+   their tags, the check against the expected output, and the threshold. See
+   [How to write an experiment](/engine/experiments/).
+3. **Explore on working cases.** In **Research**, open the experiment and launch it with the purpose
+   **Explore · working cases**. The series runs every selected case several times and gives numbers and a
+   `signal`, never a finding. Read the cases that failed, change the prompt, and run it again, one change
+   at a time.
+4. **Confirm once on held-out cases.** When the change is done, launch it once with **Confirm · held-out
+   cases**: the half of the cases you didn't tune against. The series gives a verdict. `confirmed`
+   means the 95% interval cleared 0.90 by more than the margin, `refuted` means the whole interval fell
+   short of that, and `inconclusive` means there aren't enough cases to tell. The verdict is written into
+   the project as a finding, and `FINDINGS.md` gains a line.
+
+Series also catch risks you didn't go looking for. On this project, one series showed
+`gemini-2.5-flash-lite` on the `triage` step breaking the 200-character limit of an observation three
+times in a row, until the run ended `MODEL_RETRIES_EXHAUSTED`. The engine refused the invalid output, as
+designed, and the series counted a failure: a risk you now know about, not a surprise in production.
+
+That finding, not the one case you fixed by hand, tells you the fix is safe to ship. Hand the whole loop
+to a coding agent and it runs these rounds for you: see
+[How an agent takes a task to a reliable flow](/mcp-cli/research-loop/).
 
 ## What's next
 
