@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
 import type { ApiProviderKey, ApiSecret, ApiSetting } from "@/domain"
 import { apiError } from "@/api/client"
-import { liveProjectSettings, liveProviders, liveSecrets } from "@/mocks/data/project"
+import { liveProjectSettings, liveProviders, liveResearchBudget, liveSecrets } from "@/mocks/data/project"
 import {
+  capDraftOf,
+  capText,
   dotenvKeys,
   hasProviderKey,
+  isCapDraft,
   isShadowed,
   keyOrigin,
   LOGIN_COMMANDS,
@@ -113,5 +116,16 @@ describe("setup presenters", () => {
 
   it("upgrades the engine through uv in the project", () => {
     expect(UPGRADE_COMMAND).toBe("uv lock --upgrade-package aqven && uv sync")
+  })
+
+  it("accepts a cap only as plain dollars and cents", () => {
+    expect(["0", "1", "2.50", " 0.005 "].map(isCapDraft)).toEqual([true, true, true, true])
+    expect(["", "-1", "1e3", "lots", "1."].map(isCapDraft)).toEqual([false, false, false, false, false])
+  })
+
+  it("starts the cap editor at the aqven.yaml value, else at the default", () => {
+    expect(capDraftOf(liveResearchBudget)).toBe("1.00")
+    expect(capDraftOf({ ...liveResearchBudget, project_usd: null, source: "default" })).toBe("1.00")
+    expect(capText("2.5")).toBe("$2.50")
   })
 })

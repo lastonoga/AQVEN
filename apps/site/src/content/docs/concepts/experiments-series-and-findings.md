@@ -122,7 +122,11 @@ bundled with the engine. The cost of a finished call comes from the provider's o
 that nothing prices is counted as unknown, not free. When some attempts ran on such a model, the spend of
 the series is a lower bound, and every surface says so.
 
-The project setting `research.spend_cap_usd` ($1.00 by default) decides who starts a series:
+The project spend cap decides who starts a series. It lives in `aqven.yaml` as `research.spend_cap_usd`,
+$1.00 in every new project and $1.00 when the block is missing. A local override with the same key on the
+project server wins on that computer only.
+
+The cap works like this:
 
 - **At or below the cap**, the series starts by itself. Its own cap is 1.25 × the estimate, rounded up to a
   cent, and never above the project cap.

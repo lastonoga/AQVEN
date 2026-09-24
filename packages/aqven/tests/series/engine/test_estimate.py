@@ -54,6 +54,7 @@ from aqven.series.model import (
     VariantRole,
 )
 from aqven.series.plans import VariantDraft, build_variant
+from aqven.series.settings import DEFAULT_CAP, ProjectCap
 from aqven.series.views import SeriesListQuery
 from aqven.spec import (
     AgentId,
@@ -250,11 +251,21 @@ def test_the_weakest_source_names_the_whole_estimate(sources: tuple[UsdSource, .
     assert usd_source(priced) == expected
 
 
+def test_the_estimate_names_where_the_project_cap_came_from() -> None:
+    estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices())
+    look = LookQuestion.model_validate({"kind": "look"})
+    cap = ProjectCap(usd=Decimal("2.50"), source="project")
+
+    estimate = asyncio.run(estimator.estimate(plan(look, cases=3, repeats=1), None, cap, None)).estimate
+
+    assert (estimate.project_cap_usd, estimate.project_cap_source) == (Decimal("2.50"), "project")
+
+
 def test_a_look_recommends_the_requested_cases() -> None:
     estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices())
     look = LookQuestion.model_validate({"kind": "look"})
 
-    outcome = asyncio.run(estimator.estimate(plan(look, cases=3, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(look, cases=3, repeats=1), None, DEFAULT_CAP, None))
 
     assert outcome.estimate.recommended.reason is EstimateReason.LOOK
     assert outcome.estimate.recommended.cases == 3
@@ -265,10 +276,8 @@ def test_a_look_recommends_the_requested_cases() -> None:
 def test_a_rate_pair_uses_the_prior_spread_without_history() -> None:
     estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices())
 
-    estimate = asyncio.run(
-        estimator.estimate(plan(noninferior(0.1), available=100), None, Decimal("1.00"), None)
-    ).estimate
-    short = asyncio.run(estimator.estimate(plan(noninferior(0.1)), None, Decimal("1.00"), None)).estimate
+    estimate = asyncio.run(estimator.estimate(plan(noninferior(0.1), available=100), None, DEFAULT_CAP, None)).estimate
+    short = asyncio.run(estimator.estimate(plan(noninferior(0.1)), None, DEFAULT_CAP, None)).estimate
 
     assert (estimate.spread, estimate.spread_source, estimate.icc) == (0.5, "prior", 0.3)
     assert (estimate.recommended.reason, estimate.recommended.cases) == (EstimateReason.WIDE, 52)
@@ -281,7 +290,7 @@ def test_a_rate_pair_uses_the_prior_spread_without_history() -> None:
 def test_a_zero_margin_has_no_recommendation() -> None:
     estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices())
 
-    estimate = asyncio.run(estimator.estimate(plan(threshold(0.0)), None, Decimal("1.00"), None)).estimate
+    estimate = asyncio.run(estimator.estimate(plan(threshold(0.0)), None, DEFAULT_CAP, None)).estimate
 
     assert estimate.recommended.reason is EstimateReason.NO_MARGIN
     assert estimate.recommended.cases == 12
@@ -295,7 +304,7 @@ def test_history_prices_the_attempts_and_measures_the_spread() -> None:
     prices = FixedPrices(FIXTURE_PRICES)
     estimator = SeriesEstimator(store=HistoryStore(rows), prices=prices)
 
-    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, DEFAULT_CAP, None))
 
     estimate = outcome.estimate
     assert estimate.usd_source == "history"
@@ -317,7 +326,7 @@ def test_history_without_a_known_price_does_not_price_the_attempts() -> None:
     }
     estimator = SeriesEstimator(store=HistoryStore(unpriced), prices=FixedPrices())
 
-    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, DEFAULT_CAP, None))
 
     assert (outcome.estimate.usd_source, outcome.estimate.usd) == ("unknown", None)
     assert outcome.estimate.needs_approval
@@ -336,7 +345,7 @@ def test_history_prices_the_attempts_from_the_priced_ones_only() -> None:
         store=HistoryStore({"writer": rows("writer"), "cheap": rows("cheap")}), prices=FixedPrices()
     )
 
-    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, DEFAULT_CAP, None))
 
     assert outcome.estimate.usd_source == "history"
     assert outcome.per_attempt_usd == Decimal("0.005")
@@ -351,7 +360,7 @@ def test_history_of_infrastructure_errors_does_not_price_the_attempts() -> None:
     )
     estimator = SeriesEstimator(store=HistoryStore({"writer": broken, "cheap": broken}), prices=FixedPrices())
 
-    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.2), cases=4, repeats=1), None, DEFAULT_CAP, None))
 
     assert outcome.estimate.usd_source == "unknown"
     assert outcome.estimate.usd is None
@@ -363,7 +372,7 @@ def test_recorded_runs_price_each_variant_through_its_assigned_model() -> None:
     sample = FlowSample(nodes={"classify": NodeSample(2000, 300, Decimal("0.5"))}, duration_ms=1500.0)
     estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices(FIXTURE_PRICES), sampler=FixedSampler(sample))
 
-    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.1), cases=2, repeats=1), None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(plan(noninferior(0.1), cases=2, repeats=1), None, DEFAULT_CAP, None))
 
     assert outcome.estimate.usd_source == "prices"
     assert outcome.estimate.usd == Decimal("0.00048") * 2 * 2
@@ -411,7 +420,7 @@ def test_a_first_series_is_priced_on_the_upper_bound(tmp_path: Path) -> None:
     bounded = replace(plan(noninferior(0.1), cases=2, repeats=1), bound=BoundPlan(base=project, case=case))
     estimator = SeriesEstimator(store=HistoryStore(), prices=FixedPrices(FIXTURE_PRICES))
 
-    outcome = asyncio.run(estimator.estimate(bounded, None, Decimal("1.00"), None))
+    outcome = asyncio.run(estimator.estimate(bounded, None, DEFAULT_CAP, None))
 
     bound = triage_bound(project, case)
     per_attempt = FIXTURE_PRICES[WRITER_MODEL].cost(bound.tokens_in, bound.tokens_out)
@@ -436,7 +445,7 @@ def test_an_unpriced_model_leaves_the_bound_unknown(tmp_path: Path) -> None:
     prices = FixedPrices({CRITIC_MODEL: FIXTURE_PRICES[CRITIC_MODEL]})
     estimator = SeriesEstimator(store=HistoryStore(), prices=prices)
 
-    estimate = asyncio.run(estimator.estimate(bounded, None, Decimal("1.00"), None)).estimate
+    estimate = asyncio.run(estimator.estimate(bounded, None, DEFAULT_CAP, None)).estimate
 
     assert (estimate.usd, estimate.usd_source) == (None, "unknown")
     assert estimate.warnings == (f"price_unknown:{WRITER_MODEL}",)

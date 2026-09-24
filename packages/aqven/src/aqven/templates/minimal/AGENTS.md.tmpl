@@ -336,7 +336,7 @@ server when needed.
 | Status | What it means | What you do |
 |---|---|---|
 | `running` | attempts are running | `series_get` with `wait_seconds` again |
-| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd`, $1.00 by default), unknown, or the series cap you passed is above it | tell the developer: only a person approves spend, in Studio; there is no tool for it; then `series_get` the same series |
+| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by default; a local override on the developer's machine wins), unknown, or the series cap you passed is above it | tell the developer: only a person approves spend, in Studio; there is no tool for it; never raise the cap in `aqven.yaml` to get past it; then `series_get` the same series |
 | `waiting_human` | an attempt reached a `human` node | tell the developer; the series continues once the node is answered |
 | `done` | finished; every question except `look` has a verdict | quote `verdict.text` |
 | `cancelled`, `failed` | stopped, no finding; `failed` means every attempt hit an infrastructure error | read `error` |

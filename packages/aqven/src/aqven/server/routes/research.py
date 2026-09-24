@@ -4,7 +4,6 @@ from typing import Annotated, Final
 from fastapi import APIRouter, Depends, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-from aqven.ports.identity import local_user
 from aqven.runtime.runs import Page
 from aqven.series.model import SeriesEstimate, SeriesId
 from aqven.series.protocol import MAX_WAIT_SECONDS
@@ -30,7 +29,6 @@ from aqven.server.resources import ArmFlowView
 from aqven.server.routes.runs import event_cursor
 from aqven.server.views.research import ExperimentCatalog, SeriesCancelBody, arm_flow, series_jobs
 from aqven.spec import ExperimentId
-from aqven.write.model import WriteActor
 
 EXPERIMENT_CATALOGUE: Final = "experiment catalogue read from the project files"
 ARM_FLOW: Final = "arm nodes and schemas for the Studio run view, read from the project files"
@@ -40,7 +38,6 @@ CASE_ROWS: Final = "per-case rows for Studio, holdout included"
 SSE_TRANSPORT: Final = "sse transport"
 HUMAN_APPROVAL: Final = "spend is approved by a human"
 FINAL_EVENT: Final = "series_finished"
-HUMAN_KIND: Final = "human"
 
 
 def series_frame(event: SeriesEvent) -> ServerSentEvent:
@@ -60,10 +57,6 @@ def build_research_router(context: ServerContext) -> APIRouter:
     router = APIRouter(prefix="/api", responses=ERROR_RESPONSES)
     catalog = ExperimentCatalog(context.series)
     existing_series = series_guard(context)
-
-    async def human() -> WriteActor:
-        user = await local_user(context.settings, context.environ)
-        return WriteActor(kind=HUMAN_KIND, id=user.assignee)
 
     @router.get("/experiments", operation_id="experiment_list", openapi_extra=rest_only(EXPERIMENT_CATALOGUE))
     async def list_experiments(query: Annotated[ExperimentListQuery, Query()]) -> Page[ExperimentSummaryView]:
@@ -93,7 +86,7 @@ def build_research_router(context: ServerContext) -> APIRouter:
 
     @router.post("/series", status_code=201, operation_id="series_start", openapi_extra=operation("series_start"))
     async def start_series(request: SeriesStartRequest) -> SeriesStarted:
-        return await series_jobs(context.series).start(request, await human())
+        return await series_jobs(context.series).start(request, await context.human())
 
     @router.get("/series", operation_id="series_list", openapi_extra=rest_only(SERIES_HISTORY))
     async def list_series(query: Annotated[SeriesListQuery, Query()]) -> Page[SeriesSummaryView]:
@@ -133,7 +126,7 @@ def build_research_router(context: ServerContext) -> APIRouter:
 
     @router.post("/series/{series_id}/approve", operation_id="series_approve", openapi_extra=rest_only(HUMAN_APPROVAL))
     async def approve_series(series_id: str) -> SeriesSummaryView:
-        return await series_jobs(context.series).approve(SeriesId(series_id), await human())
+        return await series_jobs(context.series).approve(SeriesId(series_id), await context.human())
 
     @router.post("/series/{series_id}/cancel", operation_id="series_cancel", openapi_extra=operation("series_cancel"))
     async def cancel_series(series_id: str, body: SeriesCancelBody | None = None) -> SeriesSummaryView:

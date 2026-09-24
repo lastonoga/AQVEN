@@ -54,7 +54,7 @@ from aqven.series.presenter import (
 )
 from aqven.series.protocol import APPROVAL_TOPIC, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
 from aqven.series.services import SeriesServices
-from aqven.series.settings import InvalidSpendCap, project_spend_cap
+from aqven.series.settings import InvalidSpendCap, ProjectCap, project_spend_cap, research_of
 from aqven.series.stats.wording import cancelled_text
 from aqven.series.store import InvalidCursor, series_cursor
 from aqven.series.views import (
@@ -381,9 +381,10 @@ class SeriesService:
         estimator = SeriesEstimator(store=self.services.store, prices=self.services.prices, sampler=sampler)
         return await estimator.estimate(estimate_plan(planned), request_cap, await self._cap(), await self._workers())
 
-    async def _cap(self) -> Decimal:
+    async def _cap(self) -> ProjectCap:
+        state = await self.services.workspace.state()
         try:
-            return await project_spend_cap(self.services.settings)
+            return await project_spend_cap(self.services.settings, research_of(state.report.project))
         except InvalidSpendCap as error:
             raise ApiFailure("NOT_RUNNABLE", str(error)) from error
 
