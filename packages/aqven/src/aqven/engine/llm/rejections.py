@@ -70,3 +70,39 @@ def schema_rejection(
     rules: tuple[SchemaRejectionRule, ...] = SCHEMA_REJECTION_RULES,
 ) -> SchemaRejectionRule | None:
     return next((rule for rule in rules if rule.matches(failure, mode)), None)
+
+
+MEDIA_REFUSALS: Final = (
+    "not support",
+    "unsupported",
+    "no endpoints found",
+    "only supported by certain models",
+    "not a multimodal model",
+    "at most 0",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class MediaRejectionRule:
+    medium: str
+    markers: tuple[str, ...]
+
+    def matches(self, failure: ProviderFailure) -> bool:
+        if failure.status is not None and failure.status not in CLIENT_ERRORS:
+            return False
+        text = failure.searchable
+        return any(marker in text for marker in self.markers) and any(refusal in text for refusal in MEDIA_REFUSALS)
+
+
+MEDIA_REJECTION_RULES: Final[tuple[MediaRejectionRule, ...]] = (
+    MediaRejectionRule(medium="images", markers=("image input", "image_url", "image(s)", "images", "vision")),
+    MediaRejectionRule(medium="audio", markers=("audio input", "input audio", "input_audio")),
+    MediaRejectionRule(medium="video", markers=("video input", "video_url")),
+    MediaRejectionRule(medium="documents", markers=("file input", "pdf", "document input")),
+)
+
+
+def media_rejection(
+    failure: ProviderFailure, rules: tuple[MediaRejectionRule, ...] = MEDIA_REJECTION_RULES
+) -> MediaRejectionRule | None:
+    return next((rule for rule in rules if rule.matches(failure)), None)

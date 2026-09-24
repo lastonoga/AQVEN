@@ -407,13 +407,13 @@ table. The set of keys is O2; their names are a **proposal — not in an ADR**.
 | `researcher` | `openrouter:mistralai/mistral-nemo` | mistral | `auto → tool`, strict false | `mcp_servers: [helpdesk]` | the `resolver` subagent |
 | `deepseek` | `openrouter:deepseek/deepseek-v4-flash-0731` | deepseek | `auto → tool`, strict false | temperature 0 | `intent__escalate`, `judges__deepseek`; the critique judge of the experiments |
 | `qwen` | `openrouter:qwen/qwen3-30b-a3b-instruct-2507` | qwen | `tool` explicitly, strict false | temperature 0 | `judges__qwen` |
-| `painter` | `openrouter:google/gemini-3.1-flash-lite-image` | google | `prompted` explicitly, strict false | `fallback_models: [openrouter:openai/gpt-5-image-mini]`; `capabilities {input: [text, image], output: [text, image]}` | `illustrate` |
+| `painter` | `openrouter:google/gemini-3.1-flash-lite-image` | google | `prompted` explicitly, strict false | `fallback_models: [openrouter:openai/gpt-5-image-mini]` | `illustrate` |
 
 The agent model table was approved by the owner on 2026-09-17: the cheapest OpenRouter model with the capabilities the
 agent's nodes need. The exceptions and their reasons:
 
 - `record__extract` moved from the former `claude` to `gemini`: `mistralai/mistral-nemo` takes text only, and the node
-  needs `Image?` and `Document?` (`E_MODALITY_UNSUPPORTED`).
+  sends `Image?` and `Document?` inputs, which the provider refuses for a text-only model.
 - `decide__tie_break` moved from the removed `grok` to `gpt`, and `intent__escalate` from `claude` to `deepseek`; the
   node `drafts__claude` was renamed to `drafts__mistral` by a `flow_patch` operation (`rename_node`), and the entry is
   in `renames` in `aqven.yaml`.
