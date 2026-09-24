@@ -500,7 +500,7 @@ def llm_bed(
     approvals = ScriptedApprovals(approve, expire)
     steps = RecordingSteps()
     dependencies = LlmDependencies(
-        models=source or FixedModels(models(scripted) if models is not None else scripted.model()),
+        models=model_source(scripted, models, source),
         inference_models=MODELS,
         tool_contexts=contexts,
         approvals=approvals,
@@ -512,6 +512,16 @@ def llm_bed(
         stream_idle_seconds=stream_idle_seconds,
     )
     return LlmBed(scripted, scope, llm_node_executor(dependencies), contexts, approvals, steps)
+
+
+def model_source(
+    scripted: ScriptedModel, models: Callable[[ScriptedModel], Model] | None, source: ModelSource | None
+) -> ModelSource:
+    if source is not None:
+        return source
+    if models is not None:
+        return FixedModels(models(scripted))
+    return FixedModels(scripted.model())
 
 
 def no_bad_words(value: BaseModel, context: object, params: NoParams) -> Verdict:
