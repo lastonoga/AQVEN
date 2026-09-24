@@ -1,4 +1,4 @@
-import { assertNever, type AttemptOutcome, type CheckId, type CheckSource, type ExperimentCheck, type SeriesAttempt, type SeriesCaseFilter, type SeriesCaseRow, type SeriesDetail, type SeriesSpend, type SeriesStatus, type SeriesSummary, type VariantId, type VariantTally } from "@/domain"
+import { type AttemptOutcome, type CheckId, type CheckSource, type ExperimentCheck, type SeriesAttempt, type SeriesCaseFilter, type SeriesCaseRow, type SeriesDetail, type SeriesSpend, type SeriesStatus, type SeriesSummary, type VariantId, type VariantTally } from "@/domain"
 import type { Tone } from "@/components/studio"
 
 export type VerdictGap = "look" | "pending" | "failed" | "none"
@@ -85,14 +85,11 @@ const FIELD_JOIN = ", "
 const hintParts = (source: CheckSource, copy: CheckHintCopy): readonly (string | null)[] => {
   if (source.kind === "code") return [copy.code(source.ref)]
   if (source.kind === "builtin") return [copy.builtin(source.use), source.fields.length === 0 ? null : copy.fields(source.fields.join(FIELD_JOIN))]
-  if (source.kind === "judge") {
-    return [
-      copy.judge(source.inference),
-      source.agent === null ? null : copy.agent(source.agent.id),
-      source.validatedBy === null ? copy.notValidated : copy.validatedBy(source.validatedBy),
-    ]
-  }
-  return assertNever(source)
+  return [
+    copy.judge(source.inference),
+    source.agent === null ? null : copy.agent(source.agent.id),
+    source.validatedBy === null ? copy.notValidated : copy.validatedBy(source.validatedBy),
+  ]
 }
 
 export const checkHint = (checks: readonly ExperimentCheck[], id: CheckId, copy: CheckHintCopy): string | null => {
