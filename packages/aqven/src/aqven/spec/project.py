@@ -8,7 +8,6 @@ from aqven.spec.common import Limits, SpecModel
 from aqven.spec.names import (
     PROVIDER_NAME_PATTERN,
     CodeRef,
-    Modality,
     PiiDetector,
     ProviderName,
     Retention,
@@ -61,8 +60,6 @@ class OpenRouterRouting(SpecModel):
 
 
 class ProviderCapabilitiesSpec(SpecModel):
-    input: list[Modality] | None = None
-    output: list[Modality] | None = None
     tools: bool | None = None
     json_schema_output: bool | None = None
 

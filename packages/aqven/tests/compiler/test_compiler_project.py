@@ -225,7 +225,6 @@ def test_agent_carries_instructions_models_tools_and_subagents(standard: Compile
     assert writer.instructions == (root / "agents/writer/writer.instructions.md").read_text(encoding="utf-8")
     openai = ProviderName("openai")
     assert [(model.model, model.provider) for model in writer.models] == [("openai:gpt-5.4-mini", openai)]
-    assert writer.primary.capabilities.strict is True
     assert writer.tools == (ToolId("stamp"),)
     assert [(sub.name, sub.agent, sub.inference) for sub in writer.subagents] == [("lookup", "critic", "lookup")]
     assert standard.agent(AgentId("critic")).instructions is None

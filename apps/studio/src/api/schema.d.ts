@@ -1330,7 +1330,6 @@ export interface components {
         AgentModel: {
             model: components["schemas"]["ModelText"];
             provider: components["schemas"]["ProviderText"];
-            capabilities: components["schemas"]["ModelCapabilities"];
         };
         /** AgentOutputSpec */
         AgentOutputSpec: {
@@ -1389,7 +1388,6 @@ export interface components {
             subagents?: components["schemas"]["SubagentSpec"][] | null;
             approval?: components["schemas"]["ToolApprovalSpec"] | null;
             limits?: components["schemas"]["Limits"] | null;
-            capabilities?: components["schemas"]["CapabilityOverride"] | null;
         };
         /** AllowedSetMember */
         AllowedSetMember: {
@@ -1751,16 +1749,6 @@ export interface components {
         };
         /** @enum {string} */
         CapSource: "override" | "project" | "default";
-        /** CapabilityOverride */
-        CapabilityOverride: {
-            family?: components["schemas"]["ModelFamily"] | null;
-            /** Input */
-            input?: components["schemas"]["Modality"][] | null;
-            /** Output */
-            output?: components["schemas"]["Modality"][] | null;
-            /** Strict */
-            strict?: boolean | null;
-        };
         /** CaseDraft */
         CaseDraft: {
             /** Dataset Id */
@@ -4999,20 +4987,6 @@ export interface components {
             /** Reason */
             reason: string;
         };
-        /**
-         * Modality
-         * @enum {string}
-         */
-        Modality: "text" | "image" | "audio" | "video" | "document";
-        ModalitySet: components["schemas"]["Modality"][];
-        /** ModelCapabilities */
-        ModelCapabilities: {
-            family: components["schemas"]["ModelFamily"];
-            input: components["schemas"]["ModalitySet"];
-            output: components["schemas"]["ModalitySet"];
-            /** Strict */
-            strict: boolean;
-        };
         /** ModelErrorDetails */
         ModelErrorDetails: {
             /** Agent */
@@ -5086,10 +5060,18 @@ export interface components {
             /** To */
             to: string;
         };
+        /** NodeAgentModel */
+        NodeAgentModel: {
+            /** Model */
+            model: string;
+            /** Provider */
+            provider: string;
+            family: components["schemas"]["ModelFamily"];
+        };
         /** NodeAgentRuntime */
         NodeAgentRuntime: {
             /** Models */
-            models: components["schemas"]["AgentModel"][] | null;
+            models: components["schemas"]["NodeAgentModel"][] | null;
             output: components["schemas"]["CompiledAgentOutput"] | null;
             /** Instructions */
             instructions: string | null;
@@ -6170,10 +6152,6 @@ export interface components {
         };
         /** ProviderCapabilitiesSpec */
         ProviderCapabilitiesSpec: {
-            /** Input */
-            input?: components["schemas"]["Modality"][] | null;
-            /** Output */
-            output?: components["schemas"]["Modality"][] | null;
             /** Tools */
             tools?: boolean | null;
             /** Json Schema Output */
@@ -7679,7 +7657,6 @@ export type SchemaCallOutcome = components['schemas']['CallOutcome'];
 export type SchemaCancelRequest = components['schemas']['CancelRequest'];
 export type SchemaCancelResult = components['schemas']['CancelResult'];
 export type SchemaCapSource = components['schemas']['CapSource'];
-export type SchemaCapabilityOverride = components['schemas']['CapabilityOverride'];
 export type SchemaCaseDraft = components['schemas']['CaseDraft'];
 export type SchemaCaseFromRunRequest = components['schemas']['CaseFromRunRequest'];
 export type SchemaCaseSelectionView = components['schemas']['CaseSelectionView'];
@@ -7918,15 +7895,13 @@ export type SchemaMetricKind = components['schemas']['MetricKind'];
 export type SchemaMetricRole = components['schemas']['MetricRole'];
 export type SchemaMetricUnit = components['schemas']['MetricUnit'];
 export type SchemaMissingRangeData = components['schemas']['MissingRangeData'];
-export type SchemaModality = components['schemas']['Modality'];
-export type SchemaModalitySet = components['schemas']['ModalitySet'];
-export type SchemaModelCapabilities = components['schemas']['ModelCapabilities'];
 export type SchemaModelErrorDetails = components['schemas']['ModelErrorDetails'];
 export type SchemaModelFamily = components['schemas']['ModelFamily'];
 export type SchemaModelField = components['schemas']['ModelField'];
 export type SchemaModelSettingsSpec = components['schemas']['ModelSettingsSpec'];
 export type SchemaModelText = components['schemas']['ModelText'];
 export type SchemaNarrowNodeSpec = components['schemas']['NarrowNodeSpec'];
+export type SchemaNodeAgentModel = components['schemas']['NodeAgentModel'];
 export type SchemaNodeAgentRuntime = components['schemas']['NodeAgentRuntime'];
 export type SchemaNodeAnswerIgnored = components['schemas']['NodeAnswerIgnored'];
 export type SchemaNodeAttemptDiscarded = components['schemas']['NodeAttemptDiscarded'];

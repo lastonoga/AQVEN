@@ -10,8 +10,6 @@ from aqven.spec.names import (
     AgentId,
     InferenceId,
     McpServerId,
-    Modality,
-    ModelFamily,
     ModelString,
     OutcomePolicy,
     ToolId,
@@ -80,13 +78,6 @@ class ToolApprovalSpec(SpecModel):
     on_timeout: TimeoutPolicy
 
 
-class CapabilityOverride(SpecModel):
-    family: ModelFamily | None = None
-    input: list[Modality] | None = None
-    output: list[Modality] | None = None
-    strict: bool | None = None
-
-
 class AgentSpec(SpecModel):
     api_version: Literal["aqven/v1"] = Field(alias="apiVersion")
     kind: Literal["Agent"]
@@ -101,4 +92,3 @@ class AgentSpec(SpecModel):
     subagents: list[SubagentSpec] | None = None
     approval: ToolApprovalSpec | None = None
     limits: Limits | None = None
-    capabilities: CapabilityOverride | None = None

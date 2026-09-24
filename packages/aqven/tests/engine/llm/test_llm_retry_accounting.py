@@ -7,7 +7,7 @@ from typing import Final, Literal
 
 import httpx2
 import pytest
-from llm_harness import Chunk, SettledCosts, agent, answer_inference, answer_node, capabilities, llm_bed, tool_call
+from llm_harness import Chunk, SettledCosts, agent, answer_inference, answer_node, llm_bed, tool_call
 from pydantic import BaseModel, JsonValue
 from pydantic_ai.models import override_allow_model_requests
 
@@ -44,10 +44,7 @@ def retrying_writer(*models: ModelString) -> CompiledAgent:
     output = CompiledAgentOutput(retries=RETRIES, strict=False)
     if not models:
         return agent(output=output)
-    choices = tuple(
-        AgentModel(model=model, provider=ProviderName("openrouter"), capabilities=capabilities(strict=False))
-        for model in models
-    )
+    choices = tuple(AgentModel(model=model, provider=ProviderName("openrouter")) for model in models)
     return agent(models=choices, output=output)
 
 

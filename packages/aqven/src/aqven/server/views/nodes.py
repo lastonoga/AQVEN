@@ -5,6 +5,7 @@ from typing import Final
 
 from pydantic import JsonValue
 
+from aqven.ir import AgentModel, CompiledAgent
 from aqven.ir.nodes import CompiledNode
 from aqven.loader import (
     NODE_ID_SEPARATOR,
@@ -20,6 +21,7 @@ from aqven.loader import (
 from aqven.server.errors import not_found
 from aqven.server.resources import (
     DynamicSlot,
+    NodeAgentModel,
     NodeAgentRuntime,
     NodeBindingView,
     NodeCode,
@@ -68,6 +70,7 @@ from aqven.spec import (
     TypeId,
     TypeModels,
     UnionType,
+    model_family,
     normalized_schema,
 )
 
@@ -351,6 +354,14 @@ def allowed_set_descriptions(project: LoadedProject, source: SourceSpec[Inferenc
     return descriptions
 
 
+def agent_models(agent: CompiledAgent) -> tuple[NodeAgentModel, ...]:
+    return tuple(agent_model(item) for item in agent.models)
+
+
+def agent_model(item: AgentModel) -> NodeAgentModel:
+    return NodeAgentModel(model=item.model, provider=item.provider, family=model_family(item.model))
+
+
 def node_detail(state: WorkspaceState, flow_id: str, node_id: str) -> NodeDetail:
     flow = loaded_flow(state, flow_id)
     source = flow.nodes.get(NodeId(node_id))
@@ -383,7 +394,7 @@ def node_detail(state: WorkspaceState, flow_id: str, node_id: str) -> NodeDetail
             None
             if agent_source is None
             else NodeAgentRuntime(
-                models=None if compiled_agent is None else compiled_agent.models,
+                models=None if compiled_agent is None else agent_models(compiled_agent),
                 output=None if compiled_agent is None else compiled_agent.output,
                 instructions=(
                     agent_instructions(project, agent_source) if compiled_agent is None else compiled_agent.instructions

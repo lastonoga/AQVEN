@@ -7,9 +7,8 @@ from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from aqven.ir import AgentModel, CompiledProject
-from aqven.ir.registry import ModelCapabilities
-from aqven.runtime import Project, RunResult
-from aqven.spec import Modality, ModelFamily, ModelString, ProviderName
+from aqven.runtime import CallMedia, ModelCall, Project, RunResult
+from aqven.spec import ModelString, ProviderName
 from aqven.testing.engines import EngineSession, FixedModels
 
 ALIAS_SHOP: Final = Path(__file__).parent / "fixtures" / "alias_shop"
@@ -22,13 +21,9 @@ def reply(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
     return ModelResponse(parts=[TextPart("scripted")])
 
 
-def capabilities() -> ModelCapabilities:
-    text = (Modality.TEXT,)
-    return ModelCapabilities(family=ModelFamily.OPENAI, input=text, output=text, strict=True)
-
-
-def choice(model: str) -> AgentModel:
-    return AgentModel(model=ModelString(model), provider=ProviderName("openai"), capabilities=capabilities())
+def choice(model: str) -> ModelCall:
+    agent_model = AgentModel(model=ModelString(model), provider=ProviderName("openai"))
+    return ModelCall(model=agent_model, uses_tools=False, media=CallMedia())
 
 
 def audit() -> RunResult[BaseModel]:

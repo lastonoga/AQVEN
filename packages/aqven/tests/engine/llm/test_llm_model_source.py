@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from llm_harness import FakeScope, agent, answer_inference, answer_node, capabilities, project
+from llm_harness import FakeScope, agent, answer_inference, answer_node, project
 from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.messages import ModelMessage, ModelRequest, UserPromptPart
 from pydantic_ai.models import Model, ModelRequestParameters
@@ -19,7 +19,7 @@ from aqven.engine.runtime import RunBudgets
 from aqven.ir import AgentModel
 from aqven.models import declared_model_ref, declared_position
 from aqven.models.usage import node_usage_log
-from aqven.runtime import CapabilityRoute, CassetteConfig, CassetteMode, ModelProfile, ModelRoute
+from aqven.runtime import CallMedia, CapabilityRoute, CassetteConfig, CassetteMode, ModelProfile, ModelRoute
 from aqven.runtime.address import RunId
 from aqven.spec import FlowId, Limits, ModelString, ProviderName
 from aqven.testing.engines import FixedModels, offline_environment
@@ -57,7 +57,7 @@ def source(budgets: RunBudgets | None = None) -> EngineModelSource:
 
 
 def built(model_source: EngineModelSource, run_scope: RunScope) -> Model:
-    return asyncio.run(model_source.model(run_scope, agent(), frozenset()))
+    return asyncio.run(model_source.model(run_scope, agent(), CallMedia()))
 
 
 def ask(model: Model) -> str | None:
@@ -134,7 +134,7 @@ def test_run_budgets_follow_the_root_run_and_are_dropped_after_it() -> None:
 
 
 def test_the_chain_can_start_at_a_fallback_model_and_stamps_its_position() -> None:
-    fallback = AgentModel(model=ModelString(SECOND), provider=ProviderName("openrouter"), capabilities=capabilities())
+    fallback = AgentModel(model=ModelString(SECOND), provider=ProviderName("openrouter"))
     two = agent(models=(*agent().models, fallback))
     factories = FixedModels(
         {
@@ -146,8 +146,8 @@ def test_the_chain_can_start_at_a_fallback_model_and_stamps_its_position() -> No
     run_scope = scope(RunSpec(flow_id=FlowId("support")))
     messages: list[ModelMessage] = [ModelRequest(parts=[UserPromptPart("hello")])]
 
-    first = asyncio.run(model_source.model(run_scope, two, frozenset()))
-    second = asyncio.run(model_source.model(run_scope, two, frozenset(), 1))
+    first = asyncio.run(model_source.model(run_scope, two, CallMedia()))
+    second = asyncio.run(model_source.model(run_scope, two, CallMedia(), 1))
     answered = asyncio.run(second.request(messages, None, ModelRequestParameters()))
     primary = asyncio.run(first.request(messages, None, ModelRequestParameters()))
 

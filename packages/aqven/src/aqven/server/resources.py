@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, Field, JsonValue
 
 from aqven.diagnostics import Diagnostic
-from aqven.ir import AgentModel, CompiledAgentOutput
+from aqven.ir import CompiledAgentOutput
 from aqven.ir.nodes import CompiledNode
 from aqven.ir.plan import CompiledProject
 from aqven.runtime.address import ResourceModel, RunId
@@ -17,8 +17,11 @@ from aqven.spec import (
     FlowId,
     FlowSpec,
     InferenceSpec,
+    ModelFamily,
+    ModelString,
     NodeKind,
     NodeSpec,
+    ProviderName,
     RunContextKey,
     TypeSpec,
 )
@@ -204,8 +207,14 @@ class NodeDisplaySource(ResourceModel):
     text: str
 
 
+class NodeAgentModel(ResourceModel):
+    model: ModelString
+    provider: ProviderName
+    family: ModelFamily
+
+
 class NodeAgentRuntime(ResourceModel):
-    models: tuple[AgentModel, ...] | None
+    models: tuple[NodeAgentModel, ...] | None
     output: CompiledAgentOutput | None
     instructions: str | None
 

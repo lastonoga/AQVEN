@@ -3,7 +3,10 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings
 
+from aqven.ir import AgentModel, CompiledAgent
 from aqven.server import ServerOptions, create_app
+from aqven.server.views.nodes import agent_models
+from aqven.spec import AgentId, ModelFamily, ModelString, ProviderName
 
 
 def test_flow_list(server_client: TestClient) -> None:
@@ -83,6 +86,18 @@ def test_node_detail(server_client: TestClient) -> None:
     assert "file" not in reply["agent_runtime"]
     assert reply["agent_path"].endswith("writer.yaml")
     assert reply["display_sources"] == {}
+
+
+def test_agent_models_carry_the_family_of_the_vendor_prefix() -> None:
+    openrouter = ProviderName("openrouter")
+    painter = ModelString("openrouter:google/gemini-3.1-flash-lite-image")
+    sketcher = ModelString("openrouter:acme/sketch-9")
+    models = (AgentModel(model=painter, provider=openrouter), AgentModel(model=sketcher, provider=openrouter))
+    agent = CompiledAgent(agent_id=AgentId("painter"), description="painter", models=models)
+
+    shown = [(item.model, item.provider, item.family) for item in agent_models(agent)]
+
+    assert shown == [(painter, openrouter, ModelFamily.GOOGLE), (sketcher, openrouter, ModelFamily.OTHER)]
 
 
 def test_lumen_dynamic_output_exposes_expected_value_variants(server_options: ServerOptions) -> None:

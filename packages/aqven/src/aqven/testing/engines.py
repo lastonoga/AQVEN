@@ -11,10 +11,10 @@ from pydantic_ai.settings import ModelSettings
 from aqven.engine import configure_local_engines, shutdown_local_engines
 from aqven.engine.assembly import ModelFactories, ProjectModelFactories, standard_engine_setup
 from aqven.engine.lifecycle import EngineSetup
-from aqven.ir import AgentModel, CompiledProject
+from aqven.ir import CompiledProject
 from aqven.ports.models import ModelFactory, provider_key_variables
 from aqven.ports.prices import NO_PRICES, PriceCache
-from aqven.runtime.options import ModelRoute
+from aqven.runtime.options import ModelCall, ModelRoute
 
 OFFLINE_KEY: Final = "aqven-offline-key"
 
@@ -37,10 +37,10 @@ class FixedModels:
     models: Mapping[str, Model]
     fallback: ModelFactories = field(default_factory=ProjectModelFactories)
 
-    def factory(self, project: CompiledProject, route: ModelRoute | None, choice: AgentModel) -> ModelFactory:
-        fixed = self.models.get(choice.model)
+    def factory(self, project: CompiledProject, route: ModelRoute | None, call: ModelCall) -> ModelFactory:
+        fixed = self.models.get(call.model.model)
         if fixed is None:
-            return self.fallback.factory(project, route, choice)
+            return self.fallback.factory(project, route, call)
         return FixedModel(fixed)
 
 
