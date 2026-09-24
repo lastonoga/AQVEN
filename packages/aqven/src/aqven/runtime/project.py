@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass
 from importlib.resources import files
@@ -219,7 +220,7 @@ class Project:
 class ProjectPlanSource:
     root: Path
 
-    def current(self) -> CompiledProject:
+    async def current(self) -> CompiledProject:
         from aqven.compiler import compile_root
 
-        return compile_root(self.root)
+        return await asyncio.to_thread(compile_root, self.root)

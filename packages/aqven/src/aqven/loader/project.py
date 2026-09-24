@@ -187,6 +187,13 @@ def file_hash(data: bytes) -> str:
     return f"{HASH_PREFIX}{hashlib.sha256(data).hexdigest()}"
 
 
+def _read_listed(location: Path) -> bytes | None:
+    try:
+        return location.read_bytes()
+    except OSError:
+        return None
+
+
 def _skipped(part: str) -> bool:
     return part.startswith(".") or part in SKIPPED_DIRECTORIES
 
@@ -314,8 +321,8 @@ class _Collector:
         return LoadResult(project, tuple(self.diagnostics))
 
     def read_yaml(self, relative: str) -> None:
-        data = (self.root / relative).read_bytes()
-        if not _is_spec_file(relative, data):
+        data = _read_listed(self.root / relative)
+        if data is None or not _is_spec_file(relative, data):
             return
         file = _File(relative)
         document = self._document(relative, data)
@@ -340,6 +347,8 @@ class _Collector:
         except UnicodeDecodeError as error:
             message = f"file is not UTF-8 encoded: {error.reason}"
             self.diagnostics.append(diagnostic(DiagnosticCode.E_PROMPT_SYNTAX, relative, (), message))
+        except OSError:
+            return
 
     def read_builder(self, relative: str) -> None:
         kind = builder_kind(relative)

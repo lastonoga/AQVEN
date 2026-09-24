@@ -20,6 +20,7 @@ from starlette.types import ASGIApp
 
 from aqven.app.access import AccessGuard, AccessPolicy, local_access_policy
 from aqven.app.engine_host import EngineHost, EngineLaunch
+from aqven.app.hang_watch import HangWatch, NoHangWatch
 from aqven.app.health import HealthEndpoint, Readiness, ServerIdentity
 from aqven.app.instance import (
     HttpServerProbe,
@@ -187,6 +188,7 @@ class LocalServer:
     observer: LaunchObserver = field(default_factory=SilentObserver)
     readiness: Readiness = field(default_factory=Readiness)
     switch: StopSwitch = field(default_factory=StopSwitch)
+    hang_watch: HangWatch = field(default_factory=NoHangWatch)
 
     def request_stop(self) -> None:
         self.switch.request()
@@ -239,6 +241,7 @@ class LocalServer:
                 root=state.root,
             )
             stack.enter_context(stop_signals(self.switch))
+            stack.enter_context(self.hang_watch.watching(state))
             engine = await self.engine.start(EngineLaunch(state.root, studio.directory, settings))
             stack.push_async_callback(self.engine.stop)
             if self.switch.requested:
@@ -303,7 +306,9 @@ class LocalServer:
         address = record.url if options.headless else studio_browser_url(record, options)
         label = "server" if options.headless else "studio"
         elapsed_ms = round((time.monotonic() - started_at) * 1000)
-        self.announcer.announce(startup_message(label, address, record.mcp_url, Path(record.project_root), elapsed_ms))
+        notes = self.hang_watch.notes(record.pid)
+        root = Path(record.project_root)
+        self.announcer.announce(startup_message(label, address, record.mcp_url, root, elapsed_ms, notes))
         if options.chat_permission_mode == "trust":
             self.announcer.announce(TRUSTED_CHAT_WARNING)
         await self._open_browser(record, options)
@@ -320,13 +325,16 @@ def studio_browser_url(record: ServerRecord, options: ServerOptions) -> str:
     return f"{(options.dev_origin or record.url).rstrip('/')}/"
 
 
-def startup_message(label: str, address: str, mcp_url: str, project_root: Path, elapsed_ms: int) -> str:
+def startup_message(
+    label: str, address: str, mcp_url: str, project_root: Path, elapsed_ms: int, stack_notes: tuple[str, ...] = ()
+) -> str:
     lines = [
         f"  {bold('aqven')} {dim(f'v{engine_version()}')}",
         "",
         _item(label, cyan(address)),
         _item("mcp", cyan(mcp_url)),
         _item("docs", dim(DOCS_URL)),
+        *(_item("stacks", dim(note)) for note in stack_notes),
         *provider_status_lines(project_root),
         "",
         f"  {green('✓')} ready in {elapsed_ms}ms",

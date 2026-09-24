@@ -1,6 +1,8 @@
 import asyncio
+import logging
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from importlib import import_module
@@ -35,6 +37,9 @@ DEFAULT_WINDOW: Final = 1000
 GIT_BATCH_LIMIT: Final = 200
 DEFAULT_DEBOUNCE_MS: Final = 250
 WATCHER_ID: Final = "watchfiles"
+WATCHER_RESTART_SECONDS: Final = 1.0
+SIMULATION_DEBOUNCE_SECONDS: Final = 3.0
+WATCH_LOGGER: Final = logging.getLogger("aqven.server.watch")
 
 type ChangeKind = Literal["added", "modified", "deleted"]
 type ActorKind = Literal["human", "agent", "fs", "git", "system"]
@@ -156,19 +161,25 @@ def change_summary(changes: tuple[FileChange, ...]) -> str:
 @dataclass(slots=True)
 class SimulationFeed:
     run: SimulationRun
+    delay_seconds: float = SIMULATION_DEBOUNCE_SECONDS
     task: asyncio.Task[None] | None = None
 
     def schedule(self, hub: SpecEventHub, tree_hash: str) -> None:
+        previous = self.task
         self.cancel()
-        self.task = asyncio.create_task(self._publish(hub, tree_hash))
+        self.task = asyncio.create_task(self._publish(hub, tree_hash, previous))
 
-    def cancel(self) -> None:
+    def cancel(self) -> bool:
         task = self.task
-        self.task = None
-        if task is not None and not task.done():
-            task.cancel()
+        if task is None or task.done():
+            return False
+        task.cancel()
+        return True
 
-    async def _publish(self, hub: SpecEventHub, tree_hash: str) -> None:
+    async def _publish(self, hub: SpecEventHub, tree_hash: str, previous: asyncio.Task[None] | None) -> None:
+        await asyncio.sleep(self.delay_seconds)
+        if previous is not None:
+            await asyncio.wait((previous,))
         try:
             diagnostics = await self.run()
         except Exception:
@@ -202,8 +213,11 @@ class SpecEventHub:
         if not self.primed:
             await self.prime()
             return ()
+        held = self._hold_simulation()
         state = await self.workspace.state()
         changes = file_changes(self.snapshot, state.snapshot)
+        if held and not changes:
+            self._simulate(state.snapshot.tree_hash)
         if not changes:
             return ()
         self.simulated = ()
@@ -235,9 +249,13 @@ class SpecEventHub:
             self.simulation.cancel()
         await self._notify()
 
+    def _hold_simulation(self) -> bool:
+        return self.simulation is not None and self.simulation.cancel()
+
     def _simulate(self, tree_hash: str) -> None:
-        if self.simulation is not None:
-            self.simulation.schedule(self, tree_hash)
+        if self.simulation is None or self.closed:
+            return
+        self.simulation.schedule(self, tree_hash)
 
     async def follow(self, after_seq: int) -> AsyncIterator[SpecEvent]:
         cursor = after_seq
@@ -347,11 +365,38 @@ class ProjectChangeFilter(DefaultFilter):
         return super().__call__(change, path)
 
 
+async def refresh_guarded(hub: SpecEventHub) -> None:
+    try:
+        await hub.refresh()
+    except Exception:
+        WATCH_LOGGER.exception("project watcher could not refresh the workspace; it keeps watching")
+
+
 async def watch_project(
     hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS, simulate: bool = True
 ) -> None:
     if simulate and hub.simulation is None:
         hub.simulation = SimulationFeed(SubprocessSimulation(root))
-    await hub.refresh()
+    await refresh_guarded(hub)
     async for _ in AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop):
-        await hub.refresh()
+        await refresh_guarded(hub)
+
+
+async def supervise_watcher(
+    hub: SpecEventHub,
+    root: Path,
+    stop: asyncio.Event,
+    debounce_ms: int = DEFAULT_DEBOUNCE_MS,
+    restart_seconds: float = WATCHER_RESTART_SECONDS,
+) -> None:
+    while not stop.is_set():
+        try:
+            await watch_project(hub, root, stop, debounce_ms)
+        except Exception:
+            WATCH_LOGGER.exception("project watcher stopped; restarting in %.1fs", restart_seconds)
+        await _pause(stop, restart_seconds)
+
+
+async def _pause(stop: asyncio.Event, seconds: float) -> None:
+    with suppress(TimeoutError):
+        await asyncio.wait_for(stop.wait(), seconds)

@@ -78,9 +78,11 @@ class CodeLoader:
 
     def _ensure_search_path(self) -> None:
         location = str(self.search_path)
-        if location in sys.path:
+        if sys.path[:1] == [location]:
             return
-        sys.path.append(location)
+        if location in sys.path:
+            sys.path.remove(location)
+        sys.path.insert(0, location)
         importlib.invalidate_caches()
 
 
