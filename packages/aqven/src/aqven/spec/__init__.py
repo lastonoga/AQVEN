@@ -256,6 +256,7 @@ from aqven.spec.project import (
     ProviderSpec,
     Rename,
     RenameKind,
+    ResearchSettings,
     TrustPolicy,
 )
 from aqven.spec.prompts import (
@@ -485,6 +486,7 @@ __all__ = [
     "Rename",
     "RenameKind",
     "RenderedPrompt",
+    "ResearchSettings",
     "Retention",
     "RunContextKey",
     "SCALAR_TYPES",

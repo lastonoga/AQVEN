@@ -98,6 +98,29 @@
       "title": "Studio chat",
       "description": "The chat panel runs Claude Code or Codex on this computer with your own sign-in. Studio never reads or stores your credentials."
     },
+    "budget": {
+      "title": "Research budget",
+      "description": "A series whose estimated cost is above this cap, or has no estimate, waits for your approval before it starts.",
+      "loading": "Loading the research budget…",
+      "loadError": "The research budget could not be loaded.",
+      "retry": "Try again",
+      "cap": "Project spend cap",
+      "source": "Set in",
+      "sources": {
+        "project": "aqven.yaml",
+        "override": "a local override on this computer",
+        "default": "the default: aqven.yaml has no research block"
+      },
+      "unusable": "The local override is not a dollar amount",
+      "overrideNote": "A local override on this computer replaces the aqven.yaml cap ({project}).",
+      "notInProject": "not set",
+      "removeOverride": "Remove override",
+      "edit": "Cap in aqven.yaml",
+      "editHint": "Saved as research.spend_cap_usd in aqven.yaml and committed with the project.",
+      "inputAria": "Project spend cap in dollars",
+      "save": "Save",
+      "failed": "The change was not saved. {message}"
+    },
     "about": {
       "title": "About",
       "folder": "Folder",

@@ -12,7 +12,6 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Final, Protocol, cast
 
-from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
@@ -36,6 +35,7 @@ from aqven.console.project_template import (
     TemplateValues,
 )
 from aqven.diagnostics import format_text
+from aqven.write.round_trip import put_in_order, round_trip_yaml
 
 COMMAND: Final = "new"
 AQVEN_DISTRIBUTION: Final = "aqven"
@@ -49,6 +49,7 @@ PROJECT_SEPARATOR: Final = "-"
 PACKAGE_SEPARATOR: Final = "_"
 FILE_ENCODING: Final = "utf-8"
 ENV_EXAMPLE: Final = ".env.example"
+LIMITS_KEY: Final = "limits"
 
 
 class NewProjectFailed(Exception):
@@ -210,20 +211,6 @@ class GenerateModels:
         raise NewProjectFailed(f"aqven generate failed:\n{format_text(loaded.diagnostics)}")
 
 
-class _RoundTripYaml(Protocol):
-    preserve_quotes: bool
-
-    def load(self, stream: object) -> object: ...
-
-    def dump(self, data: object, stream: object) -> None: ...
-
-
-def _round_trip_yaml() -> _RoundTripYaml:
-    yaml = cast("_RoundTripYaml", YAML())
-    yaml.preserve_quotes = True
-    return yaml
-
-
 def patch_data_policy(provider: CommentedMap, allows_pii: bool | None) -> None:
     if allows_pii is None:
         return
@@ -233,7 +220,7 @@ def patch_data_policy(provider: CommentedMap, allows_pii: bool | None) -> None:
 
 
 def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
-    yaml = _round_trip_yaml()
+    yaml = round_trip_yaml()
     with aqven_yaml.open(encoding=FILE_ENCODING) as handle:
         data = cast("CommentedMap", yaml.load(handle))
     provider = cast("CommentedMap", cast("CommentedSeq", data["providers"])[0])
@@ -241,7 +228,7 @@ def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
     provider["api_key"] = f"ref:env/{wizard.provider_env_var}"
     patch_data_policy(provider, wizard.allows_pii)
     if wizard.budget_usd_micros is not None:
-        data["limits"] = {"usd_micros": wizard.budget_usd_micros}
+        put_in_order(data, LIMITS_KEY, {"usd_micros": wizard.budget_usd_micros})
     with aqven_yaml.open("w", encoding=FILE_ENCODING) as handle:
         yaml.dump(data, handle)
 
