@@ -52,6 +52,8 @@ def created(tmp_path_factory: pytest.TempPathFactory) -> Path:
         str(AQVEN_PACKAGE),
         "--no-sync",
         "--with-tests",
+        "--provider",
+        "openrouter",
     )
     assert completed.returncode == 0, completed.stderr
     return workspace / "media-shop"
@@ -115,6 +117,12 @@ def test_showcase_project_renames_the_package_everywhere(created: Path) -> None:
     assert f'package: "{PACKAGE}"' in project_file
     assert f"from {PACKAGE}.types import" in main_module
     assert "lumen" not in main_module
+
+
+def test_explicit_provider_keeps_the_showcase_data_policy(created: Path) -> None:
+    project = (created / MODULE / "aqven.yaml").read_text(encoding="utf-8")
+
+    assert "allows_pii: true" in project
 
 
 def test_showcase_project_checks_without_errors(created: Path) -> None:

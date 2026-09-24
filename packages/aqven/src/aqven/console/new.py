@@ -224,6 +224,14 @@ def _round_trip_yaml() -> _RoundTripYaml:
     return yaml
 
 
+def patch_data_policy(provider: CommentedMap, allows_pii: bool | None) -> None:
+    if allows_pii is None:
+        return
+    policy = cast("CommentedMap", provider["data_policy"])
+    policy["allows_pii"] = allows_pii
+    policy["allows_sensitive"] = allows_pii
+
+
 def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
     yaml = _round_trip_yaml()
     with aqven_yaml.open(encoding=FILE_ENCODING) as handle:
@@ -231,9 +239,7 @@ def patch_provider(aqven_yaml: Path, wizard: WizardAnswers) -> None:
     provider = cast("CommentedMap", cast("CommentedSeq", data["providers"])[0])
     provider["id"] = wizard.provider_id
     provider["api_key"] = f"ref:env/{wizard.provider_env_var}"
-    policy = cast("CommentedMap", provider["data_policy"])
-    policy["allows_pii"] = wizard.allows_pii
-    policy["allows_sensitive"] = wizard.allows_pii
+    patch_data_policy(provider, wizard.allows_pii)
     if wizard.budget_usd_micros is not None:
         data["limits"] = {"usd_micros": wizard.budget_usd_micros}
     with aqven_yaml.open("w", encoding=FILE_ENCODING) as handle:
