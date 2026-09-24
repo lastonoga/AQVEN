@@ -5,6 +5,7 @@ import { useTranslations } from "use-intl"
 import type { ApiFlow, ApiProject } from "@/domain"
 import { Surface, Tag, Text, Toolbar } from "@/components/studio"
 import { Button } from "@/components/ui/button"
+import { ServerIndicator } from "@/features/health"
 import { rememberFlow } from "@/lib/last-flow"
 import { ROUTE_ID, ROUTE_PATH } from "@/lib/routes"
 import type { PickerTargets } from "./flow-items"
@@ -109,6 +110,7 @@ export function ProjectBar({ project, flows }: ProjectBarProps) {
         end={
           <>
             <OpenRunBadge />
+            <ServerIndicator />
             <SettingsButton />
           </>
         }

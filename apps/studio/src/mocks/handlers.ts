@@ -6,6 +6,7 @@ import { liveDatasetCases, liveDatasets } from "./data/datasets"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
 import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
+import { liveHealth, liveServerStatus } from "./data/server"
 import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
 const LATENCY_MS = 20
@@ -264,6 +265,10 @@ export const handlers = [
   ...researchHandlers,
 
   http.get(`${API_BASE}/ready`, () => HttpResponse.json({ status: "ready", detail: null })),
+
+  http.get(`${API_BASE}/health`, () => HttpResponse.json(liveHealth)),
+
+  http.get(`${API_BASE}/status`, () => served(liveServerStatus)),
 
   http.get(`${API_BASE}/project`, () => served(liveProject)),
 

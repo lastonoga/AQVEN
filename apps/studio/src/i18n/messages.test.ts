@@ -10,6 +10,7 @@ const NAMESPACES = [
   "common",
   "domain",
   "shell",
+  "health",
   "chat",
   "flow",
   "cases",

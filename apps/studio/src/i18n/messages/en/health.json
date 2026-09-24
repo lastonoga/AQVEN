@@ -1,0 +1,68 @@
+{
+  "indicator": {
+    "aria": "Server status: {label}",
+    "checking": "Checking",
+    "connected": "Connected",
+    "attention": "Needs attention",
+    "starting": "Starting",
+    "stopping": "Stopping",
+    "disconnected": "Disconnected"
+  },
+  "details": {
+    "title": "Project server",
+    "version": "Version",
+    "runningSince": "Running since",
+    "pid": "Process ID",
+    "root": "Project root",
+    "notSeen": "Studio has not reached the server yet.",
+    "checksAria": "Server checks",
+    "pending": "Waiting for the first check.",
+    "failed": "Studio could not read the server checks.",
+    "down": "The server is not answering. Studio retries every {seconds} s.",
+    "phase": {
+      "starting": "The server is starting and indexing the project files.",
+      "stopping": "The server is shutting down."
+    }
+  },
+  "checks": {
+    "database": {
+      "ok": "The project database answers",
+      "warning": "The project database is slow to answer",
+      "error": "The project database is not answering — restart Studio"
+    },
+    "engine": {
+      "ok": "The run engine is running",
+      "warning": "The run engine is slow to answer",
+      "error": "The run engine is not answering — restart Studio"
+    },
+    "project": {
+      "ok": "Project files are valid",
+      "warning": "The project index is not up to date yet",
+      "error": "Project files have errors"
+    },
+    "model_keys": {
+      "ok": "Every provider in aqven.yaml has a key",
+      "warning": "Some providers have no key — <link>add them in Settings</link>",
+      "error": "Studio could not read the model keys — <link>open Settings</link>"
+    }
+  },
+  "reasons": {
+    "projectErrors": "{count, plural, one {# error} other {# errors}} in project files",
+    "projectQuarantined": "{count, plural, one {# file} other {# files}} could not be read: {names}",
+    "projectWarnings": "{count, plural, one {# warning} other {# warnings}} in project files",
+    "projectIndexing": "{count, plural, one {# file} other {# files}} waiting to be indexed",
+    "modelKeysMissing": "{count, plural, one {No key for {names} — <link>add it in Settings</link>} other {No keys for {names} — <link>add them in Settings</link>}}"
+  },
+  "banner": {
+    "title": "Studio lost the connection to the project server.",
+    "hint": "Start it again in a terminal:",
+    "copyAria": "Copy the command",
+    "copied": "Copied",
+    "retrying": "Retrying every {seconds} s",
+    "checkNow": "Check now"
+  },
+  "notice": {
+    "reconnected": "Reconnected",
+    "restarted": "The server restarted"
+  }
+}
