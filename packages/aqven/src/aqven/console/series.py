@@ -17,9 +17,18 @@ from aqven.app.runtime_file import ServerRecord
 from aqven.client import ApiErrorResponse, AqvenClient, UnexpectedResponse, new_client_op_id
 from aqven.console.command import EXIT_FAILED, EXIT_OK, EXIT_USAGE, PATH_HELP, PROGRAM, OutputFormat
 from aqven.console.project_env import open_project
-from aqven.series.model import SETTLED_STATUSES, MatrixRow, MetricCell, MetricColumn, MetricRole, SeriesId, SeriesStatus
+from aqven.series.model import (
+    SETTLED_STATUSES,
+    MatrixRow,
+    MetricCell,
+    MetricColumn,
+    MetricRole,
+    SeriesEstimate,
+    SeriesId,
+    SeriesStatus,
+)
 from aqven.series.protocol import MAX_WAIT_SECONDS
-from aqven.series.views import SeriesDetailView, SeriesGetResult, SeriesStarted, SeriesStartRequest
+from aqven.series.views import SeriesDetailView, SeriesGetResult, SeriesSpend, SeriesStarted, SeriesStartRequest
 from aqven.spec import CellVerdict, ExperimentId, SeriesMetric, SeriesSplit
 from aqven.spec.experiments import MAX_REPEATS
 
@@ -40,6 +49,7 @@ STATUS_EXITS: Final[Mapping[SeriesStatus, int]] = {
 USAGE_CODES: Final = frozenset({"NOT_FOUND", "NOT_RUNNABLE", "INPUT_INVALID", "REQUEST_INVALID"})
 SHOWN_ROLES: Final = frozenset({MetricRole.PRIMARY, MetricRole.GUARDRAIL, MetricRole.CHECK})
 ALWAYS_SHOWN: Final = frozenset({SeriesMetric.SUCCESS_RATE.value})
+USD_SOURCE_NOTES: Final[Mapping[str, str]] = {"bound": " (upper bound)"}
 
 
 def positive_int(text: str) -> int:
@@ -106,6 +116,10 @@ def usd(value: Decimal | None) -> str:
     return f"${cents:f}" if cents == value else f"${value.normalize():f}"
 
 
+def estimate_usd(estimate: SeriesEstimate) -> str:
+    return f"{usd(estimate.usd)}{USD_SOURCE_NOTES.get(estimate.usd_source, '')}"
+
+
 def number(value: float | None) -> str:
     return "n/a" if value is None else format(value, NUMBER_FORMAT)
 
@@ -121,14 +135,21 @@ def started_line(started: SeriesStarted) -> str:
     )
     return (
         f"series {started.series_id} started on {started.on}: {counted(estimate.attempts, 'attempt')} ({shape}), "
-        f"estimate {usd(estimate.usd)}, cap {usd(started.spend.cap_usd)}, status {started.status}"
+        f"estimate {estimate_usd(estimate)}, cap {usd(started.spend.cap_usd)}, status {started.status}"
     )
+
+
+def spent_text(spend: SeriesSpend) -> str:
+    if spend.unpriced_attempts == 0:
+        return usd(spend.usd)
+    unpriced = counted(spend.unpriced_attempts, "attempt")
+    return f"at least {usd(spend.usd)} ({unpriced} on a model without a known price)"
 
 
 def progress_line(series: SeriesDetailView) -> str:
     return (
         f"{series.progress.done}/{series.progress.total} attempts, "
-        f"{usd(series.spend.usd)} of {usd(series.spend.cap_usd)}, status {series.status}"
+        f"{spent_text(series.spend)} of {usd(series.spend.cap_usd)}, status {series.status}"
     )
 
 
@@ -192,7 +213,7 @@ def approval_reason(series: SeriesDetailView) -> str:
     if estimate.usd is None:
         return f"there is no cost estimate, and the series may spend up to {usd(series.spend.cap_usd)}"
     if estimate.usd > estimate.project_cap_usd:
-        return f"the estimate {usd(estimate.usd)} is above the project spend cap {project_cap}"
+        return f"the estimate {estimate_usd(estimate)} is above the project spend cap {project_cap}"
     return f"the series cap {usd(series.spend.cap_usd)} is above the project spend cap {project_cap}"
 
 

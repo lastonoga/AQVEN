@@ -18,7 +18,16 @@ from aqven.engine.request import RunRecord
 from aqven.engine.runtime import active_runtime
 from aqven.ir import IrHash
 from aqven.runtime.address import JsonObject, RunId
-from aqven.series.facts import AttemptInspection, RunTrace, event_cost, inspection_of, run_facts
+from aqven.series.facts import (
+    NO_SPEND,
+    AttemptInspection,
+    RunSpend,
+    RunTrace,
+    event_spend,
+    inspection_of,
+    run_facts,
+    total_spend,
+)
 from aqven.series.ids import attempt_id, judge_run_id, key_of, subject_run_id
 from aqven.series.model import (
     AnalysisInput,
@@ -531,7 +540,11 @@ async def inspect_attempt(ticket_document: JsonObject, record_document: JsonObje
 
 
 def finished_row(
-    ticket: AttemptTicket, inspection: AttemptInspection, checks: tuple[CheckValue, ...], now: datetime
+    ticket: AttemptTicket,
+    inspection: AttemptInspection,
+    checks: tuple[CheckValue, ...],
+    judged: Sequence[JudgeReplyRecord],
+    now: datetime,
 ) -> AttemptRecord:
     return AttemptRecord(
         attempt_id=ticket.attempt_id,
@@ -553,6 +566,7 @@ def finished_row(
         schema_valid_first_try=inspection.schema_valid_first_try,
         cost_usd=inspection.cost_usd,
         check_cost_usd=check_cost(checks),
+        unpriced_calls=inspection.unpriced_calls + sum(reply.unpriced_calls for reply in judged),
         tokens_in=inspection.tokens_in,
         tokens_out=inspection.tokens_out,
         latency_ms=inspection.latency_ms,
@@ -597,23 +611,24 @@ async def close_attempt(
         package=record.plan.package,
         input_type=variant.input_type,
     )
-    answers = {check_id: JudgeReplyRecord.model_validate(raw).reply() for check_id, raw in replies.items()}
+    judged = {check_id: JudgeReplyRecord.model_validate(raw) for check_id, raw in replies.items()}
+    answers = {check_id: reply.reply() for check_id, reply in judged.items()}
     checks = await AttemptScorer(types=loader, code=loader).score(scoring, answers)
     now = utc_now()
-    row = finished_row(ticket, inspection, checks, now)
+    row = finished_row(ticket, inspection, checks, tuple(judged.values()), now)
     await store.close_attempt(row)
     return summary_of(row, now).model_dump(mode="json")
 
 
-async def run_spend(log: RunEventLog, run_id: RunId) -> Decimal:
+async def run_spend(log: RunEventLog, run_id: RunId) -> RunSpend:
     if await DBOS.get_workflow_status_async(run_id) is None:
-        return ZERO
-    return event_cost(await log.snapshot(run_id))
+        return NO_SPEND
+    return event_spend(await log.snapshot(run_id))
 
 
-async def spent_on(run_ids: Sequence[RunId]) -> Decimal:
+async def spent_on(run_ids: Sequence[RunId]) -> RunSpend:
     log = RunEventLog()
-    return sum([await run_spend(log, run_id) for run_id in run_ids], ZERO)
+    return total_spend([await run_spend(log, run_id) for run_id in run_ids])
 
 
 @DBOS.step(name=FAIL_STEP)
@@ -627,7 +642,8 @@ async def fail_attempt(series_id: str, ordinal: int, outcome: str, message: str)
     judges = [check.check_id for check in record.plan.checks if check.judge is not None]
     earlier = next((row for row in await store.attempts(record.series_id) if row.attempt_id == attempt), None)
     now = utc_now()
-    judged = [judge_run_id(attempt, check_id) for check_id in judges]
+    subject = await spent_on([run_id])
+    checks = await spent_on([judge_run_id(attempt, check_id) for check_id in judges])
     row = AttemptRecord(
         attempt_id=attempt,
         series_id=record.series_id,
@@ -641,8 +657,9 @@ async def fail_attempt(series_id: str, ordinal: int, outcome: str, message: str)
         outcome=OutcomeClass(outcome),
         passed=attempt_passed(OutcomeClass(outcome), ()),
         error_message=message,
-        cost_usd=await spent_on([run_id]),
-        check_cost_usd=await spent_on(judged),
+        cost_usd=subject.cost_usd,
+        check_cost_usd=checks.cost_usd,
+        unpriced_calls=subject.unpriced_calls + checks.unpriced_calls,
         started_at=now if earlier is None else earlier.started_at,
         finished_at=now,
     )
@@ -656,10 +673,18 @@ def unwrapped(output: JsonValue) -> JsonObject | None:
 
 
 def judge_reply(record: RunRecord, run_id: RunId) -> JudgeReplyRecord:
+    usage = record.usage
     if record.status == "completed":
-        return JudgeReplyRecord(output=unwrapped(record.output), cost_usd=record.usage.cost_usd, run_id=run_id)
+        return JudgeReplyRecord(
+            output=unwrapped(record.output),
+            cost_usd=usage.cost_usd,
+            run_id=run_id,
+            unpriced_calls=usage.unpriced_calls,
+        )
     reason = record.error.message if record.error is not None else f"the judge run was {record.status}"
-    return JudgeReplyRecord(output=None, cost_usd=record.usage.cost_usd, run_id=run_id, error=reason)
+    return JudgeReplyRecord(
+        output=None, cost_usd=usage.cost_usd, run_id=run_id, error=reason, unpriced_calls=usage.unpriced_calls
+    )
 
 
 async def run_judge(ticket: AttemptTicket, check_id: str, document: JsonObject) -> JsonObject:

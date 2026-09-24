@@ -6,7 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { textVariants } from "./text"
 import type { Tone } from "./tone"
 
-export type ChoiceAppearance = "segmented" | "chip" | "card" | "toggle"
+export type ChoiceAppearance = "segmented" | "chip" | "card" | "toggle" | "tabs"
 
 export type ChoiceSize = "sm" | "md"
 
@@ -51,6 +51,7 @@ const choiceListVariants = cva("", {
       chip: "flex items-center gap-1.75 overflow-x-auto",
       card: "flex items-center gap-2 overflow-x-auto pb-0.5",
       toggle: "flex items-center gap-1.75",
+      tabs: "flex min-w-0 items-stretch gap-1 self-stretch overflow-x-auto",
     },
   },
 })
@@ -68,6 +69,11 @@ const choiceItemVariants = cva("", {
       toggle: cn(
         "inline-flex h-7 items-center gap-1.5 rounded-md border border-transparent px-2.5 whitespace-nowrap text-muted-foreground hover:text-foreground selected:border-tone-border selected:bg-tone-bg selected:text-tone-fg",
         textVariants({ role: "meta", weight: "medium" }),
+        "leading-none",
+      ),
+      tabs: cn(
+        "inline-flex items-center border-y-2 border-transparent px-2 whitespace-nowrap text-muted-foreground hover:text-foreground selected:border-b-foreground selected:text-foreground",
+        textVariants({ role: "prose", weight: "medium" }),
         "leading-none",
       ),
     },

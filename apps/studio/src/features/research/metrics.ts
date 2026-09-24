@@ -34,6 +34,9 @@ const MINUS = "−"
 
 export const signedValue = (value: number, unit: MetricUnit): string => `${value < 0 ? MINUS : PLUS}${metricValue(Math.abs(value), unit)}`
 
+export const signedMargin = (margin: number, unit: MetricUnit, relative: boolean, negative: boolean): string =>
+  `${negative ? MINUS : PLUS}${marginText(margin, unit, relative)}`
+
 export const intervalText = (low: number, high: number, unit: MetricUnit): string => `${metricValue(low, unit)}${RANGE_DASH}${metricValue(high, unit)}`
 
 export const directionGlyph = (direction: MetricDirection): string => DIRECTION_GLYPH[direction]

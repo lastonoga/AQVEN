@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
 import type { ApiRun, RunId } from "@/domain"
-import { Dot, Empty, PickerCommand, PickerCount, PickerOption, PickerTrigger, Tag, Text } from "@/components/studio"
+import { Dot, PickerCommand, PickerCount, PickerOption, PickerTrigger, Tag, Text } from "@/components/studio"
 import { CommandEmpty, CommandInput, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRelativeTime } from "@/i18n/format"
@@ -77,7 +77,7 @@ export function RunsStrip({ runs, selected, list }: RunsStripProps) {
   const navigate = useNavigate()
   const params = runsRouteApi.useParams()
   const [open, setOpen] = useState(false)
-  if (runs.length === 0) return <Empty title={t(`lists.${list}.empty`)} hint={t(`lists.${list}.emptyHint`)} />
+  if (runs.length === 0) return null
   const rows = runRows(runs, selected, now)
   const current = rows.find((row) => row.selected)
   const choose = (id: RunId): void => {

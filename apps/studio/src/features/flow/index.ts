@@ -1,1 +1,7 @@
 export { CanvasScreen } from "./canvas-screen"
+export { GraphCanvas, type GraphCanvasProps } from "./canvas/graph-canvas"
+export { stepSchemas, withFieldCounts, type FlowStepSchemas, type StepSchemas } from "./field-counts"
+export { InspectorPanel, type InspectorPage, type InspectorPanelProps } from "./inspector-panel"
+export { buildGraph, type CanvasGraph } from "./layout"
+export { specDescription } from "./node-facts"
+export { PromptBody, SchemaBody, type SchemaBodyProps } from "./node-inspector"

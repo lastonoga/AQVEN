@@ -1,5 +1,5 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiArm, ApiArmFlow, ApiExperimentDetail, ApiExperimentSummary, ApiNode, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
+import type { ApiArm, ApiArmFlow, ApiExperimentDetail, ApiExperimentSummary, ApiNode, ApiPromptDetail, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveDatasets } from "./data/datasets"
 import { liveExperiments } from "./data/experiments"
@@ -19,6 +19,7 @@ import {
   type Attempt,
   type LaunchBody,
   type LookSeed,
+  type LookStages,
   type SeriesState,
 } from "./data/research"
 
@@ -72,11 +73,17 @@ const textAt = (body: Readonly<Record<string, unknown>>, key: string): string =>
   return typeof value === "string" ? value : ""
 }
 
+const stagesOf = (look: Readonly<Record<string, unknown>>): LookStages | null => {
+  const start = textAt(look, "start_node")
+  const end = textAt(look, "end_node")
+  return start === "" || end === "" ? null : { start, end }
+}
+
 const lookOf = (body: unknown): LookSeed | null => {
   if (!isRecord(body) || !isRecord(body["look"])) return null
   const look = body["look"]
   const names = Array.isArray(look["case_names"]) ? look["case_names"].filter((name): name is string => typeof name === "string") : []
-  return { flow: textAt(look, "flow_id"), dataset: textAt(look, "dataset_id"), cases: names }
+  return { flow: textAt(look, "flow_id"), dataset: textAt(look, "dataset_id"), cases: names, stages: stagesOf(look) }
 }
 
 const byStart = (left: SeriesState, right: SeriesState): number => Date.parse(right.startedAt) - Date.parse(left.startedAt)
@@ -137,6 +144,7 @@ const freshSeries = (fields: Pick<SeriesState, "experiment" | "look" | "on" | "r
   cellVerdict: "pass",
   waiting: {},
   errorEvery: 0,
+  unpriced: 0,
   approvedBy: null,
 })
 
@@ -214,6 +222,45 @@ const armNode = (experimentId: string, arm: ApiArm, step: ApiArm["steps"][number
   downstream: arm.steps.slice(index + 1).map((item) => item.node_id),
 })
 
+type ArmStep = ApiArm["steps"][number]
+
+const textField = (description: string) => ({ type: "string", description })
+
+const ARM_INPUT = { type: "object", properties: { message: textField("Case text the customer wrote") }, required: ["message"] }
+
+const ARM_OUTPUT = {
+  type: "object",
+  properties: { rationale: textField("Why this intent"), intent: textField("Intent of the case"), confidence: { type: "number", description: "Confidence from 0 to 1" } },
+  required: ["rationale", "intent", "confidence"],
+}
+
+const armStepSchemas = (arm: ApiArm) =>
+  Object.fromEntries(arm.steps.map((step, index) => [step.node_id, { in: index === 0 ? ARM_INPUT : ARM_OUTPUT, out: ARM_OUTPUT, form: null }]))
+
+const ARM_PROMPT_TEXT = "{% message system %}\nYou decide the intent of a case to the support desk.\n{% endmessage %}\n{% message user %}\n{{ message }}\n{{ output_format }}\n{% endmessage %}\n"
+
+const armPrompt = (experimentId: string, arm: ApiArm, step: ArmStep): ApiPromptDetail => ({
+  flow_id: arm.arm_id,
+  node_id: step.node_id,
+  inference_id: step.node_id,
+  level: 2,
+  path: `experiments/${experimentId}/arms/${arm.arm_id}/nodes/${step.node_id}/${step.node_id}.prompt.md`,
+  file_hash: null,
+  builder_ref: null,
+  has_draft: false,
+  draft_stale: false,
+  problems_count: 0,
+  source: { text: ARM_PROMPT_TEXT, file_hash: null },
+  analysis: null,
+  slots: [{ name: "message", type_id: "Text", used: true }],
+  unused_inputs: [],
+  variant_files: [],
+  problems: [],
+})
+
+const armPrompts = (experimentId: string, arm: ApiArm): Readonly<Record<string, ApiPromptDetail>> =>
+  Object.fromEntries(arm.steps.filter((step) => step.kind === "llm").map((step) => [step.node_id, armPrompt(experimentId, arm, step)]))
+
 const armFlowOf = (experiment: ApiExperimentDetail, arm: ApiArm): ApiArmFlow => ({
   experiment_id: experiment.experiment_id,
   arm_id: arm.arm_id,
@@ -221,7 +268,8 @@ const armFlowOf = (experiment: ApiExperimentDetail, arm: ApiArm): ApiArmFlow => 
   description: arm.description,
   order: arm.steps.map((step) => step.node_id),
   nodes: arm.steps.map((step, index) => armNode(experiment.experiment_id, arm, step, index)),
-  schemas: { flow_id: arm.arm_id, input: null, output: null, context: [], nodes: {} },
+  schemas: { flow_id: arm.arm_id, input: null, output: null, context: [], nodes: armStepSchemas(arm) },
+  prompts: armPrompts(experiment.experiment_id, arm),
 })
 
 const attemptSnapshot = (series: SeriesState, attempt: Attempt, template: ApiRunSnapshot): ApiRunSnapshot => ({
@@ -292,9 +340,11 @@ export const researchHandlers = [
   }),
 
   http.get(`${API_BASE}/series`, ({ request }) => {
-    const experimentId = new URL(request.url).searchParams.get("experiment_id")
-    const rows = experimentId === null ? [...states].sort(byStart) : seriesOf(experimentId)
-    return served(page(rows.map(summaryOf)))
+    const query = new URL(request.url).searchParams
+    const experimentId = query.get("experiment_id")
+    const flowId = query.get("flow_id")
+    const rows = (experimentId === null ? [...states].sort(byStart) : seriesOf(experimentId)).map(summaryOf)
+    return served(page(flowId === null ? rows : rows.filter((row) => row.flow_id === flowId)))
   }),
 
   http.get(`${API_BASE}/series/:seriesId`, ({ params }) => {

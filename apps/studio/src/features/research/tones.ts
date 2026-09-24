@@ -1,5 +1,6 @@
-import type { AttemptOutcome, CellVerdict, SeriesStatus, StabilityClass, VariantRole, VerdictState } from "@/domain"
+import type { AttemptOutcome, CellVerdict, SeriesSplit, SeriesStatus, StabilityClass, VariantRole, VerdictState } from "@/domain"
 import type { Tone } from "@/components/studio"
+import type { RowRole } from "./variant-table"
 
 export const SERIES_STATUS_TONE: Readonly<Record<SeriesStatus, Tone>> = {
   running: "primary",
@@ -44,4 +45,14 @@ export const ROLE_TONE: Readonly<Record<VariantRole, Tone>> = {
   baseline: "primary",
   candidate: "llm",
   other: "neutral",
+}
+
+export const ROW_ROLE_TONE: Readonly<Record<RowRole, Tone>> = {
+  ...ROLE_TONE,
+  tested: "tool",
+}
+
+export const SPLIT_TONE: Readonly<Record<SeriesSplit, Tone>> = {
+  dev: "primary",
+  holdout: "tool",
 }

@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from decimal import Decimal
 from typing import Final, Literal
 
 from aqven.engine.policies import PolicyError
@@ -11,6 +10,7 @@ from aqven.ports.execution import (
     NodeSkipped,
     NodeSucceeded,
     NodeUsage,
+    combined_usage,
 )
 from aqven.runtime.executions import RunError
 
@@ -37,13 +37,7 @@ class UsageTally:
 
     @property
     def total(self) -> NodeUsage:
-        return NodeUsage(
-            cost_usd=sum((part.cost_usd for part in self.parts), Decimal(0)),
-            tokens_in=sum(part.tokens_in for part in self.parts),
-            tokens_out=sum(part.tokens_out for part in self.parts),
-            requests=sum(part.requests for part in self.parts),
-            tool_calls=sum(part.tool_calls for part in self.parts),
-        )
+        return combined_usage(self.parts)
 
 
 def control_error(scope: ExecutionScope, code: ControlErrorCode, message: str) -> RunError:

@@ -18,12 +18,31 @@
     "current": "current"
   },
   "actions": {
-    "runSelected": "Run selected ({count})",
     "upload": "Upload CSV",
     "addCases": "Ask the agent to add cases",
-    "writeCases": "Ask the agent to write cases",
-    "flowOnly": "Only cases of this flow run from here.",
+    "writeCases": "Ask the agent to write cases"
+  },
+  "selection": {
+    "aria": "Selected cases",
+    "count": "{count} selected",
+    "clear": "Clear",
+    "run": "Run {count}",
+    "flowOnly": "Only cases of this flow run from here",
     "failed": "The selected cases could not start: {reason}"
+  },
+  "stages": {
+    "aria": "Stages to run",
+    "label": "Stages",
+    "from": "From stage",
+    "to": "To stage"
+  },
+  "look": {
+    "whole": "Whole flow",
+    "checking": "Checking node_outputs…",
+    "only": "Earlier stages come from node_outputs",
+    "unavailable": "Cannot start here",
+    "blocked": "{count, plural, one {# case lacks} other {# cases lack}} node_outputs for this start: {cases}",
+    "failed": "Could not check the stages: {reason}"
   },
   "empty": {
     "title": "No datasets yet",
@@ -31,12 +50,18 @@
   },
   "filter": {
     "aria": "Filter cases",
-    "tagsAria": "Filter by tag {key}",
     "search": "Filter by case name",
     "shown": "{shown} of {total, plural, one {# case} other {# cases}}",
     "clear": "Clear filters",
     "noMatch": "No case matches these filters",
-    "tagChip": "{tag}, {count, plural, one {# case} other {# cases}}"
+    "add": "Filter",
+    "dimensionsAria": "Tag dimensions",
+    "valuesAria": "Values of {key}",
+    "values": "{count, plural, one {# value} other {# values}}",
+    "cases": "{count, plural, one {# case} other {# cases}}",
+    "back": "All tags",
+    "chip": "{key}: {value}",
+    "remove": "Remove filter {tag}"
   },
   "list": {
     "aria": "Cases",
@@ -47,14 +72,13 @@
     "select": "Select {name}",
     "selectShown": "Select the shown cases",
     "deselectShown": "Deselect the shown cases",
-    "selected": "{count} selected",
-    "clearSelection": "Clear selection",
     "hasExpected": "Has an expected output",
     "noExpected": "No expected output",
     "noOutputs": "No saved node outputs",
     "outputsOf": "Saved outputs of {nodes}",
     "none": "—",
-    "yes": "✓"
+    "yes": "✓",
+    "moreTags": "+{count}"
   },
   "detail": {
     "aria": "Case {name}",
@@ -67,17 +91,16 @@
     "fields": "{count, plural, one {# field} other {# fields}}",
     "experiments": "Experiments using this case",
     "noExperiments": "No experiment selects this case yet.",
-    "allCases": "all cases"
+    "allCases": "all cases",
+    "tags": "Tags"
   },
   "run": {
     "title": "Run this case",
-    "hint": "One run of the flow on this case, over the stages you pick. The run opens in Runs.",
-    "selectedRange": "{start} → {end} · {count, plural, one {# stage} other {# stages}}",
-    "loadingRange": "Checking the case values for each stage…",
-    "rangeUnavailable": "This range cannot run: {detail}",
+    "hint": "One run over the chosen stages. It opens in Runs.",
+    "loadingRange": "Checking the case values…",
+    "rangeUnavailable": "Cannot run: {detail}",
     "rangeMissingGeneric": "required inputs are missing",
-    "rangeOnly": "Only stages inside this range execute. Earlier values come from the case.",
-    "rangeLegend": "Click a stage to select it alone. Drag the range to move it or its edges to resize it. Faded stages cannot be starting points with these case values.",
+    "rangeOnly": "Earlier stages come from the case",
     "start": "Start run",
     "starting": "Starting…",
     "failed": "Could not start this case."

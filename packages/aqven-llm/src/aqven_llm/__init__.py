@@ -42,6 +42,19 @@ from aqven_llm.factory import (
 )
 from aqven_llm.keys import ProviderKeys, ProviderKeyStore, environment_key, provider_key_env
 from aqven_llm.media import AudioOutput, MediaOutput, OpenRouterMediaModel
+from aqven_llm.pricing import (
+    PRICE_SOURCE_FACTORIES,
+    PRICE_SOURCE_GROUP,
+    GenaiPrices,
+    OpenRouterPrices,
+    PriceLookup,
+    PriceSource,
+    PriceSourceFactory,
+    TokenPrice,
+    build_price_lookup,
+    entry_point_price_source,
+    installed_price_sources,
+)
 from aqven_llm.routing import PRIVATE_ROUTING, OpenRouterRouting
 from aqven_llm.support import ProviderSupport, Readiness, entry_support, model_streams, provider_support
 from aqven_llm.target import ModelTarget
@@ -52,6 +65,8 @@ __all__ = [
     "MODEL_BUILDERS",
     "OPENAI_COMPATIBLE",
     "OPENAI_COMPATIBLE_KIND",
+    "PRICE_SOURCE_FACTORIES",
+    "PRICE_SOURCE_GROUP",
     "PRIVATE_ROUTING",
     "PROVIDERS",
     "AudioOutput",
@@ -59,6 +74,7 @@ __all__ = [
     "CustomProvider",
     "FactoryProblem",
     "FactorySignature",
+    "GenaiPrices",
     "HttpClientFactory",
     "MediaOutput",
     "MissingProviderKey",
@@ -68,7 +84,11 @@ __all__ = [
     "ModelTarget",
     "OpenAICompatibleFactory",
     "OpenRouterMediaModel",
+    "OpenRouterPrices",
     "OpenRouterRouting",
+    "PriceLookup",
+    "PriceSource",
+    "PriceSourceFactory",
     "ProviderCapabilities",
     "ProviderContext",
     "ProviderEntry",
@@ -87,15 +107,19 @@ __all__ = [
     "ProviderSupport",
     "ProviderUnavailable",
     "Readiness",
+    "TokenPrice",
     "UnknownProvider",
+    "build_price_lookup",
     "class_streams",
     "default_http_client",
     "ensure_streaming",
+    "entry_point_price_source",
     "entry_point_provider",
     "entry_support",
     "environment_key",
     "factory_signature",
     "install_hint",
+    "installed_price_sources",
     "installed_providers",
     "modality_name",
     "model_streams",

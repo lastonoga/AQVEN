@@ -1,6 +1,7 @@
 import { useTranslations } from "use-intl"
 import type { BuiltinNames } from "./metrics"
-import type { QuestionCopy, ReasonCopy, SubjectCopy } from "./presenters"
+import type { LaunchEstimate } from "@/domain"
+import { spendEstimate, type QuestionCopy, type ReasonCopy, type SubjectCopy } from "./presenters"
 
 export function useBuiltinNames(): BuiltinNames {
   const t = useTranslations("research.vocabulary.builtinMetric")
@@ -43,12 +44,10 @@ export function useSubjectCopy(): SubjectCopy {
   }
 }
 
-export function useSubjectDetailCopy(): SubjectCopy {
-  const t = useTranslations("research.experiment.run.subjectText")
-  return {
-    flow: (flow) => t("flow", { flow }),
-    range: (flow, range) => t("range", { flow, range }),
-    arm: (arm) => t("arm", { arm }),
-    armRange: (arm, range) => t("armRange", { arm, range }),
+export function useSpendText(): (estimate: Pick<LaunchEstimate, "usd" | "usdSource">) => string {
+  const t = useTranslations("research.experiment.launch.estimate")
+  return (estimate) => {
+    const spend = spendEstimate(estimate)
+    return t(spend.source, { usd: spend.usd })
   }
 }

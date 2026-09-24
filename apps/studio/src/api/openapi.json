@@ -11380,6 +11380,13 @@
           },
           "schemas": {
             "$ref": "#/components/schemas/FlowSchemas"
+          },
+          "prompts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PromptDetail"
+            },
+            "type": "object",
+            "title": "Prompts"
           }
         },
         "type": "object",
@@ -11390,7 +11397,8 @@
           "description",
           "order",
           "nodes",
-          "schemas"
+          "schemas",
+          "prompts"
         ],
         "title": "ArmFlowView"
       },
@@ -16140,6 +16148,15 @@
           "verdict"
         ],
         "title": "Contrast"
+      },
+      "CostSource": {
+        "type": "string",
+        "enum": [
+          "provider",
+          "prices",
+          "genai",
+          "unknown"
+        ]
       },
       "Count": {
         "type": "integer",
@@ -22901,6 +22918,16 @@
                 "type": "null"
               }
             ]
+          },
+          "cost_source": {
+            "$ref": "#/components/schemas/CostSource",
+            "default": "provider"
+          },
+          "unpriced_calls": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Unpriced Calls",
+            "default": 0
           }
         },
         "type": "object",
@@ -27979,6 +28006,7 @@
             "enum": [
               "history",
               "prices",
+              "bound",
               "unknown"
             ],
             "title": "Usd Source"
@@ -28275,6 +28303,12 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Cap Usd"
+          },
+          "unpriced_attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Unpriced Attempts",
+            "default": 0
           }
         },
         "type": "object",

@@ -44,7 +44,7 @@ const lastRunMeta = (lastRun: ApiRunBrief | null, copy: FlowRowCopy): readonly s
   return [copy.run(runRef(lastRun.run_id)), copy.since(lastRun.started_at)]
 }
 
-const flowRow = (flow: ApiFlow, currentId: FlowId, copy: FlowRowCopy): FlowRow => {
+const flowRow = (flow: ApiFlow, currentId: FlowId | null, copy: FlowRowCopy): FlowRow => {
   const current = flow.flow_id === currentId
   return {
     id: toFlowId(flow.flow_id),
@@ -58,7 +58,7 @@ export const projectName = (project: ApiProject): string => project.package ?? p
 
 export const projectInitial = (project: ApiProject): string => projectName(project).slice(0, 1).toUpperCase()
 
-export const flowRows = (flows: readonly ApiFlow[], currentId: FlowId, copy: FlowRowCopy): readonly FlowRow[] =>
+export const flowRows = (flows: readonly ApiFlow[], currentId: FlowId | null, copy: FlowRowCopy): readonly FlowRow[] =>
   flows.map((flow) => flowRow(flow, currentId, copy))
 
 export const runBadge = (run: ApiRunBrief): RunBadgeView => ({

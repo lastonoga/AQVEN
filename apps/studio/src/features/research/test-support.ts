@@ -37,7 +37,7 @@ export const seriesDetail = (fields: Partial<SeriesDetail>): SeriesDetail => ({
   variants: [ids.variantId("gpt"), ids.variantId("mistral")],
   status: "done",
   progress: { done: 12, total: 12 },
-  spend: { usd: 0.4, capUsd: 1 },
+  spend: { usd: 0.4, capUsd: 1, unpricedAttempts: 0 },
   verdict: null,
   waits: 0,
   startedAt: ids.isoDateTime("2026-09-21T14:05:18Z"),

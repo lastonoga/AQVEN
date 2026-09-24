@@ -12,6 +12,7 @@ from pydantic_ai.usage import RequestUsage, RunUsage, UsageLimits
 from aqven.models.callsite import current_call_site
 from aqven.models.streams import RelayedStream, StreamContext, StreamFirstModel
 from aqven.models.usage import DiscardUsage, RequestCost, UsageSink, live_cost
+from aqven.ports.prices import NO_PRICES, CachedPrices
 
 
 @dataclass(slots=True)
@@ -59,15 +60,17 @@ class LimiterModel(StreamFirstModel):
         concurrency: AbstractConcurrencyLimiter | None = None,
         budget: UsageBudget | None = None,
         usage_sink: UsageSink | None = None,
+        prices: CachedPrices = NO_PRICES,
     ) -> None:
         super().__init__(wrapped)
         self.model_ref = model_ref
         self.concurrency = concurrency
         self.budget = budget
         self.usage_sink: UsageSink = DiscardUsage() if usage_sink is None else usage_sink
+        self.prices = prices
 
     def settle(self, response: ModelResponse) -> RequestCost:
-        cost = live_cost(current_call_site(), self.model_ref, response)
+        cost = live_cost(current_call_site(), self.model_ref, response, self.prices)
         self.usage_sink.record(cost)
         if self.budget is not None:
             self.budget.after_response(cost.usage, cost.cost)

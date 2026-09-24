@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Literal, Protocol, assert_never, runtime_checkable
@@ -23,9 +23,10 @@ from aqven.ir import (
     IrHash,
 )
 from aqven.runtime.address import ExecutionAddress, JsonObject, RequestModel, ResourceModel, RunId
+from aqven.runtime.costs import EXACT_COST, weakest_cost_source
 from aqven.runtime.events import OutputPartKind, RunEvent
 from aqven.runtime.executions import RunError
-from aqven.runtime.vocabulary import AttemptCauseKind, RunMode
+from aqven.runtime.vocabulary import AttemptCauseKind, CostSource, RunMode
 from aqven.spec import FlowId, NodeId
 
 
@@ -83,6 +84,21 @@ class NodeUsage(ResourceModel):
     tokens_out: Annotated[int, Field(ge=0)] = 0
     requests: Annotated[int, Field(ge=0)] = 0
     tool_calls: Annotated[int, Field(ge=0)] = 0
+    cost_source: CostSource = EXACT_COST
+    unpriced_calls: Annotated[int, Field(ge=0)] = 0
+
+
+def combined_usage(parts: Iterable[NodeUsage]) -> NodeUsage:
+    listed = tuple(parts)
+    return NodeUsage(
+        cost_usd=sum((Decimal(part.cost_usd) for part in listed), Decimal(0)),
+        tokens_in=sum(part.tokens_in for part in listed),
+        tokens_out=sum(part.tokens_out for part in listed),
+        requests=sum(part.requests for part in listed),
+        tool_calls=sum(part.tool_calls for part in listed),
+        cost_source=weakest_cost_source(part.cost_source for part in listed),
+        unpriced_calls=sum(part.unpriced_calls for part in listed),
+    )
 
 
 class NodeSucceeded(ResourceModel):

@@ -1,6 +1,5 @@
 import type {
   CaseTags,
-  CheckSource,
   CompareQuestion,
   EstimateReason,
   ExperimentDetail,
@@ -8,29 +7,27 @@ import type {
   ExperimentQuestion,
   ExperimentSubject,
   ExperimentSummary,
-  ExperimentVariant,
   Guardrail,
   LatestSeries,
   LaunchEstimate,
   LaunchRequest,
   MetricColumn,
+  MetricDirection,
   NodeRange,
   NoninferiorQuestion,
-  QuestionKind,
   SeriesSplit,
   SeriesStatus,
   SeriesSummary,
   ThresholdBound,
   ThresholdQuestion,
-  VariantAssignment,
-  VariantRole,
+  UsdSource,
   VerdictState,
 } from "@/domain"
 import { ACTIVE_SERIES_STATUSES } from "@/domain"
 import type { DateTimeFormatOptions } from "use-intl"
 import type { Tone } from "@/components/studio"
 import { joinMeta, runRef, usd } from "@/lib/format"
-import { marginText, metricName, metricValue, unitOf, type BuiltinNames } from "./metrics"
+import { marginText, metricName, metricValue, signedMargin, unitOf, type BuiltinNames } from "./metrics"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 
 export type Badge = { readonly label: string; readonly tone: Tone; readonly detail: string | null }
@@ -85,20 +82,6 @@ type ReasonValues = {
 
 export type ReasonCopy = { readonly [K in EstimateReason]: (values: ReasonValues) => string }
 
-export type AssignmentRow = {
-  readonly key: string
-  readonly variant: ExperimentVariant
-  readonly assignment: VariantAssignment
-  readonly first: boolean
-}
-
-export type SourceCopy = {
-  readonly builtin: (use: string, fields: string) => string
-  readonly builtinAll: (use: string) => string
-  readonly judge: (inference: string, agent: string, model: string) => string
-  readonly judgeAgentless: (inference: string) => string
-}
-
 export type FilterPatch = { readonly [K in keyof ExperimentFilter]?: ExperimentFilter[K] | null }
 
 export type LaunchDraft = { readonly on: SeriesSplit; readonly cases: string; readonly repeats: string }
@@ -106,6 +89,18 @@ export type LaunchDraft = { readonly on: SeriesSplit; readonly cases: string; re
 export type LaunchProblem = "cases" | "repeats"
 
 export type LaunchCheck = { readonly kind: "valid"; readonly request: LaunchRequest } | { readonly kind: "invalid"; readonly problems: readonly LaunchProblem[] }
+
+export type RuleOp = "atLeast" | "atMost"
+
+export type DecisionRule =
+  | { readonly kind: "look" }
+  | { readonly kind: "primary"; readonly metric: string; readonly op: RuleOp; readonly bound: string }
+  | { readonly kind: "guardrail"; readonly metric: string; readonly op: RuleOp; readonly bound: string }
+  | { readonly kind: "threshold"; readonly metric: string; readonly op: RuleOp; readonly value: string; readonly margin: string }
+
+type Shift = "gain" | "loss"
+
+type RuleShape = { readonly op: RuleOp; readonly negative: boolean }
 
 export const MAX_REPEATS = 20
 
@@ -116,6 +111,23 @@ const LIST_SEPARATOR = ", "
 const TAG_JOIN = "="
 const WHOLE_NUMBER = /^\d+$/
 const LAUNCH_FIELDS: readonly LaunchProblem[] = ["cases", "repeats"]
+const PERCENT = 100
+const LOOK_RULES: readonly DecisionRule[] = [{ kind: "look" }]
+
+const RULE_SHAPE: Readonly<Record<MetricDirection, Readonly<Record<Shift, RuleShape>>>> = {
+  higher_is_better: { gain: { op: "atLeast", negative: false }, loss: { op: "atLeast", negative: true } },
+  lower_is_better: { gain: { op: "atMost", negative: true }, loss: { op: "atMost", negative: false } },
+}
+
+const PAIR_SHIFT: Readonly<Record<CompareQuestion["kind"] | NoninferiorQuestion["kind"], Shift>> = {
+  compare: "gain",
+  noninferior: "loss",
+}
+
+const THRESHOLD_OP: Readonly<Record<ThresholdBound, RuleOp>> = {
+  above: "atLeast",
+  below: "atMost",
+}
 
 export const rangeText = (range: NodeRange): string => (range.from === range.to ? range.from : `${range.from}${ARROW}${range.to}`)
 
@@ -171,30 +183,13 @@ export const withFilter = (filter: ExperimentFilter, patch: FilterPatch): Experi
   }
 }
 
+export const hasNarrowing = (filter: ExperimentFilter): boolean => filter.question !== undefined || filter.failureMode !== undefined
+
 export const failureModes = (experiments: readonly ExperimentSummary[]): readonly string[] =>
   [...new Set(experiments.flatMap((experiment) => (experiment.failureMode === null ? [] : [experiment.failureMode])))].sort()
 
-export const experimentFlows = (flows: readonly string[], experiments: readonly ExperimentSummary[]): readonly string[] =>
-  [...new Set([...flows, ...experiments.flatMap((experiment) => (experiment.flow === null ? [] : [experiment.flow]))])].sort()
-
-export const shownRole = (role: VariantRole, question: QuestionKind): VariantRole | null => (question === "look" ? null : role)
-
-export const assignmentRows = (variants: readonly ExperimentVariant[]): readonly AssignmentRow[] =>
-  variants.flatMap((variant) =>
-    variant.assignments.map((assignment, index) => ({ key: `${variant.id}:${assignment.node}`, variant, assignment, first: index === 0 })),
-  )
-
-export const sourceDetail = (source: CheckSource, copy: SourceCopy): string => {
-  if (source.kind === "code") return source.ref
-  if (source.kind === "judge") return source.agent === null ? copy.judgeAgentless(source.inference) : copy.judge(source.inference, source.agent.id, source.agent.model)
-  if (source.fields.length === 0) return copy.builtinAll(source.use)
-  return copy.builtin(source.use, source.fields.join(LIST_SEPARATOR))
-}
-
 export const questionMetrics = (metrics: readonly MetricColumn[]): readonly MetricColumn[] =>
   metrics.filter((column) => column.role === "primary" || column.role === "guardrail")
-
-export const builtinMetrics = (metrics: readonly MetricColumn[]): readonly MetricColumn[] => metrics.filter((column) => column.role === "builtin")
 
 export const tagPairs = (tags: CaseTags): readonly string[] => Object.entries(tags).map(([key, value]) => `${key}${TAG_JOIN}${value}`)
 
@@ -232,6 +227,47 @@ export const guardrailSentences = (question: ExperimentQuestion, metrics: readon
     copy.guardrail({ metric: metricName(guard.metric, copy.builtin), margin: marginText(guard.margin, unitOf(metrics, guard.metric), guard.relative) }),
   )
 
+const thresholdRule = (question: ThresholdQuestion, metrics: readonly MetricColumn[], builtin: BuiltinNames): DecisionRule => {
+  const unit = unitOf(metrics, question.metric)
+  return {
+    kind: "threshold",
+    metric: metricName(question.metric, builtin),
+    op: THRESHOLD_OP[question.bound],
+    value: metricValue(question.value, unit),
+    margin: marginText(question.margin, unit, false),
+  }
+}
+
+const guardrailRule = (guard: Guardrail, metrics: readonly MetricColumn[], builtin: BuiltinNames): DecisionRule => {
+  const shape = RULE_SHAPE[guard.direction].loss
+  return {
+    kind: "guardrail",
+    metric: metricName(guard.metric, builtin),
+    op: shape.op,
+    bound: signedMargin(guard.margin, unitOf(metrics, guard.metric), guard.relative, shape.negative),
+  }
+}
+
+const pairRules = (question: CompareQuestion | NoninferiorQuestion, metrics: readonly MetricColumn[], builtin: BuiltinNames): readonly DecisionRule[] => {
+  const shape = RULE_SHAPE[question.direction][PAIR_SHIFT[question.kind]]
+  const primary: DecisionRule = {
+    kind: "primary",
+    metric: metricName(question.primary, builtin),
+    op: shape.op,
+    bound: signedMargin(question.margin, unitOf(metrics, question.primary), question.relative, shape.negative),
+  }
+  return [primary, ...question.guardrails.map((guard) => guardrailRule(guard, metrics, builtin))]
+}
+
+export const decisionRules = (question: ExperimentQuestion, metrics: readonly MetricColumn[], builtin: BuiltinNames): readonly DecisionRule[] => {
+  if (question.kind === "look") return LOOK_RULES
+  if (question.kind === "threshold") return [thresholdRule(question, metrics, builtin)]
+  return pairRules(question, metrics, builtin)
+}
+
+export const hypothesisText = (experiment: Pick<ExperimentDetail, "description" | "question" | "metrics">, copy: QuestionCopy): string =>
+  experiment.description.length > 0 ? experiment.description : questionSentence(experiment.question, experiment.metrics, copy)
+
 const primaryColumn = (metrics: readonly MetricColumn[]): MetricColumn | null => metrics.find((column) => column.role === "primary") ?? null
 
 export const launchReason = (estimate: LaunchEstimate, metrics: readonly MetricColumn[], copy: ReasonCopy): string => {
@@ -265,10 +301,23 @@ export const checkLaunch = (draft: LaunchDraft, available: number): LaunchCheck 
   return { kind: "valid", request: { on: draft.on, cases, repeats } }
 }
 
+export type SpendEstimate = { readonly source: UsdSource; readonly usd: string }
+
+export const spendEstimate = (estimate: Pick<LaunchEstimate, "usd" | "usdSource">): SpendEstimate =>
+  estimate.usd === null ? { source: "unknown", usd: "" } : { source: estimate.usdSource, usd: usd(estimate.usd) }
+
 export const shortfallOf = (estimate: LaunchEstimate): "below" | "belowAvailable" | null => {
   if (!estimate.belowRecommended) return null
   return estimate.recommended.cases > estimate.available ? "belowAvailable" : "below"
 }
+
+export const plannedAttempts = (estimate: LaunchEstimate | null, request: LaunchRequest | null, variants: number): number | null => {
+  if (estimate !== null) return estimate.attempts
+  if (request === null) return null
+  return request.cases * request.repeats * variants
+}
+
+export const splitShare = (count: number, total: number): string => (total <= 0 ? "0%" : `${String(Math.round((count / total) * PERCENT))}%`)
 
 export const availableOn = (experiment: Pick<ExperimentDetail, "cases">, on: SeriesSplit): number => experiment.cases.splits[on]
 

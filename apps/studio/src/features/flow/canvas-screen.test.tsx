@@ -30,6 +30,16 @@ describe("CanvasScreen", () => {
     expect(screen.getAllByText("LOOP")).toHaveLength(2)
   })
 
+  it("counts the declared input and output fields of a step", async () => {
+    await renderRoute("/flows/support_case/canvas")
+    const graph = await screen.findByRole("application", { name: "Workflow graph" })
+    const triage = within(graph).getByText("triage").closest(".react-flow__node")
+    const schema = liveNodeDetails["support_case/triage"]
+    const fieldsOf = (value: unknown): number => (typeof value === "object" && value !== null && "properties" in value && typeof value.properties === "object" && value.properties !== null ? Object.keys(value.properties).length : 0)
+    expect(triage?.textContent).toContain(`${String(fieldsOf(schema?.in_schema))} inputs`)
+    expect(triage?.textContent).toContain(`${String(fieldsOf(schema?.out_schema))} outputs`)
+  })
+
   it("opens the inspector when a graph node is clicked", async () => {
     await renderRoute("/flows/support_case/canvas")
     const graph = await screen.findByRole("application", { name: "Workflow graph" })

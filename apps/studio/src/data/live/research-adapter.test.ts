@@ -99,7 +99,8 @@ describe("research adapter", () => {
 
   it("keeps a missing price and time of the estimate as null", () => {
     const api = estimateFor(experiment("reply_noninferior_mistral"), { on: "dev" })
-    expect(estimateOf(api)).toMatchObject({ request: { on: "dev", cases: 6, repeats: 3 }, usd: 0.45, capUsd: 1, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } })
+    expect(estimateOf(api)).toMatchObject({ request: { on: "dev", cases: 6, repeats: 3 }, usd: 0.45, usdSource: "history", capUsd: 1, recommended: { cases: 52, repeats: 3, reason: "short_of_cases" } })
+    expect(estimateOf({ ...api, usd_source: "bound" })).toMatchObject({ usdSource: "bound" })
     expect(estimateOf({ ...api, usd: null, minutes: null })).toMatchObject({ usd: null, minutes: null })
   })
 
@@ -130,6 +131,11 @@ describe("research adapter", () => {
     expect(detail).toMatchObject({ needsApproval: false, approvedBy: null, error: null, spend: { capUsd: 1 } })
     expect(detail.findingPath).toBe(`experiments/reply_noninferior_mistral/findings/${RESEARCH_SERIES.noninferiorHoldout}.yaml`)
     expect(detail.spend.usd).toBeCloseTo(Number(api.spend.usd), 6)
+  })
+
+  it("carries how many attempts of a series ran on a model without a known price", () => {
+    expect(seriesDetailOf(seriesOf(RESEARCH_SERIES.noninferiorHoldout)).spend.unpricedAttempts).toBe(0)
+    expect(seriesSummaryOf(seriesOf(RESEARCH_SERIES.splitInconclusive)).spend.unpricedAttempts).toBe(6)
   })
 
   it("maps case rows with their split and attempts with the error of the attempt", () => {

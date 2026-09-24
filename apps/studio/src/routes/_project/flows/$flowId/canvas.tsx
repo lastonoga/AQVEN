@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import type { ApiNodeDetail, NodeId } from "@/domain"
 import * as ids from "@/data/ids"
-import { CanvasScreen } from "@/features/flow"
+import { CanvasScreen, stepSchemas } from "@/features/flow"
 import { parseId } from "@/lib/search"
 import { loadWhen } from "@/routes/-load"
 import { optional, searchValidator, type RawSearch } from "@/routes/-search"
@@ -21,12 +21,13 @@ export const Route = createFileRoute("/_project/flows/$flowId/canvas")({
   validateSearch: validateCanvasSearch,
   loaderDeps: ({ search: { node } }) => ({ node }),
   loader: async ({ context: { api }, params, deps }) => {
-    const [nodes, detail] = await Promise.all([
+    const [nodes, schemas, detail] = await Promise.all([
       api.flow.nodes(params.flowId),
+      api.flow.schemas(params.flowId),
       loadWhen(deps.node, (nodeId) => api.flow.node(params.flowId, nodeId)),
     ])
     const prompt = await loadWhen(promptNode(deps.node, detail), (nodeId) => api.flow.prompt(params.flowId, nodeId))
-    return { nodes, detail, prompt }
+    return { nodes, fields: stepSchemas(schemas), detail, prompt }
   },
   component: CanvasScreen,
 })

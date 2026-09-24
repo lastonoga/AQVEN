@@ -4,11 +4,13 @@ from typing import Annotated, Final, Literal, get_args
 from pydantic import AwareDatetime, Field, TypeAdapter
 
 from aqven.runtime.address import ClientOpId, ExecutionAddress, Problem, ResourceModel, RunId
+from aqven.runtime.costs import EXACT_COST
 from aqven.runtime.executions import AttemptCause, CheckOutcome, PromptTrace, RunError
 from aqven.runtime.values import InlineValue, ValueRef
 from aqven.runtime.vocabulary import (
     AttemptAction,
     AttemptCauseKind,
+    CostSource,
     FinishedExecutionStatus,
     OnTimeoutAction,
     RunMode,
@@ -164,6 +166,8 @@ class NodeFinished(RunEventBase):
     degraded: bool
     checks_failed: Annotated[int, Field(ge=0)]
     error: RunError | None = None
+    cost_source: CostSource = EXACT_COST
+    unpriced_calls: Annotated[int, Field(ge=0)] = 0
 
 
 class LoopIterationFinished(RunEventBase):

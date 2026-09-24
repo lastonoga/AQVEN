@@ -76,6 +76,11 @@ class SeriesProgressFacts:
     done: int
     spend: Decimal
     waits: int
+    unpriced: int = 0
+
+
+def unpriced_attempts(attempts: Sequence[AttemptRecord]) -> int:
+    return sum(1 for attempt in attempts if attempt.unpriced_calls > 0)
 
 
 def question_kind(record: SeriesRecord) -> QuestionKind:
@@ -107,7 +112,7 @@ def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSumm
         variants=tuple(variant.variant_id for variant in record.plan.variants),
         status=shown_status(record, facts.waits),
         progress=SeriesProgress(done=facts.done, total=attempts_total(record)),
-        spend=SeriesSpend(usd=facts.spend, cap_usd=record.cap_usd),
+        spend=SeriesSpend(usd=facts.spend, cap_usd=record.cap_usd, unpriced_attempts=facts.unpriced),
         verdict=record.verdict,
         waits=facts.waits,
         started_at=record.created_at,
