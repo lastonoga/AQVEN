@@ -8,6 +8,7 @@ from dbos import DBOS
 from pydantic import ValidationError
 
 from aqven.engine.protocol import RUN_EVENTS_STREAM
+from aqven.engine.request import RunSpec
 from aqven.ports.execution import EventBuilder, EventStamp, OutputPart
 from aqven.runtime.address import ExecutionAddress, JsonObject, RunId
 from aqven.runtime.events import (
@@ -54,6 +55,28 @@ class EventObserver(Protocol):
 class UnobservedEvents:
     async def written(self, position: int, events: Sequence[RunEvent]) -> None:
         return None
+
+
+@dataclass(frozen=True, slots=True)
+class ObserverChain:
+    observers: tuple[EventObserver, ...]
+
+    async def written(self, position: int, events: Sequence[RunEvent]) -> None:
+        for observer in self.observers:
+            await observer.written(position, events)
+
+
+class RunWatch(Protocol):
+    def observer(self, run_id: RunId, spec: RunSpec) -> EventObserver | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class UnwatchedRuns:
+    def observer(self, run_id: RunId, spec: RunSpec) -> EventObserver | None:
+        return None
+
+
+UNWATCHED_RUNS: Final = UnwatchedRuns()
 
 
 def deferred_event(payload: JsonObject) -> tuple[RunEvent, ...]:

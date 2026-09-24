@@ -350,11 +350,6 @@ export type SeriesCaseRow = {
 
 export type SeriesCaseFilter = { readonly failures?: boolean; readonly divergent?: boolean }
 
-export type SeriesEvent =
-  | { readonly kind: "status"; readonly seq: number; readonly status: SeriesStatus }
-  | { readonly kind: "attempt"; readonly seq: number; readonly done: number; readonly total: number; readonly spendUsd: number }
-  | { readonly kind: "finished"; readonly seq: number; readonly status: SeriesStatus; readonly verdict: VerdictState | null }
-
 export type ArmFlow = {
   readonly experiment: ExperimentId
   readonly arm: ArmId

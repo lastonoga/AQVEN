@@ -18,7 +18,10 @@ series, approve its spend, and ask the chat for the next hypothesis.
 - **Browse the experiments.** Each row shows the experiment id with its description, the question kind
   (look, threshold, better, not worse), the subject (a flow, a range like `support_case · polish`, or an
   arm), the variants, the state of the last series, and how many series ran and what they cost. Filter by
-  **Question** or **Failure mode**.
+  **Question** or **Failure mode**. You don't need to reload: when a series starts, progresses, waits for
+  approval or for a person, or finishes, the lists and the open experiment or series page update in place,
+  whether you, the chat agent or the CLI started it. They also update when an experiment's files or a
+  finding change on disk.
 - **Suggest hypotheses** hands a prompt to the chat. It asks the agent to read the flows, their cases and
   the experiments already there, and to propose hypotheses. Each hypothesis comes with its failure mode,
   question, metric and margin, subject, variants as agents, checks and cases by tags. The agent writes no

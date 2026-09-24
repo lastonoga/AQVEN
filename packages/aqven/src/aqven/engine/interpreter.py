@@ -16,7 +16,15 @@ from aqven.engine.addressing import (
     child_workflow_id,
     prefixed_node_id,
 )
-from aqven.engine.events import BatchedOutputSink, BufferedEventSink, EventSink, NullOutputSink, StreamEventSink
+from aqven.engine.events import (
+    BatchedOutputSink,
+    BufferedEventSink,
+    EventObserver,
+    EventSink,
+    NullOutputSink,
+    ObserverChain,
+    StreamEventSink,
+)
 from aqven.engine.failures import failure_of, run_error
 from aqven.engine.forking import root_run_id
 from aqven.engine.overrides import override_outcome
@@ -610,9 +618,15 @@ async def guarded_flow(state: RunState, frame: FlowFrame) -> NodeOutcome:
         return NodeFailed(error=run_error(INTERNAL, failure.error.message, None))
 
 
+def run_observer(runtime: EngineRuntime, run_id: RunId, spec: RunSpec) -> EventObserver:
+    projection = runtime.summaries.projection(run_id)
+    watched = runtime.watch.observer(run_id, spec)
+    return projection if watched is None else ObserverChain((projection, watched))
+
+
 async def interpret(runtime: EngineRuntime, ir_hash: IrHash, flow_input: JsonObject, spec: RunSpec) -> RunRecord:
     run_id = RunId(DBOS.workflow_id or "")
-    sink = StreamEventSink(run_id=run_id, observer=runtime.summaries.projection(run_id))
+    sink = StreamEventSink(run_id=run_id, observer=run_observer(runtime, run_id, spec))
     plan = runtime.plans.find(ir_hash)
     if plan is None:
         return await finish(sink, failed_record(PLAN_MISSING, f"plan snapshot {ir_hash} is not in the store"))

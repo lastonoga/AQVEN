@@ -13,6 +13,18 @@ from watchfiles import Change, DefaultFilter
 from aqven.diagnostics import Diagnostic
 from aqven.loader import LoadedFlow, within
 from aqven.runtime.address import ClientOpId, ResourceModel
+from aqven.series.feed import ResearchNotice
+from aqven.server.research_events import (
+    EventStamp,
+    ExperimentChanged,
+    ExperimentTouch,
+    FindingWritten,
+    SeriesProgressEvent,
+    SeriesStartedEvent,
+    SeriesStatusChanged,
+    experiment_touches,
+    research_event,
+)
 from aqven.server.resources import CompileStatus, ProblemCounts
 from aqven.server.simulation import SimulationRun, SubprocessSimulation
 from aqven.server.views.common import diagnostics_within, problem_counts
@@ -81,7 +93,17 @@ class WatchChanges(Protocol):
 AWATCH: Final = cast(WatchChanges, import_module("watchfiles").awatch)
 
 
-type SpecEvent = Annotated[FilesChanged | DiagnosticsChanged | SpecResync, Field(discriminator="type")]
+type SpecEvent = Annotated[
+    FilesChanged
+    | DiagnosticsChanged
+    | SpecResync
+    | SeriesStartedEvent
+    | SeriesProgressEvent
+    | SeriesStatusChanged
+    | FindingWritten
+    | ExperimentChanged,
+    Field(discriminator="type"),
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,6 +226,9 @@ class SpecEventHub:
         builders = tuple(_diagnostics_builder(self.clock, tree_hash, flow_id, health[flow_id]) for flow_id in changed)
         return await self._publish(builders)
 
+    async def announce(self, notice: ResearchNotice) -> tuple[SpecEvent, ...]:
+        return await self._publish((_notice_builder(self.clock, self.snapshot.tree_hash, notice),))
+
     async def close(self) -> None:
         self.closed = True
         if self.simulation is not None:
@@ -254,6 +279,8 @@ class SpecEventHub:
             ops=None,
             summary=change_summary(changes),
         )
+        for touch in experiment_touches(self.snapshot, state.snapshot, [change.path for change in changes]):
+            yield _experiment_builder(self.clock, tree, touch)
         for flow_id, current in sorted(health.items()):
             if self.health.get(flow_id) != current:
                 yield _diagnostics_builder(self.clock, tree, flow_id, current)
@@ -297,6 +324,14 @@ def _diagnostics_builder(
         compile_status=health.compile_status,
         problems=health.problems,
     )
+
+
+def _experiment_builder(clock: Callable[[], datetime], tree: str, touch: ExperimentTouch) -> Callable[[int], SpecEvent]:
+    return lambda seq: touch.event(EventStamp(seq, clock(), tree))
+
+
+def _notice_builder(clock: Callable[[], datetime], tree: str, notice: ResearchNotice) -> Callable[[int], SpecEvent]:
+    return lambda seq: research_event(notice, EventStamp(seq, clock(), tree))
 
 
 class ProjectChangeFilter(DefaultFilter):

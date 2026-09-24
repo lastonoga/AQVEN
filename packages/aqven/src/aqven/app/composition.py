@@ -27,6 +27,7 @@ from aqven.series.jobs import SeriesService
 from aqven.series.ports import ModelPrices, SeriesJobs
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
+from aqven.series.watch import SeriesRunWatch
 from aqven.server import ServerExtensions, ServerOptions, create_app
 from aqven.server.app import LifespanFactory
 from aqven.server.app import process_environment as launch_environ
@@ -40,6 +41,7 @@ from aqven.server.mcp import (
     build_catalog,
     build_mcp_endpoint,
 )
+from aqven.server.research_relay import ResearchRelay, research_lifespan
 from aqven.server.security import AccessPolicy
 from aqven.server.views.runs import RunStartService
 from aqven.server.workspace import ProjectWorkspace
@@ -100,15 +102,19 @@ class ProjectParts:
     writer: WriteService
     series: SeriesServices
     jobs: SeriesJobs
+    research: ResearchRelay
 
 
 def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> ProjectParts:
     workspace = ProjectWorkspace(root, compiler=ReportCompiler())
     writer = WriteService(root)
-    findings = FileFindings(writer, root)
+    research = ResearchRelay()
+    findings = FileFindings(writer, root, research)
     analyst = ScipySeriesAnalyst()
-    series = build_series_services(root, workspace, settings, analyst, findings, prices, engine_version())
-    return ProjectParts(workspace=workspace, writer=writer, series=series, jobs=SeriesService(series))
+    series = build_series_services(root, workspace, settings, analyst, findings, prices, engine_version(), research)
+    return ProjectParts(
+        workspace=workspace, writer=writer, series=series, jobs=SeriesService(series), research=research
+    )
 
 
 @dataclass(slots=True)
@@ -218,7 +224,8 @@ def assemble_app(
     )
     watched = replace(launch, engine=observed.engine)
     project = replace(built, jobs=observed.series)
-    parts = extra.plus(ApplicationParts(lifespans=(write_recovery(project.writer), observed.lifespan)))
+    project_lifespans = (write_recovery(project.writer), research_lifespan(project.research), observed.lifespan)
+    parts = extra.plus(ApplicationParts(lifespans=project_lifespans))
     for builder in feature_builders(features, project):
         parts = parts.plus(builder(watched))
     return create_app(
@@ -244,7 +251,8 @@ class ServerApplicationFactory:
 
 
 def priced_engine_host(assembly: ProjectAssembly, plan_source: PlanSource | None = None) -> DbosEngineHost:
-    return DbosEngineHost(setup=standard_engine_setup(prices=assembly.prices), plan_source=plan_source)
+    setup = replace(standard_engine_setup(prices=assembly.prices), watch=SeriesRunWatch())
+    return DbosEngineHost(setup=setup, plan_source=plan_source)
 
 
 def studio_server(
