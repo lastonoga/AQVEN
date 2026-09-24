@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import * as ids from "@/data/ids"
-import { experimentFlow, flowGroupKey, groupByFlow, seriesFlow } from "./flow-groups"
-import { experimentSummary, seriesSummary } from "./test-support"
+import { experimentFlow, flowGroupKey, groupByFlow } from "./flow-groups"
+import { experimentSummary } from "./test-support"
 
 const SUPPORT_CASE = ids.flowId("support_case")
 const JUDGE_PANEL = ids.flowId("judge_panel")
@@ -31,12 +31,7 @@ describe("groupByFlow", () => {
     expect(experimentFlow(experimentSummary({}))).toBe("support_case")
   })
 
-  it("groups series by their flow and shows no group for an empty list", () => {
-    const series = [seriesSummary({ id: ids.seriesId("arm"), flow: null }), seriesSummary({ id: ids.seriesId("reply") })]
-    expect(groupByFlow(series, seriesFlow).map((group) => [group.flow, group.items.map((item) => item.id)])).toEqual([
-      ["support_case", ["reply"]],
-      [null, ["arm"]],
-    ])
-    expect(groupByFlow([], seriesFlow)).toEqual([])
+  it("shows no group for an empty list", () => {
+    expect(groupByFlow([], experimentFlow)).toEqual([])
   })
 })

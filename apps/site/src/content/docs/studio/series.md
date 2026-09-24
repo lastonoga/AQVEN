@@ -12,12 +12,11 @@ read what it found down to a single attempt. The meaning of each number is on
 
 ## Steps
 
-- **Find it on the Series tab.** In Research, **Series** lists every series of the project in one section
-  per flow, ordered by flow name. Each section is a heading with the flow name and the number of series,
-  then a table. Series of an arm come last, under **Arms**. Inside a section, running ones come first, then
-  the newest. The columns are **Status**, **Experiment** (a look shows as `look · <flow>`), **On** (dev or
-  holdout), **N×R**, **Spend**, **Verdict** and **Started**. An experiment page lists its own series under
-  **Series history**.
+- **Find it on the Series tab.** In Research, **Series** lists every series of the project in one table,
+  the newest first by start time, whether it is running or finished. The columns are **Status**,
+  **Experiment** (a look shows as `look · <flow>`), **Flow** (a series of an arm shows **Arms**), **On**
+  (dev or holdout), **N×R**, **Spend**, **Verdict** and **Started**. An experiment page lists its own
+  series under **Series history**.
 - **Read the header.** The title names the series: "Series … of this experiment", or "Look at N cases" with
   the dataset and the stages for a look. Tags show the status, and **live** while Studio follows it. Below
   them are the size and variants and when it started and finished. **Attempts** shows the progress.

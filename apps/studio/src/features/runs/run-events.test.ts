@@ -11,7 +11,6 @@ import {
   mergeEvents,
   mergeLive,
   RUN_EVENT_EFFECT,
-  runEventsUrl,
 } from "./run-events"
 import { completedSnapshot, FakeEventSource, nodeFinished, outputDelta, runFinished } from "./test-support"
 
@@ -37,10 +36,6 @@ describe("run event helpers", () => {
     expect(isRunEvent({ seq: 1, run_id: RUN, type: "chat_message" })).toBe(false)
     expect(isRunEvent({ seq: "1", run_id: RUN, type: "node_finished" })).toBe(false)
     expect(isRunEvent(null)).toBe(false)
-  })
-
-  it("builds the stream url after the last known event", () => {
-    expect(runEventsUrl(ids.runId("a/b"), 7)).toBe("/api/runs/a%2Fb/events?after_seq=7")
   })
 
   it("merges events by sequence without duplicates", () => {
@@ -88,15 +83,17 @@ describe("eventSourceStream", () => {
     vi.unstubAllGlobals()
   })
 
-  it("delivers the events of the run and closes on unsubscribe", () => {
+  it("follows the run feed after the last known event and closes on unsubscribe", async () => {
     const received: ApiRunEvent[] = []
     const close = eventSourceStream(ids.runId(RUN), 3, (event) => { received.push(event) })
+    await Promise.resolve()
     const source = FakeEventSource.latest()
-    expect(source.url).toBe(`/api/runs/${RUN}/events?after_seq=3`)
+    expect(source.url).toBe(`/api/events?follow=${encodeURIComponent(`run:${RUN}@3`)}`)
     source.emit(nodeFinished(RUN, 4, "prepare"))
     source.emit(nodeFinished("another-run", 5, "prepare"))
     expect(received.map((event) => event.seq)).toEqual([4])
     close()
+    await Promise.resolve()
     expect(source.closed).toBe(true)
   })
 })
