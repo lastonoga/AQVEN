@@ -22,9 +22,12 @@ MCP are three ways to start the same thing.
 - **Read the estimate before anything runs.** It gives attempts (cases × repeats × variants), dollars with
   their source, minutes and the expected half-width of the interval. See
   [what a series costs](/concepts/experiments-series-and-findings/#what-a-series-costs).
-- **Know who starts it.** At or below the project spend cap, a series starts at once. Above it, or with
-  no price estimate, it waits in `awaiting_approval` until a person clicks **Approve spend** in Studio. The
-  same approval over REST is `POST /api/series/{series_id}/approve`. No agent tool approves spend.
+- **Know who lets it spend more.** A series starts at once, whatever its estimate. When its spend reaches
+  90% of its cap, it starts no new attempts, lets the running ones finish and waits in `awaiting_approval`
+  until a person clicks **Continue** in Studio with a higher cap, or **Stop**. The same over REST is
+  `POST /api/series/{series_id}/approve` with an optional body `{"cap_usd": "2.00"}`; without it the cap
+  doubles. A `--cap` above the project cap waits for **Approve spend** before anything runs. No agent tool
+  approves spend.
 - **Set the cap in `aqven.yaml`.** The cap is `research.spend_cap_usd` in the project file, and
   `{{CLI_COMMAND}} new` writes $1.00 there:
 
@@ -51,7 +54,7 @@ MCP are three ways to start the same thing.
 
 Open **Research**, then the experiment. The **Launch** panel has **Purpose** (**Explore · working cases**
 or **Confirm · held-out cases**), **Cases** and **Repeats**. It shows the attempts, the estimate with its
-source (≈ from past series, ≈ at provider prices, ≤ upper bound, or no price estimate) and the cap. It also
+source (≈ from past series, ≈ at provider prices, ~ rough estimate, or no price estimate) and the cap. It also
 says when the size is below the recommendation. **Run** starts the series and opens its page, which
 follows it live. The **Run** button in the page header does the same with the current settings. See
 [How to use Research in Studio](/studio/research/).
@@ -81,16 +84,16 @@ the progress and the verdict. The exit code tells a script what happened:
 | 0 | the series is done, whatever its verdict |
 | 1 | it was cancelled or failed, or the server didn't answer |
 | 2 | the request was refused: unknown experiment, a project with errors (`NOT_RUNNABLE`) or a bad size |
-| 3 | it awaits approval; the line carries a Studio link to approve it |
+| 3 | it awaits approval, before it starts or paused near its cap; the line carries a Studio link to continue it |
 | 4 | an attempt waits for a person at a `human` node |
 
 ### From an agent
 
 Over MCP, `series_start` takes `experiment_id`, `on`, and optionally `cases`, `repeats`, `cap_usd` and a
 `client_op_id`. It returns at once with the estimate and the status. `series_get` with `wait_seconds` up to
-50 waits for the series to settle, and `series_cancel` stops it. MCP has no estimate-only call:
-`series_start` starts a series that fits under the cap. REST has `POST /api/experiments/{id}/estimate` for
-that. See [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/).
+50 waits for the series to settle, and `series_cancel` stops it. MCP has no estimate-only call: the
+estimate is information, and `series_start` starts the series. REST has
+`POST /api/experiments/{id}/estimate` for that. See [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/).
 
 ### Example
 
@@ -106,8 +109,9 @@ The plan asks for 12 cases, and each half of the twelve-case dataset has fewer, 
 case of its half, and the estimate warns that it is short of cases. The first command gives a `signal`
 whatever the numbers say, and you can repeat it after every change to the revision step. The second
 writes `experiments/reply_noninferior_mistral/findings/<series_id>.yaml` and regenerates `FINDINGS.md`,
-unless the series ends `invalid`. If its estimate is above the project cap, the command exits with 3 and
-prints the Studio link. Once someone approves the spend there, the series runs, and Studio shows it live.
+unless the series ends `invalid`. If its spend reaches 90% of the project cap, the series pauses, and the
+command exits with 3 and prints the Studio link. Once someone continues it there with a higher cap, the
+series runs the rest, and Studio shows it live.
 
 ## See also
 

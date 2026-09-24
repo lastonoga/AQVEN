@@ -38,8 +38,8 @@ replace a key, change the research spend cap, or update AQVEN.
   backend is signed in, and with which account when it is known. When it is not signed in, the page
   shows the command to run in a terminal: `claude auth login` or `codex login`. Then click **Check
   again**. Technical details appear only when the check itself fails.
-- **Research budget** shows the project spend cap: a series whose estimate is above it, or has no
-  estimate, waits for your approval. **Set in** says where the cap comes from: `aqven.yaml`, a local
+- **Research budget** shows the project spend cap: every series runs under it and pauses for your
+  approval when its spend reaches 90% of it. **Set in** says where the cap comes from: `aqven.yaml`, a local
   override on this computer, or the default of $1.00 when `aqven.yaml` has no `research` block. Type a new
   amount under **Cap in aqven.yaml** and click **Save**: Studio writes `research.spend_cap_usd` into
   `aqven.yaml` and keeps the rest of the file as it was. If the file changed since the page read it, the
