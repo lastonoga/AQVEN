@@ -152,8 +152,7 @@
   "experiment": {
     "guardrails": "Guardrails: {list}",
     "question": {
-      "run": "Run",
-      "runEstimate": "Run · {estimate}"
+      "run": "Run"
     },
     "canvas": {
       "title": "What we test",
@@ -278,29 +277,16 @@
       "belowAvailable": "{recommended} recommended, only {available} here: expect a wide interval",
       "summary": "Launch summary",
       "attempts": "{count, plural, one {attempt} other {attempts}}",
-      "estimating": "estimating the price…",
-      "estimateFailed": "no estimate: {reason}",
+      "shape": "{cases, plural, one {# case} other {# cases}} × {repeats, plural, one {# repeat} other {# repeats}} × {variants, plural, one {# variant} other {# variants}}",
+      "planFailed": "no launch plan: {reason}",
       "none": "—",
-      "sign": "{source, select, bound {~} other {≈}}",
-      "source": {
-        "history": "from past series",
-        "prices": "at provider prices",
-        "bound": "rough estimate",
-        "unknown": "no price estimate"
-      },
-      "cap": "cap {cap}",
-      "approval": "over the {cap} cap: pauses near it for your approval",
+      "cap": "cap {cap}, pauses near it for your approval",
+      "approval": "cap {cap} is above the project cap: waits for your approval to start",
       "run": "Run",
       "approve": "Approve spend",
       "stop": "Stop",
       "active": "{series} · {done} of {total} attempts",
-      "failed": "Could not do that: {reason}",
-      "estimate": {
-        "history": "≈ {usd} from past series",
-        "prices": "≈ {usd} at provider prices",
-        "bound": "~ {usd} rough estimate",
-        "unknown": "no price estimate"
-      }
+      "failed": "Could not do that: {reason}"
     },
     "history": {
       "title": "Series history",

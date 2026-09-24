@@ -108,7 +108,6 @@ class SeriesRun(RecordModel):
     needs_approval: bool
     total: int
     cap_usd: Decimal
-    per_attempt_usd: Decimal | None
     repeats: int
     variant_ids: tuple[VariantId, ...]
     case_names: tuple[str, ...]
@@ -165,7 +164,6 @@ def series_run(record: SeriesRecord, case_names: Sequence[str]) -> SeriesRun:
         needs_approval=record.needs_approval,
         total=len(case_names) * plan.repeats * len(plan.variants),
         cap_usd=record.cap_usd,
-        per_attempt_usd=plan.per_attempt_usd,
         repeats=plan.repeats,
         variant_ids=tuple(variant.variant_id for variant in plan.variants),
         case_names=tuple(case_names),
@@ -188,7 +186,7 @@ def attempt_workflow_id(series_id: SeriesId, run: SeriesRun, cursor: int) -> str
 @dataclass(slots=True)
 class SpendLedger:
     cap: Decimal
-    reserve: Decimal
+    reserve: Decimal = ZERO
     spent: Decimal = ZERO
 
     def committed(self, pending: int) -> Decimal:
@@ -341,7 +339,7 @@ class AttemptWindow:
 
 
 async def drive_attempts(series_id: SeriesId, run: SeriesRun, stream: SeriesStream, cap: Decimal) -> DrivenAttempts:
-    window = AttemptWindow(series_id, run, SpendLedger(cap=cap, reserve=run.per_attempt_usd or ZERO))
+    window = AttemptWindow(series_id, run, SpendLedger(cap=cap))
     while window.active:
         await window.fill()
         if window.paused:

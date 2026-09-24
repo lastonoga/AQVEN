@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import type { ExperimentDetail, LaunchEstimate, LaunchRequest } from "@/domain"
+import type { ExperimentDetail, LaunchPlan, LaunchRequest } from "@/domain"
 import { ROUTE_PATH } from "@/lib/routes"
 import { availableOn, checkLaunch, draftOf, plannedCases, type LaunchCheck, type LaunchDraft } from "./presenters"
-import { useLaunchEstimate, type EstimateState } from "./use-launch-estimate"
+import { useLaunchPlan, type PlanState } from "./use-launch-plan"
 import { useResearchAction, type ResearchAction } from "./use-research-action"
 
 export type Launch = {
@@ -11,7 +11,7 @@ export type Launch = {
   readonly available: number
   readonly check: LaunchCheck
   readonly request: LaunchRequest | null
-  readonly estimate: EstimateState
+  readonly plan: PlanState
   readonly action: ResearchAction
   readonly update: (patch: Partial<LaunchDraft>) => void
   readonly start: (request: LaunchRequest) => void
@@ -23,14 +23,14 @@ export const freshRequest = (experiment: Pick<ExperimentDetail, "cases" | "plan"
   return { on: "holdout", cases, repeats: request?.repeats ?? experiment.plan.repeats }
 }
 
-export function useLaunch(experiment: ExperimentDetail, initial: LaunchRequest, estimate: LaunchEstimate | null): Launch {
+export function useLaunch(experiment: ExperimentDetail, initial: LaunchRequest, plan: LaunchPlan | null): Launch {
   const navigate = useNavigate()
   const action = useResearchAction()
   const [draft, setDraft] = useState<LaunchDraft>(() => draftOf(initial))
   const available = availableOn(experiment, draft.on)
   const check = checkLaunch(draft, available)
   const request = check.kind === "valid" ? check.request : null
-  const state = useLaunchEstimate(experiment.id, request, { request: initial, estimate })
+  const state = useLaunchPlan(experiment.id, request, { request: initial, plan })
   const update = (patch: Partial<LaunchDraft>): void => {
     setDraft((current) => ({ ...current, ...patch }))
   }
@@ -43,5 +43,5 @@ export function useLaunch(experiment: ExperimentDetail, initial: LaunchRequest, 
       },
     )
   }
-  return { draft, available, check, request, estimate: state, action, update, start }
+  return { draft, available, check, request, plan: state, action, update, start }
 }

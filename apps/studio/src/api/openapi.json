@@ -8641,10 +8641,10 @@
         "x-aqven-rest-only": "arm nodes and schemas for the Studio run view, read from the project files"
       }
     },
-    "/api/experiments/{experiment_id}/estimate": {
+    "/api/experiments/{experiment_id}/launch-plan": {
       "post": {
-        "summary": "Estimate Series",
-        "operationId": "series_estimate",
+        "summary": "Plan Series",
+        "operationId": "series_launch_plan",
         "parameters": [
           {
             "name": "experiment_id",
@@ -8672,7 +8672,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SeriesEstimate"
+                  "$ref": "#/components/schemas/LaunchPlan"
                 }
               }
             }
@@ -8768,7 +8768,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "the estimate comes back from series_start on MCP"
+        "x-aqven-rest-only": "the launch plan comes back from series_start on MCP"
       }
     },
     "/api/series": {
@@ -18610,18 +18610,6 @@
         ],
         "title": "Estimate"
       },
-      "EstimateReason": {
-        "type": "string",
-        "enum": [
-          "look",
-          "wide",
-          "enough",
-          "no_margin",
-          "no_history",
-          "short_of_cases"
-        ],
-        "title": "EstimateReason"
-      },
       "EventCatalog": {
         "properties": {
           "spec": {
@@ -21667,6 +21655,150 @@
           "verdict"
         ],
         "title": "LatestSeries"
+      },
+      "LaunchPlan": {
+        "properties": {
+          "on": {
+            "$ref": "#/components/schemas/SeriesSplit"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats"
+          },
+          "variants": {
+            "type": "integer",
+            "title": "Variants"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          },
+          "half_width": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half Width"
+          },
+          "mde": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mde"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "spread": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spread"
+          },
+          "spread_source": {
+            "type": "string",
+            "enum": [
+              "history",
+              "prior",
+              "none"
+            ],
+            "title": "Spread Source"
+          },
+          "icc": {
+            "type": "number",
+            "title": "Icc"
+          },
+          "recommended": {
+            "$ref": "#/components/schemas/Recommendation"
+          },
+          "below_recommended": {
+            "type": "boolean",
+            "title": "Below Recommended"
+          },
+          "needs_approval": {
+            "type": "boolean",
+            "title": "Needs Approval"
+          },
+          "project_cap_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Project Cap Usd"
+          },
+          "project_cap_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CapSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cap_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cap Usd"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "on",
+          "cases",
+          "repeats",
+          "variants",
+          "attempts",
+          "available",
+          "half_width",
+          "mde",
+          "margin",
+          "spread",
+          "spread_source",
+          "icc",
+          "recommended",
+          "below_recommended",
+          "needs_approval",
+          "project_cap_usd",
+          "cap_usd"
+        ],
+        "title": "LaunchPlan"
       },
       "LaunchRequest": {
         "properties": {
@@ -27347,7 +27479,7 @@
             "title": "Repeats"
           },
           "reason": {
-            "$ref": "#/components/schemas/EstimateReason"
+            "$ref": "#/components/schemas/RecommendationReason"
           },
           "text": {
             "type": "string",
@@ -27362,6 +27494,18 @@
           "text"
         ],
         "title": "Recommendation"
+      },
+      "RecommendationReason": {
+        "type": "string",
+        "enum": [
+          "look",
+          "wide",
+          "enough",
+          "no_margin",
+          "no_history",
+          "short_of_cases"
+        ],
+        "title": "RecommendationReason"
       },
       "RecordType": {
         "properties": {
@@ -29306,8 +29450,8 @@
             "type": "array",
             "title": "Aggregates"
           },
-          "estimate": {
-            "$ref": "#/components/schemas/SeriesEstimate"
+          "launch": {
+            "$ref": "#/components/schemas/LaunchPlan"
           },
           "needs_approval": {
             "type": "boolean",
@@ -29372,193 +29516,13 @@
           "contrasts",
           "thresholds",
           "aggregates",
-          "estimate",
+          "launch",
           "needs_approval",
           "approved_by",
           "finding_path",
           "error"
         ],
         "title": "SeriesDetailView"
-      },
-      "SeriesEstimate": {
-        "properties": {
-          "on": {
-            "$ref": "#/components/schemas/SeriesSplit"
-          },
-          "cases": {
-            "type": "integer",
-            "title": "Cases"
-          },
-          "repeats": {
-            "type": "integer",
-            "title": "Repeats"
-          },
-          "variants": {
-            "type": "integer",
-            "title": "Variants"
-          },
-          "attempts": {
-            "type": "integer",
-            "title": "Attempts"
-          },
-          "available": {
-            "type": "integer",
-            "title": "Available"
-          },
-          "usd": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Usd"
-          },
-          "usd_source": {
-            "type": "string",
-            "enum": [
-              "history",
-              "prices",
-              "bound",
-              "unknown"
-            ],
-            "title": "Usd Source"
-          },
-          "minutes": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Minutes"
-          },
-          "half_width": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Half Width"
-          },
-          "mde": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mde"
-          },
-          "margin": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Margin"
-          },
-          "spread": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Spread"
-          },
-          "spread_source": {
-            "type": "string",
-            "enum": [
-              "history",
-              "prior",
-              "none"
-            ],
-            "title": "Spread Source"
-          },
-          "icc": {
-            "type": "number",
-            "title": "Icc"
-          },
-          "recommended": {
-            "$ref": "#/components/schemas/Recommendation"
-          },
-          "below_recommended": {
-            "type": "boolean",
-            "title": "Below Recommended"
-          },
-          "needs_approval": {
-            "type": "boolean",
-            "title": "Needs Approval"
-          },
-          "project_cap_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Project Cap Usd"
-          },
-          "project_cap_source": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CapSource"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cap_usd": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cap Usd"
-          },
-          "warnings": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Warnings",
-            "default": []
-          }
-        },
-        "type": "object",
-        "required": [
-          "on",
-          "cases",
-          "repeats",
-          "variants",
-          "attempts",
-          "available",
-          "usd",
-          "usd_source",
-          "minutes",
-          "half_width",
-          "mde",
-          "margin",
-          "spread",
-          "spread_source",
-          "icc",
-          "recommended",
-          "below_recommended",
-          "needs_approval",
-          "project_cap_usd",
-          "cap_usd"
-        ],
-        "title": "SeriesEstimate"
       },
       "SeriesEvent": {
         "oneOf": [
@@ -30026,8 +29990,8 @@
               }
             ]
           },
-          "estimate": {
-            "$ref": "#/components/schemas/SeriesEstimate"
+          "launch": {
+            "$ref": "#/components/schemas/LaunchPlan"
           }
         },
         "type": "object",
@@ -30048,7 +30012,7 @@
           "waits",
           "started_at",
           "finished_at",
-          "estimate"
+          "launch"
         ],
         "title": "SeriesStarted"
       },

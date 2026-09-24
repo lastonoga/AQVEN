@@ -3,6 +3,7 @@ import type {
   ApiSeriesAttempt,
   ApiContrast,
   ApiExperimentDetail,
+  ApiLaunchPlan,
   ApiLaunchRequest,
   ApiMatrixRow,
   ApiMetricCell,
@@ -10,7 +11,6 @@ import type {
   ApiQuestion,
   ApiSeriesCaseRow,
   ApiSeriesDetail,
-  ApiSeriesEstimate,
   ApiSeriesOrigin,
   ApiSeriesSummary,
   ApiSeriesVerdict,
@@ -63,9 +63,6 @@ const CAP_USD = "1.00"
 const START_PAUSE = { reason: "cap_above_project", spent_usd: "0" } as const
 const APPROVAL_LIMIT = 1
 const USD_PER_ATTEMPT = 0.0125
-const SECONDS_PER_ATTEMPT = 40
-const PARALLEL = 4
-const SECONDS_PER_MINUTE = 60
 const SPREAD = 0.25
 const ICC = 0.3
 const Z = 1.96
@@ -260,11 +257,6 @@ const SEEDS: readonly SeriesSeed[] = [
 ]
 
 export const initialSeries = (): readonly SeriesState[] => SEEDS.map((item) => ({ ...item, approvedBy: null }))
-
-const EXPERIMENTS_WITH_SERIES: ReadonlySet<string> = new Set(SEEDS.flatMap((seed) => (seed.experiment === null ? [] : [seed.experiment])))
-
-const usdSourceOf = (experiment: ApiExperimentDetail): ApiSeriesEstimate["usd_source"] =>
-  EXPERIMENTS_WITH_SERIES.has(experiment.experiment_id) ? "history" : "bound"
 
 const unit = (key: string): number => {
   let hash = HASH_SEED
@@ -579,7 +571,7 @@ const neededCases = (margin: number, repeats: number): number => {
   return found ?? MAX_RECOMMENDED
 }
 
-const recommendationOf = (question: ApiQuestion, cases: number, repeats: number, available: number): ApiSeriesEstimate["recommended"] => {
+const recommendationOf = (question: ApiQuestion, cases: number, repeats: number, available: number): ApiLaunchPlan["recommended"] => {
   if (question.kind === "look") return { cases, repeats, reason: "look", text: `a look runs ${String(cases)} cases once each and gives no verdict` }
   const margin = question.margin ?? 0
   if (margin <= 0) return { cases, repeats, reason: "no_margin", text: "the question has no margin" }
@@ -588,14 +580,13 @@ const recommendationOf = (question: ApiQuestion, cases: number, repeats: number,
   return { cases: needed, repeats, reason: needed > cases ? "wide" : "enough", text: `about ${String(needed)} cases are needed` }
 }
 
-export const estimateFor = (experiment: ApiExperimentDetail, request: LaunchBody): ApiSeriesEstimate => {
+export const launchPlanFor = (experiment: ApiExperimentDetail, request: LaunchBody): ApiLaunchPlan => {
   const { on } = request
   const available = experiment.cases.splits[on] ?? 0
   const cases = Math.min(request.cases ?? experiment.plan.cases ?? experiment.cases.selected, available)
   const repeats = request.repeats ?? experiment.plan.repeats
   const variants = experiment.variant_details.length
   const attempts = cases * repeats * variants
-  const usd = round(attempts * USD_PER_ATTEMPT, 4)
   const question = experiment.question_detail
   const recommended = recommendationOf(question, cases, repeats, available)
   const hasMargin = question.kind !== "look" && (question.margin ?? 0) > 0
@@ -606,9 +597,6 @@ export const estimateFor = (experiment: ApiExperimentDetail, request: LaunchBody
     variants,
     attempts,
     available,
-    usd: money(usd),
-    usd_source: usdSourceOf(experiment),
-    minutes: Math.max(1, Math.ceil((attempts * SECONDS_PER_ATTEMPT) / PARALLEL / SECONDS_PER_MINUTE)),
     half_width: hasMargin ? round(halfWidth(Math.max(cases, 1), repeats), 4) : null,
     mde: null,
     margin: question.kind === "look" ? null : question.margin ?? null,
@@ -624,10 +612,10 @@ export const estimateFor = (experiment: ApiExperimentDetail, request: LaunchBody
   }
 }
 
-const seriesEstimate = (series: SeriesState): ApiSeriesEstimate => {
+const seriesLaunchPlan = (series: SeriesState): ApiLaunchPlan => {
   const experiment = experimentOf(series.experiment)
   const cases = series.cases.length
-  if (experiment !== null) return estimateFor(experiment, { on: series.on, cases, repeats: series.repeats })
+  if (experiment !== null) return launchPlanFor(experiment, { on: series.on, cases, repeats: series.repeats })
   const attempts = cases * series.repeats
   return {
     on: series.on,
@@ -636,9 +624,6 @@ const seriesEstimate = (series: SeriesState): ApiSeriesEstimate => {
     variants: 1,
     attempts,
     available: cases,
-    usd: money(attempts * USD_PER_ATTEMPT),
-    usd_source: "prices",
-    minutes: 1,
     half_width: null,
     mde: null,
     margin: null,
@@ -666,7 +651,7 @@ export const detailOf = (series: SeriesState): ApiSeriesDetail => {
     contrasts: [...contrastsOf(series, rows)],
     thresholds: [],
     aggregates: [],
-    estimate: seriesEstimate(series),
+    launch: seriesLaunchPlan(series),
     needs_approval: series.status === "awaiting_approval",
     approved_by: series.approvedBy,
     finding_path: series.on === "holdout" && series.status === "done" ? `experiments/${series.experiment ?? ""}/findings/${series.id}.yaml` : null,

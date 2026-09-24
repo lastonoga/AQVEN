@@ -99,9 +99,8 @@ def test_the_list_pages_newest_first_and_cases_filter_failures(tmp_path: Path) -
     with series_engine(root, ScriptedModels()) as harness:
         first, second, head, rest, failing = asyncio.run(listed(harness))
 
-    assert (first.estimate.usd_source, first.status) == ("unknown", SeriesStatus.RUNNING)
-    assert (second.estimate.usd_source, second.status) == ("history", SeriesStatus.RUNNING)
-    assert second.estimate.cap_usd == second.estimate.project_cap_usd
+    assert (first.status, second.status) == (SeriesStatus.RUNNING, SeriesStatus.RUNNING)
+    assert second.launch.cap_usd == second.launch.project_cap_usd
     assert [item.series_id for item in head.items] == [second.series_id]
     assert head.next_cursor is not None
     assert [item.series_id for item in rest.items] == [first.series_id]

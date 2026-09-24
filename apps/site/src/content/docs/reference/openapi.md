@@ -73,7 +73,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/experiments` | `experiment_list` |
 | `GET` | `/api/experiments/{experiment_id}` | `experiment_get` |
 | `GET` | `/api/experiments/{experiment_id}/arms/{arm_id}` | `experiment_arm` |
-| `POST` | `/api/experiments/{experiment_id}/estimate` | `series_estimate` |
+| `POST` | `/api/experiments/{experiment_id}/launch-plan` | `series_launch_plan` |
 | `POST` | `/api/series` | `series_start` |
 | `GET` | `/api/series` | `series_list` |
 | `GET` | `/api/series/{series_id}` | `series_get` |

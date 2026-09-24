@@ -17,11 +17,11 @@ from aqven.series import (
     CaseSnapshot,
     CheckState,
     CheckValue,
-    EstimateReason,
     ExperimentOrigin,
+    LaunchPlan,
     LookTarget,
     Recommendation,
-    SeriesEstimate,
+    RecommendationReason,
     SeriesEvent,
     SeriesId,
     SeriesPlanRecord,
@@ -50,24 +50,21 @@ NOW: Final = datetime(2026, 9, 23, 12, 0, tzinfo=UTC)
 EVENTS: Final[TypeAdapter[SeriesEvent]] = TypeAdapter(SeriesEvent)
 
 
-def estimate() -> SeriesEstimate:
-    return SeriesEstimate(
+def launch_plan() -> LaunchPlan:
+    return LaunchPlan(
         on=SeriesSplit.HOLDOUT,
         cases=6,
         repeats=3,
         variants=2,
         attempts=36,
         available=6,
-        usd=Decimal("0.42"),
-        usd_source="prices",
-        minutes=3,
         half_width=0.18,
         mde=0.25,
         margin=0.05,
         spread=0.5,
         spread_source="prior",
         icc=0.3,
-        recommended=Recommendation(cases=60, repeats=3, reason=EstimateReason.SHORT_OF_CASES, text="more cases"),
+        recommended=Recommendation(cases=60, repeats=3, reason=RecommendationReason.SHORT_OF_CASES, text="more cases"),
         below_recommended=True,
         needs_approval=False,
         project_cap_usd=Decimal("1.00"),
@@ -98,7 +95,6 @@ def record() -> SeriesRecord:
         package="lumen",
         repeats=3,
         case_count=6,
-        per_attempt_usd=Decimal("0.0117"),
         snapshot=SeriesSnapshot(
             experiment_sha256=None,
             dataset_sha256="d",
@@ -117,7 +113,7 @@ def record() -> SeriesRecord:
         on=SeriesSplit.HOLDOUT,
         status=SeriesStatus.RUNNING,
         plan=plan,
-        estimate=estimate(),
+        launch=launch_plan(),
         cap_usd=Decimal("0.53"),
         needs_approval=False,
         created_at=NOW,

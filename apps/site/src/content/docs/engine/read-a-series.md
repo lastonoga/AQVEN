@@ -43,7 +43,7 @@ status, then the verdict, then the numbers behind it, then the cases.
   | `inconclusive` (`uninformative`, `no_discordance`) | every case passes or fails for both variants, or they agree on every case | the cases are too easy or too hard; write cases at the boundary |
   | `signal` (`dev_split`) | a number from working cases | keep exploring; confirm on held-out cases when the change is done |
   | `signal` (`judge_not_validated`) | the deciding check is a judge nobody measured | validate the judge on planted defects, then add `validated_by` |
-  | `invalid` (`cancelled`, `budget_cut`) | the series stopped before it finished | run it again, with a cap that fits the estimate |
+  | `invalid` (`cancelled`, `budget_cut`) | the series stopped before it finished | run it again, with a cap that fits what its attempts cost |
   | `invalid` (`inputs_changed`) | a file of the subject changed during the series | run it again, and don't edit while it runs |
   | `invalid` (`infra_errors`) | more than 5% of attempts hit an infrastructure error | fix the key, the limit or the code the attempts name |
   | `invalid` (`no_data`) | the primary metric got no values | read the attempts' errors, and open their runs |

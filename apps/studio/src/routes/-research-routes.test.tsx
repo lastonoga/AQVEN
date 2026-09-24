@@ -38,14 +38,14 @@ describe("research routes", () => {
     })
   })
 
-  it("loads an experiment with its series and the estimate of its plan on the working cases", async () => {
+  it("loads an experiment with its series and the launch plan on the working cases", async () => {
     const router = await renderRoute("/research/experiments/reply_noninferior_mistral")
     await waitFor(() => {
       expect(loaded(router.state.matches, "/_project/research/experiments/$experimentId")).toMatchObject({
         experiment: { id: "reply_noninferior_mistral", plan: { cases: 12, repeats: 3 }, cases: { splits: { dev: 6, holdout: 6 } } },
         series: [{ id: RESEARCH_SERIES.noninferiorHoldout }, { id: RESEARCH_SERIES.noninferiorDev }],
         launch: { on: "dev", cases: 6, repeats: 3 },
-        estimate: { attempts: 36, usd: 0.45, capUsd: 1, recommended: { cases: 52, reason: "short_of_cases" } },
+        plan: { attempts: 36, capUsd: 1, recommended: { cases: 52, reason: "short_of_cases" } },
       })
     })
   })
