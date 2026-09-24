@@ -1,15 +1,17 @@
 import asyncio
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+from dbos._dbos_config import translate_dbos_config_to_config_file
 from engine_core_plan import relay_project
 from pydantic import JsonValue
 
 from aqven.engine import AddressContext, FileBlobStore, PlanMissing, PlanRegistry, PlanStore, RefUnresolved
 from aqven.engine.addressing import address_key, child_workflow_id
-from aqven.engine.config import EnginePaths, dbos_config
+from aqven.engine.config import EnginePaths, dbos_config, executor_threads
 from aqven.engine.executors import idempotency_key, matching_case
 from aqven.engine.interpreter import visible_node
 from aqven.engine.protocol import EXECUTOR_PROTOCOL_VERSION
@@ -147,6 +149,18 @@ def test_dbos_config_targets_project_sqlite(tmp_path: Path) -> None:
     config = dbos_config(EnginePaths(tmp_path))
     assert config.get("system_database_url") == f"sqlite:///{(tmp_path / '.aqven' / 'dbos.sqlite').resolve()}"
     assert (config.get("use_listen_notify"), config.get("application_version")) == (False, EXECUTOR_PROTOCOL_VERSION)
+
+
+def test_dbos_executor_threads_are_bounded() -> None:
+    assert [executor_threads(cpus) for cpus in (None, 1, 4, 6, 8, 64)] == [16, 16, 16, 24, 32, 32]
+
+
+def test_dbos_config_caps_the_executor_pool_dbos_builds(tmp_path: Path) -> None:
+    config = dbos_config(EnginePaths(tmp_path))
+    expected = executor_threads(os.process_cpu_count())
+    assert config.get("max_executor_threads") == expected
+    runtime = translate_dbos_config_to_config_file(config).get("runtimeConfig", {})
+    assert runtime.get("max_executor_threads") == expected
 
 
 def test_idempotency_key_depends_on_run_address_and_attempt() -> None:
