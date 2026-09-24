@@ -65,6 +65,7 @@ from aqven.runtime.human import (
     ToolApprovalDecision,
 )
 from aqven.runtime.options import (
+    CallMedia,
     CapabilityRoute,
     CassetteConfig,
     CassetteMode,
@@ -152,6 +153,7 @@ __all__ = [
     "BlobStore",
     "BlobUploaded",
     "BlobValue",
+    "CallMedia",
     "CallOutcome",
     "CancelRequest",
     "CancelResult",

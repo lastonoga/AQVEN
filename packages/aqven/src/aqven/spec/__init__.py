@@ -1,7 +1,6 @@
 from aqven.spec.agent import (
     AgentOutputSpec,
     AgentSpec,
-    CapabilityOverride,
     DefaultOnTimeout,
     EscalateOnTimeout,
     FailOnTimeout,
@@ -133,6 +132,14 @@ from aqven.spec.mcp import (
     McpServerSpec,
     SecretHeader,
 )
+from aqven.spec.model_ref import (
+    PROVIDER_FAMILIES,
+    VENDOR_FAMILIES,
+    ModelRef,
+    ModelSyntaxError,
+    model_family,
+    parse_model,
+)
 from aqven.spec.modelgen import (
     BUILTIN_ANNOTATIONS,
     GENERATED_CONFIG,
@@ -233,16 +240,6 @@ from aqven.spec.policy import (
     EvaluatorRef,
     PolicyRef,
 )
-from aqven.spec.profiles import (
-    MODEL_PROFILES,
-    PROVIDER_FAMILIES,
-    VENDOR_FAMILIES,
-    ModelProfile,
-    ModelRef,
-    ModelSyntaxError,
-    parse_model,
-    resolve_profile,
-)
 from aqven.spec.project import (
     DataPolicy,
     OpenRouterRouting,
@@ -333,7 +330,6 @@ __all__ = [
     "CODE_REF_PATTERN",
     "CONTEXT_TYPES",
     "CallNodeSpec",
-    "CapabilityOverride",
     "CaseSelection",
     "CellVerdict",
     "CheckSpec",
@@ -423,7 +419,6 @@ __all__ = [
     "MEDIA_MODALITY",
     "MEDIA_TYPES",
     "MODEL_PATTERN",
-    "MODEL_PROFILES",
     "MapItemError",
     "MapNodeSpec",
     "McpServerId",
@@ -434,7 +429,6 @@ __all__ = [
     "MetricKind",
     "Modality",
     "ModelFamily",
-    "ModelProfile",
     "ModelRef",
     "ModelSettingsSpec",
     "ModelString",
@@ -560,13 +554,13 @@ __all__ = [
     "inference_spec",
     "inner_nodes",
     "llm",
+    "model_family",
     "normalized_schema",
     "overridden_model",
     "parse_model",
     "parse_ref",
     "parse_type_ref",
     "record_model",
-    "resolve_profile",
     "schema_path",
     "system",
     "tool",

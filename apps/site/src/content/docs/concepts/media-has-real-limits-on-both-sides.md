@@ -100,7 +100,10 @@ shorter. Both directions are real in AQVEN today, but not through the same mecha
 
 - **Image generation is a normal `llm` node output.** The showcase's `illustrate` node's `out` field is
   simply `type: "Image"` — the `painter` agent returns an instruction image the same way another agent
-  returns structured text. No separate mechanism, no polling.
+  returns structured text. No separate mechanism, no polling. That `out` type is what asks the model for an
+  image, whatever the model: AQVEN keeps no table of which models draw, so a model that can't fails the step —
+  refused by the provider, or by Pydantic AI before the request when its profile for that model has no image
+  output.
 - **Audio generation, in the showcase, goes through a `tool` node instead.** The `voice` node calls
   `synthesize_voice`, a plain synchronous function that hits OpenAI's text-to-speech endpoint and
   returns `type: "Audio"` from the tool's own `out`. That endpoint caps its `input` text at exactly

@@ -436,7 +436,7 @@ def _output_view(
         declared_mode=output.declared_mode,
         mode_source=output.mode_source,
         mode_reason=output.mode_reason,
-        strict=output.strict and agent.primary.capabilities.strict,
+        strict=output.strict,
         retries=output.retries,
         tool_name=OUTPUT_TOOL_NAME if delivery == "tool" else None,
         limits=limits,

@@ -14,7 +14,7 @@ from aqven.engine.llm.context import RunDeps
 from aqven.engine.llm.dynamic import NO_DYNAMIC_FORMS, DynamicForms, DynamicShaper, TypeAnnotations, dynamic_forms
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.instructions import join_instructions, output_limits
-from aqven.engine.llm.output import OutputPlan, agent_output_mode, agent_strict, output_plan
+from aqven.engine.llm.output import OutputPlan, agent_output_mode, output_media, output_plan
 from aqven.engine.llm.ports import CodeLoader, InferenceModels, MediaLoader, ModelSource, SecretSource, ToolContexts
 from aqven.engine.llm.prompt_trace import captured_prompt
 from aqven.engine.llm.prompts import (
@@ -36,6 +36,7 @@ from aqven.policies.paths import read
 from aqven.ports.execution import ExecutionScope
 from aqven.runtime.address import JsonObject
 from aqven.runtime.executions import PromptTrace
+from aqven.runtime.options import CallMedia
 from aqven.spec import AgentId, InferenceId, Limits, MediaValue, Modality, ModelSettingsSpec, RefRoot, parse_ref
 
 DEFAULT_REQUEST_LIMIT: Final = 50
@@ -148,7 +149,7 @@ class InferenceAgents:
         media_items = media_values(inference, normalized)
         media = [await self.media.content(scope, item) for item in media_items]
         conversation = build_conversation(agent.instructions, rendered, example_messages(inference), media)
-        plan = output_plan(call.output_mode or agent_output_mode(agent), shaped.model, agent_strict(agent))
+        plan = output_plan(call.output_mode or agent_output_mode(agent), shaped.model, agent.output.strict)
         instructions = _instructions(conversation, plan, shaped.model, agent.output.instruction)
         trace = captured_prompt(
             rendered,
@@ -161,7 +162,7 @@ class InferenceAgents:
         tools = await self.tools.build(scope, agent, nested=call.nested)
         output_type = [plan.spec, DeferredToolRequests] if tools.deferred else [plan.spec]
         built = Agent[RunDeps, object](
-            await self.models.model(scope, agent, media_modalities(media_items), slot.index),
+            await self.models.model(scope, agent, call_media(media_items, plan), slot.index),
             output_type=output_type,
             instructions=instructions,
             deps_type=RunDeps,
@@ -245,6 +246,10 @@ def _smallest(values: Iterable[int | None]) -> int | None:
 def media_modalities(items: Sequence[MediaValue]) -> frozenset[Modality]:
     kinds = (MEDIA_MODALITIES.get(item.media_type.split(MEDIA_TYPE_SEPARATOR)[0]) for item in items)
     return frozenset(kind for kind in kinds if kind is not None)
+
+
+def call_media(items: Sequence[MediaValue], plan: OutputPlan) -> CallMedia:
+    return CallMedia(input=media_modalities(items), output=output_media(plan))
 
 
 def with_unbound_optionals(inference: CompiledInference, document: JsonObject) -> JsonObject:

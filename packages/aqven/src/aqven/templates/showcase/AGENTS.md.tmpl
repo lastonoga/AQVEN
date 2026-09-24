@@ -72,9 +72,9 @@ tests/                                 offline tests of the example, at the proj
    investigating. `--live` also proves whether `output.strict: true` would hold for a model: every mode it probes runs
    with strict enforcement forced on, so a mode it reports `ok` for has already worked strict against the real
    provider. `aqven check` does not judge what a model accepts — strict output, images, audio, documents: the provider
-   decides, and a refusal comes back as the step's error with the provider's own message. A model outside AQVEN's own
-   list is sent strict output only when the agent sets `capabilities.strict: true`, and that applies to every model in
-   the list, not just the one you probed. Neither check tells you how deep a model's structured output actually nests correctly — before
+   decides, and a refusal comes back as the step's error with the provider's own message. AQVEN keeps no list of
+   models: `output.strict` goes to every model of the agent as you set it, and Pydantic AI leaves the flag out where the
+   provider's profile says it can't take it — probe every model in the list, not just the one that answered first. Neither check tells you how deep a model's structured output actually nests correctly — before
    trusting a model with a real schema that nests objects, carries an array of objects, or leans on a large enum,
    run `aqven models shapes <agent> --live`: it finds the model's real nesting depth, list length and enum size by
    asking it to place literal tokens at each position and checking they came back exactly where asked, not what the

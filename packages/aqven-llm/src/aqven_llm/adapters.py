@@ -16,7 +16,6 @@ from pydantic_ai.settings import ModelSettings
 from aqven_llm.errors import ProviderMisconfigured, ProviderNoStreaming
 
 type ProviderParams = Mapping[str, JsonValue]
-type ModalityName = Literal["text", "image", "audio", "video", "document"]
 type ProviderSource = Literal["project", "package", "builtin"]
 
 ENTRY_POINT_GROUP: Final = "aqven.providers"
@@ -26,14 +25,6 @@ MODEL_NAME_PARAMETER: Final = "model_name"
 CONTEXT_PARAMETER: Final = "context"
 RETURN_HINT: Final = "return"
 STREAM_METHOD: Final = "request_stream"
-TEXT_MODALITY: Final[frozenset[ModalityName]] = frozenset({"text"})
-MODALITIES: Final[Mapping[str, ModalityName]] = {
-    "text": "text",
-    "image": "image",
-    "audio": "audio",
-    "video": "video",
-    "document": "document",
-}
 NO_PARAMS: Final[ProviderParams] = {}
 
 
@@ -55,14 +46,8 @@ class ProviderFactory(Protocol):
     def __call__(self, model_name: str, context: ProviderContext) -> Model: ...
 
 
-def modality_name(text: str) -> ModalityName | None:
-    return MODALITIES.get(text)
-
-
 @dataclass(frozen=True, slots=True)
 class ProviderCapabilities:
-    input: frozenset[ModalityName] = TEXT_MODALITY
-    output: frozenset[ModalityName] = TEXT_MODALITY
     tools: bool = True
     json_schema_output: bool = False
 

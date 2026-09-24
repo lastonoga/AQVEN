@@ -17,7 +17,8 @@ from aqven.ir import AgentModel, CompiledAgent, CompiledInference
 from aqven.ports.execution import ExecutionScope
 from aqven.ports.models import ModelFactory, provider_env_var
 from aqven.ports.settings import SettingsStore, provider_key_setting, resolve_secret
-from aqven.spec import SECRET_REF_PATTERN, MediaValue, Modality, SecretRef
+from aqven.runtime.options import CallMedia
+from aqven.spec import SECRET_REF_PATTERN, MediaValue, SecretRef
 
 INPUT_SUFFIX: Final = "In"
 OUTPUT_SUFFIX: Final = "Out"
@@ -99,9 +100,7 @@ class FactoryModelSource:
     settings: SettingsStore
     environ: Mapping[str, str]
 
-    async def model(
-        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
-    ) -> Model:
+    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: CallMedia, start: int = 0) -> Model:
         return model_chain([await self._build(choice) for choice in chain_choices(agent, start)])
 
     async def _build(self, choice: AgentModel) -> Model:

@@ -1,21 +1,26 @@
 from typing import Final
 
-from llm_harness import FakeScope, agent, answer_inference, answer_node, capabilities, field_ir, project
-from pydantic import BaseModel, ConfigDict, JsonValue
+from llm_harness import FakeScope, agent, answer_inference, answer_node, field_ir, project
+from pydantic import BaseModel, ConfigDict, JsonValue, SecretStr
 from pydantic_ai import BinaryImage
 
-from aqven.engine.llm.agents import media_modalities, with_unbound_optionals
+from aqven.engine.assembly import ProjectModelFactories
+from aqven.engine.llm.agents import call_media, media_modalities, with_unbound_optionals
 from aqven.engine.llm.dynamic import DynamicForms, DynamicShaper, dynamic_forms, schema_hash
 from aqven.engine.llm.output import output_plan
-from aqven.ir import AgentModel, DynamicOutput
+from aqven.ir import AgentModel, CompiledProject, DynamicOutput
 from aqven.ports.execution import ExecutionScope
-from aqven.runtime import CapabilityRoute, ModelCall, ModelProfile, ModelRoute
+from aqven.runtime import CallMedia, CapabilityRoute, ModelCall, ModelProfile, ModelRoute
 from aqven.spec import DynamicLimits, FieldSpec, Image, Modality, ModelString, ProviderName, TypeId
 from aqven.testing import media_value
 
 IMAGE_ROUTE: Final = ModelRoute(model="openrouter:google/gemini-3.1-flash-lite-image")
 VISION_ROUTE: Final = ModelRoute(model="openrouter:google/gemini-2.5-flash-lite", zdr=False)
 TEXT_ROUTE: Final = ModelRoute(model="openrouter:mistralai/mistral-nemo")
+UNLISTED_MODEL: Final = "openrouter:acme/sketch-9"
+IMAGE_ONLY: Final = frozenset({Modality.IMAGE})
+TEXT_ONLY: Final = frozenset({Modality.TEXT})
+PROJECT: Final = CompiledProject(package="shop", description="project")
 FORM: Final[JsonValue] = [
     {"name": "order_id", "type": "Text", "description": "Order number", "maxLength": 20},
     {"name": "urgent", "type": "Bool?", "description": "Is it urgent"},
@@ -39,16 +44,11 @@ class BuiltinTypes:
 
 
 def model_call(output: frozenset[Modality], media: frozenset[Modality], uses_tools: bool = False) -> ModelCall:
-    base = capabilities()
-    model = AgentModel(
-        model=ModelString("openrouter:openai/gpt-5.4-image-2"),
-        provider=ProviderName("openrouter"),
-        capabilities=base.model_copy(update={"output": tuple(sorted(output))}),
-    )
-    return ModelCall(model=model, uses_tools=uses_tools, media=media)
+    model = AgentModel(model=ModelString(UNLISTED_MODEL), provider=ProviderName("openrouter"))
+    return ModelCall(model=model, uses_tools=uses_tools, media=CallMedia(input=media, output=output))
 
 
-def test_model_profile_routes_by_capability_media_and_declared_model() -> None:
+def test_model_profile_routes_by_the_call_media_and_declared_model() -> None:
     profile = ModelProfile(
         name="cheap",
         routes=(
@@ -59,9 +59,9 @@ def test_model_profile_routes_by_capability_media_and_declared_model() -> None:
         ),
     )
 
-    painter = profile.route(model_call(frozenset({Modality.TEXT, Modality.IMAGE}), frozenset()))
-    seeing = profile.route(model_call(frozenset({Modality.TEXT}), frozenset({Modality.IMAGE})))
-    text = profile.route(model_call(frozenset({Modality.TEXT}), frozenset()))
+    painter = profile.route(model_call(IMAGE_ONLY, frozenset()))
+    seeing = profile.route(model_call(TEXT_ONLY, IMAGE_ONLY))
+    text = profile.route(model_call(TEXT_ONLY, frozenset()))
 
     assert (painter, seeing, text) == (IMAGE_ROUTE, VISION_ROUTE, TEXT_ROUTE)
 
@@ -83,6 +83,33 @@ def test_sole_image_output_is_requested_as_binary_image() -> None:
 
     assert plan.spec is BinaryImage
     assert plan.image_field == "image"
+
+
+def test_the_call_asks_for_an_image_only_when_the_node_outputs_one() -> None:
+    photo = media_value(b"png", "image/png", "photo.png")
+
+    painting = call_media((), output_plan("prompted", Illustration))
+    reading = call_media((photo,), output_plan("tool", Intake))
+
+    assert painting == CallMedia(input=frozenset(), output=IMAGE_ONLY)
+    assert reading == CallMedia(input=IMAGE_ONLY, output=TEXT_ONLY)
+
+
+def test_an_image_output_call_requests_image_generation_from_a_model_outside_any_table() -> None:
+    factories = ProjectModelFactories()
+    key = SecretStr("k")
+
+    painter = factories.factory(PROJECT, None, model_call(IMAGE_ONLY, frozenset())).build(
+        UNLISTED_MODEL, settings=None, api_key=key
+    )
+    writer = factories.factory(PROJECT, None, model_call(TEXT_ONLY, frozenset())).build(
+        UNLISTED_MODEL, settings=None, api_key=key
+    )
+
+    assert painter.profile.get("supports_image_output") is True
+    assert (painter.settings or {}).get("extra_body") == {"modalities": ["image", "text"]}
+    assert writer.profile.get("supports_image_output") is False
+    assert (writer.settings or {}).get("extra_body") is None
 
 
 def test_dynamic_output_is_shaped_from_the_form_and_wrapped_with_its_hash() -> None:

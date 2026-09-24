@@ -10,7 +10,6 @@ from aqven.ir.common import (
     IrModel,
     JsonSchema,
     JudgeEvaluator,
-    ModalitySet,
     RefText,
 )
 from aqven.spec import (
@@ -22,7 +21,6 @@ from aqven.spec import (
     InferenceId,
     Limits,
     McpServerId,
-    ModelFamily,
     ModelSettingsSpec,
     ModelString,
     OutcomePolicy,
@@ -45,17 +43,9 @@ type PromptLevelText = Literal[1, 2]
 PROFILE_DEFAULT_REASON: Final = "Pydantic AI profile default"
 
 
-class ModelCapabilities(IrModel):
-    family: ModelFamily
-    input: ModalitySet
-    output: ModalitySet
-    strict: bool
-
-
 class AgentModel(IrModel):
     model: ModelText
     provider: ProviderText
-    capabilities: ModelCapabilities
 
 
 class CompiledAgentOutput(IrModel):
