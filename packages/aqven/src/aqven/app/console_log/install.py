@@ -9,7 +9,7 @@ from aqven.app.console_log.jsonl import DevLogHandler, dev_log_path
 from aqven.app.console_log.levels import DBOS_LOGGER, OWN_LOGGER, PROFILES, ConsoleLevel, LevelProfile
 from aqven.app.console_log.python_warnings import WarningsBridge
 from aqven.app.console_log.render import ConsoleHandler, terminal_console
-from aqven.app.console_log.rules import AccessLineRule, DemoteRule, ShutdownInterruptionRule
+from aqven.app.console_log.rules import AccessLineRule, DemoteRule, LanePauseRule, ShutdownInterruptionRule
 from aqven.app.locations import ProjectState
 from aqven.log_support import RecordRule, RuleChain
 
@@ -60,7 +60,7 @@ class InstalledConsole:
 
 def console_rules(setup: ConsoleSetup) -> tuple[RecordRule, ...]:
     demote: tuple[RecordRule, ...] = (DemoteRule(setup.demoted),) if setup.demoted else ()
-    return (AccessLineRule(), ShutdownInterruptionRule(), *demote)
+    return (AccessLineRule(), ShutdownInterruptionRule(), LanePauseRule(), *demote)
 
 
 def level_table(profile: LevelProfile) -> Mapping[str, int]:

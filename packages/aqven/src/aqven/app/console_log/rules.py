@@ -4,8 +4,10 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Final
 
+from aqven.app.console_log.events import CONSOLE_EVENT_ATTRIBUTE, ConsoleEvent
 from aqven.engine.addressing import CHILD_WORKFLOW_SEPARATOR
 from aqven.log_support import exception_of, rewritten, short_id
+from aqven.models.lanes import LANES_LOGGER
 
 ACCESS_LOGGER: Final = "uvicorn.access"
 ACCESS_ARGUMENTS: Final = 5
@@ -21,6 +23,16 @@ class AccessLineRule:
             return record
         _client, method, path, _version, status = arguments
         return rewritten(record, record.levelno, f"{method} {path} {status}")
+
+
+@dataclass(frozen=True, slots=True)
+class LanePauseRule:
+    def apply(self, record: logging.LogRecord) -> logging.LogRecord | None:
+        if record.name != LANES_LOGGER:
+            return record
+        text = record.getMessage()
+        event = ConsoleEvent(kind="lane_paused", glyph="⏸", tone="notice", text=text, level=record.levelno)
+        return rewritten(record, record.levelno, text, {CONSOLE_EVENT_ATTRIBUTE: event})
 
 
 @dataclass(frozen=True, slots=True)

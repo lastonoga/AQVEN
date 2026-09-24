@@ -100,3 +100,18 @@ def test_check_builds_no_model_client(tmp_path: Path, monkeypatch: pytest.Monkey
     report = check_project(copy_project(FIXTURE, tmp_path))
 
     assert report.ok
+
+
+def test_a_fixed_only_rate_limit_key_on_an_auto_provider_fails_the_check(tmp_path: Path) -> None:
+    root = copy_project(FIXTURE, tmp_path)
+    project = root / "aqven.yaml"
+    source = project.read_text(encoding="utf-8")
+    project.write_text(source.replace('retention: "zero"\n', 'retention: "zero"\n  retry_attempts: 3\n', 1), "utf-8")
+
+    report = check_project(root)
+
+    found = [(item.code, item.path, item.message) for item in report.diagnostics if item.file == "aqven.yaml"]
+    assert len(found) == 1
+    code, path, message = found[0]
+    assert (code, path) == (DiagnosticCode.E_SPEC_INVALID, ("providers", 0))
+    assert "on_rate_limit: auto does not read retry_attempts: remove it or set on_rate_limit: fixed" in message
