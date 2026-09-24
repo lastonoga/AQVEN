@@ -56,6 +56,7 @@ function GraphBlock({ view, question, selected, legend, onSelect, onToggleLegend
           legend={legend}
           dimmed={view.dimmed}
           pageScroll
+          fitSpace="tight"
           focusInset={SIDE_PANEL_WIDTH}
           onSelect={onSelect}
           onToggleLegend={onToggleLegend}

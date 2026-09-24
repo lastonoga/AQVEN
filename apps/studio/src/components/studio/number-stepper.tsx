@@ -22,7 +22,7 @@ const PLAIN_NUMBER = "text-center font-mono [appearance:textfield] [&::-webkit-i
 export function NumberStepper({ id, label, value, min, max, invalid, describedBy, decreaseLabel, increaseLabel, onChange }: NumberStepperProps) {
   const bounds = stepBounds(value, min, max)
   return (
-    <InputGroup className="w-30 shrink-0">
+    <InputGroup className="w-30 shrink-0 has-disabled:bg-transparent has-disabled:opacity-100">
       <InputGroupAddon align="inline-start">
         <InputGroupButton
           size="icon-xs"

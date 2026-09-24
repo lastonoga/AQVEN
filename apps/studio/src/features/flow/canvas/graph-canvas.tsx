@@ -10,7 +10,7 @@ import {
   type ProOptions,
 } from "@xyflow/react"
 import { useTranslations } from "use-intl"
-import { absoluteBox, type CanvasGraph, type CanvasNode } from "../layout"
+import { absoluteBox, type CanvasGraph } from "../layout"
 import { ContainerNode } from "./container-node"
 import { edgeColors } from "./edge-colors"
 import { FlowEdge } from "./flow-edge"
@@ -18,7 +18,7 @@ import { Legend } from "./legend"
 import { nodePorts } from "./ports"
 import { HoveredNodeContext, SelectedNodeContext } from "./selection"
 import { StepNode } from "./step-node"
-import { fitViewOptions, toFlowEdges, toFlowNodes, type CanvasFlowNode } from "./to-flow"
+import { fitViewOptions, toFlowEdges, toFlowNodes, type CanvasFlowNode, type FitSpace } from "./to-flow"
 import { useNodeFocus } from "./use-node-focus"
 import { MAX_ZOOM, MIN_ZOOM } from "./viewport"
 import { ZoomControl } from "./zoom-control"
@@ -32,6 +32,7 @@ export type GraphCanvasProps = {
   readonly dimmed?: ReadonlySet<string>
   readonly pageScroll?: boolean
   readonly focusInset?: number
+  readonly fitSpace?: FitSpace
 }
 
 const NODE_TYPES = { step: StepNode, container: ContainerNode } satisfies NodeTypes
@@ -44,11 +45,6 @@ const NONE_DIMMED: ReadonlySet<string> = new Set()
 const dimNodes = (nodes: CanvasFlowNode[], dimmed: ReadonlySet<string>): CanvasFlowNode[] =>
   nodes.map((node) => (dimmed.has(node.id) ? { ...node, className: DIMMED_CLASS } : node))
 
-const litNodes = (nodes: readonly CanvasNode[], dimmed: ReadonlySet<string>): readonly CanvasNode[] => {
-  const lit = nodes.filter((node) => !dimmed.has(node.id))
-  return lit.length === 0 ? nodes : lit
-}
-
 type FocusedNodeProps = { readonly graph: CanvasGraph; readonly selected: string | null; readonly inset: number }
 
 function FocusedNode({ graph, selected, inset }: FocusedNodeProps) {
@@ -56,10 +52,10 @@ function FocusedNode({ graph, selected, inset }: FocusedNodeProps) {
   return null
 }
 
-export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend, dimmed = NONE_DIMMED, pageScroll = false, focusInset = 0 }: GraphCanvasProps) {
+export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend, dimmed = NONE_DIMMED, pageScroll = false, focusInset = 0, fitSpace = "roomy" }: GraphCanvasProps) {
   const t = useTranslations("flow.canvas")
   const [hovered, setHovered] = useState<string | null>(null)
-  const fitOptions = fitViewOptions(litNodes(graph.nodes, dimmed))
+  const fitOptions = fitViewOptions(graph.nodes, fitSpace)
   const colors = edgeColors(graph.edges)
   const selectNode: NodeMouseHandler<CanvasFlowNode> = (_event, node) => {
     onSelect(node.id)

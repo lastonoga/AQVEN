@@ -222,11 +222,6 @@ export const questionSentence = (question: ExperimentQuestion, metrics: readonly
 export const guardrailsOf = (question: ExperimentQuestion): readonly Guardrail[] =>
   question.kind === "compare" || question.kind === "noninferior" ? question.guardrails : []
 
-export const guardrailSentences = (question: ExperimentQuestion, metrics: readonly MetricColumn[], copy: QuestionCopy): readonly string[] =>
-  guardrailsOf(question).map((guard) =>
-    copy.guardrail({ metric: metricName(guard.metric, copy.builtin), margin: marginText(guard.margin, unitOf(metrics, guard.metric), guard.relative) }),
-  )
-
 const thresholdRule = (question: ThresholdQuestion, metrics: readonly MetricColumn[], builtin: BuiltinNames): DecisionRule => {
   const unit = unitOf(metrics, question.metric)
   return {

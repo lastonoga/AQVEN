@@ -4,7 +4,9 @@ export type RowRole = VariantRole | "tested"
 
 export type Named = { readonly short: string; readonly full: string }
 
-export type StepSwap = { readonly node: NodeId; readonly from: Named; readonly to: Named }
+export type AgentModel = { readonly agent: string; readonly model: Named }
+
+export type StepSwap = { readonly node: NodeId; readonly from: AgentModel; readonly to: AgentModel }
 
 export type VariantChange =
   | { readonly kind: "reference" }
@@ -15,7 +17,7 @@ export type VariantRow = {
   readonly id: VariantId
   readonly role: RowRole
   readonly change: VariantChange
-  readonly models: readonly Named[]
+  readonly agents: readonly AgentModel[]
 }
 
 export type ChangeColumn =
@@ -54,7 +56,7 @@ export const stepName = (node: string): string => node.split(NESTING_MARK).join(
 
 const modelOf = (model: string): Named => ({ short: shortModel(model), full: model })
 
-const agentOf = (agent: AgentRef): Named => ({ short: agent.id, full: agent.id })
+const agentModelOf = (agent: AgentRef): AgentModel => ({ agent: agent.id, model: modelOf(agent.model) })
 
 const isPair = (question: ExperimentQuestion): question is Extract<ExperimentQuestion, { readonly baseline: VariantId }> =>
   question.kind === "compare" || question.kind === "noninferior"
@@ -107,9 +109,8 @@ const agentAt = (experiment: Subject, variant: ExperimentVariant, node: NodeId):
 
 const swapOf = (node: NodeId, from: AgentRef | null, to: AgentRef | null): readonly StepSwap[] => {
   if (from === null || to === null) return []
-  if (from.model !== to.model) return [{ node, from: modelOf(from.model), to: modelOf(to.model) }]
-  if (from.id !== to.id) return [{ node, from: agentOf(from), to: agentOf(to) }]
-  return []
+  if (from.id === to.id && from.model === to.model) return []
+  return [{ node, from: agentModelOf(from), to: agentModelOf(to) }]
 }
 
 export const swapsBetween = (experiment: Subject, reference: ExperimentVariant, variant: ExperimentVariant): readonly StepSwap[] => {
@@ -122,8 +123,8 @@ const stepsOf = (experiment: Subject, variant: ExperimentVariant): readonly Node
   return arm?.steps.map((step) => step.node) ?? variant.assignments.map((item) => item.node)
 }
 
-export const modelsOf = (variant: ExperimentVariant): readonly Named[] =>
-  [...new Set(variant.assignments.map((item) => item.agent.model))].map(modelOf)
+export const agentsOf = (variant: ExperimentVariant): readonly AgentModel[] =>
+  [...new Map(variant.assignments.map((item) => [item.agent.id, agentModelOf(item.agent)] as const)).values()]
 
 const changeOf = (experiment: Subject, column: ChangeColumn, reference: ExperimentVariant | null, variant: ExperimentVariant): VariantChange => {
   if (column.kind === "steps") return { kind: "steps", steps: stepsOf(experiment, variant) }
@@ -140,7 +141,7 @@ export const variantTable = (experiment: Subject): VariantTable => {
       id: variant.id,
       role: rowRole(experiment.question, variant),
       change: changeOf(experiment, column, reference, variant),
-      models: modelsOf(variant),
+      agents: agentsOf(variant),
     })),
   }
 }

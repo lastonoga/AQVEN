@@ -35,15 +35,15 @@ const casesInput = (): HTMLElement => screen.getByRole("spinbutton", { name: "Ca
 
 const repeatsInput = (): HTMLElement => screen.getByRole("spinbutton", { name: "Repeats" })
 
-const launchTile = async (name: string): Promise<HTMLElement> => tileOf(await section("Launch"), name)
+const launchSummary = async (): Promise<HTMLElement> => within(await section("Launch")).getByRole("status", { name: "Launch summary" })
 
 const launchRun = async (): Promise<HTMLElement> => within(await section("Launch")).getByRole("button", { name: "Run" })
 
 describe("ExperimentScreen: question", () => {
   it("titles the page with the question, the verdict of the latest series and a run button with the price", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    expect(await screen.findByRole("heading", { level: 1, name: "mistral is not worse than gpt on critique by more than 0.05" })).toBeTruthy()
-    expect(screen.getByText("Guardrails: cost per pass at most 20% worse")).toBeTruthy()
+    expect(await screen.findByRole("heading", { level: 1, name: "Variant mistral is not worse than variant gpt on critique by more than 0.05" })).toBeTruthy()
+    expect(screen.queryByText(/^Guardrails:/)).toBeNull()
     expect(screen.getAllByText("reply_noninferior_mistral").length).toBeGreaterThan(0)
     expect(screen.getAllByText("confirmed")[0]).toBeTruthy()
     expect(screen.getByRole("button", { name: "Run · ≈ $0.45 from past series" }).hasAttribute("disabled")).toBe(false)
@@ -136,13 +136,13 @@ describe("ExperimentScreen: what we test", () => {
     const what = await section("What we test")
     const hypothesis = within(what).getByRole("region", { name: "Hypothesis" })
     expect(within(hypothesis).getByText(/^mistral in the revision step of the polish loop is not worse than gpt/)).toBeTruthy()
-    expect(rulesOf(what)).toEqual(["critique: difference ≥ −0.05", "cost per pass ≤ +20%"])
+    expect(rulesOf(what)).toEqual(["critique: difference ≥ −0.05", "cost per passing run ≤ +20%"])
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
     expect(hypothesis.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from baseline", "Models"])
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from baseline", "Agents · models"])
     expect(rowsOf(table)).toEqual([
-      ["gpt", "baseline", "—", "mistral-nemogpt-oss-20b"],
-      ["mistral", "candidate", "polish › revise: gpt-oss-20b → mistral-nemo", "mistral-nemo"],
+      ["gpt", "baseline", "—", "mistralmistral-nemogptgpt-oss-20b"],
+      ["mistral", "candidate", "polish › revise: agent gpt → agent mistralgpt-oss-20b → mistral-nemo", "mistralmistral-nemo"],
     ])
     expect(within(table).getAllByText("mistral-nemo")[0]?.getAttribute("title")).toBe("openrouter:mistralai/mistral-nemo")
     const facts = factsOf(what)
@@ -182,10 +182,10 @@ describe("ExperimentScreen: what we test", () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
     const what = await section("What we test")
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Steps", "Models"])
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Steps", "Agents · models"])
     expect(rowsOf(table)).toEqual([
-      ["one_step", "baseline", "classify_message", "llama-3.1-8b-instruct"],
-      ["two_step", "candidate", "condense_message → classify_summary", "llama-3.1-8b-instruct"],
+      ["one_step", "baseline", "classify_message", "llamallama-3.1-8b-instruct"],
+      ["two_step", "candidate", "condense_message → classify_summary", "llamallama-3.1-8b-instruct"],
     ])
     const where = tileOf(factsOf(what), "Where")
     expect(within(where).getByText("arms")).toBeTruthy()
@@ -196,8 +196,8 @@ describe("ExperimentScreen: what we test", () => {
     await renderRoute("/research/experiments/critique_planted_defects")
     const what = await section("What we test")
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Models"])
-    expect(rowsOf(table)).toEqual([["deepseek", "tested", "deepseek-v4-flash-0731"]])
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Agents · models"])
+    expect(rowsOf(table)).toEqual([["deepseek", "tested", "deepseekdeepseek-v4-flash-0731"]])
     expect(rulesOf(what)).toEqual(["label ≥ 0.85 ± 0.05"])
     const facts = factsOf(what)
     expect(itemsOf(within(tileOf(facts, "Measured by")).getByRole("list", { name: "Checks" }))).toEqual(["labelbuilt-in"])
@@ -211,12 +211,12 @@ describe("ExperimentScreen: what we test", () => {
   it("compares the variants of a threshold on many variants with the first one", async () => {
     await renderRoute("/research/experiments/reply_stage_budget")
     const table = within(await section("What we test")).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from three_families", "Models"])
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from three_families", "Agents · models"])
     expect(rowsOf(table)[1]).toEqual([
       "mistral_only",
       "tested",
-      "drafts › gemini: gemini-2.5-flash-lite → mistral-nemodrafts › gpt: gpt-oss-20b → mistral-nemo",
-      "mistral-nemo",
+      "drafts › gemini: agent gemini → agent mistralgemini-2.5-flash-lite → mistral-nemodrafts › gpt: agent gpt → agent mistralgpt-oss-20b → mistral-nemo",
+      "mistralmistral-nemo",
     ])
   })
 
@@ -225,7 +225,7 @@ describe("ExperimentScreen: what we test", () => {
     const what = await section("What we test")
     expect(within(what).getByRole("region", { name: "Goal" })).toBeTruthy()
     expect(rulesOf(what)).toEqual(["no verdict"])
-    expect(rowsOf(within(what).getByRole("table", { name: "Variants of this experiment" }))).toEqual([["current", "tested", "mistral-nemogpt-oss-20b"]])
+    expect(rowsOf(within(what).getByRole("table", { name: "Variants of this experiment" }))).toEqual([["current", "tested", "mistralmistral-nemogptgpt-oss-20b"]])
     const cases = tileOf(factsOf(what), "Cases")
     expect(within(cases).getByText("5")).toBeTruthy()
     expect(within(cases).getByText("of 12")).toBeTruthy()
@@ -292,7 +292,7 @@ describe("ExperimentScreen: answer", () => {
       expect(button.hasAttribute("disabled")).toBe(false)
     })
     fireEvent.click(button)
-    expect((await screen.findByRole("status")).textContent).toBe("Sent to the chat on the left.")
+    expect((await within(await section("Answer")).findByRole("status")).textContent).toBe("Sent to the chat on the left.")
     expect(String(sent[0])).toContain("Suggest the next hypothesis after the experiment reply_noninferior_mistral")
     expect(String(sent[0])).toContain("ended confirmed")
   })
@@ -337,7 +337,7 @@ describe("ExperimentScreen: cases where variants disagree", () => {
 })
 
 describe("ExperimentScreen: launch", () => {
-  it("lays the launch out as steppers, a split switch, the attempts and the estimate beside the run button", async () => {
+  it("lays the launch out as a compact form, a notice line and one summary line ending with the run button", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     const launch = await section("Launch")
     expect(within(launch).queryByRole("button", { name: "Adjust" })).toBeNull()
@@ -347,11 +347,9 @@ describe("ExperimentScreen: launch", () => {
     expect(hint.getAttribute("title")).toMatch(/only 6 are available: expect a wide interval/)
     expect(repeatsInput()).toHaveProperty("value", "3")
     expect(within(launch).getByRole("radio", { name: "working" }).getAttribute("aria-checked")).toBe("true")
-    expect(within(await launchTile("Attempts")).getByText("36")).toBeTruthy()
-    const estimate = await launchTile("Estimate")
-    expect(within(estimate).getByText("≈ $0.45")).toBeTruthy()
-    expect(within(estimate).getByText("from past series")).toBeTruthy()
-    expect(within(estimate).getByText("Spend cap $1.00")).toBeTruthy()
+    const summary = await launchSummary()
+    expect(summary.textContent).toBe("36 attempts · ≈ $0.45 from past series · cap $1.00")
+    expect(summary.compareDocumentPosition(await launchRun()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect((await launchRun()).hasAttribute("disabled")).toBe(false)
   })
 
@@ -363,16 +361,43 @@ describe("ExperimentScreen: launch", () => {
     fireEvent.click(within(launch).getByRole("button", { name: "More repeats" }))
     expect(casesInput()).toHaveProperty("value", "5")
     expect(repeatsInput()).toHaveProperty("value", "4")
+    expect((await launchSummary()).textContent).toMatch(/^40 attempts · /)
     await waitFor(async () => {
-      expect(within(await launchTile("Attempts")).getByText("40")).toBeTruthy()
+      expect((await launchSummary()).textContent).toBe("40 attempts · ≈ $0.50 from past series · cap $1.00")
     })
+  })
+
+  it("keeps the last estimate dimmed while it re-estimates and asks once after the steps settle", async () => {
+    const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
+    if (experiment === undefined) throw new Error("no experiment")
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    const launch = await section("Launch")
+    const asked = vi.fn()
+    server.use(
+      http.post(`${API_BASE}/experiments/:experimentId/estimate`, () => {
+        asked()
+        return HttpResponse.json(estimateFor(experiment, { on: "dev", cases: 6, repeats: 6 }))
+      }),
+    )
+    const more = within(launch).getByRole("button", { name: "More repeats" })
+    fireEvent.click(more)
+    fireEvent.click(more)
+    fireEvent.click(more)
+    const summary = await launchSummary()
+    expect(summary.textContent).toBe("72 attempts · ≈ $0.45 from past series · cap $1.00")
+    expect(summary.querySelector("[aria-busy=true]")).toBeTruthy()
+    await waitFor(() => {
+      expect(summary.querySelector("[aria-busy=true]")).toBeNull()
+    })
+    expect(summary.textContent).toBe("72 attempts · ≈ $0.90 from past series · cap $1.00")
+    expect(asked).toHaveBeenCalledTimes(1)
   })
 
   it("re-estimates a smaller launch and keeps it runnable with a warning", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     fireEvent.change(casesInput(), { target: { value: "3" } })
     await waitFor(async () => {
-      expect(within(await launchTile("Attempts")).getByText("18")).toBeTruthy()
+      expect((await launchSummary()).textContent).toMatch(/^18 attempts · /)
     })
     expect(await within(await section("Launch")).findByText("52 recommended, only 6 here: expect a wide interval")).toBeTruthy()
     expect((await launchRun()).hasAttribute("disabled")).toBe(false)
@@ -388,36 +413,33 @@ describe("ExperimentScreen: launch", () => {
       ),
     )
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    const estimate = await launchTile("Estimate")
-    expect(within(estimate).getByText("—")).toBeTruthy()
-    expect(within(estimate).getByText("no price")).toBeTruthy()
-    expect(within(estimate).getByText("No price yet: waits for your approval")).toBeTruthy()
+    expect((await launchSummary()).textContent).toBe("36 attempts · no price estimate · needs your approval")
     expect(screen.getByRole("button", { name: "Run · no price estimate" })).toBeTruthy()
   })
 
   it.each([
-    ["history", "≈ $0.45", "from past series", "≈ $0.45 from past series"],
-    ["prices", "≈ $0.45", "at provider prices", "≈ $0.45 at provider prices"],
-    ["bound", "≤ $0.45", "upper bound", "≤ $0.45, upper bound"],
-  ] as const)("names where a %s estimate comes from in the launch and on the run button", async (source, value, from, label) => {
+    ["history", "≈ $0.45 from past series"],
+    ["prices", "≈ $0.45 at provider prices"],
+    ["bound", "≤ $0.45 upper bound"],
+  ] as const)("names where a %s estimate comes from in the launch and on the run button", async (source, label) => {
     const experiment = liveExperiments.find((item) => item.experiment_id === "reply_noninferior_mistral")
     if (experiment === undefined) throw new Error("no experiment")
     server.use(http.post(`${API_BASE}/experiments/:experimentId/estimate`, () => HttpResponse.json({ ...estimateFor(experiment, { on: "dev" }), usd_source: source })))
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    const estimate = await launchTile("Estimate")
-    expect(within(estimate).getByText(value)).toBeTruthy()
-    expect(within(estimate).getByText(from)).toBeTruthy()
+    expect((await launchSummary()).textContent).toBe(`36 attempts · ${label} · cap $1.00`)
     expect(screen.getByRole("button", { name: `Run · ${label}` })).toBeTruthy()
   })
 
   it("refuses a size outside the cases of the split", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     fireEvent.change(casesInput(), { target: { value: "7" } })
-    expect(await screen.findByText("Whole number from 1 to 6")).toBeTruthy()
+    expect(await screen.findByText("Cases: a whole number from 1 to 6")).toBeTruthy()
     expect(casesInput().getAttribute("aria-invalid")).toBe("true")
     expect(screen.getAllByRole("button", { name: RUN }).map((button) => button.hasAttribute("disabled"))).toEqual([true, true])
     fireEvent.change(repeatsInput(), { target: { value: "21" } })
-    expect(await screen.findByText("Whole number from 1 to 20")).toBeTruthy()
+    expect(await screen.findByText("Repeats: a whole number from 1 to 20")).toBeTruthy()
+    expect(screen.getByText("Cases: a whole number from 1 to 6")).toBeTruthy()
+    expect((await launchSummary()).textContent).toBe("—")
   })
 
   it("runs a series on the held-out cases and opens it", async () => {
@@ -425,7 +447,7 @@ describe("ExperimentScreen: launch", () => {
     fireEvent.click(within(await section("Launch")).getByRole("radio", { name: "held-out" }))
     fireEvent.change(casesInput(), { target: { value: "4" } })
     await waitFor(async () => {
-      expect(within(await launchTile("Attempts")).getByText("24")).toBeTruthy()
+      expect((await launchSummary()).textContent).toMatch(/^24 attempts · /)
     })
     fireEvent.click(await launchRun())
     await waitFor(() => {
@@ -438,7 +460,7 @@ describe("ExperimentScreen: launch", () => {
   it("approves the spend of a waiting series, then stops it", async () => {
     await renderRoute("/research/experiments/reply_overpromise_risk")
     const launch = await section("Launch")
-    expect(within(tileOf(launch, "Estimate")).getByText("Above the $1.00 cap: waits for your approval")).toBeTruthy()
+    expect((await launchSummary()).textContent).toMatch(/ · over the \$1\.00 cap: needs your approval$/)
     expect(within(launch).getByText("AWAITING APPROVAL")).toBeTruthy()
     fireEvent.click(within(launch).getByRole("button", { name: "Approve spend" }))
     expect(await within(launch).findByText("RUNNING")).toBeTruthy()
@@ -483,7 +505,7 @@ describe("ExperimentScreen: history and details", () => {
     expect(within(details).queryByText(/experiment\.yaml/)).toBeNull()
     fireEvent.click(within(details).getByRole("button", { name: "Technical details" }))
     expect(within(details).getByText(/experiments\/reply_noninferior_mistral\/experiment\.yaml/)).toBeTruthy()
-    expect(within(details).getByText(/not worse · critique ↑ · primary · margin 0\.05; cost per pass ↓ · guardrail · margin 20%/)).toBeTruthy()
+    expect(within(details).getByText(/not worse · critique ↑ · primary · margin 0\.05; cost per passing run ↓ · guardrail · margin 20%/)).toBeTruthy()
     expect(within(details).getByText("12 cases × 3 repeats")).toBeTruthy()
     expect(within(details).getByRole("region", { name: "Notes of this experiment" }).textContent).toContain("mistral in the revision step")
   })
