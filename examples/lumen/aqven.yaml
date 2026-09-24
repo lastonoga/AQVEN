@@ -24,6 +24,8 @@ policies:
     - "iban"
   trust:
     default_in: "untrusted"
+research:
+  spend_cap_usd: 1.00
 renames:
 - kind: "node"
   from: "support_case.drafts__claude"

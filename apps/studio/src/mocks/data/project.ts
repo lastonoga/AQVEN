@@ -1,4 +1,4 @@
-import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiSetting, ApiType, ApiTypeDetail } from "@/domain"
+import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiResearchBudget, ApiSecret, ApiSetting, ApiType, ApiTypeDetail } from "@/domain"
 
 export const liveProject: ApiProject = {
   "root": "/Users/kirunya/Projects/my/ai-workflows-automate/examples/lumen",
@@ -1247,6 +1247,15 @@ export const liveSecrets: readonly ApiSecret[] = [
     "set": false
   }
 ]
+
+export const liveResearchBudget: ApiResearchBudget = {
+  "spend_cap_usd": "1.00",
+  "source": "project",
+  "project_usd": "1.00",
+  "default_usd": "1.00",
+  "override_problem": null,
+  "project_file": liveProject.project_file
+}
 
 export const liveProjectSettings: readonly ApiSetting[] = [
   {

@@ -5,6 +5,7 @@ import sys
 import tomllib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from decimal import Decimal
 from pathlib import Path, PurePosixPath
 from typing import Final
 
@@ -21,6 +22,8 @@ from aqven.console.project_template import (
     RenderedProject,
     TemplateValues,
 )
+from aqven.loader import read_strict_yaml
+from aqven.spec import ProjectSpec
 
 AQVEN_PACKAGE: Final = Path(__file__).resolve().parents[2]
 RUN_SECONDS: Final = 300
@@ -41,6 +44,7 @@ AGENT_RULES: Final = (
     "When to stop",
 )
 CLAUDE_TOOLS: Final = ("series_start", "series_get", "series_cancel", "run_events")
+RESEARCH_BLOCK: Final = "research:\n  spend_cap_usd: 1.00\n"
 
 
 def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -385,3 +389,34 @@ def test_next_steps_skip_the_cp_when_the_wizard_already_wrote_the_key(
     out = capsys.readouterr().out
     assert "OPENROUTER_API_KEY is already set in shop/.env" in out
     assert "cp shop/.env.example" not in out
+
+
+@pytest.mark.parametrize("name", sorted(TEMPLATES))
+def test_every_template_puts_the_research_spend_cap_in_aqven_yaml(name: str) -> None:
+    values = TemplateValues(package=PACKAGE, project="demo-shop", aqven_requirement="aqven", uv_sources="")
+    rendered = TEMPLATES[name].render(values)
+    project = next(item.content for item in rendered.files if item.path == PurePosixPath(PACKAGE, "aqven.yaml"))
+    assert isinstance(project, str)
+    document, _ = read_strict_yaml(project, "aqven.yaml")
+    assert document is not None
+
+    research = ProjectSpec.model_validate(document.data).research
+
+    assert RESEARCH_BLOCK in project
+    assert research is not None and research.spend_cap_usd == Decimal("1.00")
+
+
+def test_the_wizard_budget_lands_before_the_research_block(tmp_path: Path) -> None:
+    wizard = WizardAnswers(
+        provider_id="openrouter",
+        provider_env_var="OPENROUTER_API_KEY",
+        api_key=None,
+        allows_pii=False,
+        budget_usd_micros=2_500_000,
+        max_parallel=4,
+    )
+    assert create_project(NewProjectRequest(target=tmp_path / "shop", sync=False, wizard=wizard)) == 0
+
+    project = (tmp_path / "shop" / "shop" / "aqven.yaml").read_text(encoding="utf-8")
+
+    assert project.endswith(f"limits:\n  usd_micros: 2500000\n{RESEARCH_BLOCK}")

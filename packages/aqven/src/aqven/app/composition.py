@@ -240,6 +240,7 @@ def assemble_app(
         extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans, feeds=parts.feeds),
         workspace=project.workspace,
         series=project.jobs,
+        writer=project.writer,
     )
 
 

@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { ApiProviderKey } from "@/domain"
 import { liveChatStatus } from "@/mocks/data/chat"
-import { liveFlows, liveProject, liveProjectSettings, liveProviders } from "@/mocks/data/project"
+import { liveFlows, liveProject, liveProjectSettings, liveProviders, liveResearchBudget } from "@/mocks/data/project"
 import { renderRoute } from "@/test/render-route"
 import { API_BASE } from "@/api/client"
 import { server } from "@/mocks/node"
@@ -19,6 +19,24 @@ const withProvider = (provider: string, change: Partial<ApiProviderKey>): readon
   liveProviders.map((entry) => (entry.provider === provider ? { ...entry, ...change } : entry))
 
 const keyRow = async (name: string): Promise<HTMLElement> => screen.findByRole("group", { name })
+
+const budgetSection = async (): Promise<HTMLElement> => {
+  const section = (await screen.findByRole("heading", { name: "Research budget", level: 2 })).closest("section")
+  if (section === null) throw new Error("the research budget heading is outside a section")
+  await within(section).findByText("Project spend cap")
+  return section
+}
+
+const STALE_FILE_BODY = {
+  ok: false,
+  op: "research_budget_put",
+  code: "STALE_FILE",
+  message: "aqven.yaml changed after it was read",
+  problems: [],
+  candidates: [],
+  conflict: null,
+  retry_after_ms: null,
+}
 
 const countReads = () => {
   const reads = { providers: 0, secrets: 0 }
@@ -130,6 +148,7 @@ describe("Settings", () => {
       "Other secrets",
       "Your coding agent",
       "Studio chat",
+      "Research budget",
       "About",
     ])
     expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull()
@@ -346,6 +365,77 @@ describe("Settings", () => {
     await waitFor(() => { expect(writes).toEqual([{ backend: "codex" }]) })
     expect(await screen.findByText("Not signed in to Codex. Run this in a terminal, then check again:")).toBeTruthy()
     expect(screen.getByText("codex login")).toBeTruthy()
+  })
+
+  it("shows the research cap from aqven.yaml and saves a new one into it", async () => {
+    const writes: unknown[] = []
+    server.use(
+      http.put(`${API_BASE}/project/research`, async ({ request }) => {
+        writes.push(await request.json())
+        return HttpResponse.json({ ...liveResearchBudget, spend_cap_usd: "2.50", project_usd: "2.50" })
+      }),
+    )
+    await renderRoute("/settings")
+    const section = await budgetSection()
+    expect(within(section).getByText("$1.00")).toBeTruthy()
+    expect(within(section).getByText("aqven.yaml")).toBeTruthy()
+    expect(within(section).queryByRole("button", { name: "Remove override" })).toBeNull()
+    fireEvent.change(within(section).getByLabelText("Project spend cap in dollars"), { target: { value: "2.50" } })
+    fireEvent.click(within(section).getByRole("button", { name: "Save" }))
+    expect(await within(section).findByText("$2.50")).toBeTruthy()
+    expect(writes).toEqual([{ research: { spend_cap_usd: "2.50" }, file_hash: liveResearchBudget.project_file?.file_hash }])
+  })
+
+  it("keeps Save off for a cap that is not a dollar amount", async () => {
+    await renderRoute("/settings")
+    const section = await budgetSection()
+    fireEvent.change(within(section).getByLabelText("Project spend cap in dollars"), { target: { value: "" } })
+    expect(within(section).getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true)
+  })
+
+  it("names a local override and removes it with DELETE", async () => {
+    const deletes: string[] = []
+    const overridden = { ...liveResearchBudget, spend_cap_usd: "5", source: "override" }
+    server.use(
+      http.get(`${API_BASE}/project/research`, () => HttpResponse.json(deletes.length === 0 ? overridden : liveResearchBudget)),
+      http.delete(`${API_BASE}/settings/project/:key`, ({ params }) => {
+        deletes.push(String(params["key"]))
+        return HttpResponse.json({ scope: "project", key: String(params["key"]), deleted: true })
+      }),
+    )
+    await renderRoute("/settings")
+    const section = await budgetSection()
+    expect(within(section).getByText("$5.00")).toBeTruthy()
+    expect(within(section).getByText("a local override on this computer")).toBeTruthy()
+    expect(within(section).getByText("A local override on this computer replaces the aqven.yaml cap ($1.00).")).toBeTruthy()
+    fireEvent.click(within(section).getByRole("button", { name: "Remove override" }))
+    expect(await within(section).findByText("aqven.yaml")).toBeTruthy()
+    expect(deletes).toEqual(["research.spend_cap_usd"])
+    expect(within(section).queryByRole("button", { name: "Remove override" })).toBeNull()
+  })
+
+  it("reports a broken local override instead of a cap", async () => {
+    const problem = "project setting research.spend_cap_usd must be a decimal number of dollars of at least 0, got 'lots'"
+    server.use(
+      http.get(`${API_BASE}/project/research`, () =>
+        HttpResponse.json({ ...liveResearchBudget, spend_cap_usd: null, source: "override", override_problem: problem })),
+    )
+    await renderRoute("/settings")
+    const section = await budgetSection()
+    expect(within(section).getByText("The local override is not a dollar amount")).toBeTruthy()
+    expect(within(section).getByText(problem)).toBeTruthy()
+    expect(within(section).getByRole("button", { name: "Remove override" })).toBeTruthy()
+  })
+
+  it("shows a refused save inline and keeps the typed cap", async () => {
+    server.use(http.put(`${API_BASE}/project/research`, () => HttpResponse.json(STALE_FILE_BODY, { status: 412 })))
+    await renderRoute("/settings")
+    const section = await budgetSection()
+    const input = within(section).getByLabelText("Project spend cap in dollars")
+    fireEvent.change(input, { target: { value: "3" } })
+    fireEvent.click(within(section).getByRole("button", { name: "Save" }))
+    expect((await within(section).findByRole("alert")).textContent).toBe("The change was not saved. aqven.yaml changed after it was read")
+    expect(within(section).getByLabelText<HTMLInputElement>("Project spend cap in dollars").value).toBe("3")
   })
 
   it("names the folder, the engine version and the uv update", async () => {

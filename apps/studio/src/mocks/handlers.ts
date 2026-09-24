@@ -4,7 +4,7 @@ import { API_BASE } from "@/api/client"
 import { liveChatSessions, liveChatStatus } from "./data/chat"
 import { liveDatasetCases, liveDatasets } from "./data/datasets"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
-import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
+import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveResearchBudget, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
 import { liveHealth, liveServerStatus } from "./data/server"
 import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
@@ -169,6 +169,12 @@ const maskedSecret = (secret: string): string =>
 
 const secretOf = (body: unknown): string => (isRecord(body) && typeof body["secret"] === "string" ? body["secret"] : "")
 
+const savedCap = (body: unknown): string => {
+  const research = isRecord(body) ? body["research"] : null
+  const cap = isRecord(research) ? research["spend_cap_usd"] : null
+  return typeof cap === "number" || typeof cap === "string" ? String(cap) : liveResearchBudget.default_usd
+}
+
 const envVarOf = (key: string): string | null =>
   [...liveProviders, ...liveSecrets].find((entry) => entry.setting_key === key)?.env_var ?? null
 
@@ -271,6 +277,13 @@ export const handlers = [
   http.get(`${API_BASE}/status`, () => served(liveServerStatus)),
 
   http.get(`${API_BASE}/project`, () => served(liveProject)),
+
+  http.get(`${API_BASE}/project/research`, () => served(liveResearchBudget)),
+
+  http.put(`${API_BASE}/project/research`, async ({ request }) => {
+    const cap = savedCap(await request.json())
+    return served({ ...liveResearchBudget, spend_cap_usd: cap, project_usd: cap })
+  }),
 
   http.get(`${API_BASE}/files`, ({ request }) => {
     const kind = new URL(request.url).searchParams.get("kind")

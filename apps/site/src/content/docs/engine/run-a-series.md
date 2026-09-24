@@ -22,12 +22,26 @@ MCP are three ways to start the same thing.
 - **Read the estimate before anything runs.** It gives attempts (cases × repeats × variants), dollars with
   their source, minutes and the expected half-width of the interval. See
   [what a series costs](/concepts/experiments-series-and-findings/#what-a-series-costs).
-- **Know who starts it.** At or below the project spend cap (`research.spend_cap_usd`, $1.00 by default),
-  a series starts at once. Above it, or with no price estimate, it waits in `awaiting_approval` until a
-  person clicks **Approve spend** in Studio. The same approval over REST is
-  `POST /api/series/{series_id}/approve`. No agent tool approves spend. To change the cap, set the project
-  setting on the project server: `PUT /api/settings/project/research.spend_cap_usd` with the body
-  `{"kind": "value", "value": "5.00"}`.
+- **Know who starts it.** At or below the project spend cap, a series starts at once. Above it, or with
+  no price estimate, it waits in `awaiting_approval` until a person clicks **Approve spend** in Studio. The
+  same approval over REST is `POST /api/series/{series_id}/approve`. No agent tool approves spend.
+- **Set the cap in `aqven.yaml`.** The cap is `research.spend_cap_usd` in the project file, and
+  `{{CLI_COMMAND}} new` writes $1.00 there:
+
+  ```yaml
+  research:
+    spend_cap_usd: 1.00
+  ```
+
+  Edit the number, or use **Research budget** in Studio's [Settings](/studio/settings/), which writes the
+  same key. Without a `research` block the cap is $1.00. `{{CLI_COMMAND}} check` rejects a negative cap or
+  one that is not a number. The change goes into git with the rest of the project, so review it like
+  code: whoever can edit `aqven.yaml` can raise the cap.
+- **Override it on one computer if you must.** The local setting `research.spend_cap_usd` on the project
+  server wins over `aqven.yaml` on that computer only, and stays out of git:
+  `PUT /api/settings/project/research.spend_cap_usd` with the body `{"kind": "value", "value": "5.00"}`.
+  Settings shows when an override is active and removes it. The estimate says which one won in
+  `project_cap_source`: `override`, `project` or `default`.
 - **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset or the code
   during a series ends it `invalid` with `inputs_changed`.
 - **Stop it if you must.** Queued attempts never start. Model calls already running finish and are paid

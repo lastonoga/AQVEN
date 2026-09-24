@@ -12,6 +12,8 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/ready` | `ready` |
 | `GET` | `/api/status` | `status_get` |
 | `GET` | `/api/project` | `project_get` |
+| `GET` | `/api/project/research` | `research_budget_get` |
+| `PUT` | `/api/project/research` | `research_budget_put` |
 | `GET` | `/api/files` | `file_list` |
 | `GET` | `/api/files/{path}` | `file_get` |
 | `GET` | `/api/raw/{path}` | `raw_get` |
