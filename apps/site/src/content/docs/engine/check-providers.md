@@ -65,10 +65,10 @@ models support strict output, so `output.strict: true` compiles for any model an
 that refuses the request answers with an error, and that error is the step's error.
 
 `--live` is how you find out before a real run: every mode it probes runs with strict enforcement forced on, so a mode
-reported `ok` under `--live` has already worked strict against the real provider. One thing still rides on AQVEN's
-own short model list: a model outside it is sent the schema as strict only when the agent sets
-`capabilities: {strict: true}`, which applies to *every* model in that agent's list at once, `model` and every
-`fallback_models` entry alike — so probe each one you're trusting, not only the first that happens to answer.
+reported `ok` under `--live` has already worked strict against the real provider. AQVEN keeps no model list of its
+own: `output.strict` reaches *every* model in the agent's list as you set it, `model` and every `fallback_models`
+entry alike, and Pydantic AI leaves the flag out of the request only where its profile for that model says the
+provider can't take it — so probe each one you're trusting, not only the first that happens to answer.
 
 ### Example
 
