@@ -10,11 +10,9 @@ import { ExperimentDisagreements } from "./experiment-disagreements"
 import { ExperimentQuestion } from "./experiment-question"
 import { graphViews, selectedFacts, type GraphView, type StepSelection } from "./graph-model"
 import { LaunchPanel } from "./launch-panel"
-import { activeSeries } from "./presenters"
 import { SeriesHistory } from "./series-history"
 import { StepInspector } from "./step-inspector"
 import { useLaunch } from "./use-launch"
-import { useSeriesLive } from "./use-series-live"
 
 type ExperimentPageProps = {
   readonly experiment: ExperimentDetail
@@ -71,6 +69,5 @@ function ExperimentPage({ experiment, series, initial, estimate }: ExperimentPag
 
 export function ExperimentScreen() {
   const { experiment, series, launch, estimate } = experimentRouteApi.useLoaderData()
-  useSeriesLive(activeSeries(series))
   return <ExperimentPage key={experiment.id} experiment={experiment} series={series} initial={launch} estimate={estimate} />
 }

@@ -9,6 +9,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from aqven.log_support import root_logging_untouched
 from aqven.ports.engine import EngineFacade
 from aqven.series.ports import SeriesJobs
 from aqven.server.mcp.catalog import ToolRegistration
@@ -76,7 +77,8 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
 
 
 def build_mcp_server(catalog: Iterable[ToolRegistration]) -> MCPServer:
-    server = MCPServer(SERVER_NAME, instructions=INSTRUCTIONS, log_level="WARNING")
+    with root_logging_untouched():
+        server = MCPServer(SERVER_NAME, instructions=INSTRUCTIONS, log_level="WARNING")
     for registration in catalog:
         registration.register_tool(server)
     return server

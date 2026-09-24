@@ -11,6 +11,11 @@ from aqven.chat.backend_registry import BackendRegistry
 from aqven.chat.backend_selection import BackendSelection, BackendSettingValues
 from aqven.chat.claude_backend import ClaudeChat, create_claude_chat
 from aqven.chat.codex_backend import CodexAgentBackend
+from aqven.chat.feed import ChatSignals
+from aqven.chat.server_guard import ServerProcess, ServerProcessGuard
+from aqven.chat.sqlite_journal import utc_now
+from aqven.chat.sqlite_transcripts import SqliteChatTranscripts
+from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import ChatEffort, ChatPermissionMode
 from aqven.server.chat.router import ChatRouteContext, build_chat_router
 
@@ -42,13 +47,23 @@ def studio_chat_parts(
     defaults: ChatSessionDefaults | None = None,
     shutdown_signal: asyncio.Event | None = None,
 ) -> ChatServerParts:
-    chat = create_claude_chat(project_root, access_token, allowed_tools, shutdown_signal=shutdown_signal)
-    codex = CodexAgentBackend(chat.journal, project_root, mcp_url, access_token, shutdown_signal=shutdown_signal)
+    server = ServerProcess.current(mcp_url)
+    chat = create_claude_chat(project_root, access_token, allowed_tools, shutdown_signal=shutdown_signal, server=server)
+    codex = CodexAgentBackend(
+        chat.journal,
+        project_root,
+        mcp_url,
+        access_token,
+        shutdown_signal=shutdown_signal,
+        command_guard=ServerProcessGuard(server),
+    )
     registry = BackendRegistry({"claude": chat.backend, "codex": codex}, BackendSelection(settings))
     chosen = defaults or ChatSessionDefaults()
+    transcripts = SqliteChatTranscripts.for_project(project_root)
     router = build_chat_router(
         registry,
         chat.journal,
+        transcripts,
         ChatRouteContext(
             project_root,
             mcp_url,
@@ -60,10 +75,12 @@ def studio_chat_parts(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+        TurnSettler(chat.journal, ChatSignals(), utc_now).sweep("server_restarted")
         try:
             yield
         finally:
             await codex.aclose()
             await chat.aclose()
+            transcripts.close()
 
     return ChatServerParts(chat, codex, router, lifespan)

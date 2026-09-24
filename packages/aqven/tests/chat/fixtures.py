@@ -26,8 +26,9 @@ from pydantic import JsonValue, SecretStr
 from aqven.chat.approvals import ApprovalRegistry
 from aqven.chat.builders import ChatEventBuilder, ChatStamp
 from aqven.chat.claude_backend import ClaudeAgentBackend
-from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory
+from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory, default_guard
 from aqven.chat.claude_runtime import ClaudeChatRuntime, ClaudeClientFactory
+from aqven.chat.env_guard import ChatGuard
 from aqven.chat.feed import ChatSignals
 from aqven.chat.sqlite_journal import SqliteChatJournal
 from aqven.chat.testing import ApprovalStep, ScriptStep
@@ -277,7 +278,10 @@ class ChatHarness:
 
 
 def chat_harness(
-    project_root: Path, client_factory: ClaudeClientFactory, approval_timeout_seconds: float = 5.0
+    project_root: Path,
+    client_factory: ClaudeClientFactory,
+    approval_timeout_seconds: float = 5.0,
+    guard: ChatGuard | None = None,
 ) -> ChatHarness:
     journal = SqliteChatJournal.for_project(project_root, fixed_clock)
     login = FakeLogin()
@@ -291,7 +295,7 @@ def chat_harness(
         journal=journal,
         signals=ChatSignals(),
         approvals=ApprovalRegistry(),
-        options=ClaudeOptionsFactory(settings),
+        options=ClaudeOptionsFactory(settings, guard or default_guard()),
         login=login,
         clock=fixed_clock,
         client_factory=client_factory,

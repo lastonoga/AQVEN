@@ -116,14 +116,14 @@
   },
   "list": {
     "title": "Research",
-    "subtitle": "Experiments of {project}: a question, its variants and the series that answer it",
+    "subtitle": "Experiments of {project} by flow: a question, its variants and the series that answer it",
     "suggest": "Suggest hypotheses",
     "filtersAria": "Filter experiments",
     "question": "Question",
     "failureMode": "Failure mode",
     "any": "all",
     "clear": "Clear filters",
-    "tableAria": "Experiments",
+    "tableAria": "Experiments on {section}",
     "count": "{count, plural, one {# experiment} other {# experiments}}",
     "column": {
       "experiment": "Experiment",
@@ -144,9 +144,10 @@
     "open": "Open experiment {id}",
     "empty": "No experiments match these filters",
     "emptyAll": "No experiments yet",
-    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/",
-    "subtitleFlow": "Experiments on {flow}: a question, its variants and the series that answer it",
-    "emptyFlow": "No experiments on {flow} yet"
+    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/"
+  },
+  "flowSection": {
+    "arms": "Arms"
   },
   "experiment": {
     "guardrails": "Guardrails: {list}",
@@ -437,15 +438,25 @@
       },
       "openRun": "Open run {ref}",
       "none": "—",
-      "running": "{count} running"
+      "running": "{count} running",
+      "checkHint": {
+        "builtin": "Built-in check {use}",
+        "fields": "on {fields}",
+        "code": "Code check · {ref}",
+        "judge": "Judge · inference {inference}",
+        "agent": "agent {agent}",
+        "validatedBy": "validated by {experiment}",
+        "notValidated": "not validated"
+      }
     },
     "live": "live",
     "spendAtLeast": "≥ {usd} of {cap} cap"
   },
   "seriesList": {
     "title": "Series",
-    "subtitle": "Every series of {project}: running ones first, then the newest",
-    "aria": "All series",
+    "subtitle": "Every series of {project} by flow: running ones first, then the newest",
+    "aria": "Series on {section}",
+    "count": "{count, plural, one {# series} other {# series}}",
     "empty": "No series yet",
     "emptyHint": "Start one from an experiment, or look at cases of a flow.",
     "open": "Open series {ref}",
@@ -458,8 +469,6 @@
       "spend": "Spend",
       "verdict": "Verdict",
       "started": "Started"
-    },
-    "subtitleFlow": "Series of the experiments on {flow}: running ones first, then the newest",
-    "emptyFlow": "No series on {flow} yet"
+    }
   }
 }

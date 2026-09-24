@@ -4,7 +4,7 @@ import { API_BASE, isNotFound } from "@/api/client"
 import * as ids from "@/data/ids"
 import { RESEARCH_SERIES } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
-import { readSeriesEvent, research, seriesEventsUrl } from "./research"
+import { research } from "./research"
 
 const SERIES = ids.seriesId(RESEARCH_SERIES.noninferiorHoldout)
 
@@ -15,10 +15,11 @@ describe("live research source", () => {
       const url = new URL(request.url)
       if (url.pathname === `${API_BASE}/experiments`) queries.push(Object.fromEntries(url.searchParams))
     })
-    const experiments = await research.experiments({ flow: ids.flowId("judge_panel"), question: "compare" })
+    const experiments = await research.experiments({ question: "compare", failureMode: "panel_wrong_winner" })
     server.events.removeAllListeners()
-    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_single_judge"])
-    expect(queries[0]).toMatchObject({ flow_id: "judge_panel", question: "compare" })
+    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_single_judge"])
+    expect(queries[0]).toMatchObject({ question: "compare", failure_mode: "panel_wrong_winner" })
+    expect(queries[0]).not.toHaveProperty("flow_id")
   })
 
   it("rejects a missing experiment or series with a not found error", async () => {
@@ -56,14 +57,5 @@ describe("live research source", () => {
     )
     await expect(research.cancelSeries(SERIES, "enough")).rejects.toMatchObject({ status: 409, code: "SERIES_STATE_CONFLICT" })
     expect(bodies).toEqual([{ reason: "enough" }])
-  })
-
-  it("reads only well-formed events of the watched series", () => {
-    const read = readSeriesEvent(SERIES)
-    expect(read({ seq: 4, at: "2026-09-23T10:00:00Z", series_id: SERIES, type: "series_status", status: "running" })).toEqual({ kind: "status", seq: 4, status: "running" })
-    expect(read({ seq: 4, at: "2026-09-23T10:00:00Z", series_id: "other", type: "series_status", status: "running" })).toBeNull()
-    expect(read({ seq: 4, series_id: SERIES, type: "node_finished" })).toBeNull()
-    expect(read(null)).toBeNull()
-    expect(seriesEventsUrl(SERIES, 7)).toBe(`${API_BASE}/series/${SERIES}/events?after_seq=7`)
   })
 })

@@ -191,6 +191,37 @@ def test_a_replayed_projection_never_moves_the_row_back(tmp_path: Path) -> None:
     assert (caught_up[0].node_counts.ok, caught_up[0].cost_usd) == (2, Decimal("0.0024"))
 
 
+@pytest.mark.parametrize("live", [True, False], ids=["projected", "backfilled"])
+def test_items_recovered_by_on_item_error_reach_the_listed_node_counts(tmp_path: Path, live: bool) -> None:
+    run = FixtureRun(
+        run_id(1),
+        "SUCCESS",
+        stamp(1),
+        fixture_runs()[0].call,
+        script(1)
+        .started(FLOW, "live")
+        .node("clean")
+        .recovered("clean", 0, "default")
+        .recovered("clean", 2, "skip")
+        .recovered("clean", 3, "default")
+        .done("clean")
+        .finished("completed")
+        .log(),
+        updated_at=stamp(1.5),
+    )
+    runs = {run.run_id: run}
+    waits = FakeWaits()
+    summaries, _, _ = summaries_over(tmp_path, runs)
+    if live:
+        asyncio.run(project_live(summaries, runs.values()))
+
+    listed = new_page(summaries, waits, RunListQuery())
+
+    assert listed.model_dump(mode="json") == old_page(runs, waits, RunListQuery()).model_dump(mode="json")
+    counts = listed.items[0].node_counts
+    assert (counts.items_replaced, counts.items_skipped) == (2, 1)
+
+
 def test_a_replayed_finish_keeps_the_time_the_log_recorded(tmp_path: Path) -> None:
     template = fixture_runs()[0]
     runs = {template.run_id: template}

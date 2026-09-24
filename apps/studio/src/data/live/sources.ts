@@ -30,6 +30,7 @@ import type {
 import type { SchemaPresentationResponse, SchemaPresentationTarget, SchemaRunSort } from "@/api/schema"
 import { API_BASE, api, unwrap } from "@/api/client"
 import { everyPage, MAX_PAGE } from "./paging"
+import { projectEventStream } from "./project-events"
 import { research } from "./research"
 import { server } from "./server"
 
@@ -87,6 +88,7 @@ const project = {
     unwrap(await api.GET("/api/files", { params: { query: { kind, limit: MAX_PAGE } } })).items,
   file: async (path: FilePath) => unwrap(await api.GET("/api/files/{path}", { params: { path: { path } } })),
   raw: async (path: FilePath) => unwrap(await api.GET("/api/raw/{path}", { params: { path: { path } }, parseAs: "text" })),
+  events: projectEventStream,
 }
 
 const flow = {
@@ -218,6 +220,8 @@ const chat = {
     ),
   interrupt: async (sessionId: ChatSessionId) =>
     unwrap(await api.POST("/api/chat/sessions/{session_id}/interrupt", { params: { path: { session_id: sessionId } } })),
+  transcript: async (sessionId: ChatSessionId, query: { readonly before_seq?: number; readonly limit?: number }) =>
+    unwrap(await api.GET("/api/chat/sessions/{session_id}/transcript", { params: { path: { session_id: sessionId }, query } })),
 }
 
 const SECRET_SCOPE: SettingScope = "project"

@@ -10,7 +10,6 @@ import {
   metricId,
   money,
   seriesDetailOf,
-  seriesEventOf,
   seriesSummaryOf,
   subjectOf,
 } from "./research-adapter"
@@ -145,30 +144,5 @@ describe("research adapter", () => {
     expect(attempts.some((attempt) => attempt.outcome === "error" && attempt.error === "OpenRouter answered 502 Bad Gateway for mistralai/mistral-nemo")).toBe(true)
     expect(attempts.filter((attempt) => attempt.outcome !== "error").every((attempt) => attempt.error === null)).toBe(true)
     expect(rowsOf(RESEARCH_SERIES.escalationRunning).map(caseRowOf).flatMap((row) => row.attempts).filter((attempt) => attempt.outcome === "running")).toHaveLength(1)
-  })
-
-  it("maps each series event", () => {
-    const base = { at: "2026-09-23T10:00:00Z", series_id: "s1" }
-    expect(seriesEventOf({ ...base, seq: 1, type: "series_status", status: "running" })).toEqual({ kind: "status", seq: 1, status: "running" })
-    expect(
-      seriesEventOf({
-        ...base,
-        seq: 2,
-        type: "attempt_finished",
-        attempt_id: "a1",
-        ordinal: 0,
-        variant_id: "gpt",
-        case_name: "strip",
-        repeat: 1,
-        run_id: "r1",
-        outcome: "ok",
-        passed: true,
-        cost_usd: "0.01",
-        done: 1,
-        total: 4,
-        spend_usd: "0.01",
-      }),
-    ).toEqual({ kind: "attempt", seq: 2, done: 1, total: 4, spendUsd: 0.01 })
-    expect(seriesEventOf({ ...base, seq: 3, type: "series_finished", status: "done", verdict: "confirmed" })).toEqual({ kind: "finished", seq: 3, status: "done", verdict: "confirmed" })
   })
 })

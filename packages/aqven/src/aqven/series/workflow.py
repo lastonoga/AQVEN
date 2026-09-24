@@ -28,6 +28,7 @@ from aqven.series.facts import (
     run_facts,
     total_spend,
 )
+from aqven.series.feed import SeriesKey, SeriesProgressNotice, series_key
 from aqven.series.ids import attempt_id, judge_run_id, key_of, subject_run_id
 from aqven.series.model import (
     AnalysisInput,
@@ -76,7 +77,7 @@ from aqven.series.tickets import AttemptSummary, AttemptTicket, attempt_ticket, 
 from aqven.series.views import AttemptFinishedEvent, SeriesEventBase, SeriesFinishedEvent, SeriesStatusEvent
 from aqven.server.errors import ApiFailure
 from aqven.server.workspace import take_snapshot
-from aqven.spec import LookQuestion, SeriesSplit, VariantId
+from aqven.spec import ExperimentId, FlowId, LookQuestion, SeriesSplit, VariantId
 
 PREPARE_STEP: Final = "aqven.series.prepare"
 ANNOUNCE_STEP: Final = "aqven.series.announce"
@@ -108,6 +109,8 @@ class SeriesRun(RecordModel):
     variant_ids: tuple[VariantId, ...]
     case_names: tuple[str, ...]
     created_at: AwareDatetime
+    experiment_id: ExperimentId | None = None
+    flow_id: FlowId | None = None
 
 
 class DrivenAttempts(RecordModel):
@@ -149,6 +152,7 @@ def strategy_for(record: SeriesRecord) -> SubjectStrategy:
 
 def series_run(record: SeriesRecord, case_names: Sequence[str]) -> SeriesRun:
     plan = record.plan
+    key = series_key(record)
     return SeriesRun(
         needs_approval=record.needs_approval,
         total=len(case_names) * plan.repeats * len(plan.variants),
@@ -158,7 +162,14 @@ def series_run(record: SeriesRecord, case_names: Sequence[str]) -> SeriesRun:
         variant_ids=tuple(variant.variant_id for variant in plan.variants),
         case_names=tuple(case_names),
         created_at=record.created_at,
+        experiment_id=key.experiment_id,
+        flow_id=key.flow_id,
     )
+
+
+def progress_notice(series_id: SeriesId, run: SeriesRun, done: int, spent: Decimal) -> SeriesProgressNotice:
+    key = SeriesKey(series_id=series_id, experiment_id=run.experiment_id, flow_id=run.flow_id)
+    return SeriesProgressNotice(series=key, done=done, total=run.total, spend_usd=spent)
 
 
 def attempt_workflow_id(series_id: SeriesId, run: SeriesRun, cursor: int) -> str:
@@ -330,6 +341,7 @@ async def drive_attempts(series_id: SeriesId, run: SeriesRun, stream: SeriesStre
             break
         summary = await window.next_finished()
         await stream.write(AttemptEventBuilder(series_id, summary, window.done, run.total, window.ledger.spent))
+        active_series().feed.publish(progress_notice(series_id, run, window.done, window.ledger.spent))
     return window.driven()
 
 

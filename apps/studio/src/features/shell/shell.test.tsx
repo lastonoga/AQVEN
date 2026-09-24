@@ -53,64 +53,53 @@ describe("Project shell", () => {
     const modes = await navLinks("Project modes")
     expect(modes.map((link) => link.textContent)).toEqual(["Flow", "Research"])
     expect(modes.map(pathOf)).toEqual([`${FLOWS}/support_case/canvas`, "/research"])
-    expect(flowOf(modes[1])).toBe("support_case")
+    expect(flowOf(modes[1])).toBeNull()
     expect(currentOf(modes)).toEqual(["true", null])
     const crumbs = await screen.findByRole("navigation", { name: "Project and flow" })
     expect(within(crumbs).getByText("lumen")).toBeTruthy()
     expect(within(crumbs).getByRole("button", { name: "Switch flow" }).textContent).toBe("support_case")
   })
 
-  it("keeps the flow picker in research mode and lists the research views of the selected flow", async () => {
-    await renderRoute("/research?flow=%22support_case%22")
+  it("hides the flow picker in research mode and keeps the research views free of a flow", async () => {
+    await renderRoute("/research")
     expect(currentOf(await navLinks("Project modes"))).toEqual([null, "true"])
     const tabs = await navLinks("Research views")
     expect(tabs.map((tab) => tab.textContent)).toEqual(["Experiments", "Series"])
     expect(tabs.map(pathOf)).toEqual(["/research", "/research/series"])
-    expect(tabs.map(flowOf)).toEqual(["support_case", "support_case"])
+    expect(tabs.map(flowOf)).toEqual([null, null])
     expect(currentOf(tabs)).toEqual(["true", null])
     expect(screen.queryByRole("navigation", { name: "Flow views" })).toBeNull()
-    expect(screen.getByRole("button", { name: "Switch flow" }).textContent).toBe("support_case")
+    const crumbs = screen.getByRole("navigation", { name: "Project and flow" })
+    expect(within(crumbs).getByText("lumen")).toBeTruthy()
+    expect(within(crumbs).queryByRole("button", { name: "Switch flow" })).toBeNull()
   })
 
-  it("offers all experiments in the research picker and scopes the list to the picked flow", async () => {
-    const router = await renderRoute("/research")
-    expect((await screen.findByRole("button", { name: "Switch flow" })).textContent).toBe("All experiments")
-    const items = within(await openPicker()).getAllByRole("menuitem")
-    expect(items[0]?.textContent).toMatch(/^All experiments.*OPEN$/)
-    expect(items.slice(1).map(pathOf)).toEqual(["/research", "/research"])
-    fireEvent.click(items.find((item) => item.textContent.startsWith("judge_panel")) ?? document.body)
+  it("lands on every experiment of the project when research opens from a flow", async () => {
+    const router = await renderRoute(`${FLOWS}/judge_panel/runs`)
+    expect(await screen.findByRole("button", { name: "Switch flow" })).toBeTruthy()
+    fireEvent.click(within(await screen.findByRole("navigation", { name: "Project modes" })).getByRole("link", { name: "Research" }))
     await waitFor(() => {
-      expect(router.state.location.search).toEqual({ flow: "judge_panel" })
+      expect(router.state.location.pathname).toBe("/research")
     })
-    await waitFor(() => {
-      expect(localStorage.getItem(LAST_FLOW_KEY)).toBe("judge_panel")
-    })
-    await waitFor(() => {
-      expect(screen.queryByRole("menu")).toBeNull()
-    })
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Switch flow" }))
+    expect(router.state.location.search).toEqual({})
+    await screen.findAllByRole("table")
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(["judge_panel", "support_case", "Arms"])
+    expect(screen.queryByRole("button", { name: "Switch flow" })).toBeNull()
   })
 
-  it("switches the selected flow to the flow an opened experiment tests", async () => {
+  it("opens an experiment without a flow picker and keeps the last flow of the flow mode", async () => {
     localStorage.setItem(LAST_FLOW_KEY, "judge_panel")
     await renderRoute("/research/experiments/reply_noninferior_mistral")
-    expect((await screen.findByRole("button", { name: "Switch flow" })).textContent).toBe("support_case")
-    await waitFor(() => {
-      expect(localStorage.getItem(LAST_FLOW_KEY)).toBe("support_case")
-    })
-    expect(flowOf((await navLinks("Research views"))[0])).toBe("support_case")
-  })
-
-  it("files an experiment of arms only under all experiments", async () => {
-    await renderRoute("/research/experiments/intent_split_long_messages")
-    expect((await screen.findByRole("button", { name: "Switch flow" })).textContent).toBe("All experiments")
     expect((await navLinks("Research views")).map(flowOf)).toEqual([null, null])
+    expect(screen.queryByRole("button", { name: "Switch flow" })).toBeNull()
+    expect(localStorage.getItem(LAST_FLOW_KEY)).toBe("judge_panel")
+    expect(pathOf((await navLinks("Project modes"))[0])).toBe(`${FLOWS}/judge_panel/canvas`)
   })
 
   it("marks the series view on the series list", async () => {
     await renderRoute("/research/series")
     expect(currentOf(await navLinks("Research views"))).toEqual([null, "true"])
+    expect(screen.queryByRole("button", { name: "Switch flow" })).toBeNull()
   })
 
   it("shows the flow tabs of the open flow and marks the matched one", async () => {
@@ -144,6 +133,23 @@ describe("Project shell", () => {
     expect(items.map((item) => item.textContent)[0]).toBe("judge_panel8 nodes · never run")
     expect(items[1]?.textContent).toMatch(new RegExp(`^support_case30 nodes · run ${lastRun().ref} · .+OPEN$`))
     expect(items.map(hrefOf)).toEqual([`${FLOWS}/judge_panel/runs`, `${FLOWS}/support_case/runs`])
+  })
+
+  it("switches the flow from the picker, remembers it and leaves the focus off the trigger", async () => {
+    const router = await renderRoute(`${FLOWS}/support_case/runs`)
+    const items = within(await openPicker()).getAllByRole("menuitem")
+    fireEvent.click(items.find((item) => item.textContent.startsWith("judge_panel")) ?? document.body)
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(`${FLOWS}/judge_panel/runs`)
+    })
+    await waitFor(() => {
+      expect(localStorage.getItem(LAST_FLOW_KEY)).toBe("judge_panel")
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole("menu")).toBeNull()
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(document.activeElement).not.toBe(screen.getByRole("button", { name: "Switch flow" }))
   })
 
   it("opens settings from the gear at the end of the bar", async () => {

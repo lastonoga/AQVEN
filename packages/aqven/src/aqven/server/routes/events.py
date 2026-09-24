@@ -9,12 +9,13 @@ from aqven.server.errors import ERROR_RESPONSES
 from aqven.server.routes.runs import event_cursor
 from aqven.server.spec_channel import SpecEvent
 
-STREAM_SUMMARY: Final = "Server-sent stream of spec changes"
+STREAM_SUMMARY: Final = "Server-sent stream of project changes: spec files and research"
 STREAM_DESCRIPTION: Final = (
-    "A text/event-stream that stays open and pushes a frame per spec change; it is not a schema "
-    "document and a plain request to it never completes. Each frame carries one SpecEvent as data, "
-    "its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. "
-    "The JSON Schema of every event is at GET /api/schemas/events."
+    "A text/event-stream that stays open and pushes a frame per spec change and per research fact: a series "
+    "started, its progress at most once a second, a status change, a finding written, an experiment's files "
+    "changed. It is not a schema document and a plain request to it never completes. Each frame carries one "
+    "SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or "
+    "Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events."
 )
 
 

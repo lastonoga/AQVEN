@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { ChatSession } from "./chat-session"
 import type { ChatTransport } from "./chat-transport"
+import { liveOnly } from "./transport-double"
 
 const SESSION: ApiChatSession = {
   session_id: "01a0b15e-69af-71c7-a54d-213c4df2385e",
@@ -23,7 +24,7 @@ const base = { session_id: SESSION.session_id, turn_id: "turn-1" } as const
 
 const at = (second: number): string => `2026-09-17T21:55:${String(second).padStart(2, "0")}.000000Z`
 
-const STARTED: ApiChatEvent = { ...base, seq: 1, at: at(10), type: "chat_turn_started", client_op_id: "op-1", text: "pick one", backend: "claude", model: null }
+const STARTED: ApiChatEvent = { ...base, seq: 1, at: at(10), type: "chat_turn_started", client_op_id: "op-1", text: "pick one", backend: "claude", model: null, origin: "user" }
 const THINKING: ApiChatEvent = { ...base, seq: 2, at: at(11), type: "chat_status", state: "thinking" }
 const REASONED: ApiChatEvent = { ...base, seq: 3, at: at(12), type: "chat_reasoning_delta", message_id: "msg-1", part_index: 0, delta: THOUGHT }
 const METERED: ApiChatEvent = {
@@ -47,10 +48,7 @@ const SPOKE: ApiChatEvent = { ...base, seq: 5, at: at(21), type: "chat_text_delt
 const mounted = () => {
   const listeners: ((event: ApiChatEvent) => void)[] = []
   const transport: ChatTransport = {
-    subscribe: (_sessionId, _afterSeq, onEvent) => {
-      listeners.push(onEvent)
-      return () => listeners.splice(listeners.indexOf(onEvent), 1)
-    },
+    ...liveOnly(listeners),
     send: () => Promise.resolve(),
     respond: () => Promise.resolve(),
     interrupt: () => Promise.resolve(),

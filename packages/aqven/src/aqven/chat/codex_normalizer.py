@@ -85,7 +85,17 @@ class CodexNormalizer:
         self._commands: dict[str, str] = {}
         self._outputs: dict[str, str] = {}
         self._file_items: dict[str, FileChangeThreadItem] = {}
+        self._parts: dict[str, int] = {}
         self.last_usage: ChatUsage | None = None
+
+    def _part(self, key: str) -> int:
+        return self._parts.setdefault(key, len(self._parts))
+
+    def _text(self, item_id: str, text: str) -> ChatEventBuilders:
+        return (text_delta(self._message_id, self._part(item_id), text),) if text else ()
+
+    def _reasoning(self, key: str, text: str) -> ChatEventBuilders:
+        return (reasoning_delta(self._message_id, self._part(key), text),) if text else ()
 
     def start_next_message(self) -> None:
         self._messages += 1
@@ -112,9 +122,11 @@ class CodexNormalizer:
         payload = notification.payload
         if isinstance(payload, AgentMessageDeltaNotification):
             self._text_items.add(payload.item_id)
-            return (text_delta(self._message_id, 0, payload.delta),) if payload.delta else ()
-        if isinstance(payload, ReasoningSummaryTextDeltaNotification | ReasoningTextDeltaNotification):
-            return (reasoning_delta(self._message_id, 1, payload.delta),) if payload.delta else ()
+            return self._text(payload.item_id, payload.delta)
+        if isinstance(payload, ReasoningSummaryTextDeltaNotification):
+            return self._reasoning(f"{payload.item_id}/summary/{payload.summary_index}", payload.delta)
+        if isinstance(payload, ReasoningTextDeltaNotification):
+            return self._reasoning(f"{payload.item_id}/text/{payload.content_index}", payload.delta)
         if isinstance(payload, ItemStartedNotification):
             return self._start_item(payload.item)
         if isinstance(payload, CommandExecutionOutputDeltaNotification):
@@ -180,7 +192,7 @@ class CodexNormalizer:
             if value.id in self._text_items or not value.text:
                 return ()
             self._text_items.add(value.id)
-            return (text_delta(self._message_id, 0, value.text),)
+            return self._text(value.id, value.text)
         if isinstance(value, CommandExecutionThreadItem):
             tool_id = ChatToolCallId(value.id)
             output = value.aggregated_output if value.aggregated_output is not None else self._outputs.get(value.id, "")

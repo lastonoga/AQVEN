@@ -8,7 +8,16 @@ from aqven.ports import CHAT_EVENT_TYPES
 from aqven.runtime.events import RUN_EVENT_TYPES
 from aqven.spec import SCHEMA_DIALECT, NodeKind, SpecKind, write_editor_schemas
 
-SPEC_EVENT_TYPES: Final = {"files_changed", "diagnostics_changed", "resync"}
+SPEC_EVENT_TYPES: Final = {
+    "files_changed",
+    "diagnostics_changed",
+    "resync",
+    "series_started",
+    "series_progress",
+    "series_status_changed",
+    "finding_written",
+    "experiment_changed",
+}
 SERIES_EVENT_TYPES: Final = {"series_status", "attempt_finished", "series_finished"}
 TYPE_VARIANTS: Final = {"record", "enum", "union", "id", "value"}
 CHANNELS: Final = ("spec", "run", "chat", "series")

@@ -6,6 +6,8 @@ from aqven.engine.runtime import RUNTIME_SLOT
 from aqven.ports.settings import SettingsStore
 from aqven.runtime.address import RunId
 from aqven.runtime.human import OpenWaitFilter
+from aqven.series.feed import SILENT_FEED, ResearchFeed
+from aqven.series.observed import ObservedSeriesStore
 from aqven.series.ports import FindingsSink, ModelPrices, OpenWaits, SeriesAnalyst, SeriesStore
 from aqven.series.split import SplitAssigner, WorkspacePackage
 from aqven.series.store import SqliteSeriesStore
@@ -24,6 +26,7 @@ class SeriesServices:
     waits: OpenWaits
     prices: ModelPrices
     engine_version: str
+    feed: ResearchFeed = SILENT_FEED
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,16 +46,18 @@ def build_series_services(
     findings: FindingsSink,
     prices: ModelPrices,
     engine_version: str,
+    feed: ResearchFeed = SILENT_FEED,
 ) -> SeriesServices:
     return SeriesServices(
         root=root,
         workspace=workspace,
         settings=settings,
-        store=SqliteSeriesStore.open(ProjectState(root).database),
+        store=ObservedSeriesStore(SqliteSeriesStore.open(ProjectState(root).database), feed),
         splits=SplitAssigner(WorkspacePackage(workspace)),
         analyst=analyst,
         findings=findings,
         waits=RuntimeWaits(),
         prices=prices,
         engine_version=engine_version,
+        feed=feed,
     )

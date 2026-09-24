@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { ChatSession } from "./chat-session"
 import type { ChatTransport } from "./chat-transport"
+import { liveOnly } from "./transport-double"
 import { liveTurnEvents } from "./test-support"
 
 const SESSION: ApiChatSession = {
@@ -31,10 +32,7 @@ const recorder = (): Recorder => {
   const interrupted: ChatSessionId[] = []
   const listeners: ((event: ApiChatEvent) => void)[] = []
   const transport: ChatTransport = {
-    subscribe: (_sessionId, _afterSeq, onEvent) => {
-      listeners.push(onEvent)
-      return () => listeners.splice(listeners.indexOf(onEvent), 1)
-    },
+    ...liveOnly(listeners),
     send: (_sessionId, text) => {
       sent.push(text)
       return Promise.resolve()

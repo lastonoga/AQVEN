@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { ServerIndicator } from "@/features/health"
 import { rememberFlow } from "@/lib/last-flow"
 import { ROUTE_ID, ROUTE_PATH } from "@/lib/routes"
-import type { PickerTargets } from "./flow-items"
 import { FlowPicker } from "./flow-picker"
 import { FlowTabs } from "./flow-tabs"
 import { ModeSwitch } from "./mode-switch"
@@ -22,7 +21,9 @@ export type ProjectBarProps = { readonly project: ApiProject; readonly flows: re
 
 type MenuProps = { readonly selected: FlowScope }
 
-const PICKER_OF_MODE: Readonly<Record<ProjectMode, PickerTargets>> = { flow: "flow", research: "research" }
+const FLOW_PICKER_IN_MODE: Readonly<Record<ProjectMode, boolean>> = { flow: true, research: false }
+
+const showsFlowPicker = (mode: ProjectMode | null): boolean => mode === null || FLOW_PICKER_IN_MODE[mode]
 
 function Divider() {
   return <span aria-hidden className="h-5 w-px shrink-0 bg-border" />
@@ -38,11 +39,11 @@ function FlowMenu({ selected }: MenuProps) {
   )
 }
 
-function ResearchMenu({ selected }: MenuProps) {
+function ResearchMenu() {
   return (
     <>
       <Divider />
-      <ResearchTabs selected={selected} />
+      <ResearchTabs />
     </>
   )
 }
@@ -59,13 +60,13 @@ function ModeMenu({ mode, selected }: MenuProps & { readonly mode: ProjectMode |
 }
 
 function FlowCrumb({ project, flows, selected, mode }: ProjectBarProps & MenuProps & { readonly mode: ProjectMode | null }) {
-  if (flows.length === 0) return null
+  if (flows.length === 0 || selected === null || !showsFlowPicker(mode)) return null
   return (
     <>
       <Text role="item" tone="neutral" aria-hidden className="shrink-0">
         /
       </Text>
-      <FlowPicker project={project} flows={flows} selected={selected} targets={mode === null ? "flow" : PICKER_OF_MODE[mode]} />
+      <FlowPicker project={project} flows={flows} selected={selected} />
     </>
   )
 }
@@ -90,12 +91,11 @@ function SettingsButton() {
 
 function useSelectedFlow(project: ApiProject, flows: readonly ApiFlow[]): FlowScope {
   const routed = useRoutedFlow()
-  const remembered = routed ?? null
   useEffect(() => {
-    if (remembered === null) return
-    rememberFlow(project.root, remembered)
-  }, [project.root, remembered])
-  return routed === undefined ? fallbackFlow(project, flows) : routed
+    if (routed === undefined) return
+    rememberFlow(project.root, routed)
+  }, [project.root, routed])
+  return routed ?? fallbackFlow(project, flows)
 }
 
 export function ProjectBar({ project, flows }: ProjectBarProps) {

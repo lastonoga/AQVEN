@@ -1,4 +1,4 @@
-import type { AttemptOutcome, CheckId, SeriesAttempt, SeriesCaseFilter, SeriesCaseRow, SeriesDetail, SeriesSpend, SeriesStatus, SeriesSummary, VariantId, VariantTally } from "@/domain"
+import { type AttemptOutcome, type CheckId, type CheckSource, type ExperimentCheck, type SeriesAttempt, type SeriesCaseFilter, type SeriesCaseRow, type SeriesDetail, type SeriesSpend, type SeriesStatus, type SeriesSummary, type VariantId, type VariantTally } from "@/domain"
 import type { Tone } from "@/components/studio"
 
 export type VerdictGap = "look" | "pending" | "failed" | "none"
@@ -68,3 +68,34 @@ export const toggledFilter = (filter: SeriesCaseFilter, key: CaseFilterKey): Ser
 }
 
 export const hasFilter = (filter: SeriesCaseFilter): boolean => CASE_FILTER_KEYS.some((key) => filter[key] === true)
+
+export type CheckHintCopy = {
+  readonly builtin: (use: string) => string
+  readonly fields: (fields: string) => string
+  readonly code: (ref: string) => string
+  readonly judge: (inference: string) => string
+  readonly agent: (agent: string) => string
+  readonly validatedBy: (experiment: string) => string
+  readonly notValidated: string
+}
+
+const HINT_JOIN = " · "
+const FIELD_JOIN = ", "
+
+const hintParts = (source: CheckSource, copy: CheckHintCopy): readonly (string | null)[] => {
+  if (source.kind === "code") return [copy.code(source.ref)]
+  if (source.kind === "builtin") return [copy.builtin(source.use), source.fields.length === 0 ? null : copy.fields(source.fields.join(FIELD_JOIN))]
+  return [
+    copy.judge(source.inference),
+    source.agent === null ? null : copy.agent(source.agent.id),
+    source.validatedBy === null ? copy.notValidated : copy.validatedBy(source.validatedBy),
+  ]
+}
+
+export const checkHint = (checks: readonly ExperimentCheck[], id: CheckId, copy: CheckHintCopy): string | null => {
+  const check = checks.find((item) => item.id === id)
+  if (check === undefined) return null
+  return hintParts(check.source, copy)
+    .filter((part) => part !== null)
+    .join(HINT_JOIN)
+}
