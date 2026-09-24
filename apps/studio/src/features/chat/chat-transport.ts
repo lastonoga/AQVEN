@@ -1,7 +1,7 @@
 import type { ApiChatApprovalReply, ApiChatEvent, ApiChatTranscriptPage, ChatSessionId } from "@/domain"
-import { API_BASE } from "@/api/client"
+import { chatFeed, followFeed } from "@/api/events"
 import { noop } from "@/lib/noop"
-import { isRecord, subscribeEvents, type Unsubscribe } from "@/lib/sse"
+import { isRecord, type Unsubscribe } from "@/lib/sse"
 import { CHAT_EVENT_TYPES } from "./chat-events"
 import { emptyTranscriptPage } from "./chat-history"
 
@@ -33,11 +33,8 @@ const isChatEvent = (value: unknown): value is ApiChatEvent =>
 
 const chatEventOf = (value: unknown): ApiChatEvent | null => (isChatEvent(value) ? value : null)
 
-export const chatEventsUrl = (sessionId: ChatSessionId, afterSeq: number): string =>
-  `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events?after_seq=${String(afterSeq)}`
-
 const subscribeToEvents = (sessionId: ChatSessionId, afterSeq: number, onEvent: (event: ApiChatEvent) => void): Unsubscribe =>
-  subscribeEvents({ url: chatEventsUrl(sessionId, afterSeq), types: CHAT_EVENT_TYPES, read: chatEventOf, onEvent })
+  followFeed({ feed: chatFeed(sessionId), after: afterSeq, read: chatEventOf, onEvent })
 
 const openSession =
   (calls: ChatCalls): ChatTransport["open"] =>
