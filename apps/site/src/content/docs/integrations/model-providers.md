@@ -90,6 +90,51 @@ and set a credential. Leaving `api_key` out, as above, falls back to the catalog
 that provider — `GOOGLE_API_KEY` for `google`. Set `api_key: "ref:env/GEMINI_API_KEY"` explicitly if you
 already have the credential under that name instead.
 
+## When a provider rate-limits
+
+Two keys on the provider entry keep calls under the provider's limit before it answers `429`.
+`limits.rpm` spaces requests to the provider evenly, across all of its models. `limits.concurrency` caps how
+many calls of one model run at once, 8 when it is unset. A call first waits for a place among its model's
+parallel calls, then for any pause of that model, then for its `rpm` slot.
+
+What happens after a `429` is `on_rate_limit`:
+
+| `on_rate_limit` | After a `429` |
+| --- | --- |
+| `auto` (default) | Every call of that model pauses, not only the one that failed: for the provider's `retry-after`, or 2 s doubling to at most 60 s when it sends none. The model's parallel calls are halved, never below 1, and grow back by one after 10 successful calls in a row, up to the starting value. A call gives up after 10 attempts or 120 s. |
+| `fixed` | The model pauses `retry_wait_seconds` (10 by default) before each retry, `retry_attempts` times (5 by default). Parallel calls stay as they are. |
+| `fail` | No retry: the call fails with `provider_error` at once, so an agent's `fallback_models` take over without waiting. |
+
+Other models keep running during a pause, other models of the same provider included. That matters on
+OpenRouter: a model can be rate-limited upstream by the provider serving it, and that limit is per model and
+shared with everyone else calling it, so your own `rpm` never sees it coming. `retry_wait_seconds` and
+`retry_attempts` are read only with `fixed`; with another value `aqven check` rejects them.
+
+```yaml
+providers:
+- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "unknown"
+  limits:
+    rpm: 60
+    concurrency: 4
+  on_rate_limit: "fixed"
+  retry_wait_seconds: 15
+  retry_attempts: 3
+```
+
+`aqven dev` prints one line when a model pauses:
+
+```text
+14:02:11 ⏸ openrouter:google/gemma-3-27b-it rate-limited — pausing 30s, parallel 8→4
+```
+
+In a series, an attempt that still ends with a rate limit after these retries goes to the end of the queue
+once more instead of counting as an infrastructure error; a second rate limit counts as usual.
+
 ## Under the hood
 
 Every built-in provider is a thin factory over a [Pydantic AI](/concepts/what-this-is-built-on/) model
