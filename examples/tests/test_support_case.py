@@ -355,6 +355,7 @@ def scripted_painter(aqven_engine: EngineSession) -> None:
     painter = StreamedFunctionModel(
         scripted_illustration, model_name="scripted-painter", profile=ModelProfile(supports_image_output=True)
     )
+    aqven_engine.environ = os.environ if LIVE else None
     aqven_engine.models({PAINTER: painter})
 
 
