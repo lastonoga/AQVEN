@@ -9,7 +9,7 @@ import { useBuiltinNames } from "./copy"
 import { Failure } from "./layout"
 import { intervalText, marginText, metricName, signedValue, unitOf } from "./metrics"
 import { isActive, seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
-import { shareOf, spendTone, verdictGap } from "./series-presenters"
+import { isLowerBound, shareOf, spendTone, verdictGap } from "./series-presenters"
 import { CELL_VERDICT_TONE, SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 import { useResearchAction } from "./use-research-action"
 
@@ -105,6 +105,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
             variant="meter"
             value={t("series.spend", { usd: usd(series.spend.usd), cap: usd(series.spend.capUsd) })}
             bar={{ value: shareOf(series.spend.usd, series.spend.capUsd), tone: spendTone(series) }}
+            note={isLowerBound(series.spend) ? t("series.spendLowerBound", { count: series.spend.unpricedAttempts }) : null}
           />
         </div>
       </div>

@@ -235,7 +235,13 @@
       "stop": "Stop",
       "active": "{series} · {done} of {total} attempts",
       "failed": "Could not do that: {reason}",
-      "noEstimate": "no price estimate",
+      "noEstimate": "no estimate",
+      "usdSource": {
+        "history": "from past series",
+        "prices": "provider prices",
+        "bound": "upper bound",
+        "unknown": "no price"
+      },
       "noPrice": "The models of this experiment have no price yet, so the spend cannot be estimated: the series will wait for your approval before it runs.",
       "cap": "Spend cap {cap}",
       "size": "{cases} cases × {repeats} repeats",
@@ -245,6 +251,8 @@
     "history": {
       "title": "Series history",
       "aria": "Series of this experiment",
+      "lowerBound": "≥ {usd}",
+      "unpriced": "Spend is a lower bound: {count, plural, one {# attempt} other {# attempts}} in {series, plural, one {# series} other {# series}} ran on a model without a known price.",
       "open": "Open series {ref}"
     },
     "details": {
@@ -301,6 +309,7 @@
     "spend": "{usd} of {cap} cap",
     "progressLabel": "Attempts",
     "spendLabel": "Spend",
+    "spendLowerBound": "Lower bound: {count, plural, one {# attempt} other {# attempts}} ran on a model without a known price",
     "stop": "Stop",
     "approve": "Approve spend",
     "actionFailed": "Could not do that: {reason}",

@@ -37,6 +37,8 @@ def _usage_whether_or_not_the_zero_cost_refusal_was_checkpointed_before_quorum()
         "tokens_out": 2,
         "requests": 3,
         "tool_calls": 0,
+        "cost_source": "provider",
+        "unpriced_calls": 0,
     }
     checkpointed_after_quorum_cancelled_it: dict[str, JsonValue] = {**checkpointed_before_quorum, "requests": 2}
     return checkpointed_before_quorum, checkpointed_after_quorum_cancelled_it

@@ -1,10 +1,12 @@
 import asyncio
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
 import pytest
-from series_fixture import write_project
+from series_fixture import CRITIC_MODEL, write_project
 from series_harness import ScriptedModels, SeriesHarness, series_engine, settled
+from series_prices import FIXTURE_PRICES, FixedPrices
 
 from aqven.compiler import compile_root
 from aqven.engine import DbosEngineFacade, RunSpec
@@ -13,7 +15,14 @@ from aqven.ports.engine import RunListQuery
 from aqven.series.events import SeriesEventLog
 from aqven.series.model import SeriesStatus
 from aqven.series.settings import RESEARCH_SCOPE, SPEND_CAP_KEY
-from aqven.series.views import SeriesEvent, SeriesStarted, SeriesStartRequest, SeriesStatusEvent, SeriesSummaryView
+from aqven.series.views import (
+    LaunchRequest,
+    SeriesEvent,
+    SeriesStarted,
+    SeriesStartRequest,
+    SeriesStatusEvent,
+    SeriesSummaryView,
+)
 from aqven.server.errors import ApiFailure
 from aqven.spec import ExperimentId, FlowId
 from aqven.write.model import WriteActor
@@ -61,7 +70,7 @@ async def gated(
 def test_an_estimate_above_the_project_cap_waits_for_one_human_approval(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
-    with series_engine(root, ScriptedModels()) as harness:
+    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
         started, attempts_before, runs_before, approvals, status, events = asyncio.run(gated(harness, root))
 
     estimate = started.estimate
@@ -93,3 +102,36 @@ def test_approving_a_finished_series_is_a_state_conflict(tmp_path: Path) -> None
         asyncio.run(approve_running(harness))
 
     assert raised.value.code == "SERIES_STATE_CONFLICT"
+
+
+async def first_start(harness: SeriesHarness) -> tuple[SeriesStarted, SeriesStatus]:
+    started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    done = await settled(harness.service, started.series_id)
+    return started, done.series.status
+
+
+def test_a_first_series_starts_on_an_upper_bound_under_the_project_cap(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
+        started, status = asyncio.run(first_start(harness))
+
+    estimate = started.estimate
+    assert estimate.usd_source == "bound"
+    assert estimate.usd is not None and Decimal(0) < estimate.usd <= estimate.project_cap_usd
+    assert not estimate.needs_approval
+    assert started.status is SeriesStatus.RUNNING
+    assert status is SeriesStatus.DONE
+
+
+def test_an_unpriced_judge_leaves_the_first_series_without_an_estimate(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+    unpriced = {model: price for model, price in FIXTURE_PRICES.items() if model != CRITIC_MODEL}
+    request = LaunchRequest()
+
+    with series_engine(root, ScriptedModels(), prices=FixedPrices(unpriced)) as harness:
+        estimate = asyncio.run(harness.service.estimate(ExperimentId("triage_agents"), request))
+
+    assert (estimate.usd, estimate.usd_source) == (None, "unknown")
+    assert estimate.needs_approval
+    assert f"price_unknown:{CRITIC_MODEL}" in estimate.warnings

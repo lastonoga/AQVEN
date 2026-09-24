@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import AsyncIterable
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
@@ -64,9 +65,11 @@ from aqven.models import (
 )
 from aqven.models.cassette import CASSETTE_BEHAVIORS
 from aqven.models.rate import RateLimiter
+from aqven.ports.prices import NO_PRICES, CachedPrices
 from aqven.ports.settings import provider_key_setting
 from aqven.runtime import CassetteConfig, CassetteMode, node_address
 from aqven.spec import ProviderName
+from aqven_llm import TokenPrice
 
 MODEL_REF: Final = "openrouter:openai/gpt-oss-20b"
 NO_WAIT: Final = BackoffPolicy(attempts=3, initial_seconds=0.0, max_seconds=5.0, jitter_seconds=0.0)
@@ -92,6 +95,7 @@ def policy(
     budget: UsageBudget | None = None,
     redaction: RedactionPolicy = NO_REDACTION,
     concurrency: AbstractConcurrencyLimiter | None = None,
+    prices: CachedPrices = NO_PRICES,
 ) -> CallPolicy:
     return CallPolicy(
         cassettes=cassettes(MemoryCassetteStore() if store is None else store, mode),
@@ -100,7 +104,17 @@ def policy(
         budget=budget,
         backoff=NO_WAIT,
         usage_sink=UsageLog() if usage_sink is None else usage_sink,
+        prices=prices,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class OnePrice:
+    model: str
+    price: TokenPrice
+
+    def cached(self, model: str) -> TokenPrice | None:
+        return self.price if model == self.model else None
 
 
 def guarded(inner: Model, call_policy: CallPolicy) -> Model:
@@ -361,6 +375,34 @@ def test_cost_limit_uses_provider_cost_after_the_response() -> None:
 
     assert log.entries[0].cost == Decimal("0.002")
     assert log.entries[0].usage.input_tokens == 10
+
+
+def test_the_guarded_model_prices_a_call_from_the_table_and_charges_the_budget() -> None:
+    budget = UsageBudget(limits=UsageLimits(request_limit=None, cost_limit=Decimal("1")))
+    log = UsageLog()
+    price = TokenPrice(Decimal("0.001"), Decimal("0.002"), None, None, "openrouter")
+    model = guarded(
+        ScriptedModel([text_script("one")]), policy(budget=budget, usage_sink=log, prices=OnePrice(MODEL_REF, price))
+    )
+
+    asyncio.run(model.request(prompt("a"), None, ModelRequestParameters()))
+
+    entry = log.entries[0]
+    expected = price.cost(entry.usage.input_tokens, entry.usage.output_tokens)
+    assert (entry.cost, entry.cost_source) == (expected, "prices")
+    assert budget.ledger.cost == expected
+
+
+def test_a_guarded_call_without_any_price_is_unpriced_and_leaves_the_budget_cost_unknown() -> None:
+    budget = UsageBudget(limits=UsageLimits(request_limit=None))
+    log = UsageLog()
+    model = guarded(ScriptedModel([text_script("one")]), policy(budget=budget, usage_sink=log))
+
+    asyncio.run(model.request(prompt("a"), None, ModelRequestParameters()))
+
+    assert (log.entries[0].cost, log.entries[0].cost_source) == (None, "unknown")
+    assert log.unpriced_calls() == 1
+    assert budget.ledger.cost is None
 
 
 def test_concurrency_limiter_serializes_requests() -> None:

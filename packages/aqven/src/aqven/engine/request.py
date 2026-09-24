@@ -75,12 +75,14 @@ class RunUsageTotals(BaseModel):
     cost_usd: Decimal = Decimal(0)
     tokens_in: Annotated[int, Field(ge=0)] = 0
     tokens_out: Annotated[int, Field(ge=0)] = 0
+    unpriced_calls: Annotated[int, Field(ge=0)] = 0
 
     def plus_node(self, usage: NodeUsage) -> RunUsageTotals:
         return RunUsageTotals(
             cost_usd=self.cost_usd + usage.cost_usd,
             tokens_in=self.tokens_in + usage.tokens_in,
             tokens_out=self.tokens_out + usage.tokens_out,
+            unpriced_calls=self.unpriced_calls + usage.unpriced_calls,
         )
 
     def plus(self, other: RunUsageTotals) -> RunUsageTotals:
@@ -88,6 +90,7 @@ class RunUsageTotals(BaseModel):
             cost_usd=self.cost_usd + other.cost_usd,
             tokens_in=self.tokens_in + other.tokens_in,
             tokens_out=self.tokens_out + other.tokens_out,
+            unpriced_calls=self.unpriced_calls + other.unpriced_calls,
         )
 
 

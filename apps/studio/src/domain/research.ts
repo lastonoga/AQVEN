@@ -83,6 +83,9 @@ export type AttemptOutcome = (typeof ATTEMPT_OUTCOMES)[number]
 export const ESTIMATE_REASONS = ["look", "wide", "enough", "no_margin", "no_history", "short_of_cases"] as const
 export type EstimateReason = (typeof ESTIMATE_REASONS)[number]
 
+export const USD_SOURCES = ["history", "prices", "bound", "unknown"] as const
+export type UsdSource = (typeof USD_SOURCES)[number]
+
 export type CaseTags = Readonly<Record<string, string>>
 
 export type AgentRef = { readonly id: AgentId; readonly model: string }
@@ -229,6 +232,7 @@ export type LaunchEstimate = {
   readonly variants: number
   readonly attempts: number
   readonly usd: number | null
+  readonly usdSource: UsdSource
   readonly minutes: number | null
   readonly available: number
   readonly halfWidth: number | null
@@ -247,7 +251,7 @@ export type SeriesVerdict = { readonly state: VerdictState; readonly reason: Ver
 
 export type SeriesProgress = { readonly done: number; readonly total: number }
 
-export type SeriesSpend = { readonly usd: number; readonly capUsd: number }
+export type SeriesSpend = { readonly usd: number; readonly capUsd: number; readonly unpricedAttempts: number }
 
 type SeriesHead = {
   readonly id: SeriesId
