@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections.abc import AsyncGenerator, AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Coroutine, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -50,7 +50,7 @@ from aqven.series.views import (
 from aqven.server.app import server_context
 from aqven.server.spec_channel import SpecEventHub
 from aqven.server.workspace import ProjectWorkspace
-from aqven.spec import AgentId, ExperimentId
+from aqven.spec import AgentId, ExperimentId, FlowId
 from aqven.write.model import WriteActor
 
 LOGGER: Final = logging.getLogger("aqven.dev")
@@ -156,6 +156,9 @@ class ObservedEngineFacade:
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
         return await self.inner.list_runs(query)
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        return await self.inner.latest_runs(flow_ids)
 
     def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         return self.inner.run_events(run_id, after_seq)
