@@ -35,10 +35,11 @@ const typeDetails = Object.fromEntries(await Promise.all(FORM_TYPES.map(async (i
 const prompts = (await get('/api/prompts?limit=200')).items
 const providers = await get('/api/settings/providers')
 const secrets = await get('/api/settings/secrets')
+const projectSettings = await get('/api/settings/project')
 const files = (await get('/api/files?limit=200')).items
 
 writeFileSync(`${OUT}/project.ts`, [
-  'import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiType, ApiTypeDetail } from "@/domain"',
+  'import type { ApiFileEntry, ApiFlow, ApiFlowDetail, ApiProject, ApiPrompt, ApiProviderKey, ApiSecret, ApiSetting, ApiType, ApiTypeDetail } from "@/domain"',
   '',
   `export const liveProject: ApiProject = ${lit(project)}`,
   '',
@@ -55,6 +56,8 @@ writeFileSync(`${OUT}/project.ts`, [
   `export const liveProviders: readonly ApiProviderKey[] = ${lit(providers)}`,
   '',
   `export const liveSecrets: readonly ApiSecret[] = ${lit(secrets)}`,
+  '',
+  `export const liveProjectSettings: readonly ApiSetting[] = ${lit(projectSettings)}`,
   '',
   `export const liveFiles: readonly ApiFileEntry[] = ${lit(files)}`,
   '',

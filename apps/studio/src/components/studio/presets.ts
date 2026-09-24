@@ -1,4 +1,4 @@
-import type { CompileStatus, ExecutionStatus, IndexStatus, ModelFamily, NodeKind, RunStatus, Severity, WaitState } from "@/domain"
+import type { ExecutionStatus, ModelFamily, NodeKind, RunStatus, Severity, WaitState } from "@/domain"
 import type { Tone } from "./tone"
 
 export const PROVENANCES = ["static", "data", "knowledge", "generated", "human"] as const
@@ -62,19 +62,6 @@ export const EXECUTION_STATUS_TONE: Readonly<Record<ExecutionStatus, Tone>> = {
   skipped: "neutral",
   suspended: "warning",
   cancelled: "neutral",
-}
-
-export const COMPILE_STATUS_TONE: Readonly<Record<CompileStatus, Tone>> = {
-  ok: "success",
-  not_runnable: "warning",
-  invalid: "destructive",
-  unreadable: "destructive",
-}
-
-export const INDEX_STATUS_TONE: Readonly<Record<IndexStatus, Tone>> = {
-  ready: "success",
-  building: "primary",
-  degraded: "warning",
 }
 
 export const WAIT_STATE_TONE: Readonly<Record<WaitState, Tone>> = {
