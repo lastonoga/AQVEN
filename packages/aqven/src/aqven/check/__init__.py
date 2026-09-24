@@ -29,6 +29,7 @@ from aqven.check.refs import check_refs
 from aqven.check.registry import check_registry
 from aqven.check.report import CheckReport
 from aqven.check.resolver import CodeFailure, CodeResolver, CodeTarget
+from aqven.check.sampling import check_sampling
 from aqven.check.scopes import RefResolver
 from aqven.check.secrets import check_secrets
 from aqven.check.tool_args import check_tool_args
@@ -52,6 +53,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_bounds,
     check_capabilities,
     check_output_modes,
+    check_sampling,
     check_control,
     check_human,
     check_dynamic,

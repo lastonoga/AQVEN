@@ -1,9 +1,11 @@
 import argparse
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, cast
 
+from aqven.app.console_log.levels import ConsoleLevel, add_verbosity_arguments, arguments_level
 from aqven.app.environment import (
     AQVEN_HOST,
     AQVEN_OPEN_BROWSER,
@@ -53,6 +55,7 @@ class ServerOptions:
     chat_permission_mode: ChatPermissionMode = "default"
     startup_timeout_seconds: float = STARTUP_TIMEOUT_SECONDS
     poll_seconds: float = POLL_SECONDS
+    console_level: ConsoleLevel = ConsoleLevel.INFO
 
     @property
     def launches_browser(self) -> bool:
@@ -101,6 +104,7 @@ def add_server_arguments(parser: argparse.ArgumentParser) -> None:
         choices=PERMISSION_MODES,
         help="default approval mode for new chat sessions",
     )
+    add_verbosity_arguments(parser)
 
 
 def _rules(value: object) -> tuple[str, ...]:
@@ -140,6 +144,7 @@ def server_options(
     environ: Mapping[str, str] | None = None,
 ) -> ServerOptions:
     settings = runtime_settings(environ, defaults)
+    level = arguments_level(arguments, os.environ if environ is None else environ)
     port = _number(arguments.port)
     host = _text(arguments.host)
     return ServerOptions(
@@ -156,6 +161,7 @@ def server_options(
         chat_model=_text(arguments.chat_model),
         chat_effort=_effort(arguments.chat_effort),
         chat_permission_mode=_permission_mode(arguments.chat_permission_mode),
+        console_level=level,
     )
 
 

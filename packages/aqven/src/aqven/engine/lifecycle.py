@@ -9,14 +9,14 @@ from dbos import DBOS
 
 from aqven.engine import interpreter
 from aqven.engine.blobs import FileBlobStore
-from aqven.engine.config import EnginePaths, dbos_config
+from aqven.engine.config import EnginePaths, dbos_config, dbos_log_level
+from aqven.engine.dbos_logs import route_dbos_logs
 from aqven.engine.errors import EngineBusy
 from aqven.engine.executors.tool import McpCaller, ToolsetMcpCaller
 from aqven.engine.extensions import EngineExtensions
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry, PlanStore
 from aqven.engine.prices import GracefulPrices
-from aqven.engine.protocol import DBOS_LOG_LEVEL
 from aqven.engine.registry import CoreExecutors, build_executors, throttled_executors
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, OverrideBook, ToolServices
 from aqven.engine.summaries import SUMMARY_DATABASE, RunSummaries, SqliteRunSummaryStore
@@ -45,7 +45,7 @@ class EngineSetup:
     environ: Mapping[str, str] = field(default_factory=process_environment, repr=False)
     extensions: ExtensionsFactory = no_extensions
     mcp: McpCaller = field(default_factory=ToolsetMcpCaller)
-    log_level: str = DBOS_LOG_LEVEL
+    log_level: str | None = None
     state_dir: Path | None = None
     max_parallel: int | None = None
     workflows: tuple[HostWorkflow, ...] = ()
@@ -97,7 +97,8 @@ class EngineLifecycle:
         runtime = build_runtime(paths, self.setup)
         RUNTIME_SLOT.install(runtime)
         try:
-            DBOS(config=dbos_config(paths, log_level=self.setup.log_level))
+            route_dbos_logs()
+            DBOS(config=dbos_config(paths, log_level=dbos_log_level(self.setup.log_level)))
             DBOS.launch()
         except BaseException:
             RUNTIME_SLOT.clear()
