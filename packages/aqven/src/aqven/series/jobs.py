@@ -50,6 +50,7 @@ from aqven.series.presenter import (
     started_view,
     summary_view,
     unpriced_attempts,
+    waiting_attempts,
 )
 from aqven.series.protocol import APPROVAL_TOPIC, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
 from aqven.series.services import SeriesServices
@@ -412,9 +413,7 @@ class SeriesService:
         return await self.services.store.settle(series_id, change)
 
     async def _waits(self, record: SeriesRecord, attempts: Sequence[AttemptRecord], waiting: frozenset[RunId]) -> int:
-        if record.status is not SeriesStatus.RUNNING:
-            return 0
-        return sum(1 for row in attempts if row.state is AttemptState.RUNNING and row.run_id in waiting)
+        return waiting_attempts(record, attempts, waiting)
 
     async def _facts(
         self, record: SeriesRecord, attempts: Sequence[AttemptRecord], waiting: frozenset[RunId]

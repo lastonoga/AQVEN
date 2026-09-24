@@ -172,5 +172,15 @@ def test_spec_sse_replays_with_last_event_id(
 def test_spec_channel_events_are_published_with_their_schemas(server_client: TestClient) -> None:
     schemas = server_client.get("/api/schemas/events").json()["schemas"]["spec"]
 
-    assert set(schemas) == {"files_changed", "diagnostics_changed", "resync"}
+    assert set(schemas) == {
+        "files_changed",
+        "diagnostics_changed",
+        "resync",
+        "series_started",
+        "series_progress",
+        "series_status_changed",
+        "finding_written",
+        "experiment_changed",
+    }
+    assert schemas["series_status_changed"]["properties"]["status"]["$ref"].endswith("SeriesStatus")
     assert schemas["files_changed"]["properties"]["changes"]["items"]["$ref"].endswith("FileChange")

@@ -19,7 +19,6 @@ import type {
   ApiSeriesCaseRow,
   ApiSeriesDetail,
   ApiSeriesEstimate,
-  ApiSeriesEvent,
   ApiSeriesOrigin,
   ApiSeriesSummary,
   ApiStabilityRow,
@@ -50,7 +49,6 @@ import type {
   SeriesAttempt,
   SeriesCaseRow,
   SeriesDetail,
-  SeriesEvent,
   SeriesOrigin,
   SeriesSummary,
   SplitCounts,
@@ -328,12 +326,6 @@ export const caseRowOf = (row: ApiSeriesCaseRow): SeriesCaseRow => ({
   divergent: row.divergent,
   attempts: row.attempts.map(attemptOf),
 })
-
-export const seriesEventOf = (event: ApiSeriesEvent): SeriesEvent => {
-  if (event.type === "series_status") return { kind: "status", seq: event.seq, status: event.status }
-  if (event.type === "series_finished") return { kind: "finished", seq: event.seq, status: event.status, verdict: event.verdict }
-  return { kind: "attempt", seq: event.seq, done: event.done, total: event.total, spendUsd: money(event.spend_usd) }
-}
 
 export const armFlowOf = (view: ApiArmFlow): ArmFlow => ({
   experiment: ids.experimentId(view.experiment_id),

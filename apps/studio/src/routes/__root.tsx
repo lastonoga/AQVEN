@@ -1,6 +1,7 @@
 import { createRootRouteWithContext, Navigate, Outlet, useLocation } from "@tanstack/react-router"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ChatBackendProvider } from "@/features/chat-backend"
+import { useProjectRefresh } from "@/features/shell"
 import type { RouterContext } from "@/router"
 import { DEFAULT_LOCALE } from "@/routes/-defaults"
 import { StudioIntl } from "@/routes/-intl"
@@ -13,6 +14,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootLayout() {
   const { api, now } = Route.useRouteContext()
+  useProjectRefresh()
   return (
     <TooltipProvider>
       <StudioIntl locale={DEFAULT_LOCALE} now={now}>
