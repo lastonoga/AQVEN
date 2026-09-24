@@ -17,3 +17,8 @@ export const loadArm = async (api: LiveSources, snapshot: ApiRunSnapshot): Promi
   if (!present(experiment) || !present(arm)) return null
   return api.research.armFlow(ids.experimentId(experiment), ids.armId(arm)).catch(() => null)
 }
+
+export const isProjectFlowRun = async (api: LiveSources, snapshot: ApiRunSnapshot): Promise<boolean> => {
+  if (present(snapshot.arm_id)) return false
+  return api.flow.detail(ids.flowId(snapshot.flow_id)).then(() => true, () => false)
+}
