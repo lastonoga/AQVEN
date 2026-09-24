@@ -8,6 +8,7 @@ from aqven.console.new_wizard import (
     computed_max_parallel,
     run_wizard,
     should_run_wizard,
+    wizard_from_provider,
 )
 
 
@@ -124,3 +125,7 @@ def test_run_wizard_bundles_every_answer(monkeypatch: pytest.MonkeyPatch) -> Non
     assert result.allows_pii is False
     assert result.budget_usd_micros is None
     assert result.max_parallel == 4
+
+
+def test_explicit_provider_leaves_the_data_policy_to_the_template() -> None:
+    assert wizard_from_provider("openrouter").allows_pii is None

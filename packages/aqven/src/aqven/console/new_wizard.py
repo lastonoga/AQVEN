@@ -14,7 +14,7 @@ class WizardAnswers:
     provider_id: str
     provider_env_var: str
     api_key: str | None
-    allows_pii: bool
+    allows_pii: bool | None
     budget_usd_micros: int | None
     max_parallel: int
 
@@ -49,7 +49,7 @@ def wizard_from_provider(provider_id: str) -> WizardAnswers:
         provider_id=provider_id,
         provider_env_var=entry.key.primary or "",
         api_key=None,
-        allows_pii=False,
+        allows_pii=None,
         budget_usd_micros=None,
         max_parallel=computed_max_parallel(),
     )
