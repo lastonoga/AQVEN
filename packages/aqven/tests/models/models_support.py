@@ -18,6 +18,19 @@ from aqven.ports.settings import SettingKey, SettingScope, SettingView
 FIXED_TIME: Final = datetime(2026, 9, 17, tzinfo=UTC)
 
 
+@dataclass(slots=True)
+class LaneClock:
+    now: float = 0.0
+    waits: list[float] = field(default_factory=list[float])
+
+    def time(self) -> float:
+        return self.now
+
+    async def sleep(self, seconds: float) -> None:
+        self.waits.append(seconds)
+        self.now += seconds
+
+
 @dataclass(frozen=True)
 class Chunk:
     text: str | None = None

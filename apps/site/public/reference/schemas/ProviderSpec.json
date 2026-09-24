@@ -89,6 +89,19 @@
     "ProviderLimits": {
       "additionalProperties": false,
       "properties": {
+        "concurrency": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concurrency"
+        },
         "rpm": {
           "anyOf": [
             {
@@ -108,6 +121,14 @@
     },
     "ProviderNameField": {
       "pattern": "^[a-z][a-z0-9_-]{0,62}$",
+      "type": "string"
+    },
+    "RateLimitMode": {
+      "enum": [
+        "auto",
+        "fixed",
+        "fail"
+      ],
       "type": "string"
     },
     "Retention": {
@@ -178,6 +199,10 @@
       ],
       "default": null
     },
+    "on_rate_limit": {
+      "$ref": "#/$defs/RateLimitMode",
+      "default": "auto"
+    },
     "params": {
       "anyOf": [
         {
@@ -192,6 +217,32 @@
       ],
       "default": null,
       "title": "Params"
+    },
+    "retry_attempts": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retry Attempts"
+    },
+    "retry_wait_seconds": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retry Wait Seconds"
     },
     "routing": {
       "anyOf": [

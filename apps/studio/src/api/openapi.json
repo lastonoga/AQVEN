@@ -27092,6 +27092,18 @@
               }
             ],
             "title": "Rpm"
+          },
+          "concurrency": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concurrency"
           }
         },
         "additionalProperties": false,
@@ -27190,6 +27202,34 @@
                 "type": "null"
               }
             ]
+          },
+          "on_rate_limit": {
+            "$ref": "#/components/schemas/RateLimitMode",
+            "default": "auto"
+          },
+          "retry_wait_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Wait Seconds"
+          },
+          "retry_attempts": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Attempts"
           }
         },
         "additionalProperties": false,
@@ -27328,6 +27368,14 @@
           "kind"
         ],
         "title": "QuestionView"
+      },
+      "RateLimitMode": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "fixed",
+          "fail"
+        ]
       },
       "ReadyState": {
         "properties": {

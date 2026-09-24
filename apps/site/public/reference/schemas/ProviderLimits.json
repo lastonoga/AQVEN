@@ -1,6 +1,19 @@
 {
   "additionalProperties": false,
   "properties": {
+    "concurrency": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Concurrency"
+    },
     "rpm": {
       "anyOf": [
         {

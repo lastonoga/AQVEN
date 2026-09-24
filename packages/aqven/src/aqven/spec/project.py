@@ -1,8 +1,8 @@
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, Self
 
-from pydantic import AfterValidator, Field, JsonValue
+from pydantic import AfterValidator, Field, JsonValue, model_validator
 
 from aqven.spec.common import Limits, SpecModel
 from aqven.spec.names import (
@@ -19,6 +19,7 @@ CENT: Final = Decimal("0.01")
 
 type ProviderNameField = Annotated[ProviderName, Field(pattern=PROVIDER_NAME_PATTERN)]
 type ProviderKind = Literal["catalog", "code", "openai_compatible"]
+type RateLimitMode = Literal["auto", "fixed", "fail"]
 
 type RenameKind = Literal[
     "flow",
@@ -66,6 +67,7 @@ class ProviderCapabilitiesSpec(SpecModel):
 
 class ProviderLimits(SpecModel):
     rpm: int | None = Field(default=None, ge=1)
+    concurrency: int | None = Field(default=None, ge=1)
 
 
 class ProviderSpec(SpecModel):
@@ -79,6 +81,20 @@ class ProviderSpec(SpecModel):
     data_policy: DataPolicy
     routing: OpenRouterRouting | None = None
     limits: ProviderLimits | None = None
+    on_rate_limit: RateLimitMode = "auto"
+    retry_wait_seconds: float | None = Field(default=None, gt=0)
+    retry_attempts: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def _fixed_waits_only_when_fixed(self) -> Self:
+        declared = {"retry_wait_seconds": self.retry_wait_seconds, "retry_attempts": self.retry_attempts}
+        stray = [name for name, value in declared.items() if value is not None]
+        if self.on_rate_limit == "fixed" or not stray:
+            return self
+        raise ValueError(
+            f"on_rate_limit: {self.on_rate_limit} does not read {' or '.join(stray)}: "
+            "remove it or set on_rate_limit: fixed"
+        )
 
 
 def in_cents(value: Decimal) -> Decimal:

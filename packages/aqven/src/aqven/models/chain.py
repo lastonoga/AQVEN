@@ -7,7 +7,7 @@ from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
 
-from aqven.models.backoff import BackoffModel, BackoffPolicy, Sleep
+from aqven.models.backoff import BackoffModel, BackoffPolicy
 from aqven.models.cassette import (
     CASSETTE_BEHAVIORS,
     LIVE_BEHAVIOR,
@@ -18,6 +18,7 @@ from aqven.models.cassette import (
     DirectoryCassetteStore,
     MemoryCassetteStore,
 )
+from aqven.models.lanes import ModelLane, Sleep
 from aqven.models.limiter import LimiterModel, UsageBudget
 from aqven.models.outcome import OutcomeGateModel
 from aqven.models.redaction import RedactingModel, RedactionPolicy
@@ -48,6 +49,7 @@ class CallPolicy:
     backoff_sleep: Sleep | None = None
     usage_sink: UsageSink = field(default_factory=DiscardUsage)
     prices: CachedPrices = NO_PRICES
+    lane: ModelLane | None = None
 
 
 def cassette_policy(
@@ -64,7 +66,7 @@ def cassette_policy(
 
 
 def guard_model(provider_model: Model, *, model_ref: str, policy: CallPolicy) -> Model:
-    backoff = BackoffModel(provider_model, policy=policy.backoff, sleep=policy.backoff_sleep)
+    backoff = BackoffModel(provider_model, policy=policy.backoff, sleep=policy.backoff_sleep, lane=policy.lane)
     limited = LimiterModel(
         backoff,
         model_ref=model_ref,
@@ -146,4 +148,5 @@ def with_secret(policy: CallPolicy, secret: SecretStr) -> CallPolicy:
         backoff_sleep=policy.backoff_sleep,
         usage_sink=policy.usage_sink,
         prices=policy.prices,
+        lane=policy.lane,
     )
