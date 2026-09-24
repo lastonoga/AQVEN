@@ -59,16 +59,9 @@ function ModeMenu({ mode, selected }: MenuProps & { readonly mode: ProjectMode |
   return <Menu selected={selected} />
 }
 
-function FlowCrumb({ project, flows, selected, mode }: ProjectBarProps & MenuProps & { readonly mode: ProjectMode | null }) {
+function FlowSelect({ project, flows, selected, mode }: ProjectBarProps & MenuProps & { readonly mode: ProjectMode | null }) {
   if (flows.length === 0 || selected === null || !showsFlowPicker(mode)) return null
-  return (
-    <>
-      <Text role="item" tone="neutral" aria-hidden className="shrink-0">
-        /
-      </Text>
-      <FlowPicker project={project} flows={flows} selected={selected} />
-    </>
-  )
+  return <FlowPicker project={project} flows={flows} selected={selected} />
 }
 
 function OpenRunBadge() {
@@ -122,10 +115,10 @@ export function ProjectBar({ project, flows }: ProjectBarProps) {
           <Text role="item" weight="semibold" tone="default" className="shrink-0">
             {projectName(project)}
           </Text>
-          <FlowCrumb project={project} flows={flows} selected={selected} mode={mode} />
         </nav>
         <Divider />
         <ModeSwitch mode={mode} selected={selected} />
+        <FlowSelect project={project} flows={flows} selected={selected} mode={mode} />
         <ModeMenu mode={mode} selected={selected} />
       </Toolbar>
     </Surface>

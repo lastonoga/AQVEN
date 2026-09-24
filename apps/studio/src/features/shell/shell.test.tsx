@@ -55,9 +55,12 @@ describe("Project shell", () => {
     expect(modes.map(pathOf)).toEqual([`${FLOWS}/support_case/canvas`, "/research"])
     expect(flowOf(modes[1])).toBeNull()
     expect(currentOf(modes)).toEqual(["true", null])
-    const crumbs = await screen.findByRole("navigation", { name: "Project and flow" })
+    const crumbs = await screen.findByRole("navigation", { name: "Project" })
     expect(within(crumbs).getByText("lumen")).toBeTruthy()
-    expect(within(crumbs).getByRole("button", { name: "Switch flow" }).textContent).toBe("support_case")
+    const picker = screen.getByRole("button", { name: "Switch flow" })
+    expect(picker.textContent).toBe("support_case")
+    const switcher = screen.getByRole("navigation", { name: "Project modes" })
+    expect(switcher.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("hides the flow picker in research mode and keeps the research views free of a flow", async () => {
@@ -69,9 +72,9 @@ describe("Project shell", () => {
     expect(tabs.map(flowOf)).toEqual([null, null])
     expect(currentOf(tabs)).toEqual(["true", null])
     expect(screen.queryByRole("navigation", { name: "Flow views" })).toBeNull()
-    const crumbs = screen.getByRole("navigation", { name: "Project and flow" })
+    const crumbs = screen.getByRole("navigation", { name: "Project" })
     expect(within(crumbs).getByText("lumen")).toBeTruthy()
-    expect(within(crumbs).queryByRole("button", { name: "Switch flow" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Switch flow" })).toBeNull()
   })
 
   it("lands on every experiment of the project when research opens from a flow", async () => {
@@ -183,7 +186,7 @@ describe("Project shell", () => {
     })
     const banner = (await screen.findByText("Studio lost the connection to the project server.")).closest("[role=alert]")
     expect(banner?.textContent).toContain(`uv run aqven dev ${liveProject.root}`)
-    const workspace = screen.getByRole("navigation", { name: "Project and flow" })
+    const workspace = screen.getByRole("navigation", { name: "Project" })
     expect(banner?.compareDocumentPosition(workspace)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(screen.getByRole("button", { name: "Server status: Disconnected" })).toBeTruthy()
   })
