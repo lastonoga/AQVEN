@@ -6,7 +6,7 @@ from aqven.ports.execution import NodeUsage, combined_usage
 from aqven.runtime.address import JsonObject, ResourceModel
 from aqven.runtime.executions import AttemptCause, CheckOutcome, ModelErrorDetails
 from aqven.runtime.human import ToolApprovalDecision
-from aqven.runtime.vocabulary import AttemptAction
+from aqven.runtime.vocabulary import AbandonedOutcome, AttemptAction
 from aqven.spec import OnFail
 
 
@@ -27,6 +27,12 @@ class ToolCallRetried(ResourceModel):
 
 
 type ToolCallResult = Annotated[ToolCallReturned | ToolCallRetried, Field(discriminator="kind")]
+type SegmentStart = Literal["prompt", "deferred", "reissue"]
+
+
+class ModelSlot(ResourceModel):
+    index: Annotated[int, Field(ge=0)] = 0
+    retries_spent: Annotated[int, Field(ge=0)] = 0
 
 
 class SegmentCompleted(ResourceModel):
@@ -62,13 +68,26 @@ class SegmentFailed(ResourceModel):
     model: str | None = None
 
 
+class SegmentAbandoned(ResourceModel):
+    status: Literal["abandoned"] = "abandoned"
+    outcome: AbandonedOutcome
+    message: str
+    messages_json: str
+    attempt: Annotated[int, Field(ge=1)]
+    slot: ModelSlot
+    model: str | None = None
+    details: ModelErrorDetails | None = None
+
+
 class AttemptFailure(ResourceModel):
     attempt: Annotated[int, Field(ge=1)]
     cause: AttemptCause
     action: AttemptAction
 
 
-type SegmentOutcome = Annotated[SegmentCompleted | SegmentDeferred | SegmentFailed, Field(discriminator="status")]
+type SegmentOutcome = Annotated[
+    SegmentCompleted | SegmentDeferred | SegmentFailed | SegmentAbandoned, Field(discriminator="status")
+]
 
 
 class SegmentResult(ResourceModel):
@@ -82,6 +101,8 @@ class SegmentState(ResourceModel):
     segment: Annotated[int, Field(ge=1)] = 1
     attempt_offset: Annotated[int, Field(ge=0)] = 0
     approval_round: Annotated[int, Field(ge=0)] = 0
+    start: SegmentStart = "prompt"
+    slot: ModelSlot = Field(default_factory=ModelSlot)
     messages_json: str | None = None
     approvals: dict[str, ToolApprovalDecision] = Field(default_factory=dict[str, ToolApprovalDecision])
     call_results: dict[str, ToolCallResult] = Field(default_factory=dict[str, ToolCallResult])

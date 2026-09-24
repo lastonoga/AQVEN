@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { ApiRunEvent } from "@/domain"
 import { liveNodePrompts, liveNodes } from "@/mocks/data/nodes"
 import { COMPLETED_RUN_ID, liveRunEvents, liveRunSnapshots } from "@/mocks/data/runs"
+import { RECOVERED_RUN_ID } from "@/mocks/data/recovered-run"
 import { buildTrace } from "./build"
 import type { MatrixGroup, StageRun } from "./model"
 
@@ -126,5 +127,28 @@ describe("buildTrace", () => {
   it("lists the media a payload carries by blob id", () => {
     const illustrate = stage("illustrate")?.groups[0]?.columns[0]
     expect(illustrate?.output?.media.map((media) => media.mediaType)).toEqual(["image/jpeg"])
+  })
+
+  it("marks the map item the on_item_error policy replaced and carries its default value", () => {
+    const recovered = liveRunSnapshots[RECOVERED_RUN_ID]
+    const run = buildTrace({
+      executions: recovered?.executions ?? [],
+      order: recovered?.order ?? [],
+      nodes,
+      prompts,
+      events: liveRunEvents[RECOVERED_RUN_ID] ?? [],
+    })
+    const vote = run.stages.find((item) => item.nodeId === "vote")
+    expect(vote?.recoveries.map((recovery) => [recovery.decision, recovery.policy])).toEqual([["default", "abstain"]])
+    const columns = vote?.groups[0]?.columns ?? []
+    expect(columns.map((column) => column.recovery?.decision ?? null)).toEqual([null, null, "default", null, null])
+    expect(columns[2]?.recovery?.value?.value).toMatchObject({ intent: "abstain", confidence: 0 })
+    expect(columns[2]?.check?.findings.map((finding) => finding.attempt)).toEqual([1, 2, 3, 4])
+  })
+
+  it("leaves every column of an old run without a recovery", () => {
+    const columns = trace.stages.flatMap((item) => item.groups.flatMap((group) => group.columns))
+    expect(columns.every((column) => column.recovery === null)).toBe(true)
+    expect(trace.stages.every((item) => item.recoveries.length === 0)).toBe(true)
   })
 })

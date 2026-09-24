@@ -74,6 +74,9 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
         "",
         DiagnosticCode.E_TEXT_OUTPUT,
     ),
+    "outcome_fallback_without_fallback_models": Mutation(
+        WRITER, "settings:", 'output:\n  on_error: "fallback"\nsettings:', DiagnosticCode.E_OUTCOME_FALLBACK
+    ),
     "provider_unknown": Mutation(
         WRITER, 'model: "openai:gpt-5.4-mini"', 'model: "google:gemini-3.8-flash"', DiagnosticCode.E_PROVIDER_UNKNOWN
     ),
@@ -331,6 +334,23 @@ def test_mutation_is_reported(shop: Path, name: str) -> None:
 
     assert mutation.expected in found(report)
     assert not report.ok
+
+
+def test_outcome_fallback_points_at_the_policy_without_fallback_models(shop: Path) -> None:
+    replace(shop, WRITER, "settings:", 'output:\n  on_refusal: "fallback"\n  on_truncated: "retry"\nsettings:')
+
+    report = check_project(shop)
+
+    rejected = [item for item in report.diagnostics if item.code is DiagnosticCode.E_OUTCOME_FALLBACK]
+    assert [(item.file, item.path) for item in rejected] == [(WRITER, ("output", "on_refusal"))]
+    assert rejected[0].hint == "add fallback_models to the agent or set output.on_refusal: retry or fail"
+
+
+def test_outcome_fallback_with_fallback_models_is_clean(shop: Path) -> None:
+    fallback = 'fallback_models:\n- "openai:gpt-5.4-mini"\noutput:\n  on_error: "fallback"\nsettings:'
+    replace(shop, WRITER, "settings:", fallback)
+
+    assert check_project(shop).diagnostics == ()
 
 
 def test_agent_reference_is_required_on_llm_node(shop: Path) -> None:

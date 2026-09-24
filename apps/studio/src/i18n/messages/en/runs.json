@@ -143,7 +143,12 @@
     "nodesValue": "{done} / {total}",
     "nodesNote": "{done} of {total} done",
     "running": "still running",
-    "failedNodes": "{count, plural, one {# failed node} other {# failed nodes}}"
+    "failedNodes": "{count, plural, one {# failed node} other {# failed nodes}}",
+    "recoveredItems": {
+      "default": "{count, plural, one {# item replaced} other {# items replaced}}",
+      "skip": "{count, plural, one {# item skipped} other {# items skipped}}",
+      "mixed": "{count, plural, one {# item recovered} other {# items recovered}}"
+    }
   },
   "outcome": {
     "title": "Outcome",
@@ -292,7 +297,12 @@
     "label": "Compare agents on {node}"
   },
   "status": {
-    "completedWithFailures": "Completed · {count, plural, one {# step failed} other {# steps failed}}"
+    "completedWithFailures": "Completed · {count, plural, one {# step failed} other {# steps failed}}",
+    "completedWithRecovered": {
+      "default": "Completed · {count, plural, one {# item replaced} other {# items replaced}}",
+      "skip": "Completed · {count, plural, one {# item skipped} other {# items skipped}}",
+      "mixed": "Completed · {count, plural, one {# item recovered} other {# items recovered}}"
+    }
   },
   "failure": {
     "title": {

@@ -102,6 +102,7 @@ These values come from enum classes in `aqven.spec.names`.
 | Value |
 | --- |
 | `fail` |
+| `retry` |
 | `fallback` |
 
 ## PiiClass

@@ -4,7 +4,7 @@ import { plainLines } from "@/lib/text"
 import { PresentationValue } from "@/features/runs"
 import { inlineBlock, textBlock } from "./blocks"
 import type { TraceContext } from "./context"
-import type { CallColumn, InputCell, MediaRef, PromptCell, ValueCell, ValueIdentity } from "./model"
+import type { CallColumn, InputCell, MediaRef, PromptCell, RecoveryCell, ValueCell, ValueIdentity } from "./model"
 import { byteSize, isBinaryMedia } from "./values"
 
 type InputKind = InputCell["kind"]
@@ -73,7 +73,13 @@ export const inferenceInputCells = (column: CallColumn, ctx: TraceContext): read
     ...valueBlocks(cell, ctx).slice(1)]
 }
 
+const recoveryCells = (recovery: RecoveryCell, ctx: TraceContext): readonly CellBlock[] => [
+  ...outputCells(recovery.value, ctx),
+  inlineBlock([ctx.t(`trace.recovery.caption.${recovery.decision}`, { policy: recovery.policy })], "caption", "warning"),
+]
+
 export const inferenceOutputCells = (column: CallColumn, ctx: TraceContext): readonly CellBlock[] => {
+  if (column.recovery !== null) return recoveryCells(column.recovery, ctx)
   if (column.kind !== "llm" || column.output === null) return outputCells(column.output, ctx)
   const cell = column.output
   return [{ kind: "node", node: createElement(PresentationValue, { address: column.address, side: "output", value: cell.value, valueRef: cell.ref, media: cell.media, mediaOnly: isBinaryMedia(cell.ref), compact: true }) },

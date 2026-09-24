@@ -1308,6 +1308,8 @@ export interface components {
              * @default 1
              */
             retries: number;
+            /** @default retry */
+            on_error: components["schemas"]["OutcomePolicy"];
             /** @default fail */
             on_refusal: components["schemas"]["OutcomePolicy"];
             /** @default fail */
@@ -1694,7 +1696,7 @@ export interface components {
             in?: components["schemas"]["FieldBinding"][];
         };
         /** @enum {string} */
-        CallOutcome: "ok" | "refusal" | "truncated";
+        CallOutcome: "ok" | "refusal" | "truncated" | "error";
         /** CancelRequest */
         CancelRequest: {
             /** Reason */
@@ -2515,6 +2517,8 @@ export interface components {
              * @default 1
              */
             retries: number;
+            /** @default retry */
+            on_error: components["schemas"]["OutcomePolicy"];
             /** @default fail */
             on_refusal: components["schemas"]["OutcomePolicy"];
             /** @default fail */
@@ -3335,7 +3339,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -3679,6 +3683,11 @@ export interface components {
             trace_id: string | null;
             /** Span Id */
             span_id: string | null;
+            /**
+             * Recovered Items
+             * @default []
+             */
+            recovered_items: components["schemas"]["ItemRecovery"][];
             /** Provenance */
             provenance: {
                 [key: string]: components["schemas"]["SlotProvenance"];
@@ -4465,6 +4474,25 @@ export interface components {
         };
         /** @enum {string} */
         InputSource: "request" | "sample";
+        /** ItemError */
+        ItemError: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** ItemRecovery */
+        ItemRecovery: {
+            /** Item Index */
+            item_index: number;
+            /** Policy */
+            policy: string;
+            decision: components["schemas"]["ItemRecoveryDecision"];
+            error: components["schemas"]["ItemError"];
+            default_ref: components["schemas"]["ValueRef"] | null;
+        };
+        /** @enum {string} */
+        ItemRecoveryDecision: "skip" | "default";
         JsonObject: {
             [key: string]: components["schemas"]["JsonValue"];
         };
@@ -4741,6 +4769,25 @@ export interface components {
             node_outputs?: {
                 [key: string]: components["schemas"]["JsonValue"];
             };
+        };
+        /** MapItemRecovered */
+        MapItemRecovered: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Run Id */
+            run_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "map_item_recovered";
+            address: components["schemas"]["ExecutionAddress"];
+            recovery: components["schemas"]["ItemRecovery"];
         };
         /** MapNodeSpec */
         MapNodeSpec: {
@@ -5067,6 +5114,16 @@ export interface components {
             suspended: number;
             /** Cancelled */
             cancelled: number;
+            /**
+             * Items Replaced
+             * @default 0
+             */
+            items_replaced: number;
+            /**
+             * Items Skipped
+             * @default 0
+             */
+            items_skipped: number;
         };
         /** NodeDetail */
         NodeDetail: {
@@ -5184,6 +5241,11 @@ export interface components {
             trace_id: string | null;
             /** Span Id */
             span_id: string | null;
+            /**
+             * Recovered Items
+             * @default []
+             */
+            recovered_items: components["schemas"]["ItemRecovery"][];
         };
         /** NodeFinished */
         NodeFinished: {
@@ -5503,7 +5565,7 @@ export interface components {
          * OutcomePolicy
          * @enum {string}
          */
-        OutcomePolicy: "fail" | "fallback";
+        OutcomePolicy: "fail" | "retry" | "fallback";
         /** OutputField */
         OutputField: {
             /** Name */
@@ -6245,7 +6307,7 @@ export interface components {
             hint?: string | null;
             details?: components["schemas"]["ModelErrorDetails"] | null;
         };
-        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["NodeStarted"] | components["schemas"]["InferenceInputCaptured"] | components["schemas"]["InferencePromptCaptured"] | components["schemas"]["InferenceChecksCaptured"] | components["schemas"]["NodeAttemptFailed"] | components["schemas"]["NodeProgress"] | components["schemas"]["NodeOutputDelta"] | components["schemas"]["NodeAttemptDiscarded"] | components["schemas"]["NodeSuspended"] | components["schemas"]["NodeResumed"] | components["schemas"]["NodeAnswerIgnored"] | components["schemas"]["NodeWaitTimedOut"] | components["schemas"]["NodeWaitEscalated"] | components["schemas"]["NodeFinished"] | components["schemas"]["LoopIterationFinished"] | components["schemas"]["LoopExited"] | components["schemas"]["RunSuspended"] | components["schemas"]["RunResumed"] | components["schemas"]["RunFinished"];
+        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["NodeStarted"] | components["schemas"]["InferenceInputCaptured"] | components["schemas"]["InferencePromptCaptured"] | components["schemas"]["InferenceChecksCaptured"] | components["schemas"]["NodeAttemptFailed"] | components["schemas"]["NodeProgress"] | components["schemas"]["MapItemRecovered"] | components["schemas"]["NodeOutputDelta"] | components["schemas"]["NodeAttemptDiscarded"] | components["schemas"]["NodeSuspended"] | components["schemas"]["NodeResumed"] | components["schemas"]["NodeAnswerIgnored"] | components["schemas"]["NodeWaitTimedOut"] | components["schemas"]["NodeWaitEscalated"] | components["schemas"]["NodeFinished"] | components["schemas"]["LoopIterationFinished"] | components["schemas"]["LoopExited"] | components["schemas"]["RunSuspended"] | components["schemas"]["RunResumed"] | components["schemas"]["RunFinished"];
         /** RunFinished */
         RunFinished: {
             /** Seq */
@@ -7735,6 +7797,9 @@ export type SchemaInferenceSpec = components['schemas']['InferenceSpec'];
 export type SchemaInlineValue = components['schemas']['InlineValue'];
 export type SchemaInputField = components['schemas']['InputField'];
 export type SchemaInputSource = components['schemas']['InputSource'];
+export type SchemaItemError = components['schemas']['ItemError'];
+export type SchemaItemRecovery = components['schemas']['ItemRecovery'];
+export type SchemaItemRecoveryDecision = components['schemas']['ItemRecoveryDecision'];
 export type SchemaJsonObject = components['schemas']['JsonObject'];
 export type SchemaJsonParams = components['schemas']['JsonParams'];
 export type SchemaJsonPointer = components['schemas']['JsonPointer'];
@@ -7762,6 +7827,7 @@ export type SchemaManualMissingRangeData = components['schemas']['ManualMissingR
 export type SchemaManualRangePair = components['schemas']['ManualRangePair'];
 export type SchemaManualRangePreview = components['schemas']['ManualRangePreview'];
 export type SchemaManualRangeRequest = components['schemas']['ManualRangeRequest'];
+export type SchemaMapItemRecovered = components['schemas']['MapItemRecovered'];
 export type SchemaMapNodeSpec = components['schemas']['MapNodeSpec'];
 export type SchemaMatrixRow = components['schemas']['MatrixRow'];
 export type SchemaMcpToolSource = components['schemas']['McpToolSource'];

@@ -53,9 +53,10 @@ its result comes back — a fixed set of guarantees sitting on top of Pydantic A
 you turn on per node; it's the same for every call in the project.
 
 A call always ends in one of a small number of clear outcomes, not "whatever came back." If a provider
-cuts a response short because it hit a length limit, or refuses to answer, AQVEN turns that into a
-distinct, explicit result — succeeded, cut off, or refused — instead of quietly handing you a
-truncated or empty answer to puzzle over.
+cuts a response short because it hit a length limit, refuses to answer, or ends the response with an
+error, AQVEN turns that into a distinct, explicit result — succeeded, cut off, refused, or failed with a
+provider error — instead of quietly handing you a truncated or broken answer to puzzle over. Each agent
+decides whether such a result fails the node, asks the same model again, or moves on to its next model.
 
 Common types of personal data — email addresses, phone numbers, card numbers, IBANs, IP addresses — are
 pattern-matched and redacted automatically out of the raw model output that ends up in error details

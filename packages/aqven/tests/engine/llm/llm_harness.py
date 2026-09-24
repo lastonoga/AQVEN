@@ -23,7 +23,7 @@ from aqven.engine.llm import (
     llm_node_executor,
 )
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
-from aqven.engine.llm.ports import SegmentWork, ToolCallWork
+from aqven.engine.llm.ports import ModelSource, SegmentWork, ToolCallWork
 from aqven.engine.llm.watch import DEFAULT_STREAM_IDLE_SECONDS
 from aqven.ir import (
     AgentModel,
@@ -279,7 +279,9 @@ class FakeScope:
 class FixedModels:
     model_value: Model
 
-    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
+    async def model(
+        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
+    ) -> Model:
         return self.model_value
 
 
@@ -489,6 +491,7 @@ def llm_bed(
     delta_batch_ms: int = 80,
     models: Callable[[ScriptedModel], Model] | None = None,
     stream_idle_seconds: float | None = DEFAULT_STREAM_IDLE_SECONDS,
+    source: ModelSource | None = None,
 ) -> LlmBed:
     scripted = ScriptedModel(turns)
     compiled, flow = project(node, agents, inferences, tools)
@@ -497,7 +500,7 @@ def llm_bed(
     approvals = ScriptedApprovals(approve, expire)
     steps = RecordingSteps()
     dependencies = LlmDependencies(
-        models=FixedModels(models(scripted) if models is not None else scripted.model()),
+        models=model_source(scripted, models, source),
         inference_models=MODELS,
         tool_contexts=contexts,
         approvals=approvals,
@@ -509,6 +512,16 @@ def llm_bed(
         stream_idle_seconds=stream_idle_seconds,
     )
     return LlmBed(scripted, scope, llm_node_executor(dependencies), contexts, approvals, steps)
+
+
+def model_source(
+    scripted: ScriptedModel, models: Callable[[ScriptedModel], Model] | None, source: ModelSource | None
+) -> ModelSource:
+    if source is not None:
+        return source
+    if models is not None:
+        return FixedModels(models(scripted))
+    return FixedModels(scripted.model())
 
 
 def no_bad_words(value: BaseModel, context: object, params: NoParams) -> Verdict:

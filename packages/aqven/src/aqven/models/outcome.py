@@ -25,6 +25,15 @@ class RefusedOutput(Exception):
         self.reason = str(reason)
 
 
+class ErroredOutput(Exception):
+    def __init__(self, response: ModelResponse) -> None:
+        details = response.provider_details or {}
+        reason = details.get("error") or details.get("native_finish_reason") or details.get("finish_reason") or "error"
+        super().__init__(f"error: {reason}")
+        self.response = response
+        self.reason = str(reason)
+
+
 type GateAction = Callable[[ModelResponse, int | None], ModelResponse]
 
 
@@ -40,9 +49,14 @@ def raise_refused(response: ModelResponse, max_tokens: int | None) -> ModelRespo
     raise RefusedOutput(response)
 
 
+def raise_errored(response: ModelResponse, max_tokens: int | None) -> ModelResponse:
+    raise ErroredOutput(response)
+
+
 OUTCOME_GATES: Final[Mapping[FinishReason | None, GateAction]] = {
     "length": raise_truncated,
     "content_filter": raise_refused,
+    "error": raise_errored,
 }
 
 

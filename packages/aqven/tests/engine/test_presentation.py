@@ -2,6 +2,7 @@ import asyncio
 import json
 import shutil
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Never, cast
@@ -28,7 +29,10 @@ from aqven.engine.projection import ExecutionFold, RunFold
 from aqven.engine.request import RunCall, RunSpec
 from aqven.engine.runtime import EngineRuntime
 from aqven.ir import CompiledDisplayFormatter, CompiledInferenceDisplay, CompiledProject, IrHash
+from aqven.ports.engine import ExecutionQuery
 from aqven.runtime.address import ExecutionAddress, RunId, node_address
+from aqven.runtime.events import MapItemRecovered
+from aqven.runtime.executions import ItemError, ItemRecovery
 from aqven.runtime.human import HumanWaitDetail
 from aqven.runtime.presentation import (
     DisplayBadge,
@@ -474,6 +478,43 @@ def test_execution_none_payloads_suppresses_recorded_input(monkeypatch: pytest.M
     detail = asyncio.run(facade.get_execution(RunId("run-1"), address, "none"))
     assert detail.input_ref is None
     assert detail.output_ref is None
+
+
+def test_execution_detail_returns_the_recovered_items_of_a_map(monkeypatch: pytest.MonkeyPatch) -> None:
+    address = node_address("vote")
+    recovery = ItemRecovery(
+        item_index=2,
+        policy="shop.code.review_policies:unread_angle",
+        decision="default",
+        error=ItemError(code="MODEL_RETRIES_EXHAUSTED", message="no valid output after 2 attempts"),
+        default_ref=InlineValue(value={"legible": False}),
+    )
+    fold = RunFold(executions={address_key(address): ExecutionFold(address=address, kind=NodeKind.MAP)})
+    at = datetime(2026, 9, 24, tzinfo=UTC)
+    fold.apply(MapItemRecovered(seq=3, at=at, run_id=RunId("run-1"), address=address, recovery=recovery))
+
+    async def view(self: DbosEngineFacade, run_id: RunId) -> RunRecordView:
+        call = RunCall(ir_hash="historical-hash", flow_input={}, spec=RunSpec(flow_id=FlowId("intake")))
+        return cast(RunRecordView, SimpleNamespace(call=call, fold=fold))
+
+    async def human_detail(self: DbosEngineFacade, run_id: RunId, selected: ExecutionAddress) -> HumanWaitDetail | None:
+        return None
+
+    def find_plan(ir_hash: IrHash) -> CompiledProject | None:
+        return None
+
+    monkeypatch.setattr(DbosEngineFacade, "_view", view)
+    monkeypatch.setattr(DbosEngineFacade, "_human_detail", human_detail)
+    facade = DbosEngineFacade(runtime=cast(EngineRuntime, SimpleNamespace(plans=SimpleNamespace(find=find_plan))))
+    detail = asyncio.run(facade.get_execution(RunId("run-1"), address))
+    [listed] = asyncio.run(facade.list_executions(RunId("run-1"), ExecutionQuery()))
+    assert detail.recovered_items == (recovery,)
+    assert detail.degraded
+    assert listed.recovered_items == (recovery,)
+    assert detail.model_dump(mode="json")["recovered_items"][0]["default_ref"] == {
+        "kind": "inline",
+        "value": {"legible": False},
+    }
 
 
 def test_execution_uses_current_schema_when_run_plan_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:

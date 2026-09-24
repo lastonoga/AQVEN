@@ -249,6 +249,15 @@ class FailureAnalysis:
             violations=classified.violations,
         )
 
+    def response_details(self, response: ModelResponse, attempt: int, model: str) -> ModelErrorDetails:
+        return ModelErrorDetails(
+            agent=self.context.agent_id,
+            model=model,
+            output_mode=self.context.mode,
+            attempt=attempt,
+            raw_excerpt=REDACTOR.redact(response_text(response, self.context.output_tools)),
+        )
+
     @property
     def last_kind(self) -> AttemptCauseKind | None:
         return self.failures[-1][1].kind if self.failures else None
