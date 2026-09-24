@@ -43,6 +43,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `POST` | `/api/runs/{run_id}/fork` | `run_fork` |
 | `POST` | `/api/runs/{run_id}/cancel` | `run_cancel` |
 | `GET` | `/api/events/spec` | `spec_events` |
+| `GET` | `/api/events` | `events_follow` |
 | `GET` | `/api/schemas/events` | `event_catalog` |
 | `GET` | `/api/spec-schemas` | `spec_schema_list` |
 | `GET` | `/api/spec-schemas/{kind}` | `spec_schema_get` |

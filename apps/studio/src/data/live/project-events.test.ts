@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ApiSpecEvent } from "@/domain"
-import { API_BASE } from "@/api/client"
+import { EVENTS_URL, SPEC_FEED } from "@/api/events"
 import { FakeEventStream } from "@/test/event-source"
-import { PROJECT_EVENT_TYPES, projectEventStream, projectEventsUrl, readProjectEvent } from "./project-events"
+import { projectEventStream, readProjectEvent } from "./project-events"
 
 const PROGRESS = {
   type: "series_progress",
@@ -22,40 +22,29 @@ describe("project event stream", () => {
     vi.unstubAllGlobals()
   })
 
-  it("listens for every spec and research event type on the project channel", () => {
-    expect(projectEventsUrl()).toBe(`${API_BASE}/events/spec`)
-    expect(new Set(PROJECT_EVENT_TYPES)).toEqual(
-      new Set([
-        "files_changed",
-        "diagnostics_changed",
-        "resync",
-        "series_started",
-        "series_progress",
-        "series_status_changed",
-        "finding_written",
-        "experiment_changed",
-      ]),
-    )
-  })
-
-  it("reads a well-formed event and rejects anything else", () => {
+  it("reads a well-formed event of every spec and research type and rejects anything else", () => {
+    const types = ["files_changed", "diagnostics_changed", "resync", "series_started", "series_progress", "series_status_changed", "finding_written", "experiment_changed"]
+    expect(types.map((type) => readProjectEvent({ ...PROGRESS, type })?.type)).toEqual(types)
     expect(readProjectEvent(PROGRESS)).toEqual(PROGRESS)
     expect(readProjectEvent({ ...PROGRESS, type: "series_status" })).toBeNull()
     expect(readProjectEvent({ ...PROGRESS, seq: "4" })).toBeNull()
     expect(readProjectEvent(null)).toBeNull()
   })
 
-  it("opens one EventSource and hands each frame to the listener", () => {
+  it("follows the spec feed of the tab stream and hands each project event to the listener", async () => {
     FakeEventStream.reset()
     vi.stubGlobal("EventSource", FakeEventStream)
     const received: ApiSpecEvent[] = []
     const close = projectEventStream((event) => {
       received.push(event)
     })
-    const source = FakeEventStream.latestOn(projectEventsUrl())
-    source.emit("series_progress", PROGRESS)
-    source.emit("series_status", { ...PROGRESS, type: "series_status" })
+    await Promise.resolve()
+    const source = FakeEventStream.latestOn(EVENTS_URL)
+    expect(source.url).toBe(`${EVENTS_URL}?follow=${encodeURIComponent(`${SPEC_FEED}@0`)}`)
+    source.emit(SPEC_FEED, PROGRESS)
+    source.emit(SPEC_FEED, { ...PROGRESS, seq: 5, type: "series_status" })
     close()
+    await Promise.resolve()
     expect(FakeEventStream.opened).toHaveLength(1)
     expect(received.map((event) => event.seq)).toEqual([4])
     expect(source.closed).toBe(true)

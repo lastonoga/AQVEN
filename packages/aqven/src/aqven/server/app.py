@@ -17,6 +17,7 @@ from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles, DirectoryBlobStore
 from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
+from aqven.server.event_feeds import EventFeed, EventFeeds
 from aqven.server.probes import StatusProbes, project_probes
 from aqven.server.routes.blobs import build_blobs_router
 from aqven.server.routes.datasets import build_datasets_router
@@ -70,6 +71,7 @@ class ServerOptions:
 class ServerExtensions:
     mounts: Mapping[str, ASGIApp] = field(default_factory=dict[str, ASGIApp])
     lifespans: tuple[LifespanFactory, ...] = ()
+    feeds: EventFeeds = field(default_factory=dict[str, EventFeed])
 
 
 def access_policy(options: ServerOptions) -> AccessPolicy:
@@ -175,6 +177,7 @@ def create_app(
         mcp_url=chosen.mcp_url,
         probes=probes or project_probes(root),
         series=series,
+        feeds=extended.feeds,
     )
     app = FastAPI(
         title=API_TITLE,

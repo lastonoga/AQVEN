@@ -17,7 +17,7 @@ from aqven.chat.sqlite_journal import utc_now
 from aqven.chat.sqlite_transcripts import SqliteChatTranscripts
 from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import ChatEffort, ChatPermissionMode
-from aqven.server.chat.router import ChatRouteContext, build_chat_router
+from aqven.server.chat.router import ChatEventFeed, ChatRouteContext, build_chat_router
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +36,7 @@ class ChatServerParts:
     codex: CodexAgentBackend
     router: APIRouter
     lifespan: ChatLifespan
+    feed: ChatEventFeed
 
 
 def studio_chat_parts(
@@ -83,4 +84,4 @@ def studio_chat_parts(
             await chat.aclose()
             transcripts.close()
 
-    return ChatServerParts(chat, codex, router, lifespan)
+    return ChatServerParts(chat, codex, router, lifespan, ChatEventFeed(registry, chat.journal))
