@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { ChatSession } from "./chat-session"
 import type { ChatTransport } from "./chat-transport"
+import { liveOnly } from "./transport-double"
 
 const SESSION: ApiChatSession = {
   session_id: "01a0b15e-69af-71c7-a54d-213c4df2385e",
@@ -31,6 +32,7 @@ const events: readonly ApiChatEvent[] = [
     text: "what is the package?",
     backend: "claude",
     model: null,
+    origin: "user",
   },
   {
     seq: 2,
@@ -48,10 +50,7 @@ const events: readonly ApiChatEvent[] = [
 const mount = (): ((events: readonly ApiChatEvent[]) => void) => {
   const listeners: ((event: ApiChatEvent) => void)[] = []
   const transport: ChatTransport = {
-    subscribe: (_sessionId, _afterSeq, onEvent) => {
-      listeners.push(onEvent)
-      return () => listeners.splice(listeners.indexOf(onEvent), 1)
-    },
+    ...liveOnly(listeners),
     send: () => Promise.resolve(),
     respond: () => Promise.resolve(),
     interrupt: () => Promise.resolve(),

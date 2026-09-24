@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 from claude_agent_sdk import HookMatcher
 from claude_agent_sdk.types import (
@@ -35,6 +35,17 @@ SECRET_FILE_REASON: Final = (
 )
 
 type InputTexts = Callable[[Mapping[str, object]], tuple[str, ...]]
+type Violation = Callable[[str, Mapping[str, object]], str | None]
+
+
+class ToolRule(Protocol):
+    def violation(self, tool_name: str, tool_input: Mapping[str, object]) -> str | None: ...
+
+
+class ChatGuard(ToolRule, Protocol):
+    def permission_rules(self, protected_files: Iterable[Path]) -> list[str]: ...
+
+    def hooks(self) -> dict[HookEvent, list[HookMatcher]]: ...
 
 
 def input_fields(*names: str) -> InputTexts:
@@ -108,6 +119,15 @@ def denied_tool_use(reason: str) -> SyncHookJSONOutput:
     return SyncHookJSONOutput(hookSpecificOutput=decision)
 
 
+def refusal(violation: Violation, hook_input: HookInput) -> HookJSONOutput:
+    if hook_input["hook_event_name"] != "PreToolUse":
+        return SyncHookJSONOutput()
+    reason = violation(hook_input["tool_name"], hook_input["tool_input"])
+    if reason is None:
+        return SyncHookJSONOutput()
+    return denied_tool_use(reason)
+
+
 @dataclass(frozen=True, slots=True)
 class SecretFileGuard:
     protected_markers: tuple[str, ...] = ()
@@ -132,9 +152,25 @@ class SecretFileGuard:
     async def pre_tool_use(
         self, hook_input: HookInput, tool_use_id: str | None, context: HookContext
     ) -> HookJSONOutput:
-        if hook_input["hook_event_name"] != "PreToolUse":
-            return SyncHookJSONOutput()
-        reason = self.violation(hook_input["tool_name"], hook_input["tool_input"])
-        if reason is None:
-            return SyncHookJSONOutput()
-        return denied_tool_use(reason)
+        return refusal(self.violation, hook_input)
+
+
+@dataclass(frozen=True, slots=True)
+class GuardChain:
+    secrets: SecretFileGuard
+    rules: tuple[ToolRule, ...] = ()
+
+    def violation(self, tool_name: str, tool_input: Mapping[str, object]) -> str | None:
+        reasons = (rule.violation(tool_name, tool_input) for rule in (self.secrets, *self.rules))
+        return next((reason for reason in reasons if reason is not None), None)
+
+    def permission_rules(self, protected_files: Iterable[Path]) -> list[str]:
+        return self.secrets.permission_rules(protected_files)
+
+    def hooks(self) -> dict[HookEvent, list[HookMatcher]]:
+        return {PRE_TOOL_USE: [HookMatcher(matcher=GUARDED_TOOL_MATCHER, hooks=[self.pre_tool_use])]}
+
+    async def pre_tool_use(
+        self, hook_input: HookInput, tool_use_id: str | None, context: HookContext
+    ) -> HookJSONOutput:
+        return refusal(self.violation, hook_input)

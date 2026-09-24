@@ -5,7 +5,10 @@
     "dictateAria": "Dictate",
     "stopDictationAria": "Stop dictation",
     "sendAria": "Send",
-    "cancelAria": "Stop"
+    "cancelAria": "Stop",
+    "reset": "Reset",
+    "resetAria": "Reset the stuck turn",
+    "resetHint": "The agent did not stop. Reset ends this turn here; your next message picks the conversation up again."
   },
   "message": {
     "copyAria": "Copy",
@@ -65,7 +68,9 @@
     "internal": "The agent backend failed on its side."
   },
   "thread": {
-    "scrollToBottomAria": "Scroll to latest message"
+    "scrollToBottomAria": "Scroll to latest message",
+    "loadingEarlier": "Loading earlier messages",
+    "continued": "The agent continued on its own"
   },
   "thinking": {
     "running": "Thinking… {seconds}s",

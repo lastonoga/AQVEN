@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { ChatSession } from "./chat-session"
 import type { ChatTransport } from "./chat-transport"
+import { liveOnly } from "./transport-double"
 
 const SESSION: ApiChatSession = {
   session_id: "01a0b15e-69af-71c7-a54d-213c4df2385e",
@@ -47,7 +48,7 @@ const ASKED = {
 const stamp = { at: "2026-09-17T21:55:49.9Z", session_id: SESSION.session_id, turn_id: "turn-1" } as const
 
 const ASK_EVENTS: readonly ApiChatEvent[] = [
-  { ...stamp, seq: 1, type: "chat_turn_started", client_op_id: "op-1", text: "build me a flow", backend: "claude", model: null },
+  { ...stamp, seq: 1, type: "chat_turn_started", client_op_id: "op-1", text: "build me a flow", backend: "claude", model: null, origin: "user" },
   { ...stamp, seq: 2, type: "chat_tool_call_started", message_id: "msg-1", tool_call_id: "toolu_ask", tool_name: "AskUserQuestion", mcp_server: null },
   { ...stamp, seq: 3, type: "chat_approval_requested", approval_id: "approval-1", tool_call_id: "toolu_ask", tool_name: "AskUserQuestion", input: ASKED, reason: null },
 ]
@@ -58,10 +59,7 @@ const recorder = (): { readonly transport: ChatTransport; readonly replies: Repl
   const replies: Reply[] = []
   const listeners: ((event: ApiChatEvent) => void)[] = []
   const transport: ChatTransport = {
-    subscribe: (_sessionId, _afterSeq, onEvent) => {
-      listeners.push(onEvent)
-      return () => listeners.splice(listeners.indexOf(onEvent), 1)
-    },
+    ...liveOnly(listeners),
     send: () => Promise.resolve(),
     respond: (_sessionId, approvalId, reply) => {
       replies.push({ approvalId, reply })

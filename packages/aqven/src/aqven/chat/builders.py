@@ -18,6 +18,7 @@ from aqven.ports.chat import (
     ChatEvent,
     ChatFileChange,
     ChatFileEdit,
+    ChatFinishReason,
     ChatMessageDelivered,
     ChatMessageId,
     ChatMessageQueued,
@@ -34,6 +35,7 @@ from aqven.ports.chat import (
     ChatToolStatus,
     ChatTurnFinished,
     ChatTurnId,
+    ChatTurnOrigin,
     ChatTurnStarted,
     ChatUsage,
     ChatUsageReported,
@@ -64,9 +66,11 @@ def clip(text: str, limit: int) -> Clip:
     return Clip(text[:limit], True)
 
 
-def turn_started(client_op_id: ClientOpId, text: str, agent: TurnAgent) -> ChatEventBuilder:
+def turn_started(
+    client_op_id: ClientOpId, text: str, agent: TurnAgent, origin: ChatTurnOrigin = "user"
+) -> ChatEventBuilder:
     return lambda stamp: ChatTurnStarted(
-        **stamp, client_op_id=client_op_id, text=text, backend=agent.backend, model=agent.model
+        **stamp, client_op_id=client_op_id, text=text, backend=agent.backend, model=agent.model, origin=origin
     )
 
 
@@ -171,7 +175,11 @@ def error_raised(code: ChatErrorCode, message: str, retryable: bool) -> ChatEven
 
 
 def turn_finished(
-    stop_reason: ChatStopReason, duration_ms: int, usage: ChatUsage | None, agent: TurnAgent
+    stop_reason: ChatStopReason,
+    duration_ms: int,
+    usage: ChatUsage | None,
+    agent: TurnAgent,
+    reason: ChatFinishReason | None = None,
 ) -> ChatEventBuilder:
     return lambda stamp: ChatTurnFinished(
         **stamp,
@@ -180,4 +188,5 @@ def turn_finished(
         usage=usage,
         backend=agent.backend,
         model=agent.model,
+        reason=reason,
     )

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ApiChatEvent } from "@/domain"
-import { applyChatEvents, EMPTY_TRANSCRIPT, isRunning, threadMessages, toolSnapshot } from "./chat-events"
+import { applyChatEvents, CONTINUATION_MARK, EMPTY_TRANSCRIPT, isRunning, threadMessages, toolSnapshot } from "./chat-events"
 import { liveTurnEvents } from "./test-support"
 
 const folded = () => applyChatEvents(EMPTY_TRANSCRIPT, liveTurnEvents)
@@ -131,6 +131,7 @@ const followUpTurn = (seq: number): ApiChatEvent => ({
   text: FOLLOW_UP,
   backend: "claude",
   model: null,
+  origin: "user",
 })
 
 const userTexts = (events: readonly ApiChatEvent[]): readonly unknown[] =>
@@ -162,5 +163,33 @@ describe("messages sent while the agent works", () => {
   it("updates the promise when the backend moves a message to the next turn", () => {
     const transcript = applyChatEvents(EMPTY_TRANSCRIPT, [...running, queuedEvent(45, "next_step"), queuedEvent(46, "after_turn")])
     expect(transcript.queued).toEqual([{ id: "op-2", text: FOLLOW_UP, delivery: "after_turn" }])
+  })
+})
+
+const WOKE_AT = "2026-09-17T21:57:00Z"
+const WOKE_TURN = "turn-woke"
+
+const wokeStamp = (seq: number) => ({ seq, at: WOKE_AT, session_id: SESSION_ID, turn_id: WOKE_TURN })
+
+const continuation: readonly ApiChatEvent[] = [
+  { ...wokeStamp(180), type: "chat_turn_started", client_op_id: "op-woke", text: "", backend: "claude", model: null, origin: "continuation" },
+  { ...wokeStamp(181), type: "chat_status", state: "streaming" },
+  { ...wokeStamp(182), type: "chat_text_delta", message_id: "msg_woke", part_index: 0, delta: "The background build passed." },
+]
+
+describe("a turn the agent opens on its own", () => {
+  it("marks where the agent continued instead of showing an empty user message, and runs until it finishes", () => {
+    const transcript = applyChatEvents(EMPTY_TRANSCRIPT, [...liveTurnEvents, ...continuation])
+    const messages = threadMessages(transcript)
+
+    expect(messages.map((message) => message.role)).toEqual(["user", "assistant", "assistant", "system", "assistant"])
+    expect(messages.at(-2)).toEqual({ role: "system", id: "op-woke", content: [{ type: "text", text: CONTINUATION_MARK }] })
+    expect(messages.at(-1)?.content).toEqual([{ type: "text", text: "The background build passed." }])
+    expect(isRunning(transcript)).toBe(true)
+
+    const finished = applyChatEvents(transcript, [
+      { ...wokeStamp(183), type: "chat_turn_finished", stop_reason: "interrupted", duration_ms: 900, usage: null, backend: "claude", model: null, reason: "stop_forced" },
+    ])
+    expect(isRunning(finished)).toBe(false)
   })
 })

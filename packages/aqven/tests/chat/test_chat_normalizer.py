@@ -92,6 +92,24 @@ def test_unstreamed_assistant_message_is_replayed_as_deltas() -> None:
     ]
 
 
+def test_replayed_blocks_of_one_message_keep_their_own_parts_so_texts_never_glue() -> None:
+    normalizer = ClaudeEventNormalizer(ROOT, counting_ids())
+    normalizer.begin_turn()
+    arguments = {"command": "ls"}
+    messages: list[Message] = [
+        assistant("msg_split", [TextBlock(text="The markers stay visible.")]),
+        assistant("msg_split", [ToolUseBlock(id="toolu_ls", name="Bash", input=arguments)]),
+        assistant("msg_split", [TextBlock(text="Got it — fixing the pairs.")]),
+    ]
+
+    texts = of_type(normalize_all(normalizer, messages), ChatTextDelta)
+
+    assert [(event.message_id, event.part_index, event.delta) for event in texts] == [
+        ("msg_split", 0, "The markers stay visible."),
+        ("msg_split", 2, "Got it — fixing the pairs."),
+    ]
+
+
 def test_tool_calls_produce_cards_diffs_commands_and_statuses() -> None:
     normalizer = ClaudeEventNormalizer(ROOT, counting_ids())
     normalizer.begin_turn()
