@@ -16,10 +16,12 @@ from series_fixture import CHEAP_MODEL, CRITIC_MODEL, WRITER_MODEL
 from series_prices import FixedPrices
 
 from aqven.engine.assembly import standard_engine_setup
+from aqven.engine.events import UNWATCHED_RUNS, RunWatch
 from aqven.engine.lifecycle import EngineLifecycle
 from aqven.engine.runtime import EngineRuntime
 from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
+from aqven.series.feed import SILENT_FEED, ResearchFeed
 from aqven.series.jobs import SeriesService
 from aqven.series.model import (
     TERMINAL_STATUSES,
@@ -36,6 +38,7 @@ from aqven.series.ports import ModelPrices, SeriesAnalyst
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
 from aqven.series.views import SeriesGetRequest, SeriesGetResult
+from aqven.series.watch import SeriesRunWatch
 from aqven.series.workflow import REGISTERED_SERIES_WORKFLOWS
 from aqven.server.workspace import ProjectWorkspace
 from aqven.spec import LookQuestion, SeriesSplit, VerdictReason, VerdictState
@@ -214,18 +217,22 @@ def series_engine(
     real: SeriesAnalyst | None = None,
     prices: ModelPrices | None = None,
     engine_prices: PriceCache = NO_PRICES,
+    feed: ResearchFeed | None = None,
 ) -> Generator[SeriesHarness]:
     chosen = settings or MemorySettings()
     analyst = StubAnalyst()
     findings = RecordingFindings()
     workspace = ProjectWorkspace(root)
     known = FixedPrices() if prices is None else prices
-    services = build_series_services(root, workspace, chosen, real or analyst, findings, known, "test")
+    services = build_series_services(
+        root, workspace, chosen, real or analyst, findings, known, "test", feed or SILENT_FEED
+    )
     SERIES_SLOT.install(services)
     standard = standard_engine_setup(
         factories=FixedModels(models.mapping()), environ=offline_environment(), settings=chosen, prices=engine_prices
     )
-    lifecycle = EngineLifecycle(root=root, setup=replace(standard, workflows=REGISTERED_SERIES_WORKFLOWS))
+    watch: RunWatch = UNWATCHED_RUNS if feed is None else SeriesRunWatch()
+    lifecycle = EngineLifecycle(root=root, setup=replace(standard, workflows=REGISTERED_SERIES_WORKFLOWS, watch=watch))
     try:
         runtime = lifecycle.launch()
         yield SeriesHarness(SeriesService(services), services, runtime, analyst, findings, chosen)

@@ -126,6 +126,7 @@ class DiagnosticCode(StrEnum):
     W_PROMPT_SHADOWED = "W_PROMPT_SHADOWED"
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
+    W_SAMPLING_IGNORED = "W_SAMPLING_IGNORED"
     W_TYPES_SHADOWS_STDLIB = "W_TYPES_SHADOWS_STDLIB"
     W_SIM_NODE_UNREACHED = "W_SIM_NODE_UNREACHED"
     W_PROMPT_VALUE_UNREADABLE = "W_PROMPT_VALUE_UNREADABLE"
@@ -208,6 +209,11 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_OUTPUT_MODE_RESOLVED: DiagnosticText(
         "output.mode auto resolves to {mode} for model {model} ({source})",
         "set output.mode: {mode} to pin it",
+    ),
+    DiagnosticCode.W_SAMPLING_IGNORED: DiagnosticText(
+        "{setting} is ignored by {model} (reasoning model); remove it",
+        "Pydantic AI drops sampling settings from every request to a model that reasons by default: "
+        "steer the answer in the prompt, or pick a model without reasoning to keep {setting}",
     ),
     DiagnosticCode.E_SIM_NODE_FAILED: DiagnosticText(
         "simulated run of flow {flow} (pass {pass}): node {address} failed: {code}: {message}",

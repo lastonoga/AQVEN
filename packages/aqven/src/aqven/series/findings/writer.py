@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from aqven.client.ids import ULID_RANDOM_BITS, encode_ulid
 from aqven.loader import load_project, read_strict_yaml
 from aqven.runtime.address import ClientOpId
+from aqven.series.feed import SILENT_FEED, FindingNotice, ResearchFeed
 from aqven.series.findings.layout import FINDING_GLOB, FINDINGS_FILE, finding_file
 from aqven.series.findings.render import finding_bytes, render_findings_md
 from aqven.series.findings.summary import FIRST_LOOK, FindingError, finding_at_look, finding_hash, finding_of
@@ -95,12 +96,16 @@ def _same_cases(stored: StoredFinding, spec: FindingSpec) -> bool:
 class FileFindings:
     writer: WriteService
     root: Path
+    feed: ResearchFeed = SILENT_FEED
 
     async def publish(self, record: SeriesRecord, attempts: Sequence[AttemptRecord]) -> str | None:
         experiment_id = publishable_experiment(record)
         if experiment_id is None:
             return None
-        return await asyncio.to_thread(self._publish, record, experiment_id, tuple(attempts))
+        path = await asyncio.to_thread(self._publish, record, experiment_id, tuple(attempts))
+        notice = FindingNotice(experiment_id=experiment_id, series_id=record.series_id, paths=(path, FINDINGS_FILE))
+        self.feed.publish(notice)
+        return path
 
     def _publish(self, record: SeriesRecord, experiment_id: ExperimentId, attempts: Sequence[AttemptRecord]) -> str:
         experiment = self._experiment(record.series_id, experiment_id)

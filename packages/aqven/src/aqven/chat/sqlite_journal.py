@@ -10,6 +10,7 @@ from pydantic import AwareDatetime, TypeAdapter, ValidationError
 from aqven.chat.builders import ChatEventBuilder, ChatStamp
 from aqven.chat.errors import ChatFailure
 from aqven.chat.journal import Clock, StoredChatSession
+from aqven.chat.turn_settling import UnsettledTurn
 from aqven.ports.chat import (
     CHAT_EVENT_ADAPTER,
     AgentBackendKind,
@@ -20,6 +21,7 @@ from aqven.ports.chat import (
     ChatSession,
     ChatSessionId,
     ChatSessionSettings,
+    ChatState,
     ChatTurnId,
     ChatTurnStarted,
 )
@@ -179,6 +181,34 @@ def _backfill_turn_agent(connection: sqlite3.Connection) -> None:
 
 
 JOURNAL_LOGGER: Final = logging.getLogger("aqven.chat.journal")
+STATE_EVENT_TYPES: Final[tuple[str, str]] = ("chat_status", "chat_turn_finished")
+TURN_BOUNDARY_TYPES: Final[tuple[str, str]] = ("chat_turn_started", "chat_turn_finished")
+SETTLED_STATE: Final[str] = "idle"
+CHAT_STATE: Final[TypeAdapter[ChatState]] = TypeAdapter(ChatState)
+LAST_STATE_QUERY: Final[str] = (
+    "SELECT type, json_extract(body, '$.state') FROM chat_events"
+    " WHERE session_id = ? AND type IN (?, ?) ORDER BY seq DESC LIMIT 1"
+)
+LAST_BOUNDARY_QUERY: Final[str] = (
+    "SELECT type, turn_id, at FROM chat_events WHERE session_id = ? AND type IN (?, ?) ORDER BY seq DESC LIMIT 1"
+)
+
+type StateRow = tuple[str, str | None]
+type BoundaryRow = tuple[str, str | None, str]
+
+
+def _unsettled_state(row: StateRow | None) -> ChatState | None:
+    if row is None or row[0] != STATE_EVENT_TYPES[0] or row[1] is None or row[1] == SETTLED_STATE:
+        return None
+    return CHAT_STATE.validate_python(row[1])
+
+
+def _unsettled_turn(state: ChatState | None, boundary: BoundaryRow | None) -> UnsettledTurn | None:
+    if state is None:
+        return None
+    if boundary is None or boundary[0] != TURN_BOUNDARY_TYPES[0] or boundary[1] is None:
+        return UnsettledTurn(state=state, turn_id=None, started_at=None)
+    return UnsettledTurn(state=state, turn_id=ChatTurnId(boundary[1]), started_at=datetime.fromisoformat(boundary[2]))
 
 
 def _stored_event(session_id: ChatSessionId, seq: int, body: str) -> ChatEvent | None:
@@ -265,6 +295,16 @@ class SqliteChatJournal:
             self._connection.execute(
                 "UPDATE chat_sessions SET closed_at = ? WHERE session_id = ?", (_iso(closed_at), session_id)
             )
+
+    def unsettled_turn(self, session_id: ChatSessionId) -> UnsettledTurn | None:
+        with self._lock:
+            state: StateRow | None = self._connection.execute(
+                LAST_STATE_QUERY, (session_id, *STATE_EVENT_TYPES)
+            ).fetchone()
+            boundary: BoundaryRow | None = self._connection.execute(
+                LAST_BOUNDARY_QUERY, (session_id, *TURN_BOUNDARY_TYPES)
+            ).fetchone()
+        return _unsettled_turn(_unsettled_state(state), boundary)
 
     def update_settings(self, session_id: ChatSessionId, settings: ChatSessionSettings) -> StoredChatSession:
         assignments = settings.model_dump(exclude_none=True)

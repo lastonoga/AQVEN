@@ -552,8 +552,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Server-sent stream of spec changes
-         * @description A text/event-stream that stays open and pushes a frame per spec change; it is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.
+         * Server-sent stream of project changes: spec files and research
+         * @description A text/event-stream that stays open and pushes a frame per spec change and per research fact: a series started, its progress at most once a second, a status change, a finding written, an experiment's files changed. It is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.
          */
         get: operations["spec_events"];
         put?: never;
@@ -1220,6 +1220,23 @@ export interface paths {
         };
         /** Chat Events */
         get: operations["chat_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/sessions/{session_id}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chat Transcript */
+        get: operations["chat_transcript"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1899,6 +1916,8 @@ export interface components {
             /** Diff */
             diff: string;
         };
+        /** @enum {string} */
+        ChatFinishReason: "server_restarted" | "server_stopped" | "agent_lost" | "stop_forced";
         /** ChatMessageDelivered */
         ChatMessageDelivered: {
             /** Seq */
@@ -2181,6 +2200,30 @@ export interface components {
         };
         /** @enum {string} */
         ChatToolStatus: "ok" | "error" | "denied" | "interrupted";
+        /** ChatTranscriptPage */
+        ChatTranscriptPage: {
+            /** Session Id */
+            session_id: string;
+            /** Turns */
+            turns: components["schemas"]["ChatTranscriptTurn"][];
+            /** Carry */
+            carry: components["schemas"]["ChatEvent"][];
+            /** Last Seq */
+            last_seq: number;
+            /** Before Seq */
+            before_seq: number | null;
+        };
+        /** ChatTranscriptTurn */
+        ChatTranscriptTurn: {
+            /** First Seq */
+            first_seq: number;
+            /** Last Seq */
+            last_seq: number;
+            /** Turn Id */
+            turn_id: string | null;
+            /** Events */
+            events: components["schemas"]["ChatEvent"][];
+        };
         /** ChatTurnAccepted */
         ChatTurnAccepted: {
             /** Session Id */
@@ -2214,7 +2257,10 @@ export interface components {
             backend: components["schemas"]["AgentBackendKind"];
             /** Model */
             model?: string | null;
+            reason?: components["schemas"]["ChatFinishReason"] | null;
         };
+        /** @enum {string} */
+        ChatTurnOrigin: "user" | "continuation";
         /** ChatTurnStarted */
         ChatTurnStarted: {
             /** Seq */
@@ -2241,6 +2287,8 @@ export interface components {
             backend: components["schemas"]["AgentBackendKind"];
             /** Model */
             model?: string | null;
+            /** @default user */
+            origin: components["schemas"]["ChatTurnOrigin"];
         };
         /** ChatUsage */
         ChatUsage: {
@@ -3291,7 +3339,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_STRICT_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -3670,6 +3718,30 @@ export interface components {
         };
         /** @enum {string} */
         ExecutionStatus: "pending" | "running" | "ok" | "failed" | "skipped" | "suspended" | "cancelled";
+        /** @enum {string} */
+        ExperimentChangeKind: "added" | "modified" | "deleted";
+        /** ExperimentChanged */
+        ExperimentChanged: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "experiment_changed";
+            /** Experiment Id */
+            experiment_id: string;
+            change: components["schemas"]["ExperimentChangeKind"];
+            /** Paths */
+            paths: string[];
+        };
         /** ExperimentDetailView */
         ExperimentDetailView: {
             /** Experiment Id */
@@ -3924,6 +3996,29 @@ export interface components {
             ops: components["schemas"]["JsonValue"][] | null;
             /** Summary */
             summary: string;
+        };
+        /** FindingWritten */
+        FindingWritten: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "finding_written";
+            /** Experiment Id */
+            experiment_id: string;
+            /** Series Id */
+            series_id: string;
+            /** Paths */
+            paths: string[];
         };
         /** @enum {string} */
         FinishedExecutionStatus: "ok" | "failed" | "skipped" | "cancelled";
@@ -6724,6 +6819,35 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** SeriesProgressEvent */
+        SeriesProgressEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_progress";
+            /** Done */
+            done: number;
+            /** Total */
+            total: number;
+            /** Spend Usd */
+            spend_usd: string;
+        };
         /** SeriesSpend */
         SeriesSpend: {
             /** Usd */
@@ -6788,11 +6912,62 @@ export interface components {
             finished_at: string | null;
             estimate: components["schemas"]["SeriesEstimate"];
         };
+        /** SeriesStartedEvent */
+        SeriesStartedEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_started";
+            status: components["schemas"]["SeriesStatus"];
+            /** Total */
+            total: number;
+        };
         /**
          * SeriesStatus
          * @enum {string}
          */
         SeriesStatus: "awaiting_approval" | "running" | "waiting_human" | "done" | "cancelled" | "failed";
+        /** SeriesStatusChanged */
+        SeriesStatusChanged: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_status_changed";
+            status: components["schemas"]["SeriesStatus"];
+            previous: components["schemas"]["SeriesStatus"] | null;
+        };
         /** SeriesStatusEvent */
         SeriesStatusEvent: {
             /** Seq */
@@ -6922,7 +7097,7 @@ export interface components {
             /** Id */
             id: string | null;
         };
-        SpecEvent: components["schemas"]["FilesChanged"] | components["schemas"]["DiagnosticsChanged"] | components["schemas"]["SpecResync"];
+        SpecEvent: components["schemas"]["FilesChanged"] | components["schemas"]["DiagnosticsChanged"] | components["schemas"]["SpecResync"] | components["schemas"]["SeriesStartedEvent"] | components["schemas"]["SeriesProgressEvent"] | components["schemas"]["SeriesStatusChanged"] | components["schemas"]["FindingWritten"] | components["schemas"]["ExperimentChanged"];
         /**
          * SpecKind
          * @enum {string}
@@ -7446,6 +7621,7 @@ export type SchemaChatErrorRaised = components['schemas']['ChatErrorRaised'];
 export type SchemaChatEvent = components['schemas']['ChatEvent'];
 export type SchemaChatFileChange = components['schemas']['ChatFileChange'];
 export type SchemaChatFileEdit = components['schemas']['ChatFileEdit'];
+export type SchemaChatFinishReason = components['schemas']['ChatFinishReason'];
 export type SchemaChatMessageDelivered = components['schemas']['ChatMessageDelivered'];
 export type SchemaChatMessageQueued = components['schemas']['ChatMessageQueued'];
 export type SchemaChatMessageRequest = components['schemas']['ChatMessageRequest'];
@@ -7465,8 +7641,11 @@ export type SchemaChatToolCallArgsDelta = components['schemas']['ChatToolCallArg
 export type SchemaChatToolCallFinished = components['schemas']['ChatToolCallFinished'];
 export type SchemaChatToolCallStarted = components['schemas']['ChatToolCallStarted'];
 export type SchemaChatToolStatus = components['schemas']['ChatToolStatus'];
+export type SchemaChatTranscriptPage = components['schemas']['ChatTranscriptPage'];
+export type SchemaChatTranscriptTurn = components['schemas']['ChatTranscriptTurn'];
 export type SchemaChatTurnAccepted = components['schemas']['ChatTurnAccepted'];
 export type SchemaChatTurnFinished = components['schemas']['ChatTurnFinished'];
+export type SchemaChatTurnOrigin = components['schemas']['ChatTurnOrigin'];
 export type SchemaChatTurnStarted = components['schemas']['ChatTurnStarted'];
 export type SchemaChatUsage = components['schemas']['ChatUsage'];
 export type SchemaChatUsageReported = components['schemas']['ChatUsageReported'];
@@ -7567,6 +7746,8 @@ export type SchemaExampleSpec = components['schemas']['ExampleSpec'];
 export type SchemaExecutionAddress = components['schemas']['ExecutionAddress'];
 export type SchemaExecutionDetail = components['schemas']['ExecutionDetail'];
 export type SchemaExecutionStatus = components['schemas']['ExecutionStatus'];
+export type SchemaExperimentChangeKind = components['schemas']['ExperimentChangeKind'];
+export type SchemaExperimentChanged = components['schemas']['ExperimentChanged'];
 export type SchemaExperimentDetailView = components['schemas']['ExperimentDetailView'];
 export type SchemaExperimentFilesView = components['schemas']['ExperimentFilesView'];
 export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
@@ -7586,6 +7767,7 @@ export type SchemaFileEntry = components['schemas']['FileEntry'];
 export type SchemaFileKind = components['schemas']['FileKind'];
 export type SchemaFileRef = components['schemas']['FileRef'];
 export type SchemaFilesChanged = components['schemas']['FilesChanged'];
+export type SchemaFindingWritten = components['schemas']['FindingWritten'];
 export type SchemaFinishedExecutionStatus = components['schemas']['FinishedExecutionStatus'];
 export type SchemaFlowDetail = components['schemas']['FlowDetail'];
 export type SchemaFlowIr = components['schemas']['FlowIr'];
@@ -7808,11 +7990,14 @@ export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
 export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
 export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
 export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
+export type SchemaSeriesProgressEvent = components['schemas']['SeriesProgressEvent'];
 export type SchemaSeriesSpend = components['schemas']['SeriesSpend'];
 export type SchemaSeriesSplit = components['schemas']['SeriesSplit'];
 export type SchemaSeriesStartRequest = components['schemas']['SeriesStartRequest'];
 export type SchemaSeriesStarted = components['schemas']['SeriesStarted'];
+export type SchemaSeriesStartedEvent = components['schemas']['SeriesStartedEvent'];
 export type SchemaSeriesStatus = components['schemas']['SeriesStatus'];
+export type SchemaSeriesStatusChanged = components['schemas']['SeriesStatusChanged'];
 export type SchemaSeriesStatusEvent = components['schemas']['SeriesStatusEvent'];
 export type SchemaSeriesSummaryView = components['schemas']['SeriesSummaryView'];
 export type SchemaSeriesVerdict = components['schemas']['SeriesVerdict'];
@@ -16310,6 +16495,112 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    chat_transcript: {
+        parameters: {
+            query?: {
+                before_seq?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatTranscriptPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

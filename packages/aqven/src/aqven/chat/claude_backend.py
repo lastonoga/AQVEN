@@ -8,15 +8,17 @@ from pydantic import SecretStr
 
 from aqven.chat.approvals import ApprovalRegistry
 from aqven.chat.claude_cli import ClaudeLoginProbe, SubprocessCommandRunner, locate_claude_cli
-from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory
+from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory, default_guard
 from aqven.chat.claude_runner import ClaudeSessionRunner
 from aqven.chat.claude_runtime import ClaudeChatRuntime
-from aqven.chat.env_guard import scrubbed_environment
+from aqven.chat.env_guard import GuardChain, scrubbed_environment
 from aqven.chat.errors import ChatFailure
 from aqven.chat.feed import ChatSignals, follow_chat_events
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.models import claude_catalog
+from aqven.chat.server_guard import ServerProcess, ServerProcessGuard
 from aqven.chat.sqlite_journal import SqliteChatJournal, utc_now
+from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
@@ -35,6 +37,7 @@ class ClaudeAgentBackend:
     def __init__(self, runtime: ClaudeChatRuntime) -> None:
         self._runtime = runtime
         self._runners: dict[ChatSessionId, ClaudeSessionRunner] = {}
+        self._settler = TurnSettler(runtime.journal, runtime.signals, runtime.clock)
 
     @property
     def kind(self) -> AgentBackendKind:
@@ -80,9 +83,10 @@ class ClaudeAgentBackend:
         raise ChatFailure("NOT_WAITING", f"approval {answer.approval_id} is not waiting for an answer")
 
     async def interrupt(self, session_id: ChatSessionId) -> None:
-        self._require_open(session_id)
+        stored = self._require_open(session_id)
         runner = self._runners.get(session_id)
         if runner is None:
+            self._settler.settle(stored.session, "agent_lost")
             return
         await runner.interrupt()
 
@@ -92,10 +96,11 @@ class ClaudeAgentBackend:
             await runner.reload_settings()
 
     async def close_session(self, session_id: ChatSessionId) -> None:
-        self._require(session_id)
+        stored = self._require(session_id)
         runner = self._runners.pop(session_id, None)
         if runner is not None:
             await runner.close()
+        self._settler.settle(stored.session, "agent_lost")
         self._runtime.journal.set_closed(session_id, self._runtime.clock())
         self._runtime.signals.notify(session_id)
 
@@ -103,7 +108,7 @@ class ClaudeAgentBackend:
         runners = tuple(self._runners.values())
         self._runners.clear()
         for runner in runners:
-            await runner.close()
+            await runner.close("server_stopped")
 
     def _reopen(self, session_id: ChatSessionId) -> ChatSession:
         stored = self._require(session_id)
@@ -146,6 +151,7 @@ def create_claude_chat(
     mcp_token: SecretStr,
     allowed_tools: tuple[str, ...] = (),
     shutdown_signal: asyncio.Event | None = None,
+    server: ServerProcess | None = None,
 ) -> ClaudeChat:
     cli = locate_claude_cli()
     journal = SqliteChatJournal.for_project(project_root)
@@ -158,7 +164,8 @@ def create_claude_chat(
                 mcp_token=mcp_token,
                 cli_path=cli.path,
                 allowed_tools=allowed_tools,
-            )
+            ),
+            guard=GuardChain(default_guard(), (ServerProcessGuard(server),)),
         ),
         login=ClaudeLoginProbe(cli, SubprocessCommandRunner(partial(scrubbed_environment, project_root))),
         clock=utc_now,

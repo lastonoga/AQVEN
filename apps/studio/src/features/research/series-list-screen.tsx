@@ -1,8 +1,11 @@
 import { useFormatter, useTranslations } from "use-intl"
-import type { FlowId, SeriesSummary } from "@/domain"
+import type { SeriesSummary } from "@/domain"
 import { Empty, Heading, Matrix, Page, RowLink, Surface, Tag, Text, type MatrixField } from "@/components/studio"
 import { usd } from "@/lib/format"
 import { projectRouteApi, ROUTE_PATH, seriesListRouteApi } from "@/lib/routes"
+import { useFlowTitle } from "./copy"
+import { flowGroupKey, groupByFlow, seriesFlow, type FlowGroup } from "./flow-groups"
+import { ResearchSection } from "./layout"
 import { seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
 import { originText, seriesListOrder } from "./series-list"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
@@ -77,16 +80,15 @@ function useListFields(): readonly MatrixField<SeriesSummary>[] {
   ]
 }
 
-function SeriesTable({ series, flow }: { readonly series: readonly SeriesSummary[]; readonly flow: FlowId | null }) {
+function SeriesTable({ series, label }: { readonly series: readonly SeriesSummary[]; readonly label: string }) {
   const t = useTranslations("research.seriesList")
   const fields = useListFields()
-  if (series.length === 0) return <Empty title={flow === null ? t("empty") : t("emptyFlow", { flow })} hint={t("emptyHint")} />
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
         orientation="rows"
         rules="rows"
-        label={t("aria")}
+        label={label}
         minWidth={LIST_MIN_WIDTH}
         items={series}
         itemKey={(item) => item.id}
@@ -97,14 +99,35 @@ function SeriesTable({ series, flow }: { readonly series: readonly SeriesSummary
   )
 }
 
+function SeriesSection({ group }: { readonly group: FlowGroup<SeriesSummary> }) {
+  const t = useTranslations("research.seriesList")
+  const title = useFlowTitle()(group.flow)
+  return (
+    <ResearchSection title={title} description={t("count", { count: group.items.length })}>
+      <SeriesTable series={group.items} label={t("aria", { section: title })} />
+    </ResearchSection>
+  )
+}
+
+function SeriesSections({ series }: { readonly series: readonly SeriesSummary[] }) {
+  const t = useTranslations("research.seriesList")
+  if (series.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
+  return (
+    <div className="flex min-w-0 flex-col gap-7">
+      {groupByFlow(seriesListOrder(series), seriesFlow).map((group) => (
+        <SeriesSection key={flowGroupKey(group)} group={group} />
+      ))}
+    </div>
+  )
+}
+
 export function SeriesListScreen() {
   const t = useTranslations("research.seriesList")
   const { project } = projectRouteApi.useLoaderData()
-  const { series, flow } = seriesListRouteApi.useLoaderData()
-  const subtitle = flow === null ? t("subtitle", { project: project.package ?? project.root }) : t("subtitleFlow", { flow })
+  const { series } = seriesListRouteApi.useLoaderData()
   return (
-    <Page width="xl" header={<Heading size="page" title={t("title")} below={[subtitle]} />}>
-      <SeriesTable series={seriesListOrder(series)} flow={flow} />
+    <Page width="xl" header={<Heading size="page" title={t("title")} below={[t("subtitle", { project: project.package ?? project.root })]} />}>
+      <SeriesSections series={series} />
     </Page>
   )
 }

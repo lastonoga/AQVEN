@@ -108,6 +108,7 @@ export type ApiChatMessageRequest = S["ChatMessageRequest"]
 export type ApiChatTurnAccepted = S["ChatTurnAccepted"]
 export type ApiChatApprovalReply = S["ChatApprovalReply"]
 export type ApiChatEvent = S["ChatEvent"]
+export type ApiChatTranscriptPage = S["ChatTranscriptPage"]
 
 export type ApiSpecEvent = S["SpecEvent"]
 

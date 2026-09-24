@@ -39,3 +39,5 @@ its biggest flow.
   and opening Studio on it for the very first time.
 - [How to use Studio settings](/studio/settings/) — the folder and AQVEN version of the project Studio
   is serving, next to its model keys and agent setup.
+- [How to read the dev console](/studio/read-the-dev-console/) — what the terminal running Studio prints
+  for each run, retry, series and file change.

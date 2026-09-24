@@ -99,6 +99,12 @@ def shown_status(record: SeriesRecord, waits: int) -> SeriesStatus:
     return record.status
 
 
+def waiting_attempts(record: SeriesRecord, attempts: Sequence[AttemptRecord], waiting: frozenset[RunId]) -> int:
+    if record.status is not SeriesStatus.RUNNING:
+        return 0
+    return sum(1 for row in attempts if row.state is AttemptState.RUNNING and row.run_id in waiting)
+
+
 def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSummaryView:
     return SeriesSummaryView(
         series_id=record.series_id,

@@ -1,21 +1,19 @@
 import { useRef, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiFlow, ApiProject } from "@/domain"
+import type { ApiFlow, ApiProject, FlowId } from "@/domain"
 import { Surface, Text } from "@/components/studio"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { PICKER_TARGETS, type PickerTargets } from "./flow-items"
+import { FlowItems } from "./flow-items"
 import { projectName } from "./presenters"
-import type { FlowScope } from "./selected-flow"
 
 const MENU_OFFSET = 4
 
 export type FlowPickerProps = {
   readonly project: ApiProject
   readonly flows: readonly ApiFlow[]
-  readonly selected: FlowScope
-  readonly targets: PickerTargets
+  readonly selected: FlowId
 }
 
 function Caret({ open }: { readonly open: boolean }) {
@@ -27,11 +25,10 @@ function Caret({ open }: { readonly open: boolean }) {
   )
 }
 
-export function FlowPicker({ project, flows, selected, targets }: FlowPickerProps) {
+export function FlowPicker({ project, flows, selected }: FlowPickerProps) {
   const t = useTranslations("shell.picker")
   const [open, setOpen] = useState(false)
   const navigated = useRef(false)
-  const Targets = PICKER_TARGETS[targets]
   const close = () => {
     navigated.current = true
     setOpen(false)
@@ -46,7 +43,7 @@ export function FlowPicker({ project, flows, selected, targets }: FlowPickerProp
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={t("triggerAria")} className="min-w-0 max-w-64 shrink gap-1 px-2 text-foreground">
           <Text role="item" weight="semibold" tone="default" truncate>
-            {selected ?? t("all")}
+            {selected}
           </Text>
           <Caret open={open} />
         </Button>
@@ -63,7 +60,7 @@ export function FlowPicker({ project, flows, selected, targets }: FlowPickerProp
               {t("label", { project: projectName(project) })}
             </Text>
           </DropdownMenuLabel>
-          <Targets flows={flows} selected={selected} onNavigate={close} />
+          <FlowItems flows={flows} selected={selected} onNavigate={close} />
         </DropdownMenuContent>
       </Surface>
     </DropdownMenu>

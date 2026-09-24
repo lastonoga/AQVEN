@@ -32,6 +32,7 @@ from aqven.app.instance import (
     live_server,
 )
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
+from aqven.app.observation import LaunchObserver, SilentObserver
 from aqven.app.options import ServerOptions
 from aqven.app.runtime_file import ServerRecord, remove_server_record, server_record, write_server_record
 from aqven.app.settings_store import LocalSettingsStore, open_settings_store
@@ -70,6 +71,7 @@ class ApplicationLaunch:
     chat_effort: ChatEffort | None = None
     chat_permission_mode: ChatPermissionMode = "default"
     shutdown_signal: asyncio.Event = field(default_factory=asyncio.Event)
+    observer: LaunchObserver = field(default_factory=SilentObserver)
 
 
 class ApplicationFactory(Protocol):
@@ -94,6 +96,12 @@ class SystemBrowser:
 class StandardErrorAnnouncer:
     def announce(self, message: str) -> None:
         print(message, file=sys.stderr, flush=True)
+
+
+@dataclass(frozen=True, slots=True)
+class UvicornLogging:
+    level: str = LOG_LEVEL
+    access_log: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,7 +183,8 @@ class LocalServer:
     browser: BrowserLauncher = field(default_factory=SystemBrowser)
     announcer: Announcer = field(default_factory=StandardErrorAnnouncer)
     probe: ServerProbe = field(default_factory=HttpServerProbe)
-    log_level: str = LOG_LEVEL
+    uvicorn_logging: UvicornLogging = field(default_factory=UvicornLogging)
+    observer: LaunchObserver = field(default_factory=SilentObserver)
     readiness: Readiness = field(default_factory=Readiness)
     switch: StopSwitch = field(default_factory=StopSwitch)
 
@@ -249,6 +258,7 @@ class LocalServer:
                 chat_effort=options.chat_effort,
                 chat_permission_mode=options.chat_permission_mode,
                 shutdown_signal=self.switch.shutting_down,
+                observer=self.observer,
             )
             application = self._guarded(self.application.build(launch), record, access, options)
             write_server_record(state, record)
@@ -275,8 +285,9 @@ class LocalServer:
             application,
             host=record.host,
             port=record.port,
-            log_level=self.log_level,
-            access_log=False,
+            log_config=None,
+            log_level=self.uvicorn_logging.level,
+            access_log=self.uvicorn_logging.access_log,
             lifespan="auto",
             timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_SECONDS,
         )

@@ -17,6 +17,7 @@ from aqven.engine.summaries.model import Admission, OpenRow
 from aqven.engine.summaries.store import SqliteRunSummaryStore, SummaryPage, SummaryRecord
 from aqven.runtime.address import RunId, node_address
 from aqven.runtime.events import (
+    MapItemRecovered,
     NodeFinished,
     NodeOutputDelta,
     NodeStarted,
@@ -24,10 +25,10 @@ from aqven.runtime.events import (
     RunFinished,
     RunStartedEvent,
 )
-from aqven.runtime.executions import RunError
+from aqven.runtime.executions import ItemError, ItemRecovery, RunError
 from aqven.runtime.human import HumanWait, OpenWaitFilter
 from aqven.runtime.runs import RunSummary
-from aqven.runtime.vocabulary import FinishedExecutionStatus, RunMode, TerminalRunStatus
+from aqven.runtime.vocabulary import FinishedExecutionStatus, ItemRecoveryDecision, RunMode, TerminalRunStatus
 from aqven.spec import ArmId, ExperimentId, FlowId, NodeId, NodeKind, TypeId
 
 type DbosStatus = Literal["PENDING", "SUCCESS", "ERROR", "CANCELLED", "ENQUEUED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"]
@@ -126,6 +127,21 @@ class EventScript:
                 cache_hit=False,
                 degraded=False,
                 checks_failed=0,
+            )
+        )
+        return self
+
+    def recovered(self, node_id: str, item_index: int, decision: ItemRecoveryDecision) -> EventScript:
+        recovery = ItemRecovery(
+            item_index=item_index,
+            policy="shop.code.review_policies:unread_angle",
+            decision=decision,
+            error=ItemError(code="MODEL_RETRIES_EXHAUSTED", message="no valid output after 2 attempts"),
+            default_ref=None,
+        )
+        self.events.append(
+            MapItemRecovered(
+                seq=self.seq, at=moment(self.seq), run_id=self.run_id, address=node_address(node_id), recovery=recovery
             )
         )
         return self

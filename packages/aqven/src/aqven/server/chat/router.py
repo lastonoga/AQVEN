@@ -11,6 +11,12 @@ from aqven.chat.backend_registry import BackendRegistry
 from aqven.chat.backend_selection import ChatBackendChoice, ChatBackendWrite
 from aqven.chat.errors import ChatFailure, ChatFailureCode
 from aqven.chat.journal import ChatJournal
+from aqven.chat.transcript import (
+    DEFAULT_TRANSCRIPT_TURNS,
+    MAX_TRANSCRIPT_TURNS,
+    ChatTranscriptPage,
+    ChatTranscripts,
+)
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
@@ -94,7 +100,9 @@ def chat_frame(event: ChatEvent) -> ServerSentEvent:
     return ServerSentEvent(data=event, event=event.type, id=str(event.seq))
 
 
-def build_chat_router(registry: BackendRegistry, sessions: ChatJournal, context: ChatRouteContext) -> APIRouter:
+def build_chat_router(
+    registry: BackendRegistry, sessions: ChatJournal, transcripts: ChatTranscripts, context: ChatRouteContext
+) -> APIRouter:
     router = APIRouter(prefix=CHAT_PREFIX, responses=ERROR_RESPONSES, route_class=ChatRoute)
 
     def session_view(session_id: ChatSessionId) -> ChatSession:
@@ -195,6 +203,18 @@ def build_chat_router(registry: BackendRegistry, sessions: ChatJournal, context:
     ) -> AsyncIterable[ServerSentEvent]:
         async for event in registry.for_session(session).events(session.session_id, start):
             yield chat_frame(event)
+
+    @router.get(
+        "/sessions/{session_id}/transcript",
+        operation_id="chat_transcript",
+        openapi_extra=rest_only(CHAT_REST_ONLY),
+    )
+    def chat_transcript(
+        session: Annotated[ChatSession, Depends(existing_session)],
+        before_seq: Annotated[int | None, Query(ge=1)] = None,
+        limit: Annotated[int, Query(ge=1, le=MAX_TRANSCRIPT_TURNS)] = DEFAULT_TRANSCRIPT_TURNS,
+    ) -> ChatTranscriptPage:
+        return transcripts.page(session.session_id, before_seq, limit)
 
     @router.post(
         "/sessions/{session_id}/approvals/{approval_id}",

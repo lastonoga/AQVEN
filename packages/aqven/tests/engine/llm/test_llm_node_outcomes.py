@@ -413,6 +413,59 @@ def test_the_agent_spec_defaults_retry_an_error_and_fail_a_refusal_or_truncation
     )
 
 
+SCHEMA_REJECTION: Final[dict[str, JsonValue]] = {
+    "error": {
+        "code": CLOSED_STATUS,
+        "message": "The specified schema produces a constraint that has too many states for serving.",
+        "status": "INVALID_ARGUMENT",
+    }
+}
+POLICIES: Final = (OutcomePolicy.RETRY, OutcomePolicy.FALLBACK, OutcomePolicy.FAIL)
+
+
+@dataclass(slots=True)
+class RejectingChoice:
+    model: str
+    calls: int = 0
+
+    async def rejected(self, messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[str]:
+        self.calls += 1
+        raise ModelHTTPError(CLOSED_STATUS, self.model, SCHEMA_REJECTION)
+        yield ""
+
+    def built(self) -> Model:
+        return FunctionModel(stream_function=self.rejected, model_name=PRICED_NAME)
+
+
+@pytest.mark.parametrize("policy", POLICIES, ids=[policy.value for policy in POLICIES])
+def test_a_schema_rejection_goes_to_the_fallback_model_and_never_back_to_the_same_model(
+    policy: OutcomePolicy,
+) -> None:
+    primary = RejectingChoice(PRIMARY)
+    fallback = ScriptedChoice(FALLBACK, [answer("fine", "out-1")])
+    bed = bed_with({PRIMARY: primary.built(), FALLBACK: fallback.built()}, CompiledAgentOutput(on_error=policy))
+
+    outcome = executed(bed)
+
+    assert isinstance(outcome, NodeSucceeded)
+    assert outcome.model == FALLBACK
+    assert primary.calls == 1
+    assert len(fallback.requests()) == 1
+
+
+@pytest.mark.parametrize("policy", POLICIES, ids=[policy.value for policy in POLICIES])
+def test_a_schema_rejection_of_the_only_model_fails_the_node_without_asking_it_again(policy: OutcomePolicy) -> None:
+    primary = RejectingChoice(PRIMARY)
+    bed = bed_with({PRIMARY: primary.built()}, CompiledAgentOutput(on_error=policy))
+
+    outcome = executed(bed)
+
+    assert isinstance(outcome, NodeFailed)
+    assert outcome.error.code == "OUTPUT_SCHEMA_REJECTED"
+    assert primary.calls == 1
+    assert attempt_rows(bed) == []
+
+
 async def unreachable(messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[str]:
     raise AssertionError("replay must not call the model")
     yield ""

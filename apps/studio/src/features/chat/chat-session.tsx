@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   AssistantRuntimeProvider,
   useExternalStoreRuntime,
@@ -6,14 +6,15 @@ import {
   type ExternalThreadQueueAdapter,
   type ThreadMessageLike,
 } from "@assistant-ui/react"
-import type { ApiChatEvent, ApiChatSession } from "@/domain"
+import type { ApiChatEvent, ApiChatSession, ApiChatTranscriptPage, ChatSessionId } from "@/domain"
 import { chatSessionId, clientOpId } from "@/data/ids"
 import { noop } from "@/lib/noop"
-import { applyChatEvent, EMPTY_TRANSCRIPT, isRunning, threadMessages, type ChatTranscript } from "./chat-events"
+import { EMPTY_TRANSCRIPT, isRunning, threadMessages } from "./chat-events"
+import { openHistory, prependPage, receiveEvent, type ChatHistory } from "./chat-history"
 import type { ChatTransport } from "./chat-transport"
 import { QuestionAnswerContext, type QuestionAnswerSubmit } from "./question-context"
 import { ReasoningSpanContext } from "./reasoning-context"
-import { Thread } from "./thread"
+import { Thread, type EarlierTurns } from "./thread"
 
 export type ChatSessionProps = { readonly session: ApiChatSession; readonly transport: ChatTransport }
 
@@ -37,16 +38,52 @@ const serverQueue = (dispatch: Dispatch): ExternalThreadQueueAdapter => ({
   remove: noop,
 })
 
-export function ChatSession({ session, transport }: ChatSessionProps) {
-  const [transcript, setTranscript] = useState<ChatTranscript>(EMPTY_TRANSCRIPT)
-  const id = chatSessionId(session.session_id)
+type HistoryUpdate = (current: ChatHistory | null) => ChatHistory | null
+
+const withHistory =
+  (update: (history: ChatHistory) => ChatHistory): HistoryUpdate =>
+  (current) =>
+    current === null ? current : update(current)
+
+function useChatHistory(id: ChatSessionId, transport: ChatTransport): readonly [ChatHistory | null, EarlierTurns] {
+  const [history, setHistory] = useState<ChatHistory | null>(null)
+  const [loading, setLoading] = useState<number | null>(null)
+  const requested = useRef<number | null>(null)
 
   useEffect(() => {
-    const receive = (event: ApiChatEvent): void => {
-      setTranscript((current) => applyChatEvent(current, event))
+    const opened = (page: ApiChatTranscriptPage): void => {
+      setHistory(openHistory(page))
     }
-    return transport.subscribe(id, 0, receive)
+    const received = (event: ApiChatEvent): void => {
+      setHistory(withHistory((current) => receiveEvent(current, event)))
+    }
+    return transport.open(id, opened, received)
   }, [id, transport])
+
+  const before = history?.earlierBefore ?? null
+  const load = (): void => {
+    if (before === null || requested.current === before) return
+    requested.current = before
+    setLoading(before)
+    void transport
+      .transcript(id, before)
+      .then((page) => {
+        setHistory(withHistory((current) => prependPage(current, before, page)))
+      })
+      .catch(noop)
+      .finally(() => {
+        requested.current = null
+        setLoading(null)
+      })
+  }
+
+  return [history, { before, loading: loading !== null, load }]
+}
+
+export function ChatSession({ session, transport }: ChatSessionProps) {
+  const id = chatSessionId(session.session_id)
+  const [history, earlier] = useChatHistory(id, transport)
+  const transcript = history?.transcript ?? EMPTY_TRANSCRIPT
 
   const queue = useMemo(
     () =>
@@ -80,7 +117,7 @@ export function ChatSession({ session, transport }: ChatSessionProps) {
     <AssistantRuntimeProvider runtime={runtime}>
       <QuestionAnswerContext value={answer}>
         <ReasoningSpanContext value={transcript.reasoning}>
-          <Thread failure={transcript.failure} state={transcript.state} queued={transcript.queued} />
+          <Thread failure={transcript.failure} state={transcript.state} queued={transcript.queued} earlier={earlier} />
         </ReasoningSpanContext>
       </QuestionAnswerContext>
     </AssistantRuntimeProvider>
