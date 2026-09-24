@@ -252,7 +252,12 @@
       "title": "Launch",
       "cases": "Cases",
       "repeats": "Repeats",
-      "split": "Run on",
+      "split": "Purpose",
+      "purpose": {
+        "dev": "Explore · working cases",
+        "holdout": "Confirm · held-out cases"
+      },
+      "purposeHint": "Explore: numbers without a finding. Confirm: a verdict written to FINDINGS.md.",
       "fewerCases": "Fewer cases",
       "moreCases": "More cases",
       "fewerRepeats": "Fewer repeats",

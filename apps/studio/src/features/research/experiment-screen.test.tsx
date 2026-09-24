@@ -346,7 +346,7 @@ describe("ExperimentScreen: launch", () => {
     const hint = within(launch).getByText("52 recommended, only 6 here: expect a wide interval")
     expect(hint.getAttribute("title")).toMatch(/only 6 are available: expect a wide interval/)
     expect(repeatsInput()).toHaveProperty("value", "3")
-    expect(within(launch).getByRole("radio", { name: "working" }).getAttribute("aria-checked")).toBe("true")
+    expect(within(launch).getByRole("radio", { name: "Explore · working cases" }).getAttribute("aria-checked")).toBe("true")
     const summary = await launchSummary()
     expect(summary.textContent).toBe("36 attempts · ≈ $0.45 from past series · cap $1.00")
     expect(summary.compareDocumentPosition(await launchRun()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -444,7 +444,7 @@ describe("ExperimentScreen: launch", () => {
 
   it("runs a series on the held-out cases and opens it", async () => {
     const router = await renderRoute("/research/experiments/reply_noninferior_mistral")
-    fireEvent.click(within(await section("Launch")).getByRole("radio", { name: "held-out" }))
+    fireEvent.click(within(await section("Launch")).getByRole("radio", { name: "Confirm · held-out cases" }))
     fireEvent.change(casesInput(), { target: { value: "4" } })
     await waitFor(async () => {
       expect((await launchSummary()).textContent).toMatch(/^24 attempts · /)
