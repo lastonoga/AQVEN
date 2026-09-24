@@ -74,7 +74,7 @@ interval and the margin in the file. People and agents quote that sentence; nobo
 | `refuted` | the effect is within the margin or reversed. It never means "no risk" |
 | `inconclusive` | the interval is too wide to decide |
 | `signal` | the series ran on working cases, or the deciding check is a judge without `validated_by` |
-| `invalid` | cancelled, stopped by the spend cap, inputs changed during the series, more than 5% infrastructure errors, or no data |
+| `invalid` | cancelled, inputs changed during the series, more than 5% infrastructure errors, or no data |
 
 A `look` has no verdict at all: it shows every case with its checks, cost and trace.
 
@@ -113,7 +113,7 @@ minutes. The dollars have a source, and Studio labels it:
 |---|---|---|
 | `history` | the average cost of the same variant's attempts in earlier series of this experiment | ≈ from past series |
 | `prices` | the token counts of past runs of the flow, at today's token prices | ≈ at provider prices |
-| `bound` | an upper bound when nothing has run yet: the rendered prompt of the largest case in, the agent's `max_tokens` out, times loop caps and fan-out | ≤ upper bound |
+| `bound` | a rough estimate when nothing has run yet: the rendered prompt of the largest case plus 1,600 tokens per image or file in, a typical answer out (the agent's `max_tokens`, at most 1,000), times loop caps and fan-out, times 1.5 | ~ rough estimate |
 | `unknown` | a model of the series has no known price | no price estimate |
 
 When variants differ, the series shows the least certain source of them. A token price comes from the
@@ -122,21 +122,21 @@ bundled with the engine. The cost of a finished call comes from the provider's o
 that nothing prices is counted as unknown, not free. When some attempts ran on such a model, the spend of
 the series is a lower bound, and every surface says so.
 
-The project spend cap decides who starts a series. It lives in `aqven.yaml` as `research.spend_cap_usd`,
-$1.00 in every new project and $1.00 when the block is missing. A local override with the same key on the
-project server wins on that computer only.
+The estimate is information only; what a series actually spends decides when a person is asked. The
+project spend cap lives in `aqven.yaml` as `research.spend_cap_usd`, $1.00 in every new project and $1.00
+when the block is missing. A local override with the same key on the project server wins on that computer
+only.
 
 The cap works like this:
 
-- **At or below the cap**, the series starts by itself. Its own cap is 1.25 × the estimate, rounded up to a
-  cent, and never above the project cap.
-- **Above the cap, or unknown**, the series waits in `awaiting_approval` until a person approves the spend.
-  An agent can start a series but never approve one.
-- **With an explicit cap** (`cap_usd`, or `--cap` in the terminal), the series runs under that cap. It
-  waits for approval when that cap or the estimate is above the project cap, or when the estimate is
-  unknown.
-
-A series that reaches its cap stops and ends `invalid`, so no finding is written.
+- **Every series starts at once**, whatever its estimate, with the project cap as its own cap.
+- **Near the cap it pauses.** When the spend plus a reserve for each running attempt reaches 90% of the
+  series cap, the series starts no new attempts, lets the running ones finish and waits in
+  `awaiting_approval`, with `pause.reason` `spend_near_cap` and `pause.spent_usd`. A person continues it
+  with a higher cap (double the old one unless they type another) or stops it. An agent can start a series
+  but never continue one.
+- **With an explicit cap** (`cap_usd`, or `--cap` in the terminal), the series runs under that cap. A cap
+  above the project cap waits for approval before anything runs (`pause.reason` `cap_above_project`).
 
 ## How this shapes what you do
 
