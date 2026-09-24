@@ -1,7 +1,7 @@
 import type { ApiRunEvent, ApiRunSnapshot, RunId, RunStatus } from "@/domain"
-import { API_BASE } from "@/api/client"
+import { followFeed, runFeed } from "@/api/events"
 import type { BlobText } from "@/features/call-sheet"
-import { isRecord, subscribeEvents } from "@/lib/sse"
+import { isRecord } from "@/lib/sse"
 
 export type RunEventType = ApiRunEvent["type"]
 
@@ -47,8 +47,6 @@ export const RUN_EVENT_EFFECT: Readonly<Record<RunEventType, RunEventEffect>> = 
   run_finished: "finish",
 }
 
-export const RUN_EVENT_TYPES: readonly string[] = Object.keys(RUN_EVENT_EFFECT)
-
 const LIVE_STATUSES: ReadonlySet<RunStatus> = new Set<RunStatus>(["queued", "running", "suspended"])
 
 export const isLiveStatus = (status: RunStatus): boolean => LIVE_STATUSES.has(status)
@@ -65,13 +63,10 @@ export const readRunEvent = (raw: string): ApiRunEvent | null => {
   return isRunEvent(parsed) ? parsed : null
 }
 
-export const runEventsUrl = (runId: RunId, afterSeq: number): string =>
-  `${API_BASE}/runs/${encodeURIComponent(runId)}/events?after_seq=${String(afterSeq)}`
-
 const runEventOf = (runId: RunId) => (value: unknown): ApiRunEvent | null => (isRunEvent(value) && value.run_id === runId ? value : null)
 
 export const eventSourceStream: RunEventStream = (runId, afterSeq, onEvent) =>
-  subscribeEvents({ url: runEventsUrl(runId, afterSeq), types: RUN_EVENT_TYPES, read: runEventOf(runId), onEvent })
+  followFeed({ feed: runFeed(runId), after: afterSeq, read: runEventOf(runId), onEvent })
 
 const bySeq = (left: ApiRunEvent, right: ApiRunEvent): number => left.seq - right.seq
 

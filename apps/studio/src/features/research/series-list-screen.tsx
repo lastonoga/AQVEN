@@ -4,13 +4,11 @@ import { Empty, Heading, Matrix, Page, RowLink, Surface, Tag, Text, type MatrixF
 import { usd } from "@/lib/format"
 import { projectRouteApi, ROUTE_PATH, seriesListRouteApi } from "@/lib/routes"
 import { useFlowTitle } from "./copy"
-import { flowGroupKey, groupByFlow, seriesFlow, type FlowGroup } from "./flow-groups"
-import { ResearchSection } from "./layout"
 import { seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
 import { originText, seriesListOrder } from "./series-list"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 
-const LIST_MIN_WIDTH = 860
+const LIST_MIN_WIDTH = 920
 
 function VerdictCell({ series }: { readonly series: SeriesSummary }) {
   const t = useTranslations("research.vocabulary.verdict")
@@ -31,6 +29,7 @@ function VerdictCell({ series }: { readonly series: SeriesSummary }) {
 function useListFields(): readonly MatrixField<SeriesSummary>[] {
   const t = useTranslations("research")
   const format = useFormatter()
+  const flowTitle = useFlowTitle()
   const look = (flow: string) => t("seriesList.look", { flow })
   return [
     {
@@ -46,7 +45,7 @@ function useListFields(): readonly MatrixField<SeriesSummary>[] {
     {
       id: "experiment",
       label: t("seriesList.column.experiment"),
-      track: "minmax(200px,1.6fr)",
+      track: "minmax(180px,1.6fr)",
       render: (series) => (
         <div className="flex min-w-0 items-baseline gap-2">
           <Text role="cell" tone="default" weight="semibold" truncate>
@@ -59,9 +58,19 @@ function useListFields(): readonly MatrixField<SeriesSummary>[] {
       ),
     },
     {
+      id: "flow",
+      label: t("seriesList.column.flow"),
+      track: "minmax(120px,1fr)",
+      render: (series) => (
+        <Text role="cell" as="div" truncate title={flowTitle(series.flow)}>
+          {flowTitle(series.flow)}
+        </Text>
+      ),
+    },
+    {
       id: "on",
       label: t("seriesList.column.on"),
-      track: "88px",
+      track: "80px",
       render: (series) => (
         <Tag size="xs" tone="neutral" fill="outline">
           {t(`vocabulary.splitShort.${series.on}`)}
@@ -70,54 +79,33 @@ function useListFields(): readonly MatrixField<SeriesSummary>[] {
     },
     { id: "size", label: t("seriesList.column.size"), track: "72px", render: (series) => <Text role="cell">{sizeText(series.cases, series.repeats)}</Text> },
     { id: "spend", label: t("seriesList.column.spend"), track: "80px", align: "end", render: (series) => <Text role="cell">{usd(series.spend.usd)}</Text> },
-    { id: "verdict", label: t("seriesList.column.verdict"), track: "minmax(120px,0.8fr)", render: (series) => <VerdictCell series={series} /> },
+    { id: "verdict", label: t("seriesList.column.verdict"), track: "minmax(110px,0.8fr)", render: (series) => <VerdictCell series={series} /> },
     {
       id: "started",
       label: t("seriesList.column.started"),
-      track: "minmax(130px,0.8fr)",
+      track: "minmax(120px,0.8fr)",
       render: (series) => <Text role="cell">{format.dateTime(new Date(series.startedAt), STARTED_FORMAT)}</Text>,
     },
   ]
 }
 
-function SeriesTable({ series, label }: { readonly series: readonly SeriesSummary[]; readonly label: string }) {
+function SeriesTable({ series }: { readonly series: readonly SeriesSummary[] }) {
   const t = useTranslations("research.seriesList")
   const fields = useListFields()
+  if (series.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
         orientation="rows"
         rules="rows"
-        label={label}
+        label={t("aria")}
         minWidth={LIST_MIN_WIDTH}
-        items={series}
+        items={seriesListOrder(series)}
         itemKey={(item) => item.id}
         fields={fields}
         rowLink={(item) => <RowLink to={ROUTE_PATH.series} params={{ seriesId: item.id }} aria-label={t("open", { ref: seriesRef(item.id) })} />}
       />
     </Surface>
-  )
-}
-
-function SeriesSection({ group }: { readonly group: FlowGroup<SeriesSummary> }) {
-  const t = useTranslations("research.seriesList")
-  const title = useFlowTitle()(group.flow)
-  return (
-    <ResearchSection title={title} description={t("count", { count: group.items.length })}>
-      <SeriesTable series={group.items} label={t("aria", { section: title })} />
-    </ResearchSection>
-  )
-}
-
-function SeriesSections({ series }: { readonly series: readonly SeriesSummary[] }) {
-  const t = useTranslations("research.seriesList")
-  if (series.length === 0) return <Empty title={t("empty")} hint={t("emptyHint")} />
-  return (
-    <div className="flex min-w-0 flex-col gap-7">
-      {groupByFlow(seriesListOrder(series), seriesFlow).map((group) => (
-        <SeriesSection key={flowGroupKey(group)} group={group} />
-      ))}
-    </div>
   )
 }
 
@@ -127,7 +115,7 @@ export function SeriesListScreen() {
   const { series } = seriesListRouteApi.useLoaderData()
   return (
     <Page width="xl" header={<Heading size="page" title={t("title")} below={[t("subtitle", { project: project.package ?? project.root })]} />}>
-      <SeriesSections series={series} />
+      <SeriesTable series={series} />
     </Page>
   )
 }

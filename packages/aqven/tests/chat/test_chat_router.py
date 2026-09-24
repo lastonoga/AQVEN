@@ -20,6 +20,7 @@ from aqven.ports.chat import (
     ChatApprovalRequested,
     ChatApprovalResolved,
     ChatEvent,
+    ChatMessageRequest,
     ChatSession,
     ChatSessionId,
     ChatSessionOptions,
@@ -29,9 +30,10 @@ from aqven.ports.chat import (
     ChatTurnStarted,
 )
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
+from aqven.runtime.address import ClientOpId
 from aqven.runtime.runs import Page
 from aqven.server.chat.extension import studio_chat_parts
-from aqven.server.chat.router import ChatRouteContext, build_chat_router
+from aqven.server.chat.router import ChatEventFeed, ChatRouteContext, build_chat_router
 from aqven.server.errors import install_error_handlers
 
 from .fixtures import (
@@ -135,6 +137,34 @@ def test_chat_routes_create_send_stream_and_close(tmp_path: Path) -> None:
     assert isinstance(sent, dict) and sent["turn_id"] == events[0].turn_id
     status = extras["status"]
     assert isinstance(status, dict) and status["state"] == "logged_in"
+
+
+def test_chat_event_feed_follows_a_session_from_its_cursor_and_ends_quietly_for_an_unknown_one(
+    tmp_path: Path,
+) -> None:
+    harness = chat_harness(tmp_path, ScriptedClientFactory([streamed_answer_turn(tmp_path)]))
+    registry = BackendRegistry({"claude": harness.backend}, BackendSelection(MemoryBackendSettings()))
+    feed = ChatEventFeed(registry, harness.journal)
+
+    async def scenario() -> tuple[list[BaseModel], list[BaseModel], list[BaseModel]]:
+        session = await harness.backend.start_session(harness.options())
+        events = harness.backend.events(session.session_id)
+        await harness.backend.send_message(
+            session.session_id, ChatMessageRequest(text="hello", client_op_id=ClientOpId("op-1"))
+        )
+        await next_event(events, ChatTurnFinished)
+        await harness.backend.close_session(session.session_id)
+        everything = [event async for event in feed.follow(session.session_id, 0)]
+        after_first = [event async for event in feed.follow(session.session_id, 1)]
+        unknown = [event async for event in feed.follow("nope", 0)]
+        return everything, after_first, unknown
+
+    everything, after_first, unknown = asyncio.run(scenario())
+
+    assert feed.keyed
+    assert isinstance(everything[-1], ChatTurnFinished)
+    assert after_first == everything[1:]
+    assert unknown == []
 
 
 def test_chat_backend_preference_routes_default_and_validate_choices(tmp_path: Path) -> None:
@@ -269,6 +299,7 @@ def test_claude_chat_parts_wire_router_journal_and_shutdown(tmp_path: Path) -> N
                 ChatSessionOptions(project_root=str(tmp_path), mcp_url=MCP_URL)
             )
             assert parts.chat.journal.get_session(session.session_id) is not None
+            assert parts.feed.sessions is parts.chat.journal
 
     asyncio.run(lifecycle())
 

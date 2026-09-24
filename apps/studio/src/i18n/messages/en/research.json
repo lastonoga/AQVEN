@@ -454,9 +454,8 @@
   },
   "seriesList": {
     "title": "Series",
-    "subtitle": "Every series of {project} by flow: running ones first, then the newest",
-    "aria": "Series on {section}",
-    "count": "{count, plural, one {# series} other {# series}}",
+    "subtitle": "Every series of {project}, the newest first",
+    "aria": "All series",
     "empty": "No series yet",
     "emptyHint": "Start one from an experiment, or look at cases of a flow.",
     "open": "Open series {ref}",
@@ -464,6 +463,7 @@
     "column": {
       "status": "Status",
       "experiment": "Experiment",
+      "flow": "Flow",
       "on": "On",
       "size": "N×R",
       "spend": "Spend",

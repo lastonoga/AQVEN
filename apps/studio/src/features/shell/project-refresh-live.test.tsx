@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ApiSeriesSummary, ApiSpecEvent } from "@/domain"
 import { API_BASE } from "@/api/client"
+import { EVENTS_URL, SPEC_FEED } from "@/api/events"
 import { initialSeries, RESEARCH_SERIES, summaryOf } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
 import { FakeEventStream } from "@/test/event-source"
@@ -14,7 +15,7 @@ vi.mock("@/features/chat", () => ({
   ChatPanel: () => null,
 }))
 
-const PROJECT_EVENTS = `${API_BASE}/events/spec`
+const PROJECT_EVENTS = EVENTS_URL
 const EXPERIMENT = "reply_noninferior_mistral"
 const OTHER_EXPERIMENT = "panel_single_judge"
 const QUIET_MS = REFRESH_BATCH_MS * 3
@@ -31,7 +32,7 @@ const seriesLink = (id: string): string => `Open series #${id.slice(-6)}`
 
 const emit = (event: ApiSpecEvent): void => {
   act(() => {
-    FakeEventStream.latestOn(PROJECT_EVENTS).emit(event.type, event)
+    FakeEventStream.latestOn(PROJECT_EVENTS).emit(SPEC_FEED, event)
   })
 }
 
@@ -49,7 +50,7 @@ const quiet = async (): Promise<void> => {
   })
 }
 
-const SERIES_TABLE = /^Series on /
+const SERIES_TABLE = "All series"
 
 const seriesTables = (): Promise<HTMLElement[]> => screen.findAllByRole("table", { name: SERIES_TABLE })
 
