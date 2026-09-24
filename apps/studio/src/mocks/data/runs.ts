@@ -1,9 +1,13 @@
-import type { ApiExecutionDetail, ApiRun, ApiRunEvent, ApiRunSnapshot } from "@/domain"
+import type { ApiExecution, ApiExecutionDetail, ApiRun, ApiRunEvent, ApiRunSnapshot } from "@/domain"
+import { RECOVERED_RUN_ID, recoveredRun, recoveredRunEvents, recoveredRunSnapshot } from "./recovered-run"
+
+type RecordedExecution = Omit<ApiExecution, "recovered_items">
+type RecordedRunSnapshot = Omit<ApiRunSnapshot, "executions"> & { readonly executions: readonly RecordedExecution[] }
 
 export const COMPLETED_RUN_ID = "01a0b104-4658-70aa-b49b-7c2586b56d92"
 export const FAILED_RUN_ID = "01a0b10f-c0bb-71b5-ab91-723388054f73"
 
-export const liveRuns: readonly ApiRun[] = [
+const recordedRuns: readonly ApiRun[] = [
   {
     "run_id": "01a0b1a1-035d-7661-b565-397d04af47b7",
     "flow_id": "support_case",
@@ -653,7 +657,7 @@ export const liveRuns: readonly ApiRun[] = [
   }
 ]
 
-export const liveRunSnapshots: Readonly<Record<string, ApiRunSnapshot>> = {
+const recordedRunSnapshots: Readonly<Record<string, RecordedRunSnapshot>> = {
   "01a0b104-4658-70aa-b49b-7c2586b56d92": {
     "run_id": "01a0b104-4658-70aa-b49b-7c2586b56d92",
     "flow_id": "support_case",
@@ -4826,7 +4830,21 @@ export const liveRunSnapshots: Readonly<Record<string, ApiRunSnapshot>> = {
   }
 }
 
-const legacyExecutionDetails: Readonly<Record<string, Omit<ApiExecutionDetail, "schema_source" | "allowed_sets">>> = {
+export const liveRuns: readonly ApiRun[] = [...recordedRuns, recoveredRun]
+
+const withNoRecoveries = <T extends RecordedExecution>(execution: T): T & Pick<ApiExecution, "recovered_items"> => ({
+  ...execution,
+  recovered_items: [],
+})
+
+export const liveRunSnapshots: Readonly<Record<string, ApiRunSnapshot>> = {
+  ...Object.fromEntries(
+    Object.entries(recordedRunSnapshots).map(([runId, snapshot]) => [runId, { ...snapshot, executions: snapshot.executions.map(withNoRecoveries) }]),
+  ),
+  [RECOVERED_RUN_ID]: recoveredRunSnapshot,
+}
+
+const legacyExecutionDetails: Readonly<Record<string, Omit<ApiExecutionDetail, "schema_source" | "allowed_sets" | "recovered_items">>> = {
   "01a0b104-4658-70aa-b49b-7c2586b56d92|prepare|||": {
     "address": {
       "node_id": "prepare",
@@ -10328,10 +10346,10 @@ const legacyExecutionDetails: Readonly<Record<string, Omit<ApiExecutionDetail, "
 }
 
 export const liveExecutionDetails: Readonly<Record<string, ApiExecutionDetail>> = Object.fromEntries(
-  Object.entries(legacyExecutionDetails).map(([key, detail]) => [key, { ...detail, schema_source: "unavailable" as const, allowed_sets: [] }]),
+  Object.entries(legacyExecutionDetails).map(([key, detail]) => [key, { ...withNoRecoveries(detail), schema_source: "unavailable" as const, allowed_sets: [] }]),
 )
 
-export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
+const recordedRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
   "01a0b104-4658-70aa-b49b-7c2586b56d92": [
     {
       "seq": 1,
@@ -17622,4 +17640,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "tokens_out": 0
     }
   ]
+}
+
+export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
+  ...recordedRunEvents,
+  [RECOVERED_RUN_ID]: recoveredRunEvents,
 }

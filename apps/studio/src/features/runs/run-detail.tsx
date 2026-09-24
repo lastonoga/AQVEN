@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
-import type { ApiExecutionAddress, ApiRunError, ApiRunEvent, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
+import type { ApiExecutionAddress, ApiNodeCounts, ApiRunError, ApiRunEvent, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
 import { Heading, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
@@ -10,12 +10,14 @@ import { ROUTE_PATH } from "@/lib/routes"
 import { isBinaryMedia, StageTimeline, valueCell, type RowKey, type TraceRun, type ValueCell } from "@/features/trace"
 import type { BlobText } from "@/features/call-sheet"
 import { WaitsInline } from "@/features/review"
+import type { Translator } from "@/i18n/translator"
 import { useStepLabel } from "./error-copy"
 import { ErrorPanel } from "./error-panel"
 import type { ExpectedCase } from "./expected"
 import { ExpectedVsActual } from "./expected-view"
 import { FailedStepsBanner } from "./failed-steps-banner"
 import { failedSteps, isListedFailure, type FailedStep } from "./failed-steps"
+import { nodeFailures, type NodeFailures } from "./node-failures"
 import {
   costText,
   doneCount,
@@ -25,7 +27,7 @@ import {
   tokensText,
   totalCount,
 } from "./presenters"
-import { runStatusLook, useRunStatusText } from "./run-status"
+import { snapshotStatusLook, useRunStatusText } from "./run-status"
 
 export type RunDetailProps = {
   readonly snapshot: ApiRunSnapshot
@@ -49,6 +51,23 @@ type MetricCard = {
   readonly value: string
   readonly note: string
   readonly badge: TagSpec | null
+}
+
+type NodesStatus = Pick<MetricCard, "note" | "badge">
+type FailureKind = NodeFailures["kind"]
+type FailuresOf<K extends FailureKind> = Extract<NodeFailures, { kind: K }>
+type FailureView<K extends FailureKind> = (failures: FailuresOf<K>, t: Translator<"runs.metric">, counts: ApiNodeCounts) => NodesStatus
+type FailureViews = { readonly [K in FailureKind]: FailureView<K> }
+
+const FAILURE_VIEW: FailureViews = {
+  none: (_failures, t, counts) => ({ note: t("nodesNote", { done: doneCount(counts), total: totalCount(counts) }), badge: null }),
+  failed: ({ count }, t) => ({ note: t("failedNodes", { count }), badge: { children: String(count), tone: "destructive" } }),
+  recovered: ({ count, decision }, t) => ({ note: t(`recoveredItems.${decision}`, { count }), badge: { children: String(count), tone: "warning" } }),
+}
+
+const failureStatus = <K extends FailureKind>(failures: FailuresOf<K>, t: Translator<"runs.metric">, counts: ApiNodeCounts): NodesStatus => {
+  const view: FailureView<K> = FAILURE_VIEW[failures.kind]
+  return view(failures, t, counts)
 }
 
 const liveTag = (label: string): TagSpec => ({ children: label, tone: "primary", fill: "solid" })
@@ -81,7 +100,7 @@ export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps)
   const relative = useRelativeTime("long")
   const lineage = snapshot.lineage
   const seriesId = snapshot.series_id ?? null
-  const look = runStatusLook(snapshot.status, snapshot.node_counts)
+  const look = snapshotStatusLook(snapshot)
   return (
     <Heading
       size="page"
@@ -139,13 +158,7 @@ function RunMetrics({ snapshot }: { readonly snapshot: ApiRunSnapshot }) {
       note: t("tokensNote"),
       badge: null,
     },
-    {
-      id: "nodes",
-      label: t("nodes"),
-      value: t("nodesValue", { done, total }),
-      note: counts.failed === 0 ? t("nodesNote", { done, total }) : t("failedNodes", { count: counts.failed }),
-      badge: counts.failed === 0 ? null : { children: String(counts.failed), tone: "destructive" },
-    },
+    { id: "nodes", label: t("nodes"), value: t("nodesValue", { done, total }), ...failureStatus(nodeFailures(snapshot), t, counts) },
   ]
   return (
     <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">

@@ -28,6 +28,7 @@ describe("run event helpers", () => {
   it("refreshes the snapshot on structural events and stops on the final one", () => {
     expect(RUN_EVENT_EFFECT.node_output_delta).toBe("append")
     expect(RUN_EVENT_EFFECT.node_finished).toBe("refresh")
+    expect(RUN_EVENT_EFFECT.map_item_recovered).toBe("refresh")
     expect(RUN_EVENT_EFFECT.run_finished).toBe("finish")
   })
 

@@ -74,6 +74,7 @@ export const execution = (nodeId: string, patch: Partial<ApiExecution> = {}): Ap
   output_ref: { kind: "inline", value: { intent: "defect", tier: "strong" } },
   trace_id: null,
   span_id: null,
+  recovered_items: [],
   ...patch,
 })
 
