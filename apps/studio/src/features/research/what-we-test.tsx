@@ -5,7 +5,7 @@ import type { Translator } from "@/i18n/translator"
 import { ExperimentFacts } from "./experiment-facts"
 import { HypothesisCard } from "./hypothesis-card"
 import { RowRoleTag } from "./role-tag"
-import { stepName, variantTable, type ChangeColumn, type Named, type VariantChange, type VariantRow } from "./variant-table"
+import { stepName, variantTable, type AgentModel, type ChangeColumn, type VariantChange, type VariantRow } from "./variant-table"
 
 const STEP_CHAIN = " → "
 
@@ -15,40 +15,38 @@ const changeLabel = (column: ChangeColumn, t: Translator<"research.experiment.wh
   return t(`column.${column.kind}`)
 }
 
-function NamedLine({ named }: { readonly named: Named }) {
-  return (
-    <Text role="cell" tone="default" title={named.full} className="wrap-anywhere">
-      {named.short}
-    </Text>
-  )
-}
-
 function ChangeCell({ change }: { readonly change: VariantChange }) {
   const t = useTranslations("research.experiment.what")
   if (change.kind === "reference") return <Text role="cell" tone="neutral">{t("reference")}</Text>
   if (change.kind === "steps") return <Text role="cell" tone="default" className="wrap-anywhere">{change.steps.map(stepName).join(STEP_CHAIN)}</Text>
   if (change.swaps.length === 0) return <Text role="cell" tone="neutral">{t("same")}</Text>
   return (
-    <ul className="flex min-w-0 flex-col gap-0.5">
+    <ul className="flex min-w-0 flex-col gap-1">
       {change.swaps.map((swap) => (
-        <li key={swap.node}>
-          <Text role="cell" tone="default" title={`${swap.from.full}${STEP_CHAIN}${swap.to.full}`} className="wrap-anywhere">
-            {t("swap", { step: stepName(swap.node), from: swap.from.short, to: swap.to.short })}
+        <li key={swap.node} className="flex min-w-0 flex-col">
+          <Text role="cell" tone="default" className="wrap-anywhere">
+            {t("swap", { step: stepName(swap.node), from: swap.from.agent, to: swap.to.agent })}
           </Text>
+          {swap.from.model.full === swap.to.model.full ? null : (
+            <Text role="meta" tone="neutral" title={`${swap.from.model.full}${STEP_CHAIN}${swap.to.model.full}`} className="wrap-anywhere">
+              {t("swapModels", { from: swap.from.model.short, to: swap.to.model.short })}
+            </Text>
+          )}
         </li>
       ))}
     </ul>
   )
 }
 
-function ModelsCell({ models }: { readonly models: readonly Named[] }) {
+function AgentsCell({ agents }: { readonly agents: readonly AgentModel[] }) {
   const t = useTranslations("research.experiment.what")
-  if (models.length === 0) return <Text role="cell" tone="neutral">{t("noModel")}</Text>
+  if (agents.length === 0) return <Text role="cell" tone="neutral">{t("noModel")}</Text>
   return (
     <ul className="flex min-w-0 flex-col gap-0.5">
-      {models.map((model) => (
-        <li key={model.full}>
-          <NamedLine named={model} />
+      {agents.map((item) => (
+        <li key={item.agent} className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+          <Text role="cell" tone="default">{item.agent}</Text>
+          <Text role="meta" tone="neutral" title={item.model.full} className="wrap-anywhere">{item.model.short}</Text>
         </li>
       ))}
     </ul>
@@ -78,7 +76,7 @@ function useFields(column: ChangeColumn): readonly MatrixField<VariantRow>[] {
       render: (row) => <RowRoleTag role={row.role} size="xs" />,
     },
     ...change,
-    { id: "models", label: what("column.models"), track: "minmax(0,1.4fr)", render: (row) => <ModelsCell models={row.models} /> },
+    { id: "models", label: what("column.models"), track: "minmax(0,1.4fr)", render: (row) => <AgentsCell agents={row.agents} /> },
   ]
 }
 

@@ -43,26 +43,35 @@ describe("variant table", () => {
     expect(stepName("decide__tie_break")).toBe("decide › tie_break")
   })
 
-  it("writes the difference from the baseline as the swapped models per step", () => {
+  it("writes the difference from the baseline as the swapped agents per step, with their models", () => {
     const baseline = variant("gpt", "baseline", { polish__critique: MISTRAL, polish__revise: GPT })
     const candidate = variant("mistral", "candidate", { polish__critique: MISTRAL, polish__revise: MISTRAL })
     const table = variantTable(pair([baseline, candidate]))
     expect(table.column).toEqual({ kind: "baseline" })
     expect(table.rows.map((row) => row.change)).toEqual([
       { kind: "reference" },
-      { kind: "swaps", swaps: [{ node: "polish__revise", from: { short: "gpt-oss-20b", full: GPT.model }, to: { short: "mistral-nemo", full: MISTRAL.model } }] },
+      {
+        kind: "swaps",
+        swaps: [
+          {
+            node: "polish__revise",
+            from: { agent: GPT.id, model: { short: "gpt-oss-20b", full: GPT.model } },
+            to: { agent: MISTRAL.id, model: { short: "mistral-nemo", full: MISTRAL.model } },
+          },
+        ],
+      },
     ])
-    expect(table.rows[0]?.models).toEqual([
-      { short: "mistral-nemo", full: MISTRAL.model },
-      { short: "gpt-oss-20b", full: GPT.model },
+    expect(table.rows[0]?.agents).toEqual([
+      { agent: MISTRAL.id, model: { short: "mistral-nemo", full: MISTRAL.model } },
+      { agent: GPT.id, model: { short: "gpt-oss-20b", full: GPT.model } },
     ])
   })
 
-  it("names the agents when the swap keeps the model", () => {
+  it("keeps the swap when only the agent changes and the model stays", () => {
     const baseline = variant("gpt", "baseline", { revise: GPT })
     const candidate = variant("mistral", "candidate", { revise: TERSE_GPT })
     expect(swapsBetween(pair([baseline, candidate]), baseline, candidate)).toEqual([
-      { node: "revise", from: { short: "gpt", full: "gpt" }, to: { short: "terse_gpt", full: "terse_gpt" } },
+      { node: "revise", from: { agent: GPT.id, model: { short: "gpt-oss-20b", full: GPT.model } }, to: { agent: TERSE_GPT.id, model: { short: "gpt-oss-20b", full: TERSE_GPT.model } } },
     ])
   })
 

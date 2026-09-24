@@ -100,7 +100,7 @@ describe("SeriesScreen header and verdict", () => {
     const contrasts = within(within(verdict).getByRole("list", { name: "Differences behind the verdict" })).getAllByRole("listitem")
     expect(contrasts.map((item) => item.textContent)).toEqual([
       expect.stringMatching(/^primarycritique: mistral − gpt = [+−]0\.\d\d \(95% CI .+\), margin 0\.05$/),
-      expect.stringMatching(/^guardrailcost per pass: mistral − gpt = [+−]\$0\.\d+ \(95% CI .+\), margin 20%$/),
+      expect.stringMatching(/^guardrailcost per passing run: mistral − gpt = [+−]\$0\.\d+ \(95% CI .+\), margin 20%$/),
     ])
     expect(within(verdict).getByText(`Finding written to experiments/reply_noninferior_mistral/findings/${RESEARCH_SERIES.noninferiorHoldout}.yaml`)).toBeTruthy()
   })
@@ -168,18 +168,18 @@ describe("SeriesScreen matrix", () => {
     expect(headers).toEqual([
       "Variant",
       "critiqueprimary · 0.05 · ↑",
-      "cost per passguardrail · 20% · ↓",
+      "cost per passing runguardrail · 20% · ↓",
       "promisescheck · ↑",
-      "success ratebuilt-in · ↑",
-      "cost per attemptbuilt-in · ↓",
-      "latency p50built-in · ↓",
-      "latency p95built-in · ↓",
-      "valid on first trybuilt-in · ↑",
-      "infra errorsbuilt-in · ↓",
+      "share of passing runsbuilt-in · ↑",
+      "cost per runbuilt-in · ↓",
+      "typical response time (p50)built-in · ↓",
+      "slow response time (p95)built-in · ↓",
+      "valid output on the first trybuilt-in · ↑",
+      "share of infrastructure errorsbuilt-in · ↓",
     ])
     expect(within(matrix).getByRole("img", { name: /^critique of mistral: 0\.\d\d, 95% CI 0\.\d\d–0\.\d\d, passes$/ })).toBeTruthy()
     expect(within(matrix).getByRole("img", { name: /^critique of gpt: 0\.\d\d, 95% CI 0\.\d\d–0\.\d\d, baseline$/ })).toBeTruthy()
-    expect(within(matrix).getByRole("img", { name: /^cost per pass of mistral: \$0\.\d\d, 95% CI .+, passes$/ })).toBeTruthy()
+    expect(within(matrix).getByRole("img", { name: /^cost per passing run of mistral: \$0\.\d\d, 95% CI .+, passes$/ })).toBeTruthy()
   })
 
   it("shows how stable each variant is across repeats", async () => {

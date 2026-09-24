@@ -34,7 +34,12 @@ export type CanvasFlowNode = StepFlowNode | ContainerFlowNode
 export type CanvasFlowEdge = Edge<FlowEdgeRenderData, "flow">
 
 const MARKER_SIZE = 14
-const FIT_PADDING: FitViewOptions["padding"] = { top: "56px", right: "32px", bottom: "64px", left: "32px" }
+export type FitSpace = "roomy" | "tight"
+
+const FIT_PADDING: Readonly<Record<FitSpace, NonNullable<FitViewOptions["padding"]>>> = {
+  roomy: { top: "56px", right: "32px", bottom: "64px", left: "32px" },
+  tight: "24px",
+}
 const FIT_MAX_ZOOM = 1
 const EMPTY_PORTS: NodePorts = { in: [], out: [], bottom: [] }
 
@@ -116,8 +121,8 @@ export const toFlowEdges = (edges: readonly CanvasEdge[], colors: ReadonlyMap<st
     }
   })
 
-export const fitViewOptions = (nodes: readonly CanvasNode[]): FitViewOptions<CanvasFlowNode> => ({
+export const fitViewOptions = (nodes: readonly CanvasNode[], space: FitSpace): FitViewOptions<CanvasFlowNode> => ({
   nodes: nodes.filter((node) => node.parent === null).map((node) => ({ id: node.id })),
-  padding: FIT_PADDING,
+  padding: FIT_PADDING[space],
   maxZoom: FIT_MAX_ZOOM,
 })

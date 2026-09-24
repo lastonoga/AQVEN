@@ -7,7 +7,6 @@ import {
   checkLaunch,
   decisionRules,
   failureModes,
-  guardrailSentences,
   hypothesisText,
   latestBadge,
   launchReason,
@@ -141,15 +140,13 @@ describe("experiment list rows", () => {
 })
 
 describe("the question in plain words", () => {
-  it("says a non-inferiority question with its margin and guardrails", () => {
+  it("says a non-inferiority question with its margin", () => {
     expect(questionSentence(PAIR, METRICS, QUESTION)).toBe("mistral not worse than gpt on critique by 0.05")
-    expect(guardrailSentences(PAIR, METRICS, QUESTION)).toEqual(["cost of pass ≤ 20%"])
   })
 
   it("says a comparison on a built-in metric in its unit", () => {
     const question: ExperimentQuestion = { ...PAIR, kind: "compare", primary: "latency_p50_ms", margin: 1500, guardrails: [] }
     expect(questionSentence(question, [column("latency_p50_ms", "primary", "ms", 1500)], QUESTION)).toBe("mistral beats gpt on latency p50 ms by 1.50 s")
-    expect(guardrailSentences(question, [], QUESTION)).toEqual([])
   })
 
   it("says a threshold for one variant or for every variant", () => {

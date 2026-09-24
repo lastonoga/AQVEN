@@ -68,13 +68,13 @@
       "ordinal": "grade"
     },
     "builtinMetric": {
-      "success_rate": "success rate",
-      "cost_usd": "cost per attempt",
-      "cost_of_pass": "cost per pass",
-      "latency_p50_ms": "latency p50",
-      "latency_p95_ms": "latency p95",
-      "schema_valid_first_try": "valid on first try",
-      "infra_error_rate": "infra errors"
+      "success_rate": "share of passing runs",
+      "cost_usd": "cost per run",
+      "cost_of_pass": "cost per passing run",
+      "latency_p50_ms": "typical response time (p50)",
+      "latency_p95_ms": "slow response time (p95)",
+      "schema_valid_first_try": "valid output on the first try",
+      "infra_error_rate": "share of infrastructure errors"
     },
     "stability": {
       "always": "always",
@@ -108,10 +108,10 @@
   },
   "question": {
     "look": "A look without a verdict: every case with its checks, cost and trace",
-    "threshold": "{variant} keeps {metric} {bound, select, above {above} other {below}} {value}, margin {margin}",
+    "threshold": "Variant {variant} keeps {metric} {bound, select, above {above} other {below}} {value}, margin {margin}",
     "thresholdAll": "Every variant keeps {metric} {bound, select, above {above} other {below}} {value}, margin {margin}",
-    "compare": "{candidate} beats {baseline} on {metric} by at least {margin}",
-    "noninferior": "{candidate} is not worse than {baseline} on {metric} by more than {margin}",
+    "compare": "Variant {candidate} beats variant {baseline} on {metric} by at least {margin}",
+    "noninferior": "Variant {candidate} is not worse than variant {baseline} on {metric} by more than {margin}",
     "guardrail": "{metric} at most {margin} worse"
   },
   "list": {
@@ -176,12 +176,13 @@
         "baseline": "Difference from baseline",
         "reference": "Difference from {variant}",
         "steps": "Steps",
-        "models": "Models"
+        "models": "Agents · models"
       },
       "reference": "—",
       "same": "no difference",
-      "swap": "{step}: {from} → {to}",
-      "noModel": "no model",
+      "swap": "{step}: agent {from} → agent {to}",
+      "swapModels": "{from} → {to}",
+      "noModel": "no agent",
       "rule": {
         "aria": "Decision rule",
         "primary": "{metric}: difference {op, select, atLeast {≥} other {≤}} {bound}",
@@ -257,11 +258,8 @@
       "fewerRepeats": "Fewer repeats",
       "moreRepeats": "More repeats",
       "ofAvailable": "of {available}",
-      "casesRange": "1 to {available}",
-      "repeatsRange": "1 to {max}",
-      "casesInvalid": "Whole number from 1 to {available}",
-      "repeatsInvalid": "Whole number from 1 to {max}",
-      "recommended": "Recommended ≈ {cases}",
+      "casesInvalid": "Cases: a whole number from 1 to {available}",
+      "repeatsInvalid": "Repeats: a whole number from 1 to {max}",
       "reason": {
         "look": "A look has no verdict, so any number of cases works.",
         "wide": "At {cases} cases the expected interval is ±{halfWidth}, wider than the {margin} margin: the verdict will likely be inconclusive. About {recommended} cases are needed.",
@@ -272,23 +270,21 @@
       },
       "below": "Below the recommended {recommended}: expect a wide interval",
       "belowAvailable": "{recommended} recommended, only {available} here: expect a wide interval",
-      "attempts": "Attempts",
-      "minutes": "about {count, plural, one {# minute} other {# minutes}}",
-      "estimateLabel": "Estimate",
-      "estimating": "Estimating…",
-      "estimateFailed": "No estimate: {reason}",
-      "pending": "…",
+      "summary": "Launch summary",
+      "attempts": "{count, plural, one {attempt} other {attempts}}",
+      "estimating": "estimating the price…",
+      "estimateFailed": "no estimate: {reason}",
       "none": "—",
-      "price": "{source, select, bound {≤} other {≈}} {usd}",
+      "sign": "{source, select, bound {≤} other {≈}}",
       "source": {
         "history": "from past series",
         "prices": "at provider prices",
         "bound": "upper bound",
-        "unknown": "no price"
+        "unknown": "no price estimate"
       },
-      "cap": "Spend cap {cap}",
-      "approval": "Above the {cap} cap: waits for your approval",
-      "noPrice": "No price yet: waits for your approval",
+      "cap": "cap {cap}",
+      "approval": "over the {cap} cap: needs your approval",
+      "noPrice": "needs your approval",
       "run": "Run",
       "approve": "Approve spend",
       "stop": "Stop",
@@ -297,7 +293,7 @@
       "estimate": {
         "history": "≈ {usd} from past series",
         "prices": "≈ {usd} at provider prices",
-        "bound": "≤ {usd}, upper bound",
+        "bound": "≤ {usd} upper bound",
         "unknown": "no price estimate"
       }
     },
