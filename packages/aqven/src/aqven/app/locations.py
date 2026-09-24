@@ -13,6 +13,7 @@ PROJECT_DATABASE_FILE: Final = "aqven.sqlite"
 SERVER_RECORD_FILE: Final = "server.json"
 SERVER_LOCK_FILE: Final = "server.lock"
 SERVER_LOG_FILE: Final = "server.log"
+LOGS_FOLDER: Final = "logs"
 GITIGNORE_FILE: Final = ".gitignore"
 MACOS_APPLICATION_NAME: Final = "AQVEN"
 WINDOWS_APPLICATION_NAME: Final = "AQVEN"
@@ -29,6 +30,7 @@ RUNTIME_IGNORES: Final = (
     f"{PROJECT_STATE_FOLDER}/cache/",
     f"{PROJECT_STATE_FOLDER}/plans/",
     f"{PROJECT_STATE_FOLDER}/blobs/",
+    f"{PROJECT_STATE_FOLDER}/{LOGS_FOLDER}/",
 )
 WHOLE_STATE_IGNORES: Final = frozenset(
     {

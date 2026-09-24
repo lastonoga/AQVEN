@@ -24,6 +24,7 @@ VALUES: Final = {
     "source": "model profile",
     "module": "lumen",
     "folder": "/work/lumen/src/lumen",
+    "setting": "temperature",
 }
 
 
@@ -34,6 +35,7 @@ VALUES: Final = {
         (DiagnosticCode.E_PROVIDER_NO_STREAMING, Severity.ERROR),
         (DiagnosticCode.E_OUTPUT_MODE_UNSUPPORTED, Severity.ERROR),
         (DiagnosticCode.W_OUTPUT_MODE_RESOLVED, Severity.WARNING),
+        (DiagnosticCode.W_SAMPLING_IGNORED, Severity.WARNING),
         (DiagnosticCode.W_TYPES_SHADOWS_STDLIB, Severity.WARNING),
     ],
 )

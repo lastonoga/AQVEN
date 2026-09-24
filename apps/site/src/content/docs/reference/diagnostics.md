@@ -121,6 +121,7 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_PROMPT_SHADOWED` | `warning` | — |
 | `W_GENERATED_STALE` | `warning` | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |
+| `W_SAMPLING_IGNORED` | `warning` | {setting} is ignored by {model} (reasoning model); remove it |
 | `W_TYPES_SHADOWS_STDLIB` | `warning` | generated {module}/types.py shadows the standard library module types while {folder} is on sys.path |
 | `W_SIM_NODE_UNREACHED` | `warning` | node {node} does not run in any simulated pass of flow {flow} |
 | `W_PROMPT_VALUE_UNREADABLE` | `warning` | — |

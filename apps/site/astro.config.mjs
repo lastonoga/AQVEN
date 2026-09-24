@@ -119,6 +119,7 @@ export default defineConfig({
               items: [
                 { slug: "studio/first-workflow" },
                 { slug: "studio/open-a-project" },
+                { slug: "studio/read-the-dev-console" },
               ],
             },
             {
