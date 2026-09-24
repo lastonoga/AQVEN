@@ -10523,7 +10523,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 4,
@@ -10634,7 +10636,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 7,
@@ -10710,7 +10714,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 11,
@@ -10771,7 +10777,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 14,
@@ -10832,7 +10840,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 17,
@@ -10892,7 +10902,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 19,
@@ -10939,7 +10951,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 21,
@@ -11039,7 +11053,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 26,
@@ -11070,7 +11086,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 27,
@@ -11178,7 +11196,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 29,
@@ -11296,7 +11316,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 33,
@@ -11353,7 +11375,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 35,
@@ -11470,7 +11494,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 39,
@@ -11515,7 +11541,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 41,
@@ -11612,7 +11640,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 44,
@@ -11661,7 +11691,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 46,
@@ -11724,7 +11756,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 48,
@@ -11985,7 +12019,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 61,
@@ -12023,7 +12059,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 62,
@@ -12212,7 +12250,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 68,
@@ -12265,7 +12305,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 70,
@@ -12318,7 +12360,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 71,
@@ -12453,7 +12497,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 76,
@@ -12585,7 +12631,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
           "raw_excerpt": "{\"INVALID_JSON\":\"{\\\"rationale\\\": \\\"Кандидат 0 полностью опирается на базу знаний: упомянуты оба фрагмента — про мерцание (kb_strip0flck) и нагрев (kb_ctrlheat01) — с точными цитатами. Кандидат 1 ссылается только на один фрагмент, не упоминая нагрев контроллера, что критично. По пользе: кандидат 0 д…",
           "violations": []
         }
-      }
+      },
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 80,
@@ -12645,7 +12693,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 82,
@@ -12712,7 +12762,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 83,
@@ -12776,7 +12828,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 85,
@@ -12839,7 +12893,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 87,
@@ -12918,7 +12974,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 89,
@@ -12982,7 +13040,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 90,
@@ -13204,7 +13264,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 99,
@@ -13272,7 +13334,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 102,
@@ -13575,7 +13639,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 115,
@@ -13643,7 +13709,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 118,
@@ -13715,7 +13783,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 121,
@@ -13765,7 +13835,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 123,
@@ -13815,7 +13887,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 125,
@@ -13866,7 +13940,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 127,
@@ -13969,7 +14045,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 132,
@@ -14057,7 +14135,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 136,
@@ -14096,7 +14176,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 137,
@@ -14177,7 +14259,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 139,
@@ -14424,7 +14508,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 4,
@@ -14535,7 +14621,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 7,
@@ -14611,7 +14699,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 11,
@@ -14672,7 +14762,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 14,
@@ -14733,7 +14825,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 17,
@@ -14793,7 +14887,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 19,
@@ -14840,7 +14936,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 21,
@@ -14886,7 +14984,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 23,
@@ -14994,7 +15094,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 25,
@@ -15112,7 +15214,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 29,
@@ -15169,7 +15273,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 31,
@@ -15286,7 +15392,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 35,
@@ -15331,7 +15439,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 37,
@@ -15428,7 +15538,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 40,
@@ -15477,7 +15589,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 42,
@@ -15540,7 +15654,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 44,
@@ -15798,7 +15914,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 57,
@@ -15833,7 +15951,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 58,
@@ -15993,7 +16113,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 63,
@@ -16046,7 +16168,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 65,
@@ -16099,7 +16223,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 66,
@@ -16234,7 +16360,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 71,
@@ -16339,7 +16467,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 74,
@@ -16406,7 +16536,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 75,
@@ -16470,7 +16602,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 77,
@@ -16533,7 +16667,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 79,
@@ -16612,7 +16748,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 81,
@@ -16676,7 +16814,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 82,
@@ -16980,7 +17120,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 95,
@@ -17048,7 +17190,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 98,
@@ -17255,7 +17399,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 107,
@@ -17321,7 +17467,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 110,
@@ -17393,7 +17541,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
       "cache_hit": false,
       "degraded": false,
       "checks_failed": 0,
-      "error": null
+      "error": null,
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 113,
@@ -17444,7 +17594,9 @@ export const liveRunEvents: Readonly<Record<string, readonly ApiRunEvent[]>> = {
         },
         "hint": null,
         "details": null
-      }
+      },
+      "cost_source": "provider",
+      "unpriced_calls": 0
     },
     {
       "seq": 115,

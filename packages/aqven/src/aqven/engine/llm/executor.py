@@ -481,4 +481,6 @@ def _node_usage(usage: RunUsage, log: UsageLog) -> NodeUsage:
         tokens_out=usage.output_tokens,
         requests=usage.requests,
         tool_calls=usage.tool_calls,
+        cost_source=log.cost_source(),
+        unpriced_calls=log.unpriced_calls(),
     )

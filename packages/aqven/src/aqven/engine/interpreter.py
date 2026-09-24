@@ -58,6 +58,7 @@ from aqven.ports.execution import (
     execute_node,
 )
 from aqven.runtime.address import ExecutionAddress, JsonObject, RunId
+from aqven.runtime.costs import EXACT_COST
 from aqven.runtime.events import NodeFinished, NodeStarted, RunEvent, RunFinished, RunStartedEvent
 from aqven.runtime.overrides import override_for
 from aqven.runtime.values import InlineValue
@@ -352,6 +353,8 @@ class NodeFinishedBuilder:
             degraded=succeeded.degraded if succeeded is not None else False,
             checks_failed=succeeded.checks_failed if succeeded is not None else 0,
             error=outcome.error if isinstance(outcome, NodeFailed) else None,
+            cost_source=usage.cost_source if usage is not None else EXACT_COST,
+            unpriced_calls=usage.unpriced_calls if usage is not None else 0,
         )
 
 

@@ -13,7 +13,7 @@ from aqven.series.model import (
     SeriesStatus,
     SeriesVerdict,
 )
-from aqven.series.presenter import SeriesProgressFacts, attempt_view, detail_view
+from aqven.series.presenter import SeriesProgressFacts, attempt_view, detail_view, summary_view, unpriced_attempts
 from aqven.spec import AgentId, VerdictReason, VerdictState
 
 SERIES: Final = "01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c"
@@ -84,3 +84,27 @@ def test_an_attempt_row_names_its_error(code: str | None, message: str | None, e
     )
 
     assert attempt_view(row, AttemptOutcome.ERROR).error == expected
+
+
+def test_unpriced_attempts_counts_attempts_with_at_least_one_unpriced_call() -> None:
+    rows = [attempt(SERIES, index, AttemptState.FINISHED) for index in range(2)] * 2
+    marked = [
+        rows[0].model_copy(update={"unpriced_calls": 2}),
+        rows[1].model_copy(update={"unpriced_calls": 1}),
+        rows[2],
+    ]
+
+    assert unpriced_attempts(marked) == 2
+    assert unpriced_attempts(rows) == 0
+
+
+def test_the_spend_view_carries_the_unpriced_attempts() -> None:
+    running = record(SERIES, NOW).model_copy(update={"status": SeriesStatus.RUNNING})
+    facts = SeriesProgressFacts(done=3, spend=Decimal("0.02"), waits=0, unpriced=2)
+
+    summary = summary_view(running, facts)
+    detail = detail_view(running, facts, analysis(SIGNAL), unknown_model)
+
+    assert (summary.spend.usd, summary.spend.unpriced_attempts) == (Decimal("0.02"), 2)
+    assert detail.spend.unpriced_attempts == 2
+    assert summary_view(running, SeriesProgressFacts(done=0, spend=Decimal(0), waits=0)).spend.unpriced_attempts == 0

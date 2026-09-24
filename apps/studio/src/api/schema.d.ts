@@ -2934,6 +2934,8 @@ export interface components {
             difference: components["schemas"]["Estimate"];
             verdict: components["schemas"]["CellVerdict"];
         };
+        /** @enum {string} */
+        CostSource: "provider" | "prices" | "genai" | "unknown";
         Count: number;
         /** CsvColumn */
         CsvColumn: {
@@ -5058,6 +5060,13 @@ export interface components {
             /** Checks Failed */
             checks_failed: number;
             error?: components["schemas"]["RunError"] | null;
+            /** @default provider */
+            cost_source: components["schemas"]["CostSource"];
+            /**
+             * Unpriced Calls
+             * @default 0
+             */
+            unpriced_calls: number;
         };
         /**
          * NodeKind
@@ -6486,7 +6495,7 @@ export interface components {
              * Usd Source
              * @enum {string}
              */
-            usd_source: "history" | "prices" | "unknown";
+            usd_source: "history" | "prices" | "bound" | "unknown";
             /** Minutes */
             minutes: number | null;
             /** Half Width */
@@ -6568,6 +6577,11 @@ export interface components {
             usd: string;
             /** Cap Usd */
             cap_usd: string;
+            /**
+             * Unpriced Attempts
+             * @default 0
+             */
+            unpriced_attempts: number;
         };
         /**
          * SeriesSplit
@@ -7318,6 +7332,7 @@ export type SchemaCompiledToolSource = components['schemas']['CompiledToolSource
 export type SchemaCompiledVariantSlot = components['schemas']['CompiledVariantSlot'];
 export type SchemaContractPredicate = components['schemas']['ContractPredicate'];
 export type SchemaContrast = components['schemas']['Contrast'];
+export type SchemaCostSource = components['schemas']['CostSource'];
 export type SchemaCount = components['schemas']['Count'];
 export type SchemaCsvColumn = components['schemas']['CsvColumn'];
 export type SchemaCsvImportPreview = components['schemas']['CsvImportPreview'];

@@ -64,6 +64,7 @@ from aqven.series.model import (
 )
 from aqven.series.ports import (
     FindingsSink,
+    ModelPrices,
     OpenWaits,
     SeriesAnalyst,
     SeriesJobs,
@@ -213,6 +214,7 @@ __all__ = [
     "MetricRole",
     "MetricShape",
     "MetricUnit",
+    "ModelPrices",
     "OpenWaits",
     "OutcomeClass",
     "PackageSource",

@@ -137,6 +137,7 @@ const freshSeries = (fields: Pick<SeriesState, "experiment" | "look" | "on" | "r
   cellVerdict: "pass",
   waiting: {},
   errorEvery: 0,
+  unpriced: 0,
   approvedBy: null,
 })
 

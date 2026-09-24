@@ -52,6 +52,19 @@ def test_update_merges_only_the_given_fields(store: SqliteSeriesStore) -> None:
     assert asyncio.run(store.series(first.series_id)) == finished
 
 
+def test_settling_an_ended_series_keeps_its_first_end(store: SqliteSeriesStore) -> None:
+    first = record("a", NOW)
+    asyncio.run(store.create(first, cases()))
+    later = NOW + timedelta(milliseconds=2)
+
+    settled = asyncio.run(store.settle(first.series_id, SeriesChange(status=SeriesStatus.CANCELLED, finished_at=NOW)))
+    again = asyncio.run(store.settle(first.series_id, SeriesChange(status=SeriesStatus.FAILED, finished_at=later)))
+
+    assert (settled.status, settled.finished_at) == (SeriesStatus.CANCELLED, NOW)
+    assert again == settled
+    assert asyncio.run(store.series(first.series_id)) == settled
+
+
 def test_updating_a_missing_series_fails(store: SqliteSeriesStore) -> None:
     with pytest.raises(SeriesMissing):
         asyncio.run(store.update(SeriesId("missing"), SeriesChange(status=SeriesStatus.DONE)))
