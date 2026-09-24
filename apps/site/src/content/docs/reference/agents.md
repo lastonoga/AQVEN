@@ -14,8 +14,9 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `mode` | `'auto' \| 'tool' \| 'native' \| 'prompted'` | No | `'auto'` | — |
 | `strict` | `boolean` | No | `True` | — |
 | `retries` | `integer` | No | `1` | minimum=0, maximum=5 |
-| `on_refusal` | `'fail' \| 'fallback'` | No | `'fail'` | — |
-| `on_truncated` | `'fail' \| 'fallback'` | No | `'fail'` | — |
+| `on_error` | `'fail' \| 'retry' \| 'fallback'` | No | `'retry'` | — |
+| `on_refusal` | `'fail' \| 'retry' \| 'fallback'` | No | `'fail'` | — |
+| `on_truncated` | `'fail' \| 'retry' \| 'fallback'` | No | `'fail'` | — |
 
 [JSON Schema](/reference/schemas/AgentOutputSpec.json)
 

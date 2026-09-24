@@ -1,12 +1,20 @@
 from aqven.ports.execution import EventBuilder, EventStamp
 from aqven.runtime.address import ExecutionAddress
-from aqven.runtime.events import LoopExited, LoopIterationFinished, NodeProgress, RunEvent
+from aqven.runtime.events import LoopExited, LoopIterationFinished, MapItemRecovered, NodeProgress, RunEvent
+from aqven.runtime.executions import ItemRecovery
 from aqven.spec import LoopStopReason
 
 
 def progress(address: ExecutionAddress, done: int, total: int) -> EventBuilder:
     def build(stamp: EventStamp) -> RunEvent:
         return NodeProgress(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, done=done, total=total)
+
+    return build
+
+
+def item_recovered(address: ExecutionAddress, recovery: ItemRecovery) -> EventBuilder:
+    def build(stamp: EventStamp) -> RunEvent:
+        return MapItemRecovered(seq=stamp.seq, at=stamp.at, run_id=stamp.run_id, address=address, recovery=recovery)
 
     return build
 

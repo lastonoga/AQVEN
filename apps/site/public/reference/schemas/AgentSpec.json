@@ -7,6 +7,10 @@
           "$ref": "#/$defs/OutputModeSetting",
           "default": "auto"
         },
+        "on_error": {
+          "$ref": "#/$defs/OutcomePolicy",
+          "default": "retry"
+        },
         "on_refusal": {
           "$ref": "#/$defs/OutcomePolicy",
           "default": "fail"
@@ -336,6 +340,7 @@
     "OutcomePolicy": {
       "enum": [
         "fail",
+        "retry",
         "fallback"
       ],
       "title": "OutcomePolicy",

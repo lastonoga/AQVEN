@@ -64,6 +64,7 @@ export type ApiExecutionAddress = S["ExecutionAddress"]
 export type ApiIncludePayloads = S["IncludePayloads"]
 export type ApiAttempt = S["Attempt"]
 export type ApiCheckOutcome = S["CheckOutcome"]
+export type ApiItemRecovery = S["ItemRecovery"]
 
 export type ApiHumanWait = S["HumanWait"]
 export type ApiHumanWaitDetail = S["HumanWaitDetail"]

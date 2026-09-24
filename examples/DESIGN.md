@@ -389,7 +389,8 @@ limits:
 
 Keys: `model`, `fallback_models?`, `settings? {temperature, top_p, max_tokens, seed, provider_options}` (the names are
 Pydantic AI's `ModelSettings`),
-`output? {mode = auto|tool|native|prompted, strict = true, retries = 1, on_refusal = fail|fallback, on_truncated = fail|fallback}`,
+`output? {mode = auto|tool|native|prompted, strict = true, retries = 1, on_error = retry|fail|fallback,
+on_refusal = fail|retry|fallback, on_truncated = fail|retry|fallback}`,
 `instructions?` (the path `./<agent>.instructions.md` from the agent file, level 1), `tools?`, `mcp_servers?`,
 `subagents?[] {name, description, agent, inference}` (a subagent's inference sits in the folder of the agent that
 calls it: `agents/resolver/research_policy.inference.yaml`), `approval? {tools, assignee, timeout_seconds, on_timeout}`

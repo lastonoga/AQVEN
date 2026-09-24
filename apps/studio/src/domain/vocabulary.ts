@@ -41,6 +41,9 @@ export type OnTimeoutAction = (typeof ON_TIMEOUT_ACTIONS)[number]
 export const APPROVAL_DECISIONS = ["allow", "deny"] as const
 export type ApprovalDecision = (typeof APPROVAL_DECISIONS)[number]
 
+export const ITEM_RECOVERY_DECISIONS = ["default", "skip"] as const
+export type ItemRecoveryDecision = (typeof ITEM_RECOVERY_DECISIONS)[number]
+
 export const TYPE_KINDS = ["record", "enum", "union", "id", "value"] as const
 export type TypeKind = (typeof TYPE_KINDS)[number]
 
@@ -89,6 +92,7 @@ export type EngineVocabularyIsCurrent = [
   Verified<SameSet<Schemas["WaitState"], WaitState>>,
   Verified<SameSet<Schemas["OnTimeoutAction"], OnTimeoutAction>>,
   Verified<SameSet<Schemas["ApprovalDecision"], ApprovalDecision>>,
+  Verified<SameSet<Schemas["ItemRecoveryDecision"], ItemRecoveryDecision>>,
   Verified<SameSet<Schemas["TypeKind"], TypeKind>>,
   Verified<SameSet<Schemas["Severity"], Severity>>,
   Verified<SameSet<Schemas["LineageRelation"], LineageRelation>>,

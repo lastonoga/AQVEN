@@ -11,6 +11,7 @@ from aqven.runtime.vocabulary import (
     AttemptCauseKind,
     CallOutcome,
     ExecutionStatus,
+    ItemRecoveryDecision,
     PromptPartKind,
     PromptRole,
     ResolvedOutputMode,
@@ -71,6 +72,19 @@ class Attempt(ResourceModel):
     response_ref: ValueRef | None
 
 
+class ItemError(ResourceModel):
+    code: str
+    message: str
+
+
+class ItemRecovery(ResourceModel):
+    item_index: Annotated[int, Field(ge=0)]
+    policy: str
+    decision: ItemRecoveryDecision
+    error: ItemError
+    default_ref: ValueRef | None
+
+
 class NodeExecution(ResourceModel):
     address: ExecutionAddress
     kind: NodeKind
@@ -93,6 +107,7 @@ class NodeExecution(ResourceModel):
     output_ref: ValueRef | None
     trace_id: str | None
     span_id: str | None
+    recovered_items: tuple[ItemRecovery, ...] = ()
 
 
 class SlotProvenance(ResourceModel):

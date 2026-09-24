@@ -5,7 +5,7 @@ from pydantic import AwareDatetime, Field, TypeAdapter
 
 from aqven.runtime.address import ClientOpId, ExecutionAddress, Problem, ResourceModel, RunId
 from aqven.runtime.costs import EXACT_COST
-from aqven.runtime.executions import AttemptCause, CheckOutcome, PromptTrace, RunError
+from aqven.runtime.executions import AttemptCause, CheckOutcome, ItemRecovery, PromptTrace, RunError
 from aqven.runtime.values import InlineValue, ValueRef
 from aqven.runtime.vocabulary import (
     AttemptAction,
@@ -82,6 +82,12 @@ class NodeProgress(RunEventBase):
     address: ExecutionAddress
     done: Annotated[int, Field(ge=0)]
     total: Annotated[int, Field(ge=0)]
+
+
+class MapItemRecovered(RunEventBase):
+    type: Literal["map_item_recovered"] = "map_item_recovered"
+    address: ExecutionAddress
+    recovery: ItemRecovery
 
 
 class NodeOutputDelta(RunEventBase):
@@ -212,6 +218,7 @@ type RunEvent = Annotated[
     | InferenceChecksCaptured
     | NodeAttemptFailed
     | NodeProgress
+    | MapItemRecovered
     | NodeOutputDelta
     | NodeAttemptDiscarded
     | NodeSuspended
@@ -236,6 +243,7 @@ type RunEventType = Literal[
     "inference_checks_captured",
     "node_attempt_failed",
     "node_progress",
+    "map_item_recovered",
     "node_output_delta",
     "node_attempt_discarded",
     "node_suspended",

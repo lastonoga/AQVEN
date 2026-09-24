@@ -39,6 +39,12 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   `parallel` failed, its card carries a badge such as `1 of 5 failed` and the failed columns are red; a
   stage that finished `OK` with a failure somewhere inside it gets an amber marker, and the stage
   navigator says `OK · 1 failed inside`.
+- When an item of a `map` fails and the node's `on_item_error` policy keeps the run going, the item is
+  not counted as failed: the map's card reads `OK` with a yellow `1 replaced` (or `1 skipped`) mark,
+  and hovering it shows which policy decided. The item's column says `FAILED · replaced` in yellow, and
+  its output row shows the value the policy put in its place, captioned `Default from <policy> — not a
+  model answer`. The run's status reads `Completed · 1 item replaced`, and so does the nodes card. See
+  [the map node](/engine/map-node/) for the policies themselves.
 - Click any cell in a matrix — input, prompt, output, whichever row you want — and a side panel opens
   to that exact cell. This is what makes "which execution" a real, clickable thing instead of a guess:
   the panel's title is the node's id, and right under it are the branch, iteration, or item number that
@@ -51,7 +57,9 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   one specific model call inside a loop inside a parallel branch.
 - If a node retried after a failure, a list of its failed attempts appears under its matrix: one row per
   attempt, with what caused it, what the engine did about it, the error message, and a raw excerpt of
-  what the model actually returned. A loop's card also ends with a line saying why it exited and which
+  what the model actually returned. Identical answers inside one response are shown once with a `×N`
+  count, and the post-check row folds repeated check results into one line with how many times and
+  over how many attempts they failed. A loop's card also ends with a line saying why it exited and which
   pass it kept.
 - The side panel itself has five tabs: `model` (which agent, which inference, which actual model
   answered — and, for a failed call, the error on top: the same plain-words title, message, and hint as

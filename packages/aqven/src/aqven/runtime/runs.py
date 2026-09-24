@@ -64,6 +64,8 @@ class NodeCounts(ResourceModel):
     skipped: Annotated[int, Field(ge=0)]
     suspended: Annotated[int, Field(ge=0)]
     cancelled: Annotated[int, Field(ge=0)]
+    items_replaced: Annotated[int, Field(ge=0)] = 0
+    items_skipped: Annotated[int, Field(ge=0)] = 0
 
 
 class Lineage(ResourceModel):

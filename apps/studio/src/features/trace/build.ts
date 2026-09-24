@@ -1,4 +1,4 @@
-import type { ApiExecution, ApiExecutionAddress, ApiNode, ApiPromptDetail, ApiRunEvent, NodeKind } from "@/domain"
+import type { ApiExecution, ApiExecutionAddress, ApiItemRecovery, ApiNode, ApiPromptDetail, ApiRunEvent, NodeKind } from "@/domain"
 import { plainLines } from "@/lib/text"
 import type {
   AttemptLadder,
@@ -12,6 +12,7 @@ import type {
   MatrixGroup,
   NestedBlock,
   PromptCell,
+  RecoveryCell,
   RowKey,
   RowSpec,
   StageRun,
@@ -19,6 +20,7 @@ import type {
   UpstreamRef,
 } from "./model"
 import { ROW_KEYS } from "./model"
+import { policyName, recoveredItems, recoveryOf, type RecoveredItem } from "./recovery"
 import { valueCell } from "./values"
 
 export type TraceSources = {
@@ -40,6 +42,7 @@ type Index = {
   readonly prompts: Readonly<Record<string, ApiPromptDetail>>
   readonly capturedPrompts: ReadonlyMap<string, Extract<ApiRunEvent, { type: "inference_prompt_captured" }>["prompt"]>
   readonly blobTextById: ReadonlyMap<string, string>
+  readonly recovered: readonly RecoveredItem[]
 }
 
 type RowFilled = (columns: readonly CallColumn[]) => boolean
@@ -179,6 +182,7 @@ const indexOf = (sources: TraceSources): Index => {
     prompts: sources.prompts,
     capturedPrompts: capturedPromptIndex(sources.events),
     blobTextById: sources.blobTextById ?? new Map(),
+    recovered: recoveredItems(sources.executions),
   }
 }
 
@@ -220,15 +224,26 @@ const inputCell = (execution: ApiExecution, index: Index, leaf: boolean): InputC
 }
 
 const schemaFindings = (row: AttemptRow): readonly CheckFinding[] =>
-  row.problems.map((problem) => ({ name: problem.path.join("."), pass: false, note: problem.message }))
+  row.problems.map((problem) => ({ name: problem.path.join("."), pass: false, note: problem.message, attempt: row.attempt }))
 
 const attemptFindings = (rows: readonly AttemptRow[]): readonly CheckFinding[] =>
-  rows.flatMap((row) => [{ name: row.code ?? row.kind, pass: false, note: row.message }, ...schemaFindings(row)])
+  rows.flatMap((row) => [{ name: row.code ?? row.kind, pass: false, note: row.message, attempt: row.attempt }, ...schemaFindings(row)])
 
 const checkCell = (execution: ApiExecution, index: Index): CheckCell | null => {
   const rows = index.ladders.get(executionKey(execution.address)) ?? []
   if (rows.length === 0) return null
   return { findings: attemptFindings(rows), rules: [], failedAttempts: rows.length }
+}
+
+const recoveryCell = (recovery: ApiItemRecovery, index: Index): RecoveryCell => ({
+  decision: recovery.decision,
+  policy: policyName(recovery.policy),
+  value: indexedValue(recovery.default_ref, index),
+})
+
+const columnRecovery = (execution: ApiExecution, index: Index): RecoveryCell | null => {
+  const recovery = recoveryOf(index.recovered, execution)
+  return recovery === null ? null : recoveryCell(recovery, index)
 }
 
 function nestedBlock(execution: ApiExecution, index: Index, path: string): NestedBlock | null {
@@ -270,6 +285,7 @@ function columnOf(execution: ApiExecution, index: Index, path: string): CallColu
     output: indexedValue(execution.output_ref, index),
     rawResponse: index.responses.get(executionKey(execution.address)) ?? null,
     check: checkCell(execution, index),
+    recovery: columnRecovery(execution, index),
     child,
   }
 }
@@ -280,7 +296,7 @@ const ROW_FILLED: Readonly<Record<RowKey, RowFilled>> = {
   model: () => true,
   input: (columns) => columns.some((column) => column.input !== null),
   prompt: (columns) => columns.some((column) => column.prompt !== null),
-  output: (columns) => columns.some((column) => column.output !== null),
+  output: (columns) => columns.some((column) => column.output !== null || column.recovery !== null),
   postCheck: (columns) => columns.some((column) => column.check !== null),
 }
 
@@ -327,6 +343,7 @@ const stageOf = (execution: ApiExecution, ordinal: number, index: Index): StageR
     fanOut: children.length,
     groups,
     ladders: laddersOf(groups, index),
+    recoveries: execution.recovered_items.map((recovery) => recoveryCell(recovery, index)),
     exit: index.exits.get(execution.address.node_id) ?? null,
   }
 }

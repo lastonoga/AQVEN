@@ -8,6 +8,7 @@ type FinishedExecutionStatus = Literal["ok", "failed", "skipped", "cancelled"]
 type WaitKind = Literal["form", "tool_approval"]
 type WaitState = Literal["waiting", "resolved", "timed_out"]
 type OnTimeoutAction = Literal["fail", "default", "escalate"]
+type ItemRecoveryDecision = Literal["skip", "default"]
 type ResumeOutcome = Literal["accepted", "replayed", "sent"]
 type IncludePayloads = Literal["none", "truncated", "full"]
 type AttemptCauseKind = Literal[
@@ -23,7 +24,8 @@ type AttemptCauseKind = Literal[
     "feature_unsupported",
 ]
 type AttemptAction = Literal["retry", "repair", "fallback", "none"]
-type CallOutcome = Literal["ok", "refusal", "truncated"]
+type CallOutcome = Literal["ok", "refusal", "truncated", "error"]
+type AbandonedOutcome = Literal["refusal", "truncated", "error"]
 type CostSource = Literal["provider", "prices", "genai", "unknown"]
 type LineageRelation = Literal["fork", "replay"]
 type SpecOrigin = Literal["working_copy", "release"]

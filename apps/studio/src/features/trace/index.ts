@@ -1,5 +1,6 @@
 export { buildTrace, coordinateOf, executionKey, type TraceSources } from "./build"
 export type { CallColumn, MatrixGroup, RowKey, StageRun, TraceRun, UpstreamRef, ValueCell } from "./model"
+export { recoveredItems, recoveryOf, type RecoveredItem } from "./recovery"
 export { StageTimeline, type StageTimelineProps } from "./stage-timeline"
 export { failedBelow, itemFailures, stageFailedBelow, stageItemFailures, type ItemFailures } from "./failures"
 export { stageTone } from "./paint"
