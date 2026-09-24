@@ -69,3 +69,20 @@ def test_unchanged_code_keeps_the_loaded_module(package: Path) -> None:
     again = loader.module(f"{PACKAGE}.steps", f"{PACKAGE}.steps:step")
 
     assert first is again
+
+
+def test_a_second_project_with_the_same_package_name_loads_its_own_modules(tmp_path: Path, package: Path) -> None:
+    (package / "steps.py").write_text("def step() -> str:\n    return 'first'\n", encoding="utf-8")
+    assert CodeLoader(package).function(f"{PACKAGE}.steps:step")() == "first"
+
+    other = tmp_path / "other" / PACKAGE
+    other.mkdir(parents=True)
+    (other / "__init__.py").write_text("", encoding="utf-8")
+    (other / "steps.py").write_text("def step() -> str:\n    return 'second'\n", encoding="utf-8")
+
+    try:
+        assert CodeLoader(other).function(f"{PACKAGE}.steps:step")() == "second"
+    finally:
+        location = str(other.parent.resolve())
+        if location in sys.path:
+            sys.path.remove(location)
