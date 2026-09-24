@@ -50,6 +50,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/project/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Research Budget */
+        get: operations["research_budget_get"];
+        /** Put Research Budget */
+        put: operations["research_budget_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files": {
         parameters: {
             query?: never;
@@ -1726,6 +1744,8 @@ export interface components {
         CancelResult: {
             status: components["schemas"]["RunStatus"];
         };
+        /** @enum {string} */
+        CapSource: "override" | "project" | "default";
         /** CapabilityOverride */
         CapabilityOverride: {
             family?: components["schemas"]["ModelFamily"] | null;
@@ -3982,6 +4002,7 @@ export interface components {
             /** Last Good Content Hash */
             last_good_content_hash: string | null;
         };
+        FileHash: string;
         /** @enum {string} */
         FileKind: "Project" | "Type" | "Flow" | "Node" | "Dataset" | "Experiment" | "Inference" | "Agent" | "Tool" | "McpServer" | "Finding" | "prompt" | "code" | "lock" | "other";
         /** FileRef */
@@ -6244,6 +6265,29 @@ export interface components {
             ref: components["schemas"]["RefText"];
         };
         RefText: string;
+        /** ResearchBudgetView */
+        ResearchBudgetView: {
+            /** Spend Cap Usd */
+            spend_cap_usd: string | null;
+            source: components["schemas"]["CapSource"];
+            /** Project Usd */
+            project_usd: string | null;
+            /** Default Usd */
+            default_usd: string;
+            /** Override Problem */
+            override_problem: string | null;
+            project_file: components["schemas"]["FileRef"] | null;
+        };
+        /** ResearchBudgetWrite */
+        ResearchBudgetWrite: {
+            research: components["schemas"]["ResearchSettings"];
+            file_hash: components["schemas"]["FileHash"];
+        };
+        /** ResearchSettings */
+        ResearchSettings: {
+            /** Spend Cap Usd */
+            spend_cap_usd: number | string;
+        };
         /** ResolvedAllowedSet */
         ResolvedAllowedSet: {
             /** Type Id */
@@ -6788,6 +6832,7 @@ export interface components {
             needs_approval: boolean;
             /** Project Cap Usd */
             project_cap_usd: string;
+            project_cap_source?: components["schemas"]["CapSource"] | null;
             /** Cap Usd */
             cap_usd: string;
             /**
@@ -7622,6 +7667,7 @@ export type SchemaCallNodeSpec = components['schemas']['CallNodeSpec'];
 export type SchemaCallOutcome = components['schemas']['CallOutcome'];
 export type SchemaCancelRequest = components['schemas']['CancelRequest'];
 export type SchemaCancelResult = components['schemas']['CancelResult'];
+export type SchemaCapSource = components['schemas']['CapSource'];
 export type SchemaCapabilityOverride = components['schemas']['CapabilityOverride'];
 export type SchemaCaseDraft = components['schemas']['CaseDraft'];
 export type SchemaCaseFromRunRequest = components['schemas']['CaseFromRunRequest'];
@@ -7784,6 +7830,7 @@ export type SchemaFieldName = components['schemas']['FieldName'];
 export type SchemaFileChange = components['schemas']['FileChange'];
 export type SchemaFileDetail = components['schemas']['FileDetail'];
 export type SchemaFileEntry = components['schemas']['FileEntry'];
+export type SchemaFileHash = components['schemas']['FileHash'];
 export type SchemaFileKind = components['schemas']['FileKind'];
 export type SchemaFileRef = components['schemas']['FileRef'];
 export type SchemaFilesChanged = components['schemas']['FilesChanged'];
@@ -7966,6 +8013,9 @@ export type SchemaRecommendation = components['schemas']['Recommendation'];
 export type SchemaRecordType = components['schemas']['RecordType'];
 export type SchemaRefBinding = components['schemas']['RefBinding'];
 export type SchemaRefText = components['schemas']['RefText'];
+export type SchemaResearchBudgetView = components['schemas']['ResearchBudgetView'];
+export type SchemaResearchBudgetWrite = components['schemas']['ResearchBudgetWrite'];
+export type SchemaResearchSettings = components['schemas']['ResearchSettings'];
 export type SchemaResolvedAllowedSet = components['schemas']['ResolvedAllowedSet'];
 export type SchemaResolvedOutputMode = components['schemas']['ResolvedOutputMode'];
 export type SchemaResponseTrace = components['schemas']['ResponseTrace'];
@@ -8227,6 +8277,212 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    research_budget_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchBudgetView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    research_budget_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchBudgetWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchBudgetView"];
                 };
             };
             /** @description Bad Request */

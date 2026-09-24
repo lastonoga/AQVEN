@@ -31,6 +31,8 @@ from aqven.spec.experiments import MAX_REPEATS
 SeriesId = NewType("SeriesId", str)
 AttemptId = NewType("AttemptId", str)
 
+type CapSource = Literal["override", "project", "default"]
+
 
 class SeriesStatus(StrEnum):
     AWAITING_APPROVAL = "awaiting_approval"
@@ -177,6 +179,7 @@ class SeriesEstimate(ResourceModel):
     below_recommended: bool
     needs_approval: bool
     project_cap_usd: Decimal
+    project_cap_source: CapSource | None = None
     cap_usd: Decimal
     warnings: tuple[str, ...] = ()
 

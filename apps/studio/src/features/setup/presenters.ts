@@ -1,8 +1,9 @@
-import type { ApiChatBackendKind, ApiChatStatus, ApiProviderKey, ApiSecret, ApiSetting, SettingRejectionCode, SetupStep } from "@/domain"
+import type { ApiChatBackendKind, ApiChatStatus, ApiProviderKey, ApiResearchBudget, ApiSecret, ApiSetting, SettingRejectionCode, SettingScope, SetupStep } from "@/domain"
 import { SETTING_REJECTION_CODES, SETUP_STEPS } from "@/domain"
 import type { Tone } from "@/components/studio"
 import { ApiError } from "@/api/client"
 import { messageOf } from "@/lib/errors"
+import { usd } from "@/lib/format"
 
 export type LoginState = ApiChatStatus["state"]
 export type SecretSource = NonNullable<ApiProviderKey["source"]>
@@ -34,6 +35,11 @@ export const LOGIN_COMMANDS: Readonly<Record<ApiChatBackendKind, string>> = {
 }
 
 export const UPGRADE_COMMAND = "uv lock --upgrade-package aqven && uv sync"
+
+export const SPEND_CAP_SETTING = "research.spend_cap_usd"
+export const SPEND_CAP_SCOPE: SettingScope = "project"
+
+const CAP_DRAFT = /^\d+(\.\d+)?$/
 
 export const keyOrigin = (entry: KeyEntry): KeyOrigin => entry.source ?? "missing"
 
@@ -95,3 +101,9 @@ export const mcpCommands = (root: string): McpCommands => ({
   claudeCode: `claude mcp add aqven -- uv run --directory ${shellQuoted(root)} aqven mcp`,
   stdio: JSON.stringify(stdioServer(root), null, 2),
 })
+
+export const isCapDraft = (draft: string): boolean => CAP_DRAFT.test(draft.trim())
+
+export const capDraftOf = (budget: ApiResearchBudget): string => budget.project_usd ?? budget.default_usd
+
+export const capText = (value: string): string => usd(Number(value))

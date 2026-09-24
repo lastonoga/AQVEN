@@ -1,18 +1,18 @@
 ---
 title: How to use Studio settings
-description: Add the model keys your workflows need, connect your coding agent, check the Studio chat sign-in, and update AQVEN, all from one Settings page.
+description: Add the model keys your workflows need, connect your coding agent, check the Studio chat sign-in, set the research spend cap, and update AQVEN, all from one Settings page.
 ---
 
 ## When you need this
 
 Use this right after `{{CLI_COMMAND}} new`, the first time you open Studio: you want working model
 keys, your coding agent connected to the project, and the Studio chat signed in. Come back later to
-replace a key or to update AQVEN.
+replace a key, change the research spend cap, or update AQVEN.
 
 ## Steps
 
 - Click the gear at the right end of Studio's top bar. **Settings** opens as one page. The line under
-  the title names the project package and the AQVEN version. Four sections follow, top to bottom.
+  the title names the project package and the AQVEN version. Five sections follow, top to bottom.
 - **Model keys** has one row per model provider: "Your workflows call models through these providers."
   A row is in one of three states:
   - **Saved in .env.** The row shows a masked value, like `••••0860`, and the variable name. **Replace**
@@ -38,6 +38,14 @@ replace a key or to update AQVEN.
   backend is signed in, and with which account when it is known. When it is not signed in, the page
   shows the command to run in a terminal: `claude auth login` or `codex login`. Then click **Check
   again**. Technical details appear only when the check itself fails.
+- **Research budget** shows the project spend cap: a series whose estimate is above it, or has no
+  estimate, waits for your approval. **Set in** says where the cap comes from: `aqven.yaml`, a local
+  override on this computer, or the default of $1.00 when `aqven.yaml` has no `research` block. Type a new
+  amount under **Cap in aqven.yaml** and click **Save**: Studio writes `research.spend_cap_usd` into
+  `aqven.yaml` and keeps the rest of the file as it was. If the file changed since the page read it, the
+  save is refused under the field; the page reads the file again, so click **Save** once more. When a local
+  override is active, the section says so and **Remove override** deletes it, so `aqven.yaml` decides
+  again. [How to run a series](/engine/run-a-series/) explains the cap and the override.
 - **About** shows the project folder, the AQVEN version, and the update command. Run it in the project
   folder, then restart Studio.
 

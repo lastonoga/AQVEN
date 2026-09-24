@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Annotated, Literal
+from decimal import Decimal, InvalidOperation
+from typing import Annotated, Final, Literal
 
-from pydantic import Field, JsonValue
+from pydantic import AfterValidator, Field, JsonValue
 
 from aqven.spec.common import Limits, SpecModel
 from aqven.spec.names import (
@@ -14,6 +15,8 @@ from aqven.spec.names import (
     SecretRef,
     TrustLevel,
 )
+
+CENT: Final = Decimal("0.01")
 
 type ProviderNameField = Annotated[ProviderName, Field(pattern=PROVIDER_NAME_PATTERN)]
 type ProviderKind = Literal["catalog", "code", "openai_compatible"]
@@ -81,6 +84,18 @@ class ProviderSpec(SpecModel):
     limits: ProviderLimits | None = None
 
 
+def in_cents(value: Decimal) -> Decimal:
+    try:
+        cents = value.quantize(CENT)
+    except InvalidOperation:
+        return value
+    return cents if cents == value else value
+
+
+class ResearchSettings(SpecModel):
+    spend_cap_usd: Annotated[Decimal, AfterValidator(in_cents)] = Field(ge=0)
+
+
 class Rename(SpecModel):
     kind: RenameKind
     from_: str = Field(alias="from")
@@ -96,4 +111,5 @@ class ProjectSpec(SpecModel):
     providers: list[ProviderSpec] = Field(min_length=1)
     policies: ProjectPolicies | None = None
     limits: Limits | None = None
+    research: ResearchSettings | None = None
     renames: list[Rename] | None = None

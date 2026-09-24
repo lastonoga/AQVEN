@@ -11,6 +11,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from aqven.diagnostics import Diagnostic
 from aqven.ports.engine import EngineError
 from aqven.runtime.address import JsonObject, Problem, ResourceModel
+from aqven.write.errors import WriteError
 
 type ApiErrorCode = Literal[
     "NOT_FOUND",
@@ -160,6 +161,14 @@ def from_engine_error(error: Exception) -> ApiFailure:
     return ApiFailure(error.code, error.message, problems=error.problems, conflict=error.details)
 
 
+def from_write_error(error: Exception) -> ApiFailure:
+    if not isinstance(error, WriteError):
+        return from_unexpected(error)
+    conflict = None if error.conflict is None else error.conflict.model_dump(mode="json", by_alias=True)
+    problems = tuple(diagnostic_problem(item) for item in error.problems)
+    return ApiFailure(error.code, error.message, problems=problems, conflict=conflict)
+
+
 def from_request_validation(error: Exception) -> ApiFailure:
     if not isinstance(error, RequestValidationError):
         return from_unexpected(error)
@@ -182,6 +191,7 @@ type Translator = Callable[[Exception], ApiFailure]
 TRANSLATORS: Final[Mapping[type[Exception], Translator]] = {
     ApiFailure: from_api_failure,
     EngineError: from_engine_error,
+    WriteError: from_write_error,
     RequestValidationError: from_request_validation,
     StarletteHTTPException: from_http_exception,
     Exception: from_unexpected,

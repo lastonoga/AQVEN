@@ -28,8 +28,8 @@ flow](/mcp-cli/research-loop/) is the order to use them in, round after round.
   minutes, the expected interval half-width and the recommended number of cases. Sending the same
   `client_op_id` again returns the same series instead of starting a second one.
 - **The status after `series_start` is `running` or `awaiting_approval`.** A series whose estimate is at
-  or below the project spend cap (the project setting `research.spend_cap_usd`, $1.00 by default)
-  starts by itself, with a cap of 1.25 × the estimate, rounded up to a cent and never above the project
+  or below the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by default; a local
+  override on the project server wins on that computer) starts by itself, with a cap of 1.25 × the estimate, rounded up to a cent and never above the project
   cap. One whose estimate is above the cap, or unknown because a model of the series has no known price,
   waits for a person to approve the spend. There is no MCP tool for approving: tell the user, who
   approves it in Studio or with `POST /api/series/{series_id}/approve`. There is no estimate-only tool
@@ -121,6 +121,7 @@ your count of working cases can differ by one or two:
   "below_recommended": true,
   "needs_approval": false,
   "project_cap_usd": "1.00",
+  "project_cap_source": "project",
   "cap_usd": "0.02"
 }
 ```
@@ -130,7 +131,9 @@ your count of working cases can differ by one or two:
 this experiment yet, `usd_source` is `bound`: an upper bound from the rendered prompt
 of the largest planned case and the agent's `max_tokens`, times the loop caps and fan-out, priced per
 token. OpenRouter's price list was out of reach here, so the price came from the `genai-prices` table
-bundled with the engine. The bound is far under the $1.00 project cap, so `needs_approval` is `false`:
+bundled with the engine. `project_cap_source` says where the project cap came from: `project` for
+`aqven.yaml`, as here, `override` for a local override, `default` when neither sets it. The bound is far
+under the $1.00 project cap, so `needs_approval` is `false`:
 `series_start` with the same `on`, `cases` and `repeats` starts the series as `running` at once, with a
 cap of $0.02, and every attempt calls the model live. Without a provider key those attempts fail as
 infrastructure errors, and the series ends `failed` with the missing key named in `error`.

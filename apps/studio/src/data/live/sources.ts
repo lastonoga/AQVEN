@@ -12,6 +12,7 @@ import type {
   ApiIncludePayloads,
   ApiJsonValue,
   ApiPromptPreviewBody,
+  ApiResearchBudgetWrite,
   ApiResumeRequest,
   ApiRunStartRequest,
   ApiSettingWrite,
@@ -242,6 +243,8 @@ const settings = {
   clear: clearSetting,
   putSecret: async (key: SettingKey, secret: string) => writeSetting(SECRET_SCOPE, key, { kind: "secret", secret }),
   deleteSetting: async (key: SettingKey) => clearSetting(SECRET_SCOPE, key),
+  budget: async () => unwrap(await api.GET("/api/project/research")),
+  saveBudget: async (body: ApiResearchBudgetWrite) => unwrap(await api.PUT("/api/project/research", { body })),
 }
 
 const blob = {
