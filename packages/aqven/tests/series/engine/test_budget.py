@@ -20,7 +20,7 @@ from aqven.series.model import (
     SeriesStatus,
     StopCause,
 )
-from aqven.series.protocol import LOOKAHEAD
+from aqven.series.protocol import PROBE_WIDTH
 from aqven.series.views import (
     SeriesCancelRequest,
     SeriesEvent,
@@ -78,7 +78,9 @@ async def paused(harness: SeriesHarness) -> tuple[SeriesSummaryView, SeriesRecor
     return shown.series, record, attempts, later
 
 
-def test_a_series_near_its_cap_finishes_the_running_attempts_and_waits_for_approval(tmp_path: Path) -> None:
+def test_a_probe_that_reaches_the_cap_is_the_only_attempt_before_the_series_waits_for_approval(
+    tmp_path: Path,
+) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
@@ -88,7 +90,7 @@ def test_a_series_near_its_cap_finishes_the_running_attempts_and_waits_for_appro
     assert shown.status is SeriesStatus.AWAITING_APPROVAL
     assert shown.pause == SeriesPause(reason=ApprovalReason.SPEND_NEAR_CAP, spent_usd=spend)
     assert spend >= TINY_CAP
-    assert len(attempts) == later == LOOKAHEAD
+    assert len(attempts) == later == PROBE_WIDTH
     assert all(attempt.state is AttemptState.FINISHED for attempt in attempts)
     assert {attempt.outcome for attempt in attempts} == {OutcomeClass.BUDGET_CUT}
     assert record.approved_by is None
@@ -118,7 +120,7 @@ def test_approving_a_paused_series_with_a_new_cap_runs_the_remaining_attempts(tm
     assert record.status is SeriesStatus.DONE
     assert (record.cap_usd, record.approved_by, record.stop) == (RAISED_CAP, HUMAN.id, StopCause.COMPLETED)
     assert len(attempts) == ATTEMPTS
-    assert [attempt.outcome for attempt in attempts].count(OutcomeClass.OK) == ATTEMPTS - LOOKAHEAD
+    assert [attempt.outcome for attempt in attempts].count(OutcomeClass.OK) == ATTEMPTS - PROBE_WIDTH
     assert record.verdict is not None
     assert (record.verdict.state, record.verdict.reason) == (VerdictState.SIGNAL, VerdictReason.DEV_SPLIT)
     statuses = [event.status for event in events if isinstance(event, SeriesStatusEvent)]
@@ -169,5 +171,5 @@ def test_a_paused_series_doubles_its_cap_by_default_pauses_again_and_can_be_stop
     assert refused.code == "REQUEST_INVALID"
     assert cancelled.status is SeriesStatus.CANCELLED
     assert cancelled.verdict is not None and cancelled.verdict.reason is VerdictReason.CANCELLED
-    assert attempts == LOOKAHEAD
+    assert attempts == PROBE_WIDTH
     assert published == []

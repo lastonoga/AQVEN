@@ -108,7 +108,10 @@ INSERT INTO {ATTEMPTS_TABLE}
     (attempt_id, series_id, ordinal, variant_id, case_name, repeat, run_id, state, outcome,
      cost_usd, check_cost_usd, started_at, finished_at, record)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT (attempt_id) DO NOTHING
+ON CONFLICT (attempt_id) DO UPDATE SET
+    run_id = excluded.run_id,
+    record = json_set(record, '$.run_id', excluded.run_id)
+WHERE state = 'running'
 """
 
 CLOSE_ATTEMPT: Final = f"""
@@ -117,6 +120,7 @@ INSERT INTO {ATTEMPTS_TABLE}
      cost_usd, check_cost_usd, started_at, finished_at, record)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (attempt_id) DO UPDATE SET
+    run_id = excluded.run_id,
     state = excluded.state,
     outcome = excluded.outcome,
     cost_usd = excluded.cost_usd,

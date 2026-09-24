@@ -15,6 +15,8 @@ JUDGE_PREFIX: Final = "judge"
 SEED_BYTES: Final = 8
 SEED_ORDER: Final = "big"
 FIRST_REPEAT: Final = 1
+FIRST_TRY: Final = 1
+TRY_NAME: Final = "try"
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +39,18 @@ def attempt_id(series_id: SeriesId, variant_id: VariantId, case_name: str, repea
 
 def subject_run_id(attempt: AttemptId) -> RunId:
     return RunId(str(uuid.uuid5(uuid.UUID(attempt), RUN_NAME)))
+
+
+def try_run_id(attempt: AttemptId, tries: int) -> RunId:
+    if tries == FIRST_TRY:
+        return subject_run_id(attempt)
+    return RunId(str(uuid.uuid5(uuid.UUID(attempt), ID_SEPARATOR.join((RUN_NAME, TRY_NAME, str(tries))))))
+
+
+def try_workflow_id(attempt: AttemptId, tries: int) -> str:
+    if tries == FIRST_TRY:
+        return attempt
+    return ID_SEPARATOR.join((attempt, TRY_NAME, str(tries)))
 
 
 def judge_run_id(attempt: AttemptId, check_id: str) -> RunId:
