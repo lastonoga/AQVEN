@@ -11,6 +11,7 @@ from aqven.testing import copy_project
 type Breakage = tuple[str, str, str]
 
 TRIAGE: Final = "flows/support_case/nodes/triage/triage.node.yaml"
+ILLUSTRATE: Final = "flows/support_case/nodes/illustrate/illustrate.inference.yaml"
 REVISE: Final = "flows/support_case/nodes/polish/revise"
 JUDGES: Final = "flows/judge_panel/nodes/judges"
 RESEARCH_POLICY: Final = "agents/resolver/research_policy.inference.yaml"
@@ -36,9 +37,8 @@ UNBOUND_JUDGE_INPUT: Final[Breakage] = (
 BREAKAGES: Final[Mapping[str, Breakage]] = {
     "E_INPUT_UNBOUND": UNBOUND_MESSAGE,
     "E_PII_PROVIDER": ("aqven.yaml", "allows_pii: true", "allows_pii: false"),
-    "E_MODALITY_UNSUPPORTED": (TRIAGE, 'agent: "gemini"', 'agent: "mistral"'),
+    "E_MODALITY_UNSUPPORTED": (ILLUSTRATE, '- name: "image"\n  type: "Image"', '- name: "image"\n  type: "Audio"'),
     "E_SOURCE_CONFLICT": (TRIAGE, 'agent: "gemini"', 'inference: "triage"\nagent: "gemini"'),
-    "E_STRICT_UNSUPPORTED": ("agents/llama.yaml", "strict: false", "strict: true"),
     "E_TEXT_OUTPUT": ("agents/gpt.yaml", 'mode: "prompted"', 'mode: "text"'),
     "E_PROMPT_VARIABLE_UNDECLARED": (
         f"{REVISE}.prompt.md",

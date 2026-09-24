@@ -127,12 +127,10 @@ def test_check_shows_auto_resolution_through_the_known_model_table(shop: Path) -
     assert report.ok
 
 
-def test_prompted_mode_does_not_need_strict_schema_support(shop: Path) -> None:
-    replace(shop, CHEAP, "output:\n  strict: false", "output:\n  mode: prompted")
+def test_strict_output_is_left_to_the_provider(shop: Path) -> None:
+    replace(shop, CHEAP, "output:\n  strict: false", "output:\n  strict: true")
 
-    report = check_project(shop)
-
-    assert DiagnosticCode.E_STRICT_UNSUPPORTED not in {item.code for item in report.diagnostics}
+    assert check_project(shop).ok
 
 
 def test_text_mode_value_is_reported_as_text_output(shop: Path) -> None:
