@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from typing import Final
 
@@ -7,6 +7,7 @@ from aqven.ports.engine import EngineFacade
 from aqven.ports.settings import SettingsStore
 from aqven.series.ports import SeriesJobs
 from aqven.server.blobs import BlobFiles
+from aqven.server.event_feeds import EventFeed, EventFeeds
 from aqven.server.probes import StatusProbes
 from aqven.server.spec_channel import SpecEventHub
 from aqven.server.workspace import ProjectWorkspace
@@ -44,3 +45,4 @@ class ServerContext:
     mcp_url: str | None
     probes: StatusProbes
     series: SeriesJobs | None = None
+    feeds: EventFeeds = field(default_factory=dict[str, EventFeed])
