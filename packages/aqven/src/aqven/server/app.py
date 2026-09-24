@@ -35,6 +35,7 @@ from aqven.server.security import QueryTokenScrubber
 from aqven.server.spec_channel import DEFAULT_DEBOUNCE_MS, SpecEventHub, supervise_watcher
 from aqven.server.static import StudioBundle, default_studio, mount_studio
 from aqven.server.workspace import ProjectCompiler, ProjectWorkspace
+from aqven.write import WriteService
 
 API_TITLE: Final = "AQVEN Studio API"
 OPENAPI_URL: Final = "/api/openapi.json"
@@ -162,6 +163,7 @@ def create_app(
     workspace: ProjectWorkspace | None = None,
     series: SeriesJobs | None = None,
     probes: StatusProbes | None = None,
+    writer: WriteService | None = None,
 ) -> FastAPI:
     chosen = options or ServerOptions()
     extended = extensions or ServerExtensions()
@@ -176,6 +178,7 @@ def create_app(
         engine_version=engine_version(),
         mcp_url=chosen.mcp_url,
         probes=probes or project_probes(root),
+        writer=writer or WriteService(root),
         series=series,
         feeds=extended.feeds,
     )

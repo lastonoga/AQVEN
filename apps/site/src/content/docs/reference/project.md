@@ -55,6 +55,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `providers` | `ProviderSpec[]` | Yes | `—` | minItems=1 |
 | `policies` | `ProjectPolicies \| null` | No | `None` | — |
 | `limits` | `Limits \| null` | No | `None` | — |
+| `research` | `ResearchSettings \| null` | No | `None` | — |
 | `renames` | `Rename[] \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/ProjectSpec.json)
@@ -105,6 +106,14 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `at` | `string` | Yes | `—` | — |
 
 [JSON Schema](/reference/schemas/Rename.json)
+
+## ResearchSettings
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `spend_cap_usd` | `number \| string` | Yes | `—` | — |
+
+[JSON Schema](/reference/schemas/ResearchSettings.json)
 
 ## TrustPolicy
 

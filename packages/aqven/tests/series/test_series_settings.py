@@ -6,7 +6,18 @@ import pytest
 from pydantic import JsonValue, SecretStr
 
 from aqven.ports.settings import SettingKey, SettingScope, SettingView
-from aqven.series import DEFAULT_SPEND_CAP, RESEARCH_SCOPE, SPEND_CAP_KEY, InvalidSpendCap, project_spend_cap
+from aqven.series import (
+    DEFAULT_CAP,
+    DEFAULT_SPEND_CAP,
+    RESEARCH_SCOPE,
+    SPEND_CAP_KEY,
+    InvalidSpendCap,
+    ProjectCap,
+    project_spend_cap,
+)
+from aqven.spec import ResearchSettings
+
+PROJECT_RESEARCH = ResearchSettings(spend_cap_usd=Decimal("2.50"))
 
 
 @dataclass(slots=True)
@@ -38,18 +49,29 @@ class OneSetting:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("value", "cap"),
-    [(None, DEFAULT_SPEND_CAP), (5, Decimal(5)), (2.5, Decimal("2.5")), ("0.40", Decimal("0.40")), (0, Decimal(0))],
+    [(5, Decimal(5)), (2.5, Decimal("2.5")), ("0.40", Decimal("0.40")), (0, Decimal(0))],
 )
-async def test_project_spend_cap_reads_numbers_and_decimal_strings(value: JsonValue, cap: Decimal) -> None:
-    assert await project_spend_cap(OneSetting(value)) == cap
+async def test_a_local_override_wins_over_the_project_file(value: JsonValue, cap: Decimal) -> None:
+    assert await project_spend_cap(OneSetting(value), PROJECT_RESEARCH) == ProjectCap(usd=cap, source="override")
+
+
+@pytest.mark.asyncio
+async def test_the_project_file_sets_the_cap_without_an_override() -> None:
+    assert await project_spend_cap(OneSetting(), PROJECT_RESEARCH) == ProjectCap(usd=Decimal("2.50"), source="project")
+
+
+@pytest.mark.asyncio
+async def test_the_cap_falls_back_to_one_dollar() -> None:
+    assert await project_spend_cap(OneSetting(), None) == DEFAULT_CAP
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("value", [-1, "lots", True, "NaN", "Infinity", [1], {"usd": 1}])
-async def test_project_spend_cap_rejects_anything_else(value: JsonValue) -> None:
+async def test_a_broken_override_is_refused_instead_of_skipped(value: JsonValue) -> None:
     with pytest.raises(InvalidSpendCap):
-        await project_spend_cap(OneSetting(value))
+        await project_spend_cap(OneSetting(value), PROJECT_RESEARCH)
 
 
 def test_default_cap_is_one_dollar() -> None:
+    assert ProjectCap(usd=Decimal("1.00"), source="default") == DEFAULT_CAP
     assert Decimal("1.00") == DEFAULT_SPEND_CAP

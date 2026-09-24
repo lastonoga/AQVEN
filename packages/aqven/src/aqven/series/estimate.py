@@ -28,6 +28,7 @@ from aqven.series.model import (
 )
 from aqven.series.ports import ModelPrices, SeriesStore
 from aqven.series.protocol import ATTEMPT_SLOTS, CAP_HEADROOM
+from aqven.series.settings import ProjectCap
 from aqven.series.stats.power import MarginRequired, half_width, icc_of, mde, recommended_cases, spread_of
 from aqven.series.views import SeriesListQuery
 from aqven.spec import (
@@ -562,7 +563,7 @@ class SeriesEstimator:
     sampler: RunSampler | None = None
 
     async def estimate(
-        self, plan: EstimatePlan, request_cap: Decimal | None, project_cap: Decimal, workers: int | None
+        self, plan: EstimatePlan, request_cap: Decimal | None, project_cap: ProjectCap, workers: int | None
     ) -> EstimateOutcome:
         history = await self._history(plan)
         samples = CachedSampler(self.sampler)
@@ -573,7 +574,7 @@ class SeriesEstimator:
         target = target_of(plan)
         spread = spread_for(target, history, plan.repeats)
         chosen = recommendation(plan, target, spread)
-        decision = cap_decision(usd, request_cap, project_cap)
+        decision = cap_decision(usd, request_cap, project_cap.usd)
         latency = history_latency(history) or await self._duration(samples, plan)
         warnings = (*plan.warnings, *await self._reused(plan), *unknown_warnings(priced))
         estimate = SeriesEstimate(
@@ -595,7 +596,8 @@ class SeriesEstimator:
             recommended=chosen,
             below_recommended=plan.cases < chosen.cases,
             needs_approval=decision.needs_approval,
-            project_cap_usd=project_cap,
+            project_cap_usd=project_cap.usd,
+            project_cap_source=project_cap.source,
             cap_usd=decision.cap_usd,
             warnings=tuple(dict.fromkeys(warnings)),
         )

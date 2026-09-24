@@ -10,11 +10,13 @@ from starlette.responses import Response
 from aqven.loader import file_hash
 from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT
 from aqven.runtime.runs import Page
+from aqven.series.settings import cap_override
 from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES, not_found
 from aqven.server.resources import FileDetail, FileEntry, FileKind, ProjectInfo, SyncState
 from aqven.server.views.common import page_of
 from aqven.server.views.files import file_detail, file_entries, project_info
+from aqven.server.views.research_budget import ResearchBudgetView, ResearchBudgetWrite, budget_view, write_research
 from aqven.server.workspace import WorkspaceState
 
 TEXT_TYPES: Final[Mapping[str, str]] = {
@@ -25,6 +27,7 @@ TEXT_TYPES: Final[Mapping[str, str]] = {
     ".json": "application/json",
 }
 BINARY_TYPE: Final = "application/octet-stream"
+RESEARCH_BUDGET: Final = "a person sets the research spend cap in Studio"
 NOT_MODIFIED: Final = 304
 RAW_RESPONSES: Final[dict[int | str, dict[str, object]]] = {
     **ERROR_RESPONSES,
@@ -58,6 +61,18 @@ def build_project_router(context: ServerContext) -> APIRouter:
     async def get_project() -> ProjectInfo:
         state = await context.workspace.state()
         return project_info(state, context.engine_version, context.hub.seq, context.mcp_url)
+
+    async def current_budget() -> ResearchBudgetView:
+        return budget_view(await context.workspace.state(), await cap_override(context.settings))
+
+    @router.get("/project/research", operation_id="research_budget_get", openapi_extra=rest_only(RESEARCH_BUDGET))
+    async def get_research_budget() -> ResearchBudgetView:
+        return await current_budget()
+
+    @router.put("/project/research", operation_id="research_budget_put", openapi_extra=rest_only(RESEARCH_BUDGET))
+    async def put_research_budget(body: ResearchBudgetWrite) -> ResearchBudgetView:
+        await to_thread.run_sync(write_research, context.writer, body, await context.human())
+        return await current_budget()
 
     @router.get("/files", operation_id="file_list", openapi_extra=rest_only("agents read files natively"))
     async def list_files(

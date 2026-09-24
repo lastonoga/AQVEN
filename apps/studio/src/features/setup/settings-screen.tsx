@@ -9,6 +9,7 @@ import { CommandLine } from "./command-line"
 import { KeysBoundary, ModelKeysPanel, OtherSecretsPanel } from "./model-keys"
 import { mcpCommands, UPGRADE_COMMAND } from "./presenters"
 import { useProjectKeys } from "./project-keys"
+import { ResearchBudgetSection } from "./research-budget-panel"
 
 const OTHER_CLIENTS_ID = "settings-other-mcp-clients"
 
@@ -94,6 +95,7 @@ export function SettingsScreen(): JSX.Element {
         <KeysSection />
         <CodingAgentSection root={project.root} />
         <ChatSection />
+        <ResearchBudgetSection />
         <AboutSection project={project} />
       </div>
     </Page>
