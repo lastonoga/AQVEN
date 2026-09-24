@@ -81,14 +81,8 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
     "provider_unknown": Mutation(
         WRITER, 'model: "openai:gpt-5.4-mini"', 'model: "google:gemini-3.8-flash"', DiagnosticCode.E_PROVIDER_UNKNOWN
     ),
-    "image_to_text_only_model": Mutation(
-        CLASSIFY, 'agent: "writer"', 'agent: "cheap"', DiagnosticCode.E_MODALITY_UNSUPPORTED
-    ),
     "pii_to_provider_without_pii": Mutation(
         CLASSIFY, 'agent: "writer"', 'agent: "cheap"', DiagnosticCode.E_PII_PROVIDER
-    ),
-    "strict_on_model_without_strict": Mutation(
-        CHEAP, "strict: false", "strict: true", DiagnosticCode.E_STRICT_UNSUPPORTED
     ),
     "unbounded_output": Mutation(SUMMARIZE, "  maxLength: 200\n", "", DiagnosticCode.E_OUTPUT_UNBOUNDED),
     "unbounded_inference_output": Mutation(INFERENCE, "  maxLength: 300\n", "", DiagnosticCode.E_OUTPUT_UNBOUNDED),
@@ -335,6 +329,27 @@ def test_mutation_is_reported(shop: Path, name: str) -> None:
 
     assert mutation.expected in found(report)
     assert not report.ok
+
+
+OPENROUTER_PROVIDER: Final = """- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: false
+    retention: "unknown"
+"""
+UNLISTED_VISION_MODELS: Final = ("openrouter:amazon/nova-lite-v1", "openrouter:google/gemma-3-27b-it")
+
+
+@pytest.mark.parametrize("model", UNLISTED_VISION_MODELS)
+def test_image_input_reaches_a_model_the_framework_knows_nothing_about(shop: Path, model: str) -> None:
+    append(shop, "aqven.yaml", OPENROUTER_PROVIDER)
+    replace(shop, WRITER, 'model: "openai:gpt-5.4-mini"', f'model: "{model}"')
+
+    report = check_project(shop)
+
+    assert DiagnosticCode.E_MODALITY_UNSUPPORTED not in found(report)
+    assert report.ok
 
 
 def with_research_cap(root: Path, cap: str) -> None:

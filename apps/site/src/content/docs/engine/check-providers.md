@@ -60,18 +60,15 @@ Turning `output.strict: true` on asks the provider to constrain generation to th
 leaning on the retry. Not every provider honors that request the same way: OpenRouter's own docs say
 enforcement "varies by provider — some guarantee schema-conforming output, while others translate your
 schema into their own structured-output format or treat it as a strong hint," so exact compliance isn't
-guaranteed on every endpoint it routes to. AQVEN reflects that by only letting `output.strict: true`
-compile when every model the agent can reach — its `model` and each of its `fallback_models` — is one
-AQVEN already trusts for strict output; an agent with even one untrusted model in that list fails
-`aqven check` with `E_STRICT_UNSUPPORTED` instead of shipping a silent best-effort guess.
+guaranteed on every endpoint it routes to. `aqven check` doesn't second-guess that: it keeps no list of which
+models support strict output, so `output.strict: true` compiles for any model and the provider decides — a provider
+that refuses the request answers with an error, and that error is the step's error.
 
-`--live` is how you extend that trust to a model AQVEN doesn't already know: every mode it probes runs
-with strict enforcement forced on, so a mode reported `ok` under `--live` has already worked strict
-against the real provider, not just against what AQVEN assumes. To act on that, add `capabilities:
-{strict: true}` to the agent — it overrides AQVEN's own guess for *every* model in that agent's list at
-once, `model` and every `fallback_models` entry alike, so probe each one you're trusting, not only the
-first that happens to answer; setting it on the strength of one model's `--live` pass silently extends
-the same trust to a fallback you never actually tested.
+`--live` is how you find out before a real run: every mode it probes runs with strict enforcement forced on, so a mode
+reported `ok` under `--live` has already worked strict against the real provider. One thing still rides on AQVEN's
+own short model list: a model outside it is sent the schema as strict only when the agent sets
+`capabilities: {strict: true}`, which applies to *every* model in that agent's list at once, `model` and every
+`fallback_models` entry alike — so probe each one you're trusting, not only the first that happens to answer.
 
 ### Example
 

@@ -54,7 +54,6 @@ class DiagnosticCode(StrEnum):
     E_TOOL_UNKNOWN = "E_TOOL_UNKNOWN"
     E_PROVIDER_UNKNOWN = "E_PROVIDER_UNKNOWN"
     E_MODALITY_UNSUPPORTED = "E_MODALITY_UNSUPPORTED"
-    E_STRICT_UNSUPPORTED = "E_STRICT_UNSUPPORTED"
     E_TEXT_OUTPUT = "E_TEXT_OUTPUT"
     E_SECRET_LITERAL = "E_SECRET_LITERAL"
     E_SECRET_REF_SYNTAX = "E_SECRET_REF_SYNTAX"
@@ -151,7 +150,6 @@ RULE_BY_CODE: Final[Mapping[DiagnosticCode, str]] = {
     DiagnosticCode.E_INPUT_UNBOUND: "R-09",
     DiagnosticCode.E_INPUT_UNKNOWN: "R-09",
     DiagnosticCode.E_PROVIDER_UNKNOWN: "R-03",
-    DiagnosticCode.E_STRICT_UNSUPPORTED: "R-D5",
     DiagnosticCode.E_SECRET_LITERAL: "R-S16",
     DiagnosticCode.E_SECRET_REF_SYNTAX: "R-S16",
     DiagnosticCode.E_PII_PROVIDER: "R-S12",

@@ -10,11 +10,13 @@ things: the provider quietly reshapes what you sent — a resize, a downsample, 
 still succeeds but on different material than you gave it, or it refuses the request outright with no
 partial result. Which one happens depends on the provider and the model, never on anything AQVEN
 controls: AQVEN passes an `Image`, `Audio`, `Video` or `Document` field's bytes to the provider exactly
-as declared, and hands back whatever the provider generates exactly as produced. Image resolution, video
-duration, audio length, document size — same two behaviors, a different unit each time. An oversized
-*input* can be prepared down to size before the call, on your own terms; an *output* past what one
-generation call can produce cannot be shrunk after the fact, because it doesn't exist yet — the workflow
-itself has to become more than one call.
+as declared, and hands back whatever the provider generates exactly as produced. Whether a model takes a
+modality at all is the provider's call too: `aqven check` keeps no table of what each model reads, and a model
+that refuses an image, audio, video or document input fails the step with `MODEL_FEATURE_UNSUPPORTED` and the hint to
+choose a model that accepts it. Image resolution, video duration, audio length, document size — same two
+behaviors, a different unit each time. An oversized *input* can be prepared down to size before the call, on
+your own terms; an *output* past what one generation call can produce cannot be shrunk after the fact, because
+it doesn't exist yet — the workflow itself has to become more than one call.
 
 ## The same shape, whatever the modality
 
