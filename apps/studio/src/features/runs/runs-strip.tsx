@@ -9,6 +9,7 @@ import { useRelativeTime } from "@/i18n/format"
 import { ROUTE_PATH, runsRouteApi } from "@/lib/routes"
 import { runRows, type RunRow } from "./presenters"
 import { listSearch, type RunList } from "./run-list"
+import { useRunStatusText } from "./run-status"
 
 export type RunsStripProps = { readonly runs: readonly ApiRun[]; readonly selected: RunId | null; readonly list: RunList }
 
@@ -23,7 +24,7 @@ const datasetParts = (itemId: string | null | undefined): { readonly dataset: st
 
 export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly onSelect: (id: RunId) => void }) {
   const t = useTranslations("runs")
-  const status = useTranslations("domain.runStatus")
+  const statusText = useRunStatusText()
   const mode = useTranslations("domain.runMode")
   const relative = useRelativeTime("narrow")
   const { dataset, caseName } = datasetParts(row.run.dataset_item_id)
@@ -36,7 +37,7 @@ export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly on
   const supportingTone = row.selected ? "default" : "neutral"
   return (
     <PickerOption
-      value={`${row.ref} ${row.id} ${status(row.run.status)} ${mode(row.run.mode)} ${row.run.dataset_item_id ?? ""} ${scope}`}
+      value={`${row.ref} ${row.id} ${statusText(row.status)} ${mode(row.run.mode)} ${row.run.dataset_item_id ?? ""} ${scope}`}
       title={`${t("pickerDataset")}: ${dataset ?? t("pickerNoDataset")}${caseName === null ? "" : ` · ${t("pickerCase")}: ${caseName}`} · ${t("pickerScope")}: ${scope}`}
       onSelect={() => { onSelect(row.id) }}
       data-checked={row.selected}
@@ -46,7 +47,7 @@ export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly on
       <span className="min-w-0 flex-1 space-y-1.5">
         <span className="flex flex-wrap items-center gap-2">
           <Text role="item" tone="default" weight="semibold">{row.ref}</Text>
-          <Tag tone={row.tone} fill="tint" size="sm">{status(row.run.status)}</Tag>
+          <Tag tone={row.tone} fill="tint" size="sm">{statusText(row.status)}</Tag>
           <Text role="caption" tone={supportingTone} className="ml-auto shrink-0">{relative(row.startedAt)}</Text>
         </span>
         <span className="block min-w-0">
@@ -72,7 +73,7 @@ export function RunOption({ row, onSelect }: { readonly row: RunRow; readonly on
 
 export function RunsStrip({ runs, selected, list }: RunsStripProps) {
   const t = useTranslations("runs")
-  const status = useTranslations("domain.runStatus")
+  const statusText = useRunStatusText()
   const now = useNow()
   const navigate = useNavigate()
   const params = runsRouteApi.useParams()
@@ -94,7 +95,7 @@ export function RunsStrip({ runs, selected, list }: RunsStripProps) {
             <>
               <Dot tone={current.tone} />
               <Text role="item" weight="semibold">{current.ref}</Text>
-              <Text role="tiny" tone="neutral" truncate>{status(current.run.status)}</Text>
+              <Text role="tiny" tone="neutral" truncate>{statusText(current.status)}</Text>
             </>
           )}
         </PickerTrigger>

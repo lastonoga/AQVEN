@@ -28,8 +28,12 @@ export function ProseText() {
   return <MarkdownTextPrimitive remarkPlugins={REMARK_PLUGINS} components={MARKDOWN_COMPONENTS} smooth={false} />
 }
 
-export function UserProseText({ text }: TextMessagePartProps) {
+export function UserLines({ text }: { readonly text: string }) {
   return <ProseLines text={text} role="lead" />
+}
+
+export function UserProseText({ text }: TextMessagePartProps) {
+  return <UserLines text={text} />
 }
 
 export const USER_PARTS = { Text: UserProseText } as const

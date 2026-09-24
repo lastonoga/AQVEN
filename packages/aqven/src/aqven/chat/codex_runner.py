@@ -1,7 +1,9 @@
 import asyncio
 import time
 from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from openai_codex.client import CodexClient
 from openai_codex.generated.v2_all import (
@@ -9,18 +11,30 @@ from openai_codex.generated.v2_all import (
     ItemStartedNotification,
     TurnCompletedNotification,
     TurnStatus,
+    TurnSteerResponse,
+    UserMessageThreadItem,
 )
 
 from aqven.chat.agent import session_agent
-from aqven.chat.builders import error_raised, status_changed, turn_finished, turn_started
+from aqven.chat.builders import (
+    ChatEventBuilders,
+    error_raised,
+    message_delivered,
+    message_queued,
+    status_changed,
+    turn_finished,
+    turn_started,
+)
 from aqven.chat.codex_approvals import DECLINED, CodexApprovalBridge
 from aqven.chat.codex_normalizer import CodexNormalizer
 from aqven.chat.codex_policy import codex_config
 from aqven.chat.codex_runtime import CodexChatRuntime
 from aqven.chat.feed import ChatEmitter
 from aqven.chat.journal import StoredChatSession
+from aqven.chat.pending_messages import PendingMessage, PendingMessages
 from aqven.chat.project_rules import project_rules
 from aqven.ports.chat import (
+    ChatDelivery,
     ChatErrorCode,
     ChatMessageId,
     ChatSession,
@@ -33,6 +47,29 @@ from aqven.runtime.address import ClientOpId, JsonObject
 REDACTED = "***"
 FILE_DETAILS_TIMEOUT_SECONDS = 2.0
 INTERRUPT_TIMEOUT_SECONDS = 5.0
+STEER_METHOD: Final[str] = "turn/steer"
+
+
+@dataclass(frozen=True, slots=True)
+class SteerTarget:
+    client: CodexClient
+    thread_id: str
+    turn_id: str
+
+    def params(self, message: PendingMessage) -> JsonObject:
+        return {
+            "threadId": self.thread_id,
+            "expectedTurnId": self.turn_id,
+            "clientUserMessageId": message.wire_id,
+            "input": [{"type": "text", "text": message.text}],
+        }
+
+
+def steered_client_id(payload: object) -> str | None:
+    if not isinstance(payload, ItemStartedNotification):
+        return None
+    item = payload.item.root
+    return item.client_id if isinstance(item, UserMessageThreadItem) else None
 
 
 def classify_codex_error(error: Exception) -> tuple[ChatErrorCode, bool]:
@@ -66,10 +103,29 @@ class CodexSessionRunner:
         self._turn_started_at = 0.0
         self._file_events: dict[str, asyncio.Event] = {}
         self._connecting = asyncio.Lock()
+        self._steered = PendingMessages()
+        self._after_turn = PendingMessages()
 
     @property
     def busy(self) -> bool:
         return self._emitter.turn_id is not None
+
+    async def send(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
+        running = self._emitter.turn_id
+        if running is None:
+            return self.begin_turn(client_op_id, text)
+        message = PendingMessage(client_op_id, text, self._runtime.ids())
+        target = self._steer_target()
+        if target is None:
+            self._queue_after_turn(message)
+            return running
+        self._steered.add(message)
+        self._announce(message, "next_step")
+        steered = await self._steer(target, message)
+        withdrawn = None if steered else self._steered.take(message.wire_id)
+        if withdrawn is not None:
+            self._queue_after_turn(withdrawn)
+        return running
 
     def begin_turn(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
         turn_id = ChatTurnId(self._runtime.ids())
@@ -103,8 +159,8 @@ class CodexSessionRunner:
             self._finish("interrupted")
             return
         try:
-            await asyncio.to_thread(client.turn_interrupt, thread_id, turn_id)
             delivery = self._delivery
+            await asyncio.to_thread(client.turn_interrupt, thread_id, turn_id)
             if delivery is not None:
                 await asyncio.wait_for(asyncio.shield(delivery), INTERRUPT_TIMEOUT_SECONDS)
         except Exception:
@@ -113,6 +169,8 @@ class CodexSessionRunner:
             self._finish("interrupted")
 
     async def close(self) -> None:
+        self._steered.clear()
+        self._after_turn.clear()
         self._runtime.approvals.resolve_session(self._session_id, "session_closed")
         await self._drop_client()
         await self._cancel_delivery()
@@ -138,7 +196,7 @@ class CodexSessionRunner:
                     return
                 normalizer = self._normalizer
                 if normalizer is not None:
-                    self._emitter.emit(normalizer.normalize(notification))
+                    self._emitter.emit((*self._delivered(payload, normalizer), *normalizer.normalize(notification)))
                 if isinstance(payload, ItemStartedNotification) and isinstance(payload.item.root, FileChangeThreadItem):
                     self._file_events.setdefault(payload.item.root.id, asyncio.Event()).set()
         except asyncio.CancelledError:
@@ -150,7 +208,8 @@ class CodexSessionRunner:
             if client is not None and turn_id is not None:
                 with suppress(Exception):
                     await asyncio.to_thread(client.unregister_turn_notifications, turn_id)
-            self._active_turn_id = None
+            if self._active_turn_id == turn_id:
+                self._active_turn_id = None
 
     async def _connected(self) -> CodexClient:
         async with self._connecting:
@@ -250,9 +309,51 @@ class CodexSessionRunner:
         if stored is not None and stored.backend_session_id is None:
             self._thread_id = None
 
+    def _steer_target(self) -> SteerTarget | None:
+        client, thread_id, turn_id = self._client, self._thread_id, self._active_turn_id
+        if client is None or thread_id is None or turn_id is None:
+            return None
+        return SteerTarget(client, thread_id, turn_id)
+
+    async def _steer(self, target: SteerTarget, message: PendingMessage) -> bool:
+        try:
+            await asyncio.to_thread(
+                target.client.request, STEER_METHOD, target.params(message), response_model=TurnSteerResponse
+            )
+        except Exception:
+            return False
+        return True
+
+    def _announce(self, message: PendingMessage, delivery: ChatDelivery) -> None:
+        self._emitter.emit((message_queued(message.client_op_id, message.text, delivery),))
+
+    def _queue_after_turn(self, message: PendingMessage) -> None:
+        self._after_turn.add(message)
+        self._announce(message, "after_turn")
+
+    def _delivered(self, payload: object, normalizer: CodexNormalizer) -> ChatEventBuilders:
+        delivered = self._steered.take(steered_client_id(payload))
+        if delivered is None:
+            return ()
+        normalizer.start_next_message()
+        return (message_delivered(delivered.client_op_id),)
+
+    def _requeue_unread(self) -> None:
+        unread = self._steered.waiting()
+        self._steered.clear()
+        for message in unread:
+            self._queue_after_turn(message)
+
+    def _start_queued_turn(self) -> None:
+        upcoming = self._after_turn.take_first()
+        if upcoming is None:
+            return
+        self.begin_turn(upcoming.client_op_id, upcoming.text)
+
     def _finish(self, reason: ChatStopReason, duration_ms: int | None = None) -> None:
         if not self.busy:
             return
+        self._requeue_unread()
         elapsed = int((time.monotonic() - self._turn_started_at) * 1000)
         normalizer = self._normalizer
         usage = None if normalizer is None else normalizer.last_usage
@@ -268,6 +369,7 @@ class CodexSessionRunner:
             )
         )
         self._emitter.turn_id = None
+        self._start_queued_turn()
 
     def _stored(self) -> StoredChatSession:
         stored = self._runtime.journal.get_session(self._session_id)

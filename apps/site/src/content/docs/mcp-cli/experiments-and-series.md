@@ -52,8 +52,9 @@ flow](/mcp-cli/research-loop/) is the order to use them in, round after round.
   find the first node that failed.
 - **A failure counts, an infrastructure error doesn't.** An attempt whose model broke its output type
   even after its retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`, invalid JSON) is a counted
-  failure, like a failed check or a refusal. A missing provider key, a provider error, a timeout or broken
-  code is an infrastructure error. It stays out of the metrics, and above 5% of the attempts it makes the
+  failure, like a provider refusing the output type as too complex (`OUTPUT_SCHEMA_REJECTED`), a failed
+  check or a refusal. A missing provider key, a provider error, a timeout, a stalled stream
+  (`MODEL_STREAM_STALLED`) or broken code is an infrastructure error. It stays out of the metrics, and above 5% of the attempts it makes the
   series `invalid`. See
   [How a series decides](/concepts/how-a-series-decides/#a-failure-or-an-infrastructure-error).
 - **`series_cancel`** takes a `series_id` and an optional `reason`. Queued attempts never start. Model

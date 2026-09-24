@@ -1,6 +1,7 @@
 import type { ExecutionStatus } from "@/domain"
 import { EXECUTION_STATUS_TONE, NO_PAINT, type CellPaint, type Tone } from "@/components/studio"
-import type { CallColumn } from "./model"
+import { stageFailedBelow } from "./failures"
+import type { CallColumn, StageRun } from "./model"
 
 type PaintRule = {
   readonly matches: (column: CallColumn, open: boolean, selected: boolean) => boolean
@@ -20,5 +21,10 @@ export const columnPaint = (column: CallColumn, open: boolean, selected: boolean
   PAINT_RULES.find((rule) => rule.matches(column, open, selected))?.paint ?? NO_PAINT
 
 export const statusTone = (status: ExecutionStatus): Tone => EXECUTION_STATUS_TONE[status]
+
+const PARTIAL_TONE: Tone = "warning"
+
+export const stageTone = (stage: StageRun): Tone =>
+  stage.status === "ok" && stageFailedBelow(stage) > 0 ? PARTIAL_TONE : statusTone(stage.status)
 
 export const outputPaint = (column: CallColumn): CellPaint => ({ accent: statusTone(column.status) })

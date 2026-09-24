@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react"
-import { AssistantRuntimeProvider, useExternalStoreRuntime, type AppendMessage, type ThreadMessageLike } from "@assistant-ui/react"
+import { useEffect, useMemo, useState } from "react"
+import {
+  AssistantRuntimeProvider,
+  useExternalStoreRuntime,
+  type AppendMessage,
+  type ExternalThreadQueueAdapter,
+  type ThreadMessageLike,
+} from "@assistant-ui/react"
 import type { ApiChatEvent, ApiChatSession } from "@/domain"
 import { chatSessionId, clientOpId } from "@/data/ids"
+import { noop } from "@/lib/noop"
 import { applyChatEvent, EMPTY_TRANSCRIPT, isRunning, threadMessages, type ChatTranscript } from "./chat-events"
 import type { ChatTransport } from "./chat-transport"
 import { QuestionAnswerContext, type QuestionAnswerSubmit } from "./question-context"
@@ -18,6 +25,18 @@ const appendText = (message: AppendMessage): string =>
 
 const keepMessage = (message: ThreadMessageLike): ThreadMessageLike => message
 
+type Dispatch = (message: AppendMessage) => void
+
+const serverQueue = (dispatch: Dispatch): ExternalThreadQueueAdapter => ({
+  items: [],
+  steerItems: [],
+  enqueue: dispatch,
+  steer: dispatch,
+  move: noop,
+  edit: noop,
+  remove: noop,
+})
+
 export function ChatSession({ session, transport }: ChatSessionProps) {
   const [transcript, setTranscript] = useState<ChatTranscript>(EMPTY_TRANSCRIPT)
   const id = chatSessionId(session.session_id)
@@ -29,10 +48,19 @@ export function ChatSession({ session, transport }: ChatSessionProps) {
     return transport.subscribe(id, 0, receive)
   }, [id, transport])
 
+  const queue = useMemo(
+    () =>
+      serverQueue((message) => {
+        void transport.send(id, appendText(message), clientOpId())
+      }),
+    [id, transport],
+  )
+
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({
     messages: threadMessages(transcript),
     isRunning: isRunning(transcript),
     convertMessage: keepMessage,
+    queue,
     onNew: async (message: AppendMessage) => {
       await transport.send(id, appendText(message), clientOpId())
     },
@@ -52,7 +80,7 @@ export function ChatSession({ session, transport }: ChatSessionProps) {
     <AssistantRuntimeProvider runtime={runtime}>
       <QuestionAnswerContext value={answer}>
         <ReasoningSpanContext value={transcript.reasoning}>
-          <Thread failure={transcript.failure} state={transcript.state} />
+          <Thread failure={transcript.failure} state={transcript.state} queued={transcript.queued} />
         </ReasoningSpanContext>
       </QuestionAnswerContext>
     </AssistantRuntimeProvider>

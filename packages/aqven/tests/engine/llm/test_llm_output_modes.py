@@ -234,9 +234,12 @@ def test_provider_rejection_keeps_complete_redacted_response_body() -> None:
     final = feature_unsupported(ModelHTTPError(404, "qwen", body), context)
 
     assert final is not None and final.details is not None
-    assert final.details.raw_excerpt == body.replace("anna@example.com", "<EMAIL>")
-    assert final.details.raw_excerpt is not None and len(final.details.raw_excerpt) > 2000
+    assert final.details.raw_excerpt is None
+    assert final.details.provider_response == body.replace("anna@example.com", "<EMAIL>")
+    assert final.details.provider_response is not None and len(final.details.provider_response) > 2000
+    assert final.details.status_code == 404
     assert len(final.message) < 500
+    assert "anna@example.com" not in final.message
 
 
 def test_node_failure_is_one_log_record_and_span_attributes(caplog: pytest.LogCaptureFixture) -> None:

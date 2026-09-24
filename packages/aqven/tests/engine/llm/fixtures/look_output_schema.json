@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "ViewFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "description": "The zone the sign sits in",
+          "enum": [
+            "forehead",
+            "glabella",
+            "temples",
+            "periorbital",
+            "nose",
+            "cheek_left",
+            "cheek_right",
+            "perioral",
+            "chin",
+            "jawline",
+            "neck",
+            "hairline"
+          ],
+          "type": "string"
+        },
+        "kind": {
+          "description": "Which sign it is",
+          "enum": [
+            "erythema",
+            "telangiectasia",
+            "inflammatory_lesions",
+            "comedones",
+            "post_inflammatory_marks",
+            "enlarged_pores",
+            "uneven_texture",
+            "oiliness",
+            "dryness",
+            "dyschromia",
+            "static_lines",
+            "dynamic_lines",
+            "periorbital_darkening",
+            "periorbital_puffiness",
+            "laxity",
+            "scarring"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "description": "What in this photograph shows it, written before the severity and the confidence are set",
+          "maxLength": 300,
+          "type": "string"
+        },
+        "severity": {
+          "description": "How pronounced it is",
+          "enum": [
+            "absent",
+            "mild",
+            "moderate",
+            "marked"
+          ],
+          "type": "string"
+        },
+        "confidence": {
+          "description": "How much this photograph supports the reading, separately from how pronounced it is",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "zone",
+        "kind",
+        "evidence",
+        "severity",
+        "confidence"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "view": {
+      "description": "The angle that was read, echoed back from the input",
+      "enum": [
+        "frontal",
+        "left_side",
+        "right_side",
+        "chin_up",
+        "head_down"
+      ],
+      "type": "string"
+    },
+    "legible": {
+      "description": "Whether this photograph allows any skin reading at all",
+      "type": "boolean"
+    },
+    "zones_visible": {
+      "description": "The zones this angle shows well enough to judge; empty when the scan is not legible",
+      "items": {
+        "enum": [
+          "forehead",
+          "glabella",
+          "temples",
+          "periorbital",
+          "nose",
+          "cheek_left",
+          "cheek_right",
+          "perioral",
+          "chin",
+          "jawline",
+          "neck",
+          "hairline"
+        ],
+        "type": "string"
+      },
+      "maxItems": 12,
+      "type": "array"
+    },
+    "limitations": {
+      "description": "What this angle and this image quality could not settle, written before the findings so they stay inside it",
+      "maxLength": 400,
+      "type": "string"
+    },
+    "findings": {
+      "description": "Signs found in the visible zones; empty is a valid and often correct answer",
+      "items": {
+        "$ref": "#/$defs/ViewFinding"
+      },
+      "maxItems": 12,
+      "type": "array"
+    }
+  },
+  "required": [
+    "view",
+    "legible",
+    "zones_visible",
+    "limitations",
+    "findings"
+  ],
+  "type": "object"
+}

@@ -1,6 +1,7 @@
 import { useTranslations } from "use-intl"
 import type { ApiExecutionDetail } from "@/domain"
 import { EXECUTION_STATUS_TONE, Surface, Tag } from "@/components/studio"
+import { ErrorPanel } from "@/features/runs"
 import { tokensPair, usd } from "@/lib/format"
 
 const decimal = (value: string): number => {
@@ -38,6 +39,7 @@ export function ModelCard({ execution }: { readonly execution: ApiExecutionDetai
 
   return (
     <div className="space-y-3" aria-label={t("model.section")}>
+      {execution.error === null ? null : <ErrorPanel error={execution.error} scope="step" />}
       <Surface variant="panel" padding="md" className="min-w-0">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

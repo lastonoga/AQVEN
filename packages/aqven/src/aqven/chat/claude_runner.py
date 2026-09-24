@@ -15,18 +15,27 @@ from claude_agent_sdk import (
     PermissionResultDeny,
     ProcessError,
     ToolPermissionContext,
+    UserMessage,
 )
 
 from aqven.chat.agent import session_agent
 from aqven.chat.approvals import DENY_MESSAGES, ApprovalVerdict, await_verdict, forced_verdict
-from aqven.chat.builders import ChatEventBuilders, approval_requested, approval_resolved, turn_started
+from aqven.chat.builders import (
+    ChatEventBuilders,
+    approval_requested,
+    approval_resolved,
+    message_delivered,
+    message_queued,
+    turn_started,
+)
 from aqven.chat.claude_runtime import ClaudeChatRuntime, ClaudeClient
-from aqven.chat.claude_wire import json_object
+from aqven.chat.claude_wire import json_object, queued_user_frame, single_frame
 from aqven.chat.errors import ChatFailure
 from aqven.chat.feed import ChatEmitter
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import McpConfigFile
 from aqven.chat.normalizer import UNKNOWN_ERROR, ClaudeEventNormalizer, ErrorClass, backend_session_id
+from aqven.chat.pending_messages import PendingMessage, PendingMessages
 from aqven.chat.questions import answered_input
 from aqven.chat.routes import first_match
 from aqven.chat.tool_names import claude_tool_identity
@@ -96,19 +105,38 @@ class ClaudeSessionRunner:
         self._backend_session_id: str | None = None
         self._turn_started_at = 0.0
         self._connecting = asyncio.Lock()
+        self._sending = asyncio.Lock()
+        self._pending = PendingMessages()
+        self._writes: set[asyncio.Task[None]] = set()
+        self._written: dict[str, int] = {}
+        self._generation = 0
 
     @property
     def busy(self) -> bool:
         return self._emitter.turn_id is not None
 
+    def send(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
+        running = self._emitter.turn_id
+        if running is None:
+            return self.begin_turn(client_op_id, text)
+        message = PendingMessage(client_op_id, text, self._runtime.ids())
+        self._pending.add(message)
+        self._emitter.emit((message_queued(client_op_id, text, "next_step"),))
+        self._schedule_writes((message,))
+        return running
+
     def begin_turn(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
+        turn_id = self._open_turn(client_op_id, text)
+        self._delivery = asyncio.create_task(self._deliver(text))
+        return turn_id
+
+    def _open_turn(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
         turn_id = ChatTurnId(self._runtime.ids())
         self._emitter.turn_id = turn_id
         self._turn_started_at = time.monotonic()
         self._normalizer.begin_turn()
         agent = self._normalizer.agent
         self._emitter.emit((turn_started(client_op_id, text, agent), *self._normalizer.transition("thinking")))
-        self._delivery = asyncio.create_task(self._deliver(text))
         return turn_id
 
     async def interrupt(self) -> None:
@@ -119,6 +147,7 @@ class ClaudeSessionRunner:
         self._runtime.approvals.resolve_session(self._session_id, "interrupt")
         client = self._client
         if await self._cancel_delivery() or client is None:
+            await self._cancel_writes()
             self._abort_turn((), "interrupted")
             return
         try:
@@ -127,19 +156,50 @@ class ClaudeSessionRunner:
             await self._fail(error)
 
     async def close(self) -> None:
+        self._pending.clear()
         self._runtime.approvals.resolve_session(self._session_id, "session_closed")
         await asyncio.sleep(0)
         await self._cancel_delivery()
+        await self._cancel_writes()
         await self._drop_client()
         self._normalizer.mark_interrupting()
         self._abort_turn((), "interrupted")
 
     async def _deliver(self, text: str) -> None:
-        try:
-            client = await self._connected()
-            await client.query(text)
-        except Exception as error:
-            await self._fail(error)
+        async with self._sending:
+            try:
+                client = await self._connected()
+                await client.query(text)
+            except Exception as error:
+                await self._fail(error)
+
+    def _schedule_writes(self, messages: tuple[PendingMessage, ...]) -> None:
+        for message in messages:
+            task = asyncio.create_task(self._write(message))
+            self._writes.add(task)
+            task.add_done_callback(self._writes.discard)
+
+    async def _write(self, message: PendingMessage) -> None:
+        async with self._sending:
+            try:
+                client = await self._connected()
+            except Exception as error:
+                await self._fail(error)
+                return
+            generation = self._generation
+            if self._written.get(message.wire_id) == generation:
+                return
+            try:
+                await client.query(single_frame(queued_user_frame(message.wire_id, message.text)))
+            except Exception as error:
+                await self._fail_current(client, error)
+                return
+            self._written[message.wire_id] = generation
+
+    async def _fail_current(self, client: ClaudeClient, error: Exception) -> None:
+        if client is not self._client:
+            return
+        await self._fail(error)
 
     async def _connected(self) -> ClaudeClient:
         async with self._connecting:
@@ -150,6 +210,7 @@ class ClaudeSessionRunner:
             client = self._runtime.client_factory(launch.options)
             await client.connect()
             self._client = client
+            self._generation += 1
             self._normalizer.restart_cost()
             self._reader = asyncio.create_task(self._read(client))
             return client
@@ -171,9 +232,25 @@ class ClaudeSessionRunner:
 
     def _consume(self, message: Message) -> None:
         self._remember(backend_session_id(message))
-        events = self._emitter.emit(self._normalizer.normalize(message))
+        events = self._emitter.emit((*self._delivered(message), *self._normalizer.normalize(message)))
         if any(isinstance(event, ChatTurnFinished) for event in events):
-            self._emitter.turn_id = None
+            self._turn_closed()
+
+    def _delivered(self, message: Message) -> ChatEventBuilders:
+        wire_id = message.uuid if isinstance(message, UserMessage) else None
+        delivered = self._pending.take(wire_id)
+        return () if delivered is None else (message_delivered(delivered.client_op_id),)
+
+    def _turn_closed(self) -> None:
+        self._emitter.turn_id = None
+        upcoming = self._pending.take_first()
+        if upcoming is None:
+            return
+        self._open_turn(upcoming.client_op_id, upcoming.text)
+        self._schedule_writes(self._unwritten((upcoming, *self._pending.waiting())))
+
+    def _unwritten(self, messages: tuple[PendingMessage, ...]) -> tuple[PendingMessage, ...]:
+        return tuple(message for message in messages if self._written.get(message.wire_id) != self._generation)
 
     def _remember(self, session_id: str | None) -> None:
         if session_id is None or session_id == self._backend_session_id:
@@ -199,7 +276,7 @@ class ClaudeSessionRunner:
         self._runtime.approvals.resolve_session(self._session_id, "interrupt")
         duration_ms = int((time.monotonic() - self._turn_started_at) * 1000)
         self._emitter.emit((*prefix, *self._normalizer.finished(stop_reason, duration_ms, None)))
-        self._emitter.turn_id = None
+        self._turn_closed()
 
     async def reload_settings(self) -> None:
         await self._drop_client()
@@ -208,6 +285,7 @@ class ClaudeSessionRunner:
         client, reader = self._client, self._reader
         self._client = None
         self._reader = None
+        self._generation += 1
         if reader is not None and reader is not asyncio.current_task():
             reader.cancel()
         if client is not None:
@@ -229,6 +307,13 @@ class ClaudeSessionRunner:
         delivery.cancel()
         await asyncio.wait((delivery,))
         return True
+
+    async def _cancel_writes(self) -> None:
+        writes = tuple(task for task in self._writes if task is not asyncio.current_task())
+        for task in writes:
+            task.cancel()
+        if writes:
+            await asyncio.wait(writes)
 
     async def _can_use_tool(
         self, tool_name: str, tool_input: Mapping[str, object], context: ToolPermissionContext

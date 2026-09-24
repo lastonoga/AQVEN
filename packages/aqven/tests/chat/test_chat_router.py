@@ -171,7 +171,7 @@ def test_resuming_claude_thread_ignores_new_codex_preference(tmp_path: Path) -> 
 
 def test_chat_routes_translate_failures_to_api_errors(tmp_path: Path) -> None:
     turn = [ApprovalStep(tool_name="Bash", tool_use_id="toolu_wait"), *streamed_answer_turn(tmp_path)]
-    harness = chat_harness(tmp_path, ScriptedClientFactory([turn]))
+    harness = chat_harness(tmp_path, ScriptedClientFactory([turn, streamed_answer_turn(tmp_path)]))
 
     async def scenario() -> dict[str, tuple[int, str]]:
         async with client_for(chat_app(harness)) as client:
@@ -184,7 +184,7 @@ def test_chat_routes_translate_failures_to_api_errors(tmp_path: Path) -> None:
             )
             await client.post(f"/api/chat/sessions/{session_id}/messages", json={"text": "go", "client_op_id": "a"})
             request, _ = await next_event(events, ChatApprovalRequested)
-            busy = await client.post(
+            during_turn = await client.post(
                 f"/api/chat/sessions/{session_id}/messages", json={"text": "again", "client_op_id": "b"}
             )
             allowed = await client.post(
@@ -201,7 +201,7 @@ def test_chat_routes_translate_failures_to_api_errors(tmp_path: Path) -> None:
                 "missing": missing,
                 "missing_events": missing_events,
                 "unknown_approval": unknown_approval,
-                "busy": busy,
+                "during_turn": during_turn,
                 "allowed": allowed,
                 "interrupted": interrupted,
                 "closed": closed,
@@ -216,7 +216,7 @@ def test_chat_routes_translate_failures_to_api_errors(tmp_path: Path) -> None:
         "missing": (404, "NOT_FOUND"),
         "missing_events": (404, "NOT_FOUND"),
         "unknown_approval": (409, "NOT_WAITING"),
-        "busy": (409, "CHAT_STATE_CONFLICT"),
+        "during_turn": (202, ""),
         "allowed": (200, ""),
         "interrupted": (200, ""),
         "closed": (409, "CHAT_STATE_CONFLICT"),

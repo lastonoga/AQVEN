@@ -1,12 +1,14 @@
 import type { ApiNodeCounts, ApiRun, ApiValueRef, IsoDateTime, RunId } from "@/domain"
-import { RUN_STATUS_TONE, type Tone } from "@/components/studio"
+import type { Tone } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { count, runRef, seconds, usd } from "@/lib/format"
+import { runStatusLook, type RunStatusLook } from "./run-status"
 
 export type RunRow = {
   readonly id: RunId
   readonly ref: string
   readonly tone: Tone
+  readonly status: RunStatusLook
   readonly run: ApiRun
   readonly selected: boolean
   readonly startedAt: IsoDateTime
@@ -65,11 +67,13 @@ const forkedFrom = (run: ApiRun): string | null => {
 
 const waitingOn = (run: ApiRun): string | null => run.waits.at(0)?.assignee ?? null
 
-export const runRows = (runs: readonly ApiRun[], selected: RunId | null, now: Date): readonly RunRow[] =>
-  runs.map((run) => ({
+const runRow = (run: ApiRun, selected: RunId | null, now: Date): RunRow => {
+  const status = runStatusLook(run.status, run.node_counts)
+  return {
     id: ids.runId(run.run_id),
     ref: runRef(run.run_id),
-    tone: RUN_STATUS_TONE[run.status],
+    tone: status.tone,
+    status,
     run,
     selected: run.run_id === selected,
     startedAt: ids.isoDateTime(run.started_at),
@@ -81,7 +85,11 @@ export const runRows = (runs: readonly ApiRun[], selected: RunId | null, now: Da
     progress: progressOf(run.node_counts),
     waitingOn: waitingOn(run),
     forkedFrom: forkedFrom(run),
-  }))
+  }
+}
+
+export const runRows = (runs: readonly ApiRun[], selected: RunId | null, now: Date): readonly RunRow[] =>
+  runs.map((run) => runRow(run, selected, now))
 
 export const inlineJson = (ref: ApiValueRef | null): string | null => {
   if (ref === null) return null

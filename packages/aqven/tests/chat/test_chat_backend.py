@@ -172,31 +172,29 @@ def test_turn_events_name_the_backend_and_the_model_that_produced_them(tmp_path:
     assert (reopened.backend, reopened.model) == ("claude", MODEL)
 
 
-def test_message_operation_is_idempotent_and_busy_session_rejects_second_turn(tmp_path: Path) -> None:
+def test_message_operation_is_idempotent(tmp_path: Path) -> None:
     turn = [ApprovalStep(tool_name="Bash", tool_use_id="toolu_wait"), *streamed_answer_turn(tmp_path)]
     factory = ScriptedClientFactory([turn])
     harness = chat_harness(tmp_path, factory)
 
-    async def scenario() -> tuple[str, str, str]:
+    async def scenario() -> tuple[str, str]:
         session = await harness.backend.start_session(harness.options())
         events = harness.backend.events(session.session_id)
         first = await harness.backend.send_message(session.session_id, message("one", "op-1"))
         request, _ = await next_event(events, ChatApprovalRequested)
         repeated = await harness.backend.send_message(session.session_id, message("one", "op-1"))
-        with pytest.raises(ChatFailure) as busy:
-            await harness.backend.send_message(session.session_id, message("two", "op-2"))
         await harness.backend.answer_approval(
             session.session_id, ApprovalAnswer(approval_id=request.approval_id, decision="allow")
         )
         await until_turn_finished(events)
         await harness.backend.aclose()
-        return first, repeated, busy.value.code
+        return first, repeated
 
-    first, repeated, code = asyncio.run(scenario())
+    first, repeated = asyncio.run(scenario())
 
     assert first == repeated
-    assert code == "CHAT_STATE_CONFLICT"
     assert factory.clients[0].prompts == ["one"]
+    assert factory.clients[0].queued == []
 
 
 def test_interrupt_resolves_pending_approval_and_finishes_turn(tmp_path: Path) -> None:

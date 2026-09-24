@@ -20,6 +20,7 @@ CLIENT_APP_ENV: Final[str] = "CLAUDE_AGENT_SDK_CLIENT_APP"
 DEFAULT_CLIENT_APP: Final[str] = "aqven-studio"
 DEFAULT_THINKING_BUDGET_TOKENS: Final[int] = 8000
 TRUSTED_MODE: Final[PermissionMode] = "bypassPermissions"
+REPLAY_USER_MESSAGES_FLAG: Final[str] = "replay-user-messages"
 PERMISSION_MODES: Final[Mapping[ChatPermissionMode, PermissionMode]] = {
     "default": "default",
     "accept_edits": "acceptEdits",
@@ -93,5 +94,6 @@ class ClaudeOptionsFactory:
             ),
             resume=stored.backend_session_id,
             env={**scrubbed_environment(project_root), CLIENT_APP_ENV: self.settings.client_app},
+            extra_args={REPLAY_USER_MESSAGES_FLAG: None},
         )
         return ClaudeLaunch(options, config)
