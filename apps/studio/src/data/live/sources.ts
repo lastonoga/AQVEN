@@ -31,6 +31,7 @@ import type { SchemaPresentationResponse, SchemaPresentationTarget, SchemaRunSor
 import { API_BASE, api, unwrap } from "@/api/client"
 import { everyPage, MAX_PAGE } from "./paging"
 import { research } from "./research"
+import { server } from "./server"
 
 export type RunSort = SchemaRunSort
 
@@ -256,6 +257,6 @@ export const chatEventsUrl = (sessionId: ChatSessionId, afterSeq: number | null)
     ? `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events`
     : `${API_BASE}/chat/sessions/${encodeURIComponent(sessionId)}/events?after_seq=${String(afterSeq)}`
 
-export const liveSources = { project, flow, run, datasets, research, chat, settings, blob }
+export const liveSources = { project, server, flow, run, datasets, research, chat, settings, blob }
 
 export type LiveSources = typeof liveSources

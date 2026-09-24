@@ -24,6 +24,115 @@
         "x-aqven-rest-only": "readiness probe"
       }
     },
+    "/api/status": {
+      "get": {
+        "summary": "Get Status",
+        "operationId": "status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "x-aqven-rest-only": "server status for Studio"
+      }
+    },
     "/api/project": {
       "get": {
         "summary": "Get Project",
@@ -28947,6 +29056,28 @@
         ],
         "title": "SeriesVerdict"
       },
+      "ServerStatus": {
+        "properties": {
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/StatusCheck"
+            },
+            "type": "array",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checked_at",
+          "checks"
+        ],
+        "title": "ServerStatus"
+      },
       "SettingDeleted": {
         "properties": {
           "scope": {
@@ -29409,6 +29540,58 @@
           "paired_bootstrap_quantile"
         ],
         "title": "StatMethod"
+      },
+      "StatusCheck": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/StatusCheckId"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StatusState"
+          },
+          "counts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "object",
+            "title": "Counts"
+          },
+          "names": {
+            "$ref": "#/components/schemas/StatusNames"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "state",
+          "counts",
+          "names"
+        ],
+        "title": "StatusCheck"
+      },
+      "StatusCheckId": {
+        "type": "string",
+        "enum": [
+          "database",
+          "engine",
+          "project",
+          "model_keys"
+        ]
+      },
+      "StatusNames": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "maxItems": 20
+      },
+      "StatusState": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "warning",
+          "error"
+        ]
       },
       "StructuredMode": {
         "type": "string",
