@@ -136,8 +136,8 @@ STATUS_HINTS: Final[Mapping[int, str]] = {
     403: "the provider refused access to this model: check the key permissions or choose another model in {agent}",
     404: "the provider does not serve this model with these parameters: check the model name in {agent}; {check}",
     413: "the request is too large for this model: send smaller media or less context",
-    429: "the provider kept rate-limiting after the retries: lower limits.rpm of the provider in aqven.yaml "
-    "or add fallback_models from another provider in {agent}",
+    429: "the provider kept rate-limiting after the retries: lower limits.rpm or limits.concurrency of the provider "
+    "in aqven.yaml, or add fallback_models from another provider in {agent}",
 }
 SERVER_HINT: Final = (
     "the provider failed on its side after the retries: run again later or add fallback_models "

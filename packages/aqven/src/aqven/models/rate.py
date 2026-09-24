@@ -1,19 +1,16 @@
 import asyncio
 import time
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Final
 
 from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 
-from aqven.models.backoff import Sleep
+from aqven.models.lanes import Clock, LoggedPauses, ModelLane, PauseListener, Sleep, lane_ceiling, rate_limit_strategy
 from aqven.models.waits import record_wait
 from aqven.spec import ProviderName, ProviderSpec
 
 SECONDS_PER_MINUTE: Final = 60.0
 MINIMUM_RPM: Final = 1
-
-type Clock = Callable[[], float]
 
 
 class RateLimiter(AbstractConcurrencyLimiter):
@@ -46,7 +43,9 @@ class RateLimiter(AbstractConcurrencyLimiter):
 class ProviderLimiters:
     clock: Clock = time.monotonic
     sleep: Sleep = asyncio.sleep
+    listener: PauseListener = field(default_factory=LoggedPauses)
     limiters: dict[ProviderName, RateLimiter | None] = field(default_factory=dict[ProviderName, "RateLimiter | None"])
+    lanes: dict[str, ModelLane] = field(default_factory=dict[str, ModelLane])
 
     def of(self, spec: ProviderSpec | None) -> RateLimiter | None:
         if spec is None:
@@ -55,8 +54,24 @@ class ProviderLimiters:
             self.limiters[spec.id] = self._build(spec)
         return self.limiters[spec.id]
 
+    def lane(self, model: str, spec: ProviderSpec | None) -> ModelLane:
+        if model not in self.lanes:
+            self.lanes[model] = self._lane(model, spec)
+        return self.lanes[model]
+
     def _build(self, spec: ProviderSpec) -> RateLimiter | None:
         rpm = None if spec.limits is None else spec.limits.rpm
         if rpm is None:
             return None
         return RateLimiter(rpm=rpm, clock=self.clock, sleep=self.sleep)
+
+    def _lane(self, model: str, spec: ProviderSpec | None) -> ModelLane:
+        return ModelLane(
+            model,
+            ceiling=lane_ceiling(spec),
+            strategy=rate_limit_strategy(spec),
+            pacing=self.of(spec),
+            clock=self.clock,
+            sleep=self.sleep,
+            listener=self.listener,
+        )

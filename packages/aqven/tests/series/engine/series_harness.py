@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 from pydantic import JsonValue, SecretStr
 from pydantic_ai.messages import ModelMessage, ModelRequest, UserPromptPart
@@ -121,6 +121,10 @@ class ScriptedGrades:
         return FunctionModel(stream_function=self.stream, model_name=self.model_name)
 
 
+class ModelScript(Protocol):
+    def mapping(self) -> Mapping[str, Model]: ...
+
+
 @dataclass(slots=True)
 class ScriptedModels:
     writer: ScriptedLabels = field(default_factory=lambda: ScriptedLabels(WRITER_NAME))
@@ -211,7 +215,7 @@ class SeriesHarness:
 @contextmanager
 def series_engine(
     root: Path,
-    models: ScriptedModels,
+    models: ModelScript,
     settings: MemorySettings | None = None,
     real: SeriesAnalyst | None = None,
     engine_prices: PriceCache = NO_PRICES,

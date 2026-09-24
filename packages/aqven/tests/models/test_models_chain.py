@@ -9,6 +9,7 @@ import pytest
 from models_support import (
     Chunk,
     FailingModel,
+    LaneClock,
     MemorySettings,
     Script,
     ScriptedModel,
@@ -65,6 +66,7 @@ from aqven.models import (
     request_key,
 )
 from aqven.models.cassette import CASSETTE_BEHAVIORS
+from aqven.models.lanes import ModelLane
 from aqven.models.outcome import gate_response
 from aqven.models.rate import RateLimiter
 from aqven.ports.prices import NO_PRICES, CachedPrices
@@ -510,13 +512,18 @@ def test_backoff_retries_transient_errors_with_retry_after() -> None:
         ModelAPIError("m", "connection reset"),
     ]
     inner = ScriptedModel([text_script("ok")], open_errors=errors)
-    call_policy = CallPolicy(cassettes=cassettes(MemoryCassetteStore(), None), backoff=NO_WAIT, backoff_sleep=sleep)
+    clock = LaneClock()
+    lane = ModelLane(MODEL_REF, clock=clock.time, sleep=clock.sleep)
+    call_policy = CallPolicy(
+        cassettes=cassettes(MemoryCassetteStore(), None), backoff=NO_WAIT, backoff_sleep=sleep, lane=lane
+    )
 
     response = asyncio.run(guarded(inner, call_policy).request(prompt("a"), None, ModelRequestParameters()))
 
     assert response.parts == [TextPart("ok")]
     assert inner.opens == 3
-    assert sleeps == [2.0, 0.0]
+    assert sleeps == [0.0, 0.0]
+    assert clock.waits == [2.0]
 
 
 def test_backoff_does_not_retry_client_errors() -> None:

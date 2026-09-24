@@ -5,7 +5,6 @@ from typing import Final, Protocol
 
 from pydantic import SecretStr
 from pydantic_ai import ModelHTTPError
-from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse
 from pydantic_ai.settings import ModelSettings
@@ -25,6 +24,7 @@ from aqven.models import (
     current_call_site,
     guard_model,
 )
+from aqven.models.lanes import ModelLane
 from aqven.models.providers import CUSTOM_KINDS, custom_options, key_variable
 from aqven.models.rate import ProviderLimiters
 from aqven.models.streams import StreamContext, StreamFirstModel
@@ -228,7 +228,7 @@ class EngineModelSource:
         cassettes = cassette_policy(None if spec is None else spec.cassettes, secrets=secrets)
         policy = CallPolicy(
             cassettes=cassettes,
-            concurrency=self._limiter(scope.project, actual),
+            lane=self._lane(scope.project, actual),
             budget=run_budget(self.budgets, scope, spec),
             usage_sink=ContextUsageSink(),
             prices=self.prices,
@@ -236,6 +236,6 @@ class EngineModelSource:
         guarded = guard_model(provider_model, model_ref=actual, policy=policy)
         return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), actual, position)
 
-    def _limiter(self, project: CompiledProject, model: str) -> AbstractConcurrencyLimiter | None:
+    def _lane(self, project: CompiledProject, model: str) -> ModelLane:
         shared = self.limiters if self.limiters is not None else ProviderLimiters()
-        return shared.of(provider_spec(project, model_provider(model)))
+        return shared.lane(model, provider_spec(project, model_provider(model)))

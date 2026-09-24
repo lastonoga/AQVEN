@@ -362,7 +362,8 @@ spend or raise the project cap; report the spend of every round.
   `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_RETRIES_EXHAUSTED`, `OUTPUT_SCHEMA_REJECTED`), `model_fail` (a run-time check
   failed, the output was truncated) and `refusal` are counted: the attempt fails `success_rate` and every binary
   check. `provider_error`, `timeout`, `MODEL_STREAM_STALLED`, `provider_key_missing`, `INTERNAL` and the like are
-  infrastructure errors: not counted, and above 5% of the attempts the series is `invalid`.
+  infrastructure errors: not counted, and above 5% of the attempts the series is `invalid`. An attempt that ends on a
+  rate limit (`provider_error`, HTTP 429) runs once more at the end of the series before it counts.
 - A counted failure is the engine working: it refuses invalid output instead of passing it on. The gemini agent
   (`gemini-2.5-flash-lite`, `output.retries: 2`) on `support_case.triage` broke the `maxLength: 200` of an
   observation three times in a row, the run ended `MODEL_RETRIES_EXHAUSTED`, and the series counted it against
