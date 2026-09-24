@@ -8,6 +8,7 @@ type FinishedExecutionStatus = Literal["ok", "failed", "skipped", "cancelled"]
 type WaitKind = Literal["form", "tool_approval"]
 type WaitState = Literal["waiting", "resolved", "timed_out"]
 type OnTimeoutAction = Literal["fail", "default", "escalate"]
+type ItemRecoveryDecision = Literal["skip", "default"]
 type ResumeOutcome = Literal["accepted", "replayed", "sent"]
 type IncludePayloads = Literal["none", "truncated", "full"]
 type AttemptCauseKind = Literal[
