@@ -1,3 +1,4 @@
+import type { AnyRouter } from "@tanstack/react-router"
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -57,13 +58,29 @@ const seriesTables = (): Promise<HTMLElement[]> => screen.findAllByRole("table",
 const listedLink = async (id: string): Promise<HTMLElement | undefined> =>
   (await seriesTables()).flatMap((table) => within(table).queryAllByRole("link", { name: seriesLink(id) }))[0]
 
+let opened: AnyRouter | null = null
+
+const open = async (path: string): Promise<AnyRouter> => {
+  opened = await renderRoute(path)
+  return opened
+}
+
+const settled = async (router: AnyRouter | null): Promise<void> => {
+  if (router === null) return
+  await waitFor(() => {
+    expect(router.state.status).toBe("idle")
+  })
+}
+
 describe("project channel refreshes research pages in place", () => {
   beforeEach(() => {
     FakeEventStream.reset()
     vi.stubGlobal("EventSource", FakeEventStream)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settled(opened)
+    opened = null
     server.events.removeAllListeners()
     vi.unstubAllGlobals()
   })
@@ -73,7 +90,7 @@ describe("project channel refreshes research pages in place", () => {
     const second = summary(RESEARCH_SERIES.critiqueDev)
     let rows: readonly ApiSeriesSummary[] = [first]
     server.use(http.get(`${API_BASE}/series`, () => HttpResponse.json({ items: rows, next_cursor: null, total_estimate: rows.length })))
-    await renderRoute("/research/series")
+    await open("/research/series")
     expect(await listedLink(first.series_id)).toBeDefined()
     expect(screen.queryByRole("link", { name: seriesLink(second.series_id) })).toBeNull()
 
@@ -85,7 +102,7 @@ describe("project channel refreshes research pages in place", () => {
 
   it("reloads the open experiment for its own series and ignores another experiment", async () => {
     const detail = requestsTo(`${API_BASE}/experiments/${EXPERIMENT}`)
-    await renderRoute(`/research/experiments/${EXPERIMENT}`)
+    await open(`/research/experiments/${EXPERIMENT}`)
     await screen.findByRole("heading", { level: 1 })
     const loaded = detail.count()
 
@@ -101,7 +118,7 @@ describe("project channel refreshes research pages in place", () => {
 
   it("leaves an unrelated page alone for an experiment edit and reloads it for any other file", async () => {
     const listed = requestsTo(`${API_BASE}/series`)
-    await renderRoute("/research/series")
+    await open("/research/series")
     await seriesTables()
     const loaded = listed.count()
     const experimentFile = `experiments/${EXPERIMENT}/experiment.yaml`
@@ -118,7 +135,7 @@ describe("project channel refreshes research pages in place", () => {
   })
 
   it("keeps one project stream across research pages and opens no stream per series", async () => {
-    const router = await renderRoute("/research/series")
+    const router = await open("/research/series")
     const running = await listedLink(RESEARCH_SERIES.escalationRunning)
     if (running === undefined) throw new Error("the running series is not listed")
     fireEvent.click(running)
