@@ -69,8 +69,9 @@ status, then the verdict, then the numbers behind it, then the cases.
   first, and counts the rest in `hidden_cases`. Held-out cases are never shown one by one.
 - **Tell a failure from an infrastructure error.** A failed attempt counts: a check failed, or the model's
   output broke its type even after the retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`), or
-  the model refused. An infrastructure error doesn't count toward the metrics: a missing key, a provider
-  error, a timeout. See
+  the provider refused the output type as too complex for the model (`OUTPUT_SCHEMA_REJECTED`), or the
+  model refused. An infrastructure error doesn't count toward the metrics: a missing key, a provider
+  error, a timeout, a model that stopped streaming (`MODEL_STREAM_STALLED`). See
   [a failure or an infrastructure error](/concepts/how-a-series-decides/#a-failure-or-an-infrastructure-error).
 - **Check the spend.** `spend.usd` is what the attempts cost, against `spend.cap_usd`. When
   `spend.unpriced_attempts` is above 0, some attempts ran on a model without a known price. The spend is

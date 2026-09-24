@@ -126,5 +126,5 @@ def _failed(
         code=final.code if last is None else last.code,
         message=final.message if last is None else last.message,
         hint=final.hint,
-        excerpt=None if details is None else details.raw_excerpt,
+        excerpt=None if details is None else details.raw_excerpt or details.provider_response,
     )

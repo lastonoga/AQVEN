@@ -38,6 +38,7 @@ type ModelOutputErrorCode = Literal[
     "MODEL_SCHEMA_MISMATCH",
     "MODEL_FEATURE_UNSUPPORTED",
     "MODEL_RETRIES_EXHAUSTED",
+    "OUTPUT_SCHEMA_REJECTED",
 ]
 
 MODEL_OUTPUT_ERROR_CODES: Final[frozenset[str]] = frozenset(get_args(ModelOutputErrorCode.__value__))

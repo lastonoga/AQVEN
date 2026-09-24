@@ -35,9 +35,11 @@ const DICTATION_ACTIONS: readonly ComposerAction[] = [
   { label: "stopDictationAria", condition: isDictating, Primitive: ComposerPrimitive.StopDictation, Icon: MicOff, look: { variant: "destructive", size: "icon-sm" } },
 ]
 
+const always = (): boolean => true
+
 const SUBMIT_ACTIONS: readonly ComposerAction[] = [
-  { label: "sendAria", condition: (state) => !state.thread.isRunning, Primitive: ComposerPrimitive.Send, Icon: ArrowUp, look: { size: "icon-round" } },
-  { label: "cancelAria", condition: (state) => state.thread.isRunning, Primitive: ComposerPrimitive.Cancel, Icon: Square, look: { size: "icon-round" } },
+  { label: "cancelAria", condition: (state) => state.thread.isRunning, Primitive: ComposerPrimitive.Cancel, Icon: Square, look: { variant: "outline", size: "icon-round" } },
+  { label: "sendAria", condition: always, Primitive: ComposerPrimitive.Send, Icon: ArrowUp, look: { size: "icon-round" } },
 ]
 
 function ComposerActions({ actions }: { readonly actions: readonly ComposerAction[] }) {

@@ -22,6 +22,7 @@ from aqven.testing import copy_project
 FIXTURE: Final = Path(__file__).parent.parent / "fixtures" / "fixture_shop"
 CHEAP: Final = "shared/cheap.yaml"
 TOKEN_PATTERN: Final = re.compile(r"'([^']+)'")
+TOGETHER_KEY: Final = "TOGETHER_API_KEY"
 
 
 @pytest.fixture
@@ -219,3 +220,18 @@ def test_provider_options_must_be_valid_json(shop: Path, capsys: pytest.CaptureF
     assert main(["models", "shapes", "cheap", "--project", str(shop), "--live", "--provider-options", "not json"]) == 1
 
     assert "not valid JSON" in capsys.readouterr().err
+
+
+def test_shapes_say_the_key_variable_is_empty_when_the_project_env_lacks_it_too(
+    shop: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv(TOGETHER_KEY, "")
+
+    assert shapes_models(request(shop, "cheap"), out=StringIO()) == 1
+
+    error = capsys.readouterr().err
+    assert error.startswith("aqven models shapes: no API key for provider 'together'")
+    assert error.endswith(
+        f"; {TOGETHER_KEY} is set to an empty string in the environment, which counts as unset, "
+        f"and {(shop / '.env').as_posix()} has no value for it\n"
+    )

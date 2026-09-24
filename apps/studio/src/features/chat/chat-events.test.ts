@@ -93,3 +93,74 @@ describe("applyChatEvents", () => {
     expect(answered[1]).toMatchObject({ approval: { id: "ap_1", approved: false } })
   })
 })
+
+const QUEUED_AT = "2026-09-17T21:56:04Z"
+const SESSION_ID = "01a0b15e-69af-71c7-a54d-213c4df2385e"
+const TURN_ID = "01a0b15e-6a13-7571-9226-48395adeb839"
+const FOLLOW_UP = "Also run the tests."
+
+const running = liveTurnEvents.filter((event) => event.seq <= 44)
+
+const queuedEvent = (seq: number, delivery: "next_step" | "after_turn"): ApiChatEvent => ({
+  seq,
+  at: QUEUED_AT,
+  session_id: SESSION_ID,
+  turn_id: TURN_ID,
+  type: "chat_message_queued",
+  client_op_id: "op-2",
+  text: FOLLOW_UP,
+  delivery,
+})
+
+const deliveredEvent = (seq: number): ApiChatEvent => ({
+  seq,
+  at: QUEUED_AT,
+  session_id: SESSION_ID,
+  turn_id: TURN_ID,
+  type: "chat_message_delivered",
+  client_op_id: "op-2",
+})
+
+const followUpTurn = (seq: number): ApiChatEvent => ({
+  seq,
+  at: QUEUED_AT,
+  session_id: SESSION_ID,
+  turn_id: "turn-2",
+  type: "chat_turn_started",
+  client_op_id: "op-2",
+  text: FOLLOW_UP,
+  backend: "claude",
+  model: null,
+})
+
+const userTexts = (events: readonly ApiChatEvent[]): readonly unknown[] =>
+  threadMessages(applyChatEvents(EMPTY_TRANSCRIPT, events))
+    .filter((message) => message.role === "user")
+    .map((message) => message.content)
+
+describe("messages sent while the agent works", () => {
+  it("keeps a queued message out of the thread until the agent reads it", () => {
+    const queued = applyChatEvents(EMPTY_TRANSCRIPT, [...running, queuedEvent(45, "next_step")])
+    expect(queued.queued).toEqual([{ id: "op-2", text: FOLLOW_UP, delivery: "next_step" }])
+    expect(userTexts([...running, queuedEvent(45, "next_step")])).toHaveLength(1)
+
+    const delivered = applyChatEvents(queued, [deliveredEvent(46)])
+    expect(delivered.queued).toEqual([])
+    expect(threadMessages(delivered).at(-1)).toEqual({ role: "user", id: "op-2", content: [{ type: "text", text: FOLLOW_UP }] })
+  })
+
+  it("hands a message queued for after the turn to the turn it opens", () => {
+    const events = [...running, queuedEvent(45, "after_turn"), followUpTurn(46)]
+    const transcript = applyChatEvents(EMPTY_TRANSCRIPT, events)
+    expect(transcript.queued).toEqual([])
+    expect(userTexts(events)).toEqual([
+      [{ type: "text", text: "List the flow ids in this project with one Bash command, then answer in one short sentence." }],
+      [{ type: "text", text: FOLLOW_UP }],
+    ])
+  })
+
+  it("updates the promise when the backend moves a message to the next turn", () => {
+    const transcript = applyChatEvents(EMPTY_TRANSCRIPT, [...running, queuedEvent(45, "next_step"), queuedEvent(46, "after_turn")])
+    expect(transcript.queued).toEqual([{ id: "op-2", text: FOLLOW_UP, delivery: "after_turn" }])
+  })
+})

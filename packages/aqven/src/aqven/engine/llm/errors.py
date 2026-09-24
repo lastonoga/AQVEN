@@ -1,7 +1,8 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Final
+from typing import Final, TypeIs
 
+import httpx2
 from pydantic_ai import (
     IncompleteToolCall,
     ModelAPIError,
@@ -28,6 +29,8 @@ class LlmFailureCode(StrEnum):
     REFUSAL = "refusal"
     TRUNCATED = "truncated"
     TIMEOUT = "timeout"
+    STREAM_STALLED = "MODEL_STREAM_STALLED"
+    OUTPUT_SCHEMA_REJECTED = "OUTPUT_SCHEMA_REJECTED"
     APPROVAL_MISSING = "approval_missing"
     TOOL_UNKNOWN = "tool_unknown"
     CASSETTE_MISS = "cassette_miss"
@@ -37,10 +40,11 @@ class LlmFailureCode(StrEnum):
 
 
 class LlmNodeError(Exception):
-    def __init__(self, code: LlmFailureCode, message: str) -> None:
+    def __init__(self, code: LlmFailureCode, message: str, hint: str | None = None) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
+        self.hint = hint
 
 
 FAILURE_BY_EXCEPTION: Final[Mapping[type[BaseException], LlmFailureCode]] = {
@@ -51,6 +55,8 @@ FAILURE_BY_EXCEPTION: Final[Mapping[type[BaseException], LlmFailureCode]] = {
     ModelHTTPError: LlmFailureCode.PROVIDER_ERROR,
     ModelAPIError: LlmFailureCode.PROVIDER_ERROR,
     TimeoutError: LlmFailureCode.TIMEOUT,
+    httpx2.TimeoutException: LlmFailureCode.TIMEOUT,
+    httpx2.TransportError: LlmFailureCode.PROVIDER_ERROR,
 }
 
 
@@ -80,4 +86,16 @@ def failure_code(
 ) -> LlmFailureCode | None:
     if isinstance(error, LlmNodeError):
         return error.code
+    members = group_members(error)
+    if members:
+        codes = (failure_code(item, table) for item in members)
+        return next((code for code in codes if code is not None), None)
     return next((table[kind] for kind in type(error).__mro__ if kind in table), None)
+
+
+def group_members(error: BaseException) -> tuple[BaseException, ...]:
+    return error.exceptions if is_group(error) else ()
+
+
+def is_group(error: BaseException) -> TypeIs[BaseExceptionGroup[BaseException]]:
+    return isinstance(error, BaseExceptionGroup)

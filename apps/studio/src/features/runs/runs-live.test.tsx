@@ -82,7 +82,7 @@ describe("RunsScreen live events", () => {
     })
     expect(source.closed).toBe(true)
     await waitFor(() => {
-      expect(statusTags(screen.getByRole("heading", { name: `Run ${REF}` }))).toContain("COMPLETED")
+      expect(statusTags(screen.getByRole("heading", { name: `Run ${REF}` }))).toContain("Completed · 1 step failed")
     })
     expect(statusTags(screen.getByRole("heading", { name: `Run ${REF}` }))).not.toContain("Live")
     expect(FakeEventSource.opened).toHaveLength(1)

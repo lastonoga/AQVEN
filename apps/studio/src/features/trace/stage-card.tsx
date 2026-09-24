@@ -1,9 +1,11 @@
 import type { ReactNode } from "react"
-import { Heading, NODE_KIND, Surface, Text } from "@/components/studio"
+import { Heading, NODE_KIND, Surface, Text, type TagSpec } from "@/components/studio"
 import { joinMeta, usd } from "@/lib/format"
 import { latencyText } from "./agent-cells"
 import { AttemptsLadder } from "./attempts-ladder"
 import { groupContext, type TraceScope } from "./context"
+import { failedItemsTags } from "./failed-items"
+import { stageItemFailures } from "./failures"
 import { GroupMatrix } from "./group-matrix"
 import type { StageRun } from "./model"
 import { OpenNestedBlock } from "./nested-block"
@@ -11,6 +13,8 @@ import { OpenNestedBlock } from "./nested-block"
 export type StageCardProps = { readonly stage: StageRun; readonly scope: TraceScope }
 
 const ROOT_DEPTH = 1
+
+const kindTag = (stage: StageRun): TagSpec => ({ tone: NODE_KIND[stage.kind].tone, fill: "tint", size: "sm", children: NODE_KIND[stage.kind].code })
 
 function ExitFooter({ stage, scope }: StageCardProps) {
   const exit = stage.exit
@@ -41,7 +45,7 @@ export function StageCard({ stage, scope }: StageCardProps): ReactNode {
     <Heading
       size="block"
       title={stage.nodeId}
-      tags={[{ tone: NODE_KIND[stage.kind].tone, fill: "tint", size: "sm", children: NODE_KIND[stage.kind].code }]}
+      tags={[kindTag(stage), ...failedItemsTags(stageItemFailures(stage), scope.t, "sm")]}
       description={scope.t(`domain.executionStatus.${stage.status}`)}
       trailing={<StageTotals stage={stage} scope={scope} />}
     >

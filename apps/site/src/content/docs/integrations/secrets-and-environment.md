@@ -26,8 +26,9 @@ secrets](/engine/secrets/) is where you confirm it, see every secret the project
 - Or set it from Studio: click the gear in the top bar, then **Add key** on the variable's row under
   **Model keys** or **Other secrets**. Studio writes the line to this `.env` file
   as `NAME='the-real-value'`. The quotes are not part of the value. See [How to use Studio settings](/studio/settings/).
-- When both are set, the shell environment wins. `.env` only fills in names the shell doesn't already have,
-  so exporting a variable before you run anything overrides whatever `.env` says for that same name.
+- When both are set, the shell environment wins. `.env` fills in names the shell doesn't have or has set to
+  an empty string (an empty value counts as unset), so exporting a non-empty variable before you run anything
+  overrides whatever `.env` says for that same name.
 - `.env.example` is a snapshot from when the project was created — it doesn't grow automatically as you add
   tools or MCP servers that declare their own secrets later. Add the new variable's name to it yourself, so
   a teammate cloning the project knows it's expected, then set the real value the same way.

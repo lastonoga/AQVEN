@@ -109,6 +109,7 @@
     "noRules": "No rule firings recorded",
     "attemptsSection": "Attempts, raw",
     "errorSection": "Error, raw",
+    "errorPanelSection": "Error",
     "attempt": "attempt {attempt}",
     "true": "passed",
     "false": "failed"

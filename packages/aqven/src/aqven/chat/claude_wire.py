@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Mapping
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
@@ -97,6 +97,7 @@ class AuthStatusWire(WireModel):
 
 
 STREAM_EVENT: Final[TypeAdapter[StreamEventWire]] = TypeAdapter(StreamEventWire)
+NEXT_STEP_PRIORITY: Final[str] = "next"
 CONTENT_ITEMS: Final[TypeAdapter[tuple[ContentItemWire, ...]]] = TypeAdapter(tuple[ContentItemWire, ...])
 JSON_OBJECT: Final[TypeAdapter[JsonObject]] = TypeAdapter(JsonObject)
 
@@ -132,3 +133,17 @@ def content_text(content: str | list[dict[str, object]] | None) -> str:
     except ValidationError:
         return ""
     return "\n".join(item.text for item in items if item.text is not None)
+
+
+def queued_user_frame(wire_id: str, text: str) -> JsonObject:
+    return {
+        "type": "user",
+        "message": {"role": "user", "content": text},
+        "parent_tool_use_id": None,
+        "uuid": wire_id,
+        "priority": NEXT_STEP_PRIORITY,
+    }
+
+
+async def single_frame(frame: JsonObject) -> AsyncIterator[JsonObject]:
+    yield frame

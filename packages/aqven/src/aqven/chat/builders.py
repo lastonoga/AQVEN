@@ -12,12 +12,15 @@ from aqven.ports.chat import (
     ChatApprovalRequested,
     ChatApprovalResolved,
     ChatCommand,
+    ChatDelivery,
     ChatErrorCode,
     ChatErrorRaised,
     ChatEvent,
     ChatFileChange,
     ChatFileEdit,
+    ChatMessageDelivered,
     ChatMessageId,
+    ChatMessageQueued,
     ChatReasoningDelta,
     ChatSessionId,
     ChatState,
@@ -65,6 +68,14 @@ def turn_started(client_op_id: ClientOpId, text: str, agent: TurnAgent) -> ChatE
     return lambda stamp: ChatTurnStarted(
         **stamp, client_op_id=client_op_id, text=text, backend=agent.backend, model=agent.model
     )
+
+
+def message_queued(client_op_id: ClientOpId, text: str, delivery: ChatDelivery) -> ChatEventBuilder:
+    return lambda stamp: ChatMessageQueued(**stamp, client_op_id=client_op_id, text=text, delivery=delivery)
+
+
+def message_delivered(client_op_id: ClientOpId) -> ChatEventBuilder:
+    return lambda stamp: ChatMessageDelivered(**stamp, client_op_id=client_op_id)
 
 
 def text_delta(message_id: ChatMessageId, part_index: int, delta: str) -> ChatEventBuilder:

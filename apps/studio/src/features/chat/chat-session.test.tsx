@@ -71,8 +71,22 @@ const composer = (): HTMLTextAreaElement => screen.getByPlaceholderText<HTMLText
 
 const upTo = (seq: number): readonly ApiChatEvent[] => liveTurnEvents.filter((event) => event.seq <= seq)
 
+const QUEUED_AT = "2026-09-17T21:55:50Z"
+const TURN_ID = "01a0b15e-6a13-7571-9226-48395adeb839"
+
+const queuedEvent = (seq: number, delivery: "next_step" | "after_turn"): ApiChatEvent => ({
+  seq,
+  at: QUEUED_AT,
+  session_id: SESSION.session_id,
+  turn_id: TURN_ID,
+  type: "chat_message_queued",
+  client_op_id: "op-2",
+  text: "also run the tests",
+  delivery,
+})
+
 describe("ChatSession", () => {
-  it("renders the streamed turn and swaps Send for Stop while the agent runs", () => {
+  it("renders the streamed turn and offers Stop while the agent runs", () => {
     const { transport, emit } = recorder()
     mount(transport)
     expect(screen.getByRole("button", { name: "Send" })).toBeDefined()
@@ -128,5 +142,36 @@ describe("ChatSession", () => {
       await Promise.resolve()
     })
     expect(interrupted).toEqual([SESSION.session_id])
+  })
+
+  it("keeps Send beside Stop while the agent runs and shows what Enter queued", async () => {
+    const { transport, sent, emit } = recorder()
+    mount(transport)
+    emit(upTo(4))
+    expect(screen.getByRole("button", { name: "Stop" })).toBeDefined()
+    expect(screen.getByRole("button", { name: "Send" })).toBeDefined()
+
+    fireEvent.change(composer(), { target: { value: "also run the tests" } })
+    await act(async () => {
+      fireEvent.keyDown(composer(), { key: "Enter" })
+      await Promise.resolve()
+    })
+    expect(sent).toEqual(["also run the tests"])
+
+    emit([queuedEvent(5, "next_step")])
+    const waiting = screen.getByRole("list", { name: messages.en.chat.queued.aria })
+    expect(waiting.textContent).toContain("also run the tests")
+    expect(waiting.textContent).toContain(messages.en.chat.queued.next_step)
+
+    emit([{ seq: 6, at: QUEUED_AT, session_id: SESSION.session_id, turn_id: TURN_ID, type: "chat_message_delivered", client_op_id: "op-2" }])
+    expect(screen.queryByRole("list", { name: messages.en.chat.queued.aria })).toBeNull()
+    expect(screen.getByText("also run the tests")).toBeDefined()
+  })
+
+  it("says a message waits for the next turn when the agent cannot take it now", () => {
+    const { transport, emit } = recorder()
+    mount(transport)
+    emit([...upTo(4), queuedEvent(5, "after_turn")])
+    expect(screen.getByRole("list", { name: messages.en.chat.queued.aria }).textContent).toContain(messages.en.chat.queued.after_turn)
   })
 })

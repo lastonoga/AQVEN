@@ -4,7 +4,7 @@ import type { ApiExecutionAddress } from "@/domain"
 import { Heading, Marker, Surface, Timeline, type TimelineItem } from "@/components/studio"
 import type { OpenPaths, TraceScope } from "./context"
 import type { RowKey, StageRun, TraceRun } from "./model"
-import { statusTone } from "./paint"
+import { stageTone } from "./paint"
 import { StageCard } from "./stage-card"
 
 export type StageTimelineProps = {
@@ -33,7 +33,7 @@ const defaultOpen = (stages: readonly StageRun[]): readonly string[] =>
 
 function StageMarker({ stage }: { readonly stage: StageRun }) {
   return (
-    <Marker shape={stage.fanOut === 0 ? "circle" : "diamond"} tone={statusTone(stage.status)}>
+    <Marker shape={stage.fanOut === 0 ? "circle" : "diamond"} tone={stageTone(stage)}>
       {stage.ordinal}
     </Marker>
   )

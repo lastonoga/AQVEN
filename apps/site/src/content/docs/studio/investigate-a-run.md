@@ -18,16 +18,27 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   [Cases](/studio/cases/) tab to pick a saved case, `Enter input manually` opens a form on this same
   screen instead.
 - The header above the timeline shows the run's status and mode, when it started, and the spec hash it
-  ran against. If this run was forked from another one, a `forked from` link takes you there; if the
-  flow's definition changed since this run happened, a warning says so. Four metric cards give you
-  cost, duration, tokens, and a nodes count with how many failed. If the run is waiting on a person, a
-  panel lists which node, who it's assigned to, and the deadline — that's what
-  [responding to a review](/studio/respond-to-a-review/) resolves. If the run ended in an error, a red
-  panel shows the error code, message, which node it happened at, and a hint.
+  ran against. A run that finished but lost some steps on the way — a `map` with `on_item_error` that
+  went on without one item, say — doesn't read as a plain green `COMPLETED`: its status says
+  `Completed · 1 step failed` in amber, here and in the run picker. If this run was forked from another
+  one, a `forked from` link takes you there; if the flow's definition changed since this run happened, a
+  warning says so. Four metric cards give you cost, duration, tokens, and a nodes count with how many
+  failed. If the run is waiting on a person, a panel lists which node, who it's assigned to, and the
+  deadline — that's what [responding to a review](/studio/respond-to-a-review/) resolves.
+- **Failed steps.** Under the metrics, a `Failed steps` panel lists every execution that failed, even
+  when the run itself completed. Each row names what went wrong in plain words — `The model rejected the
+  output type`, `The model's answer never matched the output type`, `The model provider returned an
+  error` — next to the engine's error code, then the step with its item, branch, or iteration
+  (`assess__look · item 0`), the error message, and the engine's hint on what to change. `Open step`
+  opens that exact execution in the side panel. If the run failed with an error no step explains — a
+  crash of the engine, a run-level timeout — a red panel above the list shows that error on its own.
 - Below that is the stage timeline: one card per top-level node, in the order the flow defines them,
   plus grey "not started" cards for anything that hasn't run yet. A `loop`, `parallel`, `map`, or
   `switch` node's card holds a matrix instead of a single result — one column per call: one pass of a
-  loop, one branch of a parallel, one item of a map.
+  loop, one branch of a parallel, one item of a map. When some items of a `map` or branches of a
+  `parallel` failed, its card carries a badge such as `1 of 5 failed` and the failed columns are red; a
+  stage that finished `OK` with a failure somewhere inside it gets an amber marker, and the stage
+  navigator says `OK · 1 failed inside`.
 - Click any cell in a matrix — input, prompt, output, whichever row you want — and a side panel opens
   to that exact cell. This is what makes "which execution" a real, clickable thing instead of a guess:
   the panel's title is the node's id, and right under it are the branch, iteration, or item number that
@@ -43,12 +54,15 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   what the model actually returned. A loop's card also ends with a line saying why it exited and which
   pass it kept.
 - The side panel itself has five tabs: `model` (which agent, which inference, which actual model
-  answered), `input` (what this call read, and from which upstream node), `prompt` (the prompt as it was
-  actually sent — a numbered list of messages — with the original template on disk collapsed underneath
-  it), `output` (what came back), and `checks` (every check that ran, pass or fail, and for a human step,
-  who it waited on and what they answered). A formatted/raw switch above the panel's body — same
-  mechanism as the [node inspector](/studio/understand-the-graph/) — flips every section between a
-  readable view and the raw JSON.
+  answered — and, for a failed call, the error on top: the same plain-words title, message, and hint as
+  in `Failed steps`, the provider and its HTTP status, and the provider's raw answer folded under
+  `Provider response`), `input` (what this call read, and from which upstream node), `prompt` (the
+  prompt as it was actually sent — a numbered list of messages — with the original template on disk
+  collapsed underneath it), `output` (what came back), and `checks` (every check that ran, pass or fail,
+  the error of a failed call, and for a human step, who it waited on and what they answered). A
+  formatted/raw switch above the panel's body — same mechanism as the [node
+  inspector](/studio/understand-the-graph/) — flips every section between a readable view and the raw
+  JSON.
 - **Turn a run into a case with `To cases`.** Once you've found a wrong answer, lock it in: `To cases`
   opens "Draft a case from this run". The engine turns the run's input, its context and the outputs of its
   top-level nodes into a dataset case of this flow, and **Hand the case to the chat** sends the draft to

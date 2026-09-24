@@ -13,6 +13,11 @@
     "retryAria": "Retry",
     "moreAria": "More actions"
   },
+  "queued": {
+    "aria": "Messages waiting for the agent",
+    "next_step": "Queued — the agent reads it at its next step",
+    "after_turn": "Queued — sent after this turn"
+  },
   "session": {
     "connecting": "Connecting to the agent…",
     "backendLoadFailed": "Could not load the selected agent",
