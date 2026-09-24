@@ -36,8 +36,13 @@ INSTRUCTIONS: Final = (
     "cannot do. Structural and cross-file edits: flow_patch. After every edit: aqven_check, for code also "
     "pyright_check and pytest_run, after a prompt edit also prompt_preview. Runs: run_start, then run_get and "
     "run_events; a run waiting for a human: run_list(status=suspended), run_get_node, run_resume; also run_fork and "
-    "run_cancel. Experiments: write experiments/<id>/experiment.yaml, run aqven_check, then series_start and "
-    "series_get with wait_seconds; read findings from FINDINGS.md and experiments/<id>/findings."
+    "run_cancel. Experiments: read FINDINGS.md first and do not retest what is confirmed for the same flow, prompts "
+    "and models. A person reads the first traces and agrees the failure modes; you line the traces up and group the "
+    "notes. Write experiments/<id>/experiment.yaml with its question and margin before any data, run aqven_check, "
+    "then series_start and series_get with wait_seconds. Explore on dev as often as needed, one change between "
+    "series: it gives a signal, never a finding. Confirm once on holdout: the verdict is written to FINDINGS.md and "
+    "experiments/<id>/findings. Quote verdict.text as it is; inconclusive means fresh held-out cases, not a rerun. "
+    "A series above the project spend cap waits for the person's approval in Studio."
 )
 
 
