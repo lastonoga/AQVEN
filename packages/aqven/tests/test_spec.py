@@ -1211,3 +1211,61 @@ def test_a_provider_declares_its_requests_per_minute_and_rejects_a_rate_below_on
     assert ("greater_than_equal", ("providers", 0, "limits", "rpm")) in set(
         validation_errors(model, project_with({"rpm": 0}))
     )
+
+
+def rate_limited_project(**provider_keys: JsonValue) -> dict[str, JsonValue]:
+    provider: dict[str, JsonValue] = {
+        "id": "openrouter",
+        "api_key": "ref:env/OPENROUTER_API_KEY",
+        "data_policy": {"allows_pii": True, "allows_sensitive": False, "retention": "zero"},
+        **provider_keys,
+    }
+    return document("Project", package="lumen", providers=[provider])
+
+
+def test_a_provider_waits_out_rate_limits_automatically_unless_it_chooses_fixed_waits_or_failing() -> None:
+    model = SPEC_MODEL_BY_KIND[SpecKind.PROJECT]
+
+    plain = model.validate_python(rate_limited_project())
+    fixed = model.validate_python(
+        rate_limited_project(
+            on_rate_limit="fixed", retry_wait_seconds=15, retry_attempts=3, limits={"rpm": 60, "concurrency": 2}
+        )
+    )
+    failing = model.validate_python(rate_limited_project(on_rate_limit="fail"))
+
+    assert isinstance(plain, ProjectSpec) and isinstance(fixed, ProjectSpec) and isinstance(failing, ProjectSpec)
+    first = plain.providers[0]
+    chosen = fixed.providers[0]
+    assert (first.on_rate_limit, first.retry_wait_seconds, first.retry_attempts, first.limits) == (
+        "auto",
+        None,
+        None,
+        None,
+    )
+    assert (chosen.on_rate_limit, chosen.retry_wait_seconds, chosen.retry_attempts) == ("fixed", 15, 3)
+    assert chosen.limits is not None and chosen.limits.concurrency == 2
+    assert failing.providers[0].on_rate_limit == "fail"
+    assert type(first).model_validate(first.model_dump(mode="json", by_alias=True)) == first
+
+
+def test_rate_limit_settings_out_of_range_or_out_of_place_do_not_pass_the_spec() -> None:
+    model = SPEC_MODEL_BY_KIND[SpecKind.PROJECT]
+    at_provider = ("providers", 0)
+
+    assert ("literal_error", (*at_provider, "on_rate_limit")) in set(
+        validation_errors(model, rate_limited_project(on_rate_limit="sometimes"))
+    )
+    assert ("greater_than_equal", (*at_provider, "limits", "concurrency")) in set(
+        validation_errors(model, rate_limited_project(limits={"concurrency": 0}))
+    )
+    assert ("greater_than", (*at_provider, "retry_wait_seconds")) in set(
+        validation_errors(model, rate_limited_project(on_rate_limit="fixed", retry_wait_seconds=0))
+    )
+    assert ("greater_than_equal", (*at_provider, "retry_attempts")) in set(
+        validation_errors(model, rate_limited_project(on_rate_limit="fixed", retry_attempts=0))
+    )
+    assert ("value_error", at_provider) in set(validation_errors(model, rate_limited_project(retry_attempts=3)))
+    assert ("value_error", at_provider) in set(
+        validation_errors(model, rate_limited_project(on_rate_limit="fail", retry_wait_seconds=5))
+    )

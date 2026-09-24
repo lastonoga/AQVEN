@@ -6177,6 +6177,8 @@ export interface components {
         ProviderLimits: {
             /** Rpm */
             rpm?: number | null;
+            /** Concurrency */
+            concurrency?: number | null;
         };
         ProviderNameField: string;
         /** ProviderSpec */
@@ -6198,6 +6200,12 @@ export interface components {
             data_policy: components["schemas"]["DataPolicy"];
             routing?: components["schemas"]["OpenRouterRouting"] | null;
             limits?: components["schemas"]["ProviderLimits"] | null;
+            /** @default auto */
+            on_rate_limit: components["schemas"]["RateLimitMode"];
+            /** Retry Wait Seconds */
+            retry_wait_seconds?: number | null;
+            /** Retry Attempts */
+            retry_attempts?: number | null;
         };
         ProviderText: string;
         /** @enum {string} */
@@ -6231,6 +6239,8 @@ export interface components {
              */
             guardrails: components["schemas"]["GuardrailView"][];
         };
+        /** @enum {string} */
+        RateLimitMode: "auto" | "fixed" | "fail";
         /** ReadyState */
         ReadyState: {
             /**
@@ -7994,6 +8004,7 @@ export type SchemaProviderSpec = components['schemas']['ProviderSpec'];
 export type SchemaProviderText = components['schemas']['ProviderText'];
 export type SchemaQuestionKind = components['schemas']['QuestionKind'];
 export type SchemaQuestionView = components['schemas']['QuestionView'];
+export type SchemaRateLimitMode = components['schemas']['RateLimitMode'];
 export type SchemaReadyState = components['schemas']['ReadyState'];
 export type SchemaRecommendation = components['schemas']['Recommendation'];
 export type SchemaRecommendationReason = components['schemas']['RecommendationReason'];

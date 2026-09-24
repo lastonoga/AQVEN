@@ -122,6 +122,9 @@ only.
 The cap works like this:
 
 - **Every series starts at once**, with the project cap as its own cap.
+- **The first attempt runs alone.** What it actually cost becomes the reserve of every attempt that
+  follows, and only then does the series run attempts side by side, so a first batch can't spend past the
+  cap before any attempt has a price.
 - **Near the cap it pauses.** When the spend plus a reserve for each running attempt (the most a finished
   attempt of the series has cost) reaches 90% of the
   series cap, the series starts no new attempts, lets the running ones finish and waits in

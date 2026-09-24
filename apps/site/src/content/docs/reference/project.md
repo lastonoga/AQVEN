@@ -74,6 +74,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
 | `rpm` | `integer \| null` | No | `None` | — |
+| `concurrency` | `integer \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/ProviderLimits.json)
 
@@ -91,6 +92,9 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `data_policy` | `DataPolicy` | Yes | `—` | — |
 | `routing` | `OpenRouterRouting \| null` | No | `None` | — |
 | `limits` | `ProviderLimits \| null` | No | `None` | — |
+| `on_rate_limit` | `'auto' \| 'fixed' \| 'fail'` | No | `'auto'` | — |
+| `retry_wait_seconds` | `number \| null` | No | `None` | — |
+| `retry_attempts` | `integer \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/ProviderSpec.json)
 

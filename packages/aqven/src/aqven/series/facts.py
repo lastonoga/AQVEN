@@ -17,6 +17,7 @@ from aqven.runtime.events import (
     NodeStarted,
     RunEvent,
 )
+from aqven.runtime.executions import RunError
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import TerminalRunStatus
 from aqven.series.model import COUNTED_OUTCOMES, OutcomeClass, RecordModel, RuntimeCheckTry
@@ -26,6 +27,8 @@ SCHEMA_CAUSES: Final = frozenset({"schema_invalid", "invalid_json", "no_structur
 USAGE_KINDS: Final = frozenset({NodeKind.LLM, NodeKind.CODE, NodeKind.TOOL, NodeKind.HUMAN})
 FIRST_ATTEMPT: Final = 1
 ZERO: Final = Decimal(0)
+PROVIDER_ERROR: Final = "provider_error"
+TOO_MANY_REQUESTS: Final = 429
 
 OUTCOME_BY_CODE: Final[Mapping[str, OutcomeClass]] = {
     "MODEL_NO_STRUCTURED_OUTPUT": OutcomeClass.SCHEMA_INVALID,
@@ -94,6 +97,7 @@ class RunFacts(RecordModel):
     models: dict[str, str] = Field(default_factory=dict[str, str])
     schema_valid_first_try: bool | None = None
     runtime_checks: tuple[RuntimeCheckTry, ...] = ()
+    rate_limited: bool = False
 
 
 class AttemptInspection(RunFacts):
@@ -212,6 +216,19 @@ def runtime_checks(events: Sequence[RunEvent]) -> tuple[RuntimeCheckTry, ...]:
     return tuple(RuntimeCheckTry(check=name, failed_first_try=value) for name, value in sorted(failed.items()))
 
 
+def rate_limit_error(error: RunError | None) -> bool:
+    if error is None or error.details is None:
+        return False
+    return error.code == PROVIDER_ERROR and error.details.status_code == TOO_MANY_REQUESTS
+
+
+def rate_limited(trace: RunTrace, record: RunRecord) -> bool:
+    if record.status != "failed":
+        return False
+    errors = (record.error, *(event.error for event in trace.finished() if event.status == "failed"))
+    return any(rate_limit_error(error) for error in errors)
+
+
 def run_facts(trace: RunTrace, record: RunRecord) -> RunFacts:
     outcome = outcome_of(record)
     cost, tokens_in, tokens_out = summed_cost(trace, record)
@@ -229,6 +246,7 @@ def run_facts(trace: RunTrace, record: RunRecord) -> RunFacts:
         models=actual_models(trace),
         schema_valid_first_try=schema_valid_first_try(trace, outcome),
         runtime_checks=runtime_checks(trace.events),
+        rate_limited=rate_limited(trace, record),
     )
 
 

@@ -38,8 +38,11 @@ section.
 
 **Transport-level retry** covers the call never really completing: a rate limit, a request timeout, a
 server error, a dropped connection. AQVEN retries these itself, honoring the provider's `retry-after`
-header when it sends one, up to a small number of attempts within a time budget. A plain client error —
-a bad request, for instance — is never retried; only failures that look transient are.
+header when it sends one, up to a small number of attempts within a time budget. A rate limit (`429`) also
+pauses every other call of the same model until the wait is over, and the provider's
+[`on_rate_limit`](/integrations/model-providers/#when-a-provider-rate-limits) decides how long it waits and
+how often it tries. A plain client error — a bad request, for instance — is never retried; only failures
+that look transient are.
 
 **Structured-output repair retry** covers a different problem: the call came back `ok`, but what it
 returned doesn't match the schema your node declared. AQVEN re-prompts the model with the validation

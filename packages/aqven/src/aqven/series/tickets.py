@@ -7,7 +7,7 @@ from pydantic import AwareDatetime, Field
 
 from aqven.engine.request import RunSpec, SeriesTag
 from aqven.runtime.address import JsonObject, RunId
-from aqven.series.ids import attempt_id, judge_run_id, key_of, subject_run_id
+from aqven.series.ids import FIRST_TRY, attempt_id, judge_run_id, key_of, try_run_id
 from aqven.series.model import (
     AttemptId,
     AttemptRecord,
@@ -88,6 +88,7 @@ class AttemptSummary(RecordModel):
     cost_usd: Decimal
     spend_usd: Decimal
     finished_at: AwareDatetime
+    requeued: bool = False
 
 
 def judge_flows(record: SeriesRecord) -> Mapping[str, FlowId]:
@@ -116,6 +117,7 @@ def attempt_ticket(
     limit_usd_micros: int,
     strategy: SubjectStrategy,
     now: datetime,
+    tries: int = FIRST_TRY,
 ) -> AttemptTicket:
     variant, case_index, repeat = variant_at(record, ordinal)
     if case.case_index != case_index:
@@ -141,7 +143,7 @@ def attempt_ticket(
         case_name=case.name,
         split=case.split,
         repeat=repeat,
-        run_id=subject_run_id(attempt),
+        run_id=try_run_id(attempt, tries),
         ir_hash=variant.ir_hash,
         flow_id=variant.flow_id,
         flow_input=prepared.flow_input,
@@ -180,4 +182,21 @@ def summary_of(row: AttemptRecord, finished_at: datetime) -> AttemptSummary:
         cost_usd=row.cost_usd,
         spend_usd=row.cost_usd + row.check_cost_usd,
         finished_at=finished_at,
+    )
+
+
+def requeued_summary(ticket: AttemptTicket, cost_usd: Decimal, now: datetime) -> AttemptSummary:
+    return AttemptSummary(
+        attempt_id=ticket.attempt_id,
+        ordinal=ticket.ordinal,
+        variant_id=ticket.variant_id,
+        case_name=ticket.case_name,
+        repeat=ticket.repeat,
+        run_id=ticket.run_id,
+        outcome=OutcomeClass.INFRA_ERROR,
+        passed=None,
+        cost_usd=cost_usd,
+        spend_usd=cost_usd,
+        finished_at=now,
+        requeued=True,
     )

@@ -15,13 +15,14 @@ from aqven.app.console_log.install import ConsoleSetup, install_console
 from aqven.app.console_log.levels import ConsoleLevel
 from aqven.app.console_log.python_warnings import WarningsBridge
 from aqven.app.console_log.render import DETAIL_INDENT
-from aqven.app.console_log.rules import AccessLineRule, DemoteRule, ShutdownInterruptionRule
+from aqven.app.console_log.rules import AccessLineRule, DemoteRule, LanePauseRule, ShutdownInterruptionRule
 from aqven.diagnostics import DIAGNOSTIC_TEXTS, DiagnosticCode
 from aqven.engine.addressing import child_workflow_id
 from aqven.engine.dbos_logs import CancelledBranchFilter, route_dbos_logs
 from aqven.ir import CompiledAgent, CompiledLlmNode, CompiledProject
 from aqven.log_support import RuleChain
 from aqven.models import LimiterModel, call_site
+from aqven.models.lanes import LANES_LOGGER, LanePause, LoggedPauses
 from aqven.runtime.address import node_address
 from aqven.server.mcp.endpoint import build_mcp_server
 from aqven.spec import AgentId
@@ -42,6 +43,10 @@ AGENT_FILE: Final = "agents/looker_nano.yaml"
 CLOCK_PREFIX: Final = re.compile(r"^\d{2}:\d{2}:\d{2} ")
 SAMPLING_HINT: Final = DIAGNOSTIC_TEXTS[DiagnosticCode.W_SAMPLING_IGNORED].hint
 BRANCH: Final = child_workflow_id(RUN_ID, node_address("drafts", branch_key="gpt"))
+GEMMA_PAUSE: Final = LanePause(
+    lane="openrouter:google/gemma-3-27b-it", seconds=30.0, parallel_before=8, parallel_after=4
+)
+PAUSE_LINE: Final = "⏸ openrouter:google/gemma-3-27b-it rate-limited — pausing 30s, parallel 8→4"
 
 
 def fresh_dbos_logger() -> None:
@@ -256,6 +261,21 @@ def test_access_lines_are_short() -> None:
 
     assert isinstance(short, logging.LogRecord)
     assert rendered(short) == f"{CLOCK} • uvicorn  POST /api/runs 201\n"
+
+
+def test_a_lane_pause_is_one_pause_line() -> None:
+    record = logging.LogRecord(LANES_LOGGER, logging.WARNING, __file__, 1, GEMMA_PAUSE.text, (), None)
+    line = RuleChain((LanePauseRule(),)).filter(at_fixed_time(record))
+
+    assert isinstance(line, logging.LogRecord)
+    assert rendered(line) == f"{CLOCK} {PAUSE_LINE}\n"
+
+
+def test_the_dev_console_prints_a_lane_pause_once(console: io.StringIO) -> None:
+    LoggedPauses().paused(GEMMA_PAUSE)
+
+    lines = [CLOCK_PREFIX.sub("", line) for line in console.getvalue().splitlines()]
+    assert lines == [PAUSE_LINE]
 
 
 def test_run_telemetry_is_demoted_when_run_lines_cover_it() -> None:

@@ -5,7 +5,7 @@ from typing import Final
 
 import httpx2
 import pytest
-from models_support import MemorySettings
+from models_support import LaneClock, MemorySettings
 from pydantic import JsonValue
 from pydantic_ai.direct import model_request_stream
 from pydantic_ai.exceptions import ModelHTTPError
@@ -22,6 +22,7 @@ from aqven.models import (
     is_transient,
 )
 from aqven.models.backoff import BackoffPolicy
+from aqven.models.lanes import ModelLane
 from aqven_llm import ProviderModelFactory
 
 MODEL: Final = "openrouter:openai/gpt-oss-20b"
@@ -106,13 +107,16 @@ class Sleeper:
         self.seconds.append(seconds)
 
 
-def policy(sleeper: Sleeper, *, attempts: int = 4, budget_seconds: float = 20.0) -> CallPolicy:
+def policy(
+    sleeper: Sleeper, *, attempts: int = 4, budget_seconds: float = 20.0, lane: ModelLane | None = None
+) -> CallPolicy:
     return CallPolicy(
         cassettes=CassettePolicy(store=MemoryCassetteStore(), behavior=LIVE_BEHAVIOR),
         backoff=BackoffPolicy(
             attempts=attempts, initial_seconds=0.0, jitter_seconds=0.0, budget_seconds=budget_seconds
         ),
         backoff_sleep=sleeper,
+        lane=lane,
     )
 
 
@@ -145,15 +149,18 @@ def text_of(response: ModelResponse) -> str:
     return "".join(part.content for part in response.parts if isinstance(part, TextPart))
 
 
-def test_status_429_is_retried_until_the_stream_opens() -> None:
+def test_status_429_pauses_the_lane_for_the_retry_after_and_is_retried_until_the_stream_opens() -> None:
     wire = Wire([status(429, RETRY_AFTER), status(429, RETRY_AFTER), stream(good_body())])
     sleeper = Sleeper()
+    clock = LaneClock()
+    lane = ModelLane(MODEL, clock=clock.time, sleep=clock.sleep)
 
-    response, events = run(wire, policy(sleeper))
+    response, events = run(wire, policy(sleeper, lane=lane))
 
     assert text_of(response) == "hello"
     assert wire.calls == 3
-    assert sleeper.seconds == [2.0, 2.0]
+    assert clock.waits == [2.0, 2.0]
+    assert sleeper.seconds == [0.0, 0.0]
     assert events >= 2
 
 
