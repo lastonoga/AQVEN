@@ -1,6 +1,8 @@
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from dbos import DBOSConfig
 
@@ -15,6 +17,14 @@ from aqven.engine.protocol import (
     POLLING_INTERVAL_SECONDS,
     STATE_DIRECTORY,
 )
+
+EXECUTOR_THREADS_PER_CPU: Final = 4
+EXECUTOR_THREADS_CEILING: Final = 32
+EXECUTOR_MINIMUM_CPUS: Final = 4
+
+
+def executor_threads(cpus: int | None) -> int:
+    return min(EXECUTOR_THREADS_CEILING, max(cpus or 0, EXECUTOR_MINIMUM_CPUS) * EXECUTOR_THREADS_PER_CPU)
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,4 +69,5 @@ def dbos_config(paths: EnginePaths, *, log_level: str = DBOS_LOG_LEVEL) -> DBOSC
         "notification_listener_polling_interval_sec": POLLING_INTERVAL_SECONDS,
         "log_level": log_level,
         "run_admin_server": False,
+        "max_executor_threads": executor_threads(os.process_cpu_count()),
     }
