@@ -1,34 +1,6 @@
 {
-  "$defs": {
-    "Modality": {
-      "enum": [
-        "text",
-        "image",
-        "audio",
-        "video",
-        "document"
-      ],
-      "title": "Modality",
-      "type": "string"
-    }
-  },
   "additionalProperties": false,
   "properties": {
-    "input": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/Modality"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Input"
-    },
     "json_schema_output": {
       "anyOf": [
         {
@@ -40,21 +12,6 @@
       ],
       "default": null,
       "title": "Json Schema Output"
-    },
-    "output": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/Modality"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Output"
     },
     "tools": {
       "anyOf": [

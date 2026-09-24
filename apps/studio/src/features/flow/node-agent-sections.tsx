@@ -35,15 +35,10 @@ const modelSections = (agent: Agent, runtime: Runtime | null, t: Copy): readonly
   const models = [agent.model, ...(agent.fallback_models ?? [])]
   const primary = runtime?.models?.[0]
   const fallbacks = models.slice(1)
-  const capabilities = runtime?.models?.map((model, index): SectionSpec => properties(
-    `agent-capabilities-${String(index)}`,
-    index === 0 ? t("agentView.primaryCapabilities") : t("agentView.fallbackCapabilities", { number: index }),
-    [
-      row(t("agentView.modelFamily"), model.capabilities.family),
-      row(t("agentView.inputModalities"), model.capabilities.input.join(", ")),
-      row(t("agentView.outputModalities"), model.capabilities.output.join(", ")),
-      row(t("agentView.strictSupport"), t(model.capabilities.strict ? "agentView.yes" : "agentView.no")),
-    ],
+  const families = runtime?.models?.map((model, index): SectionSpec => properties(
+    `agent-model-${String(index)}`,
+    index === 0 ? t("agentView.primaryModelSection") : t("agentView.fallbackModelSection", { number: index }),
+    [row(t("agentView.modelFamily"), model.family)],
   )) ?? []
   return [
     properties("agent-models", t("agentView.models"), [
@@ -53,7 +48,7 @@ const modelSections = (agent: Agent, runtime: Runtime | null, t: Copy): readonly
         ? t("agentView.none")
         : fallbacks.map((model, index) => `${String(index + 1)}. ${model}`).join(" → ")),
     ]),
-    ...capabilities,
+    ...families,
   ]
 }
 
@@ -168,7 +163,6 @@ const rawAgent = (agent: Agent, runtime: Runtime | null): unknown => ({
   subagents: agent.subagents ?? [],
   approval: agent.approval ?? null,
   limits: agent.limits ?? null,
-  capabilities_override: agent.capabilities ?? null,
 })
 
 export function AgentSections({ detail, raw }: { readonly detail: ApiNodeDetail; readonly raw: boolean }) {

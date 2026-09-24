@@ -28,18 +28,19 @@ from aqven.engine.llm import OUTPUT_TOOL_NAME, output_plan
 from aqven.engine.llm.failures import FailureContext, excerpt, feature_unsupported
 from aqven.engine.llm.instructions import output_limits
 from aqven.engine.llm.telemetry import report_node_failure
-from aqven.ir import CompiledAgent, CompiledAgentOutput, OutputMode
+from aqven.ir import AgentModel, CompiledAgent, CompiledAgentOutput, OutputMode
 from aqven.ports.execution import NodeFailed, NodeSucceeded
 from aqven.runtime.address import node_address
 from aqven.runtime.events import NodeAttemptFailed
 from aqven.runtime.executions import ModelErrorDetails
-from aqven.spec import NodeId
+from aqven.spec import ModelString, NodeId, ProviderName
 
 RUN_INPUT: Final[dict[str, JsonValue]] = {"question": "where is my order?", "product": None}
 AGENT_FILE: Final = "agents/writer.yaml"
 INFERENCE_FILE: Final = "flows/support/answer.inference.yaml"
 VALID: Final = '{"reply": "Order in transit", "confidence": 0.9}'
 TOO_LONG: Final = json.dumps({"reply": "x" * 250, "confidence": 0.5})
+UNLISTED: Final = AgentModel(model=ModelString("openrouter:acme/sketch-9"), provider=ProviderName("openrouter"))
 
 
 class Score(BaseModel):
@@ -72,6 +73,19 @@ def test_each_mode_maps_to_its_pydantic_ai_output_type() -> None:
     assert (native.text_kind, native.output_tools) == ("output_json", frozenset())
     assert isinstance(prompted.spec, PromptedOutput)
     assert (tool.mode, native.mode, prompted.mode) == ("tool", "native", "prompted")
+
+
+@pytest.mark.parametrize("strict", [True, False])
+def test_output_strict_reaches_the_request_as_the_agent_sets_it(strict: bool) -> None:
+    unlisted = agent(models=(UNLISTED,), output=CompiledAgentOutput(strict=strict))
+    bed = llm_bed(
+        [[tool_call(OUTPUT_TOOL_NAME, VALID, "out-1")]], answer_node(), [unlisted], [answer_inference()], RUN_INPUT
+    )
+
+    outcome = asyncio.run(bed.executor.execute(answer_node(), bed.scope))
+
+    assert isinstance(outcome, NodeSucceeded)
+    assert bed.scripted.seen[0][1].output_tools[0].strict is strict
 
 
 def test_output_limits_list_field_limits_from_the_schema() -> None:

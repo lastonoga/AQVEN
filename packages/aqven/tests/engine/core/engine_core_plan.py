@@ -26,7 +26,6 @@ from aqven.ir import (
     FieldIr,
     JsonSchema,
     McpToolSource,
-    ModelCapabilities,
     RefBinding,
 )
 from aqven.spec import (
@@ -36,8 +35,6 @@ from aqven.spec import (
     FlowId,
     InferenceId,
     McpServerId,
-    Modality,
-    ModelFamily,
     ModelString,
     NodeId,
     ProviderName,
@@ -259,14 +256,7 @@ def stamp_tool() -> CompiledTool:
 
 
 def writer_agent() -> CompiledAgent:
-    capabilities = ModelCapabilities(
-        family=ModelFamily.OPENAI, input=(Modality.TEXT,), output=(Modality.TEXT,), strict=True
-    )
-    model = AgentModel(
-        model=ModelString("openrouter:openai/gpt-oss-20b"),
-        provider=ProviderName("openrouter"),
-        capabilities=capabilities,
-    )
+    model = AgentModel(model=ModelString("openrouter:openai/gpt-oss-20b"), provider=ProviderName("openrouter"))
     return CompiledAgent(agent_id=AgentId("writer"), description="Writer", models=(model,))
 
 

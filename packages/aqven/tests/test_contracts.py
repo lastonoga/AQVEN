@@ -40,7 +40,6 @@ from aqven.ir import (
     JudgeEvaluator,
     LiteralBinding,
     McpToolSource,
-    ModelCapabilities,
     RefBinding,
     TemplatePrompt,
     canonical_json,
@@ -91,8 +90,6 @@ from aqven.spec import (
     FlowId,
     InferenceId,
     McpServerId,
-    Modality,
-    ModelFamily,
     ModelString,
     NodeId,
     OnFail,
@@ -111,17 +108,7 @@ def _union_types(union: object) -> frozenset[str]:
 
 
 def _agent(agent_id: str, tools: tuple[ToolId, ...] = ()) -> CompiledAgent:
-    capabilities = ModelCapabilities(
-        family=ModelFamily.OPENAI,
-        input=(Modality.TEXT, Modality.IMAGE, Modality.TEXT),
-        output=(Modality.TEXT,),
-        strict=True,
-    )
-    model = AgentModel(
-        model=ModelString("openrouter:openai/gpt-oss-20b"),
-        provider=ProviderName("openrouter"),
-        capabilities=capabilities,
-    )
+    model = AgentModel(model=ModelString("openrouter:openai/gpt-oss-20b"), provider=ProviderName("openrouter"))
     return CompiledAgent(agent_id=AgentId(agent_id), description="агент", models=(model,), tools=tools)
 
 
@@ -349,12 +336,6 @@ def test_compiled_project_round_trips_through_json() -> None:
         "call",
         "narrow",
     }
-
-
-def test_modalities_are_sorted_and_unique() -> None:
-    agent = _project().agent(AgentId("writer"))
-
-    assert agent.primary.capabilities.input == (Modality.IMAGE, Modality.TEXT)
 
 
 def test_hash_is_sha256_over_domain_separator_and_rfc8785() -> None:

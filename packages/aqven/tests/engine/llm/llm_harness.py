@@ -38,7 +38,6 @@ from aqven.ir import (
     FieldIr,
     IrHash,
     LiteralBinding,
-    ModelCapabilities,
     RefBinding,
     TemplatePrompt,
 )
@@ -58,6 +57,7 @@ from aqven.ports.execution import (
 from aqven.runtime.address import ExecutionAddress, JsonObject, RunId, node_address
 from aqven.runtime.events import RunEvent
 from aqven.runtime.human import ToolApprovalDecision
+from aqven.runtime.options import CallMedia
 from aqven.runtime.steps import BlobStore, ToolContext
 from aqven.runtime.vocabulary import AttemptCauseKind, RunMode
 from aqven.spec import (
@@ -65,8 +65,6 @@ from aqven.spec import (
     AgentId,
     FlowId,
     InferenceId,
-    Modality,
-    ModelFamily,
     ModelString,
     NodeId,
     ProviderName,
@@ -279,9 +277,7 @@ class FakeScope:
 class FixedModels:
     model_value: Model
 
-    async def model(
-        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
-    ) -> Model:
+    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: CallMedia, start: int = 0) -> Model:
         return self.model_value
 
 
@@ -376,13 +372,8 @@ class MemorySecrets:
         return SecretStr(self.values[ref])
 
 
-def capabilities(strict: bool = True) -> ModelCapabilities:
-    text = (Modality.TEXT,)
-    return ModelCapabilities(family=ModelFamily.OPENAI, input=text, output=text, strict=strict)
-
-
 def agent(agent_id: str = "writer", **update: object) -> CompiledAgent:
-    model = AgentModel(model=MODEL, provider=ProviderName("openrouter"), capabilities=capabilities())
+    model = AgentModel(model=MODEL, provider=ProviderName("openrouter"))
     base = CompiledAgent(agent_id=AgentId(agent_id), description="agent", models=(model,))
     return base.model_copy(update=update)
 

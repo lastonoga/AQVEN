@@ -20,13 +20,11 @@ from aqven.diagnostics import (
 from aqven.policies import EvalContext, Verdict
 from aqven.spec import (
     API_VERSION,
-    MODEL_PROFILES,
     SPEC_MODEL_BY_KIND,
     AgentSpec,
     BlobId,
     BuilderError,
     CallNodeSpec,
-    CapabilityOverride,
     CheckSpec,
     CodeNodeSpec,
     DynamicLimits,
@@ -49,7 +47,6 @@ from aqven.spec import (
     LoopNodeSpec,
     MapNodeSpec,
     McpServerSpec,
-    Modality,
     ModelFamily,
     ModelRef,
     ModelSyntaxError,
@@ -80,11 +77,11 @@ from aqven.spec import (
     flow,
     inference_spec,
     llm,
+    model_family,
     normalized_schema,
     parse_model,
     parse_ref,
     parse_type_ref,
-    resolve_profile,
     tool,
     write_editor_schemas,
 )
@@ -400,7 +397,6 @@ CANONICAL_NODE_KEYS: dict[type[BaseModel], tuple[str, ...]] = {
         "subagents",
         "approval",
         "limits",
-        "capabilities",
     ),
     ToolSpec: (
         "apiVersion",
@@ -632,7 +628,6 @@ def test_agent_carries_model_configuration() -> None:
                 "on_timeout": {"policy": "escalate", "assignee": "manager", "timeout_seconds": 1800},
             },
             limits={"requests": 8, "usd_micros": 80000},
-            capabilities={"family": "openai", "input": ["text", "image"]},
         )
     )
     assert isinstance(spec, AgentSpec)
@@ -789,18 +784,6 @@ def test_model_strings_parse_into_provider_and_name() -> None:
             parse_model(bad)
 
 
-def test_profile_table_marks_only_openrouter_rows_verified() -> None:
-    assert {model for model, profile in MODEL_PROFILES.items() if profile.verified} == {
-        model for model in MODEL_PROFILES if model.startswith("openrouter:")
-    }
-    gemini = MODEL_PROFILES["google:gemini-3.8-flash"]
-    assert gemini.input == frozenset(Modality)
-    assert gemini.strict
-    painter = MODEL_PROFILES["google:gemini-3-pro-image"]
-    assert Modality.IMAGE in painter.output
-    assert not painter.strict
-
-
 @pytest.mark.parametrize(
     ("model", "family"),
     [
@@ -809,30 +792,35 @@ def test_profile_table_marks_only_openrouter_rows_verified() -> None:
         ("openrouter:z-ai/glm-5.3", ModelFamily.ZHIPU),
         ("openrouter:moonshotai/kimi-k3", ModelFamily.MOONSHOT),
         ("anthropic:claude-haiku-5", ModelFamily.ANTHROPIC),
+        ("google:gemini-3.8-flash", ModelFamily.GOOGLE),
+        ("openrouter:amazon/nova-lite-v1", ModelFamily.OTHER),
         ("openrouter:nousresearch/hermes-5", ModelFamily.OTHER),
     ],
 )
-def test_unknown_model_gets_text_only_profile_and_family_by_prefix(model: str, family: ModelFamily) -> None:
-    profile = resolve_profile(model, None)
-
-    assert (profile.family, profile.input, profile.output, profile.strict, profile.verified) == (
-        family,
-        frozenset({Modality.TEXT}),
-        frozenset({Modality.TEXT}),
-        False,
-        False,
-    )
+def test_model_family_comes_from_the_provider_or_vendor_prefix(model: str, family: ModelFamily) -> None:
+    assert model_family(model) is family
 
 
-def test_agent_capabilities_override_the_profile() -> None:
-    override = CapabilityOverride(family=ModelFamily.MISTRAL, input=[Modality.TEXT, Modality.AUDIO], strict=True)
+def test_agent_capabilities_key_is_gone() -> None:
+    body = document("Agent", model="openrouter:openai/gpt-oss-20b", capabilities={"strict": True, "input": ["image"]})
 
-    profile = resolve_profile("openrouter:deepseek/deepseek-v4-pro-0813", override)
+    assert ("extra_forbidden", ("capabilities",)) in validation_errors(AGENT_ADAPTER, body)
 
-    assert profile.family is ModelFamily.MISTRAL
-    assert profile.input == frozenset({Modality.TEXT, Modality.AUDIO})
-    assert profile.output == frozenset({Modality.TEXT})
-    assert profile.strict
+
+@pytest.mark.parametrize("key", ["input", "output"])
+def test_provider_capabilities_keep_only_the_output_mode_keys(key: str) -> None:
+    provider: dict[str, JsonValue] = {
+        "id": "acme",
+        "kind": "openai_compatible",
+        "base_url": "http://127.0.0.1:8000/v1",
+        "capabilities": {"tools": False, "json_schema_output": True, key: ["text", "image"]},
+        "data_policy": {"allows_pii": False, "allows_sensitive": False, "retention": "unknown"},
+    }
+    model = SPEC_MODEL_BY_KIND[SpecKind.PROJECT]
+
+    errors = validation_errors(model, document("Project", package="lumen", providers=[provider]))
+
+    assert errors == [("extra_forbidden", ("providers", 0, "capabilities", key))]
 
 
 def test_types_validate_and_keep_field_order() -> None:
@@ -1199,19 +1187,6 @@ def test_sort_diagnostics_orders_by_file_line_code() -> None:
     ]
     with pytest.raises(ValidationError):
         Diagnostic.model_validate({"code": "E_NOPE", "severity": "error", "file": "a", "path": [], "message": "m"})
-
-
-def test_openrouter_profiles_match_the_openrouter_models_api() -> None:
-    gemini = MODEL_PROFILES["openrouter:google/gemini-2.5-flash-lite"]
-    painter = MODEL_PROFILES["openrouter:google/gemini-3.1-flash-lite-image"]
-    fallback = MODEL_PROFILES["openrouter:openai/gpt-5-image-mini"]
-
-    assert (gemini.input, gemini.output, gemini.strict) == (frozenset(Modality), frozenset({Modality.TEXT}), True)
-    assert painter.input == painter.output == frozenset({Modality.TEXT, Modality.IMAGE})
-    assert not painter.strict
-    assert Modality.DOCUMENT in fallback.input
-    assert fallback.output == frozenset({Modality.TEXT, Modality.IMAGE})
-    assert fallback.strict
 
 
 def test_a_provider_declares_its_requests_per_minute_and_rejects_a_rate_below_one() -> None:

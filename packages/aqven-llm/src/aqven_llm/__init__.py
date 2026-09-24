@@ -2,13 +2,11 @@ import pydantic_ai
 
 from aqven_llm.adapters import (
     ENTRY_POINT_GROUP,
-    MODALITIES,
     OPENAI_COMPATIBLE,
     OPENAI_COMPATIBLE_KIND,
     CustomProvider,
     FactoryProblem,
     FactorySignature,
-    ModalityName,
     OpenAICompatibleFactory,
     ProviderCapabilities,
     ProviderContext,
@@ -21,7 +19,6 @@ from aqven_llm.adapters import (
     entry_point_provider,
     factory_signature,
     installed_providers,
-    modality_name,
     qualified_name,
 )
 from aqven_llm.catalog import PROVIDERS, ClassRef, ProviderEntry, ProviderExtra, ProviderKey, split_model
@@ -63,7 +60,6 @@ from aqven_llm.target import ModelTarget
 
 __all__ = [
     "ENTRY_POINT_GROUP",
-    "MODALITIES",
     "MODEL_BUILDERS",
     "OPENAI_COMPATIBLE",
     "OPENAI_COMPATIBLE_KIND",
@@ -80,7 +76,6 @@ __all__ = [
     "HttpClientFactory",
     "MediaOutput",
     "MissingProviderKey",
-    "ModalityName",
     "ModelBuilder",
     "ModelOverride",
     "ModelTarget",
@@ -123,7 +118,6 @@ __all__ = [
     "install_hint",
     "installed_price_sources",
     "installed_providers",
-    "modality_name",
     "model_streams",
     "provider_key_env",
     "provider_support",
