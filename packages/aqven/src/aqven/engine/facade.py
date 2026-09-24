@@ -13,7 +13,7 @@ from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.forking import locate_fork, new_run_id, perform_fork
 from aqven.engine.launching import settled_record, start_run_workflow
-from aqven.engine.listing import RunListing, WorkflowFilters
+from aqven.engine.listing import RunListing, WorkflowFilters, mode_matches
 from aqven.engine.llm.errors import LlmNodeError
 from aqven.engine.presentation import CurrentFormatterLoader, CurrentTemplateLoader, present_batch
 from aqven.engine.prices import launch_models
@@ -115,6 +115,14 @@ def run_call_of(status: WorkflowStatus) -> RunCall | None:
         return RunCall(ir_hash=ir_hash, flow_input=flow_input, spec=RunSpec.model_validate(spec))
     except ValidationError, KeyError:
         return None
+
+
+def call_matches(call: RunCall | None, filters: WorkflowFilters) -> bool:
+    if call is None:
+        return False
+    if filters.flow_id is not None and call.spec.flow_id != filters.flow_id:
+        return False
+    return mode_matches(call.spec.mode, filters.mode)
 
 
 async def stored_run_call(run_id: RunId) -> RunCall | None:
@@ -358,7 +366,9 @@ class DbosEngineFacade:
             sort_desc=True,
             load_output=False,
         )
-        views = [view for view in [await self._view_of(status) for status in statuses] if view is not None]
+        candidates = [status for status in statuses if call_matches(run_call_of(status), filters)]
+        chosen = candidates if filters.needed is None else candidates[: filters.needed]
+        views = [view for view in [await self._view_of(status) for status in chosen] if view is not None]
         return [view.summary() for view in views]
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:

@@ -3,7 +3,7 @@ import * as ids from "@/data/ids"
 import { listOfMode, listSearch, readRunBlobs, RunScreen, snapshotRefs } from "@/features/runs"
 import { ROUTE_PATH } from "@/lib/routes"
 import { orNotFound } from "@/routes/-api-error"
-import { loadArm, loadExpected } from "@/routes/-run-load"
+import { isProjectFlowRun, loadArm, loadExpected } from "@/routes/-run-load"
 import { addressOf, parseRunAddressSearch } from "@/routes/-run-search"
 import { searchValidator } from "@/routes/-search"
 
@@ -17,8 +17,8 @@ export const Route = createFileRoute("/_project/runs/$runId")({
   validateSearch: validateRunSearch,
   loaderDeps: ({ search }) => ({ address: addressOf(search) }),
   loader: async ({ context: { api }, params, deps }) => {
-    const [snapshot, flows] = await Promise.all([orNotFound(api.run.snapshot(params.runId)), api.project.flows()])
-    if (flows.some((flow) => flow.flow_id === snapshot.flow_id)) {
+    const snapshot = await orNotFound(api.run.snapshot(params.runId))
+    if (await isProjectFlowRun(api, snapshot)) {
       throw redirect({ to: ROUTE_PATH.runs, params: { flowId: ids.flowId(snapshot.flow_id) }, search: { run: params.runId, ...listSearch(listOfMode(snapshot.mode)) } })
     }
     const [events, execution, arm] = await Promise.all([
