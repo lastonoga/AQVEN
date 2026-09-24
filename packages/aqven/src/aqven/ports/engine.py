@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping, Sequence
 from typing import Annotated, Final, Literal, Protocol
 
 from pydantic import AwareDatetime, Field
@@ -92,6 +92,8 @@ class EngineFacade(Protocol):
     async def get_run(self, run_id: RunId) -> RunSnapshot: ...
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]: ...
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]: ...
 
     def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]: ...
 

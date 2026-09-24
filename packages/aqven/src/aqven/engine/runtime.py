@@ -12,6 +12,7 @@ from aqven.engine.extensions import HumanLayer
 from aqven.engine.forking import root_run_id
 from aqven.engine.loading import CodeLoader
 from aqven.engine.plans import PlanRegistry
+from aqven.engine.summaries.service import RunSummaries
 from aqven.models.limiter import UsageBudget
 from aqven.models.usage import usd_of_micros
 from aqven.ports.execution import NodeExecutors
@@ -100,6 +101,7 @@ class EngineRuntime:
     executors: NodeExecutors
     human_layer: HumanLayer
     services: ToolServices
+    summaries: RunSummaries
 
 
 @dataclass(slots=True)

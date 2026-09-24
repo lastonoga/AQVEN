@@ -1,6 +1,6 @@
 import os
 import sys
-from collections.abc import AsyncGenerator, AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, AsyncIterator, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -47,6 +47,7 @@ from aqven.runtime.runs import (
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.app import LifespanFactory
 from aqven.server.mcp import McpPorts, ProjectPaths, WriterPatchFlow, build_catalog, build_mcp_server
+from aqven.spec import FlowId
 from aqven.write import WriteService
 
 ENGINE_NOT_STARTED: Final = "the aqven engine is not started: run the application lifespan before calling the API"
@@ -88,6 +89,9 @@ class DeferredEngine:
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
         return await self.current.list_runs(query)
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        return await self.current.latest_runs(flow_ids)
 
     def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         return self.current.run_events(run_id, after_seq)

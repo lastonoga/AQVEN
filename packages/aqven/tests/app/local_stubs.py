@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, NoReturn
@@ -29,6 +29,7 @@ from aqven.runtime.runs import (
     RunSummary,
 )
 from aqven.runtime.vocabulary import IncludePayloads
+from aqven.spec import FlowId
 
 ENGINE_LOG: Final = "engine-events.log"
 PROJECT_FILE: Final = "aqven.yaml"
@@ -46,6 +47,9 @@ class UnusedEngineFacade:
         unused()
 
     async def list_runs(self, query: RunListQuery) -> Page[RunSummary]:
+        unused()
+
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
         unused()
 
     def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:

@@ -1,14 +1,22 @@
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Final, Protocol
 
 from dbos import DBOS
+from pydantic import ValidationError
 
 from aqven.engine.protocol import RUN_EVENTS_STREAM
 from aqven.ports.execution import EventBuilder, EventStamp, OutputPart
 from aqven.runtime.address import ExecutionAddress, JsonObject, RunId
-from aqven.runtime.events import OUTPUT_DELTA_BATCH_MS, NodeAttemptDiscarded, NodeOutputDelta, RunEvent
+from aqven.runtime.events import (
+    OUTPUT_DELTA_BATCH_MS,
+    RUN_EVENT_ADAPTER,
+    NodeAttemptDiscarded,
+    NodeOutputDelta,
+    RunEvent,
+)
 from aqven.runtime.vocabulary import AttemptCauseKind
 
 MILLISECONDS: Final = 1000
@@ -38,26 +46,48 @@ class EventSink(Protocol):
     def defer(self, order: int, events: tuple[JsonObject, ...]) -> None: ...
 
 
+class EventObserver(Protocol):
+    async def written(self, position: int, events: Sequence[RunEvent]) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class UnobservedEvents:
+    async def written(self, position: int, events: Sequence[RunEvent]) -> None:
+        return None
+
+
+def deferred_event(payload: JsonObject) -> tuple[RunEvent, ...]:
+    try:
+        return (RUN_EVENT_ADAPTER.validate_python(payload),)
+    except ValidationError:
+        return ()
+
+
 @dataclass(slots=True)
 class StreamEventSink:
     run_id: RunId
     counter: SeqCounter = field(default_factory=SeqCounter)
     deferred: dict[int, tuple[JsonObject, ...]] = field(default_factory=dict[int, tuple[JsonObject, ...]])
+    observer: EventObserver = field(default_factory=UnobservedEvents)
 
     async def emit(self, build: EventBuilder) -> RunEvent:
-        await self._flush_deferred()
+        flushed = await self._flush_deferred()
         event = build(EventStamp(run_id=self.run_id, seq=self.counter.take(), at=utc_now()))
         await DBOS.write_stream_async(RUN_EVENTS_STREAM, event_payload(event))
+        await self.observer.written(event.seq, (*flushed, event))
         return event
 
     def defer(self, order: int, events: tuple[JsonObject, ...]) -> None:
         self.deferred[order] = events
 
-    async def _flush_deferred(self) -> None:
+    async def _flush_deferred(self) -> tuple[RunEvent, ...]:
+        flushed: list[RunEvent] = []
         for order in sorted(self.deferred):
             for payload in self.deferred.pop(order):
                 self.counter.take()
                 await DBOS.write_stream_async(RUN_EVENTS_STREAM, payload)
+                flushed.extend(deferred_event(payload))
+        return tuple(flushed)
 
 
 @dataclass(slots=True)
