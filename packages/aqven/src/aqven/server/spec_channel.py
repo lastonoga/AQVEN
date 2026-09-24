@@ -38,6 +38,7 @@ GIT_BATCH_LIMIT: Final = 200
 DEFAULT_DEBOUNCE_MS: Final = 250
 WATCHER_ID: Final = "watchfiles"
 WATCHER_RESTART_SECONDS: Final = 1.0
+SIMULATION_DEBOUNCE_SECONDS: Final = 3.0
 WATCH_LOGGER: Final = logging.getLogger("aqven.server.watch")
 
 type ChangeKind = Literal["added", "modified", "deleted"]
@@ -160,19 +161,24 @@ def change_summary(changes: tuple[FileChange, ...]) -> str:
 @dataclass(slots=True)
 class SimulationFeed:
     run: SimulationRun
+    delay_seconds: float = SIMULATION_DEBOUNCE_SECONDS
     task: asyncio.Task[None] | None = None
 
     def schedule(self, hub: SpecEventHub, tree_hash: str) -> None:
-        self.cancel()
-        self.task = asyncio.create_task(self._publish(hub, tree_hash))
+        previous = self.cancel()
+        self.task = asyncio.create_task(self._publish(hub, tree_hash, previous))
 
-    def cancel(self) -> None:
+    def cancel(self) -> asyncio.Task[None] | None:
         task = self.task
         self.task = None
         if task is not None and not task.done():
             task.cancel()
+        return task
 
-    async def _publish(self, hub: SpecEventHub, tree_hash: str) -> None:
+    async def _publish(self, hub: SpecEventHub, tree_hash: str, previous: asyncio.Task[None] | None) -> None:
+        await asyncio.sleep(self.delay_seconds)
+        if previous is not None:
+            await asyncio.wait((previous,))
         try:
             diagnostics = await self.run()
         except Exception:
@@ -240,8 +246,9 @@ class SpecEventHub:
         await self._notify()
 
     def _simulate(self, tree_hash: str) -> None:
-        if self.simulation is not None:
-            self.simulation.schedule(self, tree_hash)
+        if self.simulation is None or self.closed:
+            return
+        self.simulation.schedule(self, tree_hash)
 
     async def follow(self, after_seq: int) -> AsyncIterator[SpecEvent]:
         cursor = after_seq

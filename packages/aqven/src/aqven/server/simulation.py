@@ -1,6 +1,7 @@
 import asyncio
 import sys
-from asyncio.subprocess import DEVNULL, PIPE
+from asyncio.subprocess import DEVNULL, PIPE, Process
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol
@@ -43,9 +44,17 @@ class SubprocessSimulation:
         try:
             stdout, _ = await asyncio.wait_for(process.communicate(), self.timeout_seconds)
         except TimeoutError:
-            process.kill()
-            await process.wait()
             return ()
+        finally:
+            await reap(process)
         if process.returncode not in SUCCESS_CODES:
             return ()
         return parse_diagnostics(stdout)
+
+
+async def reap(process: Process) -> None:
+    if process.returncode is not None:
+        return
+    with suppress(ProcessLookupError):
+        process.kill()
+    await process.wait()
