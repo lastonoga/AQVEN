@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import partial
 from pathlib import Path
 
@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from starlette.types import ASGIApp
 
 from aqven.app.engine_host import DbosEngineHost, EngineHost, EngineLaunch
+from aqven.app.observation import ObservationTargets
 from aqven.app.prices import LazyPriceLookup, SharedPrices
 from aqven.app.runtime import ApplicationLaunch, LocalServer
 from aqven.check import CheckReport
@@ -23,7 +24,7 @@ from aqven.ports.settings import SettingsStore
 from aqven.series.analysis import ScipySeriesAnalyst
 from aqven.series.findings import FileFindings
 from aqven.series.jobs import SeriesService
-from aqven.series.ports import ModelPrices
+from aqven.series.ports import ModelPrices, SeriesJobs
 from aqven.series.services import SeriesServices, build_series_services
 from aqven.series.slot import SERIES_SLOT
 from aqven.server import ServerExtensions, ServerOptions, create_app
@@ -98,7 +99,7 @@ class ProjectParts:
     workspace: ProjectWorkspace
     writer: WriteService
     series: SeriesServices
-    jobs: SeriesService
+    jobs: SeriesJobs
 
 
 def project_parts(root: Path, settings: SettingsStore, prices: ModelPrices) -> ProjectParts:
@@ -198,6 +199,10 @@ def feature_builders(features: StudioFeatures, project: ProjectParts) -> tuple[P
     return tuple(builder for enabled, builder in table if enabled)
 
 
+def studio_address(launch: ApplicationLaunch) -> str | None:
+    return None if launch.headless else (launch.dev_origin or launch.record.url)
+
+
 def assemble_app(
     launch: ApplicationLaunch,
     features: StudioFeatures,
@@ -205,14 +210,21 @@ def assemble_app(
     assembly: ProjectAssembly | None = None,
 ) -> FastAPI:
     options = studio_server_options(launch, features)
-    project = (assembly or ProjectAssembly()).parts(launch.project_root, launch.settings)
-    parts = extra.plus(ApplicationParts(lifespans=(write_recovery(project.writer),)))
+    built = (assembly or ProjectAssembly()).parts(launch.project_root, launch.settings)
+    observed = launch.observer.observe(
+        ObservationTargets(
+            engine=launch.engine, series=built.jobs, workspace=built.workspace, studio_url=studio_address(launch)
+        )
+    )
+    watched = replace(launch, engine=observed.engine)
+    project = replace(built, jobs=observed.series)
+    parts = extra.plus(ApplicationParts(lifespans=(write_recovery(project.writer), observed.lifespan)))
     for builder in feature_builders(features, project):
-        parts = parts.plus(builder(launch))
+        parts = parts.plus(builder(watched))
     return create_app(
-        launch.project_root,
-        launch.engine,
-        launch.settings,
+        watched.project_root,
+        watched.engine,
+        watched.settings,
         parts.routers,
         options=options,
         extensions=ServerExtensions(mounts=parts.mounts, lifespans=parts.lifespans),

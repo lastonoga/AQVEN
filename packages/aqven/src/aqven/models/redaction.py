@@ -82,6 +82,7 @@ type ValueRedactor = Callable[[object, TextRedactor], object]
 
 OBJECT_MAP: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[str, object])
 OBJECT_LIST: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object])
+OBJECT_TUPLE: Final[TypeAdapter[tuple[object, ...]]] = TypeAdapter(tuple[object, ...])
 
 
 def redact_text(value: object, redactor: TextRedactor) -> object:
@@ -92,15 +93,19 @@ def redact_mapping(value: object, redactor: TextRedactor) -> object:
     return {key: redact_value(item, redactor) for key, item in OBJECT_MAP.validate_python(value).items()}
 
 
-def redact_sequence(value: object, redactor: TextRedactor) -> object:
+def redact_list(value: object, redactor: TextRedactor) -> object:
     return [redact_value(item, redactor) for item in OBJECT_LIST.validate_python(value)]
+
+
+def redact_tuple(value: object, redactor: TextRedactor) -> object:
+    return tuple(redact_value(item, redactor) for item in OBJECT_TUPLE.validate_python(value))
 
 
 VALUE_REDACTORS: Final[Mapping[type, ValueRedactor]] = {
     str: redact_text,
     dict: redact_mapping,
-    list: redact_sequence,
-    tuple: redact_sequence,
+    list: redact_list,
+    tuple: redact_tuple,
 }
 
 

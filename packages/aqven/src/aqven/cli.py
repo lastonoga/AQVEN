@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import os
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ from typing import Final, Literal, NoReturn
 
 from pydantic import TypeAdapter
 
+from aqven.app.console_log.levels import add_verbosity_arguments, arguments_level
 from aqven.app.environment import InvalidRuntimeSetting
 from aqven.app.options import add_server_arguments, server_options
 from aqven.check import CheckReport, check_project
@@ -99,9 +101,12 @@ class CheckCommand:
         root = open_project(Path(str(arguments.path)), output)
         if root is None:
             return EXIT_FAILED
-        generate_types(root)
-        report = check_project(root)
-        simulated = self._simulated(arguments, report)
+        from aqven.app.console_log.install import check_console_setup, install_console
+
+        with install_console(check_console_setup()):
+            generate_types(root)
+            report = check_project(root)
+            simulated = self._simulated(arguments, report)
         static = () if bool(arguments.simulation_only) else report.diagnostics
         diagnostics = (*static, *simulated)
         print(FORMATTERS[output](diagnostics))
@@ -246,11 +251,17 @@ class RunCommand:
             metavar="N",
             help="most nodes executed at once; the project setting runtime.max_parallel by default",
         )
+        add_verbosity_arguments(parser)
 
     def execute(self, arguments: argparse.Namespace) -> int:
         root = open_project(_optional_path(arguments.root) or Path.cwd(), OutputFormat.TEXT)
         if root is None:
             return EXIT_FAILED
+        try:
+            level = arguments_level(arguments, os.environ)
+        except InvalidRuntimeSetting as invalid:
+            print(f"{PROGRAM} run: {invalid}", file=sys.stderr)
+            return EXIT_USAGE
         from aqven.console.run import FlowRunRequest
 
         request = FlowRunRequest(
@@ -265,9 +276,11 @@ class RunCommand:
             data_dir=_optional_path(arguments.data_dir),
             max_parallel=arguments.max_parallel,
         )
+        from aqven.app.console_log.install import dev_console_setup, install_console
         from aqven.console.run import run_flow
 
-        return asyncio.run(run_flow(request))
+        with install_console(dev_console_setup(root, level)):
+            return asyncio.run(run_flow(request))
 
 
 @dataclass(frozen=True, slots=True)

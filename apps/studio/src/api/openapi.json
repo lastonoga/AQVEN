@@ -17080,6 +17080,7 @@
           "W_PROMPT_SHADOWED",
           "W_GENERATED_STALE",
           "W_OUTPUT_MODE_RESOLVED",
+          "W_SAMPLING_IGNORED",
           "W_TYPES_SHADOWS_STDLIB",
           "W_SIM_NODE_UNREACHED",
           "W_PROMPT_VALUE_UNREADABLE",
