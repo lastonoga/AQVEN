@@ -17,7 +17,7 @@ const item = (itemIndex: number, status: ApiExecution["status"]): ApiExecution =
 
 const snapshotOf = (executions: readonly ApiExecution[]): ApiRunSnapshot => ({
   ...completedSnapshot(),
-  node_counts: { pending: 0, running: 0, ok: 0, failed: executions.filter((entry) => entry.status === "failed").length, skipped: 0, suspended: 0, cancelled: 0 },
+  node_counts: { pending: 0, running: 0, ok: 0, failed: executions.filter((entry) => entry.status === "failed").length, skipped: 0, suspended: 0, cancelled: 0, items_replaced: 0, items_skipped: 0 },
   executions: [...executions],
 })
 

@@ -113,7 +113,7 @@ export const recoveredRun: ApiRun = {
   cost_usd: "0.0018",
   tokens_in: 13_695,
   tokens_out: 1_090,
-  node_counts: { pending: 0, running: 0, ok: 7, failed: 1, skipped: 0, suspended: 0, cancelled: 0 },
+  node_counts: { pending: 0, running: 0, ok: 7, failed: 1, skipped: 0, suspended: 0, cancelled: 0, items_replaced: 1, items_skipped: 0 },
   content_hash: CONTENT_HASH,
   definition_changed: false,
   waits: [],

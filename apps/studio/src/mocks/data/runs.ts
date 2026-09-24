@@ -25,7 +25,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -51,7 +53,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 3,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -78,7 +82,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -105,7 +111,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -132,7 +140,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -159,7 +169,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -186,7 +198,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 2,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -213,7 +227,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -237,7 +253,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -261,7 +279,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 2,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -285,7 +305,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 2,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -309,7 +331,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 2,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -333,7 +357,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -357,7 +383,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -381,7 +409,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-a295839de05546980a05df242383a467a9b8f22d1503a08833267ae2a706f612",
     "definition_changed": false,
@@ -405,7 +435,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-8a4b12c2fb09b2ebef05b495db05cda2161afa06fd660a5412d038e31ee81411",
     "definition_changed": false,
@@ -429,7 +461,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -453,7 +487,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -477,7 +513,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -501,7 +539,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -525,7 +565,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -552,7 +594,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -576,7 +620,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -600,7 +646,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 0,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -624,7 +672,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -648,7 +698,9 @@ const recordedRuns: readonly ApiRun[] = [
       "failed": 0,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -675,7 +727,9 @@ const recordedRunSnapshots: Readonly<Record<string, RecordedRunSnapshot>> = {
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-1d6cd1dcac8472621e14b90be07aa0602ee3ccace830062172604028558882e5",
     "definition_changed": false,
@@ -2941,7 +2995,9 @@ const recordedRunSnapshots: Readonly<Record<string, RecordedRunSnapshot>> = {
       "failed": 1,
       "skipped": 0,
       "suspended": 0,
-      "cancelled": 0
+      "cancelled": 0,
+      "items_replaced": 0,
+      "items_skipped": 0
     },
     "content_hash": "sha256-8a4b12c2fb09b2ebef05b495db05cda2161afa06fd660a5412d038e31ee81411",
     "definition_changed": false,

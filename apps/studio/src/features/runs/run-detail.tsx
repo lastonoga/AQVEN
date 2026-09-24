@@ -27,7 +27,7 @@ import {
   tokensText,
   totalCount,
 } from "./presenters"
-import { snapshotStatusLook, useRunStatusText } from "./run-status"
+import { runStatusLook, useRunStatusText } from "./run-status"
 
 export type RunDetailProps = {
   readonly snapshot: ApiRunSnapshot
@@ -100,7 +100,7 @@ export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps)
   const relative = useRelativeTime("long")
   const lineage = snapshot.lineage
   const seriesId = snapshot.series_id ?? null
-  const look = snapshotStatusLook(snapshot)
+  const look = runStatusLook(snapshot.status, snapshot.node_counts)
   return (
     <Heading
       size="page"
