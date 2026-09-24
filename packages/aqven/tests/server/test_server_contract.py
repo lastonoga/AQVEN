@@ -121,7 +121,7 @@ def test_runtime_file_is_owner_only(tmp_path: Path) -> None:
 RESEARCH_OPERATIONS: Final = {
     ("/api/experiments", "get"): ("experiment_list", None),
     ("/api/experiments/{experiment_id}", "get"): ("experiment_get", None),
-    ("/api/experiments/{experiment_id}/estimate", "post"): ("series_estimate", None),
+    ("/api/experiments/{experiment_id}/launch-plan", "post"): ("series_launch_plan", None),
     ("/api/series", "post"): ("series_start", "series_start"),
     ("/api/series", "get"): ("series_list", None),
     ("/api/series/{series_id}", "get"): ("series_get", "series_get"),

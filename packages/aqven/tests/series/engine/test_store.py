@@ -1,5 +1,7 @@
 import asyncio
+import json
 import sqlite3
+from contextlib import closing
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -22,8 +24,32 @@ def test_opening_writes_the_schema_version_and_keeps_user_version(store: SqliteS
         version = connection.execute("SELECT version FROM aqven_schema_versions WHERE component = 'series'").fetchone()
         user_version = connection.execute("PRAGMA user_version").fetchone()
 
-    assert version == (1,)
+    assert version == (2,)
     assert user_version == (0,)
+
+
+def estimated_record(series_id: str) -> str:
+    stored = json.loads(record(series_id, NOW).model_dump_json())
+    launch = stored.pop("launch")
+    stored["estimate"] = {**launch, "usd": "0.42", "usd_source": "bound", "minutes": 3}
+    stored["plan"]["per_attempt_usd"] = "0.0105"
+    return json.dumps(stored)
+
+
+def test_opening_a_first_version_database_moves_the_estimate_to_the_launch_plan(tmp_path: Path) -> None:
+    path = tmp_path / ".aqven" / "aqven.sqlite"
+    first = SqliteSeriesStore.open(path)
+    asyncio.run(first.create(record("old", NOW), cases()))
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute("UPDATE aqven_series SET record = ? WHERE series_id = 'old'", (estimated_record("old"),))
+        connection.execute("UPDATE aqven_schema_versions SET version = 1 WHERE component = 'series'")
+
+    reopened = SqliteSeriesStore.open(path)
+
+    assert asyncio.run(reopened.series(SeriesId("old"))) == record("old", NOW)
+    with closing(sqlite3.connect(path)) as connection:
+        version = connection.execute("SELECT version FROM aqven_schema_versions WHERE component = 'series'").fetchone()
+    assert version == (2,)
 
 
 def test_create_stores_the_series_and_its_cases_once(store: SqliteSeriesStore) -> None:

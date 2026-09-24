@@ -32,7 +32,7 @@ from aqven.runtime.runs import (
     RunSummary,
 )
 from aqven.runtime.vocabulary import IncludePayloads
-from aqven.series.model import SeriesEstimate, SeriesId
+from aqven.series.model import LaunchPlan, SeriesId
 from aqven.series.ports import SeriesJobs
 from aqven.series.views import (
     LaunchRequest,
@@ -246,8 +246,8 @@ class ObservedSeriesJobs:
     inner: SeriesJobs
     watch: SeriesWatch
 
-    async def estimate(self, experiment_id: ExperimentId, request: LaunchRequest) -> SeriesEstimate:
-        return await self.inner.estimate(experiment_id, request)
+    async def launch_plan(self, experiment_id: ExperimentId, request: LaunchRequest) -> LaunchPlan:
+        return await self.inner.launch_plan(experiment_id, request)
 
     async def start(self, request: SeriesStartRequest, actor: WriteActor) -> SeriesStarted:
         started = await self.inner.start(request, actor)

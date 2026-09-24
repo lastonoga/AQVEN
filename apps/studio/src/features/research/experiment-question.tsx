@@ -1,13 +1,12 @@
 import { useTranslations } from "use-intl"
 import type { ExperimentDetail, SeriesSummary } from "@/domain"
 import { Heading, type TagSpec } from "@/components/studio"
-import { useQuestionCopy, useSpendText } from "./copy"
+import { useQuestionCopy } from "./copy"
 import { Failure } from "./layout"
 import { questionSentence } from "./presenters"
 import { RunButton } from "./run-button"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 import type { Launch } from "./use-launch"
-import { shownEstimate } from "./use-launch-estimate"
 
 function useLatestTags(latest: SeriesSummary | null): readonly TagSpec[] {
   const t = useTranslations("research.vocabulary")
@@ -18,9 +17,7 @@ function useLatestTags(latest: SeriesSummary | null): readonly TagSpec[] {
 
 function HeaderRun({ launch }: { readonly launch: Launch }) {
   const t = useTranslations("research.experiment.question")
-  const spendText = useSpendText()
-  const estimate = shownEstimate(launch.estimate)
-  return <RunButton launch={launch} label={estimate === null ? t("run") : t("runEstimate", { estimate: spendText(estimate) })} />
+  return <RunButton launch={launch} label={t("run")} />
 }
 
 export function ExperimentQuestion({ experiment, latest, launch }: { readonly experiment: ExperimentDetail; readonly latest: SeriesSummary | null; readonly launch: Launch }) {

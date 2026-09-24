@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from aqven.runtime.runs import Page
-from aqven.series.model import SeriesEstimate, SeriesId
+from aqven.series.model import LaunchPlan, SeriesId
 from aqven.series.protocol import MAX_WAIT_SECONDS
 from aqven.series.views import (
     ExperimentDetailView,
@@ -38,7 +38,7 @@ from aqven.spec import ExperimentId
 
 EXPERIMENT_CATALOGUE: Final = "experiment catalogue read from the project files"
 ARM_FLOW: Final = "arm nodes and schemas for the Studio run view, read from the project files"
-ESTIMATE_ON_MCP: Final = "the estimate comes back from series_start on MCP"
+LAUNCH_PLAN_ON_MCP: Final = "the launch plan comes back from series_start on MCP"
 SERIES_HISTORY: Final = "series history for Studio"
 CASE_ROWS: Final = "per-case rows for Studio, holdout included"
 SSE_TRANSPORT: Final = "sse transport"
@@ -83,12 +83,12 @@ def build_research_router(context: ServerContext) -> APIRouter:
         return arm_flow(await context.workspace.state(), experiment_id, arm_id)
 
     @router.post(
-        "/experiments/{experiment_id}/estimate",
-        operation_id="series_estimate",
-        openapi_extra=rest_only(ESTIMATE_ON_MCP),
+        "/experiments/{experiment_id}/launch-plan",
+        operation_id="series_launch_plan",
+        openapi_extra=rest_only(LAUNCH_PLAN_ON_MCP),
     )
-    async def estimate_series(experiment_id: str, request: LaunchRequest) -> SeriesEstimate:
-        return await series_jobs(context.series).estimate(ExperimentId(experiment_id), request)
+    async def plan_series(experiment_id: str, request: LaunchRequest) -> LaunchPlan:
+        return await series_jobs(context.series).launch_plan(ExperimentId(experiment_id), request)
 
     @router.post("/series", status_code=201, operation_id="series_start", openapi_extra=operation("series_start"))
     async def start_series(request: SeriesStartRequest) -> SeriesStarted:

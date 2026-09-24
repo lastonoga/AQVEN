@@ -26,7 +26,7 @@ CASES_TABLE: Final = "aqven_series_cases"
 ATTEMPTS_TABLE: Final = "aqven_series_attempts"
 VERSIONS_TABLE: Final = "aqven_schema_versions"
 SCHEMA_COMPONENT: Final = "series"
-SCHEMA_VERSION: Final = 1
+SCHEMA_VERSION: Final = 2
 CONNECT_TIMEOUT: Final = 30
 LOOK_QUESTION: Final = "look"
 CURSOR_SEPARATOR: Final = "/"
@@ -124,6 +124,17 @@ ON CONFLICT (attempt_id) DO UPDATE SET
     finished_at = excluded.finished_at,
     record = excluded.record
 """
+
+STORED_VERSION: Final = f"SELECT version FROM {VERSIONS_TABLE} WHERE component = ?"
+RECORD_VERSION: Final = f"UPDATE {VERSIONS_TABLE} SET version = ? WHERE component = ?"
+LAUNCH_PLAN_RECORDS: Final = f"""
+UPDATE {SERIES_TABLE} SET record = json_remove(
+    json_set(record, '$.launch', json_extract(record, '$.estimate')),
+    '$.estimate', '$.plan.per_attempt_usd', '$.launch.usd', '$.launch.usd_source', '$.launch.minutes'
+)
+WHERE json_type(record, '$.estimate') IS NOT NULL
+"""
+MIGRATIONS: Final[Mapping[int, str]] = {2: LAUNCH_PLAN_RECORDS}
 
 LIST_ATTEMPTS: Final = f"SELECT record FROM {ATTEMPTS_TABLE} WHERE series_id = ? ORDER BY ordinal"
 SPEND: Final = f"SELECT cost_usd, check_cost_usd FROM {ATTEMPTS_TABLE} WHERE series_id = ? AND state = 'finished'"
@@ -318,6 +329,10 @@ class SqliteSeriesStore:
         with self._connection() as connection:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.executescript(SCHEMA)
+            stored: tuple[int] = connection.execute(STORED_VERSION, (SCHEMA_COMPONENT,)).fetchone()
+            for version in range(stored[0] + 1, SCHEMA_VERSION + 1):
+                connection.execute(MIGRATIONS[version])
+            connection.execute(RECORD_VERSION, (SCHEMA_VERSION, SCHEMA_COMPONENT))
 
     async def create(self, series: SeriesRecord, cases: Sequence[CaseSnapshot]) -> bool:
         return await asyncio.to_thread(self._create, series, tuple(cases))

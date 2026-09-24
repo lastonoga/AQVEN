@@ -3,19 +3,19 @@ import { Link } from "@tanstack/react-router"
 import { cn } from "cn"
 import { Check, Square } from "lucide-react"
 import { useTranslations } from "use-intl"
-import { SERIES_SPLITS, type ExperimentDetail, type LaunchEstimate, type SeriesSplit, type SeriesSummary } from "@/domain"
+import { SERIES_SPLITS, type ExperimentDetail, type LaunchPlan, type LaunchRequest, type SeriesSplit, type SeriesSummary } from "@/domain"
 import { Actions, ChoiceGroup, NumberStepper, Surface, Tag, Text, type ActionSpec, type TextTone } from "@/components/studio"
 import type { Translator } from "@/i18n/translator"
 import { SEPARATOR, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { useReasonCopy } from "./copy"
 import { ResearchSection } from "./layout"
-import { activeSeries, launchReason, MAX_REPEATS, plannedAttempts, plannedCases, seriesRef, shortfallOf, spendEstimate, type LaunchProblem, type ReasonCopy } from "./presenters"
+import { activeSeries, launchReason, MAX_REPEATS, plannedAttempts, plannedCases, seriesRef, shortfallOf, type LaunchProblem, type ReasonCopy } from "./presenters"
 import { RunButton } from "./run-button"
 import { isSpendPause } from "./series-presenters"
 import { SpendPause } from "./spend-pause"
 import { SERIES_STATUS_TONE } from "./tones"
-import { shownEstimate, type EstimateState } from "./use-launch-estimate"
+import { shownPlan, type PlanState } from "./use-launch-plan"
 import type { Launch } from "./use-launch"
 import type { ResearchAction } from "./use-research-action"
 
@@ -35,7 +35,6 @@ type FigureProps = { readonly template: string; readonly children: ReactNode }
 
 const MIN_COUNT = 1
 const COUNT_TEMPLATE = "00"
-const MONEY_TEMPLATE = usd(0)
 
 const problemsOf = (launch: Launch): readonly LaunchProblem[] => (launch.check.kind === "invalid" ? launch.check.problems : [])
 
@@ -45,24 +44,22 @@ const problemNotice = (problem: LaunchProblem, available: number, t: LaunchCopy)
   text: problem === "cases" ? t("casesInvalid", { available }) : t("repeatsInvalid", { max: MAX_REPEATS }),
 })
 
-const shortfallNotices = (estimate: LaunchEstimate | null, experiment: ExperimentDetail, t: LaunchCopy, reasons: ReasonCopy): readonly Notice[] => {
-  if (estimate === null || estimate.recommended.reason === "look") return []
-  const shortfall = shortfallOf(estimate)
-  if (shortfall === null) return []
-  return [
-    {
-      id: shortfall,
-      tone: "warning",
-      text: t(shortfall, { recommended: estimate.recommended.cases, available: estimate.available }),
-      title: launchReason(estimate, experiment.metrics, reasons),
-    },
-  ]
+const recommendationNotice = (plan: LaunchPlan, experiment: ExperimentDetail, t: LaunchCopy, reasons: ReasonCopy): Notice => {
+  const reason = launchReason(plan, experiment.metrics, reasons)
+  const shortfall = shortfallOf(plan)
+  if (shortfall === null) return { id: "recommendation", tone: "neutral", text: reason }
+  return { id: shortfall, tone: "warning", text: t(shortfall, { recommended: plan.recommended.cases, available: plan.available }), title: reason }
+}
+
+const recommendationNotices = (plan: LaunchPlan | null, experiment: ExperimentDetail, t: LaunchCopy, reasons: ReasonCopy): readonly Notice[] => {
+  if (plan === null || plan.recommended.reason === "look") return []
+  return [recommendationNotice(plan, experiment, t, reasons)]
 }
 
 const noticesOf = (launch: Launch, experiment: ExperimentDetail, t: LaunchCopy, reasons: ReasonCopy): readonly Notice[] => {
   const problems = problemsOf(launch)
   if (problems.length > 0) return problems.map((problem) => problemNotice(problem, launch.available, t))
-  return shortfallNotices(shownEstimate(launch.estimate), experiment, t, reasons)
+  return recommendationNotices(shownPlan(launch.plan), experiment, t, reasons)
 }
 
 function FieldRow({ label, htmlFor, children }: FieldRowProps) {
@@ -109,53 +106,48 @@ function Attempts({ count }: { readonly count: number | null }) {
   )
 }
 
-function Price({ estimate }: { readonly estimate: LaunchEstimate }) {
+function Shape({ request, variants }: { readonly request: LaunchRequest | null; readonly variants: number }) {
   const t = useTranslations("research.experiment.launch")
-  const spend = spendEstimate(estimate)
-  if (spend.source === "unknown") return <>{t("source.unknown")}</>
+  if (request === null) return null
   return (
     <>
-      {t("sign", { source: spend.source })} <Figure template={MONEY_TEMPLATE}>{spend.usd}</Figure> {t(`source.${spend.source}`)}
+      {SEPARATOR}
+      {t("shape", { cases: request.cases, repeats: request.repeats, variants })}
     </>
   )
 }
 
-function Cap({ estimate }: { readonly estimate: LaunchEstimate }) {
+function Cap({ plan, stale }: { readonly plan: LaunchPlan; readonly stale: boolean }) {
   const t = useTranslations("research.experiment.launch")
-  const cap = usd(estimate.capUsd)
-  if (estimate.usd !== null && estimate.usd > estimate.capUsd) return <Text role="meta" tone="warning">{t("approval", { cap })}</Text>
-  return <Text role="meta" tone="neutral">{t("cap", { cap })}</Text>
-}
-
-function Spend({ estimate, stale }: { readonly estimate: LaunchEstimate; readonly stale: boolean }) {
   return (
     <span aria-busy={stale} className={cn("transition-opacity", stale && "opacity-45")}>
       {SEPARATOR}
-      <Price estimate={estimate} />
-      {SEPARATOR}
-      <Cap estimate={estimate} />
+      <Text role="meta" tone={plan.needsApproval ? "warning" : "neutral"}>
+        {t(plan.needsApproval ? "approval" : "cap", { cap: usd(plan.capUsd) })}
+      </Text>
     </span>
   )
 }
 
-function SpendState({ state }: { readonly state: EstimateState }) {
+function CapState({ state }: { readonly state: PlanState }) {
   const t = useTranslations("research.experiment.launch")
-  if (state.kind === "ready") return <Spend estimate={state.estimate} stale={false} />
-  if (state.kind === "loading" && state.stale !== null) return <Spend estimate={state.stale} stale />
-  if (state.kind === "loading") return <Text role="meta" tone="neutral">{SEPARATOR}{t("estimating")}</Text>
-  if (state.kind === "failed") return <Text role="meta" tone="destructive">{SEPARATOR}{t("estimateFailed", { reason: state.message })}</Text>
+  if (state.kind === "ready") return <Cap plan={state.plan} stale={false} />
+  if (state.kind === "loading" && state.stale !== null) return <Cap plan={state.stale} stale />
+  if (state.kind === "failed") return <Text role="meta" tone="destructive">{SEPARATOR}{t("planFailed", { reason: state.message })}</Text>
   return null
 }
 
 function Summary({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
   const t = useTranslations("research.experiment.launch")
-  const { estimate, request } = launch
-  const attempts = plannedAttempts(estimate.kind === "ready" ? estimate.estimate : null, request, experiment.variants.length)
+  const { plan, request } = launch
+  const variants = experiment.variants.length
+  const attempts = plannedAttempts(plan.kind === "ready" ? plan.plan : null, request, variants)
   return (
     <Text role="meta" tone="default" asChild>
       <p role="status" aria-label={t("summary")} className="min-w-0 flex-1 truncate">
         <Attempts count={attempts} />
-        <SpendState state={estimate} />
+        <Shape request={request} variants={variants} />
+        <CapState state={plan} />
       </p>
     </Text>
   )

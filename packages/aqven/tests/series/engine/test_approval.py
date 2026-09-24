@@ -1,22 +1,17 @@
 import asyncio
-from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
 import pytest
-from series_fixture import ABOVE_PROJECT_CAP, CRITIC_MODEL, write_project
+from series_fixture import ABOVE_PROJECT_CAP, write_project
 from series_harness import ScriptedModels, SeriesHarness, reached, series_engine, settled
-from series_prices import FIXTURE_PRICES, FixedPrices
 
-from aqven.compiler import compile_root
-from aqven.engine import DbosEngineFacade, RunSpec
-from aqven.engine.runtime import NO_OVERRIDES
+from aqven.engine import DbosEngineFacade
 from aqven.ports.engine import RunListQuery
 from aqven.series.events import SeriesEventLog
 from aqven.series.model import ApprovalReason, SeriesStatus
 from aqven.series.settings import RESEARCH_SCOPE, SPEND_CAP_KEY
 from aqven.series.views import (
-    LaunchRequest,
     SeriesCancelRequest,
     SeriesEvent,
     SeriesStarted,
@@ -25,21 +20,13 @@ from aqven.series.views import (
     SeriesSummaryView,
 )
 from aqven.server.errors import ApiFailure
-from aqven.spec import ExperimentId, FlowId
+from aqven.spec import ExperimentId
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
 HUMAN: Final = WriteActor(kind="human", id="kir")
-TRIAGE: Final = FlowId("triage")
 TINY_PROJECT_CAP: Final = "0.000001"
 QUIET_SECONDS: Final = 1.0
-
-
-async def priced_history(harness: SeriesHarness, root: Path) -> None:
-    facade = DbosEngineFacade(runtime=harness.runtime)
-    started = await facade.launch(compile_root(root), RunSpec(flow_id=TRIAGE), {"text": "always right"}, NO_OVERRIDES)
-    record = await facade.result(started.run_id)
-    assert record.status == "completed"
 
 
 async def experiment_runs(harness: SeriesHarness) -> int:
@@ -47,8 +34,7 @@ async def experiment_runs(harness: SeriesHarness) -> int:
     return len(page.items)
 
 
-async def estimated_above_the_cap(harness: SeriesHarness, root: Path) -> tuple[SeriesStarted, SeriesSummaryView]:
-    await priced_history(harness, root)
+async def under_a_tiny_cap(harness: SeriesHarness) -> tuple[SeriesStarted, SeriesSummaryView]:
     await harness.settings.set_value(RESEARCH_SCOPE, SPEND_CAP_KEY, TINY_PROJECT_CAP)
     started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
     paused = await reached(harness.service, started.series_id, SeriesStatus.AWAITING_APPROVAL)
@@ -56,17 +42,16 @@ async def estimated_above_the_cap(harness: SeriesHarness, root: Path) -> tuple[S
     return started, paused.series
 
 
-def test_an_estimate_above_the_project_cap_starts_at_once_and_pauses_on_actual_spend(tmp_path: Path) -> None:
+def test_a_tiny_project_cap_starts_at_once_and_pauses_on_actual_spend(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
-    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
-        started, paused = asyncio.run(estimated_above_the_cap(harness, root))
+    with series_engine(root, ScriptedModels()) as harness:
+        started, paused = asyncio.run(under_a_tiny_cap(harness))
 
-    estimate = started.estimate
+    launch = started.launch
     assert started.status is SeriesStatus.RUNNING
-    assert estimate.usd is not None and estimate.usd > estimate.project_cap_usd
-    assert not estimate.needs_approval
-    assert estimate.cap_usd == estimate.project_cap_usd == started.spend.cap_usd
+    assert not launch.needs_approval
+    assert launch.cap_usd == launch.project_cap_usd == started.spend.cap_usd
     assert paused.pause is not None and paused.pause.reason is ApprovalReason.SPEND_NEAR_CAP
     assert paused.progress.done > 0
 
@@ -94,13 +79,13 @@ async def gated(
 def test_a_series_cap_above_the_project_cap_waits_for_one_human_approval(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
-    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
+    with series_engine(root, ScriptedModels()) as harness:
         started, attempts_before, runs_before, approvals, status, events = asyncio.run(gated(harness))
 
-    estimate = started.estimate
+    launch = started.launch
     assert started.status is SeriesStatus.AWAITING_APPROVAL
     assert started.pause is not None and started.pause.reason is ApprovalReason.CAP_ABOVE_PROJECT
-    assert (estimate.needs_approval, estimate.cap_usd) == (True, ABOVE_PROJECT_CAP)
+    assert (launch.needs_approval, launch.cap_usd) == (True, ABOVE_PROJECT_CAP)
     assert (attempts_before, runs_before) == (0, 0)
     accepted = [item for item in approvals if isinstance(item, SeriesSummaryView)]
     rejected = [item for item in approvals if isinstance(item, ApiFailure)]
@@ -132,28 +117,14 @@ async def first_start(harness: SeriesHarness) -> tuple[SeriesStarted, SeriesStat
     return started, done.series.status
 
 
-def test_a_first_series_starts_on_a_rough_estimate(tmp_path: Path) -> None:
+def test_a_first_series_starts_at_once_under_the_project_cap(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
-    with series_engine(root, ScriptedModels(), prices=FixedPrices(FIXTURE_PRICES)) as harness:
+    with series_engine(root, ScriptedModels()) as harness:
         started, status = asyncio.run(first_start(harness))
 
-    estimate = started.estimate
-    assert estimate.usd_source == "bound"
-    assert estimate.usd is not None and Decimal(0) < estimate.usd <= estimate.project_cap_usd
-    assert not estimate.needs_approval
+    launch = started.launch
+    assert not launch.needs_approval
+    assert launch.cap_usd == launch.project_cap_usd
     assert started.status is SeriesStatus.RUNNING
     assert status is SeriesStatus.DONE
-
-
-def test_an_unpriced_judge_leaves_the_first_series_without_an_estimate(tmp_path: Path) -> None:
-    root = write_project(tmp_path)
-    unpriced = {model: price for model, price in FIXTURE_PRICES.items() if model != CRITIC_MODEL}
-    request = LaunchRequest()
-
-    with series_engine(root, ScriptedModels(), prices=FixedPrices(unpriced)) as harness:
-        estimate = asyncio.run(harness.service.estimate(ExperimentId("triage_agents"), request))
-
-    assert (estimate.usd, estimate.usd_source) == (None, "unknown")
-    assert not estimate.needs_approval
-    assert f"price_unknown:{CRITIC_MODEL}" in estimate.warnings
