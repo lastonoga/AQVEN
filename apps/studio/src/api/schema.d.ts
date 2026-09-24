@@ -1211,6 +1211,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/sessions/{session_id}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chat Transcript */
+        get: operations["chat_transcript"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/chat/sessions/{session_id}/approvals/{approval_id}": {
         parameters: {
             query?: never;
@@ -1880,6 +1897,8 @@ export interface components {
             /** Diff */
             diff: string;
         };
+        /** @enum {string} */
+        ChatFinishReason: "server_restarted" | "server_stopped" | "agent_lost" | "stop_forced";
         /** ChatMessageDelivered */
         ChatMessageDelivered: {
             /** Seq */
@@ -2162,6 +2181,30 @@ export interface components {
         };
         /** @enum {string} */
         ChatToolStatus: "ok" | "error" | "denied" | "interrupted";
+        /** ChatTranscriptPage */
+        ChatTranscriptPage: {
+            /** Session Id */
+            session_id: string;
+            /** Turns */
+            turns: components["schemas"]["ChatTranscriptTurn"][];
+            /** Carry */
+            carry: components["schemas"]["ChatEvent"][];
+            /** Last Seq */
+            last_seq: number;
+            /** Before Seq */
+            before_seq: number | null;
+        };
+        /** ChatTranscriptTurn */
+        ChatTranscriptTurn: {
+            /** First Seq */
+            first_seq: number;
+            /** Last Seq */
+            last_seq: number;
+            /** Turn Id */
+            turn_id: string | null;
+            /** Events */
+            events: components["schemas"]["ChatEvent"][];
+        };
         /** ChatTurnAccepted */
         ChatTurnAccepted: {
             /** Session Id */
@@ -2195,7 +2238,10 @@ export interface components {
             backend: components["schemas"]["AgentBackendKind"];
             /** Model */
             model?: string | null;
+            reason?: components["schemas"]["ChatFinishReason"] | null;
         };
+        /** @enum {string} */
+        ChatTurnOrigin: "user" | "continuation";
         /** ChatTurnStarted */
         ChatTurnStarted: {
             /** Seq */
@@ -2222,6 +2268,8 @@ export interface components {
             backend: components["schemas"]["AgentBackendKind"];
             /** Model */
             model?: string | null;
+            /** @default user */
+            origin: components["schemas"]["ChatTurnOrigin"];
         };
         /** ChatUsage */
         ChatUsage: {
@@ -7342,6 +7390,7 @@ export type SchemaChatErrorRaised = components['schemas']['ChatErrorRaised'];
 export type SchemaChatEvent = components['schemas']['ChatEvent'];
 export type SchemaChatFileChange = components['schemas']['ChatFileChange'];
 export type SchemaChatFileEdit = components['schemas']['ChatFileEdit'];
+export type SchemaChatFinishReason = components['schemas']['ChatFinishReason'];
 export type SchemaChatMessageDelivered = components['schemas']['ChatMessageDelivered'];
 export type SchemaChatMessageQueued = components['schemas']['ChatMessageQueued'];
 export type SchemaChatMessageRequest = components['schemas']['ChatMessageRequest'];
@@ -7361,8 +7410,11 @@ export type SchemaChatToolCallArgsDelta = components['schemas']['ChatToolCallArg
 export type SchemaChatToolCallFinished = components['schemas']['ChatToolCallFinished'];
 export type SchemaChatToolCallStarted = components['schemas']['ChatToolCallStarted'];
 export type SchemaChatToolStatus = components['schemas']['ChatToolStatus'];
+export type SchemaChatTranscriptPage = components['schemas']['ChatTranscriptPage'];
+export type SchemaChatTranscriptTurn = components['schemas']['ChatTranscriptTurn'];
 export type SchemaChatTurnAccepted = components['schemas']['ChatTurnAccepted'];
 export type SchemaChatTurnFinished = components['schemas']['ChatTurnFinished'];
+export type SchemaChatTurnOrigin = components['schemas']['ChatTurnOrigin'];
 export type SchemaChatTurnStarted = components['schemas']['ChatTurnStarted'];
 export type SchemaChatUsage = components['schemas']['ChatUsage'];
 export type SchemaChatUsageReported = components['schemas']['ChatUsageReported'];
@@ -16096,6 +16148,112 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    chat_transcript: {
+        parameters: {
+            query?: {
+                before_seq?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatTranscriptPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

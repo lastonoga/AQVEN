@@ -10,7 +10,7 @@ import {
 } from "@assistant-ui/react"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { IntlProvider } from "use-intl"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { messages } from "@/i18n/messages"
 import { noop } from "@/lib/noop"
@@ -111,7 +111,7 @@ const textOf = (message: AppendMessage): string => message.content.flatMap((part
 
 const keep = (message: ThreadMessageLike): ThreadMessageLike => message
 
-function RunningComposerHarness({ calls }: { readonly calls: RunningCalls }) {
+function RunningComposerHarness({ calls, running = true }: { readonly calls: RunningCalls; readonly running?: boolean }) {
   const queue: ExternalThreadQueueAdapter = {
     items: [],
     steerItems: [],
@@ -123,7 +123,7 @@ function RunningComposerHarness({ calls }: { readonly calls: RunningCalls }) {
   }
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({
     messages: [],
-    isRunning: true,
+    isRunning: running,
     convertMessage: keep,
     queue,
     onNew: () => Promise.resolve(),
@@ -178,5 +178,72 @@ describe("Composer while the agent runs", () => {
       await Promise.resolve()
     })
     expect(calls.cancels).toEqual(["stop"])
+  })
+})
+
+const RESET = messages.en.chat.composer.resetAria
+
+const clickStop = async (): Promise<void> => {
+  await act(async () => {
+    fireEvent.click(button("Stop"))
+    await Promise.resolve()
+  })
+}
+
+const wait = (milliseconds: number): void => {
+  act(() => {
+    vi.advanceTimersByTime(milliseconds)
+  })
+}
+
+describe("Composer when Stop does not end the turn", () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("keeps Stop for a few seconds, then offers Reset that stops the turn again", async () => {
+    vi.useFakeTimers()
+    const calls: RunningCalls = { steered: [], enqueued: [], cancels: [] }
+    render(<RunningComposerHarness calls={calls} />)
+
+    await clickStop()
+    wait(3000)
+    expect(screen.queryByRole("button", { name: RESET })).toBeNull()
+
+    wait(2000)
+    expect(screen.queryByRole("button", { name: "Stop" })).toBeNull()
+    await act(async () => {
+      fireEvent.click(button(RESET))
+      await Promise.resolve()
+    })
+    expect(calls.cancels).toEqual(["stop", "stop"])
+  })
+
+  it("never offers Reset when nobody pressed Stop", () => {
+    vi.useFakeTimers()
+    const calls: RunningCalls = { steered: [], enqueued: [], cancels: [] }
+    render(<RunningComposerHarness calls={calls} />)
+
+    wait(60_000)
+    expect(screen.queryByRole("button", { name: RESET })).toBeNull()
+    expect(button("Stop").disabled).toBe(false)
+  })
+
+  it("forgets a stalled Stop once the turn ends, so the next turn starts with Stop", async () => {
+    vi.useFakeTimers()
+    const calls: RunningCalls = { steered: [], enqueued: [], cancels: [] }
+    const view = render(<RunningComposerHarness calls={calls} />)
+
+    await clickStop()
+    wait(5000)
+    expect(button(RESET)).toBeTruthy()
+
+    view.rerender(<RunningComposerHarness calls={calls} running={false} />)
+    expect(screen.queryByRole("button", { name: RESET })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Stop" })).toBeNull()
+
+    view.rerender(<RunningComposerHarness calls={calls} running />)
+    expect(button("Stop").disabled).toBe(false)
+    expect(screen.queryByRole("button", { name: RESET })).toBeNull()
   })
 })

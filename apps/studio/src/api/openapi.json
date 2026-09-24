@@ -10670,6 +10670,155 @@
         "x-aqven-rest-only": "sse transport"
       }
     },
+    "/api/chat/sessions/{session_id}/transcript": {
+      "get": {
+        "summary": "Chat Transcript",
+        "operationId": "chat_transcript",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "before_seq",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before Seq"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatTranscriptPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "studio chat agent"
+      }
+    },
     "/api/chat/sessions/{session_id}/approvals/{approval_id}": {
       "post": {
         "summary": "Chat Approval Answer",
@@ -12960,6 +13109,15 @@
         ],
         "title": "ChatFileEdit"
       },
+      "ChatFinishReason": {
+        "type": "string",
+        "enum": [
+          "server_restarted",
+          "server_stopped",
+          "agent_lost",
+          "stop_forced"
+        ]
+      },
       "ChatMessageDelivered": {
         "properties": {
           "seq": {
@@ -13771,6 +13929,94 @@
           "interrupted"
         ]
       },
+      "ChatTranscriptPage": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTranscriptTurn"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "carry": {
+            "items": {
+              "$ref": "#/components/schemas/ChatEvent"
+            },
+            "type": "array",
+            "title": "Carry"
+          },
+          "last_seq": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Last Seq"
+          },
+          "before_seq": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Seq"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "turns",
+          "carry",
+          "last_seq",
+          "before_seq"
+        ],
+        "title": "ChatTranscriptPage"
+      },
+      "ChatTranscriptTurn": {
+        "properties": {
+          "first_seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "First Seq"
+          },
+          "last_seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Last Seq"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ChatEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first_seq",
+          "last_seq",
+          "turn_id",
+          "events"
+        ],
+        "title": "ChatTranscriptTurn"
+      },
       "ChatTurnAccepted": {
         "properties": {
           "session_id": {
@@ -13854,6 +14100,16 @@
               }
             ],
             "title": "Model"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatFinishReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -13867,6 +14123,13 @@
           "usage"
         ],
         "title": "ChatTurnFinished"
+      },
+      "ChatTurnOrigin": {
+        "type": "string",
+        "enum": [
+          "user",
+          "continuation"
+        ]
       },
       "ChatTurnStarted": {
         "properties": {
@@ -13923,6 +14186,10 @@
               }
             ],
             "title": "Model"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/ChatTurnOrigin",
+            "default": "user"
           }
         },
         "type": "object",

@@ -8,7 +8,7 @@ from claude_agent_sdk.types import McpHttpServerConfig, SystemPromptPreset, Thin
 from pydantic import SecretStr
 
 from aqven.chat.approvals import DEFAULT_APPROVAL_TIMEOUT_SECONDS
-from aqven.chat.env_guard import SecretFileGuard, scrubbed_environment
+from aqven.chat.env_guard import ChatGuard, SecretFileGuard, scrubbed_environment
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import MCP_CONFIG_PREFIX, McpConfigFile, write_mcp_config
 from aqven.chat.models import thinking_budget
@@ -68,7 +68,7 @@ def default_guard() -> SecretFileGuard:
 @dataclass(frozen=True, slots=True)
 class ClaudeOptionsFactory:
     settings: ClaudeChatSettings
-    guard: SecretFileGuard = field(default_factory=default_guard)
+    guard: ChatGuard = field(default_factory=default_guard)
 
     def build(self, stored: StoredChatSession, can_use_tool: CanUseTool) -> ClaudeLaunch:
         project_root = Path(stored.session.project_root)

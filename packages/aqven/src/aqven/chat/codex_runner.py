@@ -25,7 +25,7 @@ from aqven.chat.builders import (
     turn_finished,
     turn_started,
 )
-from aqven.chat.codex_approvals import DECLINED, CodexApprovalBridge
+from aqven.chat.codex_approvals import COMMAND_APPROVAL, DECLINED, CodexApprovalBridge
 from aqven.chat.codex_normalizer import CodexNormalizer
 from aqven.chat.codex_policy import codex_config
 from aqven.chat.codex_runtime import CodexChatRuntime
@@ -33,9 +33,12 @@ from aqven.chat.feed import ChatEmitter
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.pending_messages import PendingMessage, PendingMessages
 from aqven.chat.project_rules import project_rules
+from aqven.chat.server_guard import SHELL_TOOL
+from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import (
     ChatDelivery,
     ChatErrorCode,
+    ChatFinishReason,
     ChatMessageId,
     ChatSession,
     ChatSessionId,
@@ -105,6 +108,9 @@ class CodexSessionRunner:
         self._connecting = asyncio.Lock()
         self._steered = PendingMessages()
         self._after_turn = PendingMessages()
+        self._interrupting = False
+        self._finish_reason: ChatFinishReason | None = None
+        self._settler = TurnSettler(runtime.journal, runtime.signals, runtime.clock)
 
     @property
     def busy(self) -> bool:
@@ -130,6 +136,8 @@ class CodexSessionRunner:
     def begin_turn(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
         turn_id = ChatTurnId(self._runtime.ids())
         self._emitter.turn_id = turn_id
+        self._interrupting = False
+        self._finish_reason = None
         self._turn_started_at = time.monotonic()
         self._normalizer = CodexNormalizer(ChatMessageId(turn_id), self._session.model)
         self._file_events = {}
@@ -148,7 +156,22 @@ class CodexSessionRunner:
 
     async def interrupt(self) -> None:
         if not self.busy:
+            self._settler.settle(self._stored().session, "agent_lost")
             return
+        if self._interrupting:
+            await self._force_stop("stop_forced")
+            return
+        await self._request_stop()
+
+    async def _force_stop(self, reason: ChatFinishReason) -> None:
+        self._finish_reason = reason
+        self._runtime.approvals.resolve_session(self._session_id, "interrupt")
+        await self._drop_client()
+        await self._cancel_delivery()
+        self._finish("interrupted")
+
+    async def _request_stop(self) -> None:
+        self._interrupting = True
         self._emitter.emit((status_changed("interrupting"),))
         self._runtime.approvals.resolve_session(self._session_id, "interrupt")
         client, thread_id, turn_id = self._client, self._thread_id, self._active_turn_id
@@ -158,23 +181,38 @@ class CodexSessionRunner:
             self._reset_unstarted_thread()
             self._finish("interrupted")
             return
+        delivery = self._delivery
         try:
-            delivery = self._delivery
             await asyncio.to_thread(client.turn_interrupt, thread_id, turn_id)
-            if delivery is not None:
-                await asyncio.wait_for(asyncio.shield(delivery), INTERRUPT_TIMEOUT_SECONDS)
         except Exception:
-            await self._drop_client()
-            await self._cancel_delivery()
-            self._finish("interrupted")
+            await self._abandon(client)
+            return
+        await self._await_delivery(client, delivery)
 
-    async def close(self) -> None:
+    async def _await_delivery(self, client: CodexClient, delivery: asyncio.Task[None] | None) -> None:
+        if delivery is None:
+            return
+        done, _ = await asyncio.wait((delivery,), timeout=INTERRUPT_TIMEOUT_SECONDS)
+        if done:
+            return
+        await self._abandon(client)
+
+    async def _abandon(self, client: CodexClient) -> None:
+        if client is not self._client:
+            return
+        await self._drop_client()
+        await self._cancel_delivery()
+        self._finish("interrupted")
+
+    async def close(self, reason: ChatFinishReason | None = None) -> None:
+        self._finish_reason = reason
         self._steered.clear()
         self._after_turn.clear()
         self._runtime.approvals.resolve_session(self._session_id, "session_closed")
         await self._drop_client()
         await self._cancel_delivery()
         self._finish("interrupted")
+        self._settler.settle(self._stored().session, reason or "agent_lost")
 
     async def _run(self, text: str) -> None:
         client: CodexClient | None = None
@@ -280,7 +318,15 @@ class CodexSessionRunner:
 
     def _approval_handler(self, method: str, params: JsonObject | None) -> JsonObject:
         bridge = self._bridge
-        return DECLINED if bridge is None else bridge.handler(method, params)
+        if bridge is None or self._refused_command(method, params):
+            return DECLINED
+        return bridge.handler(method, params)
+
+    def _refused_command(self, method: str, params: JsonObject | None) -> bool:
+        command = None if method != COMMAND_APPROVAL or params is None else params.get("command")
+        if not isinstance(command, str):
+            return False
+        return self._runtime.command_guard.violation(SHELL_TOOL, {"command": command}) is not None
 
     def _complete(self, notification: TurnCompletedNotification) -> None:
         turn = notification.turn
@@ -365,10 +411,13 @@ class CodexSessionRunner:
                     elapsed if duration_ms is None else duration_ms,
                     usage,
                     session_agent(self._session),
+                    self._finish_reason,
                 ),
             )
         )
         self._emitter.turn_id = None
+        self._interrupting = False
+        self._finish_reason = None
         self._start_queued_turn()
 
     def _stored(self) -> StoredChatSession:

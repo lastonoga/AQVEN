@@ -10,11 +10,14 @@ from aqven.chat.approvals import ApprovalRegistry
 from aqven.chat.codex_policy import codex_config
 from aqven.chat.codex_runner import CodexSessionRunner
 from aqven.chat.codex_runtime import CodexChatRuntime, CodexClientFactory, sdk_client
+from aqven.chat.env_guard import ToolRule
 from aqven.chat.errors import ChatFailure
 from aqven.chat.feed import ChatSignals, follow_chat_events
-from aqven.chat.journal import ChatJournal, StoredChatSession
+from aqven.chat.journal import StoredChatSession
 from aqven.chat.models import known_effort
+from aqven.chat.server_guard import ServerProcessGuard
 from aqven.chat.sqlite_journal import utc_now
+from aqven.chat.turn_settling import SettlingJournal, TurnSettler
 from aqven.ports.chat import (
     AgentBackendKind,
     ApprovalAnswer,
@@ -57,12 +60,13 @@ def chat_model(entry: object) -> ChatModel:
 class CodexAgentBackend:
     def __init__(
         self,
-        journal: ChatJournal,
+        journal: SettlingJournal,
         project_root: Path,
         mcp_url: str,
         mcp_token: SecretStr,
         client_factory: CodexClientFactory = sdk_client,
         shutdown_signal: asyncio.Event | None = None,
+        command_guard: ToolRule | None = None,
     ) -> None:
         self._runtime = CodexChatRuntime(
             journal=journal,
@@ -72,7 +76,9 @@ class CodexAgentBackend:
             clock=utc_now,
             client_factory=client_factory,
             shutdown=shutdown_signal or asyncio.Event(),
+            command_guard=command_guard or ServerProcessGuard(),
         )
+        self._settler = TurnSettler(journal, self._runtime.signals, self._runtime.clock)
         self._project_root = project_root
         self._mcp_url = mcp_url
         self._runners: dict[ChatSessionId, CodexSessionRunner] = {}
@@ -184,19 +190,22 @@ class CodexAgentBackend:
         raise ChatFailure("NOT_WAITING", f"approval {answer.approval_id} is not waiting for an answer")
 
     async def interrupt(self, session_id: ChatSessionId) -> None:
-        self._require_open(session_id)
+        stored = self._require_open(session_id)
         runner = self._runners.get(session_id)
-        if runner is not None:
-            await runner.interrupt()
+        if runner is None:
+            self._settler.settle(stored.session, "agent_lost")
+            return
+        await runner.interrupt()
 
     async def apply_settings(self, session_id: ChatSessionId) -> None:
         return None
 
     async def close_session(self, session_id: ChatSessionId) -> None:
-        self._require(session_id)
+        stored = self._require(session_id)
         runner = self._runners.pop(session_id, None)
         if runner is not None:
             await runner.close()
+        self._settler.settle(stored.session, "agent_lost")
         self._runtime.journal.set_closed(session_id, self._runtime.clock())
         self._runtime.signals.notify(session_id)
 
@@ -204,7 +213,7 @@ class CodexAgentBackend:
         runners = tuple(self._runners.values())
         self._runners.clear()
         for runner in runners:
-            await runner.close()
+            await runner.close("server_stopped")
 
     def _require(self, session_id: ChatSessionId) -> StoredChatSession:
         stored = self._runtime.journal.get_session(session_id)

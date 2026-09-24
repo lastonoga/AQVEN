@@ -53,6 +53,41 @@ def test_codex_text_and_reasoning_deltas_share_one_assistant_message() -> None:
     assert emitted[0].message_id == emitted[1].message_id == "turn-1"
 
 
+def agent_delta(item_id: str, delta: str) -> Notification:
+    return Notification(
+        "item/agentMessage/delta",
+        AgentMessageDeltaNotification(delta=delta, item_id=item_id, thread_id="codex-1", turn_id="turn-1"),
+    )
+
+
+def summary_delta(item_id: str, summary_index: int, delta: str) -> Notification:
+    return Notification(
+        "item/reasoning/summaryTextDelta",
+        ReasoningSummaryTextDeltaNotification(
+            delta=delta, item_id=item_id, summary_index=summary_index, thread_id="codex-1", turn_id="turn-1"
+        ),
+    )
+
+
+def test_each_codex_agent_message_and_summary_is_its_own_part_so_texts_never_glue() -> None:
+    normalizer = CodexNormalizer(ChatMessageId("turn-1"), None)
+    notifications = (
+        agent_delta("item-1", "The markers stay "),
+        agent_delta("item-1", "visible."),
+        summary_delta("reason-1", 0, "Checking the pairs."),
+        summary_delta("reason-1", 1, "Then the angles."),
+        agent_delta("item-2", "Got it — "),
+        agent_delta("item-2", "fixing the pairs."),
+    )
+
+    emitted = [builder(STAMP) for message in notifications for builder in normalizer.normalize(message)]
+    texts = [(event.part_index, event.delta) for event in emitted if isinstance(event, ChatTextDelta)]
+    thoughts = [(event.part_index, event.delta) for event in emitted if isinstance(event, ChatReasoningDelta)]
+
+    assert texts == [(0, "The markers stay "), (0, "visible."), (3, "Got it — "), (3, "fixing the pairs.")]
+    assert thoughts == [(1, "Checking the pairs."), (2, "Then the angles.")]
+
+
 def test_codex_command_stream_and_completion_keep_one_tool_call() -> None:
     normalizer = CodexNormalizer(ChatMessageId("turn-1"), None)
     command = ThreadItem.model_validate(
