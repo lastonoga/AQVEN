@@ -122,15 +122,15 @@ describe("experiment list rows", () => {
     })
   })
 
-  it("collects the flows and failure modes offered by the filters", () => {
+  it("collects the failure modes offered by the filters", () => {
     const experiments = [experimentSummary({}), experimentSummary({ id: ids.experimentId("arm_only"), flow: null, failureMode: "intent_misread" }), experimentSummary({ failureMode: null })]
     expect(failureModes(experiments)).toEqual(["intent_misread", "reply_quality"])
   })
 
   it("sets, keeps and clears one filter at a time", () => {
-    const filter = { flow: ids.flowId("support_case"), failureMode: "overpromise" }
-    expect(withFilter(filter, { question: "threshold" })).toEqual({ flow: "support_case", question: "threshold", failureMode: "overpromise" })
-    expect(withFilter(filter, { flow: null })).toEqual({ failureMode: "overpromise" })
+    const filter = { failureMode: "overpromise" }
+    expect(withFilter(filter, { question: "threshold" })).toEqual({ question: "threshold", failureMode: "overpromise" })
+    expect(withFilter({ question: "look", failureMode: "overpromise" }, { question: null })).toEqual({ failureMode: "overpromise" })
     expect(withFilter({}, { failureMode: null })).toEqual({})
   })
 

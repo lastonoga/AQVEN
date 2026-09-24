@@ -1,7 +1,8 @@
 import { useTranslations } from "use-intl"
 import type { BuiltinNames } from "./metrics"
-import type { LaunchEstimate } from "@/domain"
+import type { FlowId, LaunchEstimate } from "@/domain"
 import { spendEstimate, type QuestionCopy, type ReasonCopy, type SubjectCopy } from "./presenters"
+import type { CheckHintCopy } from "./series-presenters"
 
 export function useBuiltinNames(): BuiltinNames {
   const t = useTranslations("research.vocabulary.builtinMetric")
@@ -49,5 +50,23 @@ export function useSpendText(): (estimate: Pick<LaunchEstimate, "usd" | "usdSour
   return (estimate) => {
     const spend = spendEstimate(estimate)
     return t(spend.source, { usd: spend.usd })
+  }
+}
+
+export function useFlowTitle(): (flow: FlowId | null) => string {
+  const t = useTranslations("research.flowSection")
+  return (flow) => flow ?? t("arms")
+}
+
+export function useCheckHintCopy(): CheckHintCopy {
+  const t = useTranslations("research.series.cases.checkHint")
+  return {
+    builtin: (use) => t("builtin", { use }),
+    fields: (fields) => t("fields", { fields }),
+    code: (ref) => t("code", { ref }),
+    judge: (inference) => t("judge", { inference }),
+    agent: (agent) => t("agent", { agent }),
+    validatedBy: (experiment) => t("validatedBy", { experiment }),
+    notValidated: t("notValidated"),
   }
 }

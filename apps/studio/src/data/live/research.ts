@@ -45,7 +45,7 @@ export type ResearchSource = {
   readonly series: (id: SeriesId) => Promise<SeriesDetail>
   readonly seriesCases: (id: SeriesId, filter?: SeriesCaseFilter) => Promise<readonly SeriesCaseRow[]>
   readonly seriesOfExperiment: (id: ExperimentId) => Promise<readonly SeriesSummary[]>
-  readonly allSeries: (flow?: FlowId) => Promise<readonly SeriesSummary[]>
+  readonly allSeries: () => Promise<readonly SeriesSummary[]>
   readonly startLook: (flowId: FlowId, datasetId: DatasetId, caseNames: readonly string[], stages?: NodeRange | null) => Promise<SeriesId>
   readonly events: SeriesEventStream
 }
@@ -72,7 +72,6 @@ export const seriesEventStream: SeriesEventStream = (id, afterSeq, onEvent) =>
   subscribeEvents({ url: seriesEventsUrl(id, afterSeq), types: SERIES_EVENT_TYPES, read: readSeriesEvent(id), onEvent })
 
 const experimentQuery = (filter: ExperimentFilter, cursor: string | null) => ({
-  flow_id: filter.flow ?? null,
   question: filter.question ?? null,
   failure_mode: filter.failureMode ?? null,
   cursor,
@@ -113,9 +112,8 @@ export const research: ResearchSource = {
       unwrap(await api.GET("/api/series", { params: { query: { experiment_id: id, cursor, limit: MAX_PAGE } } })))
     return rows.map(seriesSummaryOf)
   },
-  allSeries: async (flow) => {
-    const rows = await everyPage(async (cursor) =>
-      unwrap(await api.GET("/api/series", { params: { query: { flow_id: flow ?? null, cursor, limit: MAX_PAGE } } })))
+  allSeries: async () => {
+    const rows = await everyPage(async (cursor) => unwrap(await api.GET("/api/series", { params: { query: { cursor, limit: MAX_PAGE } } })))
     return rows.map(seriesSummaryOf)
   },
   startLook: async (flowId, datasetId, caseNames, stages = null) => {

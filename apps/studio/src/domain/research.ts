@@ -218,7 +218,6 @@ export type ExperimentDetail = ExperimentHead & {
 }
 
 export type ExperimentFilter = {
-  readonly flow?: FlowId
   readonly question?: QuestionKind
   readonly failureMode?: string
 }

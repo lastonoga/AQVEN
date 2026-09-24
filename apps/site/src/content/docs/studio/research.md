@@ -1,6 +1,6 @@
 ---
 title: How to use Research in Studio
-description: Switch to Research, browse experiments, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
+description: Switch to Research, browse the experiments of every flow, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
 ---
 
 ## When you need this
@@ -13,17 +13,23 @@ series, approve its spend, and ask the chat for the next hypothesis.
 ## Steps
 
 - **Switch to Research.** The project header has two modes, **Flow** and **Research**. Research has two
-  tabs: **Experiments** and **Series**. The flow picker narrows both to one flow, and **All experiments**
-  shows every flow, arm-only experiments included. The chat panel stays open in both modes.
-- **Browse the experiments.** Each row shows the experiment id with its description, the question kind
+  tabs: **Experiments** and **Series**. Research opens on **Experiments** with every experiment of the
+  project, so there is no flow to pick. The flow picker belongs to Flow mode and is hidden in Research. The
+  chat panel stays open in both modes.
+- **Browse the experiments.** The list has one section per flow, ordered by flow name. Each section is a
+  heading with the flow name and the number of experiments, then a table. An experiment sits under the flow
+  it tests, as a whole or as a range of nodes. Experiments on an arm come last, under **Arms**, even when
+  their cases come from a flow. Each row shows the experiment id with its description, the question kind
   (look, threshold, better, not worse), the subject (a flow, a range like `support_case · polish`, or an
   arm), the variants, the state of the last series, and how many series ran and what they cost. Filter by
-  **Question** or **Failure mode**.
-- **Suggest hypotheses** hands a prompt to the chat. It asks the agent to read the flows, their cases and
-  the experiments already there, and to propose hypotheses. Each hypothesis comes with its failure mode,
-  question, metric and margin, subject, variants as agents, checks and cases by tags. The agent writes no
-  file until you pick one. Then it writes `experiments/<experiment_id>/experiment.yaml` and runs
-  `{{CLI_COMMAND}} check`.
+  **Question** or **Failure mode**. The filters apply to every section, and a flow with no matching
+  experiment drops out of the list.
+- **Suggest hypotheses** hands a prompt to the chat. The button in the page header asks about the whole
+  project. The button in a flow's section heading asks the agent to focus on that flow. The prompt asks
+  the agent to read the flows, their cases and the experiments already there, and to propose hypotheses.
+  Each hypothesis comes with its failure mode, question, metric and margin, subject, variants as agents,
+  checks and cases by tags. The agent writes no file until you pick one. Then it writes
+  `experiments/<experiment_id>/experiment.yaml` and runs `{{CLI_COMMAND}} check`.
 - **Open an experiment.** The header states the question in words and holds a **Run** button with the
   estimate. The page below reads top to bottom:
 
@@ -56,7 +62,8 @@ series, approve its spend, and ask the chat for the next hypothesis.
 
 ### Example
 
-Open the showcase project, switch to **Research**, and open `reply_noninferior_mistral`. The Hypothesis
+Open the showcase project, switch to **Research**, and open `reply_noninferior_mistral` in the
+`support_case` section. The Hypothesis
 reads "mistral in the revision step of the polish loop is not worse than gpt by the critic's score, and a
 passing reply costs at most 20% more". The variants table shows one swap, `polish__revise: agent gpt →
 agent mistral`. The facts show all twelve cases of `support_case_cases`, split between working and

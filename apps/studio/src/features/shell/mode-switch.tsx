@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { useTranslations } from "use-intl"
 import { ChoiceLink, ChoiceList } from "@/components/studio"
 import { ROUTE_PATH } from "@/lib/routes"
-import { PROJECT_MODES, researchSearch, type ProjectMode } from "./navigation"
+import { PROJECT_MODES, type ProjectMode } from "./navigation"
 import type { FlowScope } from "./selected-flow"
 
 type ModeLinkProps = { readonly selected: FlowScope; readonly current: boolean; readonly children: ReactNode }
@@ -22,9 +22,9 @@ function FlowModeLink({ selected, current, children }: ModeLinkProps) {
   )
 }
 
-function ResearchModeLink({ selected, current, children }: ModeLinkProps) {
+function ResearchModeLink({ current, children }: ModeLinkProps) {
   return (
-    <ChoiceLink appearance="segmented" size="sm" to={ROUTE_PATH.research} search={researchSearch(selected)} selected={current}>
+    <ChoiceLink appearance="segmented" size="sm" to={ROUTE_PATH.research} selected={current}>
       {children}
     </ChoiceLink>
   )
