@@ -51,7 +51,26 @@
   },
   "postCheck": {
     "attempts": "{count, plural, one {# failed attempt} other {# failed attempts}}",
-    "rules": "{count, plural, one {# rule firing} other {# rule firings}}"
+    "rules": "{count, plural, one {# rule firing} other {# rule firings}}",
+    "repeated": "×{count}\u00a0·\u00a0{attempts, plural, one {#\u00a0attempt} other {#\u00a0attempts}}"
+  },
+  "recovery": {
+    "status": {
+      "default": "{status} · replaced",
+      "skip": "{status} · skipped"
+    },
+    "caption": {
+      "default": "Default from {policy} — not a model answer",
+      "skip": "Skipped by {policy} — not in the output"
+    },
+    "tag": {
+      "default": "{count} replaced",
+      "skip": "{count} skipped"
+    },
+    "tagTitle": {
+      "default": "on_item_error {policy} replaced {count, plural, one {a failed item} other {# failed items}}; the run continued",
+      "skip": "on_item_error {policy} skipped {count, plural, one {a failed item} other {# failed items}}; the run continued"
+    }
   },
   "expander": {
     "children": "{count, plural, one {# nested call} other {# nested calls}}",
@@ -70,7 +89,8 @@
     "message": "Message",
     "problems": "Fields",
     "hint": "Hint",
-    "rawExcerpt": "Raw excerpt"
+    "rawExcerpt": "Raw excerpt",
+    "identicalAnswers": "×{count} identical answers in one response"
   },
   "exit": {
     "reason": "loop exited on {reason}",

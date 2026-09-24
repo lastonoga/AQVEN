@@ -5,7 +5,7 @@ export type ItemFailures = { readonly failed: number; readonly total: number }
 
 const ITEM_CONTAINERS: ReadonlySet<NodeKind> = new Set<NodeKind>(["map", "parallel"])
 
-const isFailed = (column: CallColumn): boolean => column.status === "failed"
+const isFailed = (column: CallColumn): boolean => column.status === "failed" && column.recovery === null
 
 const stageColumns = (stage: StageRun): readonly CallColumn[] =>
   stage.fanOut === 0 ? [] : stage.groups.flatMap((group) => group.columns)

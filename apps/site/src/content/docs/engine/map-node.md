@@ -30,6 +30,10 @@ has a single body node that runs once per list item, however many items there tu
   - `fail` — the first item failure fails the whole node immediately.
   - `default`, with `with: {value: ...}` — the failed item is replaced by that fallback value, so the
     node still succeeds with every item accounted for.
+
+  When the policy skips or replaces an item, the run records that decision as a `map_item_recovered` event,
+  and the run page shows it: the map's header gets a "replaced" or "skipped" mark naming the policy, and a
+  replaced item's output shows the value that went on in its place, labeled as not a model answer.
 - `out` binds what the node returns, the same `name`/`type`/`description`/`from` shape as any other
   node's output fields. Two reference forms exist only inside a `map` node's `out`: `$ok` is the list of
   every item that finished successfully (a defaulted item counts as successful), in list order, and

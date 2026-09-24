@@ -165,6 +165,7 @@ export const approvalExecution: ApiExecutionDetail = {
   output_ref: null,
   trace_id: null,
   span_id: null,
+  recovered_items: [],
   provenance: {},
   schema_source: "unavailable",
   allowed_sets: [],

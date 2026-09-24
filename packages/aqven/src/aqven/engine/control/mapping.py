@@ -5,7 +5,7 @@ from pydantic import JsonValue
 
 from aqven.engine.control.binding import bind_outputs
 from aqven.engine.control.children import ChildLaunch, ChildSupervisor, ChildTicket, SupervisorFactory
-from aqven.engine.control.events import progress
+from aqven.engine.control.events import item_recovered, progress
 from aqven.engine.control.outcomes import UsageTally, failure, outcome_error, policy_failure
 from aqven.engine.policies import ItemErrorRule, PolicyError, PolicyFactory
 from aqven.ir import CompiledMapNode
@@ -20,6 +20,9 @@ from aqven.ports.execution import (
     NodeSucceeded,
     ScopeFrame,
 )
+from aqven.runtime.executions import ItemError, ItemRecovery
+from aqven.runtime.values import InlineValue
+from aqven.runtime.vocabulary import ItemRecoveryDecision
 from aqven.spec import MapItemError
 
 ERROR_CODE_LIMIT: Final = 64
@@ -77,7 +80,7 @@ class MapRun:
             self.active.remove(ticket)
             outcome = await self.supervisor.outcome(ticket)
             self.usage.add(outcome)
-            stopped = self._settle(_index(ticket), outcome)
+            stopped = await self._settle(_index(ticket), outcome)
             if stopped is not None:
                 return stopped
             self.done += 1
@@ -92,27 +95,27 @@ class MapRun:
             self.active.append(await self.supervisor.start(launch))
             self.started += 1
 
-    def _settle(self, index: int, outcome: NodeOutcome) -> NodeOutcome | None:
+    async def _settle(self, index: int, outcome: NodeOutcome) -> NodeOutcome | None:
         match outcome:
             case NodeSucceeded():
                 self.values[index] = outcome.output
                 return None
             case NodeFailed() | NodeSkipped() | NodeCancelled():
                 code, message = outcome_error(outcome)
-                return self._apply(index, code, message)
+                return await self._apply(index, code, message)
             case _:
                 assert_never(outcome)
 
-    def _apply(self, index: int, code: str, message: str) -> NodeOutcome | None:
+    async def _apply(self, index: int, code: str, message: str) -> NodeOutcome | None:
         error = MapItemError(index=index, code=code[:ERROR_CODE_LIMIT], message=message[:ERROR_MESSAGE_LIMIT])
         decision: ItemDecision[JsonValue] = self.rule.decide(self.items[index], error)
         match decision:
             case Skip():
-                self.failed[index] = error
+                await self._recover(error, "skip", None)
                 return None
             case Default():
-                self.failed[index] = error
                 self.values[index] = decision.value
+                await self._recover(error, "default", InlineValue(value=decision.value))
                 return None
             case Fail():
                 return failure(self.scope, "E_MAP_ITEM_FAILED", f"item {index}: {decision.reason}", self.usage)
@@ -123,7 +126,20 @@ class MapRun:
         ok = tuple(self.values[index] for index in sorted(self.values))
         failed = tuple(self.failed[index].model_dump(mode="json") for index in sorted(self.failed))
         output = bind_outputs(self.scope, self.node.outputs, ScopeFrame(ok=ok, failed=failed))
-        return NodeSucceeded(output=output, usage=self.usage.total)
+        return NodeSucceeded(output=output, usage=self.usage.total, degraded=bool(self.failed))
+
+    async def _recover(
+        self, error: MapItemError, decision: ItemRecoveryDecision, default_ref: InlineValue | None
+    ) -> None:
+        self.failed[error.index] = error
+        recovery = ItemRecovery(
+            item_index=error.index,
+            policy=self.rule.label,
+            decision=decision,
+            error=ItemError(code=error.code, message=error.message),
+            default_ref=default_ref,
+        )
+        await self.scope.events.emit(item_recovered(self.scope.address, recovery))
 
     async def _progress(self) -> None:
         await self.scope.events.emit(progress(self.scope.address, self.done, len(self.items)))

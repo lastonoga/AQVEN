@@ -23,6 +23,7 @@ from aqven.runtime import (
     FlowHandle,
     FlowNotFound,
     HumanWait,
+    MapItemRecovered,
     NodeAttemptFailed,
     NodeFinished,
     NodeOutputDelta,
@@ -60,7 +61,12 @@ class FlowRunRequest:
     max_parallel: int | None = None
 
 
-def address_label(event: NodeStarted | NodeFinished | NodeOutputDelta | NodeSuspended | NodeAttemptFailed) -> str:
+type AddressedEvent = (
+    NodeStarted | NodeFinished | NodeOutputDelta | NodeSuspended | NodeAttemptFailed | MapItemRecovered
+)
+
+
+def address_label(event: AddressedEvent) -> str:
     address = event.address
     context = [
         f"{name}={value}"
@@ -98,6 +104,14 @@ def render_attempt_failed(event: RunEvent) -> str | None:
     return "\n".join((f"{head} (next: {event.action})", *cause_lines(cause)))
 
 
+def render_item_recovered(event: RunEvent) -> str | None:
+    if not isinstance(event, MapItemRecovered):
+        return None
+    recovery = event.recovery
+    error = f"{recovery.error.code}: {recovery.error.message}"
+    return f"↷ {address_label(event)} item {recovery.item_index} {recovery.decision} by {recovery.policy} after {error}"
+
+
 def render_delta(event: RunEvent) -> str | None:
     if not isinstance(event, NodeOutputDelta):
         return None
@@ -128,6 +142,7 @@ TEXT_RENDERERS: Final[tuple[Callable[[RunEvent], str | None], ...]] = (
     render_started,
     render_finished,
     render_attempt_failed,
+    render_item_recovered,
     render_delta,
     render_suspended,
     render_run_finished,
