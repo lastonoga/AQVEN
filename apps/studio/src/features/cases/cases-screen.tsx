@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { FileUp, Play } from "lucide-react"
+import { FileUp } from "lucide-react"
 import { useTranslations } from "use-intl"
 import type { ApiDatasetCase, ApiDatasetSummary, ExperimentDetail, FlowId } from "@/domain"
 import { Actions, Empty, Heading, Page, Text } from "@/components/studio"
@@ -14,6 +14,8 @@ import { CaseList } from "./case-list"
 import { CaseRun } from "./case-run"
 import { CsvImport } from "./csv-import"
 import { DatasetPicker } from "./dataset-picker"
+import { SelectionBar, type LaunchState } from "./selection-bar"
+import { useLookRange } from "./use-look-range"
 import {
   addCasesPrompt,
   datasetScope,
@@ -28,8 +30,6 @@ import {
   withTags,
   type DatasetScope,
 } from "./model"
-
-type LaunchState = { readonly kind: "idle" } | { readonly kind: "starting" } | { readonly kind: "failed"; readonly message: string }
 
 const IDLE: LaunchState = { kind: "idle" }
 const NO_SELECTION: ReadonlySet<string> = new Set()
@@ -51,20 +51,10 @@ type HeaderProps = {
   readonly datasets: readonly ApiDatasetSummary[]
   readonly selected: ApiDatasetSummary | null
   readonly scope: DatasetScope | null
-  readonly chosen: number
-  readonly launch: LaunchState
-  readonly onRun: () => void
   readonly onUpload: () => void
 }
 
-function LaunchNote({ scope, launch }: { readonly scope: DatasetScope | null; readonly launch: LaunchState }) {
-  const t = useTranslations("cases.actions")
-  if (launch.kind === "failed") return <Text role="hint" tone="destructive" asChild><span role="alert">{t("failed", { reason: launch.message })}</span></Text>
-  if (scope === null || scope === "flow") return null
-  return <Text role="hint" tone="neutral">{t("flowOnly")}</Text>
-}
-
-function CasesHeader({ flowId, datasets, selected, scope, chosen, launch, onRun, onUpload }: HeaderProps) {
+function CasesHeader({ flowId, datasets, selected, scope, onUpload }: HeaderProps) {
   const t = useTranslations("cases")
   const target = scope === "flow" ? selected : null
   return (
@@ -75,25 +65,11 @@ function CasesHeader({ flowId, datasets, selected, scope, chosen, launch, onRun,
         {selected === null || scope === null ? null : <ScopeLine dataset={selected} scope={scope} />}
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <Actions
-          actions={[
-            {
-              id: "run",
-              label: t("actions.runSelected", { count: chosen }),
-              variant: "default",
-              icon: Play,
-              disabled: chosen === 0 || scope !== "flow",
-              pending: launch.kind === "starting",
-              onClick: onRun,
-            },
-            { id: "upload", label: t("actions.upload"), icon: FileUp, onClick: onUpload },
-          ]}
-        />
+        <Actions actions={[{ id: "upload", label: t("actions.upload"), icon: FileUp, onClick: onUpload }]} />
         <HandoffButton
           label={target === null ? t("actions.writeCases") : t("actions.addCases")}
           prompt={() => addCasesPrompt(flowId, target)}
         />
-        <LaunchNote scope={scope} launch={launch} />
       </div>
     </div>
   )
@@ -160,16 +136,12 @@ function CasesBody({ flowId, order, dataset, scope, cases, experiments, selectio
         selection={selection}
         expanded={search.case ?? null}
         revealed={revealed}
-        activeTags={tags}
         detail={detail}
         onToggle={(name) => {
           onSelection(toggleName(selection, name))
         }}
         onSelectShown={(selected) => {
           onSelection(withNames(selection, shown.map((item) => item.name), selected))
-        }}
-        onClearSelection={() => {
-          onSelection(NO_SELECTION)
         }}
         onExpand={expand}
       />
@@ -189,11 +161,13 @@ function CasesPage() {
   const [launch, setLaunch] = useState<LaunchState>(IDLE)
   const scope = selected === null ? null : datasetScope(selected, flowId)
   const chosen = orderedSelection(cases, selection)
+  const flowScoped = scope === "flow" && selected !== null
+  const look = useLookRange(flowId, flowScoped ? selected.dataset_id : null, chosen, flow.order)
 
   const runSelected = (): void => {
-    if (selected === null || chosen.length === 0 || launch.kind === "starting") return
+    if (selected === null || !look.ready || launch.kind === "starting") return
     setLaunch({ kind: "starting" })
-    void api.research.startLook(flowId, ids.datasetId(selected.dataset_id), chosen).then(
+    void api.research.startLook(flowId, ids.datasetId(selected.dataset_id), chosen, look.stages).then(
       (seriesId) => {
         setLaunch(IDLE)
         void navigate({ to: ROUTE_PATH.series, params: { seriesId } })
@@ -213,9 +187,6 @@ function CasesPage() {
           datasets={datasets}
           selected={selected}
           scope={scope}
-          chosen={chosen.length}
-          launch={launch}
-          onRun={runSelected}
           onUpload={() => {
             setUploadOpen(true)
           }}
@@ -233,6 +204,19 @@ function CasesPage() {
           experiments={experiments}
           selection={selection}
           onSelection={setSelection}
+        />
+      )}
+      {chosen.length === 0 ? null : (
+        <SelectionBar
+          count={chosen.length}
+          flowScoped={flowScoped}
+          look={look}
+          launch={launch}
+          onRun={runSelected}
+          onClear={() => {
+            setSelection(NO_SELECTION)
+            setLaunch(IDLE)
+          }}
         />
       )}
     </Page>

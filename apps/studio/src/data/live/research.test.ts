@@ -30,7 +30,13 @@ describe("live research source", () => {
     const started = await research.startSeries(ids.experimentId("reply_noninferior_mistral"), { on: "holdout", cases: 2, repeats: 1 })
     expect(await research.series(started)).toMatchObject({ id: started, on: "holdout", cases: 2, repeats: 1, status: "running" })
     const look = await research.startLook(ids.flowId("support_case"), ids.datasetId("support_case_cases"), ["strip_flicker_credit"])
-    expect(await research.series(look)).toMatchObject({ origin: { kind: "look", cases: ["strip_flicker_credit"] }, question: { kind: "look" } })
+    expect(await research.series(look)).toMatchObject({ origin: { kind: "look", cases: ["strip_flicker_credit"], range: null }, question: { kind: "look" } })
+  })
+
+  it("sends the stages of a look as its start and end node", async () => {
+    const stages = { from: ids.nodeId("triage"), to: ids.nodeId("vote") }
+    const look = await research.startLook(ids.flowId("support_case"), ids.datasetId("support_case_cases"), ["bulb_app_offline_advice"], stages)
+    expect(await research.series(look)).toMatchObject({ origin: { kind: "look", cases: ["bulb_app_offline_advice"], range: stages } })
   })
 
   it("filters the case rows through the query", async () => {

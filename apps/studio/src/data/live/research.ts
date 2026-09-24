@@ -10,6 +10,7 @@ import type {
   FlowId,
   LaunchEstimate,
   LaunchRequest,
+  NodeRange,
   SeriesCaseFilter,
   SeriesCaseRow,
   SeriesDetail,
@@ -45,7 +46,7 @@ export type ResearchSource = {
   readonly seriesCases: (id: SeriesId, filter?: SeriesCaseFilter) => Promise<readonly SeriesCaseRow[]>
   readonly seriesOfExperiment: (id: ExperimentId) => Promise<readonly SeriesSummary[]>
   readonly allSeries: (flow?: FlowId) => Promise<readonly SeriesSummary[]>
-  readonly startLook: (flowId: FlowId, datasetId: DatasetId, caseNames: readonly string[]) => Promise<SeriesId>
+  readonly startLook: (flowId: FlowId, datasetId: DatasetId, caseNames: readonly string[], stages?: NodeRange | null) => Promise<SeriesId>
   readonly events: SeriesEventStream
 }
 
@@ -79,6 +80,8 @@ const experimentQuery = (filter: ExperimentFilter, cursor: string | null) => ({
 })
 
 const caseQuery = (filter: SeriesCaseFilter) => ({ failures: filter.failures ?? false, divergent: filter.divergent ?? false })
+
+const stagesBody = (stages: NodeRange | null) => (stages === null ? {} : { start_node: stages.from, end_node: stages.to })
 
 export const research: ResearchSource = {
   experiments: async (filter = NO_FILTER) => {
@@ -115,9 +118,9 @@ export const research: ResearchSource = {
       unwrap(await api.GET("/api/series", { params: { query: { flow_id: flow ?? null, cursor, limit: MAX_PAGE } } })))
     return rows.map(seriesSummaryOf)
   },
-  startLook: async (flowId, datasetId, caseNames) => {
+  startLook: async (flowId, datasetId, caseNames, stages = null) => {
     const started = unwrap(await api.POST("/api/series", {
-      body: { on: "dev", look: { flow_id: flowId, dataset_id: datasetId, case_names: [...caseNames] } },
+      body: { on: "dev", look: { flow_id: flowId, dataset_id: datasetId, case_names: [...caseNames], ...stagesBody(stages) } },
     }))
     return ids.seriesId(started.series_id)
   },

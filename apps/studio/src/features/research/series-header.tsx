@@ -1,14 +1,14 @@
 import { Link } from "@tanstack/react-router"
 import { Check, Square } from "lucide-react"
 import { useFormatter, useTranslations } from "use-intl"
-import type { Contrast, MetricColumn, SeriesDetail, VerdictReason } from "@/domain"
+import type { Contrast, DatasetId, FlowId, MetricColumn, NodeRange, SeriesDetail, VerdictReason } from "@/domain"
 import { Actions, Heading, Stat, Surface, Tag, Text, type ActionSpec, type TagSpec } from "@/components/studio"
-import { joinMeta, usd } from "@/lib/format"
+import { joinMeta, SEPARATOR, usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { useBuiltinNames } from "./copy"
 import { Failure } from "./layout"
 import { intervalText, marginText, metricName, signedValue, unitOf } from "./metrics"
-import { isActive, seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
+import { isActive, rangeText, seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
 import { isLowerBound, shareOf, spendTone, verdictGap } from "./series-presenters"
 import { CELL_VERDICT_TONE, SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 import { useResearchAction } from "./use-research-action"
@@ -31,15 +31,31 @@ function SeriesTitle({ series }: { readonly series: SeriesDetail }) {
   )
 }
 
+function LookStages({ range }: { readonly range: NodeRange | null }) {
+  const t = useTranslations("research.series")
+  if (range === null) return null
+  return <>{`${SEPARATOR}${t("lookStages", { range: rangeText(range) })}`}</>
+}
+
+function LookSource({ flow, dataset }: { readonly flow: FlowId | null; readonly dataset: DatasetId }) {
+  const t = useTranslations("research.series")
+  if (flow === null) return <>{t("lookOf", { dataset })}</>
+  return (
+    <Link to={ROUTE_PATH.cases} params={{ flowId: flow }} search={{ dataset }} className="underline underline-offset-3">
+      {t("lookOf", { dataset })}
+    </Link>
+  )
+}
+
 function OriginLine({ series }: { readonly series: SeriesDetail }) {
   const t = useTranslations("research.series")
   const { origin, flow } = series
   if (origin.kind === "experiment") return <>{t("experimentOf", { ref: seriesRef(series.id) })}</>
-  if (flow === null) return <>{t("lookOf", { dataset: origin.dataset })}</>
   return (
-    <Link to={ROUTE_PATH.cases} params={{ flowId: flow }} search={{ dataset: origin.dataset }} className="underline underline-offset-3">
-      {t("lookOf", { dataset: origin.dataset })}
-    </Link>
+    <>
+      <LookSource flow={flow} dataset={origin.dataset} />
+      <LookStages range={origin.range} />
+    </>
   )
 }
 
@@ -103,7 +119,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
           </Text>
           <Stat
             variant="meter"
-            value={t("series.spend", { usd: usd(series.spend.usd), cap: usd(series.spend.capUsd) })}
+            value={t(isLowerBound(series.spend) ? "series.spendAtLeast" : "series.spend", { usd: usd(series.spend.usd), cap: usd(series.spend.capUsd) })}
             bar={{ value: shareOf(series.spend.usd, series.spend.capUsd), tone: spendTone(series) }}
             note={isLowerBound(series.spend) ? t("series.spendLowerBound", { count: series.spend.unpricedAttempts }) : null}
           />

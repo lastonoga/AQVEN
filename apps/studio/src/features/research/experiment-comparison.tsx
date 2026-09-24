@@ -47,7 +47,7 @@ function VariantSide({ series, row, view }: SideProps) {
         <Text role="block" tone="default" weight="semibold" truncate>
           {row.variant}
         </Text>
-        <RoleTag role={row.role} question={series.question.kind} />
+        <RoleTag variant={row.variant} role={row.role} question={series.question} />
       </div>
       <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
         <Text role="section" tone="default" weight="semibold">

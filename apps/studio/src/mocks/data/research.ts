@@ -26,7 +26,9 @@ import { liveExperiments } from "./experiments"
 
 type Split = Readonly<Record<SeriesSplit, readonly string[]>>
 
-export type LookSeed = { readonly flow: string; readonly dataset: string; readonly cases: readonly string[] }
+export type LookStages = { readonly start: string; readonly end: string }
+
+export type LookSeed = { readonly flow: string; readonly dataset: string; readonly cases: readonly string[]; readonly stages: LookStages | null }
 
 type Variant = { readonly id: string; readonly role: VariantRole; readonly passRate: number; readonly usd: number }
 
@@ -244,7 +246,7 @@ const SEEDS: readonly SeriesSeed[] = [
   }),
   seed({
     id: RESEARCH_SERIES.lookWaiting,
-    look: { flow: "support_case", dataset: "support_case_cases", cases: ["strip_flicker_credit", "bulb_app_offline_advice", "lamp_crushed_box_reship"] },
+    look: { flow: "support_case", dataset: "support_case_cases", cases: ["strip_flicker_credit", "bulb_app_offline_advice", "lamp_crushed_box_reship"], stages: null },
     on: "dev",
     repeats: 1,
     cases: ["strip_flicker_credit", "bulb_app_offline_advice", "lamp_crushed_box_reship"],
@@ -538,7 +540,8 @@ export const caseRowsOf = (series: SeriesSeed): readonly ApiSeriesCaseRow[] => {
 
 const originOf = (series: SeriesSeed): ApiSeriesOrigin => {
   if (series.look !== null) {
-    return { kind: "look", flow_id: series.look.flow, dataset_id: series.look.dataset, case_names: [...series.look.cases], start_node: null, end_node: null }
+    const { flow, dataset, cases, stages } = series.look
+    return { kind: "look", flow_id: flow, dataset_id: dataset, case_names: [...cases], start_node: stages?.start ?? null, end_node: stages?.end ?? null }
   }
   return { kind: "experiment", experiment_id: series.experiment ?? "" }
 }

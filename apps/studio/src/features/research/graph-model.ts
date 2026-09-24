@@ -1,5 +1,6 @@
-import type { AgentRef, ApiNode, ApiPromptDetail, ArmId, ArmStep, ExperimentDetail, ExperimentSubject, ExperimentVariant, FlowId, NodeKind, NodeRange, VariantId } from "@/domain"
+import type { AgentRef, ApiNode, ApiPromptDetail, ArmId, ArmStep, ExperimentDetail, ExperimentVariant, FlowId, NodeKind, NodeRange, VariantId } from "@/domain"
 import type { CanvasGraph, FlowStepSchemas, StepSchemas } from "@/features/flow"
+import { variantArm } from "./variant-table"
 
 export type PromptSource =
   | { readonly kind: "flow"; readonly flow: FlowId }
@@ -85,10 +86,8 @@ const rangeOf = (experiment: Pick<ExperimentDetail, "subject">, graph: SubjectGr
   return null
 }
 
-const subjectArm = (subject: ExperimentSubject): ArmId | null => (subject.kind === "arm" ? subject.arm : null)
-
 export const variantsOn = (experiment: Pick<ExperimentDetail, "subject" | "variants">, arm: ArmId | null): readonly ExperimentVariant[] =>
-  experiment.variants.filter((variant) => (variant.arm ?? subjectArm(experiment.subject)) === arm)
+  experiment.variants.filter((variant) => variantArm(experiment, variant) === arm)
 
 const stepOf = (experiment: Pick<ExperimentDetail, "arms">, arm: ArmId | null, node: string): ArmStep | null =>
   experiment.arms.find((item) => item.id === arm)?.steps.find((step) => step.node === node) ?? null

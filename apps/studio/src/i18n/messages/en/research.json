@@ -47,6 +47,10 @@
       "dev": "dev",
       "holdout": "holdout"
     },
+    "splitChoice": {
+      "dev": "working",
+      "holdout": "held-out"
+    },
     "metricRole": {
       "primary": "primary",
       "guardrail": "guardrail",
@@ -80,7 +84,8 @@
     "role": {
       "baseline": "baseline",
       "candidate": "candidate",
-      "other": "other"
+      "other": "other",
+      "tested": "tested"
     },
     "direction": {
       "higher_is_better": "higher is better",
@@ -147,11 +152,11 @@
     "guardrails": "Guardrails: {list}",
     "question": {
       "run": "Run",
-      "runPrice": "Run · {price}"
+      "runEstimate": "Run · {estimate}"
     },
     "canvas": {
       "title": "What we test",
-      "hint": "Faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agents, inputs, outputs, prompt and results.",
+      "hint": "The graph of each variant: faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agents, inputs, outputs, prompt and results.",
       "graphAria": "Graph of {graph}",
       "arm": "arm {arm}",
       "flow": "flow {flow}",
@@ -159,18 +164,54 @@
       "noGraph": "The graph of this experiment could not be loaded",
       "noAgent": "no agent",
       "overridden": "overridden",
-      "outside": "Outside the tested range: this step does not run, its output comes from the case.",
-      "cases": "Cases: {selected} of {total} from {dataset}, {tags}; {dev} working, {holdout} held out",
-      "anyTag": "any tags",
-      "tagged": "tagged {tags}",
-      "openCases": "Open the cases",
-      "checks": "Checks: {list}",
-      "noChecks": "No checks: only the built-in metrics are measured",
-      "check": {
-        "judgeValidated": "{id} (judge, validated by {by})",
-        "judgeUnvalidated": "{id} (judge, not validated)",
-        "code": "{id} (code)",
-        "builtin": "{id} (built-in)"
+      "outside": "Outside the tested range: this step does not run, its output comes from the case."
+    },
+    "what": {
+      "hypothesis": "Hypothesis",
+      "goal": "Goal",
+      "tableAria": "Variants of this experiment",
+      "column": {
+        "variant": "Variant",
+        "role": "Role",
+        "baseline": "Difference from baseline",
+        "reference": "Difference from {variant}",
+        "steps": "Steps",
+        "models": "Models"
+      },
+      "reference": "—",
+      "same": "no difference",
+      "swap": "{step}: {from} → {to}",
+      "noModel": "no model",
+      "rule": {
+        "aria": "Decision rule",
+        "primary": "{metric}: difference {op, select, atLeast {≥} other {≤}} {bound}",
+        "guardrail": "{metric} {op, select, atLeast {≥} other {≤}} {bound}",
+        "threshold": "{metric} {op, select, atLeast {≥} other {≤}} {value} ± {margin}",
+        "look": "no verdict"
+      },
+      "facts": {
+        "aria": "How this experiment is run",
+        "cases": "Cases",
+        "ofTotal": "of {total}",
+        "splitAria": "{dev} working, {holdout} held out",
+        "allTags": "all tags",
+        "tagsAria": "Tags the cases are selected by",
+        "openCases": "Open the cases",
+        "measuredBy": "Measured by",
+        "checksAria": "Checks",
+        "noChecks": "built-in metrics only",
+        "validated": "validated",
+        "validatedBy": "validated by {by}",
+        "notValidated": "not validated",
+        "where": "Where",
+        "whereKind": {
+          "flow": "flow",
+          "arm": "arm",
+          "arms": "arms"
+        },
+        "everyStep": "every step",
+        "only": "› only {range}",
+        "fromCase": "Earlier steps come from the case"
       }
     },
     "answer": {
@@ -208,14 +249,19 @@
     },
     "launch": {
       "title": "Launch",
-      "cases": "Cases (N)",
-      "repeats": "Repeats (R)",
-      "split": "Cases to run on",
-      "casesHint": "1 to {available} on {split}",
-      "repeatsHint": "1 to {max}",
-      "casesInvalid": "N must be a whole number from 1 to {available}",
-      "repeatsInvalid": "R must be a whole number from 1 to {max}",
-      "recommended": "Recommended N ≈ {cases}",
+      "cases": "Cases",
+      "repeats": "Repeats",
+      "split": "Run on",
+      "fewerCases": "Fewer cases",
+      "moreCases": "More cases",
+      "fewerRepeats": "Fewer repeats",
+      "moreRepeats": "More repeats",
+      "ofAvailable": "of {available}",
+      "casesRange": "1 to {available}",
+      "repeatsRange": "1 to {max}",
+      "casesInvalid": "Whole number from 1 to {available}",
+      "repeatsInvalid": "Whole number from 1 to {max}",
+      "recommended": "Recommended ≈ {cases}",
       "reason": {
         "look": "A look has no verdict, so any number of cases works.",
         "wide": "At {cases} cases the expected interval is ±{halfWidth}, wider than the {margin} margin: the verdict will likely be inconclusive. About {recommended} cases are needed.",
@@ -224,29 +270,36 @@
         "no_history": "No earlier series to learn the spread from, so the plan size of {recommended} is used.",
         "short_of_cases": "About {recommended} cases are needed for an interval within the {margin} margin, but only {available} are available: expect a wide interval."
       },
-      "attempts": "{count, plural, one {# attempt} other {# attempts}}",
-      "spend": "≈ {usd}",
+      "below": "Below the recommended {recommended}: expect a wide interval",
+      "belowAvailable": "{recommended} recommended, only {available} here: expect a wide interval",
+      "attempts": "Attempts",
       "minutes": "about {count, plural, one {# minute} other {# minutes}}",
+      "estimateLabel": "Estimate",
       "estimating": "Estimating…",
-      "below": "Fewer cases than recommended ({recommended}): the series can still start, but expect a wide interval.",
-      "belowAvailable": "Fewer cases than recommended ({recommended}), and these cases hold only {available}: add cases, or start anyway and expect a wide interval.",
-      "approval": "This estimate is above the {cap} spend cap: the series will wait for your approval before it runs.",
+      "estimateFailed": "No estimate: {reason}",
+      "pending": "…",
+      "none": "—",
+      "price": "{source, select, bound {≤} other {≈}} {usd}",
+      "source": {
+        "history": "from past series",
+        "prices": "at provider prices",
+        "bound": "upper bound",
+        "unknown": "no price"
+      },
+      "cap": "Spend cap {cap}",
+      "approval": "Above the {cap} cap: waits for your approval",
+      "noPrice": "No price yet: waits for your approval",
+      "run": "Run",
       "approve": "Approve spend",
       "stop": "Stop",
       "active": "{series} · {done} of {total} attempts",
       "failed": "Could not do that: {reason}",
-      "noEstimate": "no estimate",
-      "usdSource": {
-        "history": "from past series",
-        "prices": "provider prices",
-        "bound": "upper bound",
-        "unknown": "no price"
-      },
-      "noPrice": "The models of this experiment have no price yet, so the spend cannot be estimated: the series will wait for your approval before it runs.",
-      "cap": "Spend cap {cap}",
-      "size": "{cases} cases × {repeats} repeats",
-      "adjust": "Adjust",
-      "adjustAria": "Launch settings"
+      "estimate": {
+        "history": "≈ {usd} from past series",
+        "prices": "≈ {usd} at provider prices",
+        "bound": "≤ {usd}, upper bound",
+        "unknown": "no price estimate"
+      }
     },
     "history": {
       "title": "Series history",
@@ -301,6 +354,7 @@
   "series": {
     "lookTitle": "Look at {count, plural, one {# case} other {# cases}}",
     "lookOf": "cases of {dataset}",
+    "lookStages": "stages {range}",
     "experimentOf": "Series {ref} of this experiment",
     "meta": "{size} · {variants}",
     "started": "started {when}",
@@ -384,7 +438,8 @@
       "none": "—",
       "running": "{count} running"
     },
-    "live": "live"
+    "live": "live",
+    "spendAtLeast": "≥ {usd} of {cap} cap"
   },
   "seriesList": {
     "title": "Series",

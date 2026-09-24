@@ -11,8 +11,10 @@ import {
   matchesTags,
   nodeOutputIds,
   orderedSelection,
+  parseTagToken,
   pickDataset,
   tagFacets,
+  tagSummary,
   tagTokens,
   toggleName,
   toggleToken,
@@ -78,6 +80,15 @@ describe("case tags", () => {
     expect(isTagToken("url=a=b")).toBe(true)
     expect(isTagToken("=mains")).toBe(false)
     expect(isTagToken("mains")).toBe(false)
+    expect(parseTagToken("url=a=b")).toEqual({ key: "url", value: "a=b" })
+    expect(parseTagToken("mains")).toBeNull()
+  })
+
+  it("shows the first tag values and counts the rest", () => {
+    const tags = { lamp_kind: "mains", channel: "storefront", reason: "replacement", regression: "yes", tier: "gold" }
+    expect(tagSummary(tags, 3)).toEqual({ values: ["mains", "storefront", "replacement"], hidden: 2 })
+    expect(tagSummary({ channel: "ozon" }, 3)).toEqual({ values: ["ozon"], hidden: 0 })
+    expect(tagSummary({}, 3)).toEqual({ values: [], hidden: 0 })
   })
 
   it("matches any value of one key and every key at once", () => {

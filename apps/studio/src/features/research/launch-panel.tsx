@@ -1,15 +1,16 @@
-import { useId, useState, type ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { Check, Square } from "lucide-react"
 import { useTranslations } from "use-intl"
 import { SERIES_SPLITS, type ExperimentDetail, type LaunchEstimate, type SeriesSplit, type SeriesSummary } from "@/domain"
-import { Actions, ChoiceGroup, Expander, Surface, Tag, Text, type ActionSpec } from "@/components/studio"
-import { Input } from "@/components/ui/input"
-import { joinMeta, usd } from "@/lib/format"
+import { Actions, ChoiceGroup, NumberStepper, Surface, Tag, Text, Tile, TileNote, TileValue, type ActionSpec, type TextTone } from "@/components/studio"
+import type { Translator } from "@/i18n/translator"
+import { usd } from "@/lib/format"
 import { ROUTE_PATH } from "@/lib/routes"
 import { useReasonCopy } from "./copy"
-import { Failure, ResearchSection } from "./layout"
-import { activeSeries, launchReason, MAX_REPEATS, plannedCases, seriesRef, shortfallOf, type LaunchProblem } from "./presenters"
+import { ResearchSection } from "./layout"
+import { activeSeries, launchReason, MAX_REPEATS, plannedAttempts, plannedCases, seriesRef, shortfallOf, spendEstimate, type ReasonCopy } from "./presenters"
+import { RunButton } from "./run-button"
 import { SERIES_STATUS_TONE } from "./tones"
 import type { EstimateState } from "./use-launch-estimate"
 import type { Launch } from "./use-launch"
@@ -21,153 +22,193 @@ export type LaunchPanelProps = {
   readonly launch: Launch
 }
 
-type NumberFieldProps = {
+type Hint = { readonly tone: TextTone; readonly text: string; readonly title?: string | undefined }
+
+type ControlProps = {
   readonly label: string
-  readonly hint: string
-  readonly value: string
-  readonly max: number
-  readonly error: string | null
-  readonly onChange: (value: string) => void
+  readonly htmlFor?: string
+  readonly hint?: Hint & { readonly id: string }
+  readonly children: ReactNode
 }
 
-const NO_PROBLEMS: readonly LaunchProblem[] = []
+const MIN_COUNT = 1
 
-function NumberField({ label, hint, value, max, error, onChange }: NumberFieldProps) {
-  const id = useId()
-  const hintId = `${id}-hint`
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Text as="div" role="hint" tone="neutral" asChild>
-        <label htmlFor={id}>{label}</label>
-      </Text>
-      <Input
-        id={id}
-        type="number"
-        inputMode="numeric"
-        min={1}
-        max={max}
-        value={value}
-        aria-invalid={error !== null}
-        aria-describedby={hintId}
-        className="w-28 font-mono"
-        onChange={(event) => {
-          onChange(event.target.value)
-        }}
-      />
-      <Text id={hintId} as="div" role="caption" tone={error === null ? "neutral" : "destructive"}>
-        {error ?? hint}
-      </Text>
-    </div>
-  )
-}
+const readyEstimate = (state: EstimateState): LaunchEstimate | null => (state.kind === "ready" ? state.estimate : null)
 
-function Callout({ tone, children }: { readonly tone: "warning" | "neutral"; readonly children: ReactNode }) {
-  return (
-    <Surface variant="callout" tone={tone} padding="sm" role="note">
-      <Text as="p" role="hint">
-        {children}
-      </Text>
-    </Surface>
-  )
-}
-
-function useSummary(launch: Launch): string {
-  const t = useTranslations("research")
-  const { draft, estimate } = launch
-  const split = t(`vocabulary.split.${draft.on}`)
-  const size = t("experiment.launch.size", { cases: draft.cases, repeats: draft.repeats })
-  if (estimate.kind === "loading") return joinMeta([size, t("experiment.launch.estimating"), split])
-  if (estimate.kind !== "ready") return joinMeta([size, split])
-  const { usd: spend, minutes, attempts } = estimate.estimate
-  return joinMeta([
-    size,
-    t("experiment.launch.attempts", { count: attempts }),
-    spend === null ? t("experiment.launch.noEstimate") : t("experiment.launch.spend", { usd: usd(spend) }),
-    minutes === null ? null : t("experiment.launch.minutes", { count: minutes }),
-    split,
-  ])
-}
-
-function Recommendation({ experiment, estimate }: { readonly experiment: ExperimentDetail; readonly estimate: LaunchEstimate }) {
-  const t = useTranslations("research.experiment.launch")
-  const reasons = useReasonCopy()
-  const reason = launchReason(estimate, experiment.metrics, reasons)
+const recommendationHint = (estimate: LaunchEstimate, experiment: ExperimentDetail, t: Translator<"research.experiment.launch">, reasons: ReasonCopy): Hint | null => {
+  if (estimate.recommended.reason === "look") return null
+  const title = launchReason(estimate, experiment.metrics, reasons)
   const shortfall = shortfallOf(estimate)
+  if (shortfall === null) return { tone: "neutral", text: t("recommended", { cases: estimate.recommended.cases }), title }
+  return { tone: "warning", text: t(shortfall, { recommended: estimate.recommended.cases, available: estimate.available }), title }
+}
+
+const casesHint = (launch: Launch, experiment: ExperimentDetail, t: Translator<"research.experiment.launch">, reasons: ReasonCopy): Hint => {
+  const { check, available } = launch
+  if (check.kind === "invalid" && check.problems.includes("cases")) return { tone: "destructive", text: t("casesInvalid", { available }) }
+  const estimate = readyEstimate(launch.estimate)
+  const recommended = estimate === null ? null : recommendationHint(estimate, experiment, t, reasons)
+  return recommended ?? { tone: "neutral", text: t("casesRange", { available }) }
+}
+
+const repeatsHint = (launch: Launch, t: Translator<"research.experiment.launch">): Hint => {
+  const { check } = launch
+  if (check.kind === "invalid" && check.problems.includes("repeats")) return { tone: "destructive", text: t("repeatsInvalid", { max: MAX_REPEATS }) }
+  return { tone: "neutral", text: t("repeatsRange", { max: MAX_REPEATS }) }
+}
+
+function Control({ label, htmlFor, hint, children }: ControlProps) {
   return (
-    <div className="flex flex-col gap-2">
-      {estimate.recommended.reason === "look" ? null : (
-        <Text as="div" role="cell" tone="default" weight="semibold">
-          {t("recommended", { cases: estimate.recommended.cases })}
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <Text as="div" role="label" tone="neutral" asChild>
+        <label htmlFor={htmlFor}>{label}</label>
+      </Text>
+      {children}
+      {hint === undefined ? null : (
+        <Text id={hint.id} as="p" role="caption" tone={hint.tone} title={hint.title}>
+          {hint.text}
         </Text>
       )}
-      <Text as="p" role="hint" tone="neutral">
-        {joinMeta([reason, t("cap", { cap: usd(estimate.capUsd) })])}
-      </Text>
-      {shortfall === null ? null : <Callout tone="warning">{t(shortfall, { recommended: estimate.recommended.cases, available: estimate.available })}</Callout>}
     </div>
   )
 }
 
-function EstimateDetail({ experiment, state }: { readonly experiment: ExperimentDetail; readonly state: EstimateState }) {
-  if (state.kind !== "ready") return null
-  return <Recommendation experiment={experiment} estimate={state.estimate} />
-}
-
-function ApprovalNote({ state }: { readonly state: EstimateState }) {
+function CasesControl({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
   const t = useTranslations("research.experiment.launch")
-  if (state.kind === "failed") return <Failure message={t("failed", { reason: state.message })} />
-  if (state.kind !== "ready") return null
-  const { estimate } = state
-  if (estimate.usd === null) return <Callout tone="neutral">{t("noPrice")}</Callout>
-  if (!estimate.needsApproval) return null
-  return <Callout tone="neutral">{t("approval", { cap: usd(estimate.capUsd) })}</Callout>
-}
-
-function Adjust({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
-  const t = useTranslations("research")
-  const { draft, available, check } = launch
-  const problems = check.kind === "invalid" ? check.problems : NO_PROBLEMS
+  const reasons = useReasonCopy()
+  const id = useId()
+  const hint = casesHint(launch, experiment, t, reasons)
+  const { draft, available } = launch
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
-        <NumberField
-          label={t("experiment.launch.cases")}
-          hint={t("experiment.launch.casesHint", { available, split: t(`vocabulary.split.${draft.on}`) })}
+    <Control label={t("cases")} htmlFor={id} hint={{ ...hint, id: `${id}-hint` }}>
+      <div className="flex items-center gap-2">
+        <NumberStepper
+          id={id}
+          label={t("cases")}
           value={draft.cases}
+          min={MIN_COUNT}
           max={available}
-          error={problems.includes("cases") ? t("experiment.launch.casesInvalid", { available }) : null}
+          invalid={hint.tone === "destructive"}
+          describedBy={`${id}-hint`}
+          decreaseLabel={t("fewerCases")}
+          increaseLabel={t("moreCases")}
           onChange={(cases) => {
             launch.update({ cases })
           }}
         />
-        <NumberField
-          label={t("experiment.launch.repeats")}
-          hint={t("experiment.launch.repeatsHint", { max: MAX_REPEATS })}
-          value={draft.repeats}
-          max={MAX_REPEATS}
-          error={problems.includes("repeats") ? t("experiment.launch.repeatsInvalid", { max: MAX_REPEATS }) : null}
-          onChange={(repeats) => {
-            launch.update({ repeats })
-          }}
-        />
-        <div className="flex flex-col gap-1.5">
-          <Text as="div" role="hint" tone="neutral">
-            {t("experiment.launch.split")}
-          </Text>
-          <ChoiceGroup<SeriesSplit>
-            appearance="segmented"
-            size="sm"
-            label={t("experiment.launch.split")}
-            value={draft.on}
-            items={SERIES_SPLITS.map((split) => ({ value: split, label: t(`vocabulary.split.${split}`) }))}
-            onValueChange={(on) => {
-              launch.update({ on, cases: String(plannedCases(experiment, on)) })
-            }}
-          />
-        </div>
+        <Text role="hint" tone="neutral">
+          {t("ofAvailable", { available })}
+        </Text>
       </div>
-      <EstimateDetail experiment={experiment} state={launch.estimate} />
-    </div>
+    </Control>
+  )
+}
+
+function RepeatsControl({ launch }: { readonly launch: Launch }) {
+  const t = useTranslations("research.experiment.launch")
+  const id = useId()
+  const hint = repeatsHint(launch, t)
+  return (
+    <Control label={t("repeats")} htmlFor={id} hint={{ ...hint, id: `${id}-hint` }}>
+      <NumberStepper
+        id={id}
+        label={t("repeats")}
+        value={launch.draft.repeats}
+        min={MIN_COUNT}
+        max={MAX_REPEATS}
+        invalid={hint.tone === "destructive"}
+        describedBy={`${id}-hint`}
+        decreaseLabel={t("fewerRepeats")}
+        increaseLabel={t("moreRepeats")}
+        onChange={(repeats) => {
+          launch.update({ repeats })
+        }}
+      />
+    </Control>
+  )
+}
+
+function SplitControl({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
+  const t = useTranslations("research")
+  return (
+    <Control label={t("experiment.launch.split")}>
+      <ChoiceGroup<SeriesSplit>
+        appearance="segmented"
+        size="sm"
+        label={t("experiment.launch.split")}
+        value={launch.draft.on}
+        items={SERIES_SPLITS.map((split) => ({ value: split, label: t(`vocabulary.splitChoice.${split}`) }))}
+        onValueChange={(on) => {
+          launch.update({ on, cases: String(plannedCases(experiment, on)) })
+        }}
+      />
+    </Control>
+  )
+}
+
+function AttemptsTile({ experiment, launch }: { readonly experiment: ExperimentDetail; readonly launch: Launch }) {
+  const t = useTranslations("research.experiment.launch")
+  const estimate = readyEstimate(launch.estimate)
+  const attempts = plannedAttempts(estimate, launch.request, experiment.variants.length)
+  const minutes = estimate?.minutes ?? null
+  return (
+    <Tile label={t("attempts")} variant="well" className="min-w-32">
+      <TileValue>{attempts ?? t("none")}</TileValue>
+      {minutes === null ? null : <TileNote>{t("minutes", { count: minutes })}</TileNote>}
+    </Tile>
+  )
+}
+
+function CapNote({ estimate }: { readonly estimate: LaunchEstimate }) {
+  const t = useTranslations("research.experiment.launch")
+  const cap = usd(estimate.capUsd)
+  if (estimate.usd === null) return <TileNote tone="warning">{t("noPrice")}</TileNote>
+  if (estimate.needsApproval) return <TileNote tone="warning">{t("approval", { cap })}</TileNote>
+  return <TileNote>{t("cap", { cap })}</TileNote>
+}
+
+function ReadyEstimate({ estimate }: { readonly estimate: LaunchEstimate }) {
+  const t = useTranslations("research.experiment.launch")
+  const spend = spendEstimate(estimate)
+  return (
+    <>
+      <TileValue>{spend.source === "unknown" ? t("none") : t("price", { source: spend.source, usd: spend.usd })}</TileValue>
+      <Text as="p" role="meta" tone="default">
+        {t(`source.${spend.source}`)}
+      </Text>
+      <CapNote estimate={estimate} />
+    </>
+  )
+}
+
+function EstimateBody({ state }: { readonly state: EstimateState }) {
+  const t = useTranslations("research.experiment.launch")
+  if (state.kind === "ready") return <ReadyEstimate estimate={state.estimate} />
+  if (state.kind === "loading") {
+    return (
+      <>
+        <TileValue>{t("pending")}</TileValue>
+        <TileNote>{t("estimating")}</TileNote>
+      </>
+    )
+  }
+  if (state.kind === "failed") {
+    return (
+      <>
+        <TileValue>{t("none")}</TileValue>
+        <TileNote tone="destructive">{t("estimateFailed", { reason: state.message })}</TileNote>
+      </>
+    )
+  }
+  return <TileValue>{t("none")}</TileValue>
+}
+
+function EstimateTile({ launch }: { readonly launch: Launch }) {
+  const t = useTranslations("research.experiment.launch")
+  return (
+    <Tile label={t("estimateLabel")} variant="well" className="min-w-44">
+      <EstimateBody state={launch.estimate} />
+    </Tile>
   )
 }
 
@@ -187,7 +228,7 @@ function ActiveSeries({ series, action }: { readonly series: readonly SeriesSumm
   const active = activeSeries(series)
   if (active === null) return null
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+    <div className="flex min-w-0 flex-wrap items-center gap-2.5 border-t border-border pt-3">
       <Tag size="xs" tone={SERIES_STATUS_TONE[active.status]}>
         {t(`vocabulary.status.${active.status}`)}
       </Tag>
@@ -203,32 +244,21 @@ function ActiveSeries({ series, action }: { readonly series: readonly SeriesSumm
 
 export function LaunchPanel({ experiment, series, launch }: LaunchPanelProps) {
   const t = useTranslations("research.experiment.launch")
-  const adjustId = useId()
-  const [open, setOpen] = useState(false)
-  const summary = useSummary(launch)
   return (
     <ResearchSection title={t("title")}>
-      <Surface variant="panel" padding="md" className="flex flex-col gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <Text as="p" role="body" tone="default">
-            {summary}
-          </Text>
-          <Expander
-            open={open}
-            controls={adjustId}
-            label={t("adjust")}
-            size="sm"
-            onClick={() => {
-              setOpen((current) => !current)
-            }}
-          />
-        </div>
-        <ApprovalNote state={launch.estimate} />
-        {open ? (
-          <div id={adjustId} role="region" aria-label={t("adjustAria")}>
-            <Adjust experiment={experiment} launch={launch} />
+      <Surface variant="panel" padding="lg" className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-wrap items-start gap-x-6 gap-y-4">
+          <CasesControl experiment={experiment} launch={launch} />
+          <RepeatsControl launch={launch} />
+          <SplitControl experiment={experiment} launch={launch} />
+          <div className="flex min-w-0 flex-wrap items-stretch gap-3">
+            <AttemptsTile experiment={experiment} launch={launch} />
+            <EstimateTile launch={launch} />
           </div>
-        ) : null}
+          <div className="ml-auto self-center">
+            <RunButton launch={launch} label={t("run")} />
+          </div>
+        </div>
         <ActiveSeries series={series} action={launch.action} />
       </Surface>
     </ResearchSection>
