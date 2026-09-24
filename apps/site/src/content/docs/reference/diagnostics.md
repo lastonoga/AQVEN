@@ -86,6 +86,7 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_HUMAN_FORM_TYPE` | `error` | — |
 | `E_HUMAN_DEFAULT_INVALID` | `error` | — |
 | `E_APPROVAL_TOOL` | `error` | — |
+| `E_OUTCOME_FALLBACK` | `error` | — |
 | `E_DYNAMIC_LIMITS` | `error` | — |
 | `E_DYNAMIC_SOURCE` | `error` | — |
 | `E_DYNAMIC_VALUE_TYPE` | `error` | — |

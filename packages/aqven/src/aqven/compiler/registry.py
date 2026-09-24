@@ -121,6 +121,7 @@ def compile_agent_output(resolved: ResolvedAgent) -> CompiledAgentOutput:
         instruction=resolution.instruction,
         strict=output.strict,
         retries=output.retries,
+        on_error=output.on_error,
         on_refusal=output.on_refusal,
         on_truncated=output.on_truncated,
     )

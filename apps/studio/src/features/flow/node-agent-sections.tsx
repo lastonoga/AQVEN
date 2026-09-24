@@ -88,8 +88,11 @@ const modeSource = (source: string, t: Copy): string => {
   return source
 }
 
-const failurePolicy = (policy: string, t: Copy): string =>
-  policy === "fallback" ? t("agentView.tryFallback") : t("agentView.failNode")
+const failurePolicy = (policy: string, t: Copy): string => {
+  if (policy === "fallback") return t("agentView.tryFallback")
+  if (policy === "retry") return t("agentView.retrySameModel")
+  return t("agentView.failNode")
+}
 
 const outputSections = (agent: Agent, runtime: Runtime | null, t: Copy): readonly SectionSpec[] => {
   const declared = agent.output
@@ -106,6 +109,7 @@ const outputSections = (agent: Agent, runtime: Runtime | null, t: Copy): readonl
   rows.push(
     row(t("agentView.strictSchema"), t((effective?.strict ?? declared?.strict ?? true) ? "agentView.yes" : "agentView.no")),
     row(t("agentView.retries"), String(effective?.retries ?? declared?.retries ?? 1)),
+    row(t("agentView.onError"), failurePolicy(effective?.on_error ?? declared?.on_error ?? "retry", t)),
     row(t("agentView.onRefusal"), failurePolicy(effective?.on_refusal ?? declared?.on_refusal ?? "fail", t)),
     row(t("agentView.onTruncated"), failurePolicy(effective?.on_truncated ?? declared?.on_truncated ?? "fail", t)),
   )

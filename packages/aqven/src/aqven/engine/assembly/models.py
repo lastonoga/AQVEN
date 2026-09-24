@@ -8,10 +8,10 @@ from pydantic_ai import ModelHTTPError
 from pydantic_ai.concurrency import AbstractConcurrencyLimiter
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse
-from pydantic_ai.models.fallback import FallbackModel
 from pydantic_ai.settings import ModelSettings
 
 from aqven.engine.extensions import RunAwareScope
+from aqven.engine.llm.adapters import chain_choices, model_chain
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.request import RunSpec
 from aqven.engine.runtime import RunBudgets
@@ -205,12 +205,12 @@ class EngineModelSource:
     budgets: RunBudgets | None = None
     prices: CachedPrices = NO_PRICES
 
-    async def model(self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality]) -> Model:
+    async def model(
+        self, scope: ExecutionScope, agent: CompiledAgent, media: frozenset[Modality], start: int = 0
+    ) -> Model:
         spec = scope_run_spec(scope)
-        models = [await self._choice(scope, spec, agent, choice, media) for choice in agent.models]
-        if len(models) == 1:
-            return models[0]
-        return FallbackModel(models[0], *models[1:])
+        choices = enumerate(chain_choices(agent, start), start)
+        return model_chain([await self._choice(scope, spec, agent, choice, media, index) for index, choice in choices])
 
     async def _choice(
         self,
@@ -219,6 +219,7 @@ class EngineModelSource:
         agent: CompiledAgent,
         choice: AgentModel,
         media: frozenset[Modality],
+        position: int,
     ) -> Model:
         route = model_route(spec, agent, choice, media)
         actual = choice.model if route is None else route.model
@@ -236,7 +237,7 @@ class EngineModelSource:
             prices=self.prices,
         )
         guarded = guard_model(provider_model, model_ref=actual, policy=policy)
-        return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), actual)
+        return DeclaredModel(FaultingModel(guarded, choice.model, choice_faults(spec, choice)), actual, position)
 
     def _limiter(self, project: CompiledProject, model: str) -> AbstractConcurrencyLimiter | None:
         shared = self.limiters if self.limiters is not None else ProviderLimiters()
