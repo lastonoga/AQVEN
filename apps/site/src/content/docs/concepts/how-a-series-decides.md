@@ -134,7 +134,8 @@ the limit, or a `code` step that trims, not a quieter engine.
 
 An infrastructure error says nothing about the model, so it is kept out of the metrics. When more than 5%
 of the attempts hit one, the series is `invalid`. When every attempt does, the series ends `failed` and
-names the first error.
+names the first error. An attempt that ends on a provider rate limit (`provider_error` with HTTP 429) is
+queued once more at the end of the series; only a second rate limit counts as an infrastructure error.
 
 ## See also
 
