@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest"
-import type { AttemptOutcome, SeriesAttempt } from "@/domain"
+import type { AttemptOutcome, ExperimentCheck, SeriesAttempt } from "@/domain"
 import * as ids from "@/data/ids"
-import { failedChecksOf, hasFilter, hasFinished, isLowerBound, isPending, orderedAttempts, pendingOf, shareOf, spendTone, tallyTone, toggledFilter, unpricedSpend, verdictGap } from "./series-presenters"
+import {
+  checkHint,
+  failedChecksOf,
+  hasFilter,
+  hasFinished,
+  isLowerBound,
+  isPending,
+  orderedAttempts,
+  pendingOf,
+  shareOf,
+  spendTone,
+  tallyTone,
+  toggledFilter,
+  unpricedSpend,
+  verdictGap,
+  type CheckHintCopy,
+} from "./series-presenters"
 import { caseRow, seriesDetail, seriesSummary } from "./test-support"
 
 const attempt = (variant: string, repeat: number, outcome: AttemptOutcome): SeriesAttempt => ({
@@ -80,5 +96,48 @@ describe("case rows", () => {
     expect(toggledFilter({ failures: true }, "divergent")).toEqual({ failures: true, divergent: true })
     expect(hasFilter({})).toBe(false)
     expect(hasFilter({ divergent: true })).toBe(true)
+  })
+})
+
+const HINT_COPY: CheckHintCopy = {
+  builtin: (use) => `Built-in check ${use}`,
+  fields: (fields) => `on ${fields}`,
+  code: (ref) => `Code check · ${ref}`,
+  judge: (inference) => `Judge · inference ${inference}`,
+  agent: (agent) => `agent ${agent}`,
+  validatedBy: (experiment) => `validated by ${experiment}`,
+  notValidated: "not validated",
+}
+
+const DEEPSEEK = { id: ids.agentId("deepseek"), model: "openrouter:deepseek/deepseek-v4-flash-0731" }
+
+const CHECKS: readonly ExperimentCheck[] = [
+  { id: ids.checkId("promises"), kind: "binary", source: { kind: "code", ref: "lumen.code.support_case:reply_keeps_resolution" } },
+  { id: ids.checkId("label"), kind: "binary", source: { kind: "builtin", use: "expected", fields: ["verdict", "reason"] } },
+  { id: ids.checkId("quotes"), kind: "binary", source: { kind: "builtin", use: "citations_in_sources", fields: [] } },
+  { id: ids.checkId("critique"), kind: "continuous", source: { kind: "judge", inference: "critique", agent: DEEPSEEK, validatedBy: ids.experimentId("critique_planted_defects") } },
+  { id: ids.checkId("tone"), kind: "ordinal", source: { kind: "judge", inference: "tone", agent: null, validatedBy: null } },
+]
+
+const hintOf = (id: string): string | null => checkHint(CHECKS, ids.checkId(id), HINT_COPY)
+
+describe("failed check hints", () => {
+  it("names the function of a code check", () => {
+    expect(hintOf("promises")).toBe("Code check · lumen.code.support_case:reply_keeps_resolution")
+  })
+
+  it("names a built-in check with the fields it reads, and without them when it reads none", () => {
+    expect(hintOf("label")).toBe("Built-in check expected · on verdict, reason")
+    expect(hintOf("quotes")).toBe("Built-in check citations_in_sources")
+  })
+
+  it("names the inference and agent of a judge and the experiment that validated it", () => {
+    expect(hintOf("critique")).toBe("Judge · inference critique · agent deepseek · validated by critique_planted_defects")
+    expect(hintOf("tone")).toBe("Judge · inference tone · not validated")
+  })
+
+  it("gives no hint for a check the series does not know", () => {
+    expect(hintOf("ghost")).toBeNull()
+    expect(checkHint([], ids.checkId("promises"), HINT_COPY)).toBeNull()
   })
 })
