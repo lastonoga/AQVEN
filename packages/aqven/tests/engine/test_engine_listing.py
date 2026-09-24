@@ -86,8 +86,7 @@ class FakeRows:
         self.selections.append(None if run_ids is None else tuple(run_ids))
         chosen = None if run_ids is None else frozenset(run_ids)
         rows = [row for row in self.rows if chosen is None or row.run_id in chosen]
-        ordered = sorted(rows, key=lambda row: row.started_at, reverse=True)
-        return ordered if filters.needed is None else ordered[: filters.needed]
+        return sorted(rows, key=lambda row: row.started_at, reverse=True)
 
     def _matches(self, wanted: OpenWaitFilter, entry: tuple[str, datetime]) -> bool:
         assignee, deadline = entry
@@ -207,7 +206,7 @@ def test_since_until_and_parent_are_pushed_to_the_store() -> None:
     page = listed(rows, RunListQuery(since=since, until=until, parent_run_id=parent))
 
     assert rows.filters == [
-        WorkflowFilters(start_time=since.isoformat(), end_time=until.isoformat(), forked_from=parent, needed=21)
+        WorkflowFilters(start_time=since.isoformat(), end_time=until.isoformat(), forked_from=parent)
     ]
     assert [item.run_id for item in page.items] == [run_id(1)]
 
@@ -233,28 +232,3 @@ def test_runs_without_waits_follow_the_ranked_ones() -> None:
     page = listed(rows, RunListQuery(sort="deadline_at"))
 
     assert [item.run_id for item in page.items] == [run_id(2), run_id(1)]
-
-
-def test_a_started_page_asks_the_store_for_one_row_past_the_page() -> None:
-    rows = FakeRows(
-        rows=[summary(index, status="completed", started_at=NOW + timedelta(minutes=index)) for index in range(5)]
-    )
-
-    page = listed(rows, RunListQuery(flow_id=FLOW, limit=2))
-
-    assert rows.filters == [WorkflowFilters(flow_id=FLOW, needed=3)]
-    assert [item.run_id for item in page.items] == [run_id(4), run_id(3)]
-    assert page.next_cursor == "2"
-    assert page.total_estimate is None
-
-
-def test_a_status_filter_still_reads_every_candidate() -> None:
-    rows = FakeRows(
-        rows=[summary(1, status="completed"), summary(2, status="failed", started_at=NOW + timedelta(minutes=1))]
-    )
-
-    page = listed(rows, RunListQuery(status="completed", limit=1))
-
-    assert rows.filters[0].needed is None
-    assert [item.run_id for item in page.items] == [run_id(1)]
-    assert page.total_estimate == 1

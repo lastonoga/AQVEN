@@ -1,8 +1,7 @@
 import asyncio
 import uuid
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final, Literal, Protocol
 
@@ -13,23 +12,23 @@ from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.forking import locate_fork, new_run_id, perform_fork
 from aqven.engine.launching import settled_record, start_run_workflow
-from aqven.engine.listing import RunListing, WorkflowFilters, mode_matches
 from aqven.engine.llm.errors import LlmNodeError
 from aqven.engine.presentation import CurrentFormatterLoader, CurrentTemplateLoader, present_batch
 from aqven.engine.prices import launch_models
 from aqven.engine.projection import ExecutionFold, RunFold, fold_events
 from aqven.engine.protocol import RUN_FLOW_WORKFLOW
 from aqven.engine.reader import TERMINAL_DBOS_STATUSES, RunEventLog
-from aqven.engine.request import RUN_CALL_ARGUMENTS, RunCall, RunRecord, RunSpec
+from aqven.engine.request import RunCall, RunRecord, RunSpec
 from aqven.engine.runtime import NO_OVERRIDES, EngineRuntime, RunOverrides
 from aqven.engine.selection import SelectionError, execution_order, range_missing, range_order
+from aqven.engine.summaries import QUEUED_DBOS_STATUSES, SummaryListing, epoch_time, fold_cost, run_call_of
 from aqven.ir import CompiledFlow, CompiledProject, IrHash, IrLookupError, flow_hash
 from aqven.ports.engine import EngineError, EventLogQuery, ExecutionQuery, RunListQuery
 from aqven.ports.identity import local_user, resolved_assignee
 from aqven.runtime.address import ExecutionAddress, JsonObject, Problem, RunId
 from aqven.runtime.events import RunEvent
 from aqven.runtime.executions import ExecutionDetail, NodeExecution, ResolvedAllowedSet
-from aqven.runtime.human import HumanWait, HumanWaitDetail, OpenWaitFilter, ResumeRequest, ResumeResult
+from aqven.runtime.human import HumanWait, HumanWaitDetail, ResumeRequest, ResumeResult
 from aqven.runtime.presentation import PresentationRequest, PresentationResponse, PresentationResult
 from aqven.runtime.runs import (
     WORKING_COPY,
@@ -49,9 +48,7 @@ from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import IncludePayloads, RunStatus
 from aqven.spec import ArmId, ExperimentId, FlowId, InferenceId, NodeId, RunContextKey
 
-QUEUED_DBOS_STATUSES: Final = frozenset({"ENQUEUED", "DELAYED"})
 SETTLED_STATUSES: Final = frozenset({"completed", "failed"})
-MILLISECONDS: Final = 1000
 UI_RUNS_PATH: Final = "/runs/"
 INPUT_PATH: Final = "input"
 CONTEXT_PATH: Final = "context"
@@ -100,29 +97,6 @@ def recorded_allowed_sets(plan: CompiledProject | None, fold: ExecutionFold) -> 
         return allowed_set_views(inference, fold.input_ref)
     except LlmNodeError:
         return ()
-
-
-def epoch_time(stamp: int | None) -> datetime:
-    return datetime.fromtimestamp((stamp or 0) / MILLISECONDS, UTC)
-
-
-def run_call_of(status: WorkflowStatus) -> RunCall | None:
-    inputs = status.input
-    if inputs is None:
-        return None
-    try:
-        ir_hash, flow_input, spec = RUN_CALL_ARGUMENTS.validate_python(tuple(inputs["args"]))
-        return RunCall(ir_hash=ir_hash, flow_input=flow_input, spec=RunSpec.model_validate(spec))
-    except ValidationError, KeyError:
-        return None
-
-
-def call_matches(call: RunCall | None, filters: WorkflowFilters) -> bool:
-    if call is None:
-        return False
-    if filters.flow_id is not None and call.spec.flow_id != filters.flow_id:
-        return False
-    return mode_matches(call.spec.mode, filters.mode)
 
 
 async def stored_run_call(run_id: RunId) -> RunCall | None:
@@ -179,15 +153,7 @@ class RunRecordView:
         return derived_status(self.status, self.fold, bool(self.waits))
 
     def cost(self) -> tuple[Decimal, int, int]:
-        finished = self.fold.finished
-        if finished is not None and (finished.cost_usd or finished.tokens_in or finished.tokens_out):
-            return finished.cost_usd, finished.tokens_in, finished.tokens_out
-        executions = self.fold.executions.values()
-        return (
-            sum((fold.cost_usd for fold in executions), Decimal(0)),
-            sum(fold.tokens_in for fold in executions),
-            sum(fold.tokens_out for fold in executions),
-        )
+        return fold_cost(self.fold)
 
     def summary(self) -> RunSummary:
         cost, tokens_in, tokens_out = self.cost()
@@ -351,25 +317,13 @@ class DbosEngineFacade:
         services = self.runtime.services
         user = await local_user(services.settings, services.environ)
         wanted = query.model_copy(update={"assignee": resolved_assignee(query.assignee, user)})
-        return await RunListing(self).page(wanted)
+        return await self._listing().page(wanted)
 
-    async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]:
-        return await self.runtime.human_layer.open_runs(wanted)
+    async def latest_runs(self, flow_ids: Sequence[FlowId]) -> Mapping[FlowId, RunSummary]:
+        return await self._listing().latest(flow_ids)
 
-    async def summaries(self, filters: WorkflowFilters, run_ids: Sequence[RunId] | None) -> Sequence[RunSummary]:
-        statuses = await DBOS.list_workflows_async(
-            name=RUN_FLOW_WORKFLOW,
-            workflow_ids=None if run_ids is None else list(run_ids),
-            start_time=filters.start_time,
-            end_time=filters.end_time,
-            forked_from=filters.forked_from,
-            sort_desc=True,
-            load_output=False,
-        )
-        candidates = [status for status in statuses if call_matches(run_call_of(status), filters)]
-        chosen = candidates if filters.needed is None else candidates[: filters.needed]
-        views = [view for view in [await self._view_of(status) for status in chosen] if view is not None]
-        return [view.summary() for view in views]
+    def _listing(self) -> SummaryListing:
+        return SummaryListing(rows=self.runtime.summaries, waits=self.runtime.human_layer)
 
     async def run_events(self, run_id: RunId, after_seq: int = 0) -> AsyncIterator[RunEvent]:
         await self._status(run_id)
@@ -481,6 +435,7 @@ class DbosEngineFacade:
         overrides = self.runtime.services.overrides
         overrides.register(forked, overrides.of(run_id))
         await perform_fork(point, forked)
+        await self.runtime.summaries.track(forked)
         return RunForked(run_id=forked, lineage_parent=run_id)
 
     async def cancel(self, run_id: RunId, request: CancelRequest) -> CancelResult:

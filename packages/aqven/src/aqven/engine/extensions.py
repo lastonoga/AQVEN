@@ -1,3 +1,4 @@
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
@@ -22,6 +23,8 @@ EXECUTOR_MISSING = "EXECUTOR_MISSING"
 class HumanLayer(Protocol):
     async def waits(self, run_id: RunId) -> tuple[HumanWait, ...]: ...
 
+    async def waits_of(self, run_ids: Sequence[RunId]) -> Mapping[RunId, tuple[HumanWait, ...]]: ...
+
     async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]: ...
 
     async def wait_detail(self, run_id: RunId, address: ExecutionAddress) -> HumanWaitDetail: ...
@@ -33,6 +36,9 @@ class HumanLayer(Protocol):
 class NoHumanLayer:
     async def waits(self, run_id: RunId) -> tuple[HumanWait, ...]:
         return ()
+
+    async def waits_of(self, run_ids: Sequence[RunId]) -> Mapping[RunId, tuple[HumanWait, ...]]:
+        return {}
 
     async def open_runs(self, wanted: OpenWaitFilter) -> tuple[RunId, ...]:
         return ()

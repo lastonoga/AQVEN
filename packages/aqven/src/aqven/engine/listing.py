@@ -8,7 +8,6 @@ from aqven.runtime.address import RunId
 from aqven.runtime.human import OpenWaitFilter
 from aqven.runtime.runs import Page, RunSummary
 from aqven.runtime.vocabulary import RunMode
-from aqven.spec import FlowId
 
 FIRST_PAGE: Final = 0
 SUSPENDED: Final = "suspended"
@@ -20,9 +19,6 @@ class WorkflowFilters:
     start_time: str | None = None
     end_time: str | None = None
     forked_from: str | None = None
-    flow_id: FlowId | None = None
-    mode: RunMode | None = None
-    needed: int | None = None
 
 
 class RunRows(Protocol):
@@ -41,25 +37,12 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def workflow_filters(query: RunListQuery, needed: int | None = None) -> WorkflowFilters:
+def workflow_filters(query: RunListQuery) -> WorkflowFilters:
     return WorkflowFilters(
         start_time=None if query.since is None else query.since.isoformat(),
         end_time=None if query.until is None else query.until.isoformat(),
         forked_from=query.parent_run_id,
-        flow_id=query.flow_id,
-        mode=query.mode,
-        needed=needed,
     )
-
-
-def page_start(cursor: str | None) -> int:
-    return int(cursor) if cursor is not None and cursor.isdigit() else FIRST_PAGE
-
-
-def rows_needed(query: RunListQuery, plan: WaitPlan | None) -> int | None:
-    if plan is not None or query.status is not None or query.sort == DEADLINE_SORT:
-        return None
-    return page_start(query.cursor) + query.limit + 1
 
 
 def wait_filter(query: RunListQuery, now: datetime) -> OpenWaitFilter:
@@ -118,14 +101,22 @@ def ordered_rows(rows: Sequence[RunSummary], sort: RunSort, order: Sequence[RunI
     return sorted(rows, key=lambda row: (ranks.get(row.run_id, unranked), -row.started_at.timestamp(), row.run_id))
 
 
-def page_of(rows: Sequence[RunSummary], cursor: str | None, limit: int, *, exact: bool = True) -> Page[RunSummary]:
-    start = page_start(cursor)
+def cursor_start(cursor: str | None) -> int:
+    return int(cursor) if cursor is not None and cursor.isdigit() else FIRST_PAGE
+
+
+def window_page(items: tuple[RunSummary, ...], start: int, limit: int, total: int) -> Page[RunSummary]:
     following = start + limit
     return Page[RunSummary](
-        items=tuple(rows[start:following]),
-        next_cursor=str(following) if following < len(rows) else None,
-        total_estimate=len(rows) if exact else None,
+        items=items,
+        next_cursor=str(following) if following < total else None,
+        total_estimate=total,
     )
+
+
+def page_of(rows: Sequence[RunSummary], cursor: str | None, limit: int) -> Page[RunSummary]:
+    start = cursor_start(cursor)
+    return window_page(tuple(rows[start : start + limit]), start, limit, len(rows))
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,8 +131,6 @@ class RunListing:
         if restricted and not order:
             return page_of((), query.cursor, query.limit)
         selected = order if restricted else None
-        needed = rows_needed(query, plan)
-        found = await self.rows.summaries(workflow_filters(query, needed), selected)
+        found = await self.rows.summaries(workflow_filters(query), selected)
         matching = [row for row in found if matches(row, query)]
-        exact = needed is None or len(found) < needed
-        return page_of(ordered_rows(matching, query.sort, order), query.cursor, query.limit, exact=exact)
+        return page_of(ordered_rows(matching, query.sort, order), query.cursor, query.limit)

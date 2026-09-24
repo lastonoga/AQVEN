@@ -40,6 +40,7 @@ class DbosEngineHost:
         lifecycle = EngineLifecycle(root=launch.project_root, setup=setup)
         runtime = await asyncio.to_thread(lifecycle.launch)
         self.lifecycle = lifecycle
+        await runtime.summaries.warm()
         plan_source = self.plan_source if self.plan_source is not None else ProjectPlanSource(launch.project_root)
         return DbosEngineFacade(runtime=runtime, plan_source=plan_source)
 

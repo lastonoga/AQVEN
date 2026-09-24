@@ -19,6 +19,7 @@ from aqven.engine.prices import GracefulPrices
 from aqven.engine.protocol import DBOS_LOG_LEVEL
 from aqven.engine.registry import CoreExecutors, build_executors, throttled_executors
 from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, OverrideBook, ToolServices
+from aqven.engine.summaries import SUMMARY_DATABASE, RunSummaries, SqliteRunSummaryStore
 from aqven.engine.throttle import WorkerPool
 from aqven.ports.prices import NO_PRICES, PriceCache
 from aqven.ports.settings import SettingsStore
@@ -69,6 +70,7 @@ def build_runtime(paths: EnginePaths, setup: EngineSetup) -> EngineRuntime:
         executors=throttled_executors(build_executors(CoreExecutors(services, setup.mcp), extensions), pool),
         human_layer=extensions.human_layer,
         services=services,
+        summaries=RunSummaries(SqliteRunSummaryStore.open(paths.state / SUMMARY_DATABASE)),
     )
 
 
