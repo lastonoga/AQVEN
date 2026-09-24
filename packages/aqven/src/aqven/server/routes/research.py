@@ -27,7 +27,13 @@ from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES
 from aqven.server.resources import ArmFlowView
 from aqven.server.routes.runs import event_cursor
-from aqven.server.views.research import ExperimentCatalog, SeriesCancelBody, arm_flow, series_jobs
+from aqven.server.views.research import (
+    ExperimentCatalog,
+    SeriesApproveBody,
+    SeriesCancelBody,
+    arm_flow,
+    series_jobs,
+)
 from aqven.spec import ExperimentId
 
 EXPERIMENT_CATALOGUE: Final = "experiment catalogue read from the project files"
@@ -125,8 +131,9 @@ def build_research_router(context: ServerContext) -> APIRouter:
                 return
 
     @router.post("/series/{series_id}/approve", operation_id="series_approve", openapi_extra=rest_only(HUMAN_APPROVAL))
-    async def approve_series(series_id: str) -> SeriesSummaryView:
-        return await series_jobs(context.series).approve(SeriesId(series_id), await context.human())
+    async def approve_series(series_id: str, body: SeriesApproveBody | None = None) -> SeriesSummaryView:
+        cap = None if body is None else body.cap_usd
+        return await series_jobs(context.series).approve(SeriesId(series_id), await context.human(), cap)
 
     @router.post("/series/{series_id}/cancel", operation_id="series_cancel", openapi_extra=operation("series_cancel"))
     async def cancel_series(series_id: str, body: SeriesCancelBody | None = None) -> SeriesSummaryView:

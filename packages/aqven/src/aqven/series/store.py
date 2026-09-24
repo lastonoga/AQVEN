@@ -272,6 +272,8 @@ def attempt_row(attempt: AttemptRecord) -> tuple[SqlParam, ...]:
 def changed_fields(change: SeriesChange) -> Mapping[str, object]:
     fields: Mapping[str, object | None] = {
         "status": change.status,
+        "cap_usd": change.cap_usd,
+        "pause": change.pause,
         "approved_by": change.approved_by,
         "approved_at": change.approved_at,
         "finished_at": change.finished_at,

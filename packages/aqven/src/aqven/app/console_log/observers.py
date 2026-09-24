@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Coroutine, 
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 from functools import partial
 from typing import Final, Protocol
 
@@ -262,8 +263,10 @@ class ObservedSeriesJobs:
     async def cases(self, series_id: SeriesId, query: SeriesCasesQuery) -> tuple[SeriesCaseRow, ...]:
         return await self.inner.cases(series_id, query)
 
-    async def approve(self, series_id: SeriesId, actor: WriteActor) -> SeriesSummaryView:
-        return await self.inner.approve(series_id, actor)
+    async def approve(
+        self, series_id: SeriesId, actor: WriteActor, cap_usd: Decimal | None = None
+    ) -> SeriesSummaryView:
+        return await self.inner.approve(series_id, actor, cap_usd)
 
     async def cancel(self, request: SeriesCancelRequest) -> SeriesSummaryView:
         return await self.inner.cancel(request)

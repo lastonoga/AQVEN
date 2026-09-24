@@ -39,7 +39,7 @@ def test_the_series_reads_its_cap_from_aqven_yaml(tmp_path: Path) -> None:
     estimate = estimated(root, MemorySettings())
 
     assert (estimate.project_cap_usd, estimate.project_cap_source) == (Decimal(TINY_PROJECT_CAP), "project")
-    assert estimate.needs_approval
+    assert (estimate.cap_usd, estimate.needs_approval) == (Decimal(TINY_PROJECT_CAP), False)
 
 
 def test_a_local_override_beats_aqven_yaml(tmp_path: Path) -> None:
@@ -50,7 +50,7 @@ def test_a_local_override_beats_aqven_yaml(tmp_path: Path) -> None:
     estimate = estimated(root, settings)
 
     assert (estimate.project_cap_usd, estimate.project_cap_source) == (Decimal(LOCAL_OVERRIDE), "override")
-    assert not estimate.needs_approval
+    assert (estimate.cap_usd, estimate.needs_approval) == (Decimal(LOCAL_OVERRIDE), False)
 
 
 def test_a_project_without_a_research_block_keeps_one_dollar(tmp_path: Path) -> None:

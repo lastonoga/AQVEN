@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from series_fixture import write_project
+from series_fixture import ABOVE_PROJECT_CAP, write_project
 from series_harness import ScriptedLabels, ScriptedModels, SeriesHarness, series_engine, wait_until
 
 from aqven.series.model import AttemptState, SeriesId, SeriesRecord, SeriesStatus
@@ -22,7 +22,6 @@ from aqven.spec import ExperimentId, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
-HUMAN: Final = WriteActor(kind="human", id="kir")
 SLOW_SECONDS: Final = 0.4
 SETTLE_SECONDS: Final = 1.5
 QUIET_SECONDS: Final = 2.0
@@ -43,8 +42,12 @@ async def stored(harness: SeriesHarness, series_id: SeriesId) -> SeriesRecord:
     return record
 
 
+def waiting_request() -> SeriesStartRequest:
+    return SeriesStartRequest(experiment_id=ExperimentId("triage_agents"), cap_usd=ABOVE_PROJECT_CAP)
+
+
 async def cancel_waiting(harness: SeriesHarness) -> tuple[SeriesSummaryView, SeriesRecord, int, ApiFailure]:
-    started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    started = await harness.service.start(waiting_request(), AGENT)
     cancelled = await harness.service.cancel(SeriesCancelRequest(series_id=started.series_id))
     await asyncio.sleep(SETTLE_SECONDS)
     attempts = await harness.services.store.attempts(started.series_id)
@@ -72,7 +75,7 @@ def test_cancelling_a_series_awaiting_approval_starts_nothing(tmp_path: Path) ->
 
 
 async def follow_cancelled(harness: SeriesHarness) -> tuple[list[SeriesEvent], list[SeriesEvent], SeriesSummaryView]:
-    started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    started = await harness.service.start(waiting_request(), AGENT)
     live: list[SeriesEvent] = []
 
     async def follow() -> None:
@@ -109,7 +112,6 @@ async def finished_rows(harness: SeriesHarness, series_id: SeriesId) -> int:
 
 async def cancel_running(harness: SeriesHarness) -> tuple[SeriesRecord, int, int, SeriesStatus]:
     started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     deadline = time.monotonic() + WAIT_SECONDS
     while await finished_rows(harness, started.series_id) < 1:
         assert time.monotonic() < deadline

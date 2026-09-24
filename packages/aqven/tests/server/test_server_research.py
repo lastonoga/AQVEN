@@ -6,12 +6,13 @@ from typing import Final
 
 import pytest
 from fastapi.testclient import TestClient
-from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs
+from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs, detail
 from server_fakes import AUTH, RUN_ID, SERVER_BASE, FakeEngine, MemorySettings, copy_fixture, node_execution
 from sse_frames import parse_frames
 
 from aqven.runtime.address import node_address
 from aqven.runtime.values import InlineValue
+from aqven.series.model import SeriesStatus
 from aqven.series.split import splits_of
 from aqven.server import ServerOptions, create_app
 from aqven.spec import DatasetId, SeriesSplit
@@ -362,6 +363,19 @@ def test_approve_and_cancel_follow_the_series_state(research_client: TestClient,
     assert bare_cancel.status_code == 200
     assert [request.reason for request in series_jobs.cancels] == ["wrong cases", None]
     assert (finished.status_code, finished.json()["code"]) == (409, "SERIES_STATE_CONFLICT")
+
+
+def test_approve_passes_the_new_cap_of_a_paused_series(
+    research_client: TestClient, series_jobs: FakeSeriesJobs
+) -> None:
+    series_jobs.views[SERIES_ID] = detail(SERIES_ID, SeriesStatus.AWAITING_APPROVAL, done=4, spend=Decimal("0.91"))
+
+    raised = research_client.post(f"/api/series/{SERIES_ID}/approve", json={"cap_usd": "2.00"})
+    doubled = research_client.post(f"/api/series/{SERIES_ID}/approve")
+    refused = research_client.post(f"/api/series/{SERIES_ID}/approve", json={"cap_usd": "0"})
+
+    assert (raised.status_code, doubled.status_code, refused.status_code) == (200, 200, 422)
+    assert [cap for _, _, cap in series_jobs.approvals] == [Decimal("2.00"), None]
 
 
 def test_without_the_series_service_the_catalogue_reads_and_series_are_not_runnable(bare_client: TestClient) -> None:
