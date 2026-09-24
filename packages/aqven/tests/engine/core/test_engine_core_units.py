@@ -1,4 +1,6 @@
 import asyncio
+import json
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
@@ -13,7 +15,7 @@ from aqven.engine.interpreter import visible_node
 from aqven.engine.protocol import EXECUTOR_PROTOCOL_VERSION
 from aqven.engine.reader import decode_event
 from aqven.engine.values import RefSources, evaluate_ref
-from aqven.ir import CompiledSwitchNode, IrHash
+from aqven.ir import CompiledProject, CompiledSwitchNode, HashDomain, IrHash, hash_of, project_hash
 from aqven.ports.execution import ChildEntry, ScopeFrame
 from aqven.runtime import node_address
 from aqven.runtime.address import RunId
@@ -77,6 +79,60 @@ def test_plans_survive_restart_by_hash(tmp_path: Path) -> None:
     assert reopened.plan(ir_hash) == plan
     with pytest.raises(PlanMissing):
         reopened.plan(IrHash("sha256-" + "0" * 64))
+
+
+@dataclass(frozen=True, slots=True)
+class CountingStore(PlanStore):
+    loads: list[IrHash] = field(default_factory=list[IrHash])
+
+    def load(self, ir_hash: IrHash) -> CompiledProject | None:
+        self.loads.append(ir_hash)
+        return PlanStore.load(self, ir_hash)
+
+
+def saved_under_older_ir(directory: Path, plan: CompiledProject) -> IrHash:
+    document = plan.model_dump(mode="json", by_alias=True)
+    assert document.pop("limits") is None
+    ir_hash = hash_of(HashDomain.PROJECT, document)
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / f"{ir_hash}.json").write_text(json.dumps(document), encoding="utf-8")
+    return ir_hash
+
+
+def test_a_plan_saved_under_an_older_ir_loads_by_the_hash_it_was_saved_under(tmp_path: Path) -> None:
+    plan = relay_project()
+    ir_hash = saved_under_older_ir(tmp_path, plan)
+    assert project_hash(plan) != ir_hash
+    assert PlanRegistry(PlanStore(tmp_path)).plan(ir_hash) == plan
+
+
+def test_a_plan_file_that_does_not_match_its_hash_is_rejected(tmp_path: Path) -> None:
+    plan = relay_project()
+    ir_hash = PlanStore(tmp_path).save(plan)
+    renamed = plan.model_copy(update={"package": "renamed"})
+    (tmp_path / f"{ir_hash}.json").write_bytes(renamed.model_dump_json(by_alias=True).encode())
+    assert PlanStore(tmp_path).load(ir_hash) is None
+
+
+def test_plan_misses_are_cached_until_the_plan_file_changes(tmp_path: Path) -> None:
+    plan = relay_project()
+    ir_hash = PlanStore(tmp_path).save(plan)
+    target = tmp_path / f"{ir_hash}.json"
+    target.write_bytes(b"{}")
+    store = CountingStore(tmp_path)
+    registry = PlanRegistry(store)
+    missing = IrHash("sha256-" + "1" * 64)
+    assert (registry.find(ir_hash), registry.find(ir_hash), registry.find(missing), registry.find(missing)) == (
+        None,
+        None,
+        None,
+        None,
+    )
+    assert store.loads == [ir_hash, missing]
+    target.write_bytes(plan.model_dump_json(by_alias=True).encode())
+    assert registry.find(ir_hash) == plan
+    assert registry.find(ir_hash) == plan
+    assert store.loads == [ir_hash, missing, ir_hash]
 
 
 def test_blobs_are_content_addressed(tmp_path: Path) -> None:

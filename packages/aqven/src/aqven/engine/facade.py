@@ -368,16 +368,8 @@ class DbosEngineFacade:
         error = fold.error or run_error
         plan = self.runtime.plans.find(IrHash(view.call.ir_hash))
         allowed_sets = recorded_allowed_sets(plan, fold) if include_payloads != "none" else ()
-        schema_source: Literal["run", "current", "unavailable"] = "run" if plan is not None else "unavailable"
-        if plan is None and self.plan_source is not None:
-            try:
-                plan = self._current_plan()
-                schema_source = "current"
-            except EngineError:
-                pass
         node = plan.flow(view.call.spec.flow_id).nodes.get(NodeId(address.node_id)) if plan is not None else None
-        if node is None:
-            schema_source = "unavailable"
+        schema_source: Literal["run", "unavailable"] = "unavailable" if node is None else "run"
         return ExecutionDetail(
             **execution.model_dump(exclude={"input_ref", "output_ref"}),
             input_ref=None if include_payloads == "none" else execution.input_ref,
