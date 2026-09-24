@@ -3,6 +3,7 @@ from decimal import Decimal
 from types import TracebackType
 from typing import Final
 
+import pytest
 from console_log_support import (
     CLOCK,
     RUN_ID,
@@ -18,6 +19,7 @@ from pydantic import JsonValue, TypeAdapter
 from aqven.app.console_log.run_lines import RunTranscript, run_line
 from aqven.app.console_log.series_lines import SeriesTranscript, series_line, series_started_line
 from aqven.app.console_log.spec_lines import spec_line
+from aqven.runtime.events import RunEvent
 from aqven.series.events import decode_series_event
 from aqven.series.model import SeriesId, SeriesStatus
 from aqven.series.views import SeriesEvent, SeriesProgress, SeriesStarted
@@ -30,6 +32,7 @@ JSON_MESSAGE: Final = f"model {MODEL} returned output that is not valid JSON: Ex
 SERIES_ID: Final = SeriesId("01a0d355-aaaa-7bbb-8ccc-00005e71e5a1")
 SERIES_AT: Final = "2026-09-24T12:36:33+00:00"
 TREE: Final = "sha256-tree"
+POLICY: Final = "shop.code.review_policies:unread_angle"
 SPEC_EVENTS: Final[TypeAdapter[SpecEvent]] = TypeAdapter(SpecEvent)
 
 
@@ -215,6 +218,89 @@ def test_completed_run_with_failed_steps_says_how_many_failed() -> None:
     assert rendered_event(run_line(finished, notes)) == (
         f"{CLOCK} ■ run bf3c852f completed · 1 step failed · 12.4s · 3,210→1,020 tok · $0.0213\n"
     )
+
+
+def recovered_item(seq: int, item_index: int, decision: str) -> RunEvent:
+    return run_event(
+        "map_item_recovered",
+        seq,
+        address=address("assess"),
+        recovery={
+            "item_index": item_index,
+            "policy": POLICY,
+            "decision": decision,
+            "error": {"code": "MODEL_RETRIES_EXHAUSTED", "message": "no valid output after 2 attempts"},
+            "default_ref": None,
+        },
+    )
+
+
+def failed_item(seq: int, item_index: int) -> RunEvent:
+    return run_event(
+        "node_finished",
+        seq,
+        address=address("assess", item_index=item_index),
+        status="failed",
+        attempt=2,
+        output_ref=None,
+        cost_usd="0",
+        tokens_in=0,
+        tokens_out=0,
+        latency_ms=0,
+        model=None,
+        cache_hit=False,
+        degraded=False,
+        checks_failed=0,
+        error=None,
+    )
+
+
+def completed(seq: int) -> RunEvent:
+    return run_event(
+        "run_finished",
+        seq,
+        status="completed",
+        output_ref=None,
+        error=None,
+        cost_usd="0",
+        tokens_in=0,
+        tokens_out=0,
+    )
+
+
+def test_recovered_item_names_the_decision_the_policy_and_the_item_error() -> None:
+    assert rendered_event(run_line(recovered_item(4, 2, "default"), transcript())) == (
+        f"{CLOCK} ↷ assess item 2 replaced · by {POLICY}\n"
+        "           MODEL_RETRIES_EXHAUSTED: no valid output after 2 attempts\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("decisions", "summary"),
+    [
+        (("default", "default"), "2 items replaced"),
+        (("skip",), "1 item skipped"),
+        (("default", "skip"), "2 items recovered"),
+    ],
+)
+def test_completed_run_whose_failed_items_were_all_recovered_names_the_decision(
+    decisions: tuple[str, ...], summary: str
+) -> None:
+    notes = transcript()
+    for index, decision in enumerate(decisions):
+        run_line(failed_item(2 * index + 1, index), notes)
+        run_line(recovered_item(2 * index + 2, index, decision), notes)
+
+    assert rendered_event(run_line(completed(9), notes)) == f"{CLOCK} ■ run bf3c852f completed · {summary}\n"
+
+
+def test_completed_run_with_more_failures_than_recovered_items_counts_failed_steps() -> None:
+    notes = transcript()
+    run_line(failed_item(1, 0), notes)
+    run_line(recovered_item(2, 0, "skip"), notes)
+    run_line(failed_item(3, 1), notes)
+
+    assert rendered_event(run_line(completed(4), notes)) == f"{CLOCK} ■ run bf3c852f completed · 2 steps failed\n"
 
 
 def test_failed_run_shows_its_error_and_hint() -> None:

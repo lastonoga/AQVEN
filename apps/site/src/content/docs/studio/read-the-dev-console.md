@@ -23,7 +23,8 @@ and which lines are safe to ignore.
   | `↻` | A model attempt failed and AQVEN repairs or retries it: the attempt, the next action, the error code. The lines below give the message, the `hint`, and the agent file. |
   | `✗` | A step failed: the error code, the first line of the message, and the `hint` below it. |
   | `⏸` | A step waits for a person to answer. |
-  | `■` | The run ended: its status, how many steps failed if it still completed, the time, tokens, and cost. |
+  | `↷` | A map item failed and its `on_item_error` policy replaced it with a default or skipped it: the item, the decision, the policy, and the item error below. |
+  | `■` | The run ended: its status, how many steps failed if it still completed (or how many items were replaced or skipped, when those are all the failures), the time, tokens, and cost. |
   | `◆` | A series started, reached another 10% of its attempts, or ended with its verdict. |
   | `✎` | A project file changed and the project was reindexed, or a flow's check result changed. |
   | `▲` | A warning, from AQVEN or from a library. A library name before the text says where it came from. |
