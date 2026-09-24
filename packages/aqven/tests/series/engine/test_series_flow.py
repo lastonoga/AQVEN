@@ -30,7 +30,6 @@ from aqven.spec import ExperimentId, VariantId, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
-HUMAN: Final = WriteActor(kind="human", id="kir")
 EXPERIMENT: Final = ExperimentId("triage_agents")
 VARIANTS: Final = (VariantId("writer"), VariantId("cheap"))
 REPEATS: Final = 3
@@ -40,8 +39,7 @@ async def run_agents_series(
     harness: SeriesHarness,
 ) -> tuple[SeriesGetResult, tuple[AttemptRecord, ...], tuple[SeriesEvent, ...]]:
     started = await harness.service.start(SeriesStartRequest(experiment_id=EXPERIMENT), AGENT)
-    assert started.status is SeriesStatus.AWAITING_APPROVAL
-    await harness.service.approve(started.series_id, HUMAN)
+    assert started.status is SeriesStatus.RUNNING
     result = await settled(harness.service, started.series_id)
     attempts = await harness.services.store.attempts(started.series_id)
     events = await SeriesEventLog().snapshot(started.series_id)
@@ -117,7 +115,7 @@ def test_the_series_stream_carries_status_attempt_and_finish_events(tmp_path: Pa
     statuses = [event.status for event in events if isinstance(event, SeriesStatusEvent)]
     finished = [event for event in events if isinstance(event, AttemptFinishedEvent)]
     assert [event.seq for event in events] == list(range(1, len(events) + 1))
-    assert statuses == [SeriesStatus.AWAITING_APPROVAL, SeriesStatus.RUNNING]
+    assert statuses == []
     assert len(finished) == len(attempts)
     assert [event.done for event in finished] == list(range(1, len(attempts) + 1))
     assert finished[-1].spend_usd == sum(

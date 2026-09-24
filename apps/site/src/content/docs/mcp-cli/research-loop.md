@@ -40,8 +40,9 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | 9. Confirm | one series on held-out cases, with `cases` from the estimate's recommendation when the half has them; `verdict.text` quoted |
 | 10. Apply | the flow changes, regression cases are added, the decision is recorded; then stage 4 on fresh cases, or stop |
 
-Stages 4 to 10 are one round. A series starts by itself when its estimate is within the project spend
-cap. Above it, the agent tells you the amount and waits: only a person approves spend, in Studio.
+Stages 4 to 10 are one round. A series starts by itself, and pauses when its spend reaches 90% of the
+project spend cap. Then the agent tells you what it spent and waits: only a person lets it spend more, in
+Studio.
 
 ## Finding what to test
 

@@ -22,6 +22,26 @@ export const spendTone = (series: Pick<SeriesDetail, "spend">): Tone => {
 
 export type UnpricedSpend = { readonly attempts: number; readonly series: number }
 
+export type PausedSeries = Pick<SeriesSummary, "id" | "status" | "pause" | "spend">
+
+const CAP_GROWTH = 2
+const CENT = 0.01
+const CENTS_DIGITS = 2
+
+export const isSpendPause = (series: Pick<SeriesSummary, "status" | "pause">): boolean =>
+  series.status === "awaiting_approval" && series.pause?.reason === "spend_near_cap"
+
+export const nextCapDraft = (cap: number): string => {
+  const next = cap * CAP_GROWTH
+  return next >= CENT ? next.toFixed(CENTS_DIGITS) : String(next)
+}
+
+export const continuedCap = (draft: string, cap: number): number | null => {
+  const text = draft.trim()
+  const value = Number(text)
+  return text !== "" && Number.isFinite(value) && value > cap ? value : null
+}
+
 export const isLowerBound = (spend: Pick<SeriesSpend, "unpricedAttempts">): boolean => spend.unpricedAttempts > 0
 
 export const unpricedSpend = (series: readonly Pick<SeriesSummary, "spend">[]): UnpricedSpend => {

@@ -3,6 +3,7 @@ import io
 import json
 import logging
 from collections.abc import AsyncIterator, Iterator, Sequence
+from decimal import Decimal
 from pathlib import Path
 from typing import Final, NoReturn
 
@@ -252,7 +253,9 @@ class ScriptedSeries:
     async def cases(self, series_id: SeriesId, query: SeriesCasesQuery) -> tuple[SeriesCaseRow, ...]:
         unused_series()
 
-    async def approve(self, series_id: SeriesId, actor: WriteActor) -> SeriesSummaryView:
+    async def approve(
+        self, series_id: SeriesId, actor: WriteActor, cap_usd: Decimal | None = None
+    ) -> SeriesSummaryView:
         unused_series()
 
     async def cancel(self, request: SeriesCancelRequest) -> SeriesSummaryView:

@@ -9539,6 +9539,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SeriesApproveBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -11959,6 +11976,14 @@
           "allow",
           "deny"
         ]
+      },
+      "ApprovalReason": {
+        "type": "string",
+        "enum": [
+          "cap_above_project",
+          "spend_near_cap"
+        ],
+        "title": "ApprovalReason"
       },
       "ApprovalResolver": {
         "type": "string",
@@ -29046,6 +29071,29 @@
         ],
         "title": "SecretStatus"
       },
+      "SeriesApproveBody": {
+        "properties": {
+          "cap_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SeriesApproveBody"
+      },
       "SeriesCancelBody": {
         "properties": {
           "reason": {
@@ -29205,6 +29253,16 @@
               }
             ],
             "title": "Finished At"
+          },
+          "pause": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesPause"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "question_detail": {
             "$ref": "#/components/schemas/QuestionView"
@@ -29641,6 +29699,24 @@
           }
         }
       },
+      "SeriesPause": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/ApprovalReason"
+          },
+          "spent_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spent Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "spent_usd"
+        ],
+        "title": "SeriesPause"
+      },
       "SeriesProgress": {
         "properties": {
           "done": {
@@ -29938,6 +30014,16 @@
               }
             ],
             "title": "Finished At"
+          },
+          "pause": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesPause"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "estimate": {
             "$ref": "#/components/schemas/SeriesEstimate"
@@ -30241,6 +30327,16 @@
               }
             ],
             "title": "Finished At"
+          },
+          "pause": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesPause"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

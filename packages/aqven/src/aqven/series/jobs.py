@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import AsyncIterator, Callable, Sequence
+from collections.abc import AsyncIterator, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -25,6 +25,7 @@ from aqven.series.model import (
     SETTLED_STATUSES,
     TERMINAL_STATUSES,
     AnalysisInput,
+    ApprovalReason,
     AttemptRecord,
     AttemptState,
     ExperimentOrigin,
@@ -32,6 +33,7 @@ from aqven.series.model import (
     SeriesChange,
     SeriesEstimate,
     SeriesId,
+    SeriesPause,
     SeriesPlanRecord,
     SeriesRecord,
     SeriesStatus,
@@ -52,7 +54,7 @@ from aqven.series.presenter import (
     unpriced_attempts,
     waiting_attempts,
 )
-from aqven.series.protocol import APPROVAL_TOPIC, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
+from aqven.series.protocol import APPROVAL_TOPIC, CAP_GROWTH, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
 from aqven.series.services import SeriesServices
 from aqven.series.settings import InvalidSpendCap, ProjectCap, project_spend_cap, research_of
 from aqven.series.stats.wording import cancelled_text
@@ -80,9 +82,28 @@ SHOWN_CASES: Final = 50
 FAILED_WORKFLOW_STATUSES: Final = frozenset({"ERROR", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"})
 CANCELLED_WORKFLOW_STATUS: Final = "CANCELLED"
 UNSTARTED_MESSAGE: Final = "the series workflow was not started"
-APPROVAL_KEY: Final = "approve:{series_id}"
+APPROVAL_ACK_SECONDS: Final = 10.0
+APPROVAL_POLL_SECONDS: Final = 0.1
+APPROVAL_KEY: Final = "approve:{series_id}:{reason}:{cap}"
+ZERO: Final = Decimal(0)
+START_PAUSE: Final = SeriesPause(reason=ApprovalReason.CAP_ABOVE_PROJECT, spent_usd=ZERO)
 
 type ReconcileRule = Callable[[SeriesRecord, WorkflowStatus | None, datetime], SeriesChange | None]
+type CapRule = Callable[[Decimal], Decimal]
+
+
+def kept_cap(cap: Decimal) -> Decimal:
+    return cap
+
+
+def grown_cap(cap: Decimal) -> Decimal:
+    return cap * CAP_GROWTH
+
+
+DEFAULT_APPROVED_CAPS: Final[Mapping[ApprovalReason, CapRule]] = {
+    ApprovalReason.CAP_ABOVE_PROJECT: kept_cap,
+    ApprovalReason.SPEND_NEAR_CAP: grown_cap,
+}
 
 
 def utc_now() -> datetime:
@@ -96,6 +117,27 @@ def not_found(series_id: str) -> ApiFailure:
 def state_conflict(record: SeriesRecord, action: str) -> ApiFailure:
     message = f"series {record.series_id} is {record.status.value} and cannot be {action}"
     return ApiFailure("SERIES_STATE_CONFLICT", message, conflict={"status": record.status.value})
+
+
+def pause_reason(record: SeriesRecord) -> ApprovalReason:
+    return START_PAUSE.reason if record.pause is None else record.pause.reason
+
+
+def approved_cap(record: SeriesRecord, wanted: Decimal | None) -> Decimal:
+    reason = pause_reason(record)
+    cap = DEFAULT_APPROVED_CAPS[reason](record.cap_usd) if wanted is None else wanted
+    if reason is ApprovalReason.SPEND_NEAR_CAP and cap <= record.cap_usd:
+        message = f"series {record.series_id} continues only with a cap above its current ${record.cap_usd}"
+        raise ApiFailure("REQUEST_INVALID", message)
+    return cap
+
+
+def approval_key(record: SeriesRecord) -> str:
+    return APPROVAL_KEY.format(series_id=record.series_id, reason=pause_reason(record).value, cap=record.cap_usd)
+
+
+def awaits_the_same_approval(current: SeriesRecord, asked: SeriesRecord) -> bool:
+    return current.status is SeriesStatus.AWAITING_APPROVAL and approval_key(current) == approval_key(asked)
 
 
 def is_look(record: SeriesRecord) -> bool:
@@ -178,6 +220,7 @@ def series_record(series_id: SeriesId, planned: PlannedSeries, outcome: Estimate
         cap_usd=estimate.cap_usd,
         needs_approval=estimate.needs_approval,
         created_at=now,
+        pause=START_PAUSE if estimate.needs_approval else None,
     )
 
 
@@ -313,17 +356,17 @@ class SeriesService:
         rows = await self._rows(record, attempts, await self.services.waits.open_runs())
         return tuple(row for row in rows if wanted_row(row, query))
 
-    async def approve(self, series_id: SeriesId, actor: WriteActor) -> SeriesSummaryView:
+    async def approve(
+        self, series_id: SeriesId, actor: WriteActor, cap_usd: Decimal | None = None
+    ) -> SeriesSummaryView:
         record = await self._reconciled(series_id)
         if record.status is not SeriesStatus.AWAITING_APPROVAL:
             raise state_conflict(record, "approved")
-        message = ApprovalMessage(approved_by=actor.id).model_dump(mode="json")
-        key = APPROVAL_KEY.format(series_id=series_id)
+        cap = approved_cap(record, cap_usd)
+        message = ApprovalMessage(approved_by=actor.id, cap_usd=cap).model_dump(mode="json")
         await self._warm(record)
-        await DBOS.send_async(series_id, message, topic=APPROVAL_TOPIC, idempotency_key=key)
-        change = SeriesChange(status=SeriesStatus.RUNNING, approved_by=actor.id, approved_at=utc_now())
-        updated = await self.services.store.update(series_id, change)
-        return await self._summary(updated, await self.services.waits.open_runs())
+        await DBOS.send_async(series_id, message, topic=APPROVAL_TOPIC, idempotency_key=approval_key(record))
+        return await self._summary(await self._acknowledged(record), await self.services.waits.open_runs())
 
     async def cancel(self, request: SeriesCancelRequest) -> SeriesSummaryView:
         record = await self._reconciled(request.series_id)
@@ -352,6 +395,15 @@ class SeriesService:
         if runtime is None:
             return
         await runtime.services.prices.warm(recorded_models(record, runtime.plans))
+
+    async def _acknowledged(self, record: SeriesRecord) -> SeriesRecord:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + APPROVAL_ACK_SECONDS
+        current = await self._record(record.series_id)
+        while awaits_the_same_approval(current, record) and loop.time() < deadline:
+            await asyncio.sleep(APPROVAL_POLL_SECONDS)
+            current = await self._record(record.series_id)
+        return current
 
     async def _mark_cancelled(self, record: SeriesRecord) -> SeriesRecord:
         attempts = await self.services.store.attempts(record.series_id)

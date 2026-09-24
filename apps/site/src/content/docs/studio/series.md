@@ -22,9 +22,12 @@ read what it found down to a single attempt. The meaning of each number is on
   them are the size and variants and when it started and finished. **Attempts** shows the progress.
   **Spend** shows the spend against the cap, and says "Lower bound" with a count when some attempts ran on
   a model without a known price.
-- **Approve spend or stop it here.** A series in **AWAITING APPROVAL** shows **Approve spend**, the only
-  way a series above the project spend cap runs. **Stop** cancels one that hasn't finished: queued
-  attempts never start, calls already running finish and are paid for, and no finding is written.
+- **Continue it or stop it here.** A series that spent 90% of its cap is **AWAITING APPROVAL** and shows
+  "Spent $0.91 of $1.00 — the series paused. Continue up to $2.00?": **Continue** runs the remaining
+  attempts under the amount in the field, **Stop** ends the series. A series started with a cap above the
+  project spend cap shows **Approve spend** before anything runs. **Stop** cancels one that hasn't
+  finished: queued attempts never start, calls already running finish and are paid for, and no finding is
+  written.
 - **Read the verdict first.** The **Verdict** block carries the state and its reason as tags, and the
   sentence the server wrote. For a comparison, it lists each difference behind the verdict: the metric,
   candidate − baseline, the 95% interval and the margin. A held-out series that wrote a finding shows

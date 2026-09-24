@@ -1440,6 +1440,11 @@ export interface components {
         ApiErrorCode: "NOT_FOUND" | "REQUEST_INVALID" | "INPUT_INVALID" | "CONTEXT_MISSING" | "BLOCKING_PROBLEMS" | "VIEW_TOO_BROAD" | "STALE_FILE" | "FILE_VANISHED" | "FILE_EXISTS" | "WAIT_ATTEMPT_STALE" | "TREE_DIRTY" | "INDEX_STALE" | "NOT_RUNNABLE" | "DIRTY_WORKTREE" | "ALREADY_RESUMED" | "NOT_WAITING" | "RUN_TIMED_OUT" | "RUN_STATE_CONFLICT" | "SERIES_STATE_CONFLICT" | "CHAT_STATE_CONFLICT" | "PROMPT_IS_CODE" | "LOCK_BUSY" | "UNAUTHORIZED" | "FORBIDDEN" | "HOST_NOT_ALLOWED" | "METHOD_NOT_ALLOWED" | "INTERNAL";
         /** @enum {string} */
         ApprovalDecision: "allow" | "deny";
+        /**
+         * ApprovalReason
+         * @enum {string}
+         */
+        ApprovalReason: "cap_above_project" | "spend_near_cap";
         /** @enum {string} */
         ApprovalResolver: "user" | "interrupt" | "session_closed";
         /** ArmFlowView */
@@ -6711,6 +6716,11 @@ export interface components {
             /** Set */
             set: boolean;
         };
+        /** SeriesApproveBody */
+        SeriesApproveBody: {
+            /** Cap Usd */
+            cap_usd?: number | string | null;
+        };
         /** SeriesCancelBody */
         SeriesCancelBody: {
             /** Reason */
@@ -6766,6 +6776,7 @@ export interface components {
             started_at: string;
             /** Finished At */
             finished_at: string | null;
+            pause?: components["schemas"]["SeriesPause"] | null;
             question_detail: components["schemas"]["QuestionView"];
             /** Checks */
             checks: components["schemas"]["CheckView"][];
@@ -6877,6 +6888,12 @@ export interface components {
             rows: components["schemas"]["MatrixRow"][];
         };
         SeriesOrigin: components["schemas"]["ExperimentOrigin"] | components["schemas"]["LookOrigin"];
+        /** SeriesPause */
+        SeriesPause: {
+            reason: components["schemas"]["ApprovalReason"];
+            /** Spent Usd */
+            spent_usd: string;
+        };
         /** SeriesProgress */
         SeriesProgress: {
             /** Done */
@@ -6975,6 +6992,7 @@ export interface components {
             started_at: string;
             /** Finished At */
             finished_at: string | null;
+            pause?: components["schemas"]["SeriesPause"] | null;
             estimate: components["schemas"]["SeriesEstimate"];
         };
         /** SeriesStartedEvent */
@@ -7081,6 +7099,7 @@ export interface components {
             started_at: string;
             /** Finished At */
             finished_at: string | null;
+            pause?: components["schemas"]["SeriesPause"] | null;
         };
         /** SeriesVerdict */
         SeriesVerdict: {
@@ -7641,6 +7660,7 @@ export type SchemaAllowedSetSpec = components['schemas']['AllowedSetSpec'];
 export type SchemaApiError = components['schemas']['ApiError'];
 export type SchemaApiErrorCode = components['schemas']['ApiErrorCode'];
 export type SchemaApprovalDecision = components['schemas']['ApprovalDecision'];
+export type SchemaApprovalReason = components['schemas']['ApprovalReason'];
 export type SchemaApprovalResolver = components['schemas']['ApprovalResolver'];
 export type SchemaArmFlowView = components['schemas']['ArmFlowView'];
 export type SchemaArmStepView = components['schemas']['ArmStepView'];
@@ -8050,6 +8070,7 @@ export type SchemaSecretScope = components['schemas']['SecretScope'];
 export type SchemaSecretSettingWrite = components['schemas']['SecretSettingWrite'];
 export type SchemaSecretSource = components['schemas']['SecretSource'];
 export type SchemaSecretStatus = components['schemas']['SecretStatus'];
+export type SchemaSeriesApproveBody = components['schemas']['SeriesApproveBody'];
 export type SchemaSeriesCancelBody = components['schemas']['SeriesCancelBody'];
 export type SchemaSeriesCaseRow = components['schemas']['SeriesCaseRow'];
 export type SchemaSeriesDetailView = components['schemas']['SeriesDetailView'];
@@ -8059,6 +8080,7 @@ export type SchemaSeriesFinishedEvent = components['schemas']['SeriesFinishedEve
 export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
 export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
 export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
+export type SchemaSeriesPause = components['schemas']['SeriesPause'];
 export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
 export type SchemaSeriesProgressEvent = components['schemas']['SeriesProgressEvent'];
 export type SchemaSeriesSpend = components['schemas']['SeriesSpend'];
@@ -15532,7 +15554,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SeriesApproveBody"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
