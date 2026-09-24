@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Final
 
 from series_feed import RecordingFeed
-from series_fixture import REVIEW_CASES, write_project
+from series_fixture import ABOVE_PROJECT_CAP, REVIEW_CASES, write_project
 from series_harness import ScriptedModels, SeriesHarness, reached, series_engine, settled, wait_until
 
 from aqven.engine import DbosEngineFacade
@@ -16,7 +16,6 @@ from aqven.testing.human import new_client_op_id
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
-HUMAN: Final = WriteActor(kind="human", id="kir")
 EXPERIMENT: Final = ExperimentId("triage_agents")
 ATTEMPTS: Final = 24
 NOTICE_SECONDS: Final = 30.0
@@ -24,7 +23,6 @@ NOTICE_SECONDS: Final = 30.0
 
 async def approved_series(harness: SeriesHarness) -> SeriesGetResult:
     started = await harness.service.start(SeriesStartRequest(experiment_id=EXPERIMENT), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     return await settled(harness.service, started.series_id)
 
 
@@ -37,12 +35,9 @@ def test_a_series_announces_its_start_every_attempt_and_each_status_it_moves_thr
 
     series = done.series
     key = SeriesKey(series_id=series.series_id, experiment_id=EXPERIMENT, flow_id=series.flow_id)
-    assert feed.started() == (SeriesStartedNotice(series=key, status=SeriesStatus.AWAITING_APPROVAL, total=ATTEMPTS),)
+    assert feed.started() == (SeriesStartedNotice(series=key, status=SeriesStatus.RUNNING, total=ATTEMPTS),)
     assert feed.seen()[0] == feed.started()[0]
-    assert feed.transitions() == (
-        (SeriesStatus.AWAITING_APPROVAL, SeriesStatus.RUNNING),
-        (SeriesStatus.RUNNING, SeriesStatus.DONE),
-    )
+    assert feed.transitions() == ((SeriesStatus.RUNNING, SeriesStatus.DONE),)
     progress = feed.progress()
     assert [notice.done for notice in progress] == list(range(1, ATTEMPTS + 1))
     assert {notice.total for notice in progress} == {ATTEMPTS}
@@ -52,7 +47,8 @@ def test_a_series_announces_its_start_every_attempt_and_each_status_it_moves_thr
 
 
 async def cancelled_while_waiting_for_approval(harness: SeriesHarness) -> SeriesGetResult:
-    started = await harness.service.start(SeriesStartRequest(experiment_id=EXPERIMENT), AGENT)
+    request = SeriesStartRequest(experiment_id=EXPERIMENT, cap_usd=ABOVE_PROJECT_CAP)
+    started = await harness.service.start(request, AGENT)
     await harness.service.cancel(SeriesCancelRequest(series_id=started.series_id))
     return await settled(harness.service, started.series_id)
 
@@ -77,7 +73,6 @@ def announced(feed: RecordingFeed, status: SeriesStatus) -> bool:
 async def answered_look(harness: SeriesHarness, feed: RecordingFeed) -> SeriesGetResult:
     look = LookTarget(flow_id=FlowId("review"), dataset_id=DatasetId("review_cases"), case_names=REVIEW_CASES)
     started = await harness.service.start(SeriesStartRequest(look=look), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     await reached(harness.service, started.series_id, SeriesStatus.WAITING_HUMAN)
     await wait_until(lambda: announced(feed, SeriesStatus.WAITING_HUMAN), NOTICE_SECONDS)
     rows = await harness.service.cases(started.series_id, SeriesCasesQuery())
@@ -101,7 +96,6 @@ def test_a_human_wait_is_announced_as_waiting_human_and_the_answer_as_running_ag
     assert done.series.status is SeriesStatus.DONE
     assert feed.started()[0].series.experiment_id is None
     assert feed.transitions() == (
-        (SeriesStatus.AWAITING_APPROVAL, SeriesStatus.RUNNING),
         (SeriesStatus.RUNNING, SeriesStatus.WAITING_HUMAN),
         (SeriesStatus.WAITING_HUMAN, SeriesStatus.RUNNING),
         (SeriesStatus.RUNNING, SeriesStatus.DONE),

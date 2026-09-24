@@ -336,7 +336,7 @@ server when needed.
 | Status | What it means | What you do |
 |---|---|---|
 | `running` | attempts are running | `series_get` with `wait_seconds` again |
-| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by default; a local override on the developer's machine wins), unknown, or the series cap you passed is above it | tell the developer: only a person approves spend, in Studio; there is no tool for it; never raise the cap in `aqven.yaml` to get past it; then `series_get` the same series |
+| `awaiting_approval` | `pause.reason` says why: `spend_near_cap` — the spend reached 90% of the series cap (the project spend cap unless you passed `cap_usd`: `research.spend_cap_usd` in `aqven.yaml`, $1.00 by default; a local override on the developer's machine wins), so the series started no new attempts, let the running ones finish and stopped at `pause.spent_usd`; `cap_above_project` — the `cap_usd` you passed is above the project cap, and nothing ran yet | tell the developer what it spent and that it waits: only a person continues it with a higher cap, or stops it, in Studio; there is no tool for it; never raise the cap in `aqven.yaml` to get past it; then `series_get` the same series |
 | `waiting_human` | an attempt reached a `human` node | tell the developer; the series continues once the node is answered |
 | `done` | finished; every question except `look` has a verdict | quote `verdict.text` |
 | `cancelled`, `failed` | stopped, no finding; `failed` means every attempt hit an infrastructure error | read `error` |
@@ -347,14 +347,14 @@ server when needed.
 | `refuted` | the effect is within the margin or reversed | drop the hypothesis; never read it as "no risk" |
 | `inconclusive` | the interval is too wide to decide | `below_mde`: write fresh cases and run a new `holdout` series at `recommended.cases`, never the same `holdout` again for another answer; `uninformative` or `no_discordance`: the cases are too easy or too hard to tell the variants apart, write boundary cases |
 | `signal` | the series ran on `dev` (`dev_split`), or the deciding check is a judge without `validated_by` (`judge_not_validated`) | a number to steer by, not a finding; for `judge_not_validated`, validate the judge first |
-| `invalid` | cancelled, stopped at its spend cap (`budget_cut`), `inputs_changed`, more than 5% infrastructure errors, or no data | fix the cause and run again |
+| `invalid` | cancelled, `inputs_changed`, more than 5% infrastructure errors, or no data | fix the cause and run again |
 
-**Spend.** The estimate carries `usd` with its `usd_source` (`history` of past series, provider `prices`, an upper
+**Spend.** The estimate carries `usd` with its `usd_source` (`history` of past series, provider `prices`, a rough
 `bound`, or `unknown`), `minutes`, `recommended` cases with its reason, `below_recommended` and warnings such as
-`short_of_cases` and `holdout_reused`. A series under the project cap starts at once; there is no estimate-only tool.
-Pass `cap_usd` to keep a series inside the budget agreed in stage 1: a series that reaches its cap stops `invalid`.
-`spend.unpriced_attempts` above 0 makes `spend.usd` a lower bound. You never approve spend or raise the project cap;
-report the spend of every round.
+`short_of_cases` and `holdout_reused`. The estimate is information: a series starts at once whatever it says; there is
+no estimate-only tool. Pass `cap_usd` to keep a series inside the budget agreed in stage 1: near its cap a series
+pauses in `awaiting_approval` until a person lets it spend more. `spend.unpriced_attempts` above 0 makes `spend.usd` a
+lower bound. You never approve spend or raise the project cap; report the spend of every round.
 
 ### Reading a series
 

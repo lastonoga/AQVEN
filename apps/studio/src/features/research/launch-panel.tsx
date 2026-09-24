@@ -12,6 +12,8 @@ import { useReasonCopy } from "./copy"
 import { ResearchSection } from "./layout"
 import { activeSeries, launchReason, MAX_REPEATS, plannedAttempts, plannedCases, seriesRef, shortfallOf, spendEstimate, type LaunchProblem, type ReasonCopy } from "./presenters"
 import { RunButton } from "./run-button"
+import { isSpendPause } from "./series-presenters"
+import { SpendPause } from "./spend-pause"
 import { SERIES_STATUS_TONE } from "./tones"
 import { shownEstimate, type EstimateState } from "./use-launch-estimate"
 import type { Launch } from "./use-launch"
@@ -121,8 +123,7 @@ function Price({ estimate }: { readonly estimate: LaunchEstimate }) {
 function Cap({ estimate }: { readonly estimate: LaunchEstimate }) {
   const t = useTranslations("research.experiment.launch")
   const cap = usd(estimate.capUsd)
-  if (estimate.usd === null) return <Text role="meta" tone="warning">{t("noPrice")}</Text>
-  if (estimate.needsApproval) return <Text role="meta" tone="warning">{t("approval", { cap })}</Text>
+  if (estimate.usd !== null && estimate.usd > estimate.capUsd) return <Text role="meta" tone="warning">{t("approval", { cap })}</Text>
   return <Text role="meta" tone="neutral">{t("cap", { cap })}</Text>
 }
 
@@ -229,6 +230,7 @@ function LaunchForm({ experiment, launch }: { readonly experiment: ExperimentDet
 }
 
 const activeActions = (action: ResearchAction, labels: { readonly approve: string; readonly stop: string }, active: SeriesSummary): readonly ActionSpec[] => {
+  if (isSpendPause(active)) return []
   const approve: readonly ActionSpec[] =
     active.status === "awaiting_approval"
       ? [{ id: "approve", label: labels.approve, variant: "outline", icon: Check, pending: action.pending("approve"), onClick: () => { action.run("approve", (api) => api.approveSeries(active.id)) } }]
@@ -254,6 +256,7 @@ function ActiveSeries({ series, action }: { readonly series: readonly SeriesSumm
         </Link>
       </Text>
       <Actions actions={activeActions(action, { approve: t("experiment.launch.approve"), stop: t("experiment.launch.stop") }, active)} />
+      <SpendPause series={active} action={action} />
     </div>
   )
 }

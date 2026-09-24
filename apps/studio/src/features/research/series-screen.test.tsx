@@ -65,6 +65,36 @@ const failedWithoutVerdict = (): ApiSeriesDetail => {
   return { ...detailOf(state), verdict: null, error: "workflow was not started" }
 }
 
+const pausedNearCap = (): ApiSeriesDetail => {
+  const state = initialSeries().find((series) => series.id === RESEARCH_SERIES.escalationRunning)
+  if (state === undefined) throw new Error("missing running series fixture")
+  return {
+    ...detailOf(state),
+    status: "awaiting_approval",
+    spend: { usd: "0.91", cap_usd: "1.00", unpriced_attempts: 0 },
+    pause: { reason: "spend_near_cap", spent_usd: "0.91" },
+  }
+}
+
+type PauseCalls = { readonly approved: unknown[]; readonly cancelled: string[] }
+
+const servePaused = (): PauseCalls => {
+  const calls: PauseCalls = { approved: [], cancelled: [] }
+  const paused = pausedNearCap()
+  server.use(
+    http.get(`${API_BASE}/series/:seriesId`, () => HttpResponse.json({ series: paused, cases: null, hidden_cases: 0 })),
+    http.post(`${API_BASE}/series/:seriesId/approve`, async ({ request }) => {
+      calls.approved.push(await request.json())
+      return HttpResponse.json({ ...paused, status: "running", pause: null })
+    }),
+    http.post(`${API_BASE}/series/:seriesId/cancel`, ({ params }) => {
+      calls.cancelled.push(String(params["seriesId"]))
+      return HttpResponse.json({ ...paused, status: "cancelled", pause: null })
+    }),
+  )
+  return calls
+}
+
 const firstArmRun = (): string => {
   const series = initialSeries().find((item) => item.id === RESEARCH_SERIES.critiqueDev)
   const attempt = series === undefined ? undefined : attemptsOf(series)[0]
@@ -165,6 +195,34 @@ describe("SeriesScreen header and verdict", () => {
     expect((await region("Verdict")).textContent).toContain("No finding: cancelled after 20 of 54 attempts.")
     expect(screen.queryByRole("button", { name: "Stop" })).toBeNull()
     expect(screen.queryByText("live")).toBeNull()
+  })
+
+  it("shows a series paused near its cap and continues it up to the cap typed in", async () => {
+    const calls = servePaused()
+    await renderRoute(seriesPath("escalationRunning"))
+    const pause = await screen.findByRole("group", { name: "Spend paused near the cap" })
+    expect(pause.textContent).toContain("Spent $0.91 of $1.00 — the series paused. Continue up to $?")
+    const cap = within(pause).getByRole("spinbutton", { name: "New spend cap in dollars" })
+    expect(cap).toHaveProperty("value", "2.00")
+    expect(screen.queryByRole("button", { name: "Approve spend" })).toBeNull()
+    fireEvent.change(cap, { target: { value: "1.00" } })
+    expect(within(pause).getByRole("button", { name: "Continue" }).hasAttribute("disabled")).toBe(true)
+    fireEvent.change(cap, { target: { value: "3.50" } })
+    fireEvent.click(within(pause).getByRole("button", { name: "Continue" }))
+    await waitFor(() => {
+      expect(calls.approved).toEqual([{ cap_usd: 3.5 }])
+    })
+  })
+
+  it("stops a series paused near its cap", async () => {
+    const calls = servePaused()
+    await renderRoute(seriesPath("escalationRunning"))
+    const pause = await screen.findByRole("group", { name: "Spend paused near the cap" })
+    expect(screen.getAllByRole("button", { name: "Stop" })).toHaveLength(1)
+    fireEvent.click(within(pause).getByRole("button", { name: "Stop" }))
+    await waitFor(() => {
+      expect(calls.cancelled).toEqual([RESEARCH_SERIES.escalationRunning])
+    })
   })
 
   it("approves the spend of a series that waits for it", async () => {

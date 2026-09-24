@@ -51,13 +51,15 @@ series, approve its spend, and ask the chat for the next hypothesis.
 - **Launch to explore or confirm.** **Purpose** is **Explore · working cases** or **Confirm · held-out
   cases**. Explore gives numbers without a finding. Confirm gives a verdict written to `FINDINGS.md`.
   Choose **Cases** out of the ones available on that side, and **Repeats**. The panel shows the attempts
-  and the estimate with its source: ≈ from past series, ≈ at provider prices, ≤ upper bound, or no price
-  estimate. It explains the recommended size, for example "At 12 cases the expected interval is ±0.18,
-  wider than the 0.05 margin". Above the project spend cap, it says the series needs your approval.
-  **Run** starts the series and opens it.
-- **Approve spend or stop.** A series that waits for approval shows **Approve spend**, here and on its own
-  page. That button is the only way a series above the cap runs: an agent can start a series but can't
-  approve one. **Stop** cancels a running series. Calls already running finish and are paid for.
+  and the estimate with its source: ≈ from past series, ≈ at provider prices, ~ rough estimate, or no
+  price estimate. It explains the recommended size, for example "At 12 cases the expected interval is
+  ±0.18, wider than the 0.05 margin". Above the project spend cap, it says the series will pause near the
+  cap for your approval. **Run** starts the series and opens it.
+- **Continue or stop a paused series.** A series whose spend reaches 90% of its cap pauses, here and on its
+  own page, with one line: "Spent $0.91 of $1.00 — the series paused. Continue up to $2.00?". Change the
+  amount if you want, then click **Continue** to run the remaining attempts under the new cap, or **Stop**.
+  An agent can start a series but can't continue one. **Stop** also cancels a running series. Calls
+  already running finish and are paid for.
 - **Use the answer.** **Run again on fresh cases** starts a series on the held-out cases at the plan's
   size. Every finished held-out series on the same cases is counted in the finding, so add new cases
   before you run it for a second answer. **Ask the agent for the next hypothesis** hands the chat the

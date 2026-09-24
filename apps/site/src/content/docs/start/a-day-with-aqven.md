@@ -124,10 +124,10 @@ a **validated** tag that points to `critique_planted_defects`. The tag only says
 the judge, so I want that test confirmed before I trust this question. I read the margins closely,
 because they are business decisions: 0.05 is how much reply quality I will give up for a cheaper step.
 The **Launch** panel shows the price before anything is spent. In AQVEN's own copy of this project, with
-nothing run yet, a held-out series was priced at ≤ $0.0056 for `intent_split_long_messages` and
-≤ $0.098 for `reply_noninferior_mistral`. Both are upper bounds, because there is no past run to learn
+nothing run yet, a held-out series was priced at ~ $0.0084 for `intent_split_long_messages` and
+~ $0.052 for `reply_noninferior_mistral`. Both are rough estimates, because there is no past run to learn
 from, and your numbers will move with the day's model prices. Both are far under the project's $1.00
-spend cap. I tell the agent to go.
+spend cap, and a series that nears the cap pauses for me anyway. I tell the agent to go.
 
 ## 13:30 — explore on working cases
 
@@ -218,7 +218,7 @@ budget is spent. Until then, tomorrow starts with `FINDINGS.md`.
 | Agreed the failure modes before they were written down | Grouped my notes into failure modes |
 | Decided the 200-character limit is a requirement | Ran `{{CLI_COMMAND}} check` after every change and read the prompt previews |
 | Agreed the margins: how much quality a cheaper step may lose | Wrote each hypothesis as an experiment before any data |
-| Held the spend: the $1.00 cap, and any approval above it | Explored on working cases, one change at a time |
+| Held the spend: the $1.00 cap, and whether a paused series goes on | Explored on working cases, one change at a time |
 | Said when a question was frozen and when to confirm | Read new failing traces itself and brought me only those that fit no known mode |
 | Chose a guard where the needed data was out of reach | Confirmed once on held-out cases and quoted the verdict |
 | Decided when to stop | Applied findings, kept regression cases, reported spend and risks |

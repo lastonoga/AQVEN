@@ -333,8 +333,8 @@ from Studio's Research mode. The server splits every dataset into `dev` and `hol
 name. **Explore** runs `dev` cases: numbers and failing cases to read, a `signal` at most. **Confirm** runs `holdout`
 cases once the change is done: its verdict (`confirmed`, `refuted`, `inconclusive`, or a `signal` when the deciding
 judge has no `validated_by`) writes a finding, `lumen/experiments/<experiment>/findings/<series>.yaml`, once, and
-regenerates `lumen/FINDINGS.md`, grouped by failure mode; an `invalid` series and a look write none. A series whose estimate is above the project spend cap
-(`research.spend_cap_usd` in `lumen/aqven.yaml`, $1.00) waits for a person to approve it in Studio. Every attempt calls the
+regenerates `lumen/FINDINGS.md`, grouped by failure mode; an `invalid` series and a look write none. A series pauses when its spend reaches 90% of the project spend cap
+(`research.spend_cap_usd` in `lumen/aqven.yaml`, $1.00) and waits for a person to continue it in Studio. Every attempt calls the
 models live; the tests of this example never start a series.
 
 A model that breaks the output contract is a result, not an infrastructure error. The `gemini` agent

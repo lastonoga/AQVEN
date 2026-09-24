@@ -42,6 +42,7 @@ export const seriesDetail = (fields: Partial<SeriesDetail>): SeriesDetail => ({
   waits: 0,
   startedAt: ids.isoDateTime("2026-09-21T14:05:18Z"),
   finishedAt: ids.isoDateTime("2026-09-21T14:39:52Z"),
+  pause: null,
   question: { kind: "noninferior", baseline: ids.variantId("gpt"), candidate: ids.variantId("mistral"), primary: CRITIQUE.id, direction: "higher_is_better", margin: 0.05, relative: false, guardrails: [] },
   checks: [],
   matrix: { columns: [CRITIQUE], rows: ROWS },

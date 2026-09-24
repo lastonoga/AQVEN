@@ -3,7 +3,7 @@ import math
 import statistics
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from decimal import ROUND_CEILING, Decimal
+from decimal import Decimal
 from typing import Final, Literal, Protocol
 
 from aqven.ir import CompiledProject
@@ -27,7 +27,7 @@ from aqven.series.model import (
     VariantPlanRecord,
 )
 from aqven.series.ports import ModelPrices, SeriesStore
-from aqven.series.protocol import ATTEMPT_SLOTS, CAP_HEADROOM
+from aqven.series.protocol import ATTEMPT_SLOTS
 from aqven.series.settings import ProjectCap
 from aqven.series.stats.power import MarginRequired, half_width, icc_of, mde, recommended_cases, spread_of
 from aqven.series.views import SeriesListQuery
@@ -58,7 +58,7 @@ PRIOR_FLOOR: Final = 0.05
 PRIOR_CEILING: Final = 0.95
 JUDGE_TOKENS_IN: Final = 2000
 JUDGE_TOKENS_OUT: Final = 300
-CENT: Final = Decimal("0.01")
+ESTIMATE_MARGIN: Final = Decimal("1.5")
 MILLISECONDS_PER_MINUTE: Final = 60000
 HOLDOUT_REUSED: Final = "holdout_reused"
 PRICE_UNKNOWN: Final = "price_unknown:{model}"
@@ -392,20 +392,10 @@ def sized_recommendation(plan: EstimatePlan, spread: Spread, margin: float, need
     return Recommendation(cases=needed, repeats=plan.repeats, reason=EstimateReason.ENOUGH, text=text)
 
 
-def ceil_cents(amount: Decimal) -> Decimal:
-    return max(CENT, (amount / CENT).to_integral_value(rounding=ROUND_CEILING) * CENT)
-
-
-def cap_decision(usd: Decimal | None, request_cap: Decimal | None, project_cap: Decimal) -> CapDecision:
-    if request_cap is not None:
-        needs = usd is None or usd > project_cap or request_cap > project_cap
-        return CapDecision(needs_approval=needs, cap_usd=request_cap)
-    if usd is None:
-        return CapDecision(needs_approval=True, cap_usd=project_cap)
-    padded = ceil_cents(usd * CAP_HEADROOM)
-    if usd <= project_cap:
-        return CapDecision(needs_approval=False, cap_usd=min(padded, project_cap))
-    return CapDecision(needs_approval=True, cap_usd=padded)
+def cap_decision(request_cap: Decimal | None, project_cap: Decimal) -> CapDecision:
+    if request_cap is None:
+        return CapDecision(needs_approval=False, cap_usd=project_cap)
+    return CapDecision(needs_approval=request_cap > project_cap, cap_usd=request_cap)
 
 
 def minutes_for(attempts: int, latency_ms: float | None, workers: int | None) -> int | None:
@@ -496,7 +486,7 @@ class VariantPricer:
         if unknown:
             return PricedAttempt(usd=None, source="unknown", unknown_models=unknown)
         costs = (self.table[bound.model].cost(bound.tokens_in, bound.tokens_out) * bound.calls for bound in facts.bound)
-        return PricedAttempt(usd=sum(costs, Decimal(0)), source="bound")
+        return PricedAttempt(usd=sum(costs, Decimal(0)) * ESTIMATE_MARGIN, source="bound")
 
     def _cost(self, model: str, tokens_in: float, tokens_out: float) -> Decimal | None:
         price = self.table.get(model)
@@ -574,7 +564,7 @@ class SeriesEstimator:
         target = target_of(plan)
         spread = spread_for(target, history, plan.repeats)
         chosen = recommendation(plan, target, spread)
-        decision = cap_decision(usd, request_cap, project_cap.usd)
+        decision = cap_decision(request_cap, project_cap.usd)
         latency = history_latency(history) or await self._duration(samples, plan)
         warnings = (*plan.warnings, *await self._reused(plan), *unknown_warnings(priced))
         estimate = SeriesEstimate(

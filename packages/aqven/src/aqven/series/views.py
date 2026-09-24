@@ -15,6 +15,7 @@ from aqven.series.model import (
     SeriesId,
     SeriesMatrix,
     SeriesOrigin,
+    SeriesPause,
     SeriesStatus,
     SeriesVerdict,
     SubjectKind,
@@ -231,6 +232,7 @@ class SeriesSummaryView(ResourceModel):
     waits: int
     started_at: AwareDatetime
     finished_at: AwareDatetime | None
+    pause: SeriesPause | None = None
 
 
 class SeriesStarted(SeriesSummaryView):

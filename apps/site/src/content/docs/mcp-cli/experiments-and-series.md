@@ -27,14 +27,16 @@ flow](/mcp-cli/research-loop/) is the order to use them in, round after round.
   `client_op_id`. It returns at once with the series summary and the `estimate`: attempts, dollars,
   minutes, the expected interval half-width and the recommended number of cases. Sending the same
   `client_op_id` again returns the same series instead of starting a second one.
-- **The status after `series_start` is `running` or `awaiting_approval`.** A series whose estimate is at
-  or below the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by default; a local
-  override on the project server wins on that computer) starts by itself, with a cap of 1.25 × the estimate, rounded up to a cent and never above the project
-  cap. One whose estimate is above the cap, or unknown because a model of the series has no known price,
-  waits for a person to approve the spend. There is no MCP tool for approving: tell the user, who
-  approves it in Studio or with `POST /api/series/{series_id}/approve`. There is no estimate-only tool
-  either: `series_start` starts a series that fits under the cap. A person who wants the estimate first
-  reads it in Studio's Launch panel, or from `POST /api/experiments/{experiment_id}/estimate`.
+- **The status after `series_start` is `running` or `awaiting_approval`.** A series starts by itself,
+  whatever its estimate, under the project spend cap (`research.spend_cap_usd` in `aqven.yaml`, $1.00 by
+  default; a local override on the project server wins on that computer) or the `cap_usd` you pass. Only
+  a `cap_usd` above the project cap waits for a person before anything runs. While it runs, a series whose
+  spend reaches 90% of its cap starts no new attempts, lets the running ones finish and waits in
+  `awaiting_approval` with `pause.reason` `spend_near_cap` and `pause.spent_usd`. There is no MCP tool for
+  approving: tell the user what it spent, and they continue it with a higher cap in Studio or with
+  `POST /api/series/{series_id}/approve`. There is no estimate-only tool either: the estimate is
+  information. A person who wants it first reads it in Studio's Launch panel, or from
+  `POST /api/experiments/{experiment_id}/estimate`.
 - **`series_get`** takes a `series_id` and `wait_seconds` (0 to 50). With `wait_seconds` above 0 it
   holds the answer until the series is `done`, `cancelled`, `failed`, `awaiting_approval` or
   `waiting_human`, or until the time runs out, and then returns the current snapshot. Call it again
@@ -107,7 +109,7 @@ your count of working cases can differ by one or two:
   "variants": 1,
   "attempts": 4,
   "available": 6,
-  "usd": "0.012027192",
+  "usd": "0.0047567880",
   "usd_source": "bound",
   "minutes": null,
   "half_width": 0.24352108850049436,
@@ -122,20 +124,20 @@ your count of working cases can differ by one or two:
   "needs_approval": false,
   "project_cap_usd": "1.00",
   "project_cap_source": "project",
-  "cap_usd": "0.02"
+  "cap_usd": "1.00"
 }
 ```
 
 `usd_source` says where the dollars come from: `history` (earlier series of this experiment), `prices`
 (the token counts of past runs of the flow at today's prices), `bound` or `unknown`. With no series of
-this experiment yet, `usd_source` is `bound`: an upper bound from the rendered prompt
-of the largest planned case and the agent's `max_tokens`, times the loop caps and fan-out, priced per
-token. OpenRouter's price list was out of reach here, so the price came from the `genai-prices` table
+this experiment yet, `usd_source` is `bound`: a rough estimate from the rendered prompt
+of the largest planned case and a typical answer (the agent's `max_tokens`, at most 1,000 tokens), times
+the loop caps and fan-out and a 1.5 margin, priced per token. OpenRouter's price list was out of reach here, so the price came from the `genai-prices` table
 bundled with the engine. `project_cap_source` says where the project cap came from: `project` for
-`aqven.yaml`, as here, `override` for a local override, `default` when neither sets it. The bound is far
-under the $1.00 project cap, so `needs_approval` is `false`:
+`aqven.yaml`, as here, `override` for a local override, `default` when neither sets it. No `cap_usd` was
+passed, so `needs_approval` is `false` and the series cap is the project cap:
 `series_start` with the same `on`, `cases` and `repeats` starts the series as `running` at once, with a
-cap of $0.02, and every attempt calls the model live. Without a provider key those attempts fail as
+cap of $1.00, and every attempt calls the model live. Without a provider key those attempts fail as
 infrastructure errors, and the series ends `failed` with the missing key named in `error`.
 
 The `recommended.text` is the warning to pass on: with six working cases, no series of this experiment can
@@ -146,7 +148,7 @@ second `series_cancel` on the same series fails with `SERIES_STATE_CONFLICT`.
 The same series from a terminal is `{{CLI_COMMAND}} series reply_overpromise_risk --cases 2 --repeats 2`.
 It starts the project server if it isn't running, then waits and prints the progress and the verdict.
 It exits with 0 when the series is done, whatever the verdict, and with 1 when it was cancelled or failed.
-It exits with 3, printing a Studio link, when the series waits for approval, and with 4 when an attempt
+It exits with 3, printing a Studio link, when the series waits for approval or paused near its cap, and with 4 when an attempt
 waits for a person. `--cap` sets the series' own cap, and `--json` prints the final state as one JSON
 line. [How to run a series](/engine/run-a-series/) lists every flag and exit code.
 
