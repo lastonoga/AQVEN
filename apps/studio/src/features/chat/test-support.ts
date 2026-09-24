@@ -10,7 +10,8 @@ export const liveTurnEvents: readonly ApiChatEvent[] = [
     client_op_id: "studio-probe-1",
     text: "List the flow ids in this project with one Bash command, then answer in one short sentence.",
     backend: "claude",
-    model: null
+    model: null,
+    origin: "user",
   },
   {
     seq: 2,

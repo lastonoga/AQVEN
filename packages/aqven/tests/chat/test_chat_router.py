@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, SecretStr, TypeAda
 from aqven.chat.backend_registry import BackendRegistry
 from aqven.chat.backend_selection import BackendSelection
 from aqven.chat.sqlite_journal import PROJECT_APP_DATABASE
+from aqven.chat.sqlite_transcripts import SqliteChatTranscripts
 from aqven.chat.testing import ApprovalStep, ScriptedClientFactory
 from aqven.ports.chat import (
     CHAT_EVENT_ADAPTER,
@@ -81,7 +82,8 @@ def chat_app(harness: ChatHarness) -> FastAPI:
     install_error_handlers(app)
     context = ChatRouteContext(harness.project_root, MCP_URL)
     registry = BackendRegistry({"claude": harness.backend}, BackendSelection(MemoryBackendSettings()))
-    app.include_router(build_chat_router(registry, harness.journal, context))
+    transcripts = SqliteChatTranscripts.for_project(harness.project_root)
+    app.include_router(build_chat_router(registry, harness.journal, transcripts, context))
     return app
 
 
@@ -246,6 +248,7 @@ def test_chat_operations_are_rest_only_in_openapi(tmp_path: Path) -> None:
         "chat_session_close",
         "chat_message_send",
         "chat_events",
+        "chat_transcript",
         "chat_approval_answer",
         "chat_interrupt",
     }

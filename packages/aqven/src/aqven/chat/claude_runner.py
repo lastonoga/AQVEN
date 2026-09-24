@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Final
 
 from claude_agent_sdk import (
+    AssistantMessage,
     ClaudeSDKError,
     CLIConnectionError,
     CLINotFoundError,
@@ -14,6 +15,7 @@ from claude_agent_sdk import (
     PermissionResultAllow,
     PermissionResultDeny,
     ProcessError,
+    StreamEvent,
     ToolPermissionContext,
     UserMessage,
 )
@@ -39,20 +41,26 @@ from aqven.chat.pending_messages import PendingMessage, PendingMessages
 from aqven.chat.questions import answered_input
 from aqven.chat.routes import first_match
 from aqven.chat.tool_names import claude_tool_identity
+from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import (
     ChatApprovalId,
+    ChatFinishReason,
     ChatSession,
     ChatState,
     ChatStopReason,
     ChatToolCallId,
     ChatTurnFinished,
     ChatTurnId,
+    ChatTurnOrigin,
 )
 from aqven.runtime.address import ClientOpId, JsonObject
 
 REDACTED: Final[str] = "***"
 THINKING: Final[ChatState] = "thinking"
 STOPPED_MESSAGE: Final[str] = "Claude Agent stopped before the turn finished."
+INTERRUPT_ACK_SECONDS: Final[float] = 10.0
+CONTINUATION_TEXT: Final[str] = ""
+CONTINUATION_MESSAGES: Final[tuple[type[Message], ...]] = (StreamEvent, AssistantMessage, UserMessage)
 
 
 class ClaudeAgentStopped(Exception):
@@ -97,6 +105,7 @@ class ClaudeSessionRunner:
         self._session_id = session.session_id
         self._runtime = runtime
         self._emitter = ChatEmitter(runtime.journal, runtime.signals, session.session_id)
+        self._settler = TurnSettler(runtime.journal, runtime.signals, runtime.clock)
         self._normalizer = ClaudeEventNormalizer(Path(session.project_root), runtime.ids, session_agent(session))
         self._client: ClaudeClient | None = None
         self._mcp_config: McpConfigFile | None = None
@@ -110,6 +119,7 @@ class ClaudeSessionRunner:
         self._writes: set[asyncio.Task[None]] = set()
         self._written: dict[str, int] = {}
         self._generation = 0
+        self._closed = False
 
     @property
     def busy(self) -> bool:
@@ -130,18 +140,25 @@ class ClaudeSessionRunner:
         self._delivery = asyncio.create_task(self._deliver(text))
         return turn_id
 
-    def _open_turn(self, client_op_id: ClientOpId, text: str) -> ChatTurnId:
+    def _open_turn(self, client_op_id: ClientOpId, text: str, origin: ChatTurnOrigin = "user") -> ChatTurnId:
         turn_id = ChatTurnId(self._runtime.ids())
         self._emitter.turn_id = turn_id
         self._turn_started_at = time.monotonic()
         self._normalizer.begin_turn()
-        agent = self._normalizer.agent
-        self._emitter.emit((turn_started(client_op_id, text, agent), *self._normalizer.transition("thinking")))
+        started = turn_started(client_op_id, text, self._normalizer.agent, origin)
+        self._emitter.emit((started, *self._normalizer.transition("thinking")))
         return turn_id
 
     async def interrupt(self) -> None:
         if not self.busy:
+            self._settler.settle(self._stored().session, "agent_lost")
             return
+        if self._normalizer.interrupting:
+            await self._force_stop("stop_forced")
+            return
+        await self._request_stop()
+
+    async def _request_stop(self) -> None:
         self._normalizer.mark_interrupting()
         self._emitter.emit(self._normalizer.transition("interrupting"))
         self._runtime.approvals.resolve_session(self._session_id, "interrupt")
@@ -151,11 +168,27 @@ class ClaudeSessionRunner:
             self._abort_turn((), "interrupted")
             return
         try:
-            await client.interrupt()
+            async with asyncio.timeout(INTERRUPT_ACK_SECONDS):
+                await client.interrupt()
+        except TimeoutError:
+            await self._force_current(client)
         except Exception as error:
-            await self._fail(error)
+            await self._fail_current(client, error)
 
-    async def close(self) -> None:
+    async def _force_current(self, client: ClaudeClient) -> None:
+        if client is not self._client:
+            return
+        await self._force_stop("stop_forced")
+
+    async def _force_stop(self, reason: ChatFinishReason) -> None:
+        self._runtime.approvals.resolve_session(self._session_id, "interrupt")
+        await self._cancel_delivery()
+        await self._cancel_writes()
+        await self._drop_client()
+        self._abort_turn((), "interrupted", reason)
+
+    async def close(self, reason: ChatFinishReason | None = None) -> None:
+        self._closed = True
         self._pending.clear()
         self._runtime.approvals.resolve_session(self._session_id, "session_closed")
         await asyncio.sleep(0)
@@ -163,7 +196,8 @@ class ClaudeSessionRunner:
         await self._cancel_writes()
         await self._drop_client()
         self._normalizer.mark_interrupting()
-        self._abort_turn((), "interrupted")
+        self._abort_turn((), "interrupted", reason)
+        self._settler.settle(self._stored().session, reason or "agent_lost")
 
     async def _deliver(self, text: str) -> None:
         async with self._sending:
@@ -232,9 +266,15 @@ class ClaudeSessionRunner:
 
     def _consume(self, message: Message) -> None:
         self._remember(backend_session_id(message))
+        self._continue_turn(message)
         events = self._emitter.emit((*self._delivered(message), *self._normalizer.normalize(message)))
         if any(isinstance(event, ChatTurnFinished) for event in events):
             self._turn_closed()
+
+    def _continue_turn(self, message: Message) -> None:
+        if self.busy or self._closed or not isinstance(message, CONTINUATION_MESSAGES):
+            return
+        self._open_turn(ClientOpId(self._runtime.ids()), CONTINUATION_TEXT, "continuation")
 
     def _delivered(self, message: Message) -> ChatEventBuilders:
         wire_id = message.uuid if isinstance(message, UserMessage) else None
@@ -270,12 +310,14 @@ class ClaudeSessionRunner:
         token = self._runtime.options.settings.mcp_token.get_secret_value()
         return text.replace(token, REDACTED) if token else text
 
-    def _abort_turn(self, prefix: ChatEventBuilders, stop_reason: ChatStopReason) -> None:
+    def _abort_turn(
+        self, prefix: ChatEventBuilders, stop_reason: ChatStopReason, reason: ChatFinishReason | None = None
+    ) -> None:
         if not self.busy:
             return
         self._runtime.approvals.resolve_session(self._session_id, "interrupt")
         duration_ms = int((time.monotonic() - self._turn_started_at) * 1000)
-        self._emitter.emit((*prefix, *self._normalizer.finished(stop_reason, duration_ms, None)))
+        self._emitter.emit((*prefix, *self._normalizer.finished(stop_reason, duration_ms, None, reason)))
         self._turn_closed()
 
     async def reload_settings(self) -> None:

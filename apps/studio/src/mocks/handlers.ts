@@ -630,6 +630,9 @@ export const handlers = [
 
   http.get(`${API_BASE}/chat/sessions`, () => served(page(liveChatSessions))),
 
+  http.get(`${API_BASE}/chat/sessions/:sessionId/transcript`, ({ params }) =>
+    served({ session_id: text(params, "sessionId"), turns: [], carry: [], last_seq: 0, before_seq: null })),
+
   http.post(`${API_BASE}/chat/sessions/:sessionId/messages`, async ({ params, request }) => {
     const sessionId = text(params, "sessionId")
     if (!liveChatSessions.some((item) => item.session_id === sessionId)) return notFound("chat_message_send", `chat session ${sessionId} is unknown`)

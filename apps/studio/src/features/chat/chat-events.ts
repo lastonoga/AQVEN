@@ -48,7 +48,12 @@ type ChatPart = ProsePart | ToolPart
 
 type ChatMessage =
   | { readonly kind: "user"; readonly id: string; readonly text: string }
+  | { readonly kind: "continuation"; readonly id: string }
   | { readonly kind: "assistant"; readonly id: string; readonly parts: readonly ChatPart[]; readonly settled: boolean }
+
+type TurnStarted = EventOf<"chat_turn_started">
+
+type TurnOrigin = TurnStarted["origin"]
 
 export type QueuedMessage = { readonly id: string; readonly text: string; readonly delivery: ChatDelivery }
 
@@ -117,6 +122,11 @@ const deliverQueued = (transcript: ChatTranscript, id: string): ChatTranscript =
   }
 }
 
+const TURN_OPENING: { readonly [O in TurnOrigin]: (event: TurnStarted) => ChatMessage } = {
+  user: (event) => ({ kind: "user", id: event.client_op_id, text: event.text }),
+  continuation: (event) => ({ kind: "continuation", id: event.client_op_id }),
+}
+
 type Fold<K extends ChatEventType> = (transcript: ChatTranscript, event: EventOf<K>) => ChatTranscript
 
 const FOLD: { readonly [K in ChatEventType]: Fold<K> } = {
@@ -124,7 +134,7 @@ const FOLD: { readonly [K in ChatEventType]: Fold<K> } = {
     ...transcript,
     failure: null,
     queued: withoutQueued(transcript.queued, event.client_op_id),
-    messages: [...transcript.messages, { kind: "user", id: event.client_op_id, text: event.text }],
+    messages: [...transcript.messages, TURN_OPENING[event.origin](event)],
   }),
   chat_message_queued: (transcript, event) => ({
     ...transcript,
@@ -279,8 +289,11 @@ const threadPart = (part: ChatPart): ThreadPart => {
   return approval === undefined ? toolPart(part) : { ...toolPart(part), approval }
 }
 
+export const CONTINUATION_MARK = "continuation"
+
 const threadMessage = (message: ChatMessage): ThreadMessageLike => {
   if (message.kind === "user") return { role: "user", id: message.id, content: [{ type: "text", text: message.text }] }
+  if (message.kind === "continuation") return { role: "system", id: message.id, content: [{ type: "text", text: CONTINUATION_MARK }] }
   return {
     role: "assistant",
     id: message.id,

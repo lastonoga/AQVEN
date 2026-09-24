@@ -10,7 +10,8 @@ from aqven.chat.approvals import ApprovalRegistry
 from aqven.chat.claude_cli import LoginProbe
 from aqven.chat.claude_options import ClaudeOptionsFactory
 from aqven.chat.feed import ChatSignals
-from aqven.chat.journal import ChatJournal, Clock, IdFactory
+from aqven.chat.journal import Clock, IdFactory
+from aqven.chat.turn_settling import SettlingJournal
 from aqven.runtime.address import JsonObject
 
 
@@ -39,7 +40,7 @@ def new_chat_id() -> str:
 
 @dataclass(frozen=True, slots=True)
 class ClaudeChatRuntime:
-    journal: ChatJournal
+    journal: SettlingJournal
     signals: ChatSignals
     approvals: ApprovalRegistry
     options: ClaudeOptionsFactory
