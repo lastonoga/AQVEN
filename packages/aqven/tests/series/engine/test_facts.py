@@ -16,7 +16,7 @@ from aqven.runtime.events import (
     NodeStarted,
     RunEvent,
 )
-from aqven.runtime.executions import AttemptCause, CheckOutcome, RunError
+from aqven.runtime.executions import AttemptCause, CheckOutcome, ModelErrorDetails, RunError
 from aqven.runtime.values import InlineValue
 from aqven.runtime.vocabulary import AttemptCauseKind, FinishedExecutionStatus
 from aqven.series.facts import NO_SPEND, RunSpend, RunTrace, event_spend, outcome_of, run_facts, total_spend
@@ -194,6 +194,30 @@ def test_uncounted_outcomes_have_no_first_try_schema_fact() -> None:
     facts = run_facts(RunTrace(events=events("schema_invalid"), flow=flow()), record)
 
     assert facts.schema_valid_first_try is None
+
+
+def provider_failure(status: int) -> RunError:
+    details = ModelErrorDetails(model="openrouter:google/gemma-3-27b-it", status_code=status)
+    return RunError(code="provider_error", message=f"answered HTTP {status}", address=CLASSIFY, details=details)
+
+
+def test_a_run_that_failed_on_a_rate_limit_is_marked_rate_limited() -> None:
+    trace = RunTrace(events=events(), flow=flow())
+
+    limited = run_facts(trace, RunRecord(status="failed", error=provider_failure(429)))
+    overloaded = run_facts(trace, RunRecord(status="failed", error=provider_failure(503)))
+    completed = run_facts(trace, RunRecord(status="completed"))
+
+    assert (limited.rate_limited, limited.outcome) == (True, OutcomeClass.INFRA_ERROR)
+    assert (overloaded.rate_limited, completed.rate_limited) == (False, False)
+
+
+def test_a_rate_limited_step_marks_the_run_when_the_run_error_carries_no_details() -> None:
+    limited_step = finished(9, TIDY, "0", 50, 0, status="failed").model_copy(update={"error": provider_failure(429)})
+    trace = RunTrace(events=(*events()[:-1], limited_step), flow=flow())
+    record = RunRecord(status="failed", error=RunError(code="provider_error", message="map failed", address=None))
+
+    assert run_facts(trace, record).rate_limited is True
 
 
 def test_event_spend_sums_the_cost_and_unpriced_calls_of_work_nodes_only() -> None:

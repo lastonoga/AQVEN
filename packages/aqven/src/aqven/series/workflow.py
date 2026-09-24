@@ -29,7 +29,7 @@ from aqven.series.facts import (
     total_spend,
 )
 from aqven.series.feed import SeriesKey, SeriesProgressNotice, series_key
-from aqven.series.ids import attempt_id, judge_run_id, key_of, subject_run_id
+from aqven.series.ids import FIRST_TRY, attempt_id, judge_run_id, key_of, try_run_id, try_workflow_id
 from aqven.series.model import (
     AnalysisInput,
     ApprovalReason,
@@ -57,7 +57,9 @@ from aqven.series.protocol import (
     APPROVAL_TOPIC,
     ATTEMPT_SLOTS,
     LOOKAHEAD,
+    PROBE_WIDTH,
     QUEUE_POLL_SECONDS,
+    RATE_LIMIT_TRIES,
     SERIES_ATTEMPT_WORKFLOW,
     SERIES_EVENTS_STREAM,
     SERIES_QUEUE,
@@ -76,7 +78,15 @@ from aqven.series.slot import active_series
 from aqven.series.stats.wording import infra_failure_text
 from aqven.series.store import SeriesMissing
 from aqven.series.subjects import SubjectBinding, SubjectStrategy, subject_strategy
-from aqven.series.tickets import AttemptSummary, AttemptTicket, attempt_ticket, running_row, summary_of, variant_at
+from aqven.series.tickets import (
+    AttemptSummary,
+    AttemptTicket,
+    attempt_ticket,
+    requeued_summary,
+    running_row,
+    summary_of,
+    variant_at,
+)
 from aqven.series.views import AttemptFinishedEvent, SeriesEventBase, SeriesFinishedEvent, SeriesStatusEvent
 from aqven.server.errors import ApiFailure
 from aqven.server.workspace import take_snapshot
@@ -91,6 +101,7 @@ OPEN_STEP: Final = "aqven.series.open_attempt"
 INSPECT_STEP: Final = "aqven.series.inspect_attempt"
 CLOSE_STEP: Final = "aqven.series.close_attempt"
 FAIL_STEP: Final = "aqven.series.fail_attempt"
+REQUEUE_STEP: Final = "aqven.series.requeue_attempt"
 JUDGE_OUTPUT: Final = "output"
 MICROS: Final = Decimal(1_000_000)
 ZERO: Final = Decimal(0)
@@ -178,9 +189,19 @@ def progress_notice(series_id: SeriesId, run: SeriesRun, done: int, spent: Decim
     return SeriesProgressNotice(series=key, done=done, total=run.total, spend_usd=spent)
 
 
-def attempt_workflow_id(series_id: SeriesId, run: SeriesRun, cursor: int) -> str:
-    key = key_of(cursor, run.repeats, len(run.variant_ids))
-    return attempt_id(series_id, run.variant_ids[key.variant_index], run.case_names[key.case_index], key.repeat)
+@dataclass(frozen=True, slots=True)
+class AttemptTry:
+    ordinal: int
+    tries: int = FIRST_TRY
+
+    def again(self) -> AttemptTry:
+        return AttemptTry(ordinal=self.ordinal, tries=self.tries + 1)
+
+
+def attempt_workflow_id(series_id: SeriesId, run: SeriesRun, entry: AttemptTry) -> str:
+    key = key_of(entry.ordinal, run.repeats, len(run.variant_ids))
+    attempt = attempt_id(series_id, run.variant_ids[key.variant_index], run.case_names[key.case_index], key.repeat)
+    return try_workflow_id(attempt, entry.tries)
 
 
 @dataclass(slots=True)
@@ -273,7 +294,7 @@ class SeriesStream:
 
 @dataclass(frozen=True, slots=True)
 class PendingAttempt:
-    ordinal: int
+    entry: AttemptTry
     handle: WorkflowHandleAsync[JsonObject]
 
 
@@ -281,21 +302,50 @@ def failure_text(error: BaseException) -> str:
     return f"{type(error).__name__}: {error}"
 
 
-async def attempt_summary(series_id: SeriesId, entry: PendingAttempt) -> AttemptSummary:
+async def attempt_summary(series_id: SeriesId, pending: PendingAttempt) -> AttemptSummary:
+    entry = pending.entry
     try:
-        raw = await entry.handle.get_result(polling_interval_sec=QUEUE_POLL_SECONDS)
+        raw = await pending.handle.get_result(polling_interval_sec=QUEUE_POLL_SECONDS)
     except Exception as error:
         outcome = FAILURE_OUTCOMES.get(type(error), OutcomeClass.INFRA_ERROR)
-        failed = await fail_attempt(series_id, entry.ordinal, outcome.value, failure_text(error))
+        failed = await fail_attempt(series_id, entry.ordinal, outcome.value, failure_text(error), entry.tries)
         return AttemptSummary.model_validate(failed)
     return AttemptSummary.model_validate(raw)
 
 
 async def enqueue_attempt(
-    series_id: SeriesId, run: SeriesRun, cursor: int, limit_usd_micros: int
+    series_id: SeriesId, run: SeriesRun, entry: AttemptTry, limit_usd_micros: int
 ) -> WorkflowHandleAsync[JsonObject]:
-    with SetWorkflowID(attempt_workflow_id(series_id, run, cursor)):
-        return await SERIES_ATTEMPTS.enqueue_async(run_attempt, series_id, cursor, limit_usd_micros)
+    with SetWorkflowID(attempt_workflow_id(series_id, run, entry)):
+        return await SERIES_ATTEMPTS.enqueue_async(run_attempt, series_id, entry.ordinal, limit_usd_micros, entry.tries)
+
+
+@dataclass(slots=True)
+class AttemptQueue:
+    total: int
+    cursor: int = 0
+    requeued: list[AttemptTry] = field(default_factory=list[AttemptTry])
+    done: int = 0
+
+    @property
+    def waiting(self) -> bool:
+        return self.cursor < self.total or bool(self.requeued)
+
+    def width(self) -> int:
+        return LOOKAHEAD if self.done else PROBE_WIDTH
+
+    def take(self) -> AttemptTry:
+        if self.cursor < self.total:
+            self.cursor += 1
+            return AttemptTry(ordinal=self.cursor - 1)
+        return self.requeued.pop(0)
+
+    def settle(self, entry: AttemptTry, summary: AttemptSummary) -> bool:
+        if summary.requeued:
+            self.requeued.append(entry.again())
+            return False
+        self.done += 1
+        return True
 
 
 @dataclass(slots=True)
@@ -303,49 +353,53 @@ class AttemptWindow:
     series_id: SeriesId
     run: SeriesRun
     ledger: SpendLedger
+    queue: AttemptQueue
     pending: dict[str, PendingAttempt] = field(default_factory=dict[str, PendingAttempt])
-    cursor: int = 0
-    done: int = 0
+
+    @property
+    def done(self) -> int:
+        return self.queue.done
 
     @property
     def active(self) -> bool:
-        return self.cursor < self.run.total or bool(self.pending)
+        return self.queue.waiting or bool(self.pending)
 
     @property
     def paused(self) -> bool:
-        return not self.pending and self.cursor < self.run.total
+        return not self.pending and self.queue.waiting
 
     def room(self) -> bool:
-        return self.cursor < self.run.total and len(self.pending) < LOOKAHEAD
+        return self.queue.waiting and len(self.pending) < self.queue.width()
 
     async def fill(self) -> None:
         while self.room() and self.ledger.open_for(len(self.pending)):
             limit = self.ledger.limit_micros(len(self.pending))
-            handle = await enqueue_attempt(self.series_id, self.run, self.cursor, limit)
-            self.pending[handle.get_workflow_id()] = PendingAttempt(ordinal=self.cursor, handle=handle)
-            self.cursor += 1
+            entry = self.queue.take()
+            handle = await enqueue_attempt(self.series_id, self.run, entry, limit)
+            self.pending[handle.get_workflow_id()] = PendingAttempt(entry=entry, handle=handle)
 
-    async def next_finished(self) -> AttemptSummary:
-        handles = [entry.handle for entry in self.pending.values()]
+    async def next_finished(self) -> AttemptSummary | None:
+        handles = [pending.handle for pending in self.pending.values()]
         finished = await DBOS.wait_first_async(handles, polling_interval_sec=QUEUE_POLL_SECONDS)
-        entry = self.pending.pop(finished.get_workflow_id())
-        summary = await attempt_summary(self.series_id, entry)
+        pending = self.pending.pop(finished.get_workflow_id())
+        summary = await attempt_summary(self.series_id, pending)
         self.ledger.add(summary.spend_usd)
-        self.done += 1
-        return summary
+        return summary if self.queue.settle(pending.entry, summary) else None
 
     def driven(self) -> DrivenAttempts:
         return DrivenAttempts(stop=StopCause.COMPLETED, spent=self.ledger.spent, done=self.done)
 
 
 async def drive_attempts(series_id: SeriesId, run: SeriesRun, stream: SeriesStream, cap: Decimal) -> DrivenAttempts:
-    window = AttemptWindow(series_id, run, SpendLedger(cap=cap))
+    window = AttemptWindow(series_id, run, SpendLedger(cap=cap), AttemptQueue(total=run.total))
     while window.active:
         await window.fill()
         if window.paused:
             window.ledger.cap = await spend_gate(series_id, window.ledger, stream)
             continue
         summary = await window.next_finished()
+        if summary is None:
+            continue
         await stream.write(AttemptEventBuilder(series_id, summary, window.done, run.total, window.ledger.spent))
         active_series().feed.publish(progress_notice(series_id, run, window.done, window.ledger.spent))
     return window.driven()
@@ -557,12 +611,12 @@ async def attempt_trace(ticket: AttemptTicket) -> RunTrace:
 
 
 @DBOS.step(name=OPEN_STEP)
-async def open_attempt(series_id: str, ordinal: int, limit_usd_micros: int) -> JsonObject:
+async def open_attempt(series_id: str, ordinal: int, limit_usd_micros: int, tries: int = FIRST_TRY) -> JsonObject:
     store = active_series().store
     record = await require_series(store, SeriesId(series_id))
     _, case_index, _ = variant_at(record, ordinal)
     case = await store.case(record.series_id, case_index)
-    ticket = attempt_ticket(record, case, ordinal, limit_usd_micros, strategy_for(record), utc_now())
+    ticket = attempt_ticket(record, case, ordinal, limit_usd_micros, strategy_for(record), utc_now(), tries)
     await store.open_attempt(running_row(ticket))
     return ticket.model_dump(mode="json")
 
@@ -673,14 +727,21 @@ async def spent_on(run_ids: Sequence[RunId]) -> RunSpend:
     return total_spend([await run_spend(log, run_id) for run_id in run_ids])
 
 
+@DBOS.step(name=REQUEUE_STEP)
+async def requeue_attempt(ticket_document: JsonObject, inspection_document: JsonObject) -> JsonObject:
+    ticket = AttemptTicket.model_validate(ticket_document)
+    inspection = AttemptInspection.model_validate(inspection_document)
+    return requeued_summary(ticket, inspection.cost_usd, utc_now()).model_dump(mode="json")
+
+
 @DBOS.step(name=FAIL_STEP)
-async def fail_attempt(series_id: str, ordinal: int, outcome: str, message: str) -> JsonObject:
+async def fail_attempt(series_id: str, ordinal: int, outcome: str, message: str, tries: int = FIRST_TRY) -> JsonObject:
     store = active_series().store
     record = await require_series(store, SeriesId(series_id))
     variant, case_index, repeat = variant_at(record, ordinal)
     case = await store.case(record.series_id, case_index)
     attempt = attempt_id(record.series_id, variant.variant_id, case.name, repeat)
-    run_id = subject_run_id(attempt)
+    run_id = try_run_id(attempt, tries)
     judges = [check.check_id for check in record.plan.checks if check.judge is not None]
     earlier = next((row for row in await store.attempts(record.series_id) if row.attempt_id == attempt), None)
     now = utc_now()
@@ -735,15 +796,21 @@ async def run_judge(ticket: AttemptTicket, check_id: str, document: JsonObject) 
     return judge_reply(await settled_record(handle), run_id).model_dump(mode="json")
 
 
+def requeues(inspection: AttemptInspection, tries: int) -> bool:
+    return inspection.rate_limited and tries < RATE_LIMIT_TRIES
+
+
 @DBOS.workflow(name=SERIES_ATTEMPT_WORKFLOW)
-async def run_attempt(series_id: str, ordinal: int, limit_usd_micros: int) -> JsonObject:
-    ticket = AttemptTicket.model_validate(await open_attempt(series_id, ordinal, limit_usd_micros))
+async def run_attempt(series_id: str, ordinal: int, limit_usd_micros: int, tries: int = FIRST_TRY) -> JsonObject:
+    ticket = AttemptTicket.model_validate(await open_attempt(series_id, ordinal, limit_usd_micros, tries))
     record = await settled_record(
         await start_run_workflow(ticket.run_id, IrHash(ticket.ir_hash), ticket.flow_input, ticket.spec)
     )
     ticket_document = ticket.model_dump(mode="json")
     record_document = record.model_dump(mode="json")
     inspection = AttemptInspection.model_validate(await inspect_attempt(ticket_document, record_document))
+    if requeues(inspection, tries):
+        return await requeue_attempt(ticket_document, inspection.model_dump(mode="json"))
     replies = {
         check_id: await run_judge(ticket, check_id, document) for check_id, document in inspection.judge_inputs.items()
     }
