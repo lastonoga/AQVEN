@@ -29,10 +29,10 @@ and the `estimate`: `usd` and `usd_source`, `minutes`, `recommended` (`cases`, `
 A look accepts at most 500 case names and runs them whatever their split, but `include_cases` shows only the `dev`
 ones: name `dev` cases.
 
-Quote a series verdict exactly as `series_get` returns it in `verdict.text`. A series whose estimate is above the
-project spend cap waits in `awaiting_approval`: only a person approves it, in Studio; there is no tool for that. Once
-approved, `series_get` the same `series_id`: `aqven series` exits with 3 at that point and never attaches to an
-existing series.
+Quote a series verdict exactly as `series_get` returns it in `verdict.text`. A series whose spend reaches 90% of its
+cap, or whose `cap_usd` is above the project spend cap, waits in `awaiting_approval` with `pause.reason` and
+`pause.spent_usd`: only a person continues it, in Studio; there is no tool for that. Once continued, `series_get` the
+same `series_id`: `aqven series` exits with 3 at that point and never attaches to an existing series.
 
 `flow_patch` takes `expects[{path, file_hash}]`: `"sha256-"` plus the sha256 of the current bytes of every file the
 operations touch. Compute it yourself from the file you just read.

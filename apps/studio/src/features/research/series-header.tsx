@@ -9,9 +9,10 @@ import { useBuiltinNames } from "./copy"
 import { Failure } from "./layout"
 import { intervalText, marginText, metricName, signedValue, unitOf } from "./metrics"
 import { isActive, rangeText, seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
-import { isLowerBound, shareOf, spendTone, verdictGap } from "./series-presenters"
+import { isLowerBound, isSpendPause, shareOf, spendTone, verdictGap } from "./series-presenters"
+import { SpendPause } from "./spend-pause"
 import { CELL_VERDICT_TONE, SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
-import { useResearchAction } from "./use-research-action"
+import { useResearchAction, type ResearchAction } from "./use-research-action"
 
 const LIST_JOIN = ", "
 const EMPTY_MARK = "—"
@@ -59,9 +60,10 @@ function OriginLine({ series }: { readonly series: SeriesDetail }) {
   )
 }
 
-function useSeriesActions(series: SeriesDetail): { readonly actions: readonly ActionSpec[]; readonly failure: string | null } {
+function useSeriesActions(series: SeriesDetail, action: ResearchAction): { readonly actions: readonly ActionSpec[]; readonly failure: string | null } {
   const t = useTranslations("research.series")
-  const action = useResearchAction()
+  const failure = action.state.kind === "failed" ? t("actionFailed", { reason: action.state.message }) : null
+  if (isSpendPause(series)) return { actions: [], failure }
   const approve: readonly ActionSpec[] =
     series.status === "awaiting_approval"
       ? [{ id: "approve", label: t("approve"), variant: "default", icon: Check, pending: action.pending("approve"), onClick: () => { action.run("approve", (api) => api.approveSeries(series.id)) } }]
@@ -69,7 +71,7 @@ function useSeriesActions(series: SeriesDetail): { readonly actions: readonly Ac
   const stop: readonly ActionSpec[] = isActive(series.status)
     ? [{ id: "stop", label: t("stop"), variant: "outline-destructive", icon: Square, pending: action.pending("stop"), onClick: () => { action.run("stop", (api) => api.cancelSeries(series.id)) } }]
     : []
-  return { actions: [...approve, ...stop], failure: action.state.kind === "failed" ? t("actionFailed", { reason: action.state.message }) : null }
+  return { actions: [...approve, ...stop], failure }
 }
 
 const liveTags = (live: boolean, label: string): readonly TagSpec[] => (live ? [{ children: label, tone: "primary", fill: "solid" }] : [])
@@ -77,7 +79,8 @@ const liveTags = (live: boolean, label: string): readonly TagSpec[] => (live ? [
 export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; readonly live: boolean }) {
   const t = useTranslations("research")
   const format = useFormatter()
-  const { actions, failure } = useSeriesActions(series)
+  const action = useResearchAction()
+  const { actions, failure } = useSeriesActions(series, action)
   const tags: readonly TagSpec[] = [
     { children: t(`vocabulary.status.${series.status}`), tone: SERIES_STATUS_TONE[series.status] },
     ...liveTags(live, t("series.live")),
@@ -101,6 +104,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
         ]}
         trailing={actions.length === 0 ? null : <Actions actions={actions} />}
       />
+      <SpendPause series={series} action={action} />
       {failure === null ? null : <Failure message={failure} />}
       <div className="flex flex-wrap gap-x-10 gap-y-3">
         <div className={METER_CLASS}>

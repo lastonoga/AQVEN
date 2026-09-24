@@ -36,7 +36,7 @@ export type ResearchSource = {
   readonly armFlow: (id: ExperimentId, arm: ArmId) => Promise<ArmFlow>
   readonly estimate: (id: ExperimentId, request: LaunchRequest) => Promise<LaunchEstimate>
   readonly startSeries: (id: ExperimentId, request: LaunchRequest) => Promise<SeriesId>
-  readonly approveSeries: (id: SeriesId) => Promise<SeriesSummary>
+  readonly approveSeries: (id: SeriesId, capUsd?: number) => Promise<SeriesSummary>
   readonly cancelSeries: (id: SeriesId, reason?: string) => Promise<SeriesSummary>
   readonly series: (id: SeriesId) => Promise<SeriesDetail>
   readonly seriesCases: (id: SeriesId, filter?: SeriesCaseFilter) => Promise<readonly SeriesCaseRow[]>
@@ -74,8 +74,8 @@ export const research: ResearchSource = {
     const started = unwrap(await api.POST("/api/series", { body: { ...launchBody(request), experiment_id: id } }))
     return ids.seriesId(started.series_id)
   },
-  approveSeries: async (id) =>
-    seriesSummaryOf(unwrap(await api.POST("/api/series/{series_id}/approve", { params: { path: { series_id: id } } }))),
+  approveSeries: async (id, capUsd) =>
+    seriesSummaryOf(unwrap(await api.POST("/api/series/{series_id}/approve", { params: { path: { series_id: id } }, body: { cap_usd: capUsd ?? null } }))),
   cancelSeries: async (id, reason) =>
     seriesSummaryOf(unwrap(await api.POST("/api/series/{series_id}/cancel", { params: { path: { series_id: id } }, body: { reason: reason ?? null } }))),
   series: async (id) =>

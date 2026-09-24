@@ -3,7 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
-from series_fixture import write_project
+from series_fixture import ABOVE_PROJECT_CAP, write_project
 from series_harness import (
     CHEAP_NAME,
     FINDING_PATH,
@@ -32,7 +32,6 @@ async def finished(
     harness: SeriesHarness, request: SeriesStartRequest
 ) -> tuple[SeriesRecord, tuple[AttemptRecord, ...]]:
     started = await harness.service.start(request, AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     await settled(harness.service, started.series_id)
     record = await harness.services.store.series(started.series_id)
     assert record is not None
@@ -122,7 +121,8 @@ def test_a_holdout_series_publishes_its_finding(tmp_path: Path) -> None:
 
 
 async def edited_midway(harness: SeriesHarness, root: Path) -> SeriesRecord:
-    started = await harness.service.start(SeriesStartRequest(experiment_id=ExperimentId("triage_agents")), AGENT)
+    request = SeriesStartRequest(experiment_id=ExperimentId("triage_agents"), cap_usd=ABOVE_PROJECT_CAP)
+    started = await harness.service.start(request, AGENT)
     code = root / "flows" / "triage" / "nodes" / "tidy" / "tidy.py"
     code.write_text(code.read_text(encoding="utf-8") + "\n\nTIDY_VERSION = 2\n", encoding="utf-8")
     await harness.service.approve(started.series_id, HUMAN)

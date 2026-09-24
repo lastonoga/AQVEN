@@ -14,13 +14,11 @@ from aqven.testing.human import new_client_op_id
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
-HUMAN: Final = WriteActor(kind="human", id="kir")
 
 
 async def answered(harness: SeriesHarness) -> tuple[SeriesGetResult, tuple[SeriesCaseRow, ...], SeriesGetResult]:
     look = LookTarget(flow_id=FlowId("review"), dataset_id=DatasetId("review_cases"), case_names=REVIEW_CASES)
     started = await harness.service.start(SeriesStartRequest(look=look), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     waiting = await reached(harness.service, started.series_id, SeriesStatus.WAITING_HUMAN)
     rows = await harness.service.cases(started.series_id, SeriesCasesQuery())
     run_id = rows[0].attempts[0].run_id

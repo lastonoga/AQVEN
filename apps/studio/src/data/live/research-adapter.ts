@@ -20,6 +20,7 @@ import type {
   ApiSeriesDetail,
   ApiSeriesEstimate,
   ApiSeriesOrigin,
+  ApiSeriesPause,
   ApiSeriesSummary,
   ApiStabilityRow,
   ApiSubject,
@@ -50,6 +51,7 @@ import type {
   SeriesCaseRow,
   SeriesDetail,
   SeriesOrigin,
+  SeriesPause,
   SeriesSummary,
   SplitCounts,
   StabilityRow,
@@ -238,6 +240,9 @@ const originOf = (origin: ApiSeriesOrigin): SeriesOrigin => {
   }
 }
 
+const pauseOf = (pause: ApiSeriesPause | null): SeriesPause | null =>
+  pause === null ? null : { reason: pause.reason, spentUsd: money(pause.spent_usd) }
+
 const seriesHeadOf = (series: ApiSeriesSummary) => ({
   id: ids.seriesId(series.series_id),
   origin: originOf(series.origin),
@@ -254,6 +259,7 @@ const seriesHeadOf = (series: ApiSeriesSummary) => ({
   waits: series.waits,
   startedAt: ids.isoDateTime(series.started_at),
   finishedAt: series.finished_at === null ? null : ids.isoDateTime(series.finished_at),
+  pause: pauseOf(series.pause ?? null),
 })
 
 export const seriesSummaryOf = (series: ApiSeriesSummary): SeriesSummary => ({ ...seriesHeadOf(series), question: series.question })

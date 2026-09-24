@@ -60,6 +60,7 @@ type Counted = { readonly passed: number; readonly total: number }
 export type LaunchBody = ApiLaunchRequest & { readonly experiment_id?: string | null; readonly look?: LookSeed | null }
 
 const CAP_USD = "1.00"
+const START_PAUSE = { reason: "cap_above_project", spent_usd: "0" } as const
 const APPROVAL_LIMIT = 1
 const USD_PER_ATTEMPT = 0.0125
 const SECONDS_PER_ATTEMPT = 40
@@ -567,6 +568,7 @@ export const summaryOf = (series: SeriesState): ApiSeriesSummary => {
     waits: attempts.filter((attempt) => attempt.outcome === WAITING_OUTCOME).length,
     started_at: series.startedAt,
     finished_at: series.finishedAt,
+    pause: series.status === "awaiting_approval" ? START_PAUSE : null,
   }
 }
 
@@ -615,7 +617,7 @@ export const estimateFor = (experiment: ApiExperimentDetail, request: LaunchBody
     icc: ICC,
     recommended,
     below_recommended: cases < recommended.cases,
-    needs_approval: usd > APPROVAL_LIMIT,
+    needs_approval: Number(request.cap_usd ?? 0) > APPROVAL_LIMIT,
     project_cap_usd: CAP_USD,
     cap_usd: CAP_USD,
     warnings: recommended.reason === "short_of_cases" ? ["short_of_cases"] : [],

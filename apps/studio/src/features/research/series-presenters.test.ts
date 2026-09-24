@@ -3,11 +3,14 @@ import type { AttemptOutcome, ExperimentCheck, SeriesAttempt } from "@/domain"
 import * as ids from "@/data/ids"
 import {
   checkHint,
+  continuedCap,
   failedChecksOf,
   hasFilter,
   hasFinished,
   isLowerBound,
   isPending,
+  isSpendPause,
+  nextCapDraft,
   orderedAttempts,
   pendingOf,
   shareOf,
@@ -139,5 +142,23 @@ describe("failed check hints", () => {
   it("gives no hint for a check the series does not know", () => {
     expect(hintOf("ghost")).toBeNull()
     expect(checkHint([], ids.checkId("promises"), HINT_COPY)).toBeNull()
+  })
+})
+
+describe("a series paused near its cap", () => {
+  it("is a spend pause only while it awaits approval for spend near the cap", () => {
+    const pause = { reason: "spend_near_cap", spentUsd: 0.91 } as const
+    expect(isSpendPause(seriesSummary({ status: "awaiting_approval", pause }))).toBe(true)
+    expect(isSpendPause(seriesSummary({ status: "awaiting_approval", pause: { reason: "cap_above_project", spentUsd: 0 } }))).toBe(false)
+    expect(isSpendPause(seriesSummary({ status: "running", pause: null }))).toBe(false)
+  })
+
+  it("offers double the cap and continues only above the current cap", () => {
+    expect(nextCapDraft(1)).toBe("2.00")
+    expect(nextCapDraft(0.000001)).toBe("0.000002")
+    expect(continuedCap(" 3.5 ", 1)).toBe(3.5)
+    expect(continuedCap("1", 1)).toBeNull()
+    expect(continuedCap("", 1)).toBeNull()
+    expect(continuedCap("abc", 1)).toBeNull()
   })
 })

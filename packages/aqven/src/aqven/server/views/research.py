@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, assert_never
 
+from pydantic import Field
+
 from aqven.check.datasets import selected_cases
 from aqven.loader import NODE_ID_SEPARATOR, LoadedExperiment, LoadedFlow, LoadedProject, scoped
 from aqven.loader.layout import EXPERIMENT_NOTES
@@ -71,6 +73,10 @@ SERIES_UNAVAILABLE: Final = "series run on the project server: this app was buil
 
 class SeriesCancelBody(RequestModel):
     reason: str | None = None
+
+
+class SeriesApproveBody(RequestModel):
+    cap_usd: Decimal | None = Field(default=None, gt=0)
 
 
 @dataclass(frozen=True, slots=True)

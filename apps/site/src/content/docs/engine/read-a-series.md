@@ -16,7 +16,7 @@ status, then the verdict, then the numbers behind it, then the cases.
   | Status | Meaning |
   |---|---|
   | `running` | attempts are running; the numbers and the verdict are provisional |
-  | `awaiting_approval` | the estimate is above the project spend cap, or unknown; a person approves the spend in Studio |
+  | `awaiting_approval` | the spend reached 90% of the series cap (`pause.reason` `spend_near_cap`, with `pause.spent_usd`), or a `cap_usd` above the project cap waits before it starts (`cap_above_project`); a person continues or stops it in Studio |
   | `waiting_human` | an attempt reached a `human` node; the series continues once someone answers it |
   | `done` | finished; every question but a `look` has a verdict |
   | `cancelled` | stopped by a person or an agent; no finding |

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from series_fixture import write_project
+from series_fixture import ABOVE_PROJECT_CAP, write_project
 from series_harness import ScriptedModels, SeriesHarness, series_engine, settled
 
 from aqven.runtime.runs import Page
@@ -30,7 +30,7 @@ WAIT_SECONDS: Final = 30
 
 
 async def waited(harness: SeriesHarness) -> tuple[SeriesGetResult, SeriesGetResult]:
-    started = await harness.service.start(SeriesStartRequest(experiment_id=SOLO), AGENT)
+    started = await harness.service.start(SeriesStartRequest(experiment_id=SOLO, cap_usd=ABOVE_PROJECT_CAP), AGENT)
     pending = await harness.service.get(SeriesGetRequest(series_id=started.series_id, wait_seconds=WAIT_SECONDS))
     await harness.service.approve(started.series_id, HUMAN)
     done = await harness.service.get(SeriesGetRequest(series_id=started.series_id, wait_seconds=WAIT_SECONDS))
@@ -50,7 +50,6 @@ def test_waiting_returns_at_once_for_approval_and_when_the_series_is_done(tmp_pa
 
 async def followed(harness: SeriesHarness) -> tuple[list[SeriesEvent], list[SeriesEvent]]:
     started = await harness.service.start(SeriesStartRequest(experiment_id=SOLO), AGENT)
-    await harness.service.approve(started.series_id, HUMAN)
     everything = [event async for event in harness.service.events(started.series_id, 0)]
     tail = [event async for event in harness.service.events(started.series_id, len(everything) - 2)]
     return everything, tail
@@ -63,7 +62,7 @@ def test_following_the_events_ends_at_the_finish_and_resumes_after_a_cursor(tmp_
         everything, tail = asyncio.run(followed(harness))
 
     assert isinstance(everything[-1], SeriesFinishedEvent)
-    assert len(everything) == 2 + 8 + 1
+    assert len(everything) == 8 + 1
     assert [event.seq for event in tail] == [len(everything) - 1, len(everything)]
 
 
@@ -85,7 +84,6 @@ async def listed(
     harness: SeriesHarness,
 ) -> tuple[SeriesStarted, SeriesStarted, Page[SeriesSummaryView], Page[SeriesSummaryView], tuple[str, ...]]:
     first = await harness.service.start(SeriesStartRequest(experiment_id=SOLO), AGENT)
-    await harness.service.approve(first.series_id, HUMAN)
     await settled(harness.service, first.series_id)
     second = await harness.service.start(SeriesStartRequest(experiment_id=SOLO), AGENT)
     await settled(harness.service, second.series_id)
@@ -101,9 +99,9 @@ def test_the_list_pages_newest_first_and_cases_filter_failures(tmp_path: Path) -
     with series_engine(root, ScriptedModels()) as harness:
         first, second, head, rest, failing = asyncio.run(listed(harness))
 
-    assert (first.estimate.usd_source, first.status) == ("unknown", SeriesStatus.AWAITING_APPROVAL)
+    assert (first.estimate.usd_source, first.status) == ("unknown", SeriesStatus.RUNNING)
     assert (second.estimate.usd_source, second.status) == ("history", SeriesStatus.RUNNING)
-    assert second.estimate.cap_usd <= second.estimate.project_cap_usd
+    assert second.estimate.cap_usd == second.estimate.project_cap_usd
     assert [item.series_id for item in head.items] == [second.series_id]
     assert head.next_cursor is not None
     assert [item.series_id for item in rest.items] == [first.series_id]

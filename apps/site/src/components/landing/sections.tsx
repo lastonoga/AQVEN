@@ -230,7 +230,7 @@ const LOOP_STEPS: { actor: LoopActor; title: string; body: string }[] = [
 const LOOP_LIMITS = [
   "Only a series on held-out cases writes a finding. On working cases the verdict stays a signal.",
   "AQVEN runs the attempts and does the statistics. The agent quotes the verdict; it never computes one.",
-  "A series that would cost more than your spend cap waits for you in Studio.",
+  "A series that nears your spend cap pauses and waits for you in Studio.",
   "A finding edited by hand fails aqven check.",
 ];
 
@@ -422,7 +422,7 @@ const FAQS = [
   {
     question: "Can my coding agent test the workflow on its own?",
     answer:
-      "Yes. It starts experiments through the project's MCP tools or the aqven series command, and AQVEN runs the attempts and computes the statistics. It explores on working cases as often as it needs, and only a series on held-out cases writes a finding. A series that would cost more than your spend cap waits for your approval in Studio.",
+      "Yes. It starts experiments through the project's MCP tools or the aqven series command, and AQVEN runs the attempts and computes the statistics. It explores on working cases as often as it needs, and only a series on held-out cases writes a finding. A series that nears your spend cap pauses for your approval in Studio.",
   },
   {
     question: "Does AQVEN replace my application, or run alongside it?",
