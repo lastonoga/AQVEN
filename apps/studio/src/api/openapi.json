@@ -12732,6 +12732,13 @@
         ],
         "title": "ChatCommand"
       },
+      "ChatDelivery": {
+        "type": "string",
+        "enum": [
+          "next_step",
+          "after_turn"
+        ]
+      },
       "ChatEffort": {
         "type": "string",
         "enum": [
@@ -12816,6 +12823,12 @@
             "$ref": "#/components/schemas/ChatTurnStarted"
           },
           {
+            "$ref": "#/components/schemas/ChatMessageQueued"
+          },
+          {
+            "$ref": "#/components/schemas/ChatMessageDelivered"
+          },
+          {
             "$ref": "#/components/schemas/ChatTextDelta"
           },
           {
@@ -12863,6 +12876,8 @@
             "chat_command": "#/components/schemas/ChatCommand",
             "chat_error": "#/components/schemas/ChatErrorRaised",
             "chat_file_edit": "#/components/schemas/ChatFileEdit",
+            "chat_message_delivered": "#/components/schemas/ChatMessageDelivered",
+            "chat_message_queued": "#/components/schemas/ChatMessageQueued",
             "chat_reasoning_delta": "#/components/schemas/ChatReasoningDelta",
             "chat_status": "#/components/schemas/ChatStatus",
             "chat_text_delta": "#/components/schemas/ChatTextDelta",
@@ -12944,6 +12959,111 @@
           "diff"
         ],
         "title": "ChatFileEdit"
+      },
+      "ChatMessageDelivered": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "chat_message_delivered",
+            "title": "Type",
+            "default": "chat_message_delivered"
+          },
+          "client_op_id": {
+            "type": "string",
+            "title": "Client Op Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "session_id",
+          "turn_id",
+          "client_op_id"
+        ],
+        "title": "ChatMessageDelivered"
+      },
+      "ChatMessageQueued": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "chat_message_queued",
+            "title": "Type",
+            "default": "chat_message_queued"
+          },
+          "client_op_id": {
+            "type": "string",
+            "title": "Client Op Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/ChatDelivery"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "session_id",
+          "turn_id",
+          "client_op_id",
+          "text",
+          "delivery"
+        ],
+        "title": "ChatMessageQueued"
       },
       "ChatMessageRequest": {
         "properties": {
@@ -21847,6 +21967,62 @@
             "type": "array",
             "title": "Violations",
             "default": []
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 599,
+                "minimum": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "provider_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Code"
+          },
+          "provider_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Response"
+          },
+          "output_shape": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutputShape"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -23866,6 +24042,75 @@
           "tool_call_args",
           "output_json"
         ]
+      },
+      "OutputShape": {
+        "properties": {
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Depth",
+            "default": 0
+          },
+          "deepest_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deepest Path"
+          },
+          "max_items": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Items"
+          },
+          "max_items_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Items Path"
+          },
+          "enum_size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enum Size"
+          },
+          "enum_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enum Path"
+          }
+        },
+        "type": "object",
+        "title": "OutputShape"
       },
       "Page_ChatSession_": {
         "properties": {

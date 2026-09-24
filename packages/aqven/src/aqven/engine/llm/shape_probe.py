@@ -22,7 +22,9 @@ MISMATCH_ERROR: Final = "MODEL_SCHEMA_MISMATCH"
 OUTPUT_RETRIES: Final = 0
 MAX_INCONCLUSIVE_STREAK: Final = 2
 
-STRUCTURAL_CODES: Final = frozenset({MISMATCH_ERROR, LlmFailureCode.OUTPUT_INVALID.value})
+STRUCTURAL_CODES: Final = frozenset(
+    {MISMATCH_ERROR, LlmFailureCode.OUTPUT_INVALID.value, LlmFailureCode.OUTPUT_SCHEMA_REJECTED.value}
+)
 
 DEPTH_LEVELS: Final[tuple[int, ...]] = (1, 2, 3, 4, 5)
 DEPTH_TOKENS: Final[tuple[str, ...]] = ("Q7-XRAY", "M4-PLUTO", "R9-TAU", "ZV3-OMEGA", "K8-DELTA")
@@ -246,5 +248,5 @@ def _failed(level: int, context: FailureContext, messages: Sequence[ModelMessage
         structural=reported_code in STRUCTURAL_CODES,
         code=reported_code,
         message=final.message if last is None else last.message,
-        excerpt=None if details is None else details.raw_excerpt,
+        excerpt=None if details is None else details.raw_excerpt or details.provider_response,
     )

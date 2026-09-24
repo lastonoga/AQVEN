@@ -1,5 +1,7 @@
 import { NODE_KIND, Surface, Heading } from "@/components/studio"
 import { groupContext, openChildColumn, type TraceContext } from "./context"
+import { failedItemsTags } from "./failed-items"
+import { itemFailures } from "./failures"
 import { GroupMatrix } from "./group-matrix"
 
 export type NestedBlockProps = { readonly ctx: TraceContext }
@@ -14,7 +16,10 @@ export function OpenNestedBlock({ ctx }: NestedBlockProps) {
       <Heading
         size="label"
         title={ctx.t("trace.nested.title", { name: column.name })}
-        tags={[{ tone: NODE_KIND[child.kind].tone, fill: "tint", size: "micro", children: NODE_KIND[child.kind].code }]}
+        tags={[
+          { tone: NODE_KIND[child.kind].tone, fill: "tint", size: "micro", children: NODE_KIND[child.kind].code },
+          ...failedItemsTags(itemFailures(child.kind, child.group.columns), ctx.t, "micro"),
+        ]}
         description={ctx.t("trace.nested.fanOut", { count: child.fanOut })}
         className="px-2.5 pt-2"
       />

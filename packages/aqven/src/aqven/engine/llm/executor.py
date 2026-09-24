@@ -1,4 +1,3 @@
-import asyncio
 import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -55,6 +54,7 @@ from aqven.engine.llm.segments import (
 from aqven.engine.llm.streaming import DeltaBatcher, StreamObserver
 from aqven.engine.llm.telemetry import report_attempt_failure, report_node_failure
 from aqven.engine.llm.tools import ExternalTools, McpServers
+from aqven.engine.llm.watch import DEFAULT_STREAM_IDLE_SECONDS, CallWatch
 from aqven.ir import CompiledLlmNode
 from aqven.models.declared import declared_model_ref
 from aqven.models.usage import UsageLog, node_usage_log
@@ -99,6 +99,7 @@ class LlmDependencies:
     mcp_servers: McpServers | None = None
     media_store: MediaStore | None = None
     types: TypeAnnotations | None = None
+    stream_idle_seconds: float | None = DEFAULT_STREAM_IDLE_SECONDS
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +108,7 @@ class LlmSegmentRunner:
     failures: Mapping[type[BaseException], LlmFailureCode]
     delta_batch_ms: int | None
     media_store: MediaStore | None = None
+    stream_idle_seconds: float | None = DEFAULT_STREAM_IDLE_SECONDS
 
     async def output_of(self, scope: ExecutionScope, prepared: PreparedRun, output: object) -> object:
         field_name = prepared.plan.image_field
@@ -164,9 +166,10 @@ class LlmSegmentRunner:
         observer = StreamObserver(sink, prepared.plan.text_kind, prepared.plan.output_tools)
         history = _history(state, prepared)
         base = len(history or ())
+        watch = CallWatch(prepared.seconds, self.stream_idle_seconds)
         with capture_run_messages() as captured:
             try:
-                async with asyncio.timeout(prepared.seconds):
+                async with watch.guard():
                     result = await prepared.agent.run(
                         None if resumed else prepared.prompt,
                         message_history=history,
@@ -175,9 +178,10 @@ class LlmSegmentRunner:
                         usage=usage,
                         usage_limits=prepared.limits,
                         model_settings=prepared.settings,
-                        event_stream_handler=observer,
+                        event_stream_handler=watch.watched(observer),
                     )
-            except Exception as error:
+            except Exception as caught:
+                error = watch.explain(caught, analysis.context)
                 code = failure_code(error, self.failures)
                 analysis.collect(captured, base, state.attempt_offset)
                 analysis.collect_final(captured, base, state.attempt_offset, error)
@@ -300,7 +304,13 @@ def llm_node_executor(dependencies: LlmDependencies) -> LlmNodeExecutor:
         mcp_servers=dependencies.mcp_servers,
         types=dependencies.types,
     )
-    segments = LlmSegmentRunner(agents, dependencies.failures, dependencies.delta_batch_ms, dependencies.media_store)
+    segments = LlmSegmentRunner(
+        agents,
+        dependencies.failures,
+        dependencies.delta_batch_ms,
+        dependencies.media_store,
+        dependencies.stream_idle_seconds,
+    )
     external = ExternalTools(dependencies.code, dependencies.tool_contexts)
     return LlmNodeExecutor(segments, dependencies.steps, dependencies.approvals, external)
 
@@ -317,6 +327,8 @@ def _failure_context(scope: ExecutionScope, node: CompiledLlmNode, prepared: Pre
         inference_id=inference.inference_id,
         agent_file=agent.file,
         inference_file=inference.file,
+        node_id=scope.address.node_id,
+        models=tuple(choice.model for choice in agent.models),
     )
 
 

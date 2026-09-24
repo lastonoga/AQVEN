@@ -24,6 +24,7 @@ from aqven.engine.llm import (
 )
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import SegmentWork, ToolCallWork
+from aqven.engine.llm.watch import DEFAULT_STREAM_IDLE_SECONDS
 from aqven.ir import (
     AgentModel,
     CompiledAgent,
@@ -487,6 +488,7 @@ def llm_bed(
     max_enum: int = 50,
     delta_batch_ms: int = 80,
     models: Callable[[ScriptedModel], Model] | None = None,
+    stream_idle_seconds: float | None = DEFAULT_STREAM_IDLE_SECONDS,
 ) -> LlmBed:
     scripted = ScriptedModel(turns)
     compiled, flow = project(node, agents, inferences, tools)
@@ -504,6 +506,7 @@ def llm_bed(
         steps=steps,
         max_enum=max_enum,
         delta_batch_ms=delta_batch_ms,
+        stream_idle_seconds=stream_idle_seconds,
     )
     return LlmBed(scripted, scope, llm_node_executor(dependencies), contexts, approvals, steps)
 

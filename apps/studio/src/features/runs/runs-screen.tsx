@@ -253,7 +253,7 @@ export function RunsScreen(): JSX.Element {
 
   const content = (
     <div className="relative h-full min-h-0">
-      <Page width="xl" header={header} beforeSticky={starting || snapshot === null ? null : <RunOverview snapshot={snapshot} />} sticky={sticky}>
+      <Page width="xl" header={header} beforeSticky={starting || snapshot === null ? null : <RunOverview snapshot={snapshot} events={events} onOpenCall={openCall} />} sticky={sticky}>
         <RunsBody
           starting={starting}
           list={list}

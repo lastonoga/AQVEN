@@ -33,7 +33,8 @@
     "noMatches": "No matching nodes",
     "previous": "Previous node",
     "next": "Next node",
-    "position": "{current} of {total}"
+    "position": "{current} of {total}",
+    "failedInside": "{status} · {count} failed inside"
   },
   "presentation": {
     "label": "Presentation",
@@ -149,9 +150,7 @@
     "pending": "This run has not finished",
     "output": "Output",
     "noOutput": "No output recorded",
-    "error": "Error",
-    "errorAt": "at {node}",
-    "hintLine": "Hint: {hint}"
+    "errorAt": "at {node}"
   },
   "execution": {
     "pending": "not started",
@@ -291,5 +290,81 @@
   },
   "compareAgents": {
     "label": "Compare agents on {node}"
+  },
+  "status": {
+    "completedWithFailures": "Completed · {count, plural, one {# step failed} other {# steps failed}}"
+  },
+  "failure": {
+    "title": {
+      "OUTPUT_SCHEMA_REJECTED": "The model rejected the output type",
+      "MODEL_RETRIES_EXHAUSTED": "The model's answer never matched the output type",
+      "MODEL_NO_STRUCTURED_OUTPUT": "The model returned no structured answer",
+      "MODEL_INVALID_JSON": "The model's answer was not valid JSON",
+      "MODEL_SCHEMA_MISMATCH": "The model's answer did not match the output type",
+      "MODEL_FEATURE_UNSUPPORTED": "The model does not support what this step asks for",
+      "MODEL_STREAM_STALLED": "The model stopped sending its answer",
+      "provider_error": "The model provider returned an error",
+      "provider_key_missing": "No API key for the model provider",
+      "timeout": "The step ran out of time",
+      "budget_exceeded": "The step went over its budget",
+      "refusal": "The model refused to answer",
+      "truncated": "The model's answer was cut off",
+      "output_invalid": "The step's output did not match its type",
+      "check_failed": "A check on the output failed",
+      "input_invalid": "The step's input did not match its type",
+      "prompt_invalid": "The prompt could not be built",
+      "allowed_set_invalid": "A set of allowed values could not be resolved",
+      "media_unavailable": "A media file for the prompt was unavailable",
+      "code_invalid": "The step's code could not be loaded",
+      "approval_missing": "A tool call needed an approval",
+      "tool_unknown": "The model called a tool this step does not have",
+      "cassette_miss": "The replay has no recorded answer for this call",
+      "AMBIGUOUS_REPLAY": "The replay matched more than one recorded call",
+      "HUMAN_TIMED_OUT": "Nobody answered before the deadline",
+      "HUMAN_DEFAULT_INVALID": "The default answer does not fit the form",
+      "E_MAP_ITEM_FAILED": "An item of the map failed",
+      "E_MAP_OVER_NOT_LIST": "The map input is not a list",
+      "E_JOIN_FAILED": "A parallel branch failed",
+      "E_JOIN_UNDECIDED": "The parallel branches reached no decision",
+      "E_INPUT_OVERLAY_UNSUPPORTED": "This step cannot take an input override",
+      "E_CHILD_SKIPPED": "A nested step was skipped",
+      "E_CHILD_CANCELLED": "A nested step was cancelled",
+      "NODE_ERROR": "The step raised an error",
+      "IO_INVALID": "A value did not match its declared type",
+      "REF_UNRESOLVED": "A reference to another value could not be resolved",
+      "CODE_NOT_FOUND": "The step's code was not found",
+      "CODE_SIGNATURE": "The step's function has the wrong signature",
+      "TOOL_REPLAY_MISS": "The replay has no recorded tool result",
+      "SECRET_MISSING": "A secret this step needs is not set",
+      "TOOL_JOB_FAILED": "The tool job failed",
+      "TOOL_JOB_TIMEOUT": "The tool job ran out of time",
+      "BLOB_MISSING": "A stored file is missing",
+      "PLAN_MISSING": "The run plan is missing",
+      "PLAN_LOOKUP": "The step is not in the run plan",
+      "EXECUTOR_MISSING": "Nothing can execute this kind of step",
+      "RUN_TIMED_OUT": "The run ran out of time",
+      "INPUT_INVALID": "The run input did not match its type",
+      "INTERNAL": "The engine failed"
+    },
+    "fallback": {
+      "step": "The step failed",
+      "run": "The run failed"
+    },
+    "hint": "Hint: {hint}",
+    "http": "HTTP {status}",
+    "providerResponse": "Provider response",
+    "fullMessage": "Full message"
+  },
+  "failedSteps": {
+    "aria": "Failed steps",
+    "title": "Failed steps",
+    "count": "{count, plural, one {# step} other {# steps}}",
+    "note": {
+      "completed": "The run still completed, without the results of these steps.",
+      "failed": "The run stopped because of these failures.",
+      "live": "The run goes on without the results of these steps."
+    },
+    "open": "Open step",
+    "openAria": "Open step {step}"
   }
 }

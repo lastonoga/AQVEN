@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { ApiExecutionAddress, ApiExecutionDetail, ApiHumanWaitDetail, ApiValueRef } from "@/domain"
-import { PresentationValue, type PresentationSide } from "@/features/runs"
+import { ErrorPanel, PresentationValue, type PresentationSide } from "@/features/runs"
 import { StructuredValue, Surface } from "@/components/studio"
 import type { PropertyRow, SectionSpec } from "@/components/studio"
 import { blobTextValue, byteSize, isBinaryMedia, valueCell, type UpstreamRef, type ValueCell } from "@/features/trace"
@@ -145,6 +145,13 @@ const humanRows = (human: ApiHumanWaitDetail, ctx: SheetContext): readonly Prope
   row(ctx.t("callSheet.human.resolvedBy"), human.resolved_by ?? ctx.none),
 ]
 
+const errorSections = (execution: ApiExecutionDetail, ctx: SheetContext): readonly SectionSpec[] => {
+  const error = execution.error
+  if (error === null) return []
+  if (ctx.raw) return structured("error", ctx.t("callSheet.checks.errorSection"), error)
+  return [{ id: "error", title: ctx.t("callSheet.checks.errorPanelSection"), body: { kind: "node", node: <ErrorPanel error={error} scope="step" /> } }]
+}
+
 const checksSections: CallSheetSectionsPresenter = ({ execution }, ctx) => {
   const human = execution.human
   return [
@@ -153,7 +160,7 @@ const checksSections: CallSheetSectionsPresenter = ({ execution }, ctx) => {
       : { kind: "node", node: <CheckCards checks={execution.checks} /> } },
     ...(execution.rule_firings.length === 0 ? [] : structured("rules", ctx.t("callSheet.checks.rulesSection"), execution.rule_firings)),
     ...(execution.attempts.length === 0 ? [] : structured("attempts", ctx.t("callSheet.checks.attemptsSection"), execution.attempts)),
-    ...structured("error", ctx.t("callSheet.checks.errorSection"), execution.error),
+    ...errorSections(execution, ctx),
     ...(human === null ? [] : properties("human", ctx.t("callSheet.human.section"), humanRows(human, ctx))),
     ...(human === null ? [] : refSections("human-answer", ctx.t("callSheet.human.answerSection"), human.answer_ref, ctx)),
   ]

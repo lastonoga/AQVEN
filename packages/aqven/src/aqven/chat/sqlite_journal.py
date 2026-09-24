@@ -15,6 +15,7 @@ from aqven.ports.chat import (
     AgentBackendKind,
     ChatEffort,
     ChatEvent,
+    ChatMessageQueued,
     ChatPermissionMode,
     ChatSession,
     ChatSessionId,
@@ -131,7 +132,7 @@ def project_app_database(project_root: Path) -> Path:
 
 
 def _operation_of(event: ChatEvent) -> ClientOpId | None:
-    return event.client_op_id if isinstance(event, ChatTurnStarted) else None
+    return event.client_op_id if isinstance(event, ChatTurnStarted | ChatMessageQueued) else None
 
 
 def _session_row(values: tuple[object, ...]) -> StoredChatSession:
@@ -296,12 +297,21 @@ class SqliteChatJournal:
                     event.seq,
                     event.type,
                     event.turn_id,
-                    _operation_of(event),
+                    self._unclaimed(session_id, _operation_of(event)),
                     event.at.isoformat(),
                     CHAT_EVENT_ADAPTER.dump_json(event).decode(),
                 ),
             )
         return event
+
+    def _unclaimed(self, session_id: ChatSessionId, operation: ClientOpId | None) -> ClientOpId | None:
+        if operation is None:
+            return None
+        claimed: tuple[int] | None = self._connection.execute(
+            "SELECT 1 FROM chat_events WHERE session_id = ? AND client_op_id = ?",
+            (session_id, operation),
+        ).fetchone()
+        return None if claimed is not None else operation
 
     def read(self, session_id: ChatSessionId, after_seq: int, limit: int) -> tuple[ChatEvent, ...]:
         with self._lock:

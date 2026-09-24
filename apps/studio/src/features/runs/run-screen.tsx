@@ -100,7 +100,7 @@ function RunView({ snapshot: loadedSnapshot }: { readonly snapshot: ApiRunSnapsh
       <Page
         width="xl"
         header={<RunHeader snapshot={snapshot} live={following} arm={arm} tools={<RunTools snapshot={snapshot} />} />}
-        beforeSticky={<RunOverview snapshot={snapshot} />}
+        beforeSticky={<RunOverview snapshot={snapshot} events={events} onOpenCall={openCall} />}
         sticky={<RunNodeNavigator trace={trace} focusedStage={focusedStage} onFocusStage={focusStage} />}
       >
         <RunDetail snapshot={snapshot} blobs={blobs} trace={trace} expected={expected} selectedKey={selectedKey} onOpenCall={openCall} />

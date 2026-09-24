@@ -29,6 +29,10 @@ def error_attributes(
         "aqven.output.mode": None if details is None else details.output_mode,
         "aqven.attempt": None if details is None else details.attempt,
         "aqven.error.raw_excerpt": None if details is None else details.raw_excerpt,
+        "aqven.error.provider_response": None if details is None else details.provider_response,
+        "aqven.error.provider_code": None if details is None else details.provider_code,
+        "aqven.error.provider": None if details is None else details.provider,
+        "http.response.status_code": None if details is None else details.status_code,
         "aqven.error.violations": None if details is None else _violations(details),
     }
     return {**base, **{key: value for key, value in optional.items() if value is not None}}

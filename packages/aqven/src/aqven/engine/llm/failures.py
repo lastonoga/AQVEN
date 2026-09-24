@@ -9,12 +9,17 @@ from pydantic_ai.exceptions import ToolRetryError, UserError
 from pydantic_ai.messages import ModelMessage, ModelRequest, ModelResponse, RetryPromptPart, TextPart, ToolCallPart
 from pydantic_core import ErrorDetails
 
-from aqven.engine.llm.errors import LlmFailureCode
+from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError, group_members
+from aqven.engine.llm.failure_context import FailureContext, FinalError
 from aqven.engine.llm.instructions import Schema
+from aqven.engine.llm.output_shape import output_shape
+from aqven.engine.llm.provider_faults import ProviderFailure, provider_failure
+from aqven.engine.llm.rejections import schema_rejection
+from aqven.engine.llm.shape_hints import mis_shape_hint, path_text, rejection_hint
 from aqven.ir.nodes import OutputMode
 from aqven.models.redaction import PATTERN_ORDER, PatternRedactor
 from aqven.runtime.address import Problem
-from aqven.runtime.executions import AttemptCause, ModelErrorDetails
+from aqven.runtime.executions import AttemptCause, ModelErrorDetails, OutputShape
 from aqven.runtime.vocabulary import AttemptAction, AttemptCauseKind
 
 MODEL_NO_STRUCTURED_OUTPUT: Final = "MODEL_NO_STRUCTURED_OUTPUT"
@@ -23,16 +28,19 @@ MODEL_SCHEMA_MISMATCH: Final = "MODEL_SCHEMA_MISMATCH"
 MODEL_FEATURE_UNSUPPORTED: Final = "MODEL_FEATURE_UNSUPPORTED"
 MODEL_RETRIES_EXHAUSTED: Final = "MODEL_RETRIES_EXHAUSTED"
 CHECK_FAILED: Final = LlmFailureCode.CHECK_FAILED.value
+OUTPUT_SCHEMA_REJECTED: Final = LlmFailureCode.OUTPUT_SCHEMA_REJECTED.value
+PROVIDER_ERROR: Final = LlmFailureCode.PROVIDER_ERROR.value
+SPECIFIC_CODES: Final = frozenset({OUTPUT_SCHEMA_REJECTED, MODEL_FEATURE_UNSUPPORTED})
+HTTP_STATUSES: Final = range(100, 600)
+SERVER_ERROR_FLOOR: Final = 500
 
 EXCERPT_LIMIT: Final = 300
 EXCERPT_ELLIPSIS: Final = "…"
 MISSING_OUTPUT_PREFIX: Final = "Please "
 JSON_INVALID_TYPE: Final = "json_invalid"
-MISSING_TYPE: Final = "missing"
 CLIENT_ERROR_STATUSES: Final = range(400, 500)
 CAUSE_CHAIN_LIMIT: Final = 8
 REF_PREFIX: Final = "#/$defs/"
-PATH_SEPARATOR: Final = "."
 REPAIR_ACTION: Final[AttemptAction] = "repair"
 FINAL_ACTION: Final[AttemptAction] = "none"
 REDACTOR: Final = PatternRedactor(PATTERN_ORDER)
@@ -50,29 +58,6 @@ FEATURE_MARKERS: Final = (
 )
 CLIENT_UNSUPPORTED_SUFFIX: Final = "output is not supported by this model"
 UNSUPPORTED_MARKERS: Final = ("not support", "unsupported", "does not support", "no endpoints found", "not available")
-
-
-@dataclass(frozen=True, slots=True)
-class FailureContext:
-    agent_id: str
-    model: str
-    mode: OutputMode
-    output_tools: frozenset[str]
-    schema: Schema
-    inference_id: str
-    agent_file: str | None = None
-    inference_file: str | None = None
-
-    @property
-    def agent_location(self) -> str:
-        return self.agent_file or f"agent {self.agent_id}"
-
-    @property
-    def inference_location(self) -> str:
-        return self.inference_file or f"inference {self.inference_id}"
-
-    def models_check(self) -> str:
-        return f"aqven models check {self.agent_id}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,7 +107,6 @@ LIMIT_TEXTS: Final[Mapping[str, LimitText]] = {
     "literal_error": LimitText("enum", "is not one of the allowed values {limit}", "extend the allowed values"),
     "enum": LimitText("enum", "is not one of the allowed values {limit}", "extend the allowed values"),
     "string_pattern_mismatch": LimitText("pattern", "does not match the pattern {limit}", "relax pattern"),
-    MISSING_TYPE: LimitText("required", "is missing", "make the field optional"),
 }
 
 NO_OUTPUT_MESSAGES: Final[Mapping[OutputMode, str]] = {
@@ -146,6 +130,19 @@ FEATURE_HINTS: Final[Mapping[OutputMode, str]] = {
     "native": "set output.mode: tool or prompted in {agent}; {check} shows which modes work",
     "prompted": "the provider rejected the request: run {check} or choose another model in {agent}",
 }
+STATUS_HINTS: Final[Mapping[int, str]] = {
+    401: "the provider refused the API key: check the key of this provider in the project .env or Studio settings",
+    402: "the provider account has no credits left: top it up or choose another model in {agent}",
+    403: "the provider refused access to this model: check the key permissions or choose another model in {agent}",
+    404: "the provider does not serve this model with these parameters: check the model name in {agent}; {check}",
+    413: "the request is too large for this model: send smaller media or less context",
+    429: "the provider kept rate-limiting after the retries: lower limits.rpm of the provider in aqven.yaml "
+    "or add fallback_models from another provider in {agent}",
+}
+SERVER_HINT: Final = (
+    "the provider failed on its side after the retries: run again later or add fallback_models "
+    "from another provider in {agent}"
+)
 
 
 def excerpt(text: str) -> str:
@@ -257,11 +254,20 @@ class FailureAnalysis:
         return self.failures[-1][1].kind if self.failures else None
 
     def final_error(self, error: BaseException, code: str, message: str) -> FinalError:
-        feature = feature_unsupported(error, self.context)
-        if feature is not None:
-            return feature
-        if not isinstance(error, UnexpectedModelBehavior) or not self.failures:
-            return FinalError(code=code, message=message)
+        leaves = leaf_errors(error)
+        default = FinalError(code=code, message=message)
+        return combined(tuple(self._leaf_error(leaf, error, default) for leaf in leaves), self.context)
+
+    def _leaf_error(self, leaf: BaseException, error: BaseException, default: FinalError) -> FinalError:
+        found = (rule(leaf, self.context) for rule in FINAL_RULES)
+        final = next((item for item in found if item is not None), None)
+        if final is not None:
+            return final
+        if isinstance(leaf, UnexpectedModelBehavior) and self.failures:
+            return self._exhausted()
+        return default if leaf is error else _plain(leaf, default)
+
+    def _exhausted(self) -> FinalError:
         exchange, classified = self.failures[-1]
         attempts = len(self.failures)
         return FinalError(
@@ -275,12 +281,41 @@ class FailureAnalysis:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class FinalError:
-    code: str
-    message: str
-    hint: str | None = None
-    details: ModelErrorDetails | None = None
+def leaf_errors(error: BaseException) -> tuple[BaseException, ...]:
+    members = group_members(error)
+    if not members:
+        return (error,)
+    return tuple(leaf for item in members for leaf in leaf_errors(item))
+
+
+def combined(finals: tuple[FinalError, ...], context: FailureContext) -> FinalError:
+    if len(finals) == 1:
+        return finals[0]
+    primary = next((item for item in finals if item.code in SPECIFIC_CODES), finals[0])
+    listed = " | ".join(item.message for item in finals)
+    message = f"all {len(finals)} models of agent {context.agent_id} failed: {listed}"
+    return FinalError(code=primary.code, message=message, hint=primary.hint, details=primary.details)
+
+
+def node_error_with_hint(error: BaseException, context: FailureContext) -> FinalError | None:
+    if not isinstance(error, LlmNodeError) or error.hint is None:
+        return None
+    details = ModelErrorDetails(agent=context.agent_id, model=context.model, output_mode=context.mode)
+    return FinalError(code=error.code.value, message=error.message, hint=error.hint, details=details)
+
+
+def schema_rejected(error: BaseException, context: FailureContext) -> FinalError | None:
+    failure = provider_failure(error)
+    if failure is None or schema_rejection(failure, context.mode) is None:
+        return None
+    model = context.declared_model(failure.model)
+    shape = output_shape(context.schema)
+    return FinalError(
+        code=OUTPUT_SCHEMA_REJECTED,
+        message=f"{model} rejected the output type {context.output_type} of step {context.step}: {failure.headline}",
+        hint=rejection_hint(context, shape),
+        details=provider_details(context, failure, model, shape),
+    )
 
 
 def feature_unsupported(error: BaseException, context: FailureContext) -> FinalError | None:
@@ -293,24 +328,74 @@ def feature_unsupported(error: BaseException, context: FailureContext) -> FinalE
         )
     if not isinstance(error, ModelHTTPError) or error.status_code not in CLIENT_ERROR_STATUSES:
         return None
-    raw_output = _body_text(error.body)
-    body = raw_output.lower()
-    if not any(marker in body for marker in FEATURE_MARKERS) or not any(item in body for item in UNSUPPORTED_MARKERS):
+    failure = provider_failure(error)
+    body = _body_text(error.body).lower()
+    if failure is None or not _mentions_unsupported_feature(body):
         return None
+    model = context.declared_model(failure.model)
     return FinalError(
         code=MODEL_FEATURE_UNSUPPORTED,
         message=(
-            f"provider of model {context.model} rejected the {context.mode} output mode "
-            f"with HTTP {error.status_code}: {excerpt(raw_output)}"
+            f"provider of model {model} rejected the {context.mode} output mode "
+            f"with HTTP {error.status_code}: {failure.headline}"
         ),
         hint=_hint(FEATURE_HINTS[context.mode], context),
-        details=ModelErrorDetails(
-            agent=context.agent_id,
-            model=context.model,
-            output_mode=context.mode,
-            raw_excerpt=REDACTOR.redact(raw_output),
-        ),
+        details=provider_details(context, failure, model, None),
     )
+
+
+def provider_error(error: BaseException, context: FailureContext) -> FinalError | None:
+    failure = provider_failure(error)
+    if failure is None:
+        return None
+    model = context.declared_model(failure.model)
+    return FinalError(
+        code=PROVIDER_ERROR,
+        message=f"model {model} failed: {failure.described()}",
+        hint=_status_hint(failure, context),
+        details=provider_details(context, failure, model, None),
+    )
+
+
+def provider_details(
+    context: FailureContext, failure: ProviderFailure, model: str, shape: OutputShape | None
+) -> ModelErrorDetails:
+    return ModelErrorDetails(
+        agent=context.agent_id,
+        model=model,
+        output_mode=context.mode,
+        status_code=failure.status if failure.status in HTTP_STATUSES else None,
+        provider=failure.provider,
+        provider_code=failure.code,
+        provider_response=failure.redacted_raw or None,
+        output_shape=shape,
+    )
+
+
+type FinalRule = Callable[[BaseException, FailureContext], FinalError | None]
+
+FINAL_RULES: Final[tuple[FinalRule, ...]] = (
+    node_error_with_hint,
+    schema_rejected,
+    feature_unsupported,
+    provider_error,
+)
+
+
+def _plain(leaf: BaseException, default: FinalError) -> FinalError:
+    return FinalError(code=default.code, message=str(leaf) or type(leaf).__name__)
+
+
+def _mentions_unsupported_feature(body: str) -> bool:
+    return any(marker in body for marker in FEATURE_MARKERS) and any(item in body for item in UNSUPPORTED_MARKERS)
+
+
+def _status_hint(failure: ProviderFailure, context: FailureContext) -> str | None:
+    status = failure.status
+    if status is None:
+        return None
+    template = STATUS_HINTS.get(status) or (SERVER_HINT if status >= SERVER_ERROR_FLOOR else None)
+    return None if template is None else _hint(template, context)
 
 
 def classify(exchange: Exchange, context: FailureContext, guards: Guards) -> Classified:
@@ -351,13 +436,14 @@ def _schema_errors(
     if not errors:
         return None
     violations = tuple(Problem(path=tuple(error["loc"]), code=error["type"], message=error["msg"]) for error in errors)
-    listed = "; ".join(f"{_path_text(item.path)}: {item.message}" for item in violations)
+    listed = "; ".join(f"{path_text(item.path)}: {item.message}" for item in violations)
+    shaped = mis_shape_hint(context, errors, output_shape(context.schema))
     return Classified(
         kind="schema_invalid",
         code=MODEL_SCHEMA_MISMATCH,
         message=f"output of model {context.model} does not match the schema of inference {context.inference_id}: "
         f"{listed}",
-        hint=_violation_hint(errors[0], context),
+        hint=shaped or _violation_hint(errors[0], context),
         violations=violations,
     )
 
@@ -395,10 +481,10 @@ def _violation_hint(error: ErrorDetails, context: FailureContext) -> str:
     text = LIMIT_TEXTS.get(error["type"])
     location = _field_location(path, context)
     if text is None:
-        return f"field {_path_text(path)} is invalid ({error['msg']}): tighten the prompt in {location}"
+        return f"field {path_text(path)} is invalid ({error['msg']}): tighten the prompt in {location}"
     limit = _limit(path, text.key, context.schema)
     phrase = text.phrase.format(limit=limit)
-    return f"field {_path_text(path)} {phrase}: tighten the prompt or {text.action} in {location}"
+    return f"field {path_text(path)} {phrase}: tighten the prompt or {text.action} in {location}"
 
 
 def _field_location(path: tuple[int | str, ...], context: FailureContext) -> str:
@@ -460,10 +546,6 @@ def _mapping(value: JsonValue) -> Schema:
 
 def _list_of_maps(value: JsonValue) -> list[Schema]:
     return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
-
-
-def _path_text(path: Sequence[int | str]) -> str:
-    return PATH_SEPARATOR.join(str(segment) for segment in path) or "output"
 
 
 def _hint(template: str, context: FailureContext) -> str:
