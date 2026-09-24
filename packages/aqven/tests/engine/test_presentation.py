@@ -1,7 +1,8 @@
 import asyncio
 import json
 import shutil
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,8 +15,9 @@ from pydantic import JsonValue, ValidationError
 from aqven.compiler import compile_root
 from aqven.engine.addressing import address_key
 from aqven.engine.display_template import render_presentation_template
-from aqven.engine.facade import DbosEngineFacade, PlanSource, RunRecordView
+from aqven.engine.facade import DbosEngineFacade, RunRecordView
 from aqven.engine.loading import CodeLoader
+from aqven.engine.plans import PlanRegistry, PlanStore
 from aqven.engine.presentation import (
     CurrentFormatterLoader,
     CurrentTemplateLoader,
@@ -28,7 +30,15 @@ from aqven.engine.presentation import (
 from aqven.engine.projection import ExecutionFold, RunFold
 from aqven.engine.request import RunCall, RunSpec
 from aqven.engine.runtime import EngineRuntime
-from aqven.ir import CompiledDisplayFormatter, CompiledInferenceDisplay, CompiledProject, IrHash
+from aqven.ir import (
+    CompiledDisplayFormatter,
+    CompiledInferenceDisplay,
+    CompiledProject,
+    HashDomain,
+    IrHash,
+    hash_of,
+    project_hash,
+)
 from aqven.ports.engine import ExecutionQuery
 from aqven.runtime.address import ExecutionAddress, RunId, node_address
 from aqven.runtime.events import MapItemRecovered
@@ -517,28 +527,61 @@ def test_execution_detail_returns_the_recovered_items_of_a_map(monkeypatch: pyte
     }
 
 
-def test_execution_uses_current_schema_when_run_plan_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+@dataclass(slots=True)
+class RecordingPlanSource:
+    plan: CompiledProject
+    calls: list[str] = field(default_factory=list[str])
+
+    def current(self) -> CompiledProject:
+        self.calls.append("current")
+        return self.plan
+
+
+def reply_view(ir_hash: str) -> Callable[[DbosEngineFacade, RunId], Awaitable[RunRecordView]]:
     address = node_address("reply")
-    plan = plan_of("standard_shop")
     fold = RunFold(executions={address_key(address): ExecutionFold(address=address, kind=NodeKind.LLM)})
 
     async def view(self: DbosEngineFacade, run_id: RunId) -> RunRecordView:
-        call = RunCall(ir_hash="missing-historical-hash", flow_input={}, spec=RunSpec(flow_id=FlowId("intake")))
+        call = RunCall(ir_hash=ir_hash, flow_input={}, spec=RunSpec(flow_id=FlowId("intake")))
         return cast(RunRecordView, SimpleNamespace(call=call, fold=fold))
 
-    async def human_detail(self: DbosEngineFacade, run_id: RunId, selected: ExecutionAddress) -> HumanWaitDetail | None:
-        return None
+    return view
 
-    monkeypatch.setattr(DbosEngineFacade, "_view", view)
-    monkeypatch.setattr(DbosEngineFacade, "_human_detail", human_detail)
 
-    def missing_plan(ir_hash: IrHash) -> None:
-        return None
+async def no_human_detail(self: DbosEngineFacade, run_id: RunId, selected: ExecutionAddress) -> HumanWaitDetail | None:
+    return None
 
-    runtime = cast(EngineRuntime, SimpleNamespace(plans=SimpleNamespace(find=missing_plan)))
-    source = SimpleNamespace(current=lambda: plan)
-    facade = DbosEngineFacade(runtime=runtime, plan_source=cast(PlanSource, source))
-    detail = asyncio.run(facade.get_execution(RunId("run-1"), address))
-    assert detail.schema_source == "current"
+
+def test_execution_of_a_run_without_its_plan_is_unavailable_without_compiling(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(DbosEngineFacade, "_view", reply_view("sha256-" + "2" * 64))
+    monkeypatch.setattr(DbosEngineFacade, "_human_detail", no_human_detail)
+    runtime = cast(EngineRuntime, SimpleNamespace(plans=PlanRegistry(PlanStore(tmp_path))))
+    source = RecordingPlanSource(plan_of("standard_shop"))
+    facade = DbosEngineFacade(runtime=runtime, plan_source=source)
+    detail = asyncio.run(facade.get_execution(RunId("run-1"), node_address("reply")))
+    assert source.calls == []
+    assert detail.schema_source == "unavailable"
+    assert (detail.input_schema, detail.output_schema) == (None, None)
+
+
+def test_execution_of_a_run_whose_plan_hash_drifted_opens_without_compiling(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    plan = plan_of("standard_shop")
+    document = plan.model_dump(mode="json", by_alias=True)
+    assert document.pop("mcp_servers") == {}
+    ir_hash = hash_of(HashDomain.PROJECT, document)
+    (tmp_path / f"{ir_hash}.json").write_text(json.dumps(document), encoding="utf-8")
+    assert project_hash(plan) != ir_hash
+    monkeypatch.setattr(DbosEngineFacade, "_view", reply_view(ir_hash))
+    monkeypatch.setattr(DbosEngineFacade, "_human_detail", no_human_detail)
+    runtime = cast(EngineRuntime, SimpleNamespace(plans=PlanRegistry(PlanStore(tmp_path))))
+    source = RecordingPlanSource(plan)
+    facade = DbosEngineFacade(runtime=runtime, plan_source=source)
+    detail = asyncio.run(facade.get_execution(RunId("run-1"), node_address("reply")))
+    assert source.calls == []
+    assert detail.schema_source == "run"
     assert detail.input_schema is not None
     assert detail.output_schema is not None
