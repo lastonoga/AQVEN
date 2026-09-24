@@ -10,7 +10,10 @@ type PaintRule = {
 
 const MUTED_STATUSES: ReadonlySet<ExecutionStatus> = new Set<ExecutionStatus>(["pending", "skipped", "cancelled"])
 
+export const RECOVERED_TONE: Tone = "warning"
+
 const PAINT_RULES: readonly PaintRule[] = [
+  { matches: (column) => column.recovery !== null, paint: { surface: RECOVERED_TONE } },
   { matches: (column) => column.status === "failed", paint: { surface: "destructive" } },
   { matches: (_column, _open, selected) => selected, paint: { surface: "neutral" } },
   { matches: (_column, open) => open, paint: { surface: "llm" } },
@@ -24,7 +27,10 @@ export const statusTone = (status: ExecutionStatus): Tone => EXECUTION_STATUS_TO
 
 const PARTIAL_TONE: Tone = "warning"
 
-export const stageTone = (stage: StageRun): Tone =>
-  stage.status === "ok" && stageFailedBelow(stage) > 0 ? PARTIAL_TONE : statusTone(stage.status)
+const isPartial = (stage: StageRun): boolean => stage.recoveries.length > 0 || stageFailedBelow(stage) > 0
 
-export const outputPaint = (column: CallColumn): CellPaint => ({ accent: statusTone(column.status) })
+export const stageTone = (stage: StageRun): Tone => (stage.status === "ok" && isPartial(stage) ? PARTIAL_TONE : statusTone(stage.status))
+
+export const columnTone = (column: CallColumn): Tone => (column.recovery === null ? statusTone(column.status) : RECOVERED_TONE)
+
+export const outputPaint = (column: CallColumn): CellPaint => ({ accent: columnTone(column) })

@@ -21,7 +21,7 @@ const JSON_INDENT = 2
 const BYTES_PER_UNIT = 1024
 const SIZE_UNITS = ["B", "KB", "MB", "GB"] as const
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+export const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
 const isMedia = (value: unknown): value is MediaShape =>

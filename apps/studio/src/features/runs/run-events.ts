@@ -31,6 +31,7 @@ export const RUN_EVENT_EFFECT: Readonly<Record<RunEventType, RunEventEffect>> = 
   inference_checks_captured: "append",
   node_attempt_failed: "append",
   node_progress: "append",
+  map_item_recovered: "refresh",
   node_output_delta: "append",
   node_attempt_discarded: "refresh",
   node_suspended: "refresh",

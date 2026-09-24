@@ -3631,6 +3631,11 @@ export interface components {
             trace_id: string | null;
             /** Span Id */
             span_id: string | null;
+            /**
+             * Recovered Items
+             * @default []
+             */
+            recovered_items: components["schemas"]["ItemRecovery"][];
             /** Provenance */
             provenance: {
                 [key: string]: components["schemas"]["SlotProvenance"];
@@ -4370,6 +4375,25 @@ export interface components {
         };
         /** @enum {string} */
         InputSource: "request" | "sample";
+        /** ItemError */
+        ItemError: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** ItemRecovery */
+        ItemRecovery: {
+            /** Item Index */
+            item_index: number;
+            /** Policy */
+            policy: string;
+            decision: components["schemas"]["ItemRecoveryDecision"];
+            error: components["schemas"]["ItemError"];
+            default_ref: components["schemas"]["ValueRef"] | null;
+        };
+        /** @enum {string} */
+        ItemRecoveryDecision: "skip" | "default";
         JsonObject: {
             [key: string]: components["schemas"]["JsonValue"];
         };
@@ -4646,6 +4670,25 @@ export interface components {
             node_outputs?: {
                 [key: string]: components["schemas"]["JsonValue"];
             };
+        };
+        /** MapItemRecovered */
+        MapItemRecovered: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Run Id */
+            run_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "map_item_recovered";
+            address: components["schemas"]["ExecutionAddress"];
+            recovery: components["schemas"]["ItemRecovery"];
         };
         /** MapNodeSpec */
         MapNodeSpec: {
@@ -4972,6 +5015,16 @@ export interface components {
             suspended: number;
             /** Cancelled */
             cancelled: number;
+            /**
+             * Items Replaced
+             * @default 0
+             */
+            items_replaced: number;
+            /**
+             * Items Skipped
+             * @default 0
+             */
+            items_skipped: number;
         };
         /** NodeDetail */
         NodeDetail: {
@@ -5089,6 +5142,11 @@ export interface components {
             trace_id: string | null;
             /** Span Id */
             span_id: string | null;
+            /**
+             * Recovered Items
+             * @default []
+             */
+            recovered_items: components["schemas"]["ItemRecovery"][];
         };
         /** NodeFinished */
         NodeFinished: {
@@ -6150,7 +6208,7 @@ export interface components {
             hint?: string | null;
             details?: components["schemas"]["ModelErrorDetails"] | null;
         };
-        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["NodeStarted"] | components["schemas"]["InferenceInputCaptured"] | components["schemas"]["InferencePromptCaptured"] | components["schemas"]["InferenceChecksCaptured"] | components["schemas"]["NodeAttemptFailed"] | components["schemas"]["NodeProgress"] | components["schemas"]["NodeOutputDelta"] | components["schemas"]["NodeAttemptDiscarded"] | components["schemas"]["NodeSuspended"] | components["schemas"]["NodeResumed"] | components["schemas"]["NodeAnswerIgnored"] | components["schemas"]["NodeWaitTimedOut"] | components["schemas"]["NodeWaitEscalated"] | components["schemas"]["NodeFinished"] | components["schemas"]["LoopIterationFinished"] | components["schemas"]["LoopExited"] | components["schemas"]["RunSuspended"] | components["schemas"]["RunResumed"] | components["schemas"]["RunFinished"];
+        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["NodeStarted"] | components["schemas"]["InferenceInputCaptured"] | components["schemas"]["InferencePromptCaptured"] | components["schemas"]["InferenceChecksCaptured"] | components["schemas"]["NodeAttemptFailed"] | components["schemas"]["NodeProgress"] | components["schemas"]["MapItemRecovered"] | components["schemas"]["NodeOutputDelta"] | components["schemas"]["NodeAttemptDiscarded"] | components["schemas"]["NodeSuspended"] | components["schemas"]["NodeResumed"] | components["schemas"]["NodeAnswerIgnored"] | components["schemas"]["NodeWaitTimedOut"] | components["schemas"]["NodeWaitEscalated"] | components["schemas"]["NodeFinished"] | components["schemas"]["LoopIterationFinished"] | components["schemas"]["LoopExited"] | components["schemas"]["RunSuspended"] | components["schemas"]["RunResumed"] | components["schemas"]["RunFinished"];
         /** RunFinished */
         RunFinished: {
             /** Seq */
@@ -7553,6 +7611,9 @@ export type SchemaInferenceSpec = components['schemas']['InferenceSpec'];
 export type SchemaInlineValue = components['schemas']['InlineValue'];
 export type SchemaInputField = components['schemas']['InputField'];
 export type SchemaInputSource = components['schemas']['InputSource'];
+export type SchemaItemError = components['schemas']['ItemError'];
+export type SchemaItemRecovery = components['schemas']['ItemRecovery'];
+export type SchemaItemRecoveryDecision = components['schemas']['ItemRecoveryDecision'];
 export type SchemaJsonObject = components['schemas']['JsonObject'];
 export type SchemaJsonParams = components['schemas']['JsonParams'];
 export type SchemaJsonPointer = components['schemas']['JsonPointer'];
@@ -7580,6 +7641,7 @@ export type SchemaManualMissingRangeData = components['schemas']['ManualMissingR
 export type SchemaManualRangePair = components['schemas']['ManualRangePair'];
 export type SchemaManualRangePreview = components['schemas']['ManualRangePreview'];
 export type SchemaManualRangeRequest = components['schemas']['ManualRangeRequest'];
+export type SchemaMapItemRecovered = components['schemas']['MapItemRecovered'];
 export type SchemaMapNodeSpec = components['schemas']['MapNodeSpec'];
 export type SchemaMatrixRow = components['schemas']['MatrixRow'];
 export type SchemaMcpToolSource = components['schemas']['McpToolSource'];

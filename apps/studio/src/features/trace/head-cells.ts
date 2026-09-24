@@ -1,7 +1,7 @@
 import { NODE_KIND, type CellBlock, type ExpanderSpec, type TagSpec } from "@/components/studio"
 import type { TraceContext } from "./context"
 import type { CallColumn } from "./model"
-import { statusTone } from "./paint"
+import { columnTone } from "./paint"
 
 const childExpander = (column: CallColumn, ctx: TraceContext): Pick<CellBlock<"heading">, "expander"> => {
   const child = column.child
@@ -24,6 +24,12 @@ const coordinateTag = (column: CallColumn, ctx: TraceContext): readonly TagSpec[
   return [{ tone: "neutral", fill: "outline", size: "micro", children: ctx.t(`trace.coordinate.${coordinate.kind}`, { value: coordinate.value }) }]
 }
 
+const statusText = (column: CallColumn, ctx: TraceContext): string => {
+  const status = ctx.t(`domain.executionStatus.${column.status}`)
+  if (column.recovery === null) return status
+  return ctx.t(`trace.recovery.status.${column.recovery.decision}`, { status })
+}
+
 const flagTags = (column: CallColumn, ctx: TraceContext): readonly TagSpec[] => [
   ...(column.agent.cacheHit ? [{ tone: "success" as const, fill: "outline" as const, size: "micro" as const, children: ctx.t("trace.call.cached") }] : []),
   ...(column.agent.degraded ? [{ tone: "warning" as const, fill: "outline" as const, size: "micro" as const, children: ctx.t("trace.call.degraded") }] : []),
@@ -34,16 +40,16 @@ export const callCells = (column: CallColumn, ctx: TraceContext): readonly CellB
     kind: "heading",
     size: "cell",
     title: column.name,
-    dots: [statusTone(column.status)],
+    dots: [columnTone(column)],
     tags: [{ tone: NODE_KIND[column.kind].tone, fill: "tint", size: "micro", children: NODE_KIND[column.kind].code }, ...coordinateTag(column, ctx)],
     ...childExpander(column, ctx),
   }
   const flags = flagTags(column, ctx)
   const status: CellBlock<"inline"> = {
     kind: "inline",
-    lines: [ctx.t(`domain.executionStatus.${column.status}`)],
+    lines: [statusText(column, ctx)],
     role: "tiny",
-    tone: statusTone(column.status),
+    tone: columnTone(column),
   }
   if (flags.length === 0) return [heading, status]
   return [heading, status, { kind: "tags", tags: flags }]
