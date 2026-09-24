@@ -10,6 +10,7 @@ from aqven.runtime.events import (
     InferenceChecksCaptured,
     InferenceInputCaptured,
     InferencePromptCaptured,
+    MapItemRecovered,
     NodeAttemptFailed,
     NodeFinished,
     NodeResumed,
@@ -19,7 +20,7 @@ from aqven.runtime.events import (
     RunFinished,
     RunStartedEvent,
 )
-from aqven.runtime.executions import Attempt, CheckOutcome, NodeExecution, PromptTrace, RunError
+from aqven.runtime.executions import Attempt, CheckOutcome, ItemRecovery, NodeExecution, PromptTrace, RunError
 from aqven.runtime.runs import HumanAnswerStatus, NodeCounts
 from aqven.runtime.values import ValueRef
 from aqven.runtime.vocabulary import ExecutionStatus
@@ -61,6 +62,7 @@ class ExecutionFold:
     output_ref: ValueRef | None = None
     error: RunError | None = None
     attempts: list[Attempt] = field(default_factory=list[Attempt])
+    recovered_items: list[ItemRecovery] = field(default_factory=list[ItemRecovery])
 
     def view(self) -> NodeExecution:
         return NodeExecution(
@@ -85,6 +87,7 @@ class ExecutionFold:
             output_ref=self.output_ref,
             trace_id=None,
             span_id=None,
+            recovered_items=tuple(self.recovered_items),
         )
 
 
@@ -120,6 +123,8 @@ class RunFold:
                 self.answered.add((address_key(event.address), event.attempt))
             case NodeAttemptFailed():
                 self._attempt_failed(event)
+            case MapItemRecovered():
+                self._item_recovered(event)
             case _:
                 return
 
@@ -135,6 +140,7 @@ class RunFold:
         order = self.started.order if self.started is not None else ()
         pending = sum(1 for node_id in order if node_id not in started)
         counts = {status: statuses.count(status) for status in EXECUTION_STATUSES}
+        decisions = [recovery.decision for fold in self.executions.values() for recovery in fold.recovered_items]
         return NodeCounts(
             pending=counts["pending"] + pending,
             running=counts["running"],
@@ -143,6 +149,8 @@ class RunFold:
             skipped=counts["skipped"],
             suspended=counts["suspended"],
             cancelled=counts["cancelled"],
+            items_replaced=decisions.count("default"),
+            items_skipped=decisions.count("skip"),
         )
 
     def answer_statuses(self, answers: Sequence[tuple[ExecutionAddress, int]]) -> tuple[HumanAnswerStatus, ...]:
@@ -175,7 +183,7 @@ class RunFold:
         fold.tokens_in = event.tokens_in
         fold.tokens_out = event.tokens_out
         fold.cache_hit = event.cache_hit
-        fold.degraded = event.degraded
+        fold.degraded = event.degraded or bool(fold.recovered_items)
         fold.output_ref = event.output_ref
         fold.error = event.error
 
@@ -198,6 +206,13 @@ class RunFold:
         fold = self.executions.get(address_key(event.address))
         if fold is not None:
             fold.checks.extend(event.checks)
+
+    def _item_recovered(self, event: MapItemRecovered) -> None:
+        fold = self.executions.get(address_key(event.address))
+        if fold is None:
+            return
+        fold.recovered_items.append(event.recovery)
+        fold.degraded = True
 
     def _set_status(self, address: ExecutionAddress, status: ExecutionStatus) -> None:
         fold = self.executions.get(address_key(address))

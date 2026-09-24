@@ -428,7 +428,7 @@ export const handlers = [
       cost_usd: "0",
       tokens_in: 0,
       tokens_out: 0,
-      node_counts: { pending: order.length, running: 0, ok: 0, failed: 0, skipped: 0, suspended: 0, cancelled: 0 },
+      node_counts: { pending: order.length, running: 0, ok: 0, failed: 0, skipped: 0, suspended: 0, cancelled: 0, items_replaced: 0, items_skipped: 0 },
       content_hash: liveFlowDetails[flowId]?.content_hash ?? template.content_hash,
       waits: [],
       lineage: null,

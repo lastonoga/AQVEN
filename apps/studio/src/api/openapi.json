@@ -18291,6 +18291,14 @@
             ],
             "title": "Span Id"
           },
+          "recovered_items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemRecovery"
+            },
+            "type": "array",
+            "title": "Recovered Items",
+            "default": []
+          },
           "provenance": {
             "additionalProperties": {
               "$ref": "#/components/schemas/SlotProvenance"
@@ -20730,6 +20738,69 @@
           "sample"
         ]
       },
+      "ItemError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ItemError"
+      },
+      "ItemRecovery": {
+        "properties": {
+          "item_index": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Item Index"
+          },
+          "policy": {
+            "type": "string",
+            "title": "Policy"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ItemRecoveryDecision"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ItemError"
+          },
+          "default_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValueRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_index",
+          "policy",
+          "decision",
+          "error",
+          "default_ref"
+        ],
+        "title": "ItemRecovery"
+      },
+      "ItemRecoveryDecision": {
+        "type": "string",
+        "enum": [
+          "skip",
+          "default"
+        ]
+      },
       "JsonObject": {
         "additionalProperties": {
           "$ref": "#/components/schemas/JsonValue"
@@ -21578,6 +21649,45 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ManualRangeRequest"
+      },
+      "MapItemRecovered": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "type": {
+            "type": "string",
+            "const": "map_item_recovered",
+            "title": "Type",
+            "default": "map_item_recovered"
+          },
+          "address": {
+            "$ref": "#/components/schemas/ExecutionAddress"
+          },
+          "recovery": {
+            "$ref": "#/components/schemas/ItemRecovery"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "run_id",
+          "address",
+          "recovery"
+        ],
+        "title": "MapItemRecovered"
       },
       "MapNodeSpec": {
         "properties": {
@@ -22577,6 +22687,18 @@
             "type": "integer",
             "minimum": 0,
             "title": "Cancelled"
+          },
+          "items_replaced": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Items Replaced",
+            "default": 0
+          },
+          "items_skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Items Skipped",
+            "default": 0
           }
         },
         "type": "object",
@@ -23073,6 +23195,14 @@
               }
             ],
             "title": "Span Id"
+          },
+          "recovered_items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemRecovery"
+            },
+            "type": "array",
+            "title": "Recovered Items",
+            "default": []
           }
         },
         "type": "object",
@@ -26836,6 +26966,9 @@
             "$ref": "#/components/schemas/NodeProgress"
           },
           {
+            "$ref": "#/components/schemas/MapItemRecovered"
+          },
+          {
             "$ref": "#/components/schemas/NodeOutputDelta"
           },
           {
@@ -26883,6 +27016,7 @@
             "inference_prompt_captured": "#/components/schemas/InferencePromptCaptured",
             "loop_exited": "#/components/schemas/LoopExited",
             "loop_iteration_finished": "#/components/schemas/LoopIterationFinished",
+            "map_item_recovered": "#/components/schemas/MapItemRecovered",
             "node_answer_ignored": "#/components/schemas/NodeAnswerIgnored",
             "node_attempt_discarded": "#/components/schemas/NodeAttemptDiscarded",
             "node_attempt_failed": "#/components/schemas/NodeAttemptFailed",

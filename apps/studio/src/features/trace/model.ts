@@ -1,4 +1,4 @@
-import type { ApiExecutionAddress, ApiJsonObject, ApiProblemRow, ApiValueRef, ExecutionStatus, NodeKind } from "@/domain"
+import type { ApiExecutionAddress, ApiJsonObject, ApiProblemRow, ApiValueRef, ExecutionStatus, ItemRecoveryDecision, NodeKind } from "@/domain"
 import type { TextLine } from "@/components/studio"
 
 export const ROW_KEYS = ["call", "agent", "model", "input", "prompt", "output", "postCheck"] as const
@@ -68,12 +68,19 @@ export type CheckFinding = {
   readonly name: string
   readonly pass: boolean
   readonly note: string | null
+  readonly attempt: number
 }
 
 export type CheckCell = {
   readonly findings: readonly CheckFinding[]
   readonly rules: readonly ApiJsonObject[]
   readonly failedAttempts: number
+}
+
+export type RecoveryCell = {
+  readonly decision: ItemRecoveryDecision
+  readonly policy: string
+  readonly value: ValueCell | null
 }
 
 export type NestedBlock = {
@@ -96,6 +103,7 @@ export type CallColumn = {
   readonly output: ValueCell | null
   readonly rawResponse: string | null
   readonly check: CheckCell | null
+  readonly recovery: RecoveryCell | null
   readonly child: NestedBlock | null
 }
 
@@ -142,6 +150,7 @@ export type StageRun = {
   readonly fanOut: number
   readonly groups: readonly MatrixGroup[]
   readonly ladders: readonly AttemptLadder[]
+  readonly recoveries: readonly RecoveryCell[]
   readonly exit: ExitSummary | null
 }
 

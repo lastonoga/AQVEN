@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import { Heading, NODE_KIND, Surface, Text, type TagSpec } from "@/components/studio"
+import { ITEM_RECOVERY_DECISIONS, type ItemRecoveryDecision } from "@/domain"
+import { Heading, NODE_KIND, Surface, Tag, Text, type TagSpec } from "@/components/studio"
 import { joinMeta, usd } from "@/lib/format"
 import { latencyText } from "./agent-cells"
 import { AttemptsLadder } from "./attempts-ladder"
@@ -7,8 +8,9 @@ import { groupContext, type TraceScope } from "./context"
 import { failedItemsTags } from "./failed-items"
 import { stageItemFailures } from "./failures"
 import { GroupMatrix } from "./group-matrix"
-import type { StageRun } from "./model"
+import type { RecoveryCell, StageRun } from "./model"
 import { OpenNestedBlock } from "./nested-block"
+import { RECOVERED_TONE } from "./paint"
 
 export type StageCardProps = { readonly stage: StageRun; readonly scope: TraceScope }
 
@@ -31,6 +33,38 @@ function ExitFooter({ stage, scope }: StageCardProps) {
   )
 }
 
+type RecoverySummary = { readonly decision: ItemRecoveryDecision; readonly count: number; readonly policy: string }
+
+const POLICY_JOIN = ", "
+
+const recoverySummaries = (recoveries: readonly RecoveryCell[]): readonly RecoverySummary[] =>
+  ITEM_RECOVERY_DECISIONS.map((decision) => {
+    const matching = recoveries.filter((recovery) => recovery.decision === decision)
+    return { decision, count: matching.length, policy: [...new Set(matching.map((recovery) => recovery.policy))].join(POLICY_JOIN) }
+  }).filter((summary) => summary.count > 0)
+
+function StageStatus({ stage, scope }: StageCardProps) {
+  const status = scope.t(`domain.executionStatus.${stage.status}`)
+  const summaries = recoverySummaries(stage.recoveries)
+  if (summaries.length === 0) return status
+  return (
+    <span className="inline-flex items-center gap-2">
+      {status}
+      {summaries.map((summary) => (
+        <Tag
+          key={summary.decision}
+          tone={RECOVERED_TONE}
+          fill="soft"
+          size="micro"
+          title={scope.t(`trace.recovery.tagTitle.${summary.decision}`, { policy: summary.policy, count: summary.count })}
+        >
+          {scope.t(`trace.recovery.tag.${summary.decision}`, { count: summary.count })}
+        </Tag>
+      ))}
+    </span>
+  )
+}
+
 function StageTotals({ stage, scope }: StageCardProps) {
   return (
     <Text role="tiny" weight="medium" tone="default">
@@ -46,7 +80,7 @@ export function StageCard({ stage, scope }: StageCardProps): ReactNode {
       size="block"
       title={stage.nodeId}
       tags={[kindTag(stage), ...failedItemsTags(stageItemFailures(stage), scope.t, "sm")]}
-      description={scope.t(`domain.executionStatus.${stage.status}`)}
+      description={<StageStatus stage={stage} scope={scope} />}
       trailing={<StageTotals stage={stage} scope={scope} />}
     >
       <div className="flex flex-col gap-2.75">

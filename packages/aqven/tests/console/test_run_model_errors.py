@@ -5,6 +5,10 @@ from typing import Final
 from aqven.console.run import text_line
 from aqven.runtime import (
     AttemptCause,
+    InlineValue,
+    ItemError,
+    ItemRecovery,
+    MapItemRecovered,
     ModelErrorDetails,
     NodeAttemptFailed,
     NodeFinished,
@@ -143,3 +147,19 @@ def test_a_rejected_output_type_prints_the_provider_status_and_code() -> None:
         "    agent: looker, model: openrouter:google/gemini-2.5-flash-lite, output mode: tool, "
         "provider: Google AI Studio, HTTP status: 400, provider code: INVALID_ARGUMENT",
     ]
+
+
+def test_recovered_map_item_prints_the_policy_decision_and_the_item_error() -> None:
+    recovery = ItemRecovery(
+        item_index=2,
+        policy="shop.code.review_policies:unread_angle",
+        decision="default",
+        error=ItemError(code="MODEL_RETRIES_EXHAUSTED", message="no valid output after 2 attempts"),
+        default_ref=InlineValue(value={"legible": False}),
+    )
+    event = MapItemRecovered(seq=6, at=AT, run_id=RUN, address=node_address(NodeId("assess")), recovery=recovery)
+
+    assert text_line(event) == (
+        "↷ assess item 2 default by shop.code.review_policies:unread_angle"
+        " after MODEL_RETRIES_EXHAUSTED: no valid output after 2 attempts"
+    )
