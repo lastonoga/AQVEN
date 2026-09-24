@@ -13,5 +13,5 @@
 
 # Studio dialogs
 
-- In the run dataset dialog, keep the "Current dataset file" and "Used for this run" tabs visible while the tab content scrolls. Show only the case recorded for the selected run in both tabs; show the full dataset case list on the Datasets page.
+- In the run dataset dialog, keep the "Current dataset file" and "Used for this run" tabs visible while the tab content scrolls. Show only the case recorded for the selected run in both tabs; show the full dataset case list on the flow's Cases tab.
 - Leave a visible gap between a search field and the first result. Check spacing both at the top and after scrolling a long dialog.

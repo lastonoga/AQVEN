@@ -22,9 +22,10 @@ __package__/
   types/{enums,ids,records,unions,values}/<type>.yaml
   fragments/<fragment>.md              prompt text shared by several prompts
   code/<module>.py                     Python used from several places
-  datasets/<dataset>.yaml              cases: input, expected output and tags; flow: names the flow they feed
-  experiments/<experiment>/            experiment.yaml: one quality question over a dataset; experiment.md: notes;
-                                       arms/<arm>/flow.yaml: a small flow only this experiment runs;
+  datasets/<dataset>.yaml              the flow they feed, and cases: name, inputs, expected_output, node_outputs, tags
+  experiments/<experiment>/            experiment.yaml: one question over a dataset; experiment.md: notes, failure
+                                       modes and decisions; checks.py: check functions of this experiment;
+                                       arms/<arm>/flow.yaml or flow.py: a small flow only this experiment runs;
                                        findings/<series>.yaml: a finding the server wrote, never edit
   FINDINGS.md                          what the project already knows, generated from the findings, never edit
   flows/<flow>/flow.yaml               flow input, output, returns and node order
@@ -39,7 +40,7 @@ tests/                                 offline tests of the example, at the proj
 ```
 
 - The file path is the identity: an id is the file name up to the first dot, a flow id is its folder name. There is no
-  `id:` key.
+  `id:` key. A nested node's id joins the ids with `__`: `polish__revise`.
 - Prompts are Markdown files, never strings inside YAML.
 - Declare every shape once in YAML. Import models from `__package__.types` and never write a `BaseModel` that repeats a
   declared type.
@@ -51,10 +52,9 @@ tests/                                 offline tests of the example, at the proj
    specified — not only which provider someone has a key for. A wrong assumption costs a rewrite; a
    question costs one reply. This applies everywhere in this file, not only when brainstorming a new flow
    from an idea.
-2. **`aqven check` must pass after every change.** It is the gate of this project, and in a project without a `tests/`
-   folder it is the whole safety net: it checks the files statically and then simulates every flow with generated
-   values, without a network and without spending tokens. Fix every error before you finish; do not ask a model to try
-   the flow instead.
+2. **`aqven check` must pass after every change.** It is the gate of this project: it checks the files statically,
+   experiments included, and then simulates every flow with generated values, without a network and without spending
+   tokens. Fix every error before you run anything live.
 3. Never edit `__package__/types.py`. `aqven generate` rebuilds it from the YAML and overwrites every edit; change
    the YAML instead. Never create `__package__/types/__init__.py`: it hides the generated models.
 4. Structural changes across files go through the `flow_patch` tool of the `aqven` MCP server: renaming or moving a
@@ -102,7 +102,7 @@ tests/                                 offline tests of the example, at the proj
 10. **Tests never call model providers.** They replace models with `FunctionModel` through the `aqven_engine` fixture.
     Recorded live runs (cassettes) exist only to prove the model contract of one scenario, never to decide which branch
     a flow takes: `tests/test_support_case.py` replays recorded runs of five scenarios and forces every branch
-    with node output overrides and scripted human answers.
+    with node output overrides and scripted human answers. Quality is measured by experiments, not by tests.
 11. **Force a branch in a scenario test with a node output override**, never by hoping a model answers a certain way:
 
    ```python
@@ -119,15 +119,12 @@ tests/                                 offline tests of the example, at the proj
 When the request is an idea rather than a change — "a workflow that triages support mail", an empty project — do
 not start writing files. Ask first. A wrong guess here costs a rewrite of every node below it.
 
-Before proposing a shape, use what the docs already worked out, not first instinct: fetch `llms.txt` and read
-*Ten kinds of nodes* for the node-kind map itself, *Designing reliable workflows* for when splitting a step,
-branching into `parallel`, looping on a critic, or building a judge panel actually earns its cost — none of
-them buy reliability just by existing, and reaching for one without a real boundary is a documented
-anti-pattern, not a safe default — and, whenever an attachment or a generated image, audio or video sits
-anywhere in the flow, *Media has real limits on both sides of a model call*, since a provider's cap can
-decide the whole flow's shape before a node is written, not just one step's. This is the same research the
-top of this file already tells you to fetch before answering an unfamiliar question; use it here too, before
-the flow exists, not only after something breaks.
+Before proposing a shape, read `FINDINGS.md` and use what the docs already worked out, not first instinct: fetch
+`llms.txt` and read *Ten kinds of nodes* for the node-kind map, *Designing reliable workflows* for when splitting a
+step, branching into `parallel`, looping on a critic, or building a judge panel actually earns its cost — none of them
+buy reliability just by existing, and reaching for one without a real boundary is a documented anti-pattern — and,
+whenever an attachment or a generated image, audio or video sits anywhere in the flow, *Media has real limits on both
+sides of a model call*, since a provider's cap can decide the whole flow's shape before a node is written.
 
 Settle these for the whole flow, then for each step. Ask them in one message, not one at a time, and ask only what
 the request has not already answered.
@@ -137,7 +134,8 @@ the request has not already answered.
 | Purpose | one sentence: what comes in, what goes out, who reads the result |
 | Input | the fields of the request and their types |
 | Output | the fields the caller gets back; a workflow with no declared output is not finishable |
-| Done | how a person tells a good result from a bad one — this becomes the dataset and the experiment's checks |
+| Done | how a person tells a good result from a bad one, as a check and a number: "the intent matches the lead's label in more than 90% of cases" — this becomes the dataset, the checks and the questions of the experiments |
+| Budget | what a series may spend and what one run may cost — this becomes `cap_usd` and the cost thresholds |
 
 | For each step | What you need |
 |---|---|
@@ -155,147 +153,262 @@ Write the files only when you have the answers. Order: types first, then agents 
 one wrong type reference is cheaper to fix before ten nodes reference it.
 
 **A passing `aqven check` is not a finished flow.** It proves the wiring is valid; it never runs a real model and
-never tells you whether the flow actually does its job. Do not stop at `flow.yaml` and call the flow built —
-finish these two before you do:
+never tells you whether the flow does its job. The flow is finished when the loop below says so.
 
-- A dataset under `datasets/` with `flow: <flow_id>`, with one case per situation this flow will actually meet in
-  its own domain: one per `switch` case or decision path from the Decisions column above, one per failure mode
-  from the Failure column, plus the ordinary case each of those is a variation on. Three near-identical
-  happy-path rows are not a dataset — a support-ticket triage flow needs an angry customer, a calm one, one in
-  the wrong language, and one where the only right answer is "escalate to a human," not four polite refund
-  requests. Write real, specific values for this flow's actual niche, not placeholders like "test input 1".
-- An experiment `experiments/<experiment_id>/experiment.yaml` whose `subject` is that flow and whose `cases` are
-  that dataset, with `checks` on what every `llm` node produces — at least the cheap built-in evaluators that fit
-  (`expected` against the case's `expected_output`, `not_empty`, `no_pii`, `language`, `max_words`, `regex`,
-  `ids_in_allowed_set`; see *The development loop* below before reaching for a judge). Start with
-  `question: {kind: look}`, run it with `series_start` on `dev`, and sharpen the question once you know which number
-  decides. An `llm` node no check covers is a
-  step nobody has actually checked, no matter how many times `aqven check` passes.
+## From a task to a reliable flow
 
-A flow without cases cannot be measured, and an idea nobody wrote cases for is usually still an idea.
+A developer gives you a task: you build the flow, run it, check it, run experiments on it, and repeat until the
+findings show it works reliably. Run the loop yourself, round after round, and stop only where *When to stop* says.
+`aqven check` proves the wiring, one run proves one case, and only a series on `holdout` proves a claim. In `llms.txt`,
+*How an agent takes a task to a reliable flow* walks the same loop with examples.
 
-## The development loop
-
-"Make it good" is not a stopping condition. Fix what good means **before** you start changing things, or you will
-edit until you run out of patience instead of until the flow works.
-
-**1. Write the target.** A dataset of real cases, then an experiment that says what you want to learn from them.
-Both are files, and the question comes before any result.
-
-| What you want to know | How |
+| Stage | Move on when |
 |---|---|
-| Whether the wiring is right | `aqven check`: static rules plus a simulated run, no tokens |
-| What the flow does on one real case | `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"`, then `run_get` and `run_events` |
-| How the output looks on a few cases, side by side | an experiment with `question: {kind: look}`, or `series_start` with `look` and named cases: no verdict |
-| Whether a failure stays rare enough | `question: {kind: threshold}` with `metric`, `below` or `above`, and a `margin` |
-| Whether a change or another agent is better | two variants and `question: {kind: compare}` with `baseline`, `candidate`, `primary`, `margin` |
-| Whether a cheaper agent is not worse | `question: {kind: noninferior}`, with `guardrails` on cost or latency |
-| Whether a judge can be trusted | an experiment on cases with planted defects, named in the judge check's `validated_by` |
+| 1. Contract | purpose, input, output, a measurable "done" and a budget are agreed (*Building a flow from an idea*) |
+| 2. Simplest flow | one `llm` step per real decision, `code` for the rest; `aqven check` is clean; `aqven prompt preview` is read for every `llm` node |
+| 3. Cases | the dataset of *Cases and checks* exists with `expected_output` and tags; `aqven check` is clean |
+| 4. Look | a `look` experiment with deterministic checks ran on `dev`, and every failing case is read |
+| 5. Error analysis | every failure has its first failing node and a failure mode, and new failing traces stop adding modes |
+| 6. Fix the spec | what the prompt or the type never asked for is fixed there, then stage 4 again |
+| 7. Hypotheses | one experiment per remaining failure mode, its question and margin written before you see a number |
+| 8. Explore | series on `dev`, one change between series, until the change is done and the question is frozen |
+| 9. Confirm | one series on `holdout`, with `cases` from the estimate's `recommended.cases` when the split has them |
+| 10. Apply | the flow is changed, regression cases are added, the decision is recorded; then stage 4 on fresh cases, or stop |
 
-Every row from `look` down is answered by a series of that experiment: see *Experiments and series* below.
+Studio calls the two splits by their purpose. **Explore** runs working cases (`dev`): numbers without a finding.
+**Confirm** runs held-out cases (`holdout`): a verdict written to `FINDINGS.md`. "Run again on fresh cases" is a
+`holdout` series at the `plan` size.
 
-An experiment is `experiments/<experiment_id>/experiment.yaml`; its id is the folder name, and notes for people go
-into `experiment.md` beside it. `__package__/experiments/` has one for every question kind and every kind of variant, so
-start from the closest. Its keys:
+### Finding what to test
 
+- Take the failing node from the run, not from reading the output. A failing case row of `series_get` carries each
+  attempt's `run_id`, `error` and `failed_checks`; `run_get` and `run_events` on that `run_id` show the first node
+  that failed. Fix the first failure upstream: later ones often cascade from it. In a multi-step flow, count failures
+  by (last node that succeeded, first node that failed) and start with the biggest cell.
+- Write one free-text note per failing trace about its first failure, then group the notes into failure modes: an id,
+  a one-line definition, a count, two or three `run_id`s. Keep them under "Failure modes" in the `experiment.md` of
+  the look experiment. The id becomes the `failure_mode` of every experiment that tests it, and the section of
+  `FINDINGS.md` its findings land in. Stop grouping when about 20 more failing traces add no new mode; few failures
+  means you need harder cases, not less reading.
+- Not everything deserves an experiment. The prompt or the type never asks for the behaviour: fix the prompt. An empty
+  or literal placeholder in `prompt preview`: fix the binding. An infrastructure error: fix keys, limits or code. Only
+  a failure on behaviour the flow clearly asks for becomes a hypothesis.
+- Rank the modes by count, then by harm, and test the riskiest first. Never write hypotheses from a generic list
+  ("hallucination", "toxicity") before you have read traces.
+
+| Category | Claim to test | Setup |
+|---|---|---|
+| Output contract and limits | agent A on step S passes its output contract in fewer than X of attempts | `threshold` on `success_rate` `below`, `variant: A`, range `from: S, to: S`; read `schema_valid_first_try`; cases that push fields to their limits; run `aqven models shapes <agent> --live` first |
+| Instruction following | instruction I of the prompt is broken more often than X | one binary check per instruction (`regex`, `language`, `max_words`, `no_pii`, `run:`), `threshold` `above` |
+| Long or noisy input | on `length: very_long` the right answer drops below X; condensing first beats one step | `threshold` with `cases.tags` on one level; `compare` of two arms |
+| Class boundaries | cases where the opening topic differs from the intent are decided right less than X | `expected` on the label field, cases selected by tags; write the label first, then the text |
+| Error propagation | a wrong output of S1 reaches the flow output; the checking step notices it but fixes it wrong | a range that starts after S1, a wrong S1 output planted in the case `node_outputs`; two checks: "noticed" and "final output right" |
+| Tool use | with a missing parameter the step invents a value more often than X | checks see the subject output, `node_outputs` and the inputs, not tool calls inside an `llm` step: grade the result, read the calls in `run_events` |
+| Judge reliability | judge J catches more than X of planted defects and passes more than Y of clean answers | an arm that runs the judge on clean answers and copies with one planted defect, `expected` on the label (the experiment `critique_planted_defects`) |
+| Cost and latency | a variant stays under $X per case, or p95 under Y ms | `threshold` on `cost_usd` or `latency_p95_ms` `below`, on the longest cases; p95 needs about 20 attempts |
+| Stability | a share of cases passes only sometimes | `repeats: 3` or more, read `stability` and `pass_k`; an A/A pair (two identical variants, `compare`, `margin: 0`) gives the noise floor (the experiment `panel_aa_noise`) |
+| Agent per step | agent B on step S is not worse than A by more than m, and a pass costs less | `noninferior` on the range `from: S, to: S`, guardrails `cost_of_pass`, `schema_valid_first_try`, `latency_p95_ms`; downgrade one step at a time |
+| Split a step | a chain S1 → S2 beats one call by more than m, and not just by calling more | `compare` against an arm of equal budget (a `parallel` of k identical `llm` branches and a `code` majority vote), with the single step as a third variant; guardrail `cost_of_pass` `relative: true` |
+
+### Writing an experiment
+
+An experiment is `experiments/<experiment_id>/experiment.yaml`; its id is the folder name. `__package__/experiments/` has
+one for every question kind and every kind of variant: start from the closest.
+
+```yaml
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "gemini on triage keeps its output contract in fewer than 95% of attempts, with gpt on the same inputs as the reference"
+failure_mode: "triage_contract_broken"
+subject:
+  flow: "support_case"
+  from: "triage"
+  to: "triage"
+cases:
+  dataset: "support_case_cases"
+variants:
+- id: "gemini"
+- id: "gpt"
+  agents:
+    triage: "gpt"
+question:
+  kind: "threshold"
+  metric: "success_rate"
+  variant: "gemini"
+  below: 0.95
+  margin: 0.02
+plan:
+  cases: 12
+  repeats: 3
+```
+
+- `description` — one falsifiable sentence with its number: what fails, where, how often. Write it so that
+  `confirmed` means exactly this sentence is true. Studio shows it as the Hypothesis, or the Goal of a look.
+- `failure_mode` — the id of the failure mode it tests; `FINDINGS.md` groups findings by it.
 - `subject` — what runs: `flow: <flow_id>`, optionally narrowed to a range of top-level nodes with `from` and `to`
-  (the nodes above the range take their outputs from the case's `node_outputs`), or `arm: <arm_id>` — a small flow
-  of two to five steps in `experiments/<experiment_id>/arms/<arm_id>/flow.yaml` that only this experiment runs. One
-  `llm` step with one agent is an arm of one step.
-- `cases` — `dataset: <dataset_id>`, optionally `tags: {<dimension>: <value>}` to select cases by their `tags`. A
-  case's `name` is its key and is unique in the dataset.
-- `variants` — what differs between attempts: `agents: {<node_id>: <agent_id>}` or another `arm`. A variant never
-  names a bare model: the agent carries the model, its settings and its output mode. A variant with only an `id` is
-  the subject as written.
-- `checks` — scored on every attempt, each with an `id` and `kind: binary | ordinal | continuous`. Cheapest first:
-  built-in `use:` — `expected` (against the case's `expected_output`), `not_empty`, `max_words`, `language`, `no_pii`,
-  `regex`, `unique_items`, `ids_in_allowed_set`, `citations_in_sources`, `cost_usd`, `latency_ms`; your own function
-  with `run:`; and only when nothing else fits, a model as judge with `inference:` and `agent:`. A judge costs tokens
-  on every attempt and has its own error — do not reach for it to check something `regex` can check. A judge check
-  carries `validated_by: <experiment_id>`, the experiment that measured it on planted defects; without it the judge
-  gives a signal, not evidence.
-- `question` — `look`, `threshold`, `compare` or `noninferior`. A metric is a check id or a series metric:
-  `success_rate`, `cost_usd`, `cost_of_pass`, `latency_p50_ms`, `latency_p95_ms`, `schema_valid_first_try`,
+  (the nodes above the range replay the case `node_outputs`, and variants swap agents only inside the range), or
+  `arm: <arm_id>` — a flow of two to five steps in `experiments/<experiment_id>/arms/<arm_id>/flow.yaml` or
+  `flow.py` that only this experiment runs. Test a structure as an arm before you build it into the flow.
+- `cases` — `dataset: <dataset_id>`, optionally `tags: {<dimension>: <value>}`: a case is selected when every listed
+  tag has that value.
+- `variants` — at least one. A variant with only an `id` is the subject as written; `agents: {<node_id>: <agent_id>}`
+  swaps the agents of nodes; `arm: <arm_id>` runs another arm with the same input and output types, optionally with
+  `agents` too. A variant never names a bare model: a new candidate model is a new `agents/<agent>.yaml` with its
+  settings and output mode.
+- `checks` — scored on every attempt, each with an `id` and `kind: binary | ordinal | continuous`, and one of:
+  a built-in `use:` with `with:` — `expected` (against the case's `expected_output`, optionally only `fields`),
+  `not_empty`, `max_words`, `language`, `no_pii`, `regex`, `unique_items`, `ids_in_allowed_set`,
+  `citations_in_sources`, `cost_usd`, `latency_ms`; your own function with `run: "@root.<module>:<function>"`
+  (a `checks.py` beside the experiment is `@root.experiments.<experiment_id>.checks:<function>`; it reads
+  `context.metadata` for `case`, `tags`, `split`, `variant`, `repeat` and `node_outputs`); or a judge with
+  `inference:` and `agent:` plus `validated_by: <experiment_id>`, the experiment that measured it on planted defects.
+- `question` — the table below. A metric is a check id or a series metric: `success_rate` (the run completed and every
+  binary check passed), `cost_usd`, `cost_of_pass`, `latency_p50_ms`, `latency_p95_ms`, `schema_valid_first_try`,
   `infra_error_rate`.
-- `plan` — `cases` and `repeats` (at most 20): the series size you recommend, not a limit.
+- `plan` — `cases` and `repeats` (at most 20): the size you recommend. A series may run another size, and its
+  estimate says what size the question needs.
 
-**`aqven check` validates every experiment** before a series may run it: the subject and its range, the arms, the
-agents of every variant, the dataset and its tag filter, the references of the checks and the fields they read, the
-metric names, `validated_by`, an `expected_output` on every case an `expected` check reads, and the finding files.
-Write the experiment before you look at any number: it pins the question before the data. Then run it as a series
-(*Experiments and series* below); try a single case with `run_start` and `dataset_item_id` when you are hunting a bug.
+| `kind` | Keys | `confirmed` means |
+|---|---|---|
+| `look` | none | no verdict and no finding: every case with its checks, cost and trace |
+| `threshold` | `metric`, `below` or `above`, `margin`, optional `variant` | the 95% interval of the metric clears the bound by more than the margin; without `variant` every variant is tested and all must |
+| `compare` | `baseline`, `candidate`, `primary`, `margin` of 0 or more, optional `direction` and `guardrails` | the candidate beats the baseline on the same cases by more than the margin, and no guardrail is worse than its margin |
+| `noninferior` | the keys of `compare`, `margin` above 0 | the candidate is not worse than the baseline by more than the margin, and the guardrails hold |
 
-**2. Then the loop.**
+A guardrail is `metric`, `margin`, optional `direction` (`higher_is_better` or `lower_is_better`) and `relative: true`
+to read the margin as a share of the baseline. Pick the margin before you see data: the smallest effect worth changing
+the flow for, or the largest loss you accept.
 
-1. `aqven check` first, every time. It is free and finds broken wiring before a single token is spent.
-2. Change **one** thing. Two changes at once and you cannot tell which one moved the number.
-3. Measure with a series on `dev` over the same cases as last time. A new dataset means a new number, not a better
-   flow.
-4. Read the cases that failed (`series_get` with `include_cases: true`), not the average. The average hides the one
-   input that breaks everything.
-5. For a wrong `llm` output, run `prompt_preview` before touching the prompt. An empty or literal placeholder in the
-   message means the data wiring is wrong, and no rewording fixes that.
-6. Repeat from 2.
+### Cases and checks
 
-**3. Stop when the question is answered**, not when the output looks nice to you. The metric, its threshold or margin
-and the plan are written in `experiment.yaml` before you look at a result; do not move them afterwards. A handful of
-single-case runs is for finding bugs, not for deciding which agent is better. The answer is one series on `holdout`,
-run when the change is done; quote its verdict.
+- A dataset is `datasets/<dataset_id>.yaml` with `flow: <flow_id>`; only an arm subject runs a dataset without
+  `flow`. A case has a unique `name`, `inputs`, and as needed `expected_output`, `node_outputs` (outputs of the
+  top-level nodes a range skips) and `tags`.
+- Cover the situations the flow will meet in its own domain: one case per `switch` case or decision path, one per
+  failure the steps can hit, plus the ordinary case each is a variation on. A support triage needs an angry customer,
+  a calm one, one in the wrong language and one where the only right answer is "escalate", not four polite refund
+  requests. Write real values for this flow's niche, never "test input 1".
+- Pick about three dimensions aimed at the failure modes (length, opening topic, channel, rare enum value), write about
+  20 combinations yourself, generate the rest without duplicates, and turn each combination into an input in a
+  separate step. Never "generate N examples" in one prompt: it yields near-identical happy paths.
+- Answer first, input second: build the expected record, then the input from it, and store the record as
+  `expected_output`. Check the answer is recoverable from the input and there is no second plausible answer.
+- Tag every case with its dimensions. Add negative controls, cases where the failure must not happen: without them a
+  `refuted` means nothing and a check that fires on everything goes unnoticed.
+- The server splits cases 50/50 between `dev` and `holdout` by a hash of `name`, the same way in every clone: write
+  twice as many cases as you need on `holdout`. Never rename a case: a renamed case is a new one and may change sides.
+  A series with `cases: N` takes the first N of its split in file order.
+- A failing run becomes a case: `run_get` gives its input and the node outputs for `node_outputs`; Studio's "To
+  cases" on a run drafts the same case.
+- Every `llm` node gets at least one check on what it produces: a node no check covers is a step nobody has checked.
+- Checks, cheapest first: a series metric, a built-in `use:`, your own `run:` function, and only then a judge. Keep
+  them binary. A judge costs tokens on every attempt and has its own error; never use one where `regex` or code can
+  check. A judge that decides the question gives a `signal`, not evidence, until its check carries `validated_by`;
+  planted defects are easier than real ones, so its measured catch rate is an upper bound.
 
-**4. Lock the fix.** A bug you fixed without a case for it comes back. Add the failing input to the dataset with
-`tags` an experiment can select, and, in a project with `tests/`, a scenario test that pins the branch with
-`node_output` so the fix survives the next edit.
+### Running a series
 
-## Experiments and series
+A series runs an experiment live on the project server: every selected case for every variant, `repeats` times, and
+every attempt is an ordinary run with a trace that costs money. The `aqven` MCP server and `aqven series` start the
+server when needed.
 
-A series runs an experiment live: every selected case for every variant, `repeats` times, and every attempt is an
-ordinary run with a trace. It runs on the project server, which the `aqven` MCP server and `aqven series` start when
-needed, and every attempt calls the models and costs money.
-
-1. Write or edit `experiments/<experiment_id>/experiment.yaml` and run `aqven check` until it is clean. A series
-   refuses to start (`NOT_RUNNABLE`) on a project with errors, or when a case cannot run for a variant, before a
-   single model call.
-2. `series_start` with `{"experiment_id": "<experiment_id>", "on": "dev"}` (optionally `cases`, `repeats`, `cap_usd`)
-   returns at once with the estimate — dollars, minutes, the recommended number of cases — and the status.
-3. `series_get` with `{"series_id": "<series_id>", "wait_seconds": 50}` until the status settles; after a timeout it
-   returns the current snapshot, so call it again.
-4. Once the status is `done`, quote `verdict.text` as it is. The server writes it from the interval and the margin
-   declared in the file; do not restate the numbers in your own words, round them, or present a `signal` or an
-   `inconclusive` as a result. While a series runs, its verdict is provisional.
-5. `series_cancel` stops a series: queued attempts never start, model calls already running finish and are paid, and
-   no finding is written.
+1. `aqven check` is clean: a series refuses to start (`NOT_RUNNABLE`) on a project with errors, or when a case cannot
+   run for a variant, before a single model call.
+2. `series_start` returns at once with the estimate and the status; `series_get` with `wait_seconds` waits until the
+   status settles, and after a timeout returns the current snapshot, so call it again.
+3. Do not edit the flow, its agents and prompts, the experiment, the dataset or the code while a series runs: the
+   series ends `invalid` with `inputs_changed`.
+4. Once the status is `done`, quote `verdict.text` as it is. The server writes it from the interval and the margin in
+   the file; never restate, round or recompute the numbers, and never present a `signal` or an `inconclusive` as a
+   result. While a series runs, its verdict is provisional.
 
 | Status | What it means | What you do |
 |---|---|---|
 | `running` | attempts are running | `series_get` with `wait_seconds` again |
-| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd`, $1.00 by default) or unknown | tell the user: only a person approves the spend, in Studio or with `POST /api/series/<series_id>/approve`; there is no tool for it |
-| `waiting_human` | an attempt reached a `human` node | tell the user; the series continues once the node is answered |
-| `done` | finished; every question except `look` has a `verdict` | quote `verdict.text` |
-| `cancelled`, `failed` | stopped; no finding | read `error` |
+| `awaiting_approval` | the estimate is above the project spend cap (`research.spend_cap_usd`, $1.00 by default), unknown, or the series cap you passed is above it | tell the developer: only a person approves spend, in Studio; there is no tool for it; then `series_get` the same series |
+| `waiting_human` | an attempt reached a `human` node | tell the developer; the series continues once the node is answered |
+| `done` | finished; every question except `look` has a verdict | quote `verdict.text` |
+| `cancelled`, `failed` | stopped, no finding; `failed` means every attempt hit an infrastructure error | read `error` |
 
-**`dev` to search, `holdout` to decide.** The server splits every dataset in half by a hash of the case `name`, the
-same way in every clone of the project. Iterate on `dev` as often as you need: a series on `dev` gives at most a
-`signal`, never a finding, and `include_cases` shows its failing cases. Run `holdout` once, when the change is done and
-the question is fixed: `series_get` never shows holdout cases one by one, and every further look at the holdout cases
-is counted in the finding.
+| Verdict | Meaning | What you do |
+|---|---|---|
+| `confirmed` | the 95% interval clears the bound, or beats the baseline, by more than the margin | on `holdout`: apply it (*Applying a finding*) |
+| `refuted` | the effect is within the margin or reversed | drop the hypothesis; never read it as "no risk" |
+| `inconclusive` | the interval is too wide to decide | `below_mde`: write fresh cases and run a new `holdout` series at `recommended.cases`, never the same `holdout` again for another answer; `uninformative` or `no_discordance`: the cases are too easy or too hard to tell the variants apart, write boundary cases |
+| `signal` | the series ran on `dev` (`dev_split`), or the deciding check is a judge without `validated_by` (`judge_not_validated`) | a number to steer by, not a finding; for `judge_not_validated`, validate the judge first |
+| `invalid` | cancelled, stopped at its spend cap (`budget_cut`), `inputs_changed`, more than 5% infrastructure errors, or no data | fix the cause and run again |
 
-| Verdict | Meaning |
+**Spend.** The estimate carries `usd` with its `usd_source` (`history` of past series, provider `prices`, an upper
+`bound`, or `unknown`), `minutes`, `recommended` cases with its reason, `below_recommended` and warnings such as
+`short_of_cases` and `holdout_reused`. A series under the project cap starts at once; there is no estimate-only tool.
+Pass `cap_usd` to keep a series inside the budget agreed in stage 1: a series that reaches its cap stops `invalid`.
+`spend.unpriced_attempts` above 0 makes `spend.usd` a lower bound. You never approve spend or raise the project cap;
+report the spend of every round.
+
+### Reading a series
+
+- A failed attempt is either a result or noise. `schema_invalid` (`MODEL_SCHEMA_MISMATCH`, `MODEL_INVALID_JSON`,
+  `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_RETRIES_EXHAUSTED`), `model_fail` (a run-time check failed, the output was
+  truncated) and `refusal` are counted: the attempt fails `success_rate` and every binary check. `provider_error`,
+  `timeout`, `provider_key_missing`, `INTERNAL` and the like are infrastructure errors: not counted, and above 5% of
+  the attempts the series is `invalid`.
+- A counted failure is the engine working: it refuses invalid output instead of passing it on. The gemini agent
+  (`gemini-2.5-flash-lite`, `output.retries: 2`) on `support_case.triage` broke the `maxLength: 200` of an
+  observation three times in a row, the run ended `MODEL_RETRIES_EXHAUSTED`, and the series counted it against
+  that variant. That is a risk the experiment found, not a bug to hide: the first row of *Applying a finding* says
+  what to change.
+- Read the failing cases (`include_cases: true`: `dev` cases only, failing first, at most 50), not the average. The
+  average hides the one input that breaks everything.
+- Mean 0.8 can mean "a fifth of the cases always fail" (fix the step) or "every case fails a fifth of the time"
+  (retry with a check, or vote): read `stability` (always, never, flaky cases per variant) and `pass_k`, shown when
+  `repeats` is 2 or more. Do not lower the temperature to look stable; that tests another product.
+- A series on `holdout` never shows its cases one by one, and every further series on the same `holdout` cases is
+  counted in the finding ("Confirmed in 1 of 3 holdout looks").
+
+### Using what the project knows
+
+`FINDINGS.md` at the module root is generated from `experiments/*/findings/*.yaml`: one section per `failure_mode`,
+each finding with its state, experiment, statement, scope (split, cases × repeats, models, date) and a link. A series
+on `holdout` with a verdict other than `invalid` writes one finding and regenerates the file.
+
+- Read it before you design a flow, change one, or write a hypothesis. Build on what is `confirmed` (the agent it
+  confirmed for a step, the structure that won), and do not test it again unless the subject changed.
+- A finding holds for its scope only: the flow, prompts and models it ran. Nothing marks it stale when they change;
+  compare its models with `agents/` yourself, and after a change only a new `holdout` series speaks for the new flow.
+- `refuted` is not "safe", `inconclusive` is "nobody knows yet", and a `signal` is not evidence.
+- Name the finding path when you propose or make a change it supports. Never edit a finding or `FINDINGS.md`: a
+  finding carries a hash of its body (`E_FINDING_TAMPERED`) and `FINDINGS.md` must match them (`W_FINDINGS_STALE`).
+
+### Applying a finding
+
+| Finding | Change |
 |---|---|
-| `confirmed` | the 95% interval clears the bound, or beats the baseline, by more than the declared margin |
-| `refuted` | the effect is within the margin or reversed; never read it as "no risk" |
-| `inconclusive` | the interval is too wide to decide; `below_mde` means more cases, not another answer |
-| `signal` | the series ran on `dev`, or the deciding check is a judge without `validated_by` |
-| `invalid` | cancelled, stopped by the spend cap, inputs changed during the series, more than 5% infrastructure errors, or no data |
+| step S breaks its output contract | first check the limit is stated in the prompt; then another agent, more `output.retries`, or trimming in a `code` step; raise a limit only if the developer confirms it is not a requirement |
+| B is not worse and cheaper | point the node's `agent:` at B |
+| the chain beats the equal-budget arm | move the arm's nodes into the flow with `flow_patch`; there is no promote tool |
+| a risk is real but no fix is proven | a structural guard (a `code` check, a `switch`, a run-time `checks:` entry), then a new hypothesis "the guard keeps the risk below X" |
+| the judge passes its planted-defect test | add `validated_by: <experiment_id>` to every check that uses it |
 
-**Findings.** A series on `holdout` with a verdict other than `invalid` writes
-`experiments/<experiment_id>/findings/<series_id>.yaml` once and regenerates `FINDINGS.md` at the module root. Read
-`FINDINGS.md` before you propose a change: it is what this project already knows, with the cases, repeats and models
-each finding holds for. Never edit either file — a finding carries a hash of its body (`E_FINDING_TAMPERED`) and
-`FINDINGS.md` must match the findings (`W_FINDINGS_STALE`); to revise a finding, run a new series on `holdout`.
+After every change: keep the cases it fixes in the dataset with `tags: {regression: "yes"}` (and `regression_of:` with
+what broke), add a scenario test that pins the branch with `node_output` when the project has `tests/`, run
+`aqven check`, and run a `look` over the regression tag on `dev`. Record the decision under "Decision" in the
+experiment's `experiment.md`: the finding path, the quoted `verdict.text`, what changed in which files, and what risk
+is left; put the finding path in the commit message.
 
-A quick look at a few named cases needs no experiment: `series_start` with
-`{"look": {"flow_id": "<flow_id>", "dataset_id": "<dataset_id>", "case_names": ["<case_name>"]}}` runs them once
-each, with no verdict and no finding; `start_node` and `end_node` narrow it to a range of top-level nodes.
+### Never
+
+Change two things between series; fix a downstream failure before the first upstream one; drop hard cases so a
+finding passes; tune a prompt on `holdout` cases; move a metric, a threshold or a margin after the data came in
+(that is a new experiment); compare a multi-call arm only against a single call; use a judge where `regex` or code
+can check; weaken a type or a limit so a series passes; present a `dev` number as a finding.
+
+### When to stop
+
+Stop and report `FINDINGS.md`, your decisions, the spend and the risks left when every "done" criterion from stage 1
+is `confirmed` on `holdout` and the regression look is clean; or a fresh exploration round finds no failure mode seen
+twice; or two rounds in a row moved neither quality, `cost_of_pass` nor p95; or the needed N is out of reach and a
+guard is in place; or the agreed budget is spent. Stop and ask the developer when a series awaits approval, when
+several variants trade quality against cost, or when "done" turns out not to be measurable.
 
 ## How to read `aqven check`
 
@@ -313,6 +426,14 @@ not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `
 `E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `E_STRICT_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`,
 `W_GENERATED_STALE`.
 
+Experiments and datasets: `E_FLOW_UNKNOWN`, `E_ARM_UNKNOWN`, `E_RANGE_INVALID` (a `from`/`to` that is not a range of
+top-level nodes), `E_VARIANT_INVALID` (an agent swap outside the range), `E_AGENT_UNKNOWN`, `E_DATASET_UNKNOWN`,
+`E_DATASET_MISMATCH` (the dataset feeds another flow, or an arm's types differ from the subject's), `E_CASES_EMPTY` (the
+tag filter selects nothing), `E_CASE_DUPLICATE`, `E_EXPECTED_MISSING` (an `expected` check on a case without
+`expected_output`), `E_CHECK_PATH_UNKNOWN`, `E_METRIC_UNKNOWN`, `E_EXPERIMENT_UNKNOWN` (a `validated_by` that does not
+exist), `E_ID_DUPLICATE`, `W_PLAN_EXCEEDS_CASES`, `W_CHECK_CONTEXT_MISMATCH`, `W_JUDGE_INPUT_UNBOUND`,
+`E_FINDING_TAMPERED`, `W_FINDINGS_STALE`.
+
 The hooks in `.claude/settings.json` run `aqven check --static` after every file edit and the full `aqven check` when
 you stop, so a broken tree comes back to you instead of reaching a commit.
 
@@ -320,8 +441,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 
 | Command | What it does |
 |---|---|
-| `corepack pnpm dev` from the repository root | shared development stack: backend Python reload, Lumen file watching, Studio Vite reload; reuse an already running stack |
-| `uv run aqven dev __package__` | standalone aqven server for isolated CLI work; do not start beside the shared development stack |
+| `uv run aqven dev __package__` | project server, file watching, Studio in the browser; a server already running for the project is reused |
 | `uv run aqven check __package__` | static check plus a simulated run of every flow |
 | `uv run aqven check --static __package__` | static check only, without the simulated runs |
 | `uv run aqven prompt preview support_case.polish__revise --project __package__` | the exact messages that llm node sends to the model |
@@ -330,9 +450,10 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven models shapes <agent> --project __package__ --live` | the agent model's real nesting depth, list length and enum size; billed, requires `--live` |
 | `uv run aqven secrets __package__` | every provider, tool and MCP secret the project declares, where it comes from, and a masked tail if it's set |
 | `uv run aqven generate __package__` | writes `__package__/types.py` |
-| `uv run aqven tree __package__` | entities by kind with their files |
+| `uv run aqven tree __package__` | entities by kind with their files, experiments and arms included |
 | `uv run aqven run support_case --root __package__ --input __package__/samples/case_request.json` | runs a flow without a server |
-| `uv run aqven series reply_look --path __package__` | runs a series of an experiment on the project server and waits for its verdict; `--on holdout` for a finding; exit code 3 means a person has to approve the spend |
+| `uv run aqven series reply_look --path __package__` | runs a series of an experiment on `dev` and waits for its verdict; `--on holdout`, `--cases N`, `--repeats R`, `--cap USD`; `--json` prints the final state with the case rows as one JSON line |
+| exit codes of `aqven series` | 0 the series is `done`, whatever the verdict; 1 `cancelled`, `failed` or no answer from the server; 2 a refused request (`NOT_RUNNABLE`, `NOT_FOUND`); 3 awaits a person's approval of the spend; 4 waits for a human answer |
 | `uv run aqven mcp __package__` | MCP over stdio, registered in `.mcp.json` |
 | `uv run python -m __package__` | the same server from the project's own entry point |
 | `uv run pytest` | offline tests |

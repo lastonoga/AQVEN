@@ -117,6 +117,27 @@ a model's output, gets for free. The same requirement also pins down field order
 `rationale` is written before the `scores` it's supposedly justifying, so the verdict gets argued into
 existence rather than decided first and rationalized afterward.
 
+## Measure the choice instead of arguing it
+
+These judgment calls don't have to stay opinions. Each one is a question an experiment can answer on your
+own cases, and the showcase has one for most of them:
+
+| The choice | The showcase experiment | Its question |
+|---|---|---|
+| a split step: condense first, then classify | `intent_split_long_messages` | `compare`: the two-step arm against the one-step arm, at most 50% dearer per correct intent |
+| a second vote on the evidence | `intent_ballot_pair` | `compare`: a pair of ballots settled by confidence against one ballot, with valid first outputs as a guardrail |
+| a three-judge panel or one judge | `panel_single_judge` | `compare` on median latency, with the winner and the success rate as guardrails |
+| which model breaks the tie | `judge_panel_agents` | `compare`: a DeepSeek tie-break against the gpt one, at most 30% dearer per correct pick |
+| how independent a critic is | `critique_recall_by_agent` | `threshold`: each critic agent stops more than 80% of replies with a planted defect |
+| how noisy the panel is on its own | `panel_aa_noise` | `compare` of two identical runs with margin 0: the noise floor every panel comparison has to beat |
+
+The first two compare a structure that calls the model more often against a single call. A win there can
+come from calling more, not from the structure. Before you credit the structure, add a variant with the
+same budget, for example k identical calls in a `parallel` and a `code` majority vote. The server doesn't
+check call counts for you.
+[How to write an experiment](/engine/experiments/) covers the file, and
+[How a series decides](/concepts/how-a-series-decides/) covers the verdict.
+
 ## Watch out for
 
 - A `loop` with no `stop:` policy — it runs to `max_iter` on every case, spending the same passes whether
@@ -145,6 +166,8 @@ score, or genuine independence justifies its cost, and skip it where it wouldn't
 
 - [How to branch into parallel steps](/engine/parallel-node/) — the `parallel` node's fields and its four
   built-in join policies, including `quorum`.
+- [How to write an experiment](/engine/experiments/) — measuring a split, a panel or a critic on your own
+  cases.
 - [How to repeat a step with a limit](/engine/loop-node/) — the `loop` node's fields, its `stop` and
   `select` policies, and the full `polish` example this page draws its critic-loop judgment from.
 - [How to route by a value](/engine/switch-node/) — the node kind `judge_panel`'s `decide` step uses to

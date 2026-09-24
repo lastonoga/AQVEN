@@ -53,6 +53,7 @@ export default defineConfig({
               items: [
                 { slug: "start/quickstart" },
                 { slug: "start/engineering-loop-walkthrough" },
+                { slug: "start/a-day-with-aqven" },
                 { slug: "start/where-next" },
               ],
             },
@@ -88,7 +89,12 @@ export default defineConfig({
             },
             {
               label: "Checks & experiments",
-              items: [{ slug: "engine/custom-evaluator" }],
+              items: [
+                { slug: "engine/experiments" },
+                { slug: "engine/run-a-series" },
+                { slug: "engine/read-a-series" },
+                { slug: "engine/custom-evaluator" },
+              ],
             },
             {
               label: "CLI tooling",
@@ -124,10 +130,11 @@ export default defineConfig({
               ],
             },
             {
-              label: "Test",
+              label: "Cases & research",
               items: [
-                { slug: "studio/datasets" },
+                { slug: "studio/cases" },
                 { slug: "studio/research" },
+                { slug: "studio/series" },
               ],
             },
             {
@@ -152,12 +159,18 @@ export default defineConfig({
               ],
             },
             {
-              label: "Edit, check & test",
+              label: "Edit, check & run",
               items: [
                 { slug: "mcp-cli/edit-a-flow" },
                 { slug: "mcp-cli/preview-a-prompt" },
                 { slug: "mcp-cli/check-and-test" },
                 { slug: "mcp-cli/runs" },
+              ],
+            },
+            {
+              label: "Experiments",
+              items: [
+                { slug: "mcp-cli/research-loop" },
                 { slug: "mcp-cli/experiments-and-series" },
               ],
             },
@@ -207,6 +220,13 @@ export default defineConfig({
                 { slug: "concepts/finding-the-node-that-went-wrong" },
                 { slug: "concepts/two-ways-to-change-a-project" },
                 { slug: "concepts/designing-reliable-workflows" },
+              ],
+            },
+            {
+              label: "Experiments",
+              items: [
+                { slug: "concepts/experiments-series-and-findings" },
+                { slug: "concepts/how-a-series-decides" },
               ],
             },
           ],

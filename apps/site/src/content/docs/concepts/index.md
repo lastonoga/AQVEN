@@ -13,7 +13,9 @@ which of the three prompt levels, the five cases of a dynamic input or output sh
 outcomes, retries, redaction — every time a model is called. **Debugging and changing a project** covers
 the engineering loop from an unexpected result to a verified fix, how to address the exact step that went
 wrong inside a parallel branch or a loop, the two ways to change a project's files, and how to decide
-whether a step should be split, diverge, or get a critic loop in the first place.
+whether a step should be split, diverge, or get a critic loop in the first place. **Experiments** covers
+how a flow proves it works: experiments, series and findings, working and held-out cases, what a series
+costs, and how a series turns intervals and margins into a verdict.
 
 - [What this is built on](/concepts/what-this-is-built-on/)
 - [A run survives a process crash](/concepts/run-survives-a-crash/)
@@ -27,3 +29,5 @@ whether a step should be split, diverge, or get a critic loop in the first place
 - [Finding the node where a workflow went wrong](/concepts/finding-the-node-that-went-wrong/)
 - [Two ways to change a project](/concepts/two-ways-to-change-a-project/)
 - [Designing reliable workflows](/concepts/designing-reliable-workflows/)
+- [Experiments, series and findings](/concepts/experiments-series-and-findings/)
+- [How a series decides](/concepts/how-a-series-decides/)

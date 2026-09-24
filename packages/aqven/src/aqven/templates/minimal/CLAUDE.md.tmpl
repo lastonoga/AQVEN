@@ -11,16 +11,31 @@ fetches the project for you, on purpose.
 | See what a prompt really sends | `prompt_preview` |
 | Run and watch | `run_start`, then `run_get` and `run_events`; also `run_list`, `run_get_node`, `run_resume`, `run_fork`, `run_cancel` |
 | Try one dataset case | `run_start` with `dataset_item_id: "<dataset_id>/<case_name>"` |
-| Measure an experiment | write `experiments/<id>/experiment.yaml` and `aqven_check` it, then `series_start` on `dev` and `series_get` with `wait_seconds`; `series_cancel` stops one; run `holdout` once, for the deciding series |
-| Look at a few named cases | `series_start` with `look: {flow_id, dataset_id, case_names}`: no verdict, no finding |
+| Look at a few named cases, no experiment | `series_start` with `{"look": {"flow_id": "<flow_id>", "dataset_id": "<dataset_id>", "case_names": ["<case_name>"]}}`; `start_node` and `end_node` narrow it to a range; no verdict, no finding |
+| Explore an experiment | `series_start` with `{"experiment_id": "<experiment_id>", "on": "dev"}` |
+| Confirm it, once | `series_start` with `{"experiment_id": "<experiment_id>", "on": "holdout", "cases": <recommended.cases>}` |
+| Wait and read | `series_get` with `{"series_id": "<series_id>", "wait_seconds": 50, "include_cases": true}` |
+| Stop a series | `series_cancel` with `{"series_id": "<series_id>"}` |
+| Find where an attempt failed | `run_get` and `run_events` with the attempt's `run_id` from the case rows |
 | What the project already knows | read `FINDINGS.md` at the module root and `experiments/<id>/findings/`; never edit them |
+
+`series_start` also takes `repeats` (at most 20), `cap_usd` and `client_op_id`, and returns at once with the status
+and the `estimate`: `usd` and `usd_source`, `minutes`, `recommended` (`cases`, `repeats`, `reason`, `text`),
+`below_recommended`, `needs_approval`, `cap_usd` and `warnings`. `series_get` waits at most 50 seconds per call;
+`include_cases` adds rows for `dev` cases only, failing first, at most 50, with `hidden_cases` for the rest. Its
+`series` carries `verdict` (`state`, `reason`, `text`), `matrix`, `thresholds`, `contrasts`, `stability`,
+`aggregates` (with `pass_k` and `infra_errors`), `spend` and `finding_path`.
+
+A look accepts at most 500 case names and runs them whatever their split, but `include_cases` shows only the `dev`
+ones: name `dev` cases.
+
+Quote a series verdict exactly as `series_get` returns it in `verdict.text`. A series whose estimate is above the
+project spend cap waits in `awaiting_approval`: only a person approves it, in Studio; there is no tool for that. Once
+approved, `series_get` the same `series_id`: `aqven series` exits with 3 at that point and never attaches to an
+existing series.
 
 `flow_patch` takes `expects[{path, file_hash}]`: `"sha256-"` plus the sha256 of the current bytes of every file the
 operations touch. Compute it yourself from the file you just read.
-
-Quote a series verdict exactly as `series_get` returns it in `verdict.text`. A series whose estimate is above the
-project spend cap waits in `awaiting_approval`: only a person approves it, in Studio or with
-`POST /api/series/<series_id>/approve`; there is no tool for that.
 
 The hooks in `.claude/settings.json` run `aqven check --static` after each file edit and the full `aqven check`
 (static plus the simulated runs) when you stop, and hand you their diagnostics.
