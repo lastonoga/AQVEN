@@ -89,5 +89,6 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `DELETE` | `/api/chat/sessions/{session_id}` | `chat_session_close` |
 | `POST` | `/api/chat/sessions/{session_id}/messages` | `chat_message_send` |
 | `GET` | `/api/chat/sessions/{session_id}/events` | `chat_events` |
+| `GET` | `/api/chat/sessions/{session_id}/transcript` | `chat_transcript` |
 | `POST` | `/api/chat/sessions/{session_id}/approvals/{approval_id}` | `chat_approval_answer` |
 | `POST` | `/api/chat/sessions/{session_id}/interrupt` | `chat_interrupt` |

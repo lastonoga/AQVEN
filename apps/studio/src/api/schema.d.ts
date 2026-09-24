@@ -552,8 +552,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Server-sent stream of spec changes
-         * @description A text/event-stream that stays open and pushes a frame per spec change; it is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.
+         * Server-sent stream of project changes: spec files and research
+         * @description A text/event-stream that stays open and pushes a frame per spec change and per research fact: a series started, its progress at most once a second, a status change, a finding written, an experiment's files changed. It is not a schema document and a plain request to it never completes. Each frame carries one SpecEvent as data, its type as the event name and its seq as the id; resume with after_seq or Last-Event-ID. The JSON Schema of every event is at GET /api/schemas/events.
          */
         get: operations["spec_events"];
         put?: never;
@@ -3709,6 +3709,30 @@ export interface components {
         };
         /** @enum {string} */
         ExecutionStatus: "pending" | "running" | "ok" | "failed" | "skipped" | "suspended" | "cancelled";
+        /** @enum {string} */
+        ExperimentChangeKind: "added" | "modified" | "deleted";
+        /** ExperimentChanged */
+        ExperimentChanged: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "experiment_changed";
+            /** Experiment Id */
+            experiment_id: string;
+            change: components["schemas"]["ExperimentChangeKind"];
+            /** Paths */
+            paths: string[];
+        };
         /** ExperimentDetailView */
         ExperimentDetailView: {
             /** Experiment Id */
@@ -3963,6 +3987,29 @@ export interface components {
             ops: components["schemas"]["JsonValue"][] | null;
             /** Summary */
             summary: string;
+        };
+        /** FindingWritten */
+        FindingWritten: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "finding_written";
+            /** Experiment Id */
+            experiment_id: string;
+            /** Series Id */
+            series_id: string;
+            /** Paths */
+            paths: string[];
         };
         /** @enum {string} */
         FinishedExecutionStatus: "ok" | "failed" | "skipped" | "cancelled";
@@ -6710,6 +6757,35 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** SeriesProgressEvent */
+        SeriesProgressEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_progress";
+            /** Done */
+            done: number;
+            /** Total */
+            total: number;
+            /** Spend Usd */
+            spend_usd: string;
+        };
         /** SeriesSpend */
         SeriesSpend: {
             /** Usd */
@@ -6774,11 +6850,62 @@ export interface components {
             finished_at: string | null;
             estimate: components["schemas"]["SeriesEstimate"];
         };
+        /** SeriesStartedEvent */
+        SeriesStartedEvent: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_started";
+            status: components["schemas"]["SeriesStatus"];
+            /** Total */
+            total: number;
+        };
         /**
          * SeriesStatus
          * @enum {string}
          */
         SeriesStatus: "awaiting_approval" | "running" | "waiting_human" | "done" | "cancelled" | "failed";
+        /** SeriesStatusChanged */
+        SeriesStatusChanged: {
+            /** Seq */
+            seq: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Tree Hash */
+            tree_hash: string;
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "series_status_changed";
+            status: components["schemas"]["SeriesStatus"];
+            previous: components["schemas"]["SeriesStatus"] | null;
+        };
         /** SeriesStatusEvent */
         SeriesStatusEvent: {
             /** Seq */
@@ -6908,7 +7035,7 @@ export interface components {
             /** Id */
             id: string | null;
         };
-        SpecEvent: components["schemas"]["FilesChanged"] | components["schemas"]["DiagnosticsChanged"] | components["schemas"]["SpecResync"];
+        SpecEvent: components["schemas"]["FilesChanged"] | components["schemas"]["DiagnosticsChanged"] | components["schemas"]["SpecResync"] | components["schemas"]["SeriesStartedEvent"] | components["schemas"]["SeriesProgressEvent"] | components["schemas"]["SeriesStatusChanged"] | components["schemas"]["FindingWritten"] | components["schemas"]["ExperimentChanged"];
         /**
          * SpecKind
          * @enum {string}
@@ -7557,6 +7684,8 @@ export type SchemaExampleSpec = components['schemas']['ExampleSpec'];
 export type SchemaExecutionAddress = components['schemas']['ExecutionAddress'];
 export type SchemaExecutionDetail = components['schemas']['ExecutionDetail'];
 export type SchemaExecutionStatus = components['schemas']['ExecutionStatus'];
+export type SchemaExperimentChangeKind = components['schemas']['ExperimentChangeKind'];
+export type SchemaExperimentChanged = components['schemas']['ExperimentChanged'];
 export type SchemaExperimentDetailView = components['schemas']['ExperimentDetailView'];
 export type SchemaExperimentFilesView = components['schemas']['ExperimentFilesView'];
 export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
@@ -7576,6 +7705,7 @@ export type SchemaFileEntry = components['schemas']['FileEntry'];
 export type SchemaFileKind = components['schemas']['FileKind'];
 export type SchemaFileRef = components['schemas']['FileRef'];
 export type SchemaFilesChanged = components['schemas']['FilesChanged'];
+export type SchemaFindingWritten = components['schemas']['FindingWritten'];
 export type SchemaFinishedExecutionStatus = components['schemas']['FinishedExecutionStatus'];
 export type SchemaFlowDetail = components['schemas']['FlowDetail'];
 export type SchemaFlowIr = components['schemas']['FlowIr'];
@@ -7794,11 +7924,14 @@ export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
 export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
 export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
 export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
+export type SchemaSeriesProgressEvent = components['schemas']['SeriesProgressEvent'];
 export type SchemaSeriesSpend = components['schemas']['SeriesSpend'];
 export type SchemaSeriesSplit = components['schemas']['SeriesSplit'];
 export type SchemaSeriesStartRequest = components['schemas']['SeriesStartRequest'];
 export type SchemaSeriesStarted = components['schemas']['SeriesStarted'];
+export type SchemaSeriesStartedEvent = components['schemas']['SeriesStartedEvent'];
 export type SchemaSeriesStatus = components['schemas']['SeriesStatus'];
+export type SchemaSeriesStatusChanged = components['schemas']['SeriesStatusChanged'];
 export type SchemaSeriesStatusEvent = components['schemas']['SeriesStatusEvent'];
 export type SchemaSeriesSummaryView = components['schemas']['SeriesSummaryView'];
 export type SchemaSeriesVerdict = components['schemas']['SeriesVerdict'];
