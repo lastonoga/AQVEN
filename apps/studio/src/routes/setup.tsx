@@ -16,13 +16,8 @@ export const Route = createFileRoute("/setup")({
   validateSearch: validateSetupSearch,
   loaderDeps: ({ search: { step } }) => ({ step }),
   loader: async ({ context: { api }, deps }) => {
-    const step = deps.step ?? SETUP_STEPS[0]
-    const [project, flows] = await Promise.all([
-      api.project.info(),
-      api.project.flows(),
-    ])
-    const providers = step === "providers" ? await api.settings.providers() : []
-    return { project, providers, flows, step }
+    const [project, flows] = await Promise.all([api.project.info(), api.project.flows()])
+    return { project, flows, step: deps.step ?? SETUP_STEPS[0] }
   },
   component: OnboardingScreen,
 })

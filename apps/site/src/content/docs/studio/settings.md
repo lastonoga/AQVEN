@@ -1,47 +1,49 @@
 ---
-title: How to check Studio's settings
-description: What each of Studio's five settings sections shows, and the one control among them that actually changes anything.
+title: How to use Studio settings
+description: Add the model keys your workflows need, connect your coding agent, check the Studio chat sign-in, and update AQVEN, all from one Settings page.
 ---
 
 ## When you need this
 
-Use this when you want to confirm which project Studio is serving, whether your chat agent is signed
-in, which model keys and secrets actually resolve, how to connect another MCP client to this project,
-or how to update. Almost everything on this screen is a status display or a copy-paste command — only
-one control on it changes anything.
+Use this right after `{{CLI_COMMAND}} new`, the first time you open Studio: you want working model
+keys, your coding agent connected to the project, and the Studio chat signed in. Come back later to
+replace a key or to update AQVEN.
 
 ## Steps
 
-- Open the dropdown at the top of the [chat panel](/studio/chat/) — the same one you use to switch
-  flows and threads — and click **Studio settings**. A dialog opens with five sections listed down the
-  left: Project, Chat agent, Model keys, MCP connections, Updates.
-- **Project** shows the folder Studio was launched in, the package name, the engine version, the paths
-  to the project's `aqven.yaml` and lock file, the index status (`ready`, `building`, or `degraded`),
-  and a problem count of errors, warnings, and info. Below that, a command to open a different project
-  by running Studio again in its own folder. All of it is read-only.
-- **Chat agent** is the one section with something to click: a switch between **Claude Agent** and
-  **Codex**. Changing it only decides which backend the next new thread starts against — any thread
-  you already have open keeps running on the backend it started with. Below the switch, a status
-  readout for whichever backend is selected: sign-in state, sign-in method (subscription or API key),
-  account, and any extra detail, with a **Check again** button that re-runs the check rather than
-  changing anything.
-- **Model keys** holds two panels. The first, also called Model keys, lists one row per model provider
-  a node in this project can call. The second, Project secrets, lists one row per secret a tool or MCP
-  server in this project declares. Both show a masked value (or "not set") and whether it resolved
-  from the process environment or the project's `.env` file — the same rows, in the same shape, as the
-  CLI's [`secrets`](/engine/secrets/) report. There's no field here to type a key into.
-- **MCP connections** shows this project's own AQVEN MCP server address and how it authenticates,
-  plus two copy-paste snippets for connecting an external agent to that same server: one command for
-  Claude Code, one JSON block for stdio clients like Cursor or Claude Desktop.
-- **Updates** shows the installed engine version and two copy-paste commands for upgrading it, one for
-  `uv`, one for `pip`.
-- Nothing on Project, Model keys, MCP connections, or Updates has a form to fill in. If a key or secret
-  shows as not set, setting it isn't something you do on this screen — see
-  [How to manage secrets](/engine/secrets/) below.
+- Click the gear at the right end of Studio's top bar. **Settings** opens as one page. The line under
+  the title names the project package and the AQVEN version. Four sections follow, top to bottom.
+- **Model keys** has one row per model provider: "Your workflows call models through these providers."
+  A row is in one of three states:
+  - **Saved in .env.** The row shows a masked value, like `••••0860`, and the variable name. **Replace**
+    opens a password field for a new value. **Remove** deletes the line from the project's `.env` file.
+  - **Not set.** **Add key** opens the same password field. **Save** writes `NAME='value'` to the `.env`
+    file next to `aqven.yaml`. Studio creates that file if it is missing and keeps it out of git with a
+    `.gitignore` line in the same folder.
+  - **From your shell.** The variable is exported in the shell that started Studio, and the shell wins
+    over `.env`. The row has no buttons: change the value in the shell. If `.env` also has a value for
+    the same variable, the row says that the `.env` value is not used.
+- A key never appears in full. The page shows only the masked value, before and after you save.
+- If the engine refuses a value, the reason appears under the row and the field stays open. For
+  example, a key with a line break in it is refused.
+- **Other secrets** appears below Model keys only when a tool or an MCP server of the project declares
+  a secret. Each variable gets one row with the same states and buttons, plus the tools and servers that
+  use it.
+- **Your coding agent.** `{{CLI_COMMAND}} new` puts a `.mcp.json` file in the folder it creates, so
+  Claude Code started in that folder connects to the project by itself. For Claude Code started in another
+  folder, copy the `claude mcp add` command shown here and run it once in that folder. **Cursor,
+  Claude Desktop and other clients** unfolds the JSON block for any client that starts an MCP server
+  over stdio.
+- **Studio chat.** Pick **Claude Agent** or **Codex** for new chat threads. One line says whether that
+  backend is signed in, and with which account when it is known. When it is not signed in, the page
+  shows the command to run in a terminal: `claude auth login` or `codex login`. Then click **Check
+  again**. Technical details appear only when the check itself fails.
+- **About** shows the project folder, the AQVEN version, and the update command. Run it in the project
+  folder, then restart Studio.
 
 ### Example
 
-Open the [showcase](/start/quickstart/) project in Studio:
+Create the [showcase](/start/quickstart/) project and start Studio:
 
 ```bash
 {{CLI_COMMAND}} new my_project --template showcase
@@ -49,29 +51,29 @@ cd my_project/my_project
 {{CLI_COMMAND}} studio
 ```
 
-Click the dropdown at the top of the chat panel and choose **Studio settings**. The dialog opens on
-**Project**, showing the folder, the `showcase` package, and `no problems` if the tree is clean.
+Click the gear. In **Model keys**, the `openrouter` row reads `Not set · OPENROUTER_API_KEY`. Click
+**Add key**, paste your key, and click **Save**. The row changes to the masked value and
+`saved in .env`, and `my_project/my_project/.env` now has this line:
 
-Click **MCP connections** and copy the Claude Code command straight out of the panel:
-
-```bash
-claude mcp add aqven -- uv run --directory /path/to/my_project/my_project {{CLI_COMMAND}} mcp
+```text
+OPENROUTER_API_KEY='<your key>'
 ```
 
-The panel fills in this project's absolute path. Run the command from an ordinary terminal in the
-folder you start Claude Code from, and a Claude Code session outside Studio gets the same tools the
-Studio chat already calls — nothing in the panel itself ran that command for you.
+To update AQVEN later, copy the command from **About** and run it in the same folder:
+
+```bash
+uv lock --upgrade-package aqven && uv sync
+```
+
+Then stop Studio and start it again.
 
 ## See also
 
-- [How to manage secrets](/engine/secrets/) — the CLI's own read-only report on the same provider keys
-  and secrets, down to the same masking rule. Neither this screen nor that command lets you set a key;
-  that's done by exporting it or adding it to the project's `.env` file.
-- [How to set a secret for a provider, tool, or MCP server](/integrations/secrets-and-environment/) —
-  actually setting the value this screen only reports on.
-- [How to connect a model provider](/integrations/model-providers/) — declaring a provider in the
-  first place, before it can show up in this screen's Model keys panel.
-- [How to use the AI chat in Studio](/studio/chat/) — the panel whose dropdown opens this dialog, and
-  where the backend you pick in Chat agent actually gets used.
-- [How to check a project before committing](/engine/check/) — the errors, warnings, and info counts
-  behind the Project section's problem count.
+- [How to set a secret for a provider, tool, or MCP server](/integrations/secrets-and-environment/): the
+  same `.env` file by hand, and the `ref:env/NAME` format that tells the engine which variable to read.
+- [How to manage secrets](/engine/secrets/): the CLI report of the same keys, with the same masking.
+- [How to connect a model provider](/integrations/model-providers/): declare a provider, so its key
+  shows up in **Model keys**.
+- [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/): the same MCP connection, with
+  the details for clients that speak HTTP.
+- [How to use the AI chat in Studio](/studio/chat/): where the backend you pick in **Studio chat** runs.

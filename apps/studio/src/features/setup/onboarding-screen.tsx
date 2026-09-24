@@ -2,7 +2,7 @@ import type { JSX, ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { useTranslations } from "use-intl"
-import type { ApiFlow, ApiProviderKey, SetupStep } from "@/domain"
+import type { ApiFlow, SetupStep } from "@/domain"
 import { SETUP_STEPS } from "@/domain"
 import { ChoiceLink, ChoiceList, Empty, Heading, Page, Surface, Tag, Text, TitledPanel, Toolbar } from "@/components/studio"
 import { Button } from "@/components/ui/button"
@@ -10,11 +10,11 @@ import { flowId as toFlowId } from "@/data/ids"
 import { landingFlow } from "@/lib/landing"
 import { ROUTE_PATH, setupRouteApi } from "@/lib/routes"
 import { ChatStatusPanel } from "./chat-status"
-import { hasProviderKey, neighboursOf } from "./presenters"
-import { ProviderKeys } from "./provider-keys"
+import { KeysBoundary, ModelKeysPanel } from "./model-keys"
+import { neighboursOf } from "./presenters"
+import { useProjectKeys } from "./project-keys"
 
 type StepProps = {
-  readonly providers: readonly ApiProviderKey[]
   readonly flows: readonly ApiFlow[]
 }
 
@@ -22,20 +22,9 @@ function AgentStep() {
   return <ChatStatusPanel />
 }
 
-function ProvidersStep({ providers }: StepProps) {
-  const t = useTranslations("setup.providers")
-  return (
-    <>
-      <TitledPanel size="section" title={t("title")} below={[t("description")]}>
-        <ProviderKeys providers={providers} />
-      </TitledPanel>
-      {hasProviderKey(providers) ? null : (
-        <Text role="hint" tone="warning">
-          {t("missingNote")}
-        </Text>
-      )}
-    </>
-  )
+function ProvidersStep() {
+  const keys = useProjectKeys()
+  return <KeysBoundary state={keys}>{(loaded) => <ModelKeysPanel keys={loaded} onChanged={keys.reload} />}</KeysBoundary>
 }
 
 function FlowLink({ flow }: { readonly flow: ApiFlow }) {
@@ -138,7 +127,7 @@ function BrandLine() {
 }
 
 export function OnboardingScreen(): JSX.Element {
-  const { project, providers, flows, step } = setupRouteApi.useLoaderData()
+  const { project, flows, step } = setupRouteApi.useLoaderData()
   const t = useTranslations("setup.onboarding")
   const Body = STEP_BODY[step]
   return (
@@ -147,7 +136,7 @@ export function OnboardingScreen(): JSX.Element {
         <BrandLine />
         <Heading size="page" title={t("title", { project: project.package ?? project.root })} below={[project.root, t("lead")]} />
         <StepNav step={step} />
-        <Body providers={providers} flows={flows} />
+        <Body flows={flows} />
         <StepFooter step={step} />
       </div>
     </Page>

@@ -4,7 +4,7 @@ import { API_BASE } from "@/api/client"
 import { liveChatSessions, liveChatStatus } from "./data/chat"
 import { liveDatasetCases, liveDatasets } from "./data/datasets"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
-import { liveFiles, liveFlowDetails, liveFlows, liveProject, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
+import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
 import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
@@ -158,6 +158,18 @@ const matchesRun = (run: ApiRun, url: URL): boolean => {
 const byDeadline = (left: ApiRun, right: ApiRun): number => earliestDeadline(left) - earliestDeadline(right)
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> => typeof value === "object" && value !== null && !Array.isArray(value)
+
+const SECRET_MASK = "••••"
+const SECRET_VISIBLE_SUFFIX = 4
+const SECRET_MIN_LENGTH_FOR_SUFFIX = 12
+
+const maskedSecret = (secret: string): string =>
+  secret.length < SECRET_MIN_LENGTH_FOR_SUFFIX ? SECRET_MASK : `${SECRET_MASK}${secret.slice(-SECRET_VISIBLE_SUFFIX)}`
+
+const secretOf = (body: unknown): string => (isRecord(body) && typeof body["secret"] === "string" ? body["secret"] : "")
+
+const envVarOf = (key: string): string | null =>
+  [...liveProviders, ...liveSecrets].find((entry) => entry.setting_key === key)?.env_var ?? null
 
 const flowIdOf = (body: unknown): string => {
   if (!isRecord(body)) return ""
@@ -651,4 +663,21 @@ export const handlers = [
   http.get(`${API_BASE}/settings/providers`, () => served(liveProviders)),
 
   http.get(`${API_BASE}/settings/secrets`, () => served(liveSecrets)),
+
+  http.get(`${API_BASE}/settings/project`, () => served(liveProjectSettings)),
+
+  http.put(`${API_BASE}/settings/project/:key`, async ({ params, request }) => {
+    const key = text(params, "key")
+    return served({
+      scope: "project",
+      key,
+      kind: "secret",
+      value: null,
+      masked: maskedSecret(secretOf(await request.json())),
+      env_var: envVarOf(key),
+      updated_at: new Date().toISOString(),
+    })
+  }),
+
+  http.delete(`${API_BASE}/settings/project/:key`, ({ params }) => served({ scope: "project", key: text(params, "key"), deleted: true })),
 ]
