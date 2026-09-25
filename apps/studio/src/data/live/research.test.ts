@@ -17,9 +17,19 @@ describe("live research source", () => {
     })
     const experiments = await research.experiments({ question: "compare", failureMode: "panel_wrong_winner" })
     server.events.removeAllListeners()
-    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_single_judge"])
+    expect(experiments.map((item) => item.id)).toEqual(["judge_panel_agents", "panel_judge_prompt", "panel_single_judge"])
     expect(queries[0]).toMatchObject({ question: "compare", failure_mode: "panel_wrong_winner" })
     expect(queries[0]).not.toHaveProperty("flow_id")
+  })
+
+  it("reads a flow of an experiment and refuses a flow the experiment does not hold", async () => {
+    const flow = await research.experimentFlow(ids.experimentId("intent_split_long_messages"), ids.flowId("two_step"))
+    expect(flow).toMatchObject({ experiment: "intent_split_long_messages", flow: "two_step", order: ["condense_message", "classify_summary"] })
+    expect(flow.nodes.map((node) => node.path)).toEqual([
+      "experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.node.yaml",
+      "experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.node.yaml",
+    ])
+    await expect(research.experimentFlow(ids.experimentId("intent_split_long_messages"), ids.flowId("support_case"))).rejects.toSatisfy(isNotFound)
   })
 
   it("rejects a missing experiment or series with a not found error", async () => {

@@ -2,9 +2,13 @@
 
 **Purpose:** stability, and the noise floor for comparisons.
 
-`run_a` and `run_b` are the same variant: the project flow `judge_panel` as written, on the same cases, with the same
+`run_a` and `run_b` run the same flow: the project flow `judge_panel` as written, on the same cases, with the same
 agents. Any difference between them is noise: sampling at temperature 0.2 on llama, provider routing, the tie-break
 firing on one run and not on the other.
+
+**Variants.** Both variants leave the flow as written and change nothing, so the experiment declares no `varies`:
+an experiment whose variants all keep the subject is an A/A experiment, and `aqven check` neither asks for a factor
+nor warns that the variants repeat each other. The pair measures the flow against itself.
 
 **Check.** `matches_expected` is the built-in `expected` check with no `fields`: it compares every field the case lists
 in `expected_output`, which for these cases is only the `winner`.

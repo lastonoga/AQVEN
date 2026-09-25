@@ -26,7 +26,7 @@ CASES_TABLE: Final = "aqven_series_cases"
 ATTEMPTS_TABLE: Final = "aqven_series_attempts"
 VERSIONS_TABLE: Final = "aqven_schema_versions"
 SCHEMA_COMPONENT: Final = "series"
-SCHEMA_VERSION: Final = 2
+SCHEMA_VERSION: Final = 3
 CONNECT_TIMEOUT: Final = 30
 LOOK_QUESTION: Final = "look"
 CURSOR_SEPARATOR: Final = "/"
@@ -138,7 +138,27 @@ UPDATE {SERIES_TABLE} SET record = json_remove(
 )
 WHERE json_type(record, '$.estimate') IS NOT NULL
 """
-MIGRATIONS: Final[Mapping[int, str]] = {2: LAUNCH_PLAN_RECORDS}
+FACTOR_RECORDS: Final = f"""
+UPDATE {SERIES_TABLE} SET record = json_set(
+    json_remove(record, '$.plan.subject.arm_id'),
+    '$.plan.subject.kind',
+    CASE json_extract(record, '$.plan.subject.kind')
+        WHEN 'arm' THEN 'flow'
+        ELSE json_extract(record, '$.plan.subject.kind')
+    END,
+    '$.plan.subject.flow_id',
+    COALESCE(json_extract(record, '$.plan.subject.flow_id'), json_extract(record, '$.plan.subject.arm_id')),
+    '$.plan.subject.local_flow',
+    json(CASE WHEN json_extract(record, '$.plan.subject.arm_id') IS NULL THEN 'false' ELSE 'true' END),
+    '$.plan.variants',
+    json((
+        SELECT json_group_array(json_insert(json_remove(variant.value, '$.arm_id'), '$.changes', json('[]')))
+        FROM (SELECT value FROM json_each(record, '$.plan.variants') ORDER BY key) AS variant
+    ))
+)
+WHERE json_type(record, '$.plan.variants') = 'array'
+"""
+MIGRATIONS: Final[Mapping[int, str]] = {2: LAUNCH_PLAN_RECORDS, 3: FACTOR_RECORDS}
 
 LIST_ATTEMPTS: Final = f"SELECT record FROM {ATTEMPTS_TABLE} WHERE series_id = ? ORDER BY ordinal"
 SPEND: Final = f"SELECT cost_usd, check_cost_usd FROM {ATTEMPTS_TABLE} WHERE series_id = ? AND state = 'finished'"

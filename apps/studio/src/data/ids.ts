@@ -1,6 +1,5 @@
 import type {
   AgentId,
-  ArmId,
   BlobId,
   ChatSessionId,
   CheckId,
@@ -36,7 +35,6 @@ export const projectRoot = (raw: string): ProjectRoot => raw as ProjectRoot
 export const experimentId = (raw: string): ExperimentId => raw as ExperimentId
 export const seriesId = (raw: string): SeriesId => raw as SeriesId
 export const variantId = (raw: string): VariantId => raw as VariantId
-export const armId = (raw: string): ArmId => raw as ArmId
 export const checkId = (raw: string): CheckId => raw as CheckId
 export const datasetId = (raw: string): DatasetId => raw as DatasetId
 

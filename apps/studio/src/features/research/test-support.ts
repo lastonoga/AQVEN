@@ -7,7 +7,7 @@ export const experimentSummary = (fields: Partial<ExperimentSummary>): Experimen
   id: ids.experimentId("reply_noninferior_mistral"),
   description: "mistral is not worse than gpt",
   flow: SUPPORT_CASE,
-  subject: { kind: "range", flow: SUPPORT_CASE, range: { from: ids.nodeId("polish"), to: ids.nodeId("polish") } },
+  subject: { kind: "range", flow: SUPPORT_CASE, local: false, range: { from: ids.nodeId("polish"), to: ids.nodeId("polish") } },
   failureMode: "reply_quality",
   latest: null,
   seriesCount: 0,

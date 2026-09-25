@@ -21,7 +21,7 @@ from aqven.series.model import (
     VariantPlanRecord,
 )
 from aqven.series.subjects import SubjectStrategy
-from aqven.spec import ArmId, ExperimentId, FlowId, SeriesSplit, VariantId
+from aqven.spec import ExperimentId, FlowId, SeriesSplit, VariantId
 
 EXPERIMENT_MODE: Final = "experiment"
 SUBJECT_ROLE: Final = "subject"
@@ -100,8 +100,8 @@ def experiment_of(record: SeriesRecord) -> ExperimentId | None:
     return origin.experiment_id if isinstance(origin, ExperimentOrigin) else None
 
 
-def arm_of(record: SeriesRecord, variant: VariantPlanRecord) -> ArmId | None:
-    return variant.arm_id or record.plan.subject.arm_id
+def flow_experiment_of(record: SeriesRecord) -> ExperimentId | None:
+    return experiment_of(record) if record.plan.subject.local_flow else None
 
 
 def variant_at(record: SeriesRecord, ordinal: int) -> tuple[VariantPlanRecord, int, int]:
@@ -131,7 +131,7 @@ def attempt_ticket(
         case_name=case.name,
         repeat=repeat,
         experiment_id=experiment_of(record),
-        arm_id=arm_of(record, variant),
+        flow_experiment_id=flow_experiment_of(record),
     )
     prepared = strategy.prepare(variant, case, record.dataset_id, tag, limit_usd_micros)
     return AttemptTicket(

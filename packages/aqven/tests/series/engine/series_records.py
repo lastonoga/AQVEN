@@ -56,7 +56,7 @@ def record(series_id: str, created_at: datetime, experiment: str = EXPERIMENT) -
     variant = VariantPlanRecord(
         variant_id=WRITER,
         role=VariantRole.OTHER,
-        arm_id=None,
+        changes=(),
         flow_id=FlowId("triage"),
         ir_hash="",
         flow_hash="sha256-flow",
@@ -75,7 +75,7 @@ def record(series_id: str, created_at: datetime, experiment: str = EXPERIMENT) -
     )
     plan = SeriesPlanRecord(
         subject=SubjectRecord(
-            kind=SubjectKind.FLOW, flow_id=FlowId("triage"), arm_id=None, start_node=None, end_node=None
+            kind=SubjectKind.FLOW, flow_id=FlowId("triage"), local_flow=False, start_node=None, end_node=None
         ),
         question=None,
         variants=(variant,),

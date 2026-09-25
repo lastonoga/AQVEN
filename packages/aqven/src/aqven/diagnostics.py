@@ -111,9 +111,15 @@ class DiagnosticCode(StrEnum):
     E_SIM_PROMPT_RENDER = "E_SIM_PROMPT_RENDER"
     E_SIM_OUTPUT_INVALID = "E_SIM_OUTPUT_INVALID"
     E_SIM_RUN_FAILED = "E_SIM_RUN_FAILED"
-    E_ARM_UNKNOWN = "E_ARM_UNKNOWN"
     E_RANGE_INVALID = "E_RANGE_INVALID"
     E_VARIANT_INVALID = "E_VARIANT_INVALID"
+    E_FACTOR_MISSING = "E_FACTOR_MISSING"
+    E_FACTOR_NODE_UNKNOWN = "E_FACTOR_NODE_UNKNOWN"
+    E_FACTOR_KIND = "E_FACTOR_KIND"
+    E_VARIANT_OUTSIDE_FACTOR = "E_VARIANT_OUTSIDE_FACTOR"
+    E_ALTERNATIVE_UNKNOWN = "E_ALTERNATIVE_UNKNOWN"
+    E_ALTERNATIVE_ID_TAKEN = "E_ALTERNATIVE_ID_TAKEN"
+    E_FACTOR_FLOW_CONTRACT = "E_FACTOR_FLOW_CONTRACT"
     E_METRIC_UNKNOWN = "E_METRIC_UNKNOWN"
     E_EXPERIMENT_UNKNOWN = "E_EXPERIMENT_UNKNOWN"
     E_DATASET_MISMATCH = "E_DATASET_MISMATCH"
@@ -135,6 +141,8 @@ class DiagnosticCode(StrEnum):
     W_CHECK_CONTEXT_MISMATCH = "W_CHECK_CONTEXT_MISMATCH"
     W_JUDGE_INPUT_UNBOUND = "W_JUDGE_INPUT_UNBOUND"
     W_FINDINGS_STALE = "W_FINDINGS_STALE"
+    W_VARIANT_DUPLICATE = "W_VARIANT_DUPLICATE"
+    W_ALTERNATIVE_UNUSED = "W_ALTERNATIVE_UNUSED"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -237,9 +245,38 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
         "generated {module}/types.py shadows the standard library module types while {folder} is on sys.path",
         "remove {folder} from sys.path and PYTHONPATH; import the models as {module}.types",
     ),
-    DiagnosticCode.E_ARM_UNKNOWN: DiagnosticText(
-        "arm {arm} is not an arm of experiment {experiment}; its arms: {arms}",
-        "create {folder}/arms/{arm}/flow.yaml or name an existing arm",
+    DiagnosticCode.E_FACTOR_MISSING: DiagnosticText(
+        "experiment {experiment}: {problem}, but the experiment declares no varies",
+        "declare varies with what (agent, prompt, use or flow) and the nodes it changes; "
+        "each variant sets values of that factor under nodes",
+    ),
+    DiagnosticCode.E_FACTOR_NODE_UNKNOWN: DiagnosticText(
+        "experiment {experiment}: varies.nodes names {node}, {problem}",
+        "{fix}",
+    ),
+    DiagnosticCode.E_FACTOR_KIND: DiagnosticText(
+        "experiment {experiment}: varies.what {what} changes {wanted} nodes, but {node} is a {kind} node",
+        "name {wanted} nodes of {subject} ({candidates}) or pick another varies.what",
+    ),
+    DiagnosticCode.E_VARIANT_OUTSIDE_FACTOR: DiagnosticText(
+        "experiment {experiment}: variant {variant} sets {node}, which is not in varies.nodes ({nodes})",
+        "add {node} to varies.nodes or remove it from the variant: "
+        "the variants of an experiment change one factor on the nodes it declares",
+    ),
+    DiagnosticCode.E_ALTERNATIVE_UNKNOWN: DiagnosticText(
+        "experiment {experiment}: variant {variant} puts alternative {alternative} at {node}, "
+        "but {folder} has no such node; its alternatives: {alternatives}",
+        "create {folder}/{alternative}.node.yaml or name an existing alternative",
+    ),
+    DiagnosticCode.E_ALTERNATIVE_ID_TAKEN: DiagnosticText(
+        "experiment {experiment}: alternative {alternative} has the id of a node of {subject}",
+        "rename the alternative file: an alternative runs under the id of its slot, "
+        "and its own id must not shadow a node of the subject",
+    ),
+    DiagnosticCode.E_FACTOR_FLOW_CONTRACT: DiagnosticText(
+        "experiment {experiment}: variant {variant} calls flow {flow} at {node}, whose {side} {own} differs from "
+        "{side} {expected} of flow {original}",
+        "give flow {flow} the {side} type of flow {original}: every variant runs the same cases and checks",
     ),
     DiagnosticCode.E_RANGE_INVALID: DiagnosticText(
         "experiment {experiment}: {problem}",
@@ -300,6 +337,14 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
         "FINDINGS.md does not match the finding files: {problem}",
         "FINDINGS.md is generated from experiments/*/findings/*.yaml and is not edited by hand: "
         "restore it from git, the next finding on holdout cases rewrites it",
+    ),
+    DiagnosticCode.W_VARIANT_DUPLICATE: DiagnosticText(
+        "experiment {experiment}: variant {variant} sets the same values as variant {first}",
+        "change the values of one of them or remove it; to measure noise on purpose, leave every variant as written",
+    ),
+    DiagnosticCode.W_ALTERNATIVE_UNUSED: DiagnosticText(
+        "experiment {experiment}: {entity} is used by no variant",
+        "name it in variants[].nodes or delete {file}",
     ),
 }
 

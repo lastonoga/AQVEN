@@ -1,12 +1,30 @@
 {
+  "$defs": {
+    "FactorNode": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "FactorValue": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    }
+  },
   "additionalProperties": false,
-  "description": "One variant of the subject: agents assigned to LLM nodes, another arm, or the subject as written.\n\n``agents`` maps a node id of the subject (or of ``arm``) to an agent id; nodes not listed keep their own agent.\nA variant never names a bare model: an agent carries the model, its settings and the output mode.",
+  "description": "One variant of the subject: the value of the experiment factor on some of its nodes.\n\n``nodes`` maps a node of ``varies.nodes`` to its value, whose kind ``varies.what`` sets: an agent id\n(``agent``), a prompt name from the experiment ``prompts/`` folder (``prompt``), an alternative id from its\n``nodes/`` folder (``use``) or a flow id, local to the experiment first, then of the project (``flow``). A\nfactor node the variant leaves out runs as written; a variant without ``nodes`` is the subject as written.",
   "properties": {
-    "agents": {
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "nodes": {
       "anyOf": [
         {
           "additionalProperties": {
-            "type": "string"
+            "$ref": "#/$defs/FactorValue"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/FactorNode"
           },
           "type": "object"
         },
@@ -15,24 +33,7 @@
         }
       ],
       "default": null,
-      "title": "Agents"
-    },
-    "arm": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Arm"
-    },
-    "id": {
-      "pattern": "^[a-z][a-z0-9_]{0,62}$",
-      "title": "Id",
-      "type": "string"
+      "title": "Nodes"
     }
   },
   "required": [

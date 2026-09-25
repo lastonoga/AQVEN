@@ -54,7 +54,7 @@ class GeneratedInferenceModels:
         return self._model(inference, OUTPUT_SUFFIX)
 
     def _model(self, inference: CompiledInference, suffix: str) -> type[BaseModel]:
-        ref = f"{self.package}.{GENERATED_MODULE}:{pascal(inference.inference_id)}{suffix}"
+        ref = f"{self.package}.{GENERATED_MODULE}:{pascal(inference.origin or inference.inference_id)}{suffix}"
         found = pkgutil.resolve_name(ref)
         if isinstance(found, type) and issubclass(found, BaseModel):
             return found

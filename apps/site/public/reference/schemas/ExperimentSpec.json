@@ -190,6 +190,29 @@
       "title": "ExperimentCheck",
       "type": "object"
     },
+    "ExperimentFactor": {
+      "additionalProperties": false,
+      "description": "The one factor the variants of an experiment change: ``what`` kind of edit on which ``nodes`` of the subject.\n\n``nodes`` lists local node ids of the subject flow, each once; a nested node is named by its own id. Every\nvariant sets values of this factor only, so a series tells which edit made the difference.",
+      "properties": {
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/FactorNode"
+          },
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "what": {
+          "$ref": "#/$defs/FactorKind"
+        }
+      },
+      "required": [
+        "what",
+        "nodes"
+      ],
+      "title": "ExperimentFactor",
+      "type": "object"
+    },
     "ExperimentPlan": {
       "additionalProperties": false,
       "description": "The default size of a series: how many cases and how many repeats per case.\n\nThese are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the\nrecommended size next to them. ``cases`` unset means every selected case.",
@@ -220,31 +243,11 @@
     },
     "ExperimentSubject": {
       "additionalProperties": false,
-      "description": "What the experiment runs: a project flow, an arm of this experiment, or a range of top-level nodes.\n\nExactly one of ``flow`` and ``arm`` is set. ``from`` and ``to`` narrow the run to a contiguous range of\ntop-level nodes; nodes before the range take their outputs from the case ``node_outputs``.",
+      "description": "What the experiment runs: a flow, whole or as a range of its top-level nodes.\n\n``flow`` names a local flow of this experiment (``flows/<flow_id>/`` in the experiment folder) or a project\nflow; a local flow is looked up first. ``from`` and ``to`` narrow the run to a contiguous range of top-level\nnodes; nodes before the range take their outputs from the case ``node_outputs``.",
       "properties": {
-        "arm": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Arm"
-        },
         "flow": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Flow"
+          "title": "Flow",
+          "type": "string"
         },
         "from": {
           "anyOf": [
@@ -271,8 +274,30 @@
           "title": "To"
         }
       },
+      "required": [
+        "flow"
+      ],
       "title": "ExperimentSubject",
       "type": "object"
+    },
+    "FactorKind": {
+      "description": "The kind of edit an experiment factor makes on each of its nodes.\n\n``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm\nnode, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at\nanother flow.",
+      "enum": [
+        "agent",
+        "prompt",
+        "use",
+        "flow"
+      ],
+      "title": "FactorKind",
+      "type": "string"
+    },
+    "FactorNode": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
+    },
+    "FactorValue": {
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "type": "string"
     },
     "Guardrail": {
       "additionalProperties": false,
@@ -503,13 +528,21 @@
     },
     "VariantSpec": {
       "additionalProperties": false,
-      "description": "One variant of the subject: agents assigned to LLM nodes, another arm, or the subject as written.\n\n``agents`` maps a node id of the subject (or of ``arm``) to an agent id; nodes not listed keep their own agent.\nA variant never names a bare model: an agent carries the model, its settings and the output mode.",
+      "description": "One variant of the subject: the value of the experiment factor on some of its nodes.\n\n``nodes`` maps a node of ``varies.nodes`` to its value, whose kind ``varies.what`` sets: an agent id\n(``agent``), a prompt name from the experiment ``prompts/`` folder (``prompt``), an alternative id from its\n``nodes/`` folder (``use``) or a flow id, local to the experiment first, then of the project (``flow``). A\nfactor node the variant leaves out runs as written; a variant without ``nodes`` is the subject as written.",
       "properties": {
-        "agents": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,62}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nodes": {
           "anyOf": [
             {
               "additionalProperties": {
-                "type": "string"
+                "$ref": "#/$defs/FactorValue"
+              },
+              "propertyNames": {
+                "$ref": "#/$defs/FactorNode"
               },
               "type": "object"
             },
@@ -518,24 +551,7 @@
             }
           ],
           "default": null,
-          "title": "Agents"
-        },
-        "arm": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Arm"
-        },
-        "id": {
-          "pattern": "^[a-z][a-z0-9_]{0,62}$",
-          "title": "Id",
-          "type": "string"
+          "title": "Nodes"
         }
       },
       "required": [
@@ -546,7 +562,7 @@
     }
   },
   "additionalProperties": false,
-  "description": "An experiment: subject \u00d7 variants \u00d7 cases \u00d7 checks \u00d7 question.\n\nThe question picks the statistic and the verdict. Evals, agent comparisons, regressions, judge validation\nand risky hypotheses are all experiments that differ only in their question and variants.",
+  "description": "An experiment: subject \u00d7 factor \u00d7 variants \u00d7 cases \u00d7 checks \u00d7 question.\n\n``varies`` declares the one factor the variants change; it is required once there is more than one variant.\nThe question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,\nregressions, judge validation and risky hypotheses are all experiments that differ only in their factor,\nvariants and question.",
   "properties": {
     "apiVersion": {
       "const": "aqven/v1",
@@ -610,6 +626,17 @@
       "minItems": 1,
       "title": "Variants",
       "type": "array"
+    },
+    "varies": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExperimentFactor"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

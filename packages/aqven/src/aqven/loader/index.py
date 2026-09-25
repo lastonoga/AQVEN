@@ -9,7 +9,16 @@ from aqven.loader.aliases import ANY, Pattern, children, sites
 from aqven.loader.layout import local_node_id
 from aqven.loader.project import LoadedExperiment, LoadedFlow, LoadedProject, SourceSpec
 from aqven.loader.strict_yaml import Position, YamlPath
-from aqven.spec import BUILTIN_TYPE_IDS, TEXT_SUFFIX, FlowId, RefRoot, RefSyntaxError, parse_ref
+from aqven.spec import (
+    BUILTIN_TYPE_IDS,
+    TEXT_SUFFIX,
+    FactorKind,
+    FlowId,
+    NodeId,
+    RefRoot,
+    RefSyntaxError,
+    parse_ref,
+)
 
 NODE_QUALIFIER: Final = "."
 REF_PREFIX: Final = "$"
@@ -28,12 +37,13 @@ class EntityKind(StrEnum):
     NODE = "node"
     DATASET = "dataset"
     EXPERIMENT = "experiment"
-    ARM = "arm"
+    LOCAL_FLOW = "local_flow"
+    ALTERNATIVE = "alternative"
     FINDING = "finding"
     CODE = "code"
 
 
-QUALIFIED_KINDS: Final = frozenset({EntityKind.NODE, EntityKind.ARM, EntityKind.FINDING})
+QUALIFIED_KINDS: Final = frozenset({EntityKind.NODE, EntityKind.LOCAL_FLOW, EntityKind.ALTERNATIVE, EntityKind.FINDING})
 
 
 def scoped(owner: str, name: str) -> str:
@@ -92,12 +102,16 @@ def _source[S: BaseModel](source: SourceSpec[S] | None) -> _Source | None:
     return _Source(source.path, source.spec, source.positions)
 
 
+type _Resolved = tuple[YamlPath, EntityKey]
+
+
 @dataclass(frozen=True, slots=True)
 class _Document:
     key: EntityKey
     path: str
     source: _Source | None
     flow: LoadedFlow | None = None
+    resolved: tuple[_Resolved, ...] = ()
 
 
 type _Site = tuple[Pattern, EntityKind]
@@ -121,6 +135,24 @@ FLOW_SITES: Final[tuple[_Site, ...]] = (
     (("output",), EntityKind.TYPE),
     (("order", ANY), EntityKind.NODE),
     (("requires", ANY, "nodes", ANY), EntityKind.NODE),
+)
+
+NODE_SITES: Final[tuple[_Site, ...]] = (
+    (("inference",), EntityKind.INFERENCE),
+    (("agent",), EntityKind.AGENT),
+    (("tool",), EntityKind.TOOL),
+    (("flow",), EntityKind.FLOW),
+    (("run",), EntityKind.CODE),
+    (("form",), EntityKind.TYPE),
+    (("to",), EntityKind.TYPE),
+    (("body",), EntityKind.NODE),
+    (("body", ANY), EntityKind.NODE),
+    (("cases", ANY, "node"), EntityKind.NODE),
+    (("join", "run"), EntityKind.CODE),
+    (("on_item_error", "run"), EntityKind.CODE),
+    (("stop", ANY, "run"), EntityKind.CODE),
+    (("select", "run"), EntityKind.CODE),
+    *FIELD_TYPES,
 )
 
 SITES: Final[Mapping[EntityKind, tuple[_Site, ...]]] = {
@@ -150,30 +182,11 @@ SITES: Final[Mapping[EntityKind, tuple[_Site, ...]]] = {
         *_evaluators("checks"),
     ),
     EntityKind.FLOW: FLOW_SITES,
-    EntityKind.ARM: FLOW_SITES,
-    EntityKind.NODE: (
-        (("inference",), EntityKind.INFERENCE),
-        (("agent",), EntityKind.AGENT),
-        (("tool",), EntityKind.TOOL),
-        (("flow",), EntityKind.FLOW),
-        (("run",), EntityKind.CODE),
-        (("form",), EntityKind.TYPE),
-        (("to",), EntityKind.TYPE),
-        (("body",), EntityKind.NODE),
-        (("body", ANY), EntityKind.NODE),
-        (("cases", ANY, "node"), EntityKind.NODE),
-        (("join", "run"), EntityKind.CODE),
-        (("on_item_error", "run"), EntityKind.CODE),
-        (("stop", ANY, "run"), EntityKind.CODE),
-        (("select", "run"), EntityKind.CODE),
-        *FIELD_TYPES,
-    ),
+    EntityKind.LOCAL_FLOW: FLOW_SITES,
+    EntityKind.NODE: NODE_SITES,
+    EntityKind.ALTERNATIVE: NODE_SITES,
     EntityKind.EXPERIMENT: (
-        (("subject", "flow"), EntityKind.FLOW),
-        (("subject", "arm"), EntityKind.ARM),
         (("cases", "dataset"), EntityKind.DATASET),
-        (("variants", ANY, "arm"), EntityKind.ARM),
-        (("variants", ANY, "agents", ANY), EntityKind.AGENT),
         *_evaluators("checks"),
         (("checks", ANY, "validated_by"), EntityKind.EXPERIMENT),
     ),
@@ -203,7 +216,7 @@ def _documents(project: LoadedProject) -> Iterator[_Document]:
         yield from _node_documents(flow)
     yield from _registry(EntityKind.DATASET, project.datasets)
     for experiment in project.experiments.values():
-        yield from _experiment_documents(experiment)
+        yield from _experiment_documents(project, experiment)
 
 
 def _flow_document(key: EntityKey, flow: LoadedFlow) -> _Document:
@@ -215,15 +228,81 @@ def _node_documents(flow: LoadedFlow) -> Iterator[_Document]:
         yield _Document(EntityKey(EntityKind.NODE, _qualified(flow, node_id)), node.path, _source(node), flow)
 
 
-def _experiment_documents(experiment: LoadedExperiment) -> Iterator[_Document]:
+def _experiment_documents(project: LoadedProject, experiment: LoadedExperiment) -> Iterator[_Document]:
     owner = experiment.experiment_id
-    yield _Document(EntityKey(EntityKind.EXPERIMENT, owner), experiment.source.path, _source(experiment.source))
-    for arm_id, arm in experiment.arms.items():
-        scoped_arm = replace(arm, flow_id=FlowId(scoped(owner, arm_id)))
-        yield _flow_document(EntityKey(EntityKind.ARM, scoped_arm.flow_id), scoped_arm)
-        yield from _node_documents(scoped_arm)
+    key = EntityKey(EntityKind.EXPERIMENT, owner)
+    resolved = tuple(_experiment_refs(project, experiment))
+    yield _Document(key, experiment.source.path, _source(experiment.source), resolved=resolved)
+    for flow_id, flow in experiment.flows.items():
+        local = replace(flow, flow_id=FlowId(scoped(owner, flow_id)))
+        yield _flow_document(EntityKey(EntityKind.LOCAL_FLOW, local.flow_id), local)
+        yield from _node_documents(local)
+    for node_id, alternative in experiment.alternatives.items():
+        alternative_key = EntityKey(EntityKind.ALTERNATIVE, scoped(owner, node_id))
+        yield _Document(alternative_key, alternative.path, _source(alternative))
     for series, finding in experiment.findings.items():
         yield _Document(EntityKey(EntityKind.FINDING, scoped(owner, series)), finding.path, _source(finding))
+
+
+def _experiment_refs(project: LoadedProject, experiment: LoadedExperiment) -> Iterator[_Resolved]:
+    spec = experiment.source.spec
+    subject = _flow_key(experiment, spec.subject.flow)
+    yield ("subject", "flow"), subject
+    factor = spec.varies
+    if factor is None:
+        return
+    expanded = _expanded_ids(experiment.flows.get(spec.subject.flow) or project.flows.get(spec.subject.flow))
+    for index, node in enumerate(factor.nodes):
+        yield ("varies", "nodes", index), EntityKey(EntityKind.NODE, scoped(subject.id, expanded.get(node, node)))
+    values = (
+        (("variants", index, "nodes", node), value)
+        for index, variant in enumerate(spec.variants)
+        for node, value in (variant.nodes or {}).items()
+    )
+    for path, value in values:
+        yield from _value_ref(experiment, factor.what, path, value)
+
+
+def _expanded_ids(flow: LoadedFlow | None) -> dict[NodeId, NodeId]:
+    if flow is None:
+        return {}
+    return {local_node_id(node_id): node_id for node_id in flow.nodes}
+
+
+def _value_ref(experiment: LoadedExperiment, what: FactorKind, path: YamlPath, value: str) -> Iterator[_Resolved]:
+    target = VALUE_TARGETS[what](experiment, value)
+    if target is not None:
+        yield path, target
+
+
+def _flow_key(experiment: LoadedExperiment, flow_id: FlowId) -> EntityKey:
+    if flow_id in experiment.flows:
+        return EntityKey(EntityKind.LOCAL_FLOW, scoped(experiment.experiment_id, flow_id))
+    return EntityKey(EntityKind.FLOW, flow_id)
+
+
+def _agent_value(experiment: LoadedExperiment, value: str) -> EntityKey | None:
+    return EntityKey(EntityKind.AGENT, value)
+
+
+def _prompt_value(experiment: LoadedExperiment, value: str) -> EntityKey | None:
+    return None
+
+
+def _alternative_value(experiment: LoadedExperiment, value: str) -> EntityKey | None:
+    return EntityKey(EntityKind.ALTERNATIVE, scoped(experiment.experiment_id, NodeId(value)))
+
+
+def _flow_value(experiment: LoadedExperiment, value: str) -> EntityKey | None:
+    return _flow_key(experiment, FlowId(value))
+
+
+VALUE_TARGETS: Final[Mapping[FactorKind, Callable[[LoadedExperiment, str], EntityKey | None]]] = {
+    FactorKind.AGENT: _agent_value,
+    FactorKind.PROMPT: _prompt_value,
+    FactorKind.USE: _alternative_value,
+    FactorKind.FLOW: _flow_value,
+}
 
 
 def _registry[K: str, S: BaseModel](kind: EntityKind, table: Mapping[K, SourceSpec[S]]) -> Iterator[_Document]:
@@ -242,13 +321,15 @@ def _references(document: _Document) -> Iterator[Reference]:
     listed = (
         (path, kind, text) for pattern, kind in SITES.get(document.key.kind, ()) for path, text in sites(data, pattern)
     )
-    for path, kind, text in (*listed, *_data_refs(document, data)):
-        target = TARGETS.get(kind, _as_written)(document, text)
-        if target is None:
-            continue
+    targets = (
+        (path, EntityKey(kind, target))
+        for path, kind, text in (*listed, *_data_refs(document, data))
+        if (target := TARGETS.get(kind, _as_written)(document, text)) is not None
+    )
+    for path, target in (*targets, *document.resolved):
         position = source.positions.get(path)
         line = position[0] if position is not None else None
-        yield Reference(document.key, source.path, path, line, EntityKey(kind, target))
+        yield Reference(document.key, source.path, path, line, target)
 
 
 def _data_refs(document: _Document, data: JsonValue) -> Iterator[tuple[YamlPath, EntityKind, str]]:
@@ -307,13 +388,8 @@ def _code_target(document: _Document, text: str) -> str | None:
     return None if text.endswith(TEXT_SUFFIX) else text
 
 
-def _arm_target(document: _Document, text: str) -> str | None:
-    return scoped(document.key.id, text) if document.key.kind is EntityKind.EXPERIMENT else None
-
-
 TARGETS: Final[Mapping[EntityKind, Callable[[_Document, str], str | None]]] = {
     EntityKind.NODE: _node_target,
     EntityKind.TYPE: _type_target,
     EntityKind.CODE: _code_target,
-    EntityKind.ARM: _arm_target,
 }

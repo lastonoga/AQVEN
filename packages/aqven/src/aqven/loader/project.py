@@ -20,8 +20,8 @@ from aqven.loader.layout import (
     PROJECT_FILE,
     SKIPPED_DIRECTORIES,
     TEXT_SUFFIX,
+    alternatives_folder,
     ancestors,
-    arm_experiment_folder,
     builder_kind,
     declares,
     entity_id,
@@ -30,6 +30,10 @@ from aqven.loader.layout import (
     expected_kind,
     finding_experiment_folder,
     inference_texts,
+    inside,
+    local_flow_experiment_folder,
+    local_flow_folder,
+    prompts_folder,
     type_id_for,
 )
 from aqven.loader.strict_yaml import Position, YamlDocument, YamlPath, read_strict_yaml
@@ -38,7 +42,6 @@ from aqven.spec import (
     NAME_PATTERN,
     AgentId,
     AgentSpec,
-    ArmId,
     DatasetFile,
     DatasetId,
     ExperimentId,
@@ -109,10 +112,18 @@ class LoadedInference:
     source: SourceSpec[InferenceSpec] | None
     builder_path: str | None
     texts: Mapping[str, str]
+    origin: InferenceId | None = None
 
     @property
     def stem(self) -> str:
-        return posixpath.join(self.folder, self.inference_id)
+        return posixpath.join(self.folder, self.origin or self.inference_id)
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentPrompt:
+    name: str
+    path: str
+    text: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,13 +131,11 @@ class LoadedExperiment:
     experiment_id: ExperimentId
     folder: str
     source: SourceSpec[ExperimentSpec]
-    arms: Mapping[ArmId, LoadedFlow]
     notes: str | None
+    flows: Mapping[FlowId, LoadedFlow] = field(default_factory=dict[FlowId, LoadedFlow])
+    alternatives: Mapping[NodeId, SourceSpec[NodeSpec]] = field(default_factory=dict[NodeId, SourceSpec[NodeSpec]])
+    prompts: Mapping[str, ExperimentPrompt] = field(default_factory=dict[str, ExperimentPrompt])
     findings: Mapping[str, SourceSpec[FindingSpec]] = field(default_factory=dict[str, SourceSpec[FindingSpec]])
-
-    def arm_folder(self, arm_id: ArmId) -> str | None:
-        arm = self.arms.get(arm_id)
-        return None if arm is None else arm.folder
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,20 +283,13 @@ class _Collector:
             self._check_builder(flow)
         for inference in self.inferences.values():
             self._check_builder(inference)
-        project_flows = {
-            folder: parts for folder, parts in self.flows.items() if not _is_arm(folder, self.experiment_folders)
-        }
+        self._report_misplaced_flows()
+        project_flows = {folder: parts for folder, parts in self.flows.items() if self._project_flow(folder)}
         flows = {FlowId(name): _loaded_flow(parts, owned) for name, parts in self._unique(project_flows).items()}
         findings = self._owned_findings()
+        prompts = self._owned_prompts()
         experiments = {
-            key: LoadedExperiment(
-                experiment_id=key,
-                folder=posixpath.dirname(source.path),
-                source=source,
-                arms=_arms(posixpath.dirname(source.path), self.flows, owned),
-                notes=self.texts.get(posixpath.join(posixpath.dirname(source.path), EXPERIMENT_NOTES)),
-                findings=findings.get(posixpath.dirname(source.path), {}),
-            )
+            key: self._experiment(key, source, owned, prompts.get(posixpath.dirname(source.path), {}), findings)
             for key, source in self.experiments.items()
         }
         inferences = {
@@ -319,6 +321,26 @@ class _Collector:
             experiments=experiments,
         )
         return LoadResult(project, tuple(self.diagnostics))
+
+    def _experiment(
+        self,
+        key: ExperimentId,
+        source: SourceSpec[ExperimentSpec],
+        owned: Mapping[str, _NodeTable],
+        prompts: Mapping[str, ExperimentPrompt],
+        findings: Mapping[str, Mapping[str, SourceSpec[FindingSpec]]],
+    ) -> LoadedExperiment:
+        folder = posixpath.dirname(source.path)
+        return LoadedExperiment(
+            experiment_id=key,
+            folder=folder,
+            source=source,
+            notes=self.texts.get(posixpath.join(folder, EXPERIMENT_NOTES)),
+            flows=_local_flows(folder, self.flows, owned),
+            alternatives=owned.get(alternatives_folder(folder), {}),
+            prompts=prompts,
+            findings=findings.get(folder, {}),
+        )
 
     def read_yaml(self, relative: str) -> None:
         data = _read_listed(self.root / relative)
@@ -506,10 +528,48 @@ class _Collector:
         self._register(owner, source.spec.series, source)
 
     def _owned_nodes(self) -> Mapping[str, _NodeTable]:
-        tables: dict[str, _NodeTable] = {folder: {} for folder in self.flows}
+        alternatives = frozenset(alternatives_folder(folder) for folder in self.experiment_folders)
+        tables: dict[str, _NodeTable] = {folder: {} for folder in (*self.flows, *alternatives)}
         for file, source in self.nodes:
             self._own(tables, file, source)
-        return {folder: _expanded(table) for folder, table in tables.items()}
+        return {
+            folder: table if folder in alternatives else expand_node_table(table) for folder, table in tables.items()
+        }
+
+    def _project_flow(self, folder: str) -> bool:
+        return _local_owner(folder, self.experiment_folders) is None and self._enclosing(folder) is None
+
+    def _enclosing(self, folder: str) -> str | None:
+        return next((owner for owner in sorted(self.experiment_folders) if _in_folder(folder, owner)), None)
+
+    def _report_misplaced_flows(self) -> None:
+        for folder, parts in sorted(self.flows.items()):
+            owner = self._enclosing(folder)
+            if owner is None or _local_owner(folder, self.experiment_folders) is not None:
+                continue
+            message = (
+                f"flow {parts.name} lies in experiment folder {owner} outside its flows folder: a flow of an "
+                f"experiment lives in {local_flow_folder(owner, parts.name)}/, move it there"
+            )
+            self.diagnostics.append(diagnostic(DiagnosticCode.E_ORPHAN_FILE, parts.path, (), message))
+
+    def _owned_prompts(self) -> Mapping[str, Mapping[str, ExperimentPrompt]]:
+        tables: dict[str, dict[str, ExperimentPrompt]] = {folder: {} for folder in self.experiment_folders}
+        folders = {prompts_folder(folder): folder for folder in self.experiment_folders}
+        for path, text in sorted(self.texts.items()):
+            owner = folders.get(posixpath.dirname(path))
+            if owner is None or not path.endswith(TEXT_SUFFIX):
+                continue
+            self._own_prompt(tables[owner], path, text)
+        return tables
+
+    def _own_prompt(self, table: dict[str, ExperimentPrompt], path: str, text: str) -> None:
+        name = PurePosixPath(path).name.removesuffix(TEXT_SUFFIX)
+        if NAME.fullmatch(name) is None:
+            message = f"prompt name {name!r} from the file name does not match {NAME_PATTERN}"
+            self.diagnostics.append(diagnostic(DiagnosticCode.E_BAD_NAME, path, (), message))
+            return
+        table[name] = ExperimentPrompt(name, path, text)
 
     def _own(self, tables: dict[str, _NodeTable], file: _File, source: SourceSpec[NodeSpec]) -> None:
         owner = next((folder for folder in ancestors(file.folder) if folder in tables), None)
@@ -520,22 +580,26 @@ class _Collector:
         self._register(tables[owner], NodeId(file.entity), source)
 
 
-def _is_arm(flow_folder: str, experiment_folders: frozenset[str]) -> bool:
-    owner = arm_experiment_folder(flow_folder)
-    return owner is not None and owner in experiment_folders
+def _local_owner(flow_folder: str, experiment_folders: frozenset[str]) -> str | None:
+    owner = local_flow_experiment_folder(flow_folder)
+    return owner if owner is not None and owner in experiment_folders else None
+
+
+def _in_folder(path: str, folder: str) -> bool:
+    return bool(folder) and (path == folder or inside(path, folder))
 
 
 def _loaded_flow(parts: _Parts[FlowSpec], owned: Mapping[str, _NodeTable]) -> LoadedFlow:
     return LoadedFlow(FlowId(parts.name), parts.folder, parts.source, parts.builder_path, owned[parts.folder])
 
 
-def _arms(
+def _local_flows(
     experiment_folder: str, flows: Mapping[str, _Parts[FlowSpec]], owned: Mapping[str, _NodeTable]
-) -> Mapping[ArmId, LoadedFlow]:
+) -> Mapping[FlowId, LoadedFlow]:
     return {
-        ArmId(parts.name): _loaded_flow(parts, owned)
+        FlowId(parts.name): _loaded_flow(parts, owned)
         for folder, parts in sorted(flows.items())
-        if arm_experiment_folder(folder) == experiment_folder
+        if local_flow_experiment_folder(folder) == experiment_folder
     }
 
 
@@ -543,7 +607,7 @@ def _is_spec_file(relative: str, data: bytes) -> bool:
     return relative == PROJECT_FILE or relative != LOCK_FILE and AQVEN_HEADER.search(data) is not None
 
 
-def _expanded(table: _NodeTable) -> _NodeTable:
+def expand_node_table(table: Mapping[NodeId, SourceSpec[NodeSpec]]) -> dict[NodeId, SourceSpec[NodeSpec]]:
     parents = {inner: local for local, source in table.items() for inner in inner_nodes(source.spec)}
     return {expanded_node_id(local, parents): source for local, source in table.items()}
 

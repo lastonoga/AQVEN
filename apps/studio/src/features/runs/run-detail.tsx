@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useNow, useTranslations } from "use-intl"
-import type { ApiExecutionAddress, ApiNodeCounts, ApiRunError, ApiRunEvent, ApiRunSnapshot, ApiValueRef, ArmFlow } from "@/domain"
+import type { ApiExecutionAddress, ApiNodeCounts, ApiRunError, ApiRunEvent, ApiRunSnapshot, ApiValueRef, ExperimentFlowDetail } from "@/domain"
 import { Heading, Stat, StructuredValue, Surface, Tag, Text, TitledPanel, type TagSpec } from "@/components/studio"
 import * as ids from "@/data/ids"
 import { useRelativeTime } from "@/i18n/format"
@@ -41,7 +41,7 @@ export type RunDetailProps = {
 export type RunHeaderProps = {
   readonly snapshot: ApiRunSnapshot
   readonly live: boolean
-  readonly arm?: ArmFlow | null
+  readonly experimentFlow?: ExperimentFlowDetail | null
   readonly tools?: ReactNode
 }
 
@@ -82,16 +82,16 @@ function HeaderTrailing({ changed, tools }: { readonly changed: boolean; readonl
   )
 }
 
-function ArmLine({ arm }: { readonly arm: ArmFlow }) {
+function ExperimentFlowLine({ experiment, flow }: { readonly experiment: string; readonly flow: string }) {
   const t = useTranslations("runs.run")
   return (
-    <Link to={ROUTE_PATH.experiment} params={{ experimentId: arm.experiment }}>
-      {t("arm", { arm: arm.arm, experiment: arm.experiment })}
+    <Link to={ROUTE_PATH.experiment} params={{ experimentId: ids.experimentId(experiment) }}>
+      {t("experimentFlow", { flow, experiment })}
     </Link>
   )
 }
 
-export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps) {
+export function RunHeader({ snapshot, live, experimentFlow = null, tools }: RunHeaderProps) {
   const t = useTranslations("runs.run")
   const liveLabel = useTranslations("runs.live")("badge")
   const statusText = useRunStatusText()
@@ -100,6 +100,7 @@ export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps)
   const relative = useRelativeTime("long")
   const lineage = snapshot.lineage
   const seriesId = snapshot.series_id ?? null
+  const flowExperiment = snapshot.flow_experiment_id ?? null
   const look = runStatusLook(snapshot.status, snapshot.node_counts)
   return (
     <Heading
@@ -125,8 +126,8 @@ export function RunHeader({ snapshot, live, arm = null, tools }: RunHeaderProps)
             {t("series", { series: runRef(seriesId) })}
           </Link>
         ),
-        arm === null ? null : <ArmLine key="arm" arm={arm} />,
-        arm?.description ?? null,
+        flowExperiment === null ? null : <ExperimentFlowLine key="experimentFlow" experiment={flowExperiment} flow={snapshot.flow_id} />,
+        experimentFlow?.description ?? null,
       ].filter((line) => line !== null)}
       trailing={<HeaderTrailing changed={snapshot.definition_changed} tools={tools} />}
     />

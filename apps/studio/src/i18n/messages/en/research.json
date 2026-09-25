@@ -8,8 +8,7 @@
     },
     "subject": {
       "flow": "flow",
-      "range": "range",
-      "arm": "arm"
+      "range": "range"
     },
     "status": {
       "running": "RUNNING",
@@ -104,6 +103,12 @@
       "error": "error",
       "waiting": "waiting",
       "running": "running"
+    },
+    "factor": {
+      "agent": "agent",
+      "prompt": "prompt",
+      "use": "node",
+      "flow": "called flow"
     }
   },
   "question": {
@@ -136,8 +141,8 @@
     "subject": {
       "flow": "flow {flow}",
       "range": "{flow} · {range}",
-      "arm": "arm {arm}",
-      "armRange": "arm {arm} · {range}"
+      "local": "experiment flow {flow}",
+      "localRange": "experiment flow {flow} · {range}"
     },
     "series": "{count, plural, =0 {no series} one {# series} other {# series}}",
     "spent": "{amount}",
@@ -147,7 +152,7 @@
     "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/"
   },
   "flowSection": {
-    "arms": "Arms"
+    "local": "Flows of experiments"
   },
   "experiment": {
     "guardrails": "Guardrails: {list}",
@@ -156,11 +161,14 @@
     },
     "canvas": {
       "title": "What we test",
-      "hint": "The graph of each variant: faded steps are outside the tested range; a swap line shows where a variant puts another agent. Click a step to see its agents, inputs, outputs, prompt and results.",
+      "hint": "The graph of the subject and of each flow a variant calls: faded steps are outside the tested range; a line on a step shows what the variants change there. Click a step to see its agents, inputs, outputs, prompt and results.",
       "graphAria": "Graph of {graph}",
-      "arm": "arm {arm}",
+      "localFlow": "flow {flow} of this experiment",
       "flow": "flow {flow}",
+      "subject": "subject",
       "swap": "swap: {agents}",
+      "factor": "{what}: {values}",
+      "factorWritten": "{what} varies",
       "noGraph": "The graph of this experiment could not be loaded",
       "noAgent": "no agent",
       "overridden": "overridden",
@@ -170,18 +178,25 @@
       "hypothesis": "Hypothesis",
       "goal": "Goal",
       "tableAria": "Variants of this experiment",
+      "factor": {
+        "agent": "Varies: agent of {nodes}",
+        "prompt": "Varies: prompt of {nodes}",
+        "use": "Varies: implementation of {nodes}",
+        "flow": "Varies: flow called by {nodes}"
+      },
       "column": {
         "variant": "Variant",
         "role": "Role",
-        "baseline": "Difference from baseline",
-        "reference": "Difference from {variant}",
-        "steps": "Steps",
+        "value": {
+          "agent": "Agent",
+          "prompt": "Prompt",
+          "use": "Alternative",
+          "flow": "Flow"
+        },
         "models": "Agents · models"
       },
-      "reference": "—",
-      "same": "no difference",
-      "swap": "{step}: agent {from} → agent {to}",
-      "swapModels": "{from} → {to}",
+      "asWritten": "as written",
+      "nodeValue": "{node}: {value}",
       "noModel": "no agent",
       "rule": {
         "aria": "Decision rule",
@@ -207,12 +222,12 @@
         "where": "Where",
         "whereKind": {
           "flow": "flow",
-          "arm": "arm",
-          "arms": "arms"
+          "local": "experiment flow"
         },
         "everyStep": "every step",
         "only": "› only {range}",
-        "fromCase": "Earlier steps come from the case"
+        "fromCase": "Earlier steps come from the case",
+        "localFlows": "flows of this experiment: {flows}"
       }
     },
     "answer": {
@@ -298,6 +313,9 @@
     "details": {
       "title": "Technical details",
       "files": "Files",
+      "flows": "Flows of this experiment",
+      "alternatives": "Alternative nodes",
+      "prompts": "Alternative prompts",
       "question": "Question",
       "subject": "Subject",
       "plan": "Plan",

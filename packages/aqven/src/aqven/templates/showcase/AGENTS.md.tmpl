@@ -25,7 +25,8 @@ __package__/
   datasets/<dataset>.yaml              the flow they feed, and cases: name, inputs, expected_output, node_outputs, tags
   experiments/<experiment>/            experiment.yaml: one question over a dataset; experiment.md: notes, failure
                                        modes and decisions; checks.py: check functions of this experiment;
-                                       arms/<arm>/flow.yaml or flow.py: a small flow only this experiment runs;
+                                       flows/<flow>/: a flow only this experiment runs; nodes/<node>/ and
+                                       prompts/<name>.md: what its variants put in place of a node or a prompt;
                                        findings/<series>.yaml: a finding the server wrote, never edit
   FINDINGS.md                          what the project already knows, generated from the findings, never edit
   flows/<flow>/flow.yaml               flow input, output, returns and node order
@@ -211,20 +212,22 @@ Studio calls the two splits by their purpose. **Explore** runs working cases (`d
 |---|---|---|
 | Output contract and limits | agent A on step S passes its output contract in fewer than X of attempts | `threshold` on `success_rate` `below`, `variant: A`, range `from: S, to: S`; read `schema_valid_first_try`; cases that push fields to their limits; run `aqven models shapes <agent> --live` first |
 | Instruction following | instruction I of the prompt is broken more often than X | one binary check per instruction (`regex`, `language`, `max_words`, `no_pii`, `run:`), `threshold` `above` |
-| Long or noisy input | on `length: very_long` the right answer drops below X; condensing first beats one step | `threshold` with `cases.tags` on one level; `compare` of two arms |
+| Long or noisy input | on `length: very_long` the right answer drops below X; condensing first beats one step | `threshold` with `cases.tags` on one level; `compare` of two flows in one slot (`varies: what: flow`) |
 | Class boundaries | cases where the opening topic differs from the intent are decided right less than X | `expected` on the label field, cases selected by tags; write the label first, then the text |
 | Error propagation | a wrong output of S1 reaches the flow output; the checking step notices it but fixes it wrong | a range that starts after S1, a wrong S1 output planted in the case `node_outputs`; two checks: "noticed" and "final output right" |
 | Tool use | with a missing parameter the step invents a value more often than X | checks see the subject output, `node_outputs` and the inputs, not tool calls inside an `llm` step: grade the result, read the calls in `run_events` |
-| Judge reliability | judge J catches more than X of planted defects and passes more than Y of clean answers | an arm that runs the judge on clean answers and copies with one planted defect, `expected` on the label (the experiment `critique_planted_defects`) |
+| Judge reliability | judge J catches more than X of planted defects and passes more than Y of clean answers | a local flow that runs the judge on clean answers and copies with one planted defect, `expected` on the label (the experiment `critique_planted_defects`) |
 | Cost and latency | a variant stays under $X per case, or p95 under Y ms | `threshold` on `cost_usd` or `latency_p95_ms` `below`, on the longest cases; p95 needs about 20 attempts |
-| Stability | a share of cases passes only sometimes | `repeats: 3` or more, read `stability` and `pass_k`; an A/A pair (two identical variants, `compare`, `margin: 0`) gives the noise floor (the experiment `panel_aa_noise`) |
-| Agent per step | agent B on step S is not worse than A by more than m, and a pass costs less | `noninferior` on the range `from: S, to: S`, guardrails `cost_of_pass`, `schema_valid_first_try`, `latency_p95_ms`; downgrade one step at a time |
-| Split a step | a chain S1 → S2 beats one call by more than m, and not just by calling more | `compare` against an arm of equal budget (a `parallel` of k identical `llm` branches and a `code` majority vote), with the single step as a third variant; guardrail `cost_of_pass` `relative: true` |
+| Stability | a share of cases passes only sometimes | `repeats: 3` or more, read `stability` and `pass_k`; an A/A pair (two variants that both keep the flow as written, no `varies`; `compare`, `margin: 0`) gives the noise floor (the experiment `panel_aa_noise`) |
+| Agent per step | agent B on step S is not worse than A by more than m, and a pass costs less | `noninferior` on the range `from: S, to: S`, `varies: what: agent` on S, guardrails `cost_of_pass`, `schema_valid_first_try`, `latency_p95_ms`; downgrade one step at a time |
+| Prompt | prompt P on step S beats the prompt as written by more than m | `varies: what: prompt` on S, the text in `prompts/<name>.md`; the inputs and output schema stay, so only the wording differs |
+| Step logic | algorithm A of a `code` step (a merge rule, a vote, a threshold) is not worse than the one as written | `varies: what: use` on the step, each algorithm an alternative node in `nodes/`; the ways are variants, never checks |
+| Split a step | a chain S1 → S2 beats one call by more than m, and not just by calling more | `varies: what: flow` on a slot, a `call` node, with the single step, the chain and a flow of equal budget (a `parallel` of k identical `llm` branches and a `code` majority vote) as local flows; guardrail `cost_of_pass` `relative: true` |
 
 ### Writing an experiment
 
 An experiment is `experiments/<experiment_id>/experiment.yaml`; its id is the folder name. `__package__/experiments/` has
-one for every question kind and every kind of variant: start from the closest.
+one for every question kind and every kind of factor: start from the closest.
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -235,12 +238,16 @@ subject:
   flow: "support_case"
   from: "triage"
   to: "triage"
+varies:
+  what: "agent"
+  nodes:
+  - "triage"
 cases:
   dataset: "support_case_cases"
 variants:
 - id: "gemini"
 - id: "gpt"
-  agents:
+  nodes:
     triage: "gpt"
 question:
   kind: "threshold"
@@ -257,15 +264,17 @@ plan:
   `confirmed` means exactly this sentence is true. Studio shows it as the Hypothesis, or the Goal of a look.
 - `failure_mode` — the id of the failure mode it tests; `FINDINGS.md` groups findings by it.
 - `subject` — what runs: `flow: <flow_id>`, optionally narrowed to a range of top-level nodes with `from` and `to`
-  (the nodes above the range replay the case `node_outputs`, and variants swap agents only inside the range), or
-  `arm: <arm_id>` — a flow of two to five steps in `experiments/<experiment_id>/arms/<arm_id>/flow.yaml` or
-  `flow.py` that only this experiment runs. Test a structure as an arm before you build it into the flow.
+  (the nodes above the range replay the case `node_outputs`). The flow is a local flow of the experiment, looked up
+  first in `experiments/<experiment_id>/flows/<flow_id>/` (`flow.yaml` with its nodes, or `flow.py`), or a flow of the
+  project. A local flow runs only in this experiment; test a structure there before you build it into the project.
+- `varies` — the one factor the variants change: `what` and `nodes`, the nodes of the subject it touches, each named
+  by its own id (`revise`, not `polish__revise`), inside the range when there is one. Required with two or more
+  variants.
 - `cases` — `dataset: <dataset_id>`, optionally `tags: {<dimension>: <value>}`: a case is selected when every listed
   tag has that value.
-- `variants` — at least one. A variant with only an `id` is the subject as written; `agents: {<node_id>: <agent_id>}`
-  swaps the agents of nodes; `arm: <arm_id>` runs another arm with the same input and output types, optionally with
-  `agents` too. A variant never names a bare model: a new candidate model is a new `agents/<agent>.yaml` with its
-  settings and output mode.
+- `variants` — at least one. A variant is an `id` and `nodes: {<node>: <value>}` for nodes of `varies.nodes`; a variant
+  with only an `id` is the subject as written, and a factor node a variant leaves out runs as written. A variant never
+  names a bare model: a new candidate model is a new `agents/<agent>.yaml` with its settings and output mode.
 - `checks` — scored on every attempt, each with an `id` and `kind: binary | ordinal | continuous`, and one of:
   a built-in `use:` with `with:` — `expected` (against the case's `expected_output`, optionally only `fields`),
   `not_empty`, `max_words`, `language`, `no_pii`, `regex`, `unique_items`, `ids_in_allowed_set`,
@@ -290,11 +299,42 @@ A guardrail is `metric`, `margin`, optional `direction` (`higher_is_better` or `
 to read the margin as a share of the baseline. Pick the margin before you see data: the smallest effect worth changing
 the flow for, or the largest loss you accept.
 
+**One factor per experiment: the compared things are variants, the measures are checks.** Each way of doing a step is a
+variant, a row of the series; what tells a good result from a bad one is a check, a column. Never write the ways as
+checks over one variant (three merge rules as three checks): make each a variant through the factor that changes it.
+A variant that changes two things at once cannot say which one made the difference; a combination you want to test as
+one thing (a cheaper agent with a prompt tuned for it) goes into one alternative node and is compared with `use`.
+
+| `what` | The node | A variant's value | Files |
+|---|---|---|---|
+| `agent` | an `llm` node | an agent of the project | `agents/<agent>.yaml` |
+| `prompt` | an `llm` node | the name of a prompt text; it replaces the prompt of that node only, and the inputs, output schema and checks of its inference stay | `experiments/<experiment_id>/prompts/<name>.md` |
+| `use` | any node | the id of an alternative node; it runs under the id of the node it replaces, so `$<node>.out` bindings keep working, and its children are found among the alternatives first | `experiments/<experiment_id>/nodes/<alternative>/`: `<alternative>.node.yaml` and its `.py`, `.inference.yaml`, `.prompt.md` |
+| `flow` | a `call` node | a flow with the input and output types of the flow the node calls as written; the node keeps its input bindings | `experiments/<experiment_id>/flows/<flow_id>/`, else a flow of the project |
+
+```
+experiments/<experiment_id>/
+  experiment.yaml             subject, varies, cases, variants, checks, question, plan
+  experiment.md               notes, failure modes, decisions
+  checks.py                   check functions of this experiment
+  flows/<flow_id>/            local flows: flow.yaml with nodes/, or flow.py
+  nodes/<alternative>/        alternative nodes for use
+  prompts/<name>.md           prompt texts for prompt
+  findings/<series>.yaml      findings the server wrote, never edit
+```
+
+To compare whole structures, give the subject a slot: a local flow with one `call` node that passes its input on,
+and each structure a local flow the variants plug into that node with `flow`. `aqven check` assembles and compiles
+every variant; an error inside an alternative, a prompt text or a local flow is reported at
+`variants[i].nodes.<node>` and names the file it comes from. In `__package__/experiments/`, `judge_panel_agents` varies an
+agent, `panel_judge_prompt` a prompt on three nodes, `panel_merge_rule` a code step, and `panel_single_judge`,
+`intent_split_long_messages` and `intent_ballot_pair` the flow in a slot.
+
 ### Cases and checks
 
-- A dataset is `datasets/<dataset_id>.yaml` with `flow: <flow_id>`; only an arm subject runs a dataset without
-  `flow`. A case has a unique `name`, `inputs`, and as needed `expected_output`, `node_outputs` (outputs of the
-  top-level nodes a range skips) and `tags`.
+- A dataset is `datasets/<dataset_id>.yaml` with `flow: <flow_id>`; a local flow subject also runs a dataset without
+  `flow`, or the dataset of a project flow with the same input type. A case has a unique `name`, `inputs`, and as
+  needed `expected_output`, `node_outputs` (outputs of the top-level nodes a range skips) and `tags`.
 - Cover the situations the flow will meet in its own domain: one case per `switch` case or decision path, one per
   failure the steps can hit, plus the ordinary case each is a variation on. A support triage needs an angry customer,
   a calm one, one in the wrong language and one where the only right answer is "escalate", not four polite refund
@@ -397,7 +437,8 @@ on `holdout` with a verdict other than `invalid` writes one finding and regenera
 |---|---|
 | step S breaks its output contract | first check the limit is stated in the prompt; then another agent, more `output.retries`, or trimming in a `code` step; raise a limit only if the developer confirms it is not a requirement |
 | B is not worse and cheaper | point the node's `agent:` at B |
-| the chain beats the equal-budget arm | move the arm's nodes into the flow with `flow_patch`; there is no promote tool |
+| a prompt wins | copy the text of `prompts/<name>.md` into the node's prompt file and preview it with `aqven prompt preview` |
+| an alternative node or a local flow wins | move its nodes into the project flow with `flow_patch`; there is no promote tool |
 | a risk is real but no fix is proven | a structural guard (a `code` check, a `switch`, a run-time `checks:` entry), then a new hypothesis "the guard keeps the risk below X" |
 | the judge passes its planted-defect test | add `validated_by: <experiment_id>` to every check that uses it |
 
@@ -411,8 +452,9 @@ is left; put the finding path in the commit message.
 
 Change two things between series; fix a downstream failure before the first upstream one; drop hard cases so a
 finding passes; tune a prompt on `holdout` cases; move a metric, a threshold or a margin after the data came in
-(that is a new experiment); compare a multi-call arm only against a single call; use a judge where `regex` or code
-can check; weaken a type or a limit so a series passes; present a `dev` number as a finding.
+(that is a new experiment); vary two factors in one experiment; write the compared ways as checks instead of
+variants; compare a multi-call flow only against a single call; use a judge where `regex` or code can check; weaken
+a type or a limit so a series passes; present a `dev` number as a finding.
 
 ### When to stop
 
@@ -438,13 +480,19 @@ Examples: `E_REF_MISSING` (a binding points at something that does not exist), `
 not fit the declared type), `E_INPUT_UNBOUND`, `E_PROMPT_VARIABLE_UNDECLARED`, `E_PROMPT_MISSING`,
 `E_SWITCH_NOT_EXHAUSTIVE`, `E_OUTPUT_MODE_UNSUPPORTED`, `W_OUTPUT_MODE_RESOLVED`, `W_GENERATED_STALE`.
 
-Experiments and datasets: `E_FLOW_UNKNOWN`, `E_ARM_UNKNOWN`, `E_RANGE_INVALID` (a `from`/`to` that is not a range of
-top-level nodes), `E_VARIANT_INVALID` (an agent swap outside the range), `E_AGENT_UNKNOWN`, `E_DATASET_UNKNOWN`,
-`E_DATASET_MISMATCH` (the dataset feeds another flow, or an arm's types differ from the subject's), `E_CASES_EMPTY` (the
-tag filter selects nothing), `E_CASE_DUPLICATE`, `E_EXPECTED_MISSING` (an `expected` check on a case without
-`expected_output`), `E_CHECK_PATH_UNKNOWN`, `E_METRIC_UNKNOWN`, `E_EXPERIMENT_UNKNOWN` (a `validated_by` that does not
-exist), `E_ID_DUPLICATE`, `W_PLAN_EXCEEDS_CASES`, `W_CHECK_CONTEXT_MISMATCH`, `W_JUDGE_INPUT_UNBOUND`,
-`E_FINDING_TAMPERED`, `W_FINDINGS_STALE`.
+Experiments and datasets: `E_FLOW_UNKNOWN`, `E_RANGE_INVALID` (a `from`/`to` that is not a range of top-level nodes),
+`E_FACTOR_MISSING` (several variants and no `varies`), `E_FACTOR_NODE_UNKNOWN` (a `varies.nodes` entry that is not a
+node of the subject or lies outside the range), `E_FACTOR_KIND` (`agent` or `prompt` on a node that is not `llm`,
+`flow` on one that is not `call`), `E_VARIANT_OUTSIDE_FACTOR` (a variant sets a node not in `varies.nodes`),
+`E_ALTERNATIVE_UNKNOWN`, `E_ALTERNATIVE_ID_TAKEN` (an alternative with the id of a subject node), `E_PROMPT_MISSING`
+(a variant names a prompt with no file in `prompts/`), `E_FACTOR_FLOW_CONTRACT` (a flow for the slot with other input
+or output types), `E_VARIANT_INVALID` (a question names a variant that is not declared), `E_AGENT_UNKNOWN`,
+`E_DATASET_UNKNOWN`, `E_DATASET_MISMATCH` (the dataset feeds another flow, or a local flow's input type differs),
+`E_CASES_EMPTY` (the tag filter selects nothing), `E_CASE_DUPLICATE`, `E_EXPECTED_MISSING` (an `expected` check on a
+case without `expected_output`), `E_CHECK_PATH_UNKNOWN`, `E_METRIC_UNKNOWN`, `E_EXPERIMENT_UNKNOWN` (a `validated_by`
+that does not exist), `E_ID_DUPLICATE`, `W_PLAN_EXCEEDS_CASES`, `W_CHECK_CONTEXT_MISMATCH`, `W_JUDGE_INPUT_UNBOUND`,
+`E_FINDING_TAMPERED`, `W_FINDINGS_STALE`, `W_VARIANT_DUPLICATE` (two variants set the same values),
+`W_ALTERNATIVE_UNUSED` (an alternative, a prompt text or a local flow no variant uses).
 
 The hooks in `.claude/settings.json` run `aqven check --static` after every file edit and the full `aqven check` when
 you stop, so a broken tree comes back to you instead of reaching a commit.
@@ -462,7 +510,7 @@ you stop, so a broken tree comes back to you instead of reaching a commit.
 | `uv run aqven models shapes <agent> --project __package__ --live` | the agent model's real nesting depth, list length and enum size; billed, requires `--live` |
 | `uv run aqven secrets __package__` | every provider, tool and MCP secret the project declares, where it comes from, and a masked tail if it's set |
 | `uv run aqven generate __package__` | writes `__package__/types.py` |
-| `uv run aqven tree __package__` | entities by kind with their files, experiments and arms included |
+| `uv run aqven tree __package__` | entities by kind with their files, experiments with their local flows and alternatives included |
 | `uv run aqven run support_case --root __package__ --input __package__/samples/case_request.json` | runs a flow without a server |
 | `uv run aqven series reply_look --path __package__` | runs a series of an experiment on `dev` and waits for its verdict; `--on holdout`, `--cases N`, `--repeats R`, `--cap USD`; `--json` prints the final state with the case rows as one JSON line |
 | exit codes of `aqven series` | 0 the series is `done`, whatever the verdict; 1 `cancelled`, `failed` or no answer from the server; 2 a refused request (`NOT_RUNNABLE`, `NOT_FOUND`); 3 awaits a person's approval of the spend; 4 waits for a human answer |

@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Merges the verdicts by majority alone: two judges on the same candidate agree however far apart their scores are, and only a three-way split goes to the tie-break"
+run: "majority_only"
+in:
+- name: "verdicts"
+  type: "JudgeVerdict[]"
+  description: "Judge verdicts"
+  maxItems: 3
+  from: "$judges.out.verdicts"
+out:
+- name: "consensus"
+  type: "JudgeVerdict"
+  description: "Merged panel verdict"
+- name: "level"
+  type: "Agreement"
+  description: "Whether a majority of the judges picked the same candidate"
+- name: "spread"
+  type: "Float"
+  description: "Largest score spread on a single criterion among the judges who picked the majority candidate"
+  minimum: 0
+  maximum: 4

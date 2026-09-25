@@ -12,7 +12,7 @@ from aqven.ir import CompiledFlow, CompiledProject, IrLookupError
 from aqven.runtime.address import JsonObject
 from aqven.runtime.options import RunContext
 from aqven.series.model import CaseSnapshot, SubjectKind, SubjectRecord, VariantPlanRecord
-from aqven.spec import DatasetId, ExperimentSubject, FlowId, Limits, NodeId, VariantSpec
+from aqven.spec import DatasetId, ExperimentSubject, FlowId, Limits, NodeId
 
 EXPERIMENT_MODE: Final = "experiment"
 DATASET_ITEM_SEPARATOR: Final = "/"
@@ -26,11 +26,6 @@ class SubjectUnbound(RuntimeError):
     def __init__(self, kind: SubjectKind) -> None:
         super().__init__(f"the {kind.value} subject strategy is used before it is bound to a series")
         self.kind = kind
-
-
-class SubjectTargetMissing(ValueError):
-    def __init__(self) -> None:
-        super().__init__("the experiment subject names neither a flow nor an arm")
 
 
 class CaseInputInvalid(ValueError):
@@ -58,8 +53,6 @@ class SubjectStrategy(Protocol):
     def kind(self) -> SubjectKind: ...
 
     def bind(self, binding: SubjectBinding) -> SubjectStrategy: ...
-
-    def target(self, experiment: ExperimentSubject, variant: VariantSpec) -> FlowId: ...
 
     def problems(self, plan: CompiledProject, flow_id: FlowId, case: CaseSnapshot) -> tuple[str, ...]: ...
 
@@ -105,16 +98,6 @@ def objects(documents: Sequence[JsonValue]) -> tuple[JsonObject, ...]:
 
 def ordered_outputs(order: Sequence[NodeId], outputs: Mapping[NodeId, JsonValue]) -> tuple[JsonValue, ...]:
     return tuple(outputs[node_id] for node_id in order if node_id in outputs)
-
-
-def flow_target(experiment: ExperimentSubject, variant: VariantSpec) -> FlowId:
-    if variant.arm is not None:
-        return FlowId(variant.arm)
-    if experiment.arm is not None:
-        return FlowId(experiment.arm)
-    if experiment.flow is not None:
-        return experiment.flow
-    raise SubjectTargetMissing()
 
 
 def validation_messages(error: ValidationError) -> tuple[str, ...]:
@@ -166,15 +149,12 @@ def compiled_flow(plan: CompiledProject, flow_id: FlowId) -> CompiledFlow | None
 
 
 @dataclass(frozen=True, slots=True)
-class WholeFlowSubject:
+class FlowSubject:
     kind: SubjectKind = SubjectKind.FLOW
     binding: SubjectBinding | None = None
 
     def bind(self, binding: SubjectBinding) -> SubjectStrategy:
         return replace(self, binding=binding)
-
-    def target(self, experiment: ExperimentSubject, variant: VariantSpec) -> FlowId:
-        return flow_target(experiment, variant)
 
     def problems(self, plan: CompiledProject, flow_id: FlowId, case: CaseSnapshot) -> tuple[str, ...]:
         flow = compiled_flow(plan, flow_id)
@@ -223,25 +203,12 @@ class WholeFlowSubject:
 
 
 @dataclass(frozen=True, slots=True)
-class FlowSubject(WholeFlowSubject):
-    kind: SubjectKind = SubjectKind.FLOW
-
-
-@dataclass(frozen=True, slots=True)
-class ArmSubject(WholeFlowSubject):
-    kind: SubjectKind = SubjectKind.ARM
-
-
-@dataclass(frozen=True, slots=True)
 class RangeSubject:
     kind: SubjectKind = SubjectKind.RANGE
     binding: SubjectBinding | None = None
 
     def bind(self, binding: SubjectBinding) -> SubjectStrategy:
         return replace(self, binding=binding)
-
-    def target(self, experiment: ExperimentSubject, variant: VariantSpec) -> FlowId:
-        return flow_target(experiment, variant)
 
     def problems(self, plan: CompiledProject, flow_id: FlowId, case: CaseSnapshot) -> tuple[str, ...]:
         flow = compiled_flow(plan, flow_id)
@@ -308,20 +275,18 @@ class RangeSubject:
         return subject.start_node, subject.end_node
 
 
-SUBJECTS: Final[Mapping[tuple[bool, bool], SubjectStrategy]] = {
-    (False, False): FlowSubject(),
-    (True, False): ArmSubject(),
-    (False, True): RangeSubject(),
-    (True, True): RangeSubject(),
+SUBJECTS: Final[Mapping[bool, SubjectStrategy]] = {
+    False: FlowSubject(),
+    True: RangeSubject(),
 }
 
 
-def subject_key(subject: SubjectRecord) -> tuple[bool, bool]:
-    return (subject.arm_id is not None, subject.start_node is not None)
+def subject_key(subject: SubjectRecord) -> bool:
+    return subject.start_node is not None
 
 
 def subject_kind(experiment: ExperimentSubject) -> SubjectKind:
-    return SUBJECTS[(experiment.arm is not None, experiment.from_ is not None)].kind
+    return SUBJECTS[experiment.from_ is not None].kind
 
 
 def subject_strategy(binding: SubjectBinding) -> SubjectStrategy:

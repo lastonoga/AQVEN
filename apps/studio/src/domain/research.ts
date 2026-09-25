@@ -1,12 +1,15 @@
-import type { AgentId, ArmId, CheckId, DatasetId, ExperimentId, FilePath, FlowId, IsoDateTime, NodeId, RunId, SeriesId, VariantId } from "./core"
+import type { AgentId, CheckId, DatasetId, ExperimentId, FilePath, FlowId, IsoDateTime, NodeId, RunId, SeriesId, VariantId } from "./core"
 import type { ApiFlowSchemas, ApiNode, ApiPromptDetail } from "./live"
 import type { NodeKind } from "./vocabulary"
 
 export const QUESTION_KINDS = ["look", "threshold", "compare", "noninferior"] as const
 export type QuestionKind = (typeof QUESTION_KINDS)[number]
 
-export const SUBJECT_KINDS = ["flow", "range", "arm"] as const
+export const SUBJECT_KINDS = ["flow", "range"] as const
 export type SubjectKind = (typeof SUBJECT_KINDS)[number]
+
+export const FACTOR_KINDS = ["agent", "prompt", "use", "flow"] as const
+export type FactorKind = (typeof FACTOR_KINDS)[number]
 
 export const CHECK_KINDS = ["binary", "continuous", "ordinal"] as const
 export type CheckKind = (typeof CHECK_KINDS)[number]
@@ -92,19 +95,26 @@ export type AgentRef = { readonly id: AgentId; readonly model: string }
 
 export type NodeRange = { readonly from: NodeId; readonly to: NodeId }
 
-export type ArmStep = {
+export type FlowStep = {
   readonly node: NodeId
   readonly kind: NodeKind
   readonly agent: AgentRef | null
   readonly description: string
 }
 
-export type ExperimentArm = { readonly id: ArmId; readonly description: string; readonly steps: readonly ArmStep[] }
+export type ExperimentFlow = { readonly id: FlowId; readonly description: string; readonly file: FilePath | null; readonly steps: readonly FlowStep[] }
+
+export type ExperimentAlternative = { readonly id: NodeId; readonly kind: NodeKind; readonly description: string; readonly file: FilePath }
+
+export type ExperimentPrompt = { readonly name: string; readonly file: FilePath }
+
+export type ExperimentFactor = { readonly what: FactorKind; readonly nodes: readonly NodeId[] }
+
+export type FactorChange = { readonly node: NodeId; readonly what: FactorKind; readonly value: string }
 
 export type ExperimentSubject =
-  | { readonly kind: "flow"; readonly flow: FlowId }
-  | { readonly kind: "range"; readonly flow: FlowId; readonly range: NodeRange }
-  | { readonly kind: "arm"; readonly arm: ArmId; readonly range: NodeRange | null }
+  | { readonly kind: "flow"; readonly flow: FlowId; readonly local: boolean }
+  | { readonly kind: "range"; readonly flow: FlowId; readonly local: boolean; readonly range: NodeRange }
 
 export type SplitCounts = Readonly<Record<SeriesSplit, number>>
 
@@ -121,8 +131,8 @@ export type VariantAssignment = { readonly node: NodeId; readonly agent: AgentRe
 
 export type ExperimentVariant = {
   readonly id: VariantId
-  readonly arm: ArmId | null
   readonly role: VariantRole
+  readonly changes: readonly FactorChange[]
   readonly assignments: readonly VariantAssignment[]
 }
 
@@ -207,7 +217,10 @@ export type ExperimentFiles = { readonly spec: FilePath; readonly notes: FilePat
 
 export type ExperimentDetail = ExperimentHead & {
   readonly question: ExperimentQuestion
-  readonly arms: readonly ExperimentArm[]
+  readonly varies: ExperimentFactor | null
+  readonly flows: readonly ExperimentFlow[]
+  readonly alternatives: readonly ExperimentAlternative[]
+  readonly prompts: readonly ExperimentPrompt[]
   readonly cases: CaseSelection
   readonly variants: readonly ExperimentVariant[]
   readonly checks: readonly ExperimentCheck[]
@@ -349,10 +362,11 @@ export type SeriesCaseRow = {
 
 export type SeriesCaseFilter = { readonly failures?: boolean; readonly divergent?: boolean }
 
-export type ArmFlow = {
+export type ExperimentFlowDetail = {
   readonly experiment: ExperimentId
-  readonly arm: ArmId
+  readonly flow: FlowId
   readonly description: string | null
+  readonly order: readonly NodeId[]
   readonly nodes: readonly ApiNode[]
   readonly schemas: ApiFlowSchemas
   readonly prompts: Readonly<Record<string, ApiPromptDetail>>

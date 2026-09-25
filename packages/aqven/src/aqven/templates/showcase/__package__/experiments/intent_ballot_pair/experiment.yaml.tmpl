@@ -3,18 +3,18 @@ kind: "Experiment"
 description: "A second intent ballot on the evidence, settled by confidence, gets the intent of a long message right more often than one ballot, with at most 5 points fewer outputs valid on the first try"
 failure_mode: "intent_misread"
 subject:
-  arm: "single"
+  flow: "intent_decision"
+varies:
+  what: "flow"
+  nodes:
+  - "ballots"
 cases:
   dataset: "long_customer_messages"
 variants:
 - id: "single"
 - id: "pair"
-  arm: "pair"
-- id: "pair_qwen"
-  arm: "pair"
-  agents:
-    words: "qwen"
-    evidence: "qwen"
+  nodes:
+    ballots: "pair"
 checks:
 - id: "intent"
   kind: "binary"

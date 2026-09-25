@@ -24,7 +24,6 @@ from aqven.loader import (
 from aqven.loader import project as loader_project
 from aqven.spec import (
     AgentId,
-    ArmId,
     ExperimentId,
     FlowId,
     HumanNodeSpec,
@@ -84,7 +83,7 @@ ENTITY_IDS: Final[Mapping[str, tuple[str, SpecKind | None]]] = {
     "support/quick.inference.py": ("quick", SpecKind.INFERENCE),
     "experiments/reply_quality/experiment.yaml": ("reply_quality", SpecKind.EXPERIMENT),
     "experiments/reply_quality/experiment.md": ("experiment", None),
-    "experiments/reply_quality/arms/revise_only/flow.yaml": ("revise_only", SpecKind.FLOW),
+    "experiments/reply_quality/flows/revise_only/flow.yaml": ("revise_only", SpecKind.FLOW),
 }
 
 INCLUDES: Final[Mapping[str, tuple[tuple[str, ...], str, tuple[str, ...]]]] = {
@@ -129,9 +128,9 @@ out:
 
 EXPERIMENT: Final = """apiVersion: "aqven/v1"
 kind: "Experiment"
-description: "A quick look at the audit arm"
+description: "A quick look at the audit flow"
 subject:
-  arm: "audit"
+  flow: "audit"
 cases:
   dataset: "triage"
 variants:
@@ -525,13 +524,13 @@ def test_dynamic_limits_errors_get_their_own_code() -> None:
 
 def with_experiment(root: Path, folder: str) -> None:
     write(root, f"{folder}/experiment.yaml", EXPERIMENT)
-    write(root, f"{folder}/arms/audit/flow.yaml", (root / "triage/flow.yaml").read_text(encoding="utf-8"))
-    write(root, f"{folder}/arms/audit/nodes/note.yaml", NOTE_NODE)
+    write(root, f"{folder}/flows/audit/flow.yaml", (root / "triage/flow.yaml").read_text(encoding="utf-8"))
+    write(root, f"{folder}/flows/audit/nodes/note.yaml", NOTE_NODE)
 
 
-def test_experiment_takes_its_id_notes_and_arms_from_its_folder(shop: Path) -> None:
+def test_experiment_takes_its_id_notes_and_local_flows_from_its_folder(shop: Path) -> None:
     with_experiment(shop, "experiments/audit_look")
-    write(shop, "experiments/audit_look/experiment.md", "Why the audit arm is worth a look.\n")
+    write(shop, "experiments/audit_look/experiment.md", "Why the audit flow is worth a look.\n")
 
     result = load_project(shop)
 
@@ -543,24 +542,82 @@ def test_experiment_takes_its_id_notes_and_arms_from_its_folder(shop: Path) -> N
         "experiments/audit_look",
         "experiments/audit_look/experiment.yaml",
     )
-    assert experiment.notes == "Why the audit arm is worth a look.\n"
-    assert set(experiment.arms) == {ArmId("audit")}
-    assert set(experiment.arms[ArmId("audit")].nodes) == {NodeId("note")}
-    assert experiment.arm_folder(ArmId("audit")) == "experiments/audit_look/arms/audit"
+    assert experiment.notes == "Why the audit flow is worth a look.\n"
+    assert set(experiment.flows) == {FlowId("audit")}
+    assert set(experiment.flows[FlowId("audit")].nodes) == {NodeId("note")}
+    assert experiment.flows[FlowId("audit")].folder == "experiments/audit_look/flows/audit"
     assert set(project.flows) == {FlowId("triage")}
 
 
-def test_experiment_without_notes_or_arms_loads(shop: Path) -> None:
+def test_experiment_without_notes_or_local_files_loads(shop: Path) -> None:
     write(shop, "experiments/audit_look/experiment.yaml", EXPERIMENT)
 
     project = load_project(shop).project
 
     assert project is not None
     experiment = project.experiments[ExperimentId("audit_look")]
-    assert (experiment.notes, dict(experiment.arms)) == (None, {})
+    assert (experiment.notes, dict(experiment.flows), dict(experiment.alternatives), dict(experiment.prompts)) == (
+        None,
+        {},
+        {},
+        {},
+    )
 
 
-def test_same_arm_name_in_two_experiments_does_not_collide(shop: Path) -> None:
+def test_experiment_owns_its_alternatives_by_local_id_with_their_own_files(shop: Path) -> None:
+    folder = "experiments/audit_look"
+    write(shop, f"{folder}/experiment.yaml", EXPERIMENT)
+    write(shop, f"{folder}/nodes/note_short/note_short.node.yaml", NOTE_NODE)
+    write(shop, f"{folder}/nodes/classify_short.node.yaml", (shop / CLASSIFY).read_text(encoding="utf-8"))
+    write(shop, f"{folder}/nodes/classify_short.inference.yaml", (shop / INFERENCE).read_text(encoding="utf-8"))
+    write(shop, f"{folder}/nodes/classify_short.prompt.md", (shop / PROMPT).read_text(encoding="utf-8"))
+
+    result = load_project(shop)
+
+    assert result.diagnostics == ()
+    project = result.project
+    assert project is not None
+    alternatives = project.experiments[ExperimentId("audit_look")].alternatives
+    classify = alternatives[NodeId("classify_short")].spec
+    assert set(alternatives) == {NodeId("note_short"), NodeId("classify_short")}
+    assert alternatives[NodeId("note_short")].path == f"{folder}/nodes/note_short/note_short.node.yaml"
+    assert isinstance(classify, LlmNodeSpec) and classify.inference == InferenceId("classify_short")
+    assert InferenceId("classify_short") in project.inferences
+
+
+def test_alternative_ids_are_unique_in_an_experiment(shop: Path) -> None:
+    folder = "experiments/audit_look"
+    write(shop, f"{folder}/experiment.yaml", EXPERIMENT)
+    write(shop, f"{folder}/nodes/a/note_short.node.yaml", NOTE_NODE)
+    write(shop, f"{folder}/nodes/b/note_short.node.yaml", NOTE_NODE)
+
+    result = load_project(shop)
+
+    assert [(item.code, item.file) for item in result.diagnostics] == [
+        (DiagnosticCode.E_ID_DUPLICATE, f"{folder}/nodes/b/note_short.node.yaml")
+    ]
+
+
+def test_experiment_prompts_are_named_by_their_files(shop: Path) -> None:
+    folder = "experiments/audit_look"
+    write(shop, f"{folder}/experiment.yaml", EXPERIMENT)
+    write(shop, f"{folder}/prompts/short.md", "Sort the ticket.\n")
+    write(shop, f"{folder}/prompts/Long-One.md", "Sort the ticket slowly.\n")
+    write(shop, f"{folder}/prompts/drafts/old.md", "Old.\n")
+
+    result = load_project(shop)
+
+    assert [(item.code, item.file) for item in result.diagnostics] == [
+        (DiagnosticCode.E_BAD_NAME, f"{folder}/prompts/Long-One.md")
+    ]
+    assert result.project is not None
+    prompts = result.project.experiments[ExperimentId("audit_look")].prompts
+    assert {name: (prompt.path, prompt.text) for name, prompt in prompts.items()} == {
+        "short": (f"{folder}/prompts/short.md", "Sort the ticket.\n")
+    }
+
+
+def test_same_local_flow_name_in_two_experiments_does_not_collide(shop: Path) -> None:
     with_experiment(shop, "experiments/audit_look")
     with_experiment(shop, "experiments/audit_again")
 
@@ -569,15 +626,15 @@ def test_same_arm_name_in_two_experiments_does_not_collide(shop: Path) -> None:
     assert result.diagnostics == ()
     project = result.project
     assert project is not None
-    folders = {key: experiment.arms[ArmId("audit")].folder for key, experiment in project.experiments.items()}
+    folders = {key: experiment.flows[FlowId("audit")].folder for key, experiment in project.experiments.items()}
     assert folders == {
-        ExperimentId("audit_look"): "experiments/audit_look/arms/audit",
-        ExperimentId("audit_again"): "experiments/audit_again/arms/audit",
+        ExperimentId("audit_look"): "experiments/audit_look/flows/audit",
+        ExperimentId("audit_again"): "experiments/audit_again/flows/audit",
     }
     assert FlowId("audit") not in project.flows
 
 
-def test_arms_folder_without_experiment_file_holds_project_flows(shop: Path) -> None:
+def test_flows_folder_without_experiment_file_holds_project_flows(shop: Path) -> None:
     with_experiment(shop, "experiments/audit_look")
     (shop / "experiments/audit_look/experiment.yaml").unlink()
 
@@ -585,10 +642,10 @@ def test_arms_folder_without_experiment_file_holds_project_flows(shop: Path) -> 
 
     assert project is not None
     assert project.experiments == {}
-    assert project.flows[FlowId("audit")].folder == "experiments/audit_look/arms/audit"
+    assert project.flows[FlowId("audit")].folder == "experiments/audit_look/flows/audit"
 
 
-def test_invalid_experiment_file_still_owns_its_arms(shop: Path) -> None:
+def test_invalid_experiment_file_still_owns_its_local_flows(shop: Path) -> None:
     with_experiment(shop, "experiments/audit_look")
     replace(shop, "experiments/audit_look/experiment.yaml", 'kind: "look"', 'kind: "glance"')
 
@@ -598,6 +655,38 @@ def test_invalid_experiment_file_still_owns_its_arms(shop: Path) -> None:
     assert result.project is not None
     assert result.project.experiments == {}
     assert FlowId("audit") not in result.project.flows
+
+
+@pytest.mark.parametrize(
+    "folder",
+    ["experiments/audit_look/arms/audit", "experiments/audit_look/audit", "experiments/audit_look"],
+)
+def test_flow_elsewhere_in_an_experiment_folder_is_an_orphan(shop: Path, folder: str) -> None:
+    write(shop, "experiments/audit_look/experiment.yaml", EXPERIMENT)
+    write(shop, f"{folder}/flow.yaml", (shop / "triage/flow.yaml").read_text(encoding="utf-8"))
+    write(shop, f"{folder}/nodes/note.yaml", NOTE_NODE)
+
+    result = load_project(shop)
+
+    problem = next(item for item in result.diagnostics if item.code is DiagnosticCode.E_ORPHAN_FILE)
+    assert [(item.code, item.file) for item in result.diagnostics] == [
+        (DiagnosticCode.E_ORPHAN_FILE, f"{folder}/flow.yaml")
+    ]
+    assert "move it there" in problem.message and "experiments/audit_look/flows/" in problem.message
+    assert result.project is not None
+    assert dict(result.project.experiments[ExperimentId("audit_look")].flows) == {}
+    assert set(result.project.flows) == {FlowId("triage")}
+
+
+def test_node_elsewhere_in_an_experiment_folder_is_an_orphan(shop: Path) -> None:
+    write(shop, "experiments/audit_look/experiment.yaml", EXPERIMENT)
+    write(shop, "experiments/audit_look/spare/note.yaml", NOTE_NODE)
+
+    result = load_project(shop)
+
+    assert [(item.code, item.file) for item in result.diagnostics] == [
+        (DiagnosticCode.E_ORPHAN_FILE, "experiments/audit_look/spare/note.yaml")
+    ]
 
 
 def test_a_file_deleted_between_listing_and_reading_is_skipped(shop: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -10,6 +10,10 @@ import { questionMetrics, subjectText } from "./presenters"
 
 const LIST_JOIN = "; "
 
+type Listed = { readonly id: string; readonly file: string | null }
+
+const listedText = (items: readonly Listed[]): string => items.map((item) => joinMeta([item.id, item.file])).join(LIST_JOIN)
+
 function useMetricText(question: ExperimentQuestion): (column: MetricColumn) => string {
   const t = useTranslations("research")
   const builtin = useBuiltinNames()
@@ -37,8 +41,12 @@ function useFacts(experiment: ExperimentDetail): readonly Fact[] {
       </Text>
     ),
   })
+  const listed = (id: string, label: string, items: readonly Listed[]): readonly Fact[] => (items.length === 0 ? [] : [plain(id, label, listedText(items))])
   return [
     plain("files", t("experiment.details.files"), joinMeta([experiment.files.spec, experiment.files.notes])),
+    ...listed("flows", t("experiment.details.flows"), experiment.flows.map((flow) => ({ id: flow.id, file: flow.file }))),
+    ...listed("alternatives", t("experiment.details.alternatives"), experiment.alternatives.map((item) => ({ id: item.id, file: item.file }))),
+    ...listed("prompts", t("experiment.details.prompts"), experiment.prompts.map((item) => ({ id: item.name, file: item.file }))),
     plain("question", t("experiment.details.question"), joinMeta([t(`vocabulary.question.${experiment.question.kind}`), metrics.join(LIST_JOIN)])),
     plain("subject", t("experiment.details.subject"), subjectText(experiment.subject, subject)),
     plain("plan", t("experiment.details.plan"), t("experiment.details.planText", { cases: experiment.plan.cases ?? experiment.cases.selected, repeats: experiment.plan.repeats })),

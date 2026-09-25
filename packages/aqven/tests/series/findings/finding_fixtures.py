@@ -38,6 +38,7 @@ from aqven.series import (
     SubjectRecord,
     ThresholdCell,
     VariantAggregates,
+    VariantChange,
     VariantPlanRecord,
     VariantRole,
     attempt_id,
@@ -49,6 +50,7 @@ from aqven.spec import (
     DatasetId,
     ExperimentId,
     ExperimentSpec,
+    FactorKind,
     FlowId,
     InferenceId,
     MetricDirection,
@@ -78,6 +80,7 @@ MISTRAL: Final = VariantId("mistral")
 GPT_MODEL: Final = "openrouter:openai/gpt-oss-20b"
 MISTRAL_MODEL: Final = "openrouter:mistralai/mistral-nemo"
 REVISE: Final = NodeId("polish__revise")
+REVISE_SLOT: Final = NodeId("revise")
 VARIANTS: Final = (GPT, MISTRAL)
 MODELS: Final = {GPT: GPT_MODEL, MISTRAL: MISTRAL_MODEL}
 ATTEMPT_COST: Final = Decimal("0.0035")
@@ -99,7 +102,8 @@ def experiment(experiment_id: str, question: dict[str, JsonValue], failure_mode:
         "failure_mode": failure_mode,
         "subject": {"flow": FLOW, "from": "polish", "to": "polish"},
         "cases": {"dataset": DATASET},
-        "variants": [{"id": GPT}, {"id": MISTRAL, "agents": {REVISE: "mistral"}}],
+        "varies": {"what": "agent", "nodes": [REVISE_SLOT]},
+        "variants": [{"id": GPT}, {"id": MISTRAL, "nodes": {REVISE_SLOT: "mistral"}}],
         "checks": [
             {"id": "critique", "kind": "continuous", "inference": "critique", "agent": "deepseek"},
         ],
@@ -117,7 +121,7 @@ def variant_plan(variant: VariantId, role: VariantRole, agent: str, model: str) 
     return VariantPlanRecord(
         variant_id=variant,
         role=role,
-        arm_id=None,
+        changes=variant_changes(variant),
         flow_id=FLOW,
         ir_hash=f"{variant}-ir",
         flow_hash=f"sha256-{variant[0] * 64}",
@@ -125,6 +129,12 @@ def variant_plan(variant: VariantId, role: VariantRole, agent: str, model: str) 
         output_type=TypeId("CaseOutcome"),
         assignments=(Assignment(node_id=REVISE, agent_id=AgentId(agent), model=model, overridden=variant == MISTRAL),),
     )
+
+
+def variant_changes(variant: VariantId) -> tuple[VariantChange, ...]:
+    if variant != MISTRAL:
+        return ()
+    return (VariantChange(node_id=REVISE_SLOT, what=FactorKind.AGENT, value="mistral"),)
 
 
 def critique_check(validated: bool) -> CheckPlan:
@@ -260,7 +270,7 @@ def attempts_of(series_id: SeriesId, split: SeriesSplit = SeriesSplit.HOLDOUT) -
 
 def plan(question: Question, validated: bool) -> SeriesPlanRecord:
     return SeriesPlanRecord(
-        subject=SubjectRecord(kind=SubjectKind.RANGE, flow_id=FLOW, arm_id=None, start_node=None, end_node=None),
+        subject=SubjectRecord(kind=SubjectKind.RANGE, flow_id=FLOW, local_flow=False, start_node=None, end_node=None),
         question=question,
         variants=(
             variant_plan(GPT, VariantRole.BASELINE, "gpt", GPT_MODEL),

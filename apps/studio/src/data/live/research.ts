@@ -1,9 +1,8 @@
 import type {
-  ArmFlow,
-  ArmId,
   DatasetId,
   ExperimentDetail,
   ExperimentFilter,
+  ExperimentFlowDetail,
   ExperimentId,
   ExperimentSummary,
   FlowId,
@@ -20,9 +19,9 @@ import { api, unwrap } from "@/api/client"
 import * as ids from "@/data/ids"
 import { everyPage, MAX_PAGE } from "./paging"
 import {
-  armFlowOf,
   caseRowOf,
   experimentDetailOf,
+  experimentFlowOf,
   experimentSummaryOf,
   launchBody,
   launchPlanOf,
@@ -33,7 +32,7 @@ import {
 export type ResearchSource = {
   readonly experiments: (filter?: ExperimentFilter) => Promise<readonly ExperimentSummary[]>
   readonly experiment: (id: ExperimentId) => Promise<ExperimentDetail>
-  readonly armFlow: (id: ExperimentId, arm: ArmId) => Promise<ArmFlow>
+  readonly experimentFlow: (id: ExperimentId, flow: FlowId) => Promise<ExperimentFlowDetail>
   readonly launchPlan: (id: ExperimentId, request: LaunchRequest) => Promise<LaunchPlan>
   readonly startSeries: (id: ExperimentId, request: LaunchRequest) => Promise<SeriesId>
   readonly approveSeries: (id: SeriesId, capUsd?: number) => Promise<SeriesSummary>
@@ -66,8 +65,8 @@ export const research: ResearchSource = {
   },
   experiment: async (id) =>
     experimentDetailOf(unwrap(await api.GET("/api/experiments/{experiment_id}", { params: { path: { experiment_id: id } } }))),
-  armFlow: async (id, arm) =>
-    armFlowOf(unwrap(await api.GET("/api/experiments/{experiment_id}/arms/{arm_id}", { params: { path: { experiment_id: id, arm_id: arm } } }))),
+  experimentFlow: async (id, flow) =>
+    experimentFlowOf(unwrap(await api.GET("/api/experiments/{experiment_id}/flows/{flow_id}", { params: { path: { experiment_id: id, flow_id: flow } } }))),
   launchPlan: async (id, request) =>
     launchPlanOf(unwrap(await api.POST("/api/experiments/{experiment_id}/launch-plan", { params: { path: { experiment_id: id } }, body: launchBody(request) }))),
   startSeries: async (id, request) => {

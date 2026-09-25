@@ -9,9 +9,18 @@ from pathlib import Path
 import pytest
 from series_records import EXPERIMENT, NOW, WRITER, attempt, cases, record
 
-from aqven.series.model import AttemptState, SeriesChange, SeriesId, SeriesStatus
+from aqven.series.model import (
+    AttemptState,
+    SeriesChange,
+    SeriesId,
+    SeriesRecord,
+    SeriesStatus,
+    SubjectKind,
+    SubjectRecord,
+)
 from aqven.series.store import InvalidCursor, SeriesMissing, SqliteSeriesStore, series_cursor
 from aqven.series.views import SeriesListQuery
+from aqven.spec import FlowId, VariantId
 
 
 @pytest.fixture
@@ -24,7 +33,7 @@ def test_opening_writes_the_schema_version_and_keeps_user_version(store: SqliteS
         version = connection.execute("SELECT version FROM aqven_schema_versions WHERE component = 'series'").fetchone()
         user_version = connection.execute("PRAGMA user_version").fetchone()
 
-    assert version == (2,)
+    assert version == (3,)
     assert user_version == (0,)
 
 
@@ -49,7 +58,61 @@ def test_opening_a_first_version_database_moves_the_estimate_to_the_launch_plan(
     assert asyncio.run(reopened.series(SeriesId("old"))) == record("old", NOW)
     with closing(sqlite3.connect(path)) as connection:
         version = connection.execute("SELECT version FROM aqven_schema_versions WHERE component = 'series'").fetchone()
-    assert version == (2,)
+    assert version == (3,)
+
+
+def two_variants(series_id: str) -> SeriesRecord:
+    base = record(series_id, NOW)
+    cheap = base.plan.variants[0].model_copy(update={"variant_id": VariantId("cheap")})
+    return base.model_copy(update={"plan": base.plan.model_copy(update={"variants": (*base.plan.variants, cheap)})})
+
+
+def local_flow_series(series_id: str) -> SeriesRecord:
+    base = two_variants(series_id)
+    subject = SubjectRecord(
+        kind=SubjectKind.FLOW, flow_id=FlowId("solo"), local_flow=True, start_node=None, end_node=None
+    )
+    return base.model_copy(update={"flow_id": None, "plan": base.plan.model_copy(update={"subject": subject})})
+
+
+def before_factors(current: SeriesRecord, arm: str | None) -> str:
+    stored = json.loads(current.model_dump_json())
+    plan = stored["plan"]
+    subject = {key: value for key, value in plan["subject"].items() if key != "local_flow"}
+    kind = "arm" if arm is not None else subject["kind"]
+    flow_id = None if arm is not None else subject["flow_id"]
+    plan["subject"] = {**subject, "kind": kind, "flow_id": flow_id, "arm_id": arm}
+    plan["variants"] = [
+        {**{key: value for key, value in variant.items() if key != "changes"}, "arm_id": arm}
+        for variant in plan["variants"]
+    ]
+    return json.dumps(stored)
+
+
+def test_opening_a_second_version_database_turns_arm_series_into_local_flow_series(tmp_path: Path) -> None:
+    path = tmp_path / ".aqven" / "aqven.sqlite"
+    first = SqliteSeriesStore.open(path)
+    migrated = {"arm": (local_flow_series("arm"), "solo"), "plain": (two_variants("plain"), None)}
+    for current, _ in migrated.values():
+        asyncio.run(first.create(current, cases()))
+    with closing(sqlite3.connect(path)) as connection, connection:
+        for series_id, (current, arm) in migrated.items():
+            old = before_factors(current, arm)
+            connection.execute("UPDATE aqven_series SET record = ? WHERE series_id = ?", (old, series_id))
+        connection.execute("UPDATE aqven_schema_versions SET version = 2 WHERE component = 'series'")
+
+    reopened = SqliteSeriesStore.open(path)
+
+    assert asyncio.run(reopened.series(SeriesId("arm"))) == local_flow_series("arm")
+    assert asyncio.run(reopened.series(SeriesId("plain"))) == two_variants("plain")
+    listed = asyncio.run(reopened.search(SeriesListQuery(experiment_id=EXPERIMENT), 10))
+    assert {item.series_id: [variant.variant_id for variant in item.plan.variants] for item in listed} == {
+        "arm": ["writer", "cheap"],
+        "plain": ["writer", "cheap"],
+    }
+    with closing(sqlite3.connect(path)) as connection:
+        version = connection.execute("SELECT version FROM aqven_schema_versions WHERE component = 'series'").fetchone()
+    assert version == (3,)
 
 
 def test_create_stores_the_series_and_its_cases_once(store: SqliteSeriesStore) -> None:
