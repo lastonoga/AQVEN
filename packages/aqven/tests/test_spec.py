@@ -1168,6 +1168,7 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_VARIANT_DUPLICATE,
         DiagnosticCode.W_ALTERNATIVE_UNUSED,
         DiagnosticCode.W_MEDIA_TYPE_MISMATCH,
+        DiagnosticCode.W_AGENT_SKILLS_STALE,
     }
     assert all(code.value.startswith("W_") == (code in warnings) for code in DiagnosticCode)
     unbounded = diagnostic(

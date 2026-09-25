@@ -1,7 +1,13 @@
----
-title: How to keep case media as files in the project
-description: Point a dataset case at an image, audio, video or document file in the project instead of a blob, keep private files out of git, move old blob-backed cases to files, and read the three media diagnostics.
----
+# How to keep case media as files in the project
+
+Point a dataset case at an image, audio, video or document file in the project instead of a blob, keep private files out of git, move old blob-backed cases to files, and read the three media diagnostics.
+
+## Contents
+
+- [When you need this](#when-you-need-this)
+- [Steps](#steps)
+  - [Example](#example)
+- [See also](#see-also)
 
 ## When you need this
 
@@ -12,7 +18,7 @@ job then runs the same case on the same bytes.
 ## Steps
 
 - **Put the file next to the dataset.** Each dataset can have a folder with its own name:
-  `datasets/<dataset_id>/`, beside `datasets/<dataset_id>.yaml`. Copy the file there. `{{CLI_COMMAND}} check`
+  `datasets/<dataset_id>/`, beside `datasets/<dataset_id>.yaml`. Copy the file there. `aqven check`
   does not read the files in this folder as project files, so any name and any extension is fine.
 - **Point the case at the file with `file`.** A media value in a case takes `$media` and `file`, and an
   optional `name`:
@@ -70,7 +76,7 @@ job then runs the same case on the same bytes.
   files, run:
 
   ```bash
-  {{CLI_COMMAND}} datasets materialize . customer_photos
+  aqven datasets materialize . customer_photos
   ```
 
   The first argument is the project folder that holds `aqven.yaml`. List dataset IDs after it, or leave
@@ -78,7 +84,7 @@ job then runs the same case on the same bytes.
   `.aqven/blobs/` to `datasets/<dataset_id>/<name>` and rewrites the value as a `file` reference. A blob
   that isn't in the local store is named in the output, and its value stays as it is. Commit the
   dataset file and its new folder together.
-- **Run `{{CLI_COMMAND}} check` before you commit.** It checks every file reference without reading the
+- **Run `aqven check` before you commit.** It checks every file reference without reading the
   bytes. A file reference passes where the flow's input type expects `Image`, `Audio`, `Video` or
   `Document`.
 
@@ -91,15 +97,15 @@ job then runs the same case on the same bytes.
 - **Attach files from Studio if you prefer.** When you attach a file to a case in Studio, Studio writes
   it into `datasets/<dataset_id>/`, picks a name that doesn't clash with the files already there, and
   saves a `file` reference in the case. An open case shows file media the same way it shows blob
-  media. See [How to work with cases in Studio](/studio/cases/).
+  media. See How to work with cases in Studio.
 
 ### Example
 
-Create the [showcase](/start/quickstart/) project if you don't already have one, and go to the folder with
+Create the showcase project if you don't already have one, and go to the folder with
 `aqven.yaml`:
 
 ```bash
-{{CLI_COMMAND}} new my_project --template showcase
+aqven new my_project --template showcase
 cd my_project/my_project
 ```
 
@@ -145,7 +151,7 @@ video:
 Check the project:
 
 ```bash
-{{CLI_COMMAND}} check .
+aqven check .
 ```
 
 A typo in a path, such as `@root/samples/flow_strip_controler.jpg`, gives `E_MEDIA_FILE_MISSING` on that
@@ -157,12 +163,12 @@ blob.
 
 ## See also
 
-- [How to work with cases in Studio](/studio/cases/): read cases, run them, attach a file.
-- [How to run a series](/engine/run-a-series/): why a changed input ends a series `invalid`.
-- [How to give an agent a tool](/engine/tool-node/): reading and writing the bytes behind a media value
+- How to work with cases in Studio: read cases, run them, attach a file.
+- How to run a series: why a changed input ends a series `invalid`.
+- How to give an agent a tool: reading and writing the bytes behind a media value
   with `ctx.blobs`.
-- [Media has real limits on both sides of a model call](/concepts/media-has-real-limits-on-both-sides/):
+- [Media has real limits on both sides of a model call](../concepts/media-has-real-limits-on-both-sides.md):
   size, resolution and duration limits of the providers.
-- [Datasets reference](/reference/datasets/) and [Media reference](/reference/media/): every key,
+- Datasets reference and [Media reference](../reference/media.md): every key,
   generated from the code.
-- [Diagnostic codes](/reference/diagnostics/): the full message of every code above.
+- Diagnostic codes: the full message of every code above.

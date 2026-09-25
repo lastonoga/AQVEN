@@ -62,9 +62,7 @@ On the `revise` inference the check is `promises_match_resolution`. There, `valu
 `ReviseOut` and the decision is in its input:
 
 ```python
-def promises_match_resolution(
-    value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams
-) -> Verdict:
+def promises_match_resolution(value: ReviseOut, context: EvalContext[ReviseIn, ReviseOut], params: NoParams) -> Verdict:
     text = value.reply.text.lower()
     resolution = context.inputs.resolution
     return _verdict(rule(text, resolution) for rule in PROMISE_RULES)
@@ -87,9 +85,7 @@ question:
 ```
 
 ```python
-def reply_keeps_resolution(
-    value: BaseModel, context: EvalContext[BaseModel, BaseModel], params: NoParams
-) -> Verdict:
+def reply_keeps_resolution(value: BaseModel, context: EvalContext[BaseModel, BaseModel], params: NoParams) -> Verdict:
     text = PolishedReply.model_validate(value.model_dump(mode="json")).reply.text.lower()
     resolution = CaseDecision.model_validate(context.metadata.get(NODE_OUTPUTS)).route.resolution
     return _verdict(rule(text, resolution) for rule in PROMISE_RULES)

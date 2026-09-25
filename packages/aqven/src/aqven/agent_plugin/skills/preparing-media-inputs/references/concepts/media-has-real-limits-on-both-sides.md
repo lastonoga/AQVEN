@@ -77,6 +77,11 @@ two-minute video are both valid values for these fields, and `check` and runtime
 through unchanged. The type system enforces presence and MIME shape, not size — which is exactly why
 rule 1 above matters: nothing in the project itself will ever tell you a ceiling exists.
 
+A dataset case can point at a media file in the project with `file` instead of a `blob_id`. That changes
+where the bytes live, not what the engine checks: the file becomes this same blob-backed value before the
+run starts, with its real size and no limit on it. See
+[how to keep case media as files in the project](../engine/dataset-media-files.md).
+
 ## Evidence: the input side, across three providers
 
 Three providers, real current numbers — proof of the pattern above, not the full list of providers or
