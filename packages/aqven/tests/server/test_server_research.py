@@ -1,12 +1,14 @@
 import json
+import os
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
 import pytest
 from fastapi.testclient import TestClient
-from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs, detail
+from series_fakes import DONE_ID, MOMENT, SERIES_ID, FakeSeriesJobs, detail
 from server_fakes import AUTH, RUN_ID, SERVER_BASE, FakeEngine, MemorySettings, copy_fixture, node_execution
 from sse_frames import parse_frames
 
@@ -221,6 +223,70 @@ def test_experiment_list_carries_the_question_and_the_series_history(research_cl
     assert row["latest"]["series_id"] == DONE_ID
     assert research_client.get("/api/experiments", params={"question": "threshold"}).json()["items"] == []
     assert len(research_client.get("/api/experiments", params={"flow_id": "intake"}).json()["items"]) == 1
+
+
+FILES_TIME: Final = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)
+NOTES_TIME: Final = datetime(2026, 9, 24, 13, 0, tzinfo=UTC)
+CREATED_TIME: Final = datetime(2026, 9, 24, 9, 0, tzinfo=UTC)
+
+
+def set_mtime(path: Path, moment: datetime) -> None:
+    os.utime(path, (moment.timestamp(), moment.timestamp()))
+
+
+def age_experiment(root: Path) -> Path:
+    folder = root / "experiments" / EXPERIMENT
+    for path in folder.rglob("*"):
+        set_mtime(path, FILES_TIME)
+    set_mtime(folder / "prompts" / "terse.md", CREATED_TIME)
+    set_mtime(folder / "experiment.md", NOTES_TIME)
+    return folder
+
+
+def listed_row(root: Path, engine: FakeEngine, settings: MemorySettings, options: ServerOptions) -> dict[str, object]:
+    app = create_app(root, engine, settings, options=options, series=FakeSeriesJobs())
+    with TestClient(app, base_url=SERVER_BASE, headers=AUTH) as client:
+        [row] = client.get("/api/experiments").json()["items"]
+        detail_body = client.get(f"/api/experiments/{EXPERIMENT}").json()
+    assert {key: detail_body[key] for key in row} == row
+    return row
+
+
+def moment(value: object) -> datetime:
+    assert isinstance(value, str)
+    return datetime.fromisoformat(value)
+
+
+def test_experiment_list_says_when_an_experiment_moved_and_why_it_needs_the_owner(
+    research_project: Path, server_engine: FakeEngine, server_settings: MemorySettings, server_options: ServerOptions
+) -> None:
+    age_experiment(research_project)
+
+    row = listed_row(research_project, server_engine, server_settings, server_options)
+
+    assert (moment(row["created"]), moment(row["last_activity"]), row["activity_source"]) == (
+        CREATED_TIME,
+        NOTES_TIME,
+        "files",
+    )
+    assert FILES_TIME > MOMENT
+    assert (row["running"], row["archived"]) == (True, False)
+    assert row["attention"] == ["results_stale", "check_errors"]
+
+
+def test_an_archived_experiment_still_lists_with_its_series_and_reasons(
+    research_project: Path, server_engine: FakeEngine, server_settings: MemorySettings, server_options: ServerOptions
+) -> None:
+    folder = research_project / "experiments" / EXPERIMENT
+    archived = EXPERIMENT_YAML.replace('failure_mode: "reply_quality"', 'failure_mode: "reply_quality"\narchived: true')
+    (folder / "experiment.yaml").write_text(archived, encoding="utf-8")
+    for path in folder.rglob("*"):
+        set_mtime(path, CREATED_TIME)
+
+    row = listed_row(research_project, server_engine, server_settings, server_options)
+
+    assert (row["archived"], row["attention"]) == (True, ["check_errors"])
+    assert (moment(row["last_activity"]), row["activity_source"]) == (MOMENT, "series")
 
 
 def test_experiment_detail_resolves_variants_checks_columns_and_cases(research_client: TestClient) -> None:

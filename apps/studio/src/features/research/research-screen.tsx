@@ -1,19 +1,29 @@
-import type { ReactNode } from "react"
-import { useTranslations } from "use-intl"
+import { useId, useMemo, useState, type ReactNode } from "react"
+import { Link } from "@tanstack/react-router"
+import { useLocale, useNow, useTranslations } from "use-intl"
 import type { ExperimentFilter, ExperimentSummary, FlowId } from "@/domain"
-import { Empty, Heading, Matrix, Page, RowLink, Surface, Tag, Text, Toolbar, type MatrixField } from "@/components/studio"
+import { Dot, Empty, Expander, Heading, Matrix, Page, RowLink, Surface, Tag, Text, Toolbar, type MatrixField } from "@/components/studio"
 import { HandoffButton } from "@/features/chat-handoff"
+import { relativeTime } from "@/i18n/format"
 import { projectRouteApi, researchRouteApi, ROUTE_PATH } from "@/lib/routes"
 import { useFlowTitle, useSubjectCopy } from "./copy"
-import { experimentFlow, flowGroupKey, groupByFlow, type FlowGroup } from "./flow-groups"
+import { layoutExperiments, localDayStart, type ActivityGroup, type Grouping, type ListSection } from "./experiment-groups"
 import { ResearchSection } from "./layout"
-import { experimentRows, failureModes, hasNarrowing, type ExperimentRow, type ListCopy } from "./presenters"
+import { experimentRows, failureModes, hasNarrowing, withFilter, type ExperimentRow, type ListCopy } from "./presenters"
 import { ResearchFilters } from "./research-filters"
+import { useSeenMark } from "./use-seen-mark"
+import { isNewSince, rememberedGrouping, rememberGrouping, type SeenMarks } from "./viewer-memory"
 
 const TABLE_MIN_WIDTH = 866
 const WRAPPED = "line-clamp-2 wrap-anywhere"
+const MINUTE_MS = 60_000
+const HEADING_LINK = "rounded-xs outline-none underline-offset-3 hover:underline focus-visible:ring-2 focus-visible:ring-ring"
 
 type HypothesesScope = { readonly experiments: readonly ExperimentSummary[]; readonly filter: ExperimentFilter }
+
+type ListView = { readonly scope: HypothesesScope; readonly seen: SeenMarks | null; readonly now: Date }
+
+type SectionHead = { readonly title: string; readonly heading: ReactNode; readonly trailing: ReactNode }
 
 const hypothesesPrompt = ({ experiments, filter }: HypothesesScope, flow: FlowId | null) => (): string =>
   [
@@ -27,8 +37,9 @@ const hypothesesPrompt = ({ experiments, filter }: HypothesesScope, flow: FlowId
     .filter((line) => line !== null)
     .join("\n")
 
-function useListCopy(): ListCopy {
+function useListCopy(now: Date): ListCopy {
   const t = useTranslations("research")
+  const locale = useLocale()
   const subject = useSubjectCopy()
   return {
     subject,
@@ -37,7 +48,36 @@ function useListCopy(): ListCopy {
     split: (split) => t(`vocabulary.splitShort.${split}`),
     series: (count) => t("list.series", { count }),
     spent: (amount) => t("list.spent", { amount }),
+    activity: (source, at) => t(`list.activity.${source}`, { when: relativeTime(at, now, locale, "narrow") }),
+    attention: (reason) => t(`list.attention.${reason}`),
   }
+}
+
+function ExperimentCell({ row }: { readonly row: ExperimentRow }) {
+  const t = useTranslations("research.list")
+  return (
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-center gap-1.5">
+        {row.fresh ? <Dot tone="success" size="sm" label={t("new")} /> : null}
+        <Text as="div" role="cell" tone="default" weight="semibold" truncate>
+          {row.id}
+        </Text>
+        {row.activity === null ? null : (
+          <Text role="caption" tone="neutral" className="ml-auto shrink-0 whitespace-nowrap pl-2">
+            {row.activity}
+          </Text>
+        )}
+      </div>
+      {row.attention === null ? null : (
+        <Text as="div" role="caption" tone="warning" className="wrap-anywhere">
+          {row.attention}
+        </Text>
+      )}
+      <Text as="div" role="caption" tone="neutral" className={WRAPPED} title={row.description}>
+        {row.description}
+      </Text>
+    </div>
+  )
 }
 
 function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
@@ -46,17 +86,8 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "experiment",
       label: t("list.column.experiment"),
-      track: "minmax(200px,1.5fr)",
-      render: (row) => (
-        <div className="min-w-0">
-          <Text as="div" role="cell" tone="default" weight="semibold" truncate>
-            {row.id}
-          </Text>
-          <Text as="div" role="caption" tone="neutral" className={WRAPPED} title={row.description}>
-            {row.description}
-          </Text>
-        </div>
-      ),
+      track: "minmax(240px,1.7fr)",
+      render: (row) => <ExperimentCell row={row} />,
     },
     {
       id: "question",
@@ -71,7 +102,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "subject",
       label: t("list.column.subject"),
-      track: "minmax(140px,1.2fr)",
+      track: "minmax(140px,1.1fr)",
       render: (row) => (
         <Text as="div" role="cell" className={WRAPPED} title={row.subject}>
           {row.subject}
@@ -81,7 +112,7 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
     {
       id: "variants",
       label: t("list.column.variants"),
-      track: "minmax(140px,1.4fr)",
+      track: "minmax(140px,1.2fr)",
       render: (row) => (
         <Text as="div" role="cell" className={WRAPPED} title={row.variants}>
           {row.variants}
@@ -117,11 +148,11 @@ function useExperimentFields(): readonly MatrixField<ExperimentRow>[] {
   ]
 }
 
-function ExperimentTable({ experiments, label }: { readonly experiments: readonly ExperimentSummary[]; readonly label: string }) {
+function ExperimentTable({ experiments, label, view }: { readonly experiments: readonly ExperimentSummary[]; readonly label: string; readonly view: ListView }) {
   const t = useTranslations("research.list")
-  const copy = useListCopy()
+  const copy = useListCopy(view.now)
   const fields = useExperimentFields()
-  const rows = experimentRows(experiments, copy)
+  const rows = experimentRows(experiments, copy, (experiment) => isNewSince(experiment, view.seen))
   return (
     <Surface variant="panel" className="overflow-x-auto">
       <Matrix
@@ -143,24 +174,89 @@ const sectionSuggest = (label: string, scope: HypothesesScope, flow: FlowId | nu
   return <HandoffButton label={label} prompt={hypothesesPrompt(scope, flow)} variant="ghost" />
 }
 
-function ExperimentSection({ group, scope }: { readonly group: FlowGroup<ExperimentSummary>; readonly scope: HypothesesScope }) {
+function useSectionHead(scope: HypothesesScope): (section: ListSection) => SectionHead {
   const t = useTranslations("research.list")
-  const title = useFlowTitle()(group.flow)
+  const flowTitle = useFlowTitle()
+  const activityHead = (group: ActivityGroup): SectionHead => ({
+    title: t(`group.${group}`),
+    heading: <span title={t(`groupHint.${group}`)}>{t(`group.${group}`)}</span>,
+    trailing: null,
+  })
+  const flowHead = (flow: FlowId | null): SectionHead => {
+    const title = flowTitle(flow)
+    const heading =
+      flow === null ? title : (
+        <Link to={ROUTE_PATH.canvas} params={{ flowId: flow }} aria-label={t("openFlow", { flow })} className={HEADING_LINK}>
+          {title}
+        </Link>
+      )
+    return { title, heading, trailing: sectionSuggest(t("suggest"), scope, flow) }
+  }
+  const modeHead = (mode: string | null): SectionHead => {
+    if (mode === null) return { title: t("group.noFailureMode"), heading: t("group.noFailureMode"), trailing: null }
+    const heading = (
+      <Link to={ROUTE_PATH.research} search={withFilter(scope.filter, { failureMode: mode })} aria-label={t("filterMode", { mode })} className={HEADING_LINK}>
+        {mode}
+      </Link>
+    )
+    return { title: mode, heading, trailing: null }
+  }
+  return (section) => {
+    if (section.kind === "activity") return activityHead(section.group)
+    if (section.kind === "flow") return flowHead(section.flow)
+    return modeHead(section.mode)
+  }
+}
+
+function OpenSection({ section, view }: { readonly section: ListSection; readonly view: ListView }) {
+  const t = useTranslations("research.list")
+  const head = useSectionHead(view.scope)(section)
   return (
-    <ResearchSection title={title} description={t("count", { count: group.items.length })} trailing={sectionSuggest(t("suggest"), scope, group.flow)}>
-      <ExperimentTable experiments={group.items} label={t("tableAria", { section: title })} />
+    <ResearchSection title={head.title} heading={head.heading} description={t("count", { count: section.items.length })} trailing={head.trailing}>
+      <ExperimentTable experiments={section.items} label={t("tableAria", { section: head.title })} view={view} />
     </ResearchSection>
   )
 }
 
-function ExperimentSections({ experiments, scope }: { readonly experiments: readonly ExperimentSummary[]; readonly scope: HypothesesScope }) {
+type CollapsedKind = "older" | "archived"
+
+function CollapsedSection({ kind, experiments, view }: { readonly kind: CollapsedKind; readonly experiments: readonly ExperimentSummary[]; readonly view: ListView }) {
   const t = useTranslations("research.list")
-  if (experiments.length === 0) return <Empty title={hasNarrowing(scope.filter) ? t("empty") : t("emptyAll")} hint={t("emptyHint")} />
+  const id = useId()
+  const [open, setOpen] = useState(false)
+  if (experiments.length === 0) return null
+  const title = t(`group.${kind}`, { count: experiments.length })
+  return (
+    <section aria-label={title} className="flex min-w-0 flex-col items-start gap-3">
+      <Expander
+        open={open}
+        controls={id}
+        label={title}
+        size="sm"
+        onClick={() => {
+          setOpen((current) => !current)
+        }}
+      />
+      {open ? (
+        <div id={id} className="w-full min-w-0">
+          <ExperimentTable experiments={experiments} label={t("tableAria", { section: title })} view={view} />
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function ExperimentSections({ experiments, grouping, view }: { readonly experiments: readonly ExperimentSummary[]; readonly grouping: Grouping; readonly view: ListView }) {
+  const t = useTranslations("research.list")
+  if (experiments.length === 0) return <Empty title={hasNarrowing(view.scope.filter) ? t("empty") : t("emptyAll")} hint={t("emptyHint")} />
+  const layout = layoutExperiments(experiments, grouping, localDayStart(view.now))
   return (
     <div className="flex min-w-0 flex-col gap-7">
-      {groupByFlow(experiments, experimentFlow).map((group) => (
-        <ExperimentSection key={flowGroupKey(group)} group={group} scope={scope} />
+      {layout.open.map((section) => (
+        <OpenSection key={section.key} section={section} view={view} />
       ))}
+      <CollapsedSection key={`${grouping}:older`} kind="older" experiments={layout.older} view={view} />
+      <CollapsedSection key="archived" kind="archived" experiments={layout.archived} view={view} />
     </div>
   )
 }
@@ -169,7 +265,15 @@ export function ResearchScreen() {
   const t = useTranslations("research.list")
   const { project } = projectRouteApi.useLoaderData()
   const { experiments, all, filter } = researchRouteApi.useLoaderData()
+  const [grouping, setGrouping] = useState<Grouping>(rememberedGrouping)
+  const now = useNow({ updateInterval: MINUTE_MS })
+  const visible = useMemo(() => layoutExperiments(experiments, grouping, localDayStart(now)).open.flatMap((section) => section.items), [experiments, grouping, now])
+  const seen = useSeenMark(project.root, visible)
   const scope: HypothesesScope = { experiments: all, filter }
+  const choose = (next: Grouping): void => {
+    setGrouping(next)
+    rememberGrouping(next)
+  }
   return (
     <Page
       width="xl"
@@ -180,8 +284,8 @@ export function ResearchScreen() {
       }
     >
       <div className="flex flex-col gap-5">
-        <ResearchFilters filter={filter} failureModes={failureModes(all)} count={experiments.length} />
-        <ExperimentSections experiments={experiments} scope={scope} />
+        <ResearchFilters filter={filter} failureModes={failureModes(all)} count={experiments.length} grouping={grouping} onGroupingChange={choose} />
+        <ExperimentSections experiments={experiments} grouping={grouping} view={{ scope, seen, now }} />
       </div>
     </Page>
   )

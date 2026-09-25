@@ -5,7 +5,8 @@ from factor_lab import REVIEW, ROUTE_DIRECT, ROUTE_REVIEW, checked, experiment, 
 
 from aqven.loader import LoadedProject
 from aqven.series.views import ExperimentDetailView
-from aqven.server.views.research import EMPTY_LEDGER, experiment_detail
+from aqven.server.views.experiment_activity import EMPTY_LEDGER, UNSEEN_FOLDER, ActivityFacts, experiment_activity
+from aqven.server.views.research import ExperimentRecord, experiment_detail
 
 WRITER: Final = {"agent_id": "writer", "model": "openai:gpt-5.4-mini"}
 
@@ -16,8 +17,13 @@ def lab(tmp_path_factory: pytest.TempPathFactory) -> LoadedProject:
     return project
 
 
+QUIET: Final = ExperimentRecord(
+    ledger=EMPTY_LEDGER, activity=experiment_activity(ActivityFacts(ledger=EMPTY_LEDGER, times=UNSEEN_FOLDER, errors=0))
+)
+
+
 def detail(project: LoadedProject, experiment_id: str) -> ExperimentDetailView:
-    return experiment_detail(project, experiment(project, experiment_id), EMPTY_LEDGER)
+    return experiment_detail(project, experiment(project, experiment_id), QUIET)
 
 
 def changes(view: ExperimentDetailView) -> dict[str, list[tuple[str, str, str]]]:

@@ -59,6 +59,12 @@ export type SeriesStatus = (typeof SERIES_STATUSES)[number]
 export const ACTIVE_SERIES_STATUSES = ["running", "awaiting_approval", "waiting_human"] as const
 export type ActiveSeriesStatus = (typeof ACTIVE_SERIES_STATUSES)[number]
 
+export const ATTENTION_REASONS = ["spend_cap_pause", "series_invalid", "results_stale", "check_errors"] as const
+export type AttentionReason = (typeof ATTENTION_REASONS)[number]
+
+export const ACTIVITY_SOURCES = ["files", "series"] as const
+export type ActivitySource = (typeof ACTIVITY_SOURCES)[number]
+
 export const VERDICT_STATES = ["confirmed", "refuted", "inconclusive", "invalid", "signal"] as const
 export type VerdictState = (typeof VERDICT_STATES)[number]
 
@@ -210,15 +216,25 @@ export type LatestSeries = {
   readonly verdict: VerdictState | null
 }
 
+export type ExperimentActivity = {
+  readonly created: IsoDateTime | null
+  readonly last: IsoDateTime | null
+  readonly source: ActivitySource | null
+  readonly running: boolean
+  readonly attention: readonly AttentionReason[]
+}
+
 type ExperimentHead = {
   readonly id: ExperimentId
   readonly description: string
   readonly flow: FlowId | null
   readonly subject: ExperimentSubject
   readonly failureMode: string | null
+  readonly archived: boolean
   readonly latest: LatestSeries | null
   readonly seriesCount: number
   readonly spentUsd: number
+  readonly activity: ExperimentActivity
 }
 
 export type ExperimentSummary = ExperimentHead & {
