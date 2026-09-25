@@ -1,6 +1,7 @@
 ---
 import "../styles/landing.css";
 import { Navbar1 } from "@/components/navbar1";
+import { latestRelease } from "@/lib/latest-release";
 import { Hero1 } from "@/components/hero1";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
@@ -21,6 +22,8 @@ import {
   QUICKSTART,
   REPO,
 } from "@/components/landing/site-nav";
+
+const release = await latestRelease;
 ---
 
 <!doctype html>
@@ -45,7 +48,7 @@ import {
     </script>
   </head>
   <body>
-    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} />
+    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
 
     <main>
       <Hero1
