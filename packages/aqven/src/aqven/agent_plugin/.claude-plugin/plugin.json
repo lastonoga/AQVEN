@@ -1,0 +1,10 @@
+{
+  "name": "aqven",
+  "version": "0.0.2",
+  "description": "AQVEN skills: build, harden, test and debug typed AI workflows with the engine of the same version",
+  "author": {
+    "name": "Kirill Burkhanov"
+  },
+  "homepage": "https://aqvenstudio.com",
+  "repository": "https://github.com/lastonoga/AQVEN"
+}

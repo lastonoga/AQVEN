@@ -18,13 +18,23 @@ from openai_codex.generated.v2_all import (
     TurnStartResponse,
     TurnStatus,
 )
-from openai_codex.models import InitializeResponse, JsonObject, Notification
-from pydantic import SecretStr
+from openai_codex.models import InitializeResponse, JsonObject, JsonValue, Notification
+from pydantic import BaseModel, SecretStr
 
+from aqven.chat.agent_plugin import PLUGIN_SKILLS, agent_skills_root
 from aqven.chat.codex_backend import CodexAgentBackend
+from aqven.chat.codex_skills import SKILLS_LIST_METHOD
 from aqven.chat.sqlite_journal import SqliteChatJournal
 from aqven.ports.chat import ChatEvent, ChatMessageRequest, ChatSessionOptions, ChatTurnFinished, ChatTurnStarted
 from aqven.runtime.address import ClientOpId
+
+
+def plugin_skill_listing(cwd: str) -> JsonObject:
+    skills: list[JsonValue] = [
+        {"name": name, "description": name, "enabled": True, "path": str(agent_skills_root()), "scope": "user"}
+        for name in PLUGIN_SKILLS
+    ]
+    return {"data": [{"cwd": cwd, "errors": [], "skills": skills}]}
 
 
 class FakeCodexClient(CodexClient):
@@ -32,6 +42,13 @@ class FakeCodexClient(CodexClient):
         super().__init__(config, approval_handler)
         self.calls: list[str] = []
         self.thread_options: list[JsonObject] = []
+        self.requests: list[tuple[str, JsonObject]] = []
+
+    def request[M: BaseModel](self, method: str, params: JsonObject | None, *, response_model: type[M]) -> M:
+        self.calls.append(method)
+        self.requests.append((method, dict(params or {})))
+        answer = plugin_skill_listing(str(self.config.cwd)) if method == SKILLS_LIST_METHOD else {}
+        return response_model.model_validate(answer)
 
     def start(self) -> None:
         self.calls.append("start")

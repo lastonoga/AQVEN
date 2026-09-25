@@ -1,0 +1,20 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "A listing as the seller submitted it"
+fields:
+- name: "title"
+  type: "Text"
+  description: "Listing title"
+  maxLength: 120
+- name: "description"
+  type: "Text"
+  description: "Listing text written by the seller"
+  maxLength: 2000
+- name: "category"
+  type: "Category"
+  description: "Category the seller picked"
+- name: "photos"
+  type: "Image[]"
+  description: "Photos at the resolution the seller uploaded, in upload order"
+  maxItems: 4

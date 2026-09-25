@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "call"
+description: "Writes the fix list with the fix_list flow"
+flow: "fix_list"
+in:
+- name: "title"
+  from: "$prepare.out.title"
+- name: "findings"
+  from: "$aspects.out.findings"

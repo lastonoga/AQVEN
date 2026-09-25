@@ -1,0 +1,32 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Qwen3 VL reading the photos gets the labelled decision right at least 5 points more often than Gemini Flash-Lite"
+failure_mode: "wrong_decision"
+subject:
+  flow: "listing_review"
+varies:
+  what: "agent"
+  nodes:
+  - "match_photos"
+cases:
+  dataset: "listing_cases"
+variants:
+- id: "gemini"
+- id: "qwen"
+  nodes:
+    match_photos: "critic"
+checks:
+- id: "decision_right"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "decision"
+question:
+  kind: "compare"
+  baseline: "gemini"
+  candidate: "qwen"
+  primary: "decision_right"
+  margin: 0.05
+plan:
+  repeats: 3

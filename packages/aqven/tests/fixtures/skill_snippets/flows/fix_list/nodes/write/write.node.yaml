@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Writes the fix list for the seller"
+agent: "reader"
+in:
+- name: "title"
+  from: "$input.title"
+- name: "findings"
+  from: "$input.findings"

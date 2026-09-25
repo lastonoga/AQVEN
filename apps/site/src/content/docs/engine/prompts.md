@@ -153,6 +153,108 @@ including the customer's reply text, itself. It only takes `text` and `category`
 inference also declares a `photo` field, but that one is an image, and media fields are never passed in
 as text; they're attached to the call separately.
 
+## Variant slots and fragments
+
+Two tools keep a Markdown prompt from turning into copies of itself. A **fragment** is shared text that several
+prompts include. A **variant slot** is one part of a prompt whose text depends on the value of an input: one file
+per value, and the prompt renders whichever one the input picks. Both work at the Liquid level only; a level-3
+function builds its text in Python instead.
+
+### Fragments
+
+- Include a fragment with `{% include "fragments/brand_voice" %}`. The name may leave out `.md`.
+- AQVEN looks for the file next to the file that includes it, then in the inference's folder, then from the
+  project root. A name that starts with `@root/` is read from the project root only. `fragments/` at the project
+  root is the usual place, not a rule.
+- A fragment is Liquid too. Its `{{ }}` read the inputs of the inference that includes it, and the checks count
+  them as the prompt's own.
+- An include is a Liquid tag, so a prompt that includes a fragment is a template: it has to place
+  `{{ output_format }}` itself, exactly once.
+- `{{CLI_COMMAND}} check` reports `E_FRAGMENT_MISSING` for a name it cannot find, and `E_SOURCE_CONFLICT` when the
+  same name leads to two different files from the prompt and from one of its variants.
+
+### Variant slots
+
+Declare the slot in the `.inference.yaml`, under `variants`:
+
+- `on` names the inference input that picks the text: `category`, or a field inside an input,
+  `product.lamp_kind` (`$in.product.lamp_kind` means the same). The input must be an enum or `Text`: the text is
+  picked by equality.
+- `cases` maps a value of that input to a variant. For an enum, every key must be one of its values.
+- `default` is the variant for any other value, and for `null` when the input is optional. Without `default`,
+  `cases` has to cover every value of the enum, and the input cannot be optional: `{{CLI_COMMAND}} check` reports
+  `E_VARIANT_NOT_EXHAUSTIVE` otherwise.
+- A variant written as a bare name, `mains`, is the file `<stem>.variants/<slot>/mains.md` next to the inference:
+  `revise.variants/lamp_guide/mains.md` for the slot `lamp_guide` of `revise`. A variant written as a path that
+  ends in `.md` is looked up from the inference's folder, then from the project root; `@root/` reads it from the
+  root only. A missing file is `E_VARIANT_MISSING`; a file in the variants folder that no case names is
+  `E_ORPHAN_FILE`.
+
+Then render the slot in the prompt with `{{ variants.<slot> }}`, exactly where its text belongs. A declared slot
+the prompt never renders is `E_PROMPT_INPUT_UNUSED`. Declaring a slot makes the prompt a template, so it places
+`{{ output_format }}` itself. A variant file is Liquid as well: it reads the same inputs, and an input that only a
+variant reads still counts as used. The input named in `on` counts as used too.
+
+At run time the value of `on` picks the case; a value with no case takes `default`; a value with no case and no
+`default` fails the step with `prompt_invalid`. Preview any case before a run, with `default` for the default:
+
+```bash
+uv run {{CLI_COMMAND}} prompt preview support_case.revise --project . --variant lamp_guide=rechargeable
+```
+
+The MCP tool `prompt_preview` takes the same choice as `variants: {"lamp_guide": "rechargeable"}`. The preview
+lists each slot with the case it used and the input that picked it.
+
+A variant slot is for text that depends on the case at hand. To find out which of two prompt texts works better,
+run an experiment that changes the prompt instead: see [How to run an experiment](/engine/experiments/).
+
+### Example
+
+The showcase's `revise` step gives lamp-specific advice. Its inference declares one slot, picked by the kind of
+lamp in the case:
+
+```yaml
+variants:
+  lamp_guide:
+    on: "product.lamp_kind"
+    cases:
+      mains: "mains"
+      rechargeable: "rechargeable"
+      smart_wifi: "smart_wifi"
+      smart_zigbee: "smart_zigbee"
+    default: "unknown"
+```
+
+`product` is optional (`ProductRef?`), so `default: "unknown"` also covers a case with no product. Five files sit
+next to the inference, in `revise.variants/lamp_guide/`: `mains.md`, `rechargeable.md`, `smart_wifi.md`,
+`smart_zigbee.md` and `unknown.md`. This is `mains.md`:
+
+```text
+The lamp runs on mains power and has no app. Start any troubleshooting step by unplugging it from the socket, and never suggest opening the body or changing the wiring. If the chunks carry advice about the switch, the dimmer or the socket base, give it as a separate step.
+```
+
+`revise.prompt.md` includes three fragments at the top of its system message and renders the slot in the user
+message:
+
+```liquid
+{% message system cache %}
+You write a reply to the customer on behalf of the support desk of a smart lighting brand, from the decision that was taken and the knowledge base chunks.
+{% include "fragments/brand_voice" %}
+{% include "fragments/citation_rules" %}
+{% include "fragments/untrusted_input" %}
+{{ output_format }}
+{% endmessage %}
+```
+
+```liquid
+Advice for this lamp kind:
+{{ variants.lamp_guide }}
+```
+
+The fragments are `fragments/brand_voice.md`, `fragments/citation_rules.md` and `fragments/untrusted_input.md` at
+the project root; other prompts of the showcase include the same files. More tested files with a slot and a
+fragment are on [Tested snippets](/engine/snippets/).
+
 ## Under the hood
 
 Level-2 templates render on [python-liquid](/concepts/what-this-is-built-on/) — real Liquid syntax, not

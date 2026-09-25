@@ -1,0 +1,4 @@
+schema_version: "1.0"
+name: "aggregation-as-variants"
+context:
+  scaffold_script: "scaffold.sh"

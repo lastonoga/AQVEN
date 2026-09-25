@@ -1,0 +1,129 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "strip_flicker_and_missing_parcel"
+  inputs:
+    customer:
+      customer_id: "cus_8h1j3k5l7z9x"
+      display_name: "Maya Fischer"
+      email: "maya.fischer@example.com"
+      tier: "plus"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260911"
+    message: "Hello, I have two problems and I need both sorted. First, the Flow Strip 5 m I installed last month flickers near the controller every evening, even after I pushed the plug in and restarted it from the app. Second, my other order, the two Glow bulbs, shows as delivered since Friday but nothing arrived, and my neighbours have nothing either. Please tell me what happens with the strip and where my bulbs are."
+    order_id: "LUM-20260911"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    - "lost_parcel"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    requests: "2"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "cracked_shade_and_hub_question"
+  inputs:
+    customer:
+      customer_id: "cus_9j2k4l6z8x1c"
+      display_name: "Tomás Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "Hi. The Arc Floor lamp came yesterday with the glass shade cracked right across, the box was dented on one corner and I have photos of both. While I have you: can the Glow bulbs I already own work through the Lumen hub, or do I need the Zigbee versions? I want to order the hub this week, so I need to know before I pay. Two things then: the broken shade, and the hub question."
+    order_id: "LUM-20260915"
+    product:
+      sku: "SKU-ARCF01"
+      name: "Lumen Arc Floor"
+      category: "floor_lamp"
+      lamp_kind: "mains"
+    tags:
+    - "shipping_damage"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    requests: "2"
+    intent: "delivery"
+  expected_output:
+    intent: "delivery"
+- name: "nova_charge_parcel_and_colours"
+  inputs:
+    customer:
+      customer_id: "cus_1k3l5z7x9c2v"
+      display_name: "Priya Nair"
+      email: "priya.nair@example.com"
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260902"
+    message: "Three things, sorry. My Nova Cordless stopped charging: the ring at the base stays dark with two different cables. The second Nova I ordered for my mother never arrived, the tracking has not moved for nine days. And do you still make the sage green colour, because I would like to replace the lost one with that. The lamp that does not charge is the one I use every day, the parcel is a gift, and the colour is just a question."
+    order_id: "LUM-20260902"
+    product:
+      sku: "SKU-NOVA01"
+      name: "Lumen Nova Cordless"
+      category: "desk_lamp"
+      lamp_kind: "rechargeable"
+    tags:
+    - "charging"
+    - "lost_parcel"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    requests: "3"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "zigbee_pairing_warranty_and_late_mount"
+  inputs:
+    customer:
+      customer_id: "cus_2l4z6x8c0v3b"
+      display_name: "Daniel Okafor"
+      email: null
+      tier: "business"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/account/orders/LUM-20260918"
+    message: "Good morning. We fitted twelve Zigbee bulbs in our office and I have three questions. How long is the warranty for business customers, and does it cover bulbs used ten hours a day? Is there a way to pair all twelve at once through the hub instead of one by one? And the ceiling mount we ordered with them is still not here after two weeks, so one room has no light. The mount is the urgent one."
+    order_id: "LUM-20260918"
+    product:
+      sku: "SKU-GLZB01"
+      name: "Lumen Glow E27 Zigbee"
+      category: "smart_bulb"
+      lamp_kind: "smart_zigbee"
+    tags:
+    - "late_parcel"
+    urgent: true
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    length: "long"
+    requests: "3"
+    intent: "delivery"
+  expected_output:
+    intent: "delivery"

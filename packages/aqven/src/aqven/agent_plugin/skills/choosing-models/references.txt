@@ -1,0 +1,8 @@
+integrations/openrouter-model-selection.md
+integrations/model-providers.md
+engine/check-providers.md
+engine/check-shapes.md
+reference/agents.md
+reference/project.md
+reference/provider-catalog.md
+concepts/what-happens-when-a-model-is-called.md

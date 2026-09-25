@@ -1,0 +1,68 @@
+{
+  "data": {
+    "id": "meta-llama/llama-3.2-11b-vision-instruct",
+    "name": "Meta: Llama 3.2 11B Vision Instruct",
+    "created": 0,
+    "description": "",
+    "architecture": {
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tokenizer": "",
+      "instruct_type": null
+    },
+    "endpoints": [
+      {
+        "name": "DeepInfra | Meta: Llama 3.2 11B Vision Instruct",
+        "model_name": "Meta: Llama 3.2 11B Vision Instruct",
+        "context_length": 131072,
+        "pricing": {
+          "prompt": "0.000000049",
+          "completion": "0.000000049",
+          "request": "0",
+          "image": "0"
+        },
+        "provider_name": "DeepInfra",
+        "tag": "deepinfra/bf16",
+        "quantization": "bf16",
+        "max_completion_tokens": 16384,
+        "max_prompt_tokens": null,
+        "supported_parameters": [
+          "max_tokens",
+          "temperature",
+          "top_p"
+        ],
+        "status": 0,
+        "uptime_last_30m": 99.0,
+        "supports_implicit_caching": false
+      },
+      {
+        "name": "Cloudflare | Meta: Llama 3.2 11B Vision Instruct",
+        "model_name": "Meta: Llama 3.2 11B Vision Instruct",
+        "context_length": 128000,
+        "pricing": {
+          "prompt": "0.000000049",
+          "completion": "0.00000068",
+          "request": "0",
+          "image": "0"
+        },
+        "provider_name": "Cloudflare",
+        "tag": "cloudflare",
+        "quantization": "unknown",
+        "max_completion_tokens": 8192,
+        "max_prompt_tokens": null,
+        "supported_parameters": [
+          "max_tokens",
+          "temperature"
+        ],
+        "status": 0,
+        "uptime_last_30m": 96.4,
+        "supports_implicit_caching": false
+      }
+    ]
+  }
+}

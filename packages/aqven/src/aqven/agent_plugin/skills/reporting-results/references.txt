@@ -1,0 +1,3 @@
+concepts/research-journal.md
+reference/findings.md
+concepts/experiments-series-and-findings.md

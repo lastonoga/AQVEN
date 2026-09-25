@@ -31,12 +31,14 @@ from aqven.console.command import (
     not_implemented,
 )
 from aqven.console.formats import EventFormat
+from aqven.console.hook import HookCommand
 from aqven.console.models import ModelsCommand
 from aqven.console.new import NewCommand
 from aqven.console.project_env import open_project
 from aqven.console.prompt import PromptCommand
 from aqven.console.secrets import SecretsCommand
 from aqven.console.series import SeriesCommand
+from aqven.console.skills import SkillsCommand
 from aqven.diagnostics import Diagnostic, format_text, has_errors
 from aqven.loader import (
     PROJECT_FILE,
@@ -351,6 +353,8 @@ COMMANDS: Final[Mapping[str, Command]] = {
     "secrets": SecretsCommand(),
     "prompt": PromptCommand(),
     "series": SeriesCommand(),
+    "skills": SkillsCommand(),
+    "hook": HookCommand(),
 }
 
 

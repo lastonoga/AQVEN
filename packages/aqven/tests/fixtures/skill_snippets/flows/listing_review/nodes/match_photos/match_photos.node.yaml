@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Reads the photos and says whether they match the description"
+agent: "reader"
+in:
+- name: "description"
+  from: "$input.description"
+- name: "category"
+  from: "$input.category"
+- name: "photos"
+  from: "$input.photos"

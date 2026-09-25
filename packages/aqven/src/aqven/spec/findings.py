@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import Final, Literal, Self
 
 from pydantic import AwareDatetime, Field, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 from aqven.spec.common import SpecModel
 from aqven.spec.names import (
@@ -83,7 +84,7 @@ class FindingVariant(SpecModel):
     """
 
     id: VariantId
-    arm: str | None = None
+    arm: SkipJsonSchema[str | None] = None
     changes: list[FindingChange] | None = None
     agents: dict[NodeId, AgentId]
     models: list[str]

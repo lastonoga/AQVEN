@@ -7,12 +7,14 @@ from claude_agent_sdk import CanUseTool, ClaudeAgentOptions, PermissionMode
 from claude_agent_sdk.types import McpHttpServerConfig, SystemPromptPreset, ThinkingConfigEnabled
 from pydantic import SecretStr
 
+from aqven.chat.agent_plugin import claude_plugins, claude_skills, plugin_read_rules
 from aqven.chat.approvals import DEFAULT_APPROVAL_TIMEOUT_SECONDS
 from aqven.chat.env_guard import ChatGuard, SecretFileGuard, scrubbed_environment
+from aqven.chat.host_block import HostFacts, host_block
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.mcp_config import MCP_CONFIG_PREFIX, McpConfigFile, write_mcp_config
 from aqven.chat.models import thinking_budget
-from aqven.chat.project_rules import project_rules
+from aqven.chat.project_rules import studio_instructions
 from aqven.ports.chat import ChatPermissionMode
 
 AQVEN_MCP_SERVER: Final[str] = "aqven"
@@ -46,10 +48,8 @@ class ClaudeLaunch:
     mcp_config: McpConfigFile
 
 
-def claude_system_prompt(project_root: Path) -> SystemPromptPreset:
-    rules = project_rules(project_root)
-    if not rules:
-        return SystemPromptPreset(type="preset", preset="claude_code")
+def claude_system_prompt(facts: HostFacts) -> SystemPromptPreset:
+    rules = studio_instructions(facts.project_root, host_block("claude", facts))
     return SystemPromptPreset(type="preset", preset="claude_code", append=rules)
 
 
@@ -80,11 +80,13 @@ class ClaudeOptionsFactory:
             cli_path=self.settings.cli_path,
             model=stored.session.model,
             permission_mode=mode,
-            system_prompt=claude_system_prompt(project_root),
+            system_prompt=claude_system_prompt(HostFacts.of(project_root, stored.mcp_url)),
             mcp_servers=config.path,
             strict_mcp_config=True,
             setting_sources=[],
-            allowed_tools=list(self.settings.allowed_tools),
+            plugins=claude_plugins(),
+            skills=claude_skills(),
+            allowed_tools=[*self.settings.allowed_tools, *plugin_read_rules()],
             disallowed_tools=self.guard.permission_rules(config.locations()),
             hooks=self.guard.hooks(),
             can_use_tool=None if mode == TRUSTED_MODE else can_use_tool,
