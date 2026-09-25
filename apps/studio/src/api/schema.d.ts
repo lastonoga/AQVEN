@@ -999,7 +999,8 @@ export interface paths {
         /** List Experiments */
         get: operations["experiment_list"];
         put?: never;
-        post?: never;
+        /** Post Experiment */
+        post: operations["experiment_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1154,6 +1155,57 @@ export interface paths {
         put?: never;
         /** Cancel Series */
         post: operations["series_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/authoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Authoring Options */
+        get: operations["research_authoring"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/authoring/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Count Cases */
+        post: operations["research_case_count"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/experiments/{experiment_id}/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Experiment Cases */
+        put: operations["experiment_cases_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1589,6 +1641,67 @@ export interface components {
         };
         /** @enum {string} */
         AttentionReason: "spend_cap_pause" | "series_invalid" | "results_stale" | "check_errors";
+        /** AuthoringDatasetView */
+        AuthoringDatasetView: {
+            /** Dataset Id */
+            dataset_id: string;
+            /** Flow Id */
+            flow_id: string | null;
+            /** Total */
+            total: number;
+            /** Splits */
+            splits: {
+                [key: string]: number;
+            };
+            /** Tags */
+            tags: {
+                [key: string]: components["schemas"]["TagValueView"][];
+            };
+        };
+        /** AuthoringFlowView */
+        AuthoringFlowView: {
+            /** Flow Id */
+            flow_id: string;
+            /** Description */
+            description: string;
+            /** Input Type */
+            input_type: string | null;
+            /** Output Type */
+            output_type: string | null;
+            /** Nodes */
+            nodes: components["schemas"]["AuthoringNodeView"][];
+        };
+        /** AuthoringNodeView */
+        AuthoringNodeView: {
+            /** Node Id */
+            node_id: string;
+            /** Flow Node Id */
+            flow_node_id: string;
+            kind: components["schemas"]["NodeKind"];
+            /** Description */
+            description: string;
+            /** Agent Id */
+            agent_id: string | null;
+            /** Inference Id */
+            inference_id: string | null;
+            /** Calls */
+            calls: string | null;
+        };
+        /** AuthoringOptionsView */
+        AuthoringOptionsView: {
+            /** Flows */
+            flows: components["schemas"]["AuthoringFlowView"][];
+            /** Agents */
+            agents: components["schemas"]["AgentRefView"][];
+            /** Datasets */
+            datasets: components["schemas"]["AuthoringDatasetView"][];
+            /** Evaluators */
+            evaluators: components["schemas"]["EvaluatorOptionView"][];
+            /** Question Kinds */
+            question_kinds: components["schemas"]["QuestionKind"][];
+            /** Metrics */
+            metrics: components["schemas"]["SeriesMetric"][];
+        };
         /** BlobMeta */
         BlobMeta: {
             /** Blob Id */
@@ -1753,6 +1866,26 @@ export interface components {
         };
         /** @enum {string} */
         CapSource: "override" | "project" | "default";
+        /** CaseCountRequest */
+        CaseCountRequest: {
+            /** Dataset Id */
+            dataset_id: string;
+            /** Tags */
+            tags?: {
+                [key: string]: string;
+            };
+        };
+        /** CaseCountView */
+        CaseCountView: {
+            /** Selected */
+            selected: number;
+            /** Total */
+            total: number;
+            /** Splits */
+            splits: {
+                [key: string]: number;
+            };
+        };
         /** CaseDraft */
         CaseDraft: {
             /** Dataset Id */
@@ -1781,6 +1914,20 @@ export interface components {
             path: string;
             /** Media Type */
             media_type: string;
+        };
+        /**
+         * CaseSelection
+         * @description Which cases the experiment runs: a dataset, optionally filtered by case tags.
+         *
+         *     A case is selected when every tag listed here has the same value on the case.
+         */
+        CaseSelection: {
+            /** Dataset */
+            dataset: string;
+            /** Tags */
+            tags?: {
+                [key: string]: string;
+            } | null;
         };
         /** CaseSelectionView */
         CaseSelectionView: {
@@ -2508,6 +2655,30 @@ export interface components {
              */
             kind: "code";
             run: components["schemas"]["AbsoluteCodeRef"];
+        };
+        /**
+         * CompareQuestion
+         * @description Is ``candidate`` better than ``baseline`` on ``primary`` by more than ``margin``, on the same cases.
+         */
+        CompareQuestion: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "compare";
+            /** Baseline */
+            baseline: string;
+            /** Candidate */
+            candidate: string;
+            primary: components["schemas"]["MetricName"];
+            direction?: components["schemas"]["MetricDirection"] | null;
+            /**
+             * Margin
+             * @default 0
+             */
+            margin: number;
+            /** Guardrails */
+            guardrails?: components["schemas"]["Guardrail"][] | null;
         };
         /** @enum {string} */
         CompileStatus: "ok" | "not_runnable" | "invalid" | "unreadable";
@@ -3394,7 +3565,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_FACTOR_MISSING" | "E_FACTOR_NODE_UNKNOWN" | "E_FACTOR_KIND" | "E_VARIANT_OUTSIDE_FACTOR" | "E_ALTERNATIVE_UNKNOWN" | "E_ALTERNATIVE_ID_TAKEN" | "E_FACTOR_FLOW_CONTRACT" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "E_MEDIA_FILE_MISSING" | "E_MEDIA_PATH_INVALID" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE" | "W_VARIANT_DUPLICATE" | "W_ALTERNATIVE_UNUSED" | "W_MEDIA_TYPE_MISMATCH";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_FACTOR_MISSING" | "E_FACTOR_NODE_UNKNOWN" | "E_FACTOR_KIND" | "E_VARIANT_OUTSIDE_FACTOR" | "E_ALTERNATIVE_UNKNOWN" | "E_ALTERNATIVE_ID_TAKEN" | "E_FACTOR_FLOW_CONTRACT" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "E_MEDIA_FILE_MISSING" | "E_MEDIA_PATH_INVALID" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE" | "W_VARIANT_DUPLICATE" | "W_ALTERNATIVE_UNUSED" | "W_MEDIA_TYPE_MISMATCH" | "W_AGENT_SKILLS_STALE";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -3563,6 +3734,7 @@ export interface components {
          * @enum {string}
          */
         Effect: "read" | "write" | "external";
+        EntityName: string;
         /** EnumType */
         EnumType: {
             /**
@@ -3624,6 +3796,25 @@ export interface components {
             /** Attempts */
             attempts: number;
             degenerate?: components["schemas"]["DegenerateReason"] | null;
+        };
+        /** EvaluatorOptionView */
+        EvaluatorOptionView: {
+            /** Use */
+            use: string;
+            /** Needs Params */
+            needs_params: boolean;
+            /** Description */
+            description: string;
+            kind: components["schemas"]["MetricKind"];
+            /** Params */
+            params: components["schemas"]["EvaluatorParamView"][];
+        };
+        /** EvaluatorParamView */
+        EvaluatorParamView: {
+            /** Name */
+            name: string;
+            /** Required */
+            required: boolean;
         };
         /** EventCatalog */
         EventCatalog: {
@@ -3768,6 +3959,16 @@ export interface components {
         };
         /** @enum {string} */
         ExecutionStatus: "pending" | "running" | "ok" | "failed" | "skipped" | "suspended" | "cancelled";
+        /** ExpectedHash */
+        ExpectedHash: {
+            file_hash: components["schemas"]["FileHash"];
+        };
+        /** ExperimentCasesWrite */
+        ExperimentCasesWrite: {
+            cases: components["schemas"]["CaseSelection"];
+            expects: components["schemas"]["ExpectedHash"];
+            client_op_id: components["schemas"]["Ulid"];
+        };
         /** @enum {string} */
         ExperimentChangeKind: "added" | "modified" | "deleted";
         /** ExperimentChanged */
@@ -3791,6 +3992,53 @@ export interface components {
             change: components["schemas"]["ExperimentChangeKind"];
             /** Paths */
             paths: string[];
+        };
+        /**
+         * ExperimentCheck
+         * @description A detector scored on every attempt: a built-in, a ``module:function`` or a judge inference with its agent.
+         *
+         *     ``validated_by`` names the experiment that measured this judge on planted defects; a judge without it
+         *     produces signals, not evidence.
+         */
+        ExperimentCheck: {
+            /** Id */
+            id: string;
+            kind: components["schemas"]["MetricKind"];
+            /** Use */
+            use?: string | null;
+            /** Run */
+            run?: string | null;
+            /** Inference */
+            inference?: string | null;
+            /** Agent */
+            agent?: string | null;
+            /** With */
+            with?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+            /** Validated By */
+            validated_by?: string | null;
+        };
+        /** ExperimentCreateRequest */
+        ExperimentCreateRequest: {
+            experiment_id: components["schemas"]["EntityName"];
+            spec: components["schemas"]["ExperimentSpec"];
+            /** Prompts */
+            prompts?: {
+                [key: string]: components["schemas"]["PromptText"];
+            };
+            client_op_id: components["schemas"]["Ulid"];
+        };
+        /** ExperimentCreated */
+        ExperimentCreated: {
+            /** File */
+            file: string;
+            /** File Hash */
+            file_hash: string;
+            /** Diagnostics */
+            diagnostics: components["schemas"]["Diagnostic"][];
+            /** Experiment Id */
+            experiment_id: string;
         };
         /** ExperimentDetailView */
         ExperimentDetailView: {
@@ -3850,6 +4098,27 @@ export interface components {
             notes: string | null;
             files: components["schemas"]["ExperimentFilesView"];
         };
+        /**
+         * ExperimentFactor
+         * @description The one factor the variants of an experiment change: ``what`` kind of edit on which ``nodes`` of the subject.
+         *
+         *     ``nodes`` lists local node ids of the subject flow, each once; a nested node is named by its own id. Every
+         *     variant sets values of this factor only, so a series tells which edit made the difference.
+         */
+        ExperimentFactor: {
+            what: components["schemas"]["FactorKind"];
+            /** Nodes */
+            nodes: components["schemas"]["FactorNode"][];
+        };
+        /** ExperimentFileWritten */
+        ExperimentFileWritten: {
+            /** File */
+            file: string;
+            /** File Hash */
+            file_hash: string;
+            /** Diagnostics */
+            diagnostics: components["schemas"]["Diagnostic"][];
+        };
         /** ExperimentFilesView */
         ExperimentFilesView: {
             /** Spec */
@@ -3908,6 +4177,64 @@ export interface components {
             /** File */
             file: string;
         };
+        /**
+         * ExperimentSpec
+         * @description An experiment: subject × factor × variants × cases × checks × question.
+         *
+         *     ``varies`` declares the one factor the variants change; it is required once there is more than one variant.
+         *     The question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,
+         *     regressions, judge validation and risky hypotheses are all experiments that differ only in their factor,
+         *     variants and question.
+         *
+         *     ``archived: true`` sets the experiment aside: Studio lists it only under Archived at the end of Research,
+         *     while ``aqven check`` and series treat it as any other experiment.
+         */
+        ExperimentSpec: {
+            /**
+             * Apiversion
+             * @constant
+             */
+            apiVersion: "aqven/v1";
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "Experiment";
+            /** Description */
+            description: string;
+            /** Failure Mode */
+            failure_mode?: string | null;
+            /**
+             * Archived
+             * @default false
+             */
+            archived: boolean;
+            subject: components["schemas"]["ExperimentSubject"];
+            varies?: components["schemas"]["ExperimentFactor"] | null;
+            cases: components["schemas"]["CaseSelection"];
+            /** Variants */
+            variants: components["schemas"]["VariantSpec"][];
+            /** Checks */
+            checks?: components["schemas"]["ExperimentCheck"][] | null;
+            question: components["schemas"]["Question"];
+            plan?: components["schemas"]["ExperimentPlan"];
+        };
+        /**
+         * ExperimentSubject
+         * @description What the experiment runs: a flow, whole or as a range of its top-level nodes.
+         *
+         *     ``flow`` names a local flow of this experiment (``flows/<flow_id>/`` in the experiment folder) or a project
+         *     flow; a local flow is looked up first. ``from`` and ``to`` narrow the run to a contiguous range of top-level
+         *     nodes; nodes before the range take their outputs from the case ``node_outputs``.
+         */
+        ExperimentSubject: {
+            /** Flow */
+            flow: string;
+            /** From */
+            from?: string | null;
+            /** To */
+            to?: string | null;
+        };
         /** ExperimentSummaryView */
         ExperimentSummaryView: {
             /** Experiment Id */
@@ -3963,6 +4290,7 @@ export interface components {
          * @enum {string}
          */
         FactorKind: "agent" | "prompt" | "use" | "flow";
+        FactorNode: string;
         /** FactorSlotView */
         FactorSlotView: {
             /** Node Id */
@@ -3973,6 +4301,7 @@ export interface components {
             /** Files */
             files: components["schemas"]["NodeFileView"][];
         };
+        FactorValue: string;
         /** FactorView */
         FactorView: {
             what: components["schemas"]["FactorKind"];
@@ -4302,6 +4631,23 @@ export interface components {
             overrides?: components["schemas"]["ForkOverrides"] | null;
             /** @default original */
             at: components["schemas"]["ForkBase"];
+        };
+        /**
+         * Guardrail
+         * @description A metric that must not get worse than the baseline by more than ``margin``.
+         *
+         *     ``relative`` reads ``margin`` as a share of the baseline value, so 0.2 allows the candidate 20 % worse.
+         */
+        Guardrail: {
+            metric: components["schemas"]["MetricName"];
+            direction?: components["schemas"]["MetricDirection"] | null;
+            /** Margin */
+            margin: number;
+            /**
+             * Relative
+             * @default false
+             */
+            relative: boolean;
         };
         /** GuardrailView */
         GuardrailView: {
@@ -4840,6 +5186,17 @@ export interface components {
             /** End Node */
             end_node?: string | null;
         };
+        /**
+         * LookQuestion
+         * @description Run the cases and show them side by side, with no statistical verdict.
+         */
+        LookQuestion: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "look";
+        };
         /** LookTarget */
         LookTarget: {
             /** Flow Id */
@@ -5102,6 +5459,7 @@ export interface components {
          * @enum {string}
          */
         MetricKind: "binary" | "ordinal" | "continuous";
+        MetricName: string;
         /**
          * MetricRole
          * @enum {string}
@@ -5749,6 +6107,27 @@ export interface components {
             default_ref: components["schemas"]["ValueRef"] | null;
         };
         /**
+         * NoninferiorQuestion
+         * @description Is ``candidate`` not worse than ``baseline`` on ``primary`` by more than ``margin``, on the same cases.
+         */
+        NoninferiorQuestion: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "noninferior";
+            /** Baseline */
+            baseline: string;
+            /** Candidate */
+            candidate: string;
+            primary: components["schemas"]["MetricName"];
+            direction?: components["schemas"]["MetricDirection"] | null;
+            /** Margin */
+            margin: number;
+            /** Guardrails */
+            guardrails?: components["schemas"]["Guardrail"][] | null;
+        };
+        /**
          * OnFail
          * @enum {string}
          */
@@ -6268,6 +6647,7 @@ export interface components {
             draft_stale: boolean;
             problems_count: components["schemas"]["Count"];
         };
+        PromptText: string;
         /** PromptTrace */
         PromptTrace: {
             level: components["schemas"]["aqven__spec__names__PromptLevel"];
@@ -6350,6 +6730,7 @@ export interface components {
             retry_attempts?: number | null;
         };
         ProviderText: string;
+        Question: components["schemas"]["LookQuestion"] | components["schemas"]["ThresholdQuestion"] | components["schemas"]["CompareQuestion"] | components["schemas"]["NoninferiorQuestion"];
         /** @enum {string} */
         QuestionKind: "look" | "threshold" | "compare" | "noninferior";
         /** QuestionView */
@@ -7008,6 +7389,11 @@ export interface components {
             /** Rows */
             rows: components["schemas"]["MatrixRow"][];
         };
+        /**
+         * SeriesMetric
+         * @enum {string}
+         */
+        SeriesMetric: "success_rate" | "cost_usd" | "cost_of_pass" | "latency_p50_ms" | "latency_p95_ms" | "schema_valid_first_try" | "infra_error_rate";
         SeriesOrigin: components["schemas"]["ExperimentOrigin"] | components["schemas"]["LookOrigin"];
         /** SeriesPause */
         SeriesPause: {
@@ -7470,6 +7856,14 @@ export interface components {
         };
         /** @enum {string} */
         SyncState: "ok" | "quarantined" | "unreadable";
+        TagName: string;
+        /** TagValueView */
+        TagValueView: {
+            /** Value */
+            value: string;
+            /** Count */
+            count: number;
+        };
         /** TemplatePrompt */
         TemplatePrompt: {
             /**
@@ -7504,6 +7898,31 @@ export interface components {
             margin: number;
             estimate: components["schemas"]["Estimate"];
             verdict: components["schemas"]["CellVerdict"];
+        };
+        /**
+         * ThresholdQuestion
+         * @description Is ``metric`` below or above a value by more than ``margin``, for one variant or each variant.
+         *
+         *     Exactly one of ``below`` and ``above`` is set.
+         */
+        ThresholdQuestion: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "threshold";
+            metric: components["schemas"]["MetricName"];
+            /** Variant */
+            variant?: string | null;
+            /** Below */
+            below?: number | null;
+            /** Above */
+            above?: number | null;
+            /**
+             * Margin
+             * @default 0
+             */
+            margin: number;
         };
         TimeoutPolicy: components["schemas"]["FailOnTimeout"] | components["schemas"]["DefaultOnTimeout"] | components["schemas"]["EscalateOnTimeout"];
         /** ToolApprovalSpec */
@@ -7721,6 +8140,23 @@ export interface components {
             };
             default?: components["schemas"]["VariantRef"] | null;
         };
+        /**
+         * VariantSpec
+         * @description One variant of the subject: the value of the experiment factor on some of its nodes.
+         *
+         *     ``nodes`` maps a node of ``varies.nodes`` to its value, whose kind ``varies.what`` sets: an agent id
+         *     (``agent``), a prompt name from the experiment ``prompts/`` folder (``prompt``), an alternative id from its
+         *     ``nodes/`` folder (``use``) or a flow id, local to the experiment first, then of the project (``flow``). A
+         *     factor node the variant leaves out runs as written; a variant without ``nodes`` is the subject as written.
+         */
+        VariantSpec: {
+            /** Id */
+            id: string;
+            /** Nodes */
+            nodes?: {
+                [key: string]: components["schemas"]["FactorValue"];
+            } | null;
+        };
         /** VariantTally */
         VariantTally: {
             /** Variant Id */
@@ -7803,6 +8239,10 @@ export type SchemaAttemptFinishedEvent = components['schemas']['AttemptFinishedE
 export type SchemaAttemptOutcome = components['schemas']['AttemptOutcome'];
 export type SchemaAttemptView = components['schemas']['AttemptView'];
 export type SchemaAttentionReason = components['schemas']['AttentionReason'];
+export type SchemaAuthoringDatasetView = components['schemas']['AuthoringDatasetView'];
+export type SchemaAuthoringFlowView = components['schemas']['AuthoringFlowView'];
+export type SchemaAuthoringNodeView = components['schemas']['AuthoringNodeView'];
+export type SchemaAuthoringOptionsView = components['schemas']['AuthoringOptionsView'];
 export type SchemaBlobMeta = components['schemas']['BlobMeta'];
 export type SchemaBlobUploaded = components['schemas']['BlobUploaded'];
 export type SchemaBlobValue = components['schemas']['BlobValue'];
@@ -7818,9 +8258,12 @@ export type SchemaCallOutcome = components['schemas']['CallOutcome'];
 export type SchemaCancelRequest = components['schemas']['CancelRequest'];
 export type SchemaCancelResult = components['schemas']['CancelResult'];
 export type SchemaCapSource = components['schemas']['CapSource'];
+export type SchemaCaseCountRequest = components['schemas']['CaseCountRequest'];
+export type SchemaCaseCountView = components['schemas']['CaseCountView'];
 export type SchemaCaseDraft = components['schemas']['CaseDraft'];
 export type SchemaCaseFromRunRequest = components['schemas']['CaseFromRunRequest'];
 export type SchemaCaseMediaAttached = components['schemas']['CaseMediaAttached'];
+export type SchemaCaseSelection = components['schemas']['CaseSelection'];
 export type SchemaCaseSelectionView = components['schemas']['CaseSelectionView'];
 export type SchemaCellVerdict = components['schemas']['CellVerdict'];
 export type SchemaChangeKind = components['schemas']['ChangeKind'];
@@ -7875,6 +8318,7 @@ export type SchemaCodeNodeSpec = components['schemas']['CodeNodeSpec'];
 export type SchemaCodePolicy = components['schemas']['CodePolicy'];
 export type SchemaCodePrompt = components['schemas']['CodePrompt'];
 export type SchemaCodeToolSource = components['schemas']['CodeToolSource'];
+export type SchemaCompareQuestion = components['schemas']['CompareQuestion'];
 export type SchemaCompileStatus = components['schemas']['CompileStatus'];
 export type SchemaCompiledAgent = components['schemas']['CompiledAgent'];
 export type SchemaCompiledAgentOutput = components['schemas']['CompiledAgentOutput'];
@@ -7951,28 +8395,42 @@ export type SchemaDynamicLimits = components['schemas']['DynamicLimits'];
 export type SchemaDynamicOutput = components['schemas']['DynamicOutput'];
 export type SchemaDynamicSlot = components['schemas']['DynamicSlot'];
 export type SchemaEffect = components['schemas']['Effect'];
+export type SchemaEntityName = components['schemas']['EntityName'];
 export type SchemaEnumType = components['schemas']['EnumType'];
 export type SchemaEnumValue = components['schemas']['EnumValue'];
 export type SchemaEscalateOnTimeout = components['schemas']['EscalateOnTimeout'];
 export type SchemaEstimate = components['schemas']['Estimate'];
+export type SchemaEvaluatorOptionView = components['schemas']['EvaluatorOptionView'];
+export type SchemaEvaluatorParamView = components['schemas']['EvaluatorParamView'];
 export type SchemaEventCatalog = components['schemas']['EventCatalog'];
 export type SchemaEventSchemas = components['schemas']['EventSchemas'];
 export type SchemaExampleSpec = components['schemas']['ExampleSpec'];
 export type SchemaExecutionAddress = components['schemas']['ExecutionAddress'];
 export type SchemaExecutionDetail = components['schemas']['ExecutionDetail'];
 export type SchemaExecutionStatus = components['schemas']['ExecutionStatus'];
+export type SchemaExpectedHash = components['schemas']['ExpectedHash'];
+export type SchemaExperimentCasesWrite = components['schemas']['ExperimentCasesWrite'];
 export type SchemaExperimentChangeKind = components['schemas']['ExperimentChangeKind'];
 export type SchemaExperimentChanged = components['schemas']['ExperimentChanged'];
+export type SchemaExperimentCheck = components['schemas']['ExperimentCheck'];
+export type SchemaExperimentCreateRequest = components['schemas']['ExperimentCreateRequest'];
+export type SchemaExperimentCreated = components['schemas']['ExperimentCreated'];
 export type SchemaExperimentDetailView = components['schemas']['ExperimentDetailView'];
+export type SchemaExperimentFactor = components['schemas']['ExperimentFactor'];
+export type SchemaExperimentFileWritten = components['schemas']['ExperimentFileWritten'];
 export type SchemaExperimentFilesView = components['schemas']['ExperimentFilesView'];
 export type SchemaExperimentFlowView = components['schemas']['ExperimentFlowView'];
 export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
 export type SchemaExperimentPlan = components['schemas']['ExperimentPlan'];
 export type SchemaExperimentPromptView = components['schemas']['ExperimentPromptView'];
+export type SchemaExperimentSpec = components['schemas']['ExperimentSpec'];
+export type SchemaExperimentSubject = components['schemas']['ExperimentSubject'];
 export type SchemaExperimentSummaryView = components['schemas']['ExperimentSummaryView'];
 export type SchemaFactorAgentView = components['schemas']['FactorAgentView'];
 export type SchemaFactorKind = components['schemas']['FactorKind'];
+export type SchemaFactorNode = components['schemas']['FactorNode'];
 export type SchemaFactorSlotView = components['schemas']['FactorSlotView'];
+export type SchemaFactorValue = components['schemas']['FactorValue'];
 export type SchemaFactorView = components['schemas']['FactorView'];
 export type SchemaFailOnTimeout = components['schemas']['FailOnTimeout'];
 export type SchemaFamiliesDistinct = components['schemas']['FamiliesDistinct'];
@@ -8001,6 +8459,7 @@ export type SchemaFlowSummary = components['schemas']['FlowSummary'];
 export type SchemaForkBase = components['schemas']['ForkBase'];
 export type SchemaForkOverrides = components['schemas']['ForkOverrides'];
 export type SchemaForkRequest = components['schemas']['ForkRequest'];
+export type SchemaGuardrail = components['schemas']['Guardrail'];
 export type SchemaGuardrailView = components['schemas']['GuardrailView'];
 export type SchemaHumanAnswerStatus = components['schemas']['HumanAnswerStatus'];
 export type SchemaHumanNodeSpec = components['schemas']['HumanNodeSpec'];
@@ -8043,6 +8502,7 @@ export type SchemaLoginMethod = components['schemas']['LoginMethod'];
 export type SchemaLoginState = components['schemas']['LoginState'];
 export type SchemaLoginStatus = components['schemas']['LoginStatus'];
 export type SchemaLookOrigin = components['schemas']['LookOrigin'];
+export type SchemaLookQuestion = components['schemas']['LookQuestion'];
 export type SchemaLookTarget = components['schemas']['LookTarget'];
 export type SchemaLoopExited = components['schemas']['LoopExited'];
 export type SchemaLoopIterationFinished = components['schemas']['LoopIterationFinished'];
@@ -8062,6 +8522,7 @@ export type SchemaMetricCell = components['schemas']['MetricCell'];
 export type SchemaMetricColumn = components['schemas']['MetricColumn'];
 export type SchemaMetricDirection = components['schemas']['MetricDirection'];
 export type SchemaMetricKind = components['schemas']['MetricKind'];
+export type SchemaMetricName = components['schemas']['MetricName'];
 export type SchemaMetricRole = components['schemas']['MetricRole'];
 export type SchemaMetricUnit = components['schemas']['MetricUnit'];
 export type SchemaMissingRangeData = components['schemas']['MissingRangeData'];
@@ -8099,6 +8560,7 @@ export type SchemaNodeSuspended = components['schemas']['NodeSuspended'];
 export type SchemaNodeValueShape = components['schemas']['NodeValueShape'];
 export type SchemaNodeWaitEscalated = components['schemas']['NodeWaitEscalated'];
 export type SchemaNodeWaitTimedOut = components['schemas']['NodeWaitTimedOut'];
+export type SchemaNoninferiorQuestion = components['schemas']['NoninferiorQuestion'];
 export type SchemaOnFail = components['schemas']['OnFail'];
 export type SchemaOnTimeoutAction = components['schemas']['OnTimeoutAction'];
 export type SchemaOpenRouterRouting = components['schemas']['OpenRouterRouting'];
@@ -8155,6 +8617,7 @@ export type SchemaPromptSlot = components['schemas']['PromptSlot'];
 export type SchemaPromptSource = components['schemas']['PromptSource'];
 export type SchemaPromptSourceText = components['schemas']['PromptSourceText'];
 export type SchemaPromptSummary = components['schemas']['PromptSummary'];
+export type SchemaPromptText = components['schemas']['PromptText'];
 export type SchemaPromptTrace = components['schemas']['PromptTrace'];
 export type SchemaPromptTraceMessage = components['schemas']['PromptTraceMessage'];
 export type SchemaProviderCapabilitiesSpec = components['schemas']['ProviderCapabilitiesSpec'];
@@ -8164,6 +8627,7 @@ export type SchemaProviderLimits = components['schemas']['ProviderLimits'];
 export type SchemaProviderNameField = components['schemas']['ProviderNameField'];
 export type SchemaProviderSpec = components['schemas']['ProviderSpec'];
 export type SchemaProviderText = components['schemas']['ProviderText'];
+export type SchemaQuestion = components['schemas']['Question'];
 export type SchemaQuestionKind = components['schemas']['QuestionKind'];
 export type SchemaQuestionView = components['schemas']['QuestionView'];
 export type SchemaRateLimitMode = components['schemas']['RateLimitMode'];
@@ -8218,6 +8682,7 @@ export type SchemaSeriesEvent = components['schemas']['SeriesEvent'];
 export type SchemaSeriesFinishedEvent = components['schemas']['SeriesFinishedEvent'];
 export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
 export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
+export type SchemaSeriesMetric = components['schemas']['SeriesMetric'];
 export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
 export type SchemaSeriesPause = components['schemas']['SeriesPause'];
 export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
@@ -8264,9 +8729,12 @@ export type SchemaSubjectView = components['schemas']['SubjectView'];
 export type SchemaSwitchCase = components['schemas']['SwitchCase'];
 export type SchemaSwitchNodeSpec = components['schemas']['SwitchNodeSpec'];
 export type SchemaSyncState = components['schemas']['SyncState'];
+export type SchemaTagName = components['schemas']['TagName'];
+export type SchemaTagValueView = components['schemas']['TagValueView'];
 export type SchemaTemplatePrompt = components['schemas']['TemplatePrompt'];
 export type SchemaTerminalRunStatus = components['schemas']['TerminalRunStatus'];
 export type SchemaThresholdCell = components['schemas']['ThresholdCell'];
+export type SchemaThresholdQuestion = components['schemas']['ThresholdQuestion'];
 export type SchemaTimeoutPolicy = components['schemas']['TimeoutPolicy'];
 export type SchemaToolApprovalSpec = components['schemas']['ToolApprovalSpec'];
 export type SchemaToolKind = components['schemas']['ToolKind'];
@@ -8290,6 +8758,7 @@ export type SchemaVariantChange = components['schemas']['VariantChange'];
 export type SchemaVariantRef = components['schemas']['VariantRef'];
 export type SchemaVariantRole = components['schemas']['VariantRole'];
 export type SchemaVariantSlot = components['schemas']['VariantSlot'];
+export type SchemaVariantSpec = components['schemas']['VariantSpec'];
 export type SchemaVariantTally = components['schemas']['VariantTally'];
 export type SchemaVariantView = components['schemas']['VariantView'];
 export type SchemaVerdictReason = components['schemas']['VerdictReason'];
@@ -14948,6 +15417,111 @@ export interface operations {
             };
         };
     };
+    experiment_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentCreated"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     experiment_get: {
         parameters: {
             query?: never;
@@ -15922,6 +16496,321 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeriesSummaryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    research_authoring: {
+        parameters: {
+            query?: {
+                flow?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthoringOptionsView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    research_case_count: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseCountRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseCountView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    experiment_cases_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentCasesWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentFileWritten"];
                 };
             };
             /** @description Bad Request */

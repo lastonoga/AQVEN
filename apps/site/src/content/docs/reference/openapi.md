@@ -72,6 +72,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `POST` | `/api/datasets/import-csv/preview` | `dataset_csv_preview` |
 | `POST` | `/api/datasets/import-csv` | `dataset_csv_import` |
 | `GET` | `/api/experiments` | `experiment_list` |
+| `POST` | `/api/experiments` | `experiment_create` |
 | `GET` | `/api/experiments/{experiment_id}` | `experiment_get` |
 | `GET` | `/api/experiments/{experiment_id}/flows/{flow_id}` | `experiment_flow` |
 | `POST` | `/api/experiments/{experiment_id}/launch-plan` | `series_launch_plan` |
@@ -82,6 +83,9 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/series/{series_id}/events` | `series_events` |
 | `POST` | `/api/series/{series_id}/approve` | `series_approve` |
 | `POST` | `/api/series/{series_id}/cancel` | `series_cancel` |
+| `GET` | `/api/research/authoring` | `research_authoring` |
+| `POST` | `/api/research/authoring/count` | `research_case_count` |
+| `PUT` | `/api/experiments/{experiment_id}/cases` | `experiment_cases_put` |
 | `GET` | `/api/chat/status` | `chat_login_status` |
 | `GET` | `/api/chat/models` | `chat_model_list` |
 | `GET` | `/api/chat/backend` | `chat_backend_get` |

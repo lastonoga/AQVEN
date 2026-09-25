@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router"
 import { ArrowUpRight, Check, Code, Gauge, Scale, type LucideIcon } from "lucide-react"
 import { useTranslations } from "use-intl"
-import { SERIES_SPLITS, type CheckSource, type CheckSourceKind, type ExperimentCheck, type ExperimentDetail, type SplitCounts } from "@/domain"
-import { Dot, Tag, Text, Tile, TileNote, TileValue } from "@/components/studio"
+import type { CheckSource, CheckSourceKind, ExperimentCheck, ExperimentDetail } from "@/domain"
+import { Tag, Text, Tile, TileNote, TileValue } from "@/components/studio"
 import { ROUTE_PATH } from "@/lib/routes"
-import { rangeText, splitShare, tagPairs } from "./presenters"
-import { SPLIT_TONE } from "./tones"
+import { casesSearch, rangeText, tagPairs } from "./presenters"
+import { SplitBar } from "./split-bar"
 import { whereView, type WhereView } from "./variant-table"
 
 const CHECK_ICON: Readonly<Record<CheckSourceKind, LucideIcon>> = {
@@ -15,34 +15,6 @@ const CHECK_ICON: Readonly<Record<CheckSourceKind, LucideIcon>> = {
 }
 
 const TILE_CLASS = "flex-1 basis-64"
-
-function SplitBar({ splits }: { readonly splits: SplitCounts }) {
-  const t = useTranslations("research.experiment.what.facts")
-  const choice = useTranslations("research.vocabulary.splitChoice")
-  const total = splits.dev + splits.holdout
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <div role="img" aria-label={t("splitAria", { dev: splits.dev, holdout: splits.holdout })} className="flex h-1.5 overflow-hidden rounded-xs bg-border">
-        {SERIES_SPLITS.map((split) => (
-          <div key={split} data-tone={SPLIT_TONE[split]} className="h-full bg-tone" style={{ width: splitShare(splits[split], total) }} />
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
-        {SERIES_SPLITS.map((split) => (
-          <span key={split} className="inline-flex items-center gap-1.5">
-            <Dot tone={SPLIT_TONE[split]} shape="square" />
-            <Text role="hint" tone="default" weight="semibold">
-              {splits[split]}
-            </Text>
-            <Text role="hint" tone="neutral">
-              {choice(split)}
-            </Text>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 function CaseTags({ pairs }: { readonly pairs: readonly string[] }) {
   const t = useTranslations("research.experiment.what.facts")
@@ -75,7 +47,7 @@ function CasesTile({ experiment }: { readonly experiment: ExperimentDetail }) {
       <CaseTags pairs={pairs} />
       {flowId === null ? null : (
         <Text role="link" tone="neutral" asChild>
-          <Link to={ROUTE_PATH.cases} params={{ flowId }} search={{ dataset: cases.dataset, ...(pairs.length === 0 ? {} : { tag: pairs }) }} className="inline-flex items-center gap-1 self-start">
+          <Link to={ROUTE_PATH.cases} params={{ flowId }} search={casesSearch(cases.dataset, cases.tags)} className="inline-flex items-center gap-1 self-start">
             {t("openCases")}
             <ArrowUpRight aria-hidden className="size-3" />
           </Link>

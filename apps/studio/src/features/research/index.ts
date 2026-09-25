@@ -1,4 +1,5 @@
 export { ExperimentScreen } from "./experiment-screen"
+export { NewExperimentScreen } from "./new-experiment"
 export { ResearchScreen } from "./research-screen"
 export { SeriesListScreen } from "./series-list-screen"
 export { SeriesScreen } from "./series-screen"

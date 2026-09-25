@@ -9,7 +9,6 @@ from pydantic import Field, JsonValue, TypeAdapter, ValidationError
 
 from aqven.datasets import CaseMediaResolver, with_media_placeholders
 from aqven.loader import dataset_media_folder
-from aqven.loader.aliases import AliasScope
 from aqven.loader.strict_yaml import read_strict_yaml
 from aqven.preview.samples import sample_document
 from aqven.runtime.address import RequestModel, ResourceModel
@@ -23,6 +22,7 @@ from aqven.server.case_media import case_with_media
 from aqven.server.errors import ApiFailure, not_found, validation_problems
 from aqven.server.run_inputs import input_adapter
 from aqven.server.views.common import loaded_flow, loaded_project
+from aqven.server.views.documents import alias_scope
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import API_VERSION, NAME_PATTERN, DatasetCase, DatasetFile, DatasetId, FlowId, NodeId, SeriesSplit
 from aqven.write import canonical_yaml
@@ -215,9 +215,8 @@ def case_from_run(
         message = f"run {snapshot.run_id} ran flow {snapshot.flow_id}, but dataset {dataset_id} belongs to {holder}"
         raise ApiFailure("INPUT_INVALID", message)
     case = run_case(snapshot, request)
-    scope = AliasScope(state.root.name, tuple(flow.folder for flow in project.flows.values()))
     document = case.model_dump(mode="json", by_alias=True, exclude_none=True)
-    text = canonical_yaml(source.path, document, scope).decode("utf-8")
+    text = canonical_yaml(source.path, document, alias_scope(state)).decode("utf-8")
     return CaseDraft(dataset_id=DatasetId(dataset_id), case=case, yaml=text)
 
 
@@ -286,8 +285,8 @@ def create_dataset(state: WorkspaceState, request: DatasetCreateRequest) -> Path
     relative = f"{DATASET_FOLDER}/{request.dataset_id}.yaml"
     location = state.root / relative
     location.parent.mkdir(parents=True, exist_ok=True)
-    scope = AliasScope(state.root.name, tuple(flow.folder for flow in project.flows.values()))
-    content = canonical_yaml(relative, document.model_dump(mode="json", by_alias=True, exclude_none=True), scope)
+    data = document.model_dump(mode="json", by_alias=True, exclude_none=True)
+    content = canonical_yaml(relative, data, alias_scope(state))
     parsed, diagnostics = read_strict_yaml(content.decode("utf-8"), relative)
     if parsed is None or diagnostics:
         detail = diagnostics[0].message if diagnostics else "the generated YAML is invalid"
