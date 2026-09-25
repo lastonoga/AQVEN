@@ -2,16 +2,17 @@
 
 # AQVEN
 
-### AI workflows built for humans and coding agents.
+### Discover what your AI workflow needs to work reliably.
 
-Build your AI workflow, check it before it runs, and see exactly what it did.
+A Python framework and a local Studio for AI workflows.<br>
+Your coding agent runs the experiments. You see the evidence and decide.
 
 [![PyPI](https://img.shields.io/pypi/v/aqven)](https://pypi.org/project/aqven/)
 [![Python](https://img.shields.io/pypi/pyversions/aqven)](https://pypi.org/project/aqven/)
 [![CI](https://github.com/lastonoga/AQVEN/actions/workflows/ci.yml/badge.svg)](https://github.com/lastonoga/AQVEN/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-source--available-blue)](LICENSE)
 
-**[Documentation](https://aqvenstudio.com)** · **[Quickstart](https://aqvenstudio.com/start/quickstart/)** · **[Studio](https://aqvenstudio.com/studio/)** · **[Reference](https://aqvenstudio.com/reference/)** · **[llms.txt](https://aqvenstudio.com/llms.txt)**
+**[Documentation](https://aqvenstudio.com)** · **[Quickstart](https://aqvenstudio.com/start/quickstart/)** · **[Use cases](https://aqvenstudio.com/use-cases/)** · **[Studio](https://aqvenstudio.com/studio/)** · **[llms.txt](https://aqvenstudio.com/llms.txt)**
 
 <br>
 
@@ -24,13 +25,37 @@ Build your AI workflow, check it before it runs, and see exactly what it did.
 AQVEN keeps an AI workflow as typed files in your repository: a flow, one file per step, prompts in
 Markdown, and declared types, agents and tools. `aqven check` validates every connection and simulates
 every flow before you spend a token. Studio, a local browser app in the same install, shows each run
-step by step. Your coding agent works on the same files through AQVEN's MCP server.
+step by step. Your coding agent works on the same files through AQVEN's MCP server, and runs experiments
+whose verdicts AQVEN computes.
 
 > [!NOTE]
 > AQVEN is in alpha: expect changes between releases. It is source-available, not open source. See
 > [License](#license).
 
-## Quick start
+## Contents
+
+- [What it's for](#what-its-for)
+- [Install](#install)
+- [Start with your coding agent](#start-with-your-coding-agent)
+- [Start by hand](#start-by-hand)
+- [Your agent does the work. You direct the investigation.](#your-agent-does-the-work-you-direct-the-investigation)
+- [What's inside](#whats-inside)
+- [When AQVEN is not the right tool](#when-aqven-is-not-the-right-tool)
+- [Built on](#built-on)
+- [Support and feedback](#support-and-feedback)
+- [License](#license)
+
+## What it's for
+
+| | |
+| --- | --- |
+| **[Find](https://aqvenstudio.com/use-cases/#find)** | *"What am I missing?"* Your agent explores cases and variants you wouldn't try yourself. |
+| **[Explain](https://aqvenstudio.com/use-cases/#explain)** | *"Why did this fail?"* Follow a bad answer back to the step where it started. |
+| **[Compare](https://aqvenstudio.com/use-cases/#compare)** | *"What should I change?"* Models and prompts side by side, with cost and latency. |
+| **[Confirm](https://aqvenstudio.com/use-cases/#confirm)** | *"Can I trust this change?"* A verdict on held-out cases that is allowed to say inconclusive. |
+| **[Build](https://aqvenstudio.com/use-cases/#build)** | *"How do I keep it readable as it grows?"* Typed files in your repo, checked before a run costs a token. |
+
+## Install
 
 You need [uv](https://docs.astral.sh/uv/getting-started/installation/). AQVEN runs on Python 3.14,
 and uv fetches it for you.
@@ -38,37 +63,66 @@ and uv fetches it for you.
 ```bash
 uv tool install aqven
 aqven new my_project --template minimal --provider openrouter
-cd my_project
-uv run aqven check my_project
 ```
 
 `aqven new` writes the project, installs its environment with `uv sync` and generates typed Python
-models. `aqven check` validates every file, then simulates a run of every flow with stand-ins for the
-model calls. On the new project it prints:
+models. It also prepares the project for a coding agent: `AGENTS.md`, `CLAUDE.md`, an `.mcp.json` that
+registers AQVEN's MCP server, and Claude Code hooks that run `aqven check` as the agent works.
+
+A real run needs a model key: copy `my_project/.env.example` to `my_project/.env` and set
+`OPENROUTER_API_KEY` in it. `aqven check` needs neither a key nor the network.
+
+## Start with your coding agent
+
+Start Claude Code in the project and approve the `aqven` server when it asks:
+
+```bash
+cd my_project
+claude
+```
+
+Then hand it a task. It builds the flow, runs `aqven check` after every change, and works in rounds:
+
+```text
+Build a flow that reads an incoming support e-mail and returns its intent (defect, delivery or question) and a one-line summary.
+Done means: the intent is right on more than 90% of held-out cases, and a case costs under $0.002.
+Work in rounds: explore on working cases, confirm once on held-out cases. Stop when every "done" criterion is confirmed, or when you have spent $5.
+Then report FINDINGS.md, the decisions you made and the risks that are left.
+```
+
+Open Studio next to it to watch every run, or chat from there: its
+[chat panel](https://aqvenstudio.com/studio/chat/) runs Claude Code or Codex on the same project.
+
+```bash
+uv run aqven dev my_project
+```
+
+For Codex, Cursor or another MCP client, see
+[How to set up a coding agent outside Studio](https://aqvenstudio.com/mcp-cli/set-up-an-agent-outside-studio/).
+
+## Start by hand
+
+Check the new project:
+
+```bash
+cd my_project
+uv run aqven check my_project
+```
 
 ```text
 errors: 0, warnings: 0
 ```
 
-> [!TIP]
-> `aqven check` needs no API key and no network. Run it after every change.
-
-To run the flow for real, copy `my_project/.env.example` to `my_project/.env` and set
-`OPENROUTER_API_KEY` in it. Then run the flow in your terminal, one line per event as it happens, or
-start Studio:
+`aqven check` validates every file, then simulates a run of every flow with stand-ins for the model
+calls. Run it after every change. With a key in `.env`, run the flow for real, one line per event as it
+happens:
 
 ```bash
 echo '{"text": "How long does a light strip last?", "tone": "friendly"}' > question.json
 uv run aqven run answer_question --root my_project --input question.json
-uv run aqven dev my_project
 ```
 
-The [quickstart](https://aqvenstudio.com/start/quickstart/) walks through AQVEN's full example,
-`--template showcase`: a support flow with every node kind, human approval and experiments.
-
-## What a workflow looks like
-
-This is the project you just created, trimmed to the files that define the workflow:
+This is the project, trimmed to the files that define the workflow:
 
 ```text
 my_project/
@@ -141,52 +195,19 @@ doesn't fit the slot (`E_BINDING_TYPE`), a prompt variable the inference doesn't
 (`E_PROMPT_VARIABLE_UNDECLARED`) and a `switch` that misses a case (`E_SWITCH_NOT_EXHAUSTIVE`).
 → [All diagnostics](https://aqvenstudio.com/reference/diagnostics/)
 
-## Why AQVEN
+The [quickstart](https://aqvenstudio.com/start/quickstart/) walks through AQVEN's full example,
+`--template showcase`: a support flow with every node kind, human approval and experiments.
 
-An AI workflow spreads fast. The prompt is in one file, the model settings in another, routing in code,
-tools somewhere else, and a coding agent edits ten of them at once. A month later nobody can say what
-actually runs, or which step produced a bad answer. AQVEN keeps all of it in one place, as files a
-person can read and a command can check.
+## Your agent does the work. You direct the investigation.
 
-- **Check it before it runs.** Broken references, types that don't match, a prompt that points at
-  nothing: caught before a customer finds them.
-  → [How to check a project](https://aqvenstudio.com/engine/check/)
-- **Review a change like code.** A prompt edit shows up in your diff, and so does a new finding in
-  `FINDINGS.md`. → [Files as source of truth](https://aqvenstudio.com/concepts/files-as-source-of-truth/)
-- **Find where a bad result came from.** Open the exact run in Studio and walk back to the first step
-  that went wrong: what went in, what came out, which model answered, what it cost.
-  → [How to investigate a run](https://aqvenstudio.com/studio/investigate-a-run/)
-- **Prove a change holds.** Explore on working cases, confirm once on held-out cases, and keep the
-  verdict. → [Experiments, series and findings](https://aqvenstudio.com/concepts/experiments-series-and-findings/)
-- **Survive a crash.** A run checkpoints as it goes and resumes after a restart. A step that waits for a
-  person can wait for days. → [A run survives a process crash](https://aqvenstudio.com/concepts/run-survives-a-crash/)
-
-## For coding agents
-
-`aqven new` prepares every project for an agent:
-
-- **`AGENTS.md` and `CLAUDE.md`** hold the project's layout, rules and commands. They send the agent to
-  [`llms.txt`](https://aqvenstudio.com/llms.txt), the index of the docs in Markdown, before it guesses.
-- **`.mcp.json`** registers AQVEN's MCP server, `uv run aqven mcp my_project`. Its tools include
-  `flow_patch` for cross-file edits, `aqven_check`, `prompt_preview`, `run_start` and `series_start`.
-- **`.claude/settings.json`** adds Claude Code hooks: `aqven check --static` after every edit, and the
-  full check before the agent finishes its turn.
-
-Start Claude Code in the project root and approve the `aqven` server. For Codex, Cursor or another MCP
-client, see [How to set up a coding agent outside Studio](https://aqvenstudio.com/mcp-cli/set-up-an-agent-outside-studio/).
-Studio's [chat panel](https://aqvenstudio.com/studio/chat/) runs Claude Code or Codex on the same project.
-
-## From a demo to a workflow that holds
-
-One run proves one case, and `aqven check` proves the wiring. Neither says whether the workflow holds on
-real inputs. The agent finds out in rounds: it builds, runs, checks and experiments. You read the first
-traces and make the decisions.
+One run proves one case, and `aqven check` proves the wiring. Neither says how the workflow behaves on
+real inputs. The agent finds out in rounds, and you make the decisions:
 
 1. **You** set the goal, what "done" means in numbers, and a budget.
 2. **The agent** builds the simplest flow that works, writes cases with expected outputs, and runs
    `aqven check` after every change.
-3. **You** read the first traces it hands you, failing runs first, about 30 in all, and note the first
-   thing that went wrong in each.
+3. **You** read the first traces it hands you, failing runs first, and note the first thing that went
+   wrong in each.
 4. **The agent** groups your notes into failure modes you agree on, and writes one experiment per mode
    before any data.
 5. **The agent** explores on working cases, one change between series, then confirms once on held-out
@@ -195,17 +216,11 @@ traces and make the decisions.
 6. **You** decide which limits are requirements, how much quality a cheaper step may lose, and any spend
    above the project cap. An agent can start a series but never approve its spend.
 
-A task you can hand to the agent:
-
-```text
-Build a flow that reads an incoming support e-mail and returns its intent (defect, delivery or question) and a one-line summary.
-Done means: the intent is right on more than 90% of held-out cases, and a case costs under $0.002.
-Work in rounds: explore on working cases, confirm once on held-out cases. Stop when every "done" criterion is confirmed, or when you have spent $5.
-Then report FINDINGS.md, the decisions you made and the risks that are left.
-```
+A verdict holds for the cases, checks and versions it measured. It is evidence for a decision, not a
+guarantee about every future output.
 
 → [A day with AQVEN](https://aqvenstudio.com/start/a-day-with-aqven/) ·
-[How an agent takes a task to a reliable flow](https://aqvenstudio.com/mcp-cli/research-loop/)
+[How an agent takes a task through the research loop](https://aqvenstudio.com/mcp-cli/research-loop/)
 
 ## What's inside
 
@@ -221,6 +236,7 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | **[Experiments and findings](https://aqvenstudio.com/engine/experiments/)** | An experiment writes one question down before any data. A series answers it across variants and cases. A verdict on held-out cases becomes a finding in `FINDINGS.md` |
 | **[Durable execution](https://aqvenstudio.com/concepts/run-survives-a-crash/)** | A run survives a crash and resumes where it left off |
 | **[Studio](https://aqvenstudio.com/studio/)** | The local browser app. **Flow** shows a workflow's graph, runs and cases. **Research** shows experiments and series, and launches a series to **Explore** or **Confirm** |
+| **[MCP server](https://aqvenstudio.com/mcp-cli/)** | The same tools Studio's chat uses, for any MCP client: `flow_patch` for cross-file edits, `aqven_check`, `prompt_preview`, `run_start`, `series_start` and more |
 
 ## When AQVEN is not the right tool
 
@@ -246,9 +262,11 @@ serves and consumes MCP, [FastAPI](https://fastapi.tiangolo.com/) serves Studio 
 [python-liquid](https://jg-rp.github.io/liquid/) renders prompt templates.
 → [What this is built on](https://aqvenstudio.com/concepts/what-this-is-built-on/)
 
-## Feedback
+## Support and feedback
 
-Report a bug or ask for a feature in [GitHub Issues](https://github.com/lastonoga/AQVEN/issues).
+- **Docs:** [aqvenstudio.com](https://aqvenstudio.com). For an agent, [llms.txt](https://aqvenstudio.com/llms.txt)
+  indexes every page in Markdown.
+- **Bugs and ideas:** [GitHub Issues](https://github.com/lastonoga/AQVEN/issues).
 
 ## License
 
