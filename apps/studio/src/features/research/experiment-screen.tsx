@@ -1,4 +1,3 @@
-import { useState } from "react"
 import type { ExperimentDetail, LaunchPlan, LaunchRequest, SeriesSummary } from "@/domain"
 import { Page } from "@/components/studio"
 import { experimentRouteApi } from "@/lib/routes"
@@ -13,6 +12,8 @@ import { LaunchPanel } from "./launch-panel"
 import { SeriesHistory } from "./series-history"
 import { StepInspector } from "./step-inspector"
 import { useLaunch } from "./use-launch"
+import { usePageFocus } from "./use-page-focus"
+import { changeBlocks } from "./what-changes"
 
 type ExperimentPageProps = {
   readonly experiment: ExperimentDetail
@@ -38,14 +39,15 @@ function StepSlot({ experiment, views, selection, latest, onClose }: StepSlotPro
 function ExperimentPage({ experiment, series, initial, plan }: ExperimentPageProps) {
   const { graphs, latest } = experimentRouteApi.useLoaderData()
   const launch = useLaunch(experiment, initial, plan)
-  const [selection, setSelection] = useState<StepSelection | null>(null)
   const views = graphViews(experiment, graphs)
+  const blocks = changeBlocks(experiment)
+  const focus = usePageFocus(views, blocks)
   const detail = latest?.series ?? null
   return (
     <div className="relative h-full min-h-0">
       <Page width="xl" header={<ExperimentQuestion experiment={experiment} latest={series[0] ?? null} launch={launch} />}>
         <div className="flex min-w-0 flex-col gap-7">
-          <ExperimentCanvas experiment={experiment} views={views} selection={selection} onSelect={setSelection} />
+          <ExperimentCanvas experiment={experiment} views={views} blocks={blocks} focus={focus} />
           <ExperimentAnswer experiment={experiment} latest={detail} launch={launch} />
           <ExperimentComparison latest={detail} />
           <ExperimentDisagreements latest={detail} cases={latest?.disagreements ?? []} />
@@ -57,11 +59,9 @@ function ExperimentPage({ experiment, series, initial, plan }: ExperimentPagePro
       <StepSlot
         experiment={experiment}
         views={views}
-        selection={selection}
+        selection={focus.selection}
         latest={series[0] ?? null}
-        onClose={() => {
-          setSelection(null)
-        }}
+        onClose={focus.close}
       />
     </div>
   )

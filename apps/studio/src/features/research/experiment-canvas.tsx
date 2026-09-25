@@ -1,18 +1,22 @@
 import { useState } from "react"
+import { cn } from "cn"
 import { useTranslations } from "use-intl"
 import type { ExperimentDetail, ExperimentQuestion } from "@/domain"
 import { Empty, SIDE_PANEL_WIDTH, Surface, Text } from "@/components/studio"
 import { buildGraph, GraphCanvas, withFieldCounts } from "@/features/flow"
 import { joinMeta } from "@/lib/format"
-import { markSteps, type GraphView, type StepMark, type StepSelection } from "./graph-model"
+import { markSteps, type GraphView, type StepMark } from "./graph-model"
 import { ResearchSection } from "./layout"
 import { RoleTag } from "./role-tag"
+import type { PageFocus } from "./use-page-focus"
+import { graphAnchor, type ChangeBlock } from "./what-changes"
 import { WhatWeTest } from "./what-we-test"
 
 type GraphBlockProps = {
   readonly view: GraphView
   readonly question: ExperimentQuestion
   readonly selected: string | null
+  readonly highlighted: boolean
   readonly legend: boolean
   readonly onSelect: (node: string) => void
   readonly onToggleLegend: () => void
@@ -21,8 +25,8 @@ type GraphBlockProps = {
 export type ExperimentCanvasProps = {
   readonly experiment: ExperimentDetail
   readonly views: readonly GraphView[]
-  readonly selection: StepSelection | null
-  readonly onSelect: (selection: StepSelection) => void
+  readonly blocks: readonly ChangeBlock[]
+  readonly focus: PageFocus
 }
 
 const MARK_JOIN = " · "
@@ -57,14 +61,19 @@ function GraphTitle({ view, question }: { readonly view: GraphView; readonly que
   )
 }
 
-function GraphBlock({ view, question, selected, legend, onSelect, onToggleLegend }: GraphBlockProps) {
+function GraphBlock({ view, question, selected, highlighted, legend, onSelect, onToggleLegend }: GraphBlockProps) {
   const t = useTranslations("research.experiment.canvas")
   const label = useMarkLabel()
   const graph = withFieldCounts(markSteps(buildGraph(view.source.nodes, view.source.order), view.marks, label), view.source.schemas)
   return (
-    <section aria-label={t("graphAria", { graph: view.source.key })} className="flex min-w-0 flex-col gap-2">
+    <section
+      id={graphAnchor(view.source.key)}
+      aria-label={t("graphAria", { graph: view.source.key })}
+      data-highlighted={highlighted}
+      className="flex min-w-0 scroll-mt-4 flex-col gap-2"
+    >
       <GraphTitle view={view} question={question} />
-      <Surface variant="panel" className="relative h-80 overflow-hidden">
+      <Surface variant="panel" className={cn("relative h-80 overflow-hidden", highlighted && "ring-2 ring-ring")}>
         <GraphCanvas
           graph={graph}
           selected={selected}
@@ -81,7 +90,7 @@ function GraphBlock({ view, question, selected, legend, onSelect, onToggleLegend
   )
 }
 
-function Graphs({ experiment, views, selection, onSelect }: ExperimentCanvasProps) {
+function Graphs({ experiment, views, focus }: ExperimentCanvasProps) {
   const t = useTranslations("research.experiment.canvas")
   const [legend, setLegend] = useState(false)
   if (views.length === 0) return <Empty title={t("noGraph")} />
@@ -96,10 +105,11 @@ function Graphs({ experiment, views, selection, onSelect }: ExperimentCanvasProp
             key={item.source.key}
             view={item}
             question={experiment.question}
-            selected={selection?.graph === item.source.key ? selection.node : null}
+            selected={focus.selection?.graph === item.source.key ? focus.selection.node : null}
+            highlighted={focus.graph === item.source.key}
             legend={legend}
             onSelect={(node) => {
-              onSelect({ graph: item.source.key, node })
+              focus.select({ graph: item.source.key, node })
             }}
             onToggleLegend={() => {
               setLegend((open) => !open)
@@ -115,7 +125,7 @@ export function ExperimentCanvas(props: ExperimentCanvasProps) {
   const t = useTranslations("research.experiment.canvas")
   return (
     <ResearchSection title={t("title")}>
-      <WhatWeTest experiment={props.experiment} />
+      <WhatWeTest experiment={props.experiment} views={props.views} blocks={props.blocks} focus={props.focus} />
       <Graphs {...props} />
     </ResearchSection>
   )

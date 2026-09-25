@@ -27,6 +27,7 @@ from aqven.series.model import (
 from aqven.series.protocol import MAX_LOOK_CASES, MAX_WAIT_SECONDS
 from aqven.spec import (
     AgentId,
+    AgentSpec,
     DatasetCase,
     DatasetId,
     ExperimentId,
@@ -46,6 +47,7 @@ from aqven.spec.experiments import MAX_REPEATS
 from aqven.write.model import Ulid
 
 type QuestionKind = Literal["look", "threshold", "compare", "noninferior"]
+type NodeFileRole = Literal["node", "code", "inference", "prompt"]
 
 
 class LaunchRequest(RequestModel):
@@ -135,11 +137,31 @@ class LocalFlowView(ResourceModel):
     steps: tuple[FlowStepView, ...]
 
 
+class NodeFileView(ResourceModel):
+    role: NodeFileRole
+    path: str
+
+
 class AlternativeView(ResourceModel):
     alternative_id: NodeId
     kind: NodeKind
     description: str
     file: str
+    files: tuple[NodeFileView, ...]
+
+
+class FactorSlotView(ResourceModel):
+    node_id: NodeId
+    kind: NodeKind
+    written: str | None
+    files: tuple[NodeFileView, ...]
+
+
+class FactorAgentView(ResourceModel):
+    agent_id: AgentId
+    file: str
+    spec: AgentSpec
+    instructions: str | None
 
 
 class ExperimentPromptView(ResourceModel):
@@ -214,6 +236,8 @@ class ExperimentFilesView(ResourceModel):
 class ExperimentDetailView(ExperimentSummaryView):
     question_detail: QuestionView
     varies: FactorView | None
+    slots: tuple[FactorSlotView, ...]
+    agents: tuple[FactorAgentView, ...]
     flows: tuple[LocalFlowView, ...]
     alternatives: tuple[AlternativeView, ...]
     prompts: tuple[ExperimentPromptView, ...]

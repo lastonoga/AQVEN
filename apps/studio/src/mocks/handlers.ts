@@ -3,6 +3,7 @@ import type { ApiDatasetCase, ApiDatasetSummary, ApiRun, ApiRunSnapshot } from "
 import { API_BASE } from "@/api/client"
 import { liveChatSessions, liveChatStatus } from "./data/chat"
 import { liveDatasetCases, liveDatasets } from "./data/datasets"
+import { liveFileTexts } from "./data/files"
 import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
 import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveResearchBudget, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
@@ -10,6 +11,7 @@ import { liveHealth, liveServerStatus } from "./data/server"
 import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
 const LATENCY_MS = 20
+const RAW_PREFIX = `${API_BASE}/raw/`
 const NOT_FOUND = 404
 const UNPROCESSABLE = 422
 const CREATED = 201
@@ -288,6 +290,14 @@ export const handlers = [
   http.get(`${API_BASE}/files`, ({ request }) => {
     const kind = new URL(request.url).searchParams.get("kind")
     return served(page(kind === null ? liveFiles : liveFiles.filter((file) => file.kind === kind)))
+  }),
+
+  http.get(`${API_BASE}/raw/*`, async ({ request }) => {
+    const path = decodeURIComponent(new URL(request.url).pathname.slice(RAW_PREFIX.length))
+    const text = liveFileTexts[path]
+    if (text === undefined) return notFound("raw_get", `file ${path} is not in the project`)
+    await delay(LATENCY_MS)
+    return HttpResponse.text(text)
   }),
 
   http.get(`${API_BASE}/flows`, () => served(page(liveFlows))),

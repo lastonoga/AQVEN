@@ -1,11 +1,14 @@
+import { useId } from "react"
 import { useTranslations } from "use-intl"
-import type { ApiNodeDetail } from "@/domain"
+import type { ApiAgentRuntime, ApiAgentSpec } from "@/domain"
 import { SectionStack, type PropertyRow, type SectionSpec } from "@/components/studio"
 import { plainLines } from "@/lib/text"
 
 type Copy = ReturnType<typeof useTranslations<"flow.inspector">>
-type Agent = NonNullable<ApiNodeDetail["agent_spec"]>
-type Runtime = NonNullable<ApiNodeDetail["agent_runtime"]>
+type Agent = ApiAgentSpec
+type Runtime = ApiAgentRuntime
+
+export type AgentSectionsProps = { readonly agent: Agent; readonly runtime: Runtime | null; readonly raw: boolean }
 
 const row = (key: string, value: string): PropertyRow => ({ key, value })
 
@@ -165,16 +168,17 @@ const rawAgent = (agent: Agent, runtime: Runtime | null): unknown => ({
   limits: agent.limits ?? null,
 })
 
-export function AgentSections({ detail, raw }: { readonly detail: ApiNodeDetail; readonly raw: boolean }) {
+const scoped = (scope: string, sections: readonly SectionSpec[]): readonly SectionSpec[] =>
+  sections.map((section) => ({ ...section, id: `${scope}${section.id}` }))
+
+export function AgentSections({ agent, runtime, raw }: AgentSectionsProps) {
   const t = useTranslations("flow.inspector")
-  const agent = detail.agent_spec
-  if (agent === null || agent === undefined) return null
-  const runtime = detail.agent_runtime ?? null
-  if (raw) return <SectionStack gap="lg" sections={[{
+  const scope = useId()
+  if (raw) return <SectionStack gap="lg" sections={scoped(scope, [{
     id: "agent-raw",
     title: t("agentView.agent"),
     body: { kind: "value", value: rawAgent(agent, runtime) },
-  }]} />
+  }])} />
   const instructions = runtime?.instructions
   const sections: readonly SectionSpec[] = [
     prose("agent-description", t("agentView.role"), agent.description),
@@ -187,5 +191,5 @@ export function AgentSections({ detail, raw }: { readonly detail: ApiNodeDetail;
     ...accessSections(agent, t),
     ...limitSections(agent, t),
   ]
-  return <SectionStack gap="lg" sections={sections} />
+  return <SectionStack gap="lg" sections={scoped(scope, sections)} />
 }

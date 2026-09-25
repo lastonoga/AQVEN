@@ -36,6 +36,8 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
       "guardrails": []
     },
     "varies": null,
+    "slots": [],
+    "agents": [],
     "flows": [
       {
         "flow_id": "critique_only",
@@ -225,6 +227,128 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "critique"
       ]
     },
+    "slots": [
+      {
+        "node_id": "critique",
+        "kind": "llm",
+        "written": "deepseek",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/critique_recall_by_agent/flows/critic/flow.py"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/polish/critique.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/polish/critique.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "deepseek",
+        "file": "agents/deepseek.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Intent cascade escalation, DeepSeek-family panel judge and the reply critic in experiments",
+          "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.0,
+            "top_p": null,
+            "max_tokens": 1500,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "qwen",
+        "file": "agents/qwen.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Qwen-family panel judge",
+          "model": "openrouter:qwen/qwen3-30b-a3b-instruct-2507",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.0,
+            "top_p": null,
+            "max_tokens": 1500,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "tool",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "llama",
+        "file": "agents/llama.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Cheap open model: intent ballots and the Meta-family panel judge",
+          "model": "openrouter:meta-llama/llama-3.1-8b-instruct",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.2,
+            "top_p": null,
+            "max_tokens": 800,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "auto",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [
       {
         "flow_id": "critic",
@@ -479,6 +603,20 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "ballots"
       ]
     },
+    "slots": [
+      {
+        "node_id": "ballots",
+        "kind": "call",
+        "written": "single",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/intent_ballot_pair/flows/intent_decision/nodes/ballots/ballots.node.yaml"
+          }
+        ]
+      }
+    ],
+    "agents": [],
     "flows": [
       {
         "flow_id": "intent_decision",
@@ -752,6 +890,128 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "escalate"
       ]
     },
+    "slots": [
+      {
+        "node_id": "escalate",
+        "kind": "llm",
+        "written": "deepseek",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/intent_escalation_agents/flows/escalation/nodes/escalate/escalate.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/vote/ballot.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/vote/ballot.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "deepseek",
+        "file": "agents/deepseek.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Intent cascade escalation, DeepSeek-family panel judge and the reply critic in experiments",
+          "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.0,
+            "top_p": null,
+            "max_tokens": 1500,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "qwen",
+        "file": "agents/qwen.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Qwen-family panel judge",
+          "model": "openrouter:qwen/qwen3-30b-a3b-instruct-2507",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.0,
+            "top_p": null,
+            "max_tokens": 1500,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "tool",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [
       {
         "flow_id": "escalation",
@@ -998,6 +1258,20 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "classify"
       ]
     },
+    "slots": [
+      {
+        "node_id": "classify",
+        "kind": "call",
+        "written": "one_step",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/intent_split_long_messages/flows/message_intent/nodes/classify/classify.node.yaml"
+          }
+        ]
+      }
+    ],
+    "agents": [],
     "flows": [
       {
         "flow_id": "message_intent",
@@ -1234,6 +1508,95 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "tie_break"
       ]
     },
+    "slots": [
+      {
+        "node_id": "tie_break",
+        "kind": "llm",
+        "written": "gpt",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/decide/tie_break.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "deepseek",
+        "file": "agents/deepseek.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Intent cascade escalation, DeepSeek-family panel judge and the reply critic in experiments",
+          "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.0,
+            "top_p": null,
+            "max_tokens": 1500,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 1,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -1468,6 +1831,62 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "tie_break"
       ]
     },
+    "slots": [
+      {
+        "node_id": "tie_break",
+        "kind": "llm",
+        "written": "gpt",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/decide/tie_break.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -1700,6 +2119,95 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "tie_break"
       ]
     },
+    "slots": [
+      {
+        "node_id": "tie_break",
+        "kind": "llm",
+        "written": "gpt",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/decide/tie_break.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "mistral",
+        "file": "agents/mistral.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Mistral-family model: reply draft and reply critique",
+          "model": "openrouter:mistralai/mistral-nemo",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.2,
+            "top_p": null,
+            "max_tokens": 3000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 2,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -2143,6 +2651,66 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "llama"
       ]
     },
+    "slots": [
+      {
+        "node_id": "deepseek",
+        "kind": "llm",
+        "written": "tie_break",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/judges/deepseek.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      },
+      {
+        "node_id": "qwen",
+        "kind": "llm",
+        "written": "tie_break",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/judges/qwen.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      },
+      {
+        "node_id": "llama",
+        "kind": "llm",
+        "written": "tie_break",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/judges/llama.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/judge_panel/nodes/decide/tie_break.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/judge_panel/nodes/decide/tie_break.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [],
     "flows": [],
     "alternatives": [],
     "prompts": [
@@ -2473,19 +3041,57 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "aggregate"
       ]
     },
+    "slots": [
+      {
+        "node_id": "aggregate",
+        "kind": "code",
+        "written": "aggregate",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/judge_panel/nodes/aggregate/aggregate.node.yaml"
+          },
+          {
+            "role": "code",
+            "path": "flows/judge_panel/nodes/aggregate/aggregate.py"
+          }
+        ]
+      }
+    ],
+    "agents": [],
     "flows": [],
     "alternatives": [
       {
         "alternative_id": "always_tie_break",
         "kind": "code",
         "description": "Never merges the verdicts: every case goes to the tie-break judge with the three verdicts in view, and the spread is kept for the panel result",
-        "file": "experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.node.yaml"
+        "file": "experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.node.yaml",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.node.yaml"
+          },
+          {
+            "role": "code",
+            "path": "experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.py"
+          }
+        ]
       },
       {
         "alternative_id": "majority_only",
         "kind": "code",
         "description": "Merges the verdicts by majority alone: two judges on the same candidate agree however far apart their scores are, and only a three-way split goes to the tie-break",
-        "file": "experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml"
+        "file": "experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml"
+          },
+          {
+            "role": "code",
+            "path": "experiments/panel_merge_rule/nodes/majority_only/majority_only.py"
+          }
+        ]
       }
     ],
     "prompts": [],
@@ -2805,6 +3411,20 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "panel"
       ]
     },
+    "slots": [
+      {
+        "node_id": "panel",
+        "kind": "call",
+        "written": "judge_panel",
+        "files": [
+          {
+            "role": "node",
+            "path": "experiments/panel_single_judge/flows/winner_pick/nodes/panel/panel.node.yaml"
+          }
+        ]
+      }
+    ],
+    "agents": [],
     "flows": [
       {
         "flow_id": "single_judge",
@@ -3003,6 +3623,8 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
       "guardrails": []
     },
     "varies": null,
+    "slots": [],
+    "agents": [],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -3207,6 +3829,95 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "revise"
       ]
     },
+    "slots": [
+      {
+        "node_id": "revise",
+        "kind": "llm",
+        "written": "gpt",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/support_case/nodes/polish/revise.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/polish/revise.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/polish/revise.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "mistral",
+        "file": "agents/mistral.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Mistral-family model: reply draft and reply critique",
+          "model": "openrouter:mistralai/mistral-nemo",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.2,
+            "top_p": null,
+            "max_tokens": 3000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 2,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -3425,6 +4136,8 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
       "guardrails": []
     },
     "varies": null,
+    "slots": [],
+    "agents": [],
     "flows": [],
     "alternatives": [],
     "prompts": [],
@@ -3622,6 +4335,166 @@ export const liveExperiments: readonly ApiExperimentDetail[] = [
         "mistral"
       ]
     },
+    "slots": [
+      {
+        "node_id": "gpt",
+        "kind": "llm",
+        "written": "gpt",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/support_case/nodes/drafts/gpt.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/polish/revise.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/polish/revise.prompt.md"
+          }
+        ]
+      },
+      {
+        "node_id": "gemini",
+        "kind": "llm",
+        "written": "gemini",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/support_case/nodes/drafts/gemini.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/polish/revise.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/polish/revise.prompt.md"
+          }
+        ]
+      },
+      {
+        "node_id": "mistral",
+        "kind": "llm",
+        "written": "mistral",
+        "files": [
+          {
+            "role": "node",
+            "path": "flows/support_case/nodes/drafts/mistral.node.yaml"
+          },
+          {
+            "role": "inference",
+            "path": "flows/support_case/nodes/polish/revise.inference.yaml"
+          },
+          {
+            "role": "prompt",
+            "path": "flows/support_case/nodes/polish/revise.prompt.md"
+          }
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "gpt",
+        "file": "agents/gpt.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "OpenAI-family reply author: draft, revision from critique and the judge panel tie-break",
+          "model": "openrouter:openai/gpt-oss-20b",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.3,
+            "top_p": null,
+            "max_tokens": 6000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 4,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "gemini",
+        "file": "agents/gemini.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Multimodal case parsing, the attachment form and a Google-family reply draft",
+          "model": "openrouter:google/gemini-2.5-flash-lite",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.2,
+            "top_p": null,
+            "max_tokens": 4000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "auto",
+            "strict": false,
+            "retries": 2,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      },
+      {
+        "agent_id": "mistral",
+        "file": "agents/mistral.yaml",
+        "spec": {
+          "apiVersion": "aqven/v1",
+          "kind": "Agent",
+          "description": "Mistral-family model: reply draft and reply critique",
+          "model": "openrouter:mistralai/mistral-nemo",
+          "fallback_models": null,
+          "settings": {
+            "temperature": 0.2,
+            "top_p": null,
+            "max_tokens": 3000,
+            "seed": null,
+            "provider_options": null
+          },
+          "output": {
+            "mode": "prompted",
+            "strict": false,
+            "retries": 2,
+            "on_error": "retry",
+            "on_refusal": "fail",
+            "on_truncated": "fail"
+          },
+          "instructions": null,
+          "tools": null,
+          "mcp_servers": null,
+          "subagents": null,
+          "approval": null,
+          "limits": null
+        },
+        "instructions": null
+      }
+    ],
     "flows": [],
     "alternatives": [],
     "prompts": [],
