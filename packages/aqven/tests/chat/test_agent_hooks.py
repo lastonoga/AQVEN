@@ -552,8 +552,8 @@ def test_previews_and_factor_agents_come_from_the_real_project() -> None:
     second = project_previews(SNIPPETS)
 
     assert first is not None and second is not None
-    assert "listing_review.look" in {item.node for item in first}
+    assert "listing_review.match_photos" in {item.node for item in first}
     assert [item.digest for item in first] == [item.digest for item in second]
-    assert agent_factor_agents(SNIPPETS, "look_agent") == ("critic", "reader")
-    assert agent_factor_agents(SNIPPETS, "look_prompt") == ()
+    assert agent_factor_agents(SNIPPETS, "photo_agent") == ("critic", "reader")
+    assert agent_factor_agents(SNIPPETS, "photo_prompt") == ()
     assert agent_factor_agents(SNIPPETS, "missing") == ()

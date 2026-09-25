@@ -24,7 +24,10 @@ knowing before you build assumptions on one and hit the other.
   schema before anything runs, and fails with `INPUT_INVALID` and a `problems` list if it doesn't match.
   Otherwise it returns at once, without waiting for the run to finish: `run_id`, `status`, `last_seq`, a
   `ui_url` to open the same run in Studio, and `warnings` for anything the run will hit later, most
-  commonly a missing secret. Call `run_get` or `run_events` next to follow it.
+  commonly a missing secret. Call `run_get` or `run_events` next to follow it. With `dataset_item_id`,
+  media the case points at by `file` is read from the project and stored as blobs before the run starts,
+  so the run's input and trace carry a `blob_id`; see
+  how to keep case media as files in the project.
 - **`run_get`** is the full snapshot: `status`, `mode`, cost and token totals, `node_counts` (how many
   nodes are pending, running, ok, failed, skipped, suspended, cancelled), the full `executions` list, and
   `error` if the run failed. If it's paused on a person, `waits` lists what's waiting and for whom — that's

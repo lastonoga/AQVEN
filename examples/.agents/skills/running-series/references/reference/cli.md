@@ -24,6 +24,7 @@ The command names and help text below come from `aqven.cli.COMMANDS`. Use `uv ru
 | `aqven secrets` | every secret the project declares, where it comes from and whether it is set | Available |
 | `aqven prompt` | prompts of llm nodes | Available |
 | `aqven series` | run a series of an experiment on the project server and wait for its verdict | Available |
+| `aqven datasets` | dataset files: turn blob media of cases into files next to the dataset | Available |
 | `aqven skills` | the aqven skills and agent rules of a project for Claude Code and Codex outside Studio | Available |
 | `aqven hook` | answer one Claude Code hook event read from stdin with reminders for the agent; it never blocks a tool call; hooks: reminders, compaction | Available |
 

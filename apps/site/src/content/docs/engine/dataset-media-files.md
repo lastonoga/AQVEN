@@ -103,30 +103,57 @@ Create the [showcase](/start/quickstart/) project if you don't already have one,
 cd my_project/my_project
 ```
 
-The showcase ships a photo and an invoice in `samples/`: `flow_strip_controller.jpg` and
-`invoice_LUM-20260903.pdf`. Open `datasets/support_case_multimodal_demo.yaml` and point the
-`flickering_strip_all_media` case at them. Replace its `photo` and `invoice` values with:
+The showcase already keeps its case media as files. `samples/` holds a photo, a voice note, a video clip and
+an invoice: `flow_strip_controller.jpg`, `voice.wav`, `clip.mp4` and `invoice_LUM-20260903.pdf`. Several
+datasets share them, so they point at them with `@root/`. Open `datasets/support_case_multimodal_demo.yaml`.
+Its one case, `flickering_strip_all_media`, has these media values:
 
 ```yaml
 photo:
   $media: "image/jpeg"
   file: "@root/samples/flow_strip_controller.jpg"
+voice_note:
+  $media: "audio/wav"
+  file: "@root/samples/voice.wav"
+video:
+  $media: "video/mp4"
+  file: "@root/samples/clip.mp4"
 invoice:
   $media: "application/pdf"
   file: "@root/samples/invoice_LUM-20260903.pdf"
 ```
 
-Leave the rest of the case as it is. Then check the project:
+`support_case_csv_review` and `support_case_csv_ui_demo` point at the same four files, and the first case of
+`support_case_cases` at the photo and the invoice. No showcase case uses `blob_id`, so a new project runs
+them with an empty `.aqven/`.
+
+To give the dataset its own copy of a file, copy it into the dataset's folder:
+
+```bash
+mkdir -p datasets/support_case_multimodal_demo
+cp samples/clip.mp4 datasets/support_case_multimodal_demo/
+```
+
+Then drop the `@root/samples/` prefix from the `video` value, because a relative path starts in that folder:
+
+```yaml
+video:
+  $media: "video/mp4"
+  file: "clip.mp4"
+```
+
+Check the project:
 
 ```bash
 {{CLI_COMMAND}} check .
 ```
 
 A typo in a path, such as `@root/samples/flow_strip_controler.jpg`, gives `E_MEDIA_FILE_MISSING` on that
-value. `file: "../samples/flow_strip_controller.jpg"` gives `E_MEDIA_PATH_INVALID`: a relative path starts
-in `datasets/support_case_multimodal_demo/` and can't climb out of it. Write `@root/` for a file outside the
-dataset's folder. Once `check` is clean, the case runs from Studio, a series or the terminal, and the run
-gets both files as blobs.
+value. `file: "../samples/voice.wav"` gives `E_MEDIA_PATH_INVALID`: a relative path starts in
+`datasets/support_case_multimodal_demo/` and can't climb out of it. Write `@root/` for a file outside the
+dataset's folder. `$media: "image/png"` on `flow_strip_controller.jpg` gives `W_MEDIA_TYPE_MISMATCH`. Once
+`check` is clean, the case runs from Studio, a series or the terminal, and the run gets every file as a
+blob.
 
 ## See also
 

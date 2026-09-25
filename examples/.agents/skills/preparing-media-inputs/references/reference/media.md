@@ -11,6 +11,7 @@ Generated field reference from the AQVEN Python package.
 - [FieldSpec](#fieldspec)
 - [Image](#image)
 - [MapItemError](#mapitemerror)
+- [MediaFileRef](#mediafileref)
 - [MediaValue](#mediavalue)
 - [Video](#video)
 
@@ -93,6 +94,16 @@ JSON Schema
 | `index` | `integer` | Yes | `—` | minimum=0 |
 | `code` | `string` | Yes | `—` | maxLength=64 |
 | `message` | `string` | Yes | `—` | maxLength=400 |
+
+JSON Schema
+
+## MediaFileRef
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `$media` | `string` | Yes | `—` | minLength=3, maxLength=255, pattern=^[a-z]+/[a-z0-9.+-]+$ |
+| `file` | `string` | Yes | `—` | minLength=1, maxLength=1024 |
+| `name` | `string \| null` | No | `None` | — |
 
 JSON Schema
 

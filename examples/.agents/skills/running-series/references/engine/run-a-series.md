@@ -55,8 +55,9 @@ MCP are three ways to start the same thing.
   `PUT /api/settings/project/research.spend_cap_usd` with the body `{"kind": "value", "value": "5.00"}`.
   Settings shows when an override is active and removes it. The launch plan says which one won in
   `project_cap_source`: `override`, `project` or `default`.
-- **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset or the code
-  during a series ends it `invalid` with `inputs_changed`.
+- **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset, a media
+  file a case points at, or the code during a series ends it `invalid` with `inputs_changed`. See
+  How to keep case media as files in the project.
 - **Stop it if you must.** Queued attempts never start. Model calls already running finish and are paid
   for. The series ends `cancelled`, and no finding is written.
 

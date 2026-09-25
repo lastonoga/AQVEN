@@ -49,7 +49,10 @@ before the data. A series then answers it: see How to run a series.
   attempts" can be refuted; "the reply is good" can't.
 - **`failure_mode` names the failure the experiment tests**, as a snake_case id such as `overpromise` or
   `intent_misread`. It's optional. Several experiments can share one. `FINDINGS.md` groups findings by it,
-  and Studio's Research list filters by it.
+  and Studio's Research list filters and groups by it.
+- **`archived: true` sets an experiment aside.** It's optional and `false` by default. Studio's Research
+  list folds an archived experiment into **Archived** at the end, and its page still opens.
+  `aqven check` and series treat it like any other experiment, so it still has to pass the check.
 - **`subject` is what runs.**
   - `flow: <flow_id>` names the flow. A local flow in `flows/<flow_id>/` of this experiment is found first,
     then a project flow. A local flow is written like any flow, as `flow.yaml` with its nodes or as a Python

@@ -66,7 +66,9 @@ AGENTS.md, CLAUDE.md, .claude/       rules and hooks for coding agents: aqven ch
 lumen/
   app.py                             the host: the ASGI app, mounting into another app, calling in process
   __main__.py                        starting the server: python -m lumen
-  samples/                           inputs of the example: case_request.json, answers.json, a photo and an invoice
+  samples/                           inputs of the example: case_request.json, answers.json, a photo, a voice note,
+                                     a video clip, an invoice and a CSV to import; the media datasets point at the files
+                                     with file: "@root/samples/<file>" instead of blob_id
   .env.example                       OPENROUTER_API_KEY and the AQVEN_* variables
   aqven.yaml
   types.py                           models of every type and of inference, tool and code step inputs and outputs:

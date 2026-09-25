@@ -8,6 +8,7 @@ description: "Prepares images, scans, PDFs, audio and video for AQVEN flows so t
 - The model sees what production sends: sources at native resolution, orientation applied, crops and segments
   within the provider's limit. Experiments measure the production path, never a downscaled stand-in.
 - Never pre-shrink or re-encode a source. Derived files are rebuilt from the sources by a script in the project.
+- A case you author points at its media with `file:`, a file in the project; private media stays out of git.
 - Apply EXIF orientation before any crop, in scripts and in the production step alike.
 - A synthetic input has the property it is labelled with, where the prompt looks for it, on a base that does not
   have it at level zero.
@@ -19,7 +20,7 @@ description: "Prepares images, scans, PDFs, audio and video for AQVEN flows so t
 | # | Step | Exit criterion |
 |---|---|---|
 | 1 | Inspect the sources. Images: pixel size, format (HEIC → JPEG with `sips -s format jpeg <file> --out <file>.jpg`), EXIF orientation tag; the contact sheet script below prints stored size, tag and upright size. PDFs: page count, text layer or scanned pages, page size. Audio and video: duration, sample rate or frame rate, resolution, channels (`ffprobe` where installed) | a table per file |
-| 2 | Sources at native resolution go into the project (`<package>/samples/<dataset_id>/`), never into `/tmp` | derived files rebuild from the sources with one script |
+| 2 | Sources at native resolution go into the project, never into `/tmp`: the files of one dataset in `<package>/datasets/<dataset_id>/`, files several datasets share in `<package>/samples/`. Cases point at them with `{$media: "image/jpeg", file: "<file>"}` or `file: "@root/samples/<file>"`; old `blob_id` cases become files with `uv run aqven datasets materialize <package> [<dataset_id>…]`. Photos of people and scanned documents: ask the owner, then a `.gitignore` line on `datasets/<dataset_id>/` or Git LFS | derived files rebuild from the sources with one script; `aqven_check` clean |
 | 3 | Orientation: applied before any crop. In production, bytes are read and written only in a `tool` node (`ctx.blobs`); a `code` node sees only `media_type`, `blob_id` and `size_bytes` | the contact sheet shows every image upright |
 | 4 | Provider limits: fine detail goes as several native-resolution crops in one `Image[]` input, each within the model's limit; long audio or video goes as segments within the model's duration and size limits. Look the numbers up in the provider's current docs every time | no image is downscaled by the provider more than twice (`--provider-edge` shows the factor); no segment is over the limit |
 | 5 | Crop boxes and segment bounds come from something you can check (OCR word boxes, an object detector, a fixed form template, silence or speaker-change timestamps, coordinates the owner confirmed), not from eyeballing; try a library with `uv run --with <package>==<version>` before asking the owner to add it | every crop hits its region and holds the area the prompt compares against; no segment cuts a sentence |
@@ -58,13 +59,16 @@ A pitfall is a general rule; the illustration after it is one instance.
 | The crop cut away what the prompt compares against: "a stain darker than the fabric around it" with no fabric left in the crop | the crop holds the comparison area |
 | Edits left visible seams, so the model could spot the synthetic cases by the seam | inspect the synthetic sheet |
 | Audio cut at fixed 30 s marks split a sentence of a meeting across two segments | cut at silences or speaker changes, listed in a table |
+| Media known only by `blob_id`: the dataset ran on the machine that imported it and nowhere else | the file in the project, `file:` in the case |
+| The `$media` of a file reference guessed: a PNG screenshot labelled `image/jpeg` (`W_MEDIA_TYPE_MISMATCH`) | `$media` from the real format, checked in step 1 |
 
 ## Tools and commands
 
 - Bash: `sips` for format and size on macOS, `ffprobe` for audio and video where installed; the contact sheet
   script above.
 - `aqven` MCP `run_start` (`mode: "live"`), `run_get_node`.
-- Media import into datasets and case building: `building-datasets`.
+- `uv run aqven datasets materialize <package> [<dataset_id>…]`: old `blob_id` cases into files.
+- `file:` references in cases and case building: `building-datasets`.
 
 ## References
 
@@ -74,3 +78,5 @@ A pitfall is a general rule; the illustration after it is one instance.
   documents, silent reshaping, why preparation happens in a `tool` node. Read at step 4.
 - `references/reference/media.md`: the media value types (`Image`, `Audio`, `Video`, `Document`) and their fields.
   Read before typing a media input.
+- `references/engine/dataset-media-files.md`: `file:` references, the two path forms, private files, the three
+  media diagnostics. Read at step 2.

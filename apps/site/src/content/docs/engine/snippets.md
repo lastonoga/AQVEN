@@ -794,8 +794,9 @@ Tell the seller what to fix before the listing goes live, one fix for each faile
 ## A dataset with tags
 
 Tags are the axes an experiment filters and compares on; `expected_output` is the ground truth the built-in check
-`expected` compares with. A media input is a blob the project server stored: its id is `sha256-` and the SHA-256 of
-the bytes.
+`expected` compares with. A media input here is a blob the project server stored: its id is `sha256-` and the
+SHA-256 of the bytes. A dataset you write by hand can point at a file in the project instead, see
+[How to keep case media as files in the project](/engine/dataset-media-files/).
 
 ```yaml title="datasets/listing_cases.yaml"
 apiVersion: "aqven/v1"
