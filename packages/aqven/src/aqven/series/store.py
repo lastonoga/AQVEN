@@ -309,6 +309,7 @@ def changed_fields(change: SeriesChange) -> Mapping[str, object]:
         "status": change.status,
         "cap_usd": change.cap_usd,
         "pause": change.pause,
+        "pauses": change.pauses,
         "approved_by": change.approved_by,
         "approved_at": change.approved_at,
         "finished_at": change.finished_at,

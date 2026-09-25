@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Final, Literal, NewType
@@ -283,6 +284,14 @@ class SeriesPause(ResourceModel):
     spent_usd: Decimal
 
 
+class PauseSpan(RecordModel):
+    started_at: AwareDatetime
+    ended_at: AwareDatetime | None = None
+
+    def ended(self, at: datetime) -> PauseSpan:
+        return self if self.ended_at is not None else self.model_copy(update={"ended_at": at})
+
+
 class SeriesAnalysis(ResourceModel):
     variants: tuple[VariantAggregates, ...]
     matrix: SeriesMatrix
@@ -413,12 +422,14 @@ class SeriesRecord(RecordModel):
     finding_path: str | None = None
     error: str | None = None
     pause: SeriesPause | None = None
+    pauses: tuple[PauseSpan, ...] = ()
 
 
 class SeriesChange(RecordModel):
     status: SeriesStatus | None = None
     cap_usd: Decimal | None = None
     pause: SeriesPause | None = None
+    pauses: tuple[PauseSpan, ...] | None = None
     approved_by: str | None = None
     approved_at: AwareDatetime | None = None
     finished_at: AwareDatetime | None = None

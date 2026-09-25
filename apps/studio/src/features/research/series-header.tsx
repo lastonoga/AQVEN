@@ -13,6 +13,7 @@ import { isLowerBound, isSpendPause, shareOf, spendTone, verdictGap } from "./se
 import { SpendPause } from "./spend-pause"
 import { CELL_VERDICT_TONE, SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
 import { useResearchAction, type ResearchAction } from "./use-research-action"
+import { useSeriesEta } from "./use-series-eta"
 
 const LIST_JOIN = ", "
 const EMPTY_MARK = "—"
@@ -80,6 +81,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
   const t = useTranslations("research")
   const format = useFormatter()
   const action = useResearchAction()
+  const eta = useSeriesEta()
   const { actions, failure } = useSeriesActions(series, action)
   const tags: readonly TagSpec[] = [
     { children: t(`vocabulary.status.${series.status}`), tone: SERIES_STATUS_TONE[series.status] },
@@ -115,6 +117,7 @@ export function SeriesHeader({ series, live }: { readonly series: SeriesDetail; 
             variant="meter"
             value={t("series.progress", { done: series.progress.done, total: series.progress.total })}
             bar={{ value: shareOf(series.progress.done, series.progress.total), tone: SERIES_STATUS_TONE[series.status] }}
+            note={eta.caption(series.eta)}
           />
         </div>
         <div className={METER_CLASS}>

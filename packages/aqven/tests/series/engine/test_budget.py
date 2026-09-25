@@ -125,6 +125,7 @@ def test_approving_a_paused_series_with_a_new_cap_runs_the_remaining_attempts(tm
     assert (record.verdict.state, record.verdict.reason) == (VerdictState.SIGNAL, VerdictReason.DEV_SPLIT)
     statuses = [event.status for event in events if isinstance(event, SeriesStatusEvent)]
     assert statuses == [SeriesStatus.AWAITING_APPROVAL, SeriesStatus.RUNNING]
+    assert [span.ended_at is not None for span in record.pauses] == [True]
     assert feed.transitions() == (
         (SeriesStatus.RUNNING, SeriesStatus.AWAITING_APPROVAL),
         (SeriesStatus.AWAITING_APPROVAL, SeriesStatus.RUNNING),
@@ -166,6 +167,8 @@ def test_a_paused_series_doubles_its_cap_by_default_pauses_again_and_can_be_stop
         published = list(harness.findings.published)
 
     assert first.pause is not None and again.pause is not None
+    assert first.eta is not None and first.eta.state == "paused"
+    assert cancelled.eta is None
     assert first.pause.reason is again.pause.reason is ApprovalReason.SPEND_NEAR_CAP
     assert again.pause.spent_usd == first.pause.spent_usd
     assert refused.code == "REQUEST_INVALID"
