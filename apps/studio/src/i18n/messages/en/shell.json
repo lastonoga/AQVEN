@@ -17,6 +17,10 @@
     "openAria": "Open run {run}"
   },
   "resizeChatAria": "Resize chat",
+  "chatToggle": {
+    "hide": "Hide chat",
+    "show": "Show chat"
+  },
   "frame": {
     "io": "{input} → {output}",
     "problems": "{count, plural, one {# problem} other {# problems}}",
