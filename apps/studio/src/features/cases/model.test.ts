@@ -54,6 +54,8 @@ const experiment = (id: string, dataset: string, tags: CaseTags): ExperimentDeta
   spentUsd: 0,
   question: { kind: "look" },
   varies: null,
+  slots: [],
+  agents: [],
   flows: [],
   alternatives: [],
   prompts: [],

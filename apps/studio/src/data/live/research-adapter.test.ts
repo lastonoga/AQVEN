@@ -117,6 +117,28 @@ describe("research adapter", () => {
     ])
   })
 
+  it("maps the slots as written with their files and the agents an agent factor names", () => {
+    const merge = experimentDetailOf(experiment("panel_merge_rule"))
+    expect(merge.slots).toEqual([
+      {
+        node: "aggregate",
+        kind: "code",
+        written: "aggregate",
+        files: [
+          { role: "node", path: "flows/judge_panel/nodes/aggregate/aggregate.node.yaml" },
+          { role: "code", path: "flows/judge_panel/nodes/aggregate/aggregate.py" },
+        ],
+      },
+    ])
+    expect(merge.alternatives.find((alternative) => alternative.id === "majority_only")?.files.map((file) => file.role)).toEqual(["node", "code"])
+    const agents = experimentDetailOf(experiment("judge_panel_agents"))
+    expect(agents.slots.map((slot) => [slot.node, slot.written])).toEqual([["tie_break", "gpt"]])
+    expect(agents.agents.map((agent) => [agent.id, agent.file, agent.spec.model])).toEqual([
+      ["gpt", "agents/gpt.yaml", "openrouter:openai/gpt-oss-20b"],
+      ["deepseek", "agents/deepseek.yaml", "openrouter:deepseek/deepseek-v4-flash-0731"],
+    ])
+  })
+
   it("maps the launch plan with its recommendation and cap, and no price", () => {
     const api = launchPlanFor(experiment("reply_noninferior_mistral"), { on: "dev" })
     const plan = launchPlanOf(api)
