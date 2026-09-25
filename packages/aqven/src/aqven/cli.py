@@ -30,6 +30,7 @@ from aqven.console.command import (
     add_format_argument,
     not_implemented,
 )
+from aqven.console.datasets import DatasetsCommand
 from aqven.console.formats import EventFormat
 from aqven.console.models import ModelsCommand
 from aqven.console.new import NewCommand
@@ -351,6 +352,7 @@ COMMANDS: Final[Mapping[str, Command]] = {
     "secrets": SecretsCommand(),
     "prompt": PromptCommand(),
     "series": SeriesCommand(),
+    "datasets": DatasetsCommand(),
 }
 
 

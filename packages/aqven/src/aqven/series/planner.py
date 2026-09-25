@@ -8,9 +8,11 @@ from aqven.check.datasets import selected_cases
 from aqven.compiler.bindings import evaluator
 from aqven.compiler.context import CompileContext
 from aqven.compiler.errors import CompileError
+from aqven.datasets import CaseMediaResolver
+from aqven.engine.runtime import engine_blob_store
 from aqven.factors import is_local_subject
 from aqven.ir import BuiltinEvaluator, CompiledEvaluator, CompiledProject, JudgeEvaluator
-from aqven.loader import LoadedExperiment, LoadedProject, SourceSpec
+from aqven.loader import LoadedExperiment, LoadedProject, SourceSpec, dataset_media_folder
 from aqven.runtime.address import Problem
 from aqven.series.model import (
     CaseSnapshot,
@@ -45,6 +47,7 @@ from aqven.series.protocol import MAX_ATTEMPTS
 from aqven.series.split import FixedPackage, SplitAssigner
 from aqven.series.subjects import SubjectBinding, TypeSource, subject_kind, subject_strategy
 from aqven.series.views import SeriesStartRequest
+from aqven.server.case_media import BlobWriters, case_media_resolver, case_with_media
 from aqven.server.errors import ApiFailure, diagnostic_problem
 from aqven.server.workspace import TreeSnapshot
 from aqven.spec import (
@@ -359,7 +362,18 @@ def case_snapshot(index: int, case: DatasetCase, split: SeriesSplit) -> CaseSnap
     )
 
 
-async def tagged_choice(draft: SeriesDraft, splits: SplitAssigner) -> CaseChoice:
+async def case_snapshots(
+    media: CaseMediaResolver, draft: SeriesDraft, chosen: Sequence[tuple[DatasetCase, SeriesSplit]]
+) -> tuple[CaseSnapshot, ...]:
+    return tuple(
+        [
+            case_snapshot(index, await case_with_media(media, case, draft.dataset.path), split)
+            for index, (case, split) in enumerate(chosen)
+        ]
+    )
+
+
+async def tagged_choice(draft: SeriesDraft, splits: SplitAssigner, media: CaseMediaResolver) -> CaseChoice:
     cases = draft.dataset.spec.cases
     selected = [cases[index] for index in selected_cases(draft.dataset.spec, draft.tags)]
     assigned = await splits.assign(draft.dataset_id, [case.name for case in selected])
@@ -368,12 +382,12 @@ async def tagged_choice(draft: SeriesDraft, splits: SplitAssigner) -> CaseChoice
         raise not_runnable(f"dataset {draft.dataset_id} has no selected cases on the {draft.on.value} split")
     wanted = draft.wanted or len(available)
     warnings = (SHORT_OF_CASES,) if wanted > len(available) else ()
-    chosen = available[:wanted]
-    snapshots = tuple(case_snapshot(index, case, draft.on) for index, case in enumerate(chosen))
+    chosen = [(case, draft.on) for case in available[:wanted]]
+    snapshots = await case_snapshots(media, draft, chosen)
     return CaseChoice(cases=snapshots, available=len(available), warnings=warnings)
 
 
-async def named_choice(draft: SeriesDraft, splits: SplitAssigner) -> CaseChoice:
+async def named_choice(draft: SeriesDraft, splits: SplitAssigner, media: CaseMediaResolver) -> CaseChoice:
     names = draft.names or ()
     if len(set(names)) != len(names):
         raise ApiFailure("REQUEST_INVALID", "case_names must be unique")
@@ -382,14 +396,14 @@ async def named_choice(draft: SeriesDraft, splits: SplitAssigner) -> CaseChoice:
     if missing:
         raise ApiFailure("NOT_FOUND", f"cases not in dataset {draft.dataset_id}: {', '.join(missing)}")
     assigned = await splits.assign(draft.dataset_id, names)
-    snapshots = tuple(case_snapshot(index, known[name], assigned[name]) for index, name in enumerate(names))
+    snapshots = await case_snapshots(media, draft, [(known[name], assigned[name]) for name in names])
     return CaseChoice(cases=snapshots, available=len(snapshots), warnings=())
 
 
-async def case_choice(draft: SeriesDraft, splits: SplitAssigner) -> CaseChoice:
+async def case_choice(draft: SeriesDraft, splits: SplitAssigner, media: CaseMediaResolver) -> CaseChoice:
     if draft.names is None:
-        return await tagged_choice(draft, splits)
-    return await named_choice(draft, splits)
+        return await tagged_choice(draft, splits, media)
+    return await named_choice(draft, splits, media)
 
 
 def attempt_limit(choice: CaseChoice, draft: SeriesDraft) -> None:
@@ -409,6 +423,10 @@ def case_problems(
         for draft, variant in compiled.variants
         for message in strategy.problems(variant.plan, variant.flow_id, case)
     )
+
+
+def media_folders(project: LoadedProject) -> frozenset[str]:
+    return frozenset(dataset_media_folder(source.path) for source in project.datasets.values())
 
 
 def registered(registrar: PlanRegistrar | None, plan: CompiledProject | None) -> str | None:
@@ -461,12 +479,14 @@ class SeriesPlanner:
     types: TypeSource
     engine_version: str
     holdout_share: float
+    blobs: BlobWriters = engine_blob_store
 
     async def draft(self, request: PlanRequest, state: PlanningState) -> tuple[SeriesDraft, CaseChoice, str]:
         project = loaded_project(state.report)
         draft = ORIGINS[request.experiment_id is not None](project, request)
         package = project.project.spec.package
-        choice = await case_choice(draft, SplitAssigner(FixedPackage(package), self.holdout_share))
+        splits = SplitAssigner(FixedPackage(package), self.holdout_share)
+        choice = await case_choice(draft, splits, case_media_resolver(project.root, self.blobs))
         attempt_limit(choice, draft)
         return draft, choice, package
 
@@ -487,6 +507,7 @@ class SeriesPlanner:
             experiment_sha256=draft.experiment_sha256,
             dataset_sha256=draft.dataset.file_hash,
             tree=state.tree,
+            media_folders=media_folders(loaded_project(state.report)),
             engine_version=self.engine_version,
         )
         return PlannedSeries(

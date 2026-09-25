@@ -22,7 +22,9 @@ limits a model's answer has to obey), and
 fixed until run time).
 
 **Checks & experiments** is how you find out whether a flow works reliably, not just on the case you
-tried. [How to write an experiment](/engine/experiments/) puts one question in a file before any data.
+tried. [How to keep case media as files in the project](/engine/dataset-media-files/) puts the images,
+audio, video and documents of dataset cases in git next to the dataset.
+[How to write an experiment](/engine/experiments/) puts one question in a file before any data.
 [How to run a series](/engine/run-a-series/) answers it on many cases, from Studio, the terminal or an
 agent. [How to read a series](/engine/read-a-series/) says what the verdict means and what to do next.
 [How to write a custom evaluator](/engine/custom-evaluator/) adds a check no built-in can express.

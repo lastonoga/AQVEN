@@ -27,24 +27,16 @@ cases:
     urgent: true
     photo:
       $media: "image/jpeg"
-      blob_id: "sha256-0606035923b6e819a36fc2581f0d9bdb78ccfabe8bb6f44a98ac3b2cbd65e3b6"
-      size_bytes: 1865
-      name: "flow_strip_controller.jpg"
+      file: "@root/samples/flow_strip_controller.jpg"
     voice_note:
       $media: "audio/wav"
-      blob_id: "sha256-627b3f43f925ca8305175adcbfdaef581de4e48f876356f52b744102fbd27675"
-      size_bytes: 32044
-      name: "voice.wav"
+      file: "@root/samples/voice.wav"
     video:
       $media: "video/mp4"
-      blob_id: "sha256-56e4ab6809017822c002e780d3ad85a74e58457ba23c3a25696f4fa545401c5a"
-      size_bytes: 6129
-      name: "clip.mp4"
+      file: "@root/samples/clip.mp4"
     invoice:
       $media: "application/pdf"
-      blob_id: "sha256-73c299df4819d9854d92954932dc86a16fe13c603013316637ad0385d308e712"
-      size_bytes: 633
-      name: "invoice_LUM-20260903.pdf"
+      file: "@root/samples/invoice_LUM-20260903.pdf"
   context:
     date: "2026-09-18"
     tenant_id: "lumen"

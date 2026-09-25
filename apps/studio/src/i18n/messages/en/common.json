@@ -16,7 +16,9 @@
   "media": {
     "openImage": "Open image: {name}",
     "playVideo": "Play video: {name}",
-    "openFile": "Open {name}"
+    "openFile": "Open {name}",
+    "openPath": "Open {path}",
+    "pathInvalid": "Cannot show {file}: the path is absolute, climbs out of its folder or points into .aqven/"
   },
   "valueMode": {
     "label": "Value format",

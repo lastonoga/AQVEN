@@ -8,10 +8,12 @@ from write_helpers import AGENT, current_hash, read
 from aqven.client import new_client_op_id
 from aqven.runtime.address import ClientOpId
 from aqven.write import CollectingSink, FilesChanged, WriteError, WriteService
-from aqven.write.model import ExpectedFile, FilesWriteRequest
+from aqven.write.model import ExpectedFile, FileBytesWriteRequest, FilesWriteRequest
 
 NOTE: Final = "notes/finding.md"
 SUMMARY: Final = "SUMMARY.md"
+PHOTO: Final = "datasets/photos/parcel.jpg"
+JPEG: Final = b"\xff\xd8\xff\xe0\x00binary"
 
 
 def files_request(
@@ -94,3 +96,40 @@ def test_unchanged_bytes_are_not_rewritten(service: WriteService, shop: Path) ->
 def test_service_paths_are_refused_before_the_disk() -> None:
     with pytest.raises(ValidationError):
         files_request({".aqven/lock": None}, {".aqven/lock": "x"})
+
+
+def test_bytes_write_stores_binary_files_next_to_text_in_one_transaction(
+    service: WriteService, shop: Path, sink: CollectingSink
+) -> None:
+    request = FileBytesWriteRequest(
+        expects=[ExpectedFile(path=PHOTO, file_hash=None), ExpectedFile(path=NOTE, file_hash=None)],
+        files={PHOTO: JPEG, NOTE: b"photo attached\n"},
+        client_op_id=new_client_op_id(),
+        intent="attach a photo",
+    )
+
+    result = service.write_bytes(request, AGENT)
+
+    assert (result.op, result.changed_paths) == ("files_write", (PHOTO, NOTE))
+    assert (shop / PHOTO).read_bytes() == JPEG
+    assert read(shop, NOTE) == "photo attached\n"
+    [notice] = [notice for notice in sink.notices if isinstance(notice, FilesChanged)]
+    assert notice.summary == "attach a photo"
+
+
+def test_bytes_write_refuses_a_file_that_appeared_after_it_was_expected_absent(
+    service: WriteService, shop: Path
+) -> None:
+    (shop / PHOTO).parent.mkdir(parents=True)
+    (shop / PHOTO).write_bytes(b"someone else")
+    request = FileBytesWriteRequest(
+        expects=[ExpectedFile(path=PHOTO, file_hash=None)],
+        files={PHOTO: JPEG},
+        client_op_id=new_client_op_id(),
+    )
+
+    with pytest.raises(WriteError) as raised:
+        service.write_bytes(request, AGENT)
+
+    assert raised.value.code == "FILE_EXISTS"
+    assert (shop / PHOTO).read_bytes() == b"someone else"

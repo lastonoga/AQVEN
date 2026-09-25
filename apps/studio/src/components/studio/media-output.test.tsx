@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import { IntlProvider } from "use-intl"
 import { describe, expect, it, vi } from "vitest"
+import * as ids from "@/data/ids"
 import { messages } from "@/i18n/messages"
-import { StructuredValue } from "./value-display"
+import { MediaOutput, type FileMedia } from "./media-output"
+import { StructuredValue, flattenValueWithMedia } from "./value-display"
 
 const renderValue = (value: unknown, media: readonly {
   slot: string
@@ -78,4 +80,66 @@ describe("StructuredValue media output", () => {
     expect(screen.queryByText("media.image.blob_id:")).toBeNull()
   })
 
+})
+
+const renderFileMedia = (media: FileMedia) => render(
+  <IntlProvider locale="en" messages={messages.en} timeZone="UTC">
+    <MediaOutput media={media} />
+  </IntlProvider>,
+)
+
+const fileMedia = (mediaType: string, file: string, path: string | null): FileMedia => ({
+  slot: "photo",
+  mediaType,
+  file,
+  path: path === null ? null : ids.filePath(path),
+  name: file.split("/").at(-1) ?? file,
+})
+
+describe("MediaOutput for a file in the project", () => {
+  it("reads the file through the raw route and names its path as a link under the media", () => {
+    renderFileMedia(fileMedia("image/jpeg", "parcel photo.jpg", "datasets/photos/parcel photo.jpg"))
+
+    const thumbnail = screen.getByRole("button", { name: "Open image: parcel photo.jpg" })
+    expect(within(thumbnail).getByRole("img").getAttribute("src")).toBe("/api/raw/datasets/photos/parcel%20photo.jpg")
+    const path = screen.getByRole("link", { name: "datasets/photos/parcel photo.jpg" })
+    expect(path.getAttribute("href")).toBe("/api/raw/datasets/photos/parcel%20photo.jpg")
+    expect(path.getAttribute("target")).toBe("_blank")
+    expect(path.parentElement?.textContent).toBe("datasets/photos/parcel photo.jpg · image/jpeg")
+    expect(screen.queryByText(/ B$/u)).toBeNull()
+  })
+
+  it("plays audio and video files and links a document file", () => {
+    renderFileMedia(fileMedia("audio/wav", "voice.wav", "datasets/calls/voice.wav"))
+    renderFileMedia(fileMedia("video/mp4", "@root/samples/clip.mp4", "samples/clip.mp4"))
+    renderFileMedia(fileMedia("application/pdf", "invoice.pdf", "datasets/calls/invoice.pdf"))
+
+    expect(screen.getByLabelText("voice.wav").getAttribute("src")).toBe("/api/raw/datasets/calls/voice.wav")
+    expect(screen.getByLabelText("clip.mp4").getAttribute("src")).toBe("/api/raw/samples/clip.mp4")
+    expect(screen.getByRole("link", { name: "Open invoice.pdf" }).getAttribute("href")).toBe("/api/raw/datasets/calls/invoice.pdf")
+    expect(screen.getByRole("link", { name: "samples/clip.mp4" })).toBeTruthy()
+  })
+
+  it("says why a path it cannot resolve shows nothing", () => {
+    renderFileMedia(fileMedia("image/jpeg", "../outside.jpg", null))
+
+    expect(screen.getByRole("alert").textContent).toBe("Cannot show ../outside.jpg: the path is absolute, climbs out of its folder or points into .aqven/")
+    expect(screen.queryByRole("img")).toBeNull()
+    expect(screen.queryByRole("link")).toBeNull()
+    expect(screen.getByText("../outside.jpg · image/jpeg")).toBeTruthy()
+  })
+
+  it("flattens file and blob media side by side and names a file by its base name", () => {
+    const value = {
+      photo: { $media: "image/jpeg", file: "damaged/photo_01.jpg" },
+      invoice: { $media: "application/pdf", blob_id: "sha256-pdf", size_bytes: 80, name: "invoice.pdf" },
+    }
+
+    const media = flattenValueWithMedia(value, (file) => ids.filePath(`datasets/photos/${file}`)).flatMap((entry) => ("media" in entry ? [entry.media] : []))
+
+    expect(media).toEqual([
+      { slot: "photo", mediaType: "image/jpeg", file: "damaged/photo_01.jpg", path: "datasets/photos/damaged/photo_01.jpg", name: "photo_01.jpg" },
+      { slot: "invoice", mediaType: "application/pdf", blobId: "sha256-pdf", bytes: 80, name: "invoice.pdf" },
+    ])
+  })
 })

@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 import { useTranslations } from "use-intl"
+import type { FilePath } from "@/domain"
 import { ChoiceGroup } from "./choice"
-import { MediaOutput, type OutputMedia } from "./media-output"
+import { MediaOutput, mediaKey, type BlobMedia, type FileMedia, type OutputMedia } from "./media-output"
 
 export type ValueMode = "flat" | "json"
 
 export type FlatEntry = { readonly path: string; readonly value: string }
 export type FlatMediaEntry = { readonly path: string; readonly media: OutputMedia }
+export type MediaFileLocator = (file: string) => FilePath | null
 
 type ValueDisplayState = { readonly mode: ValueMode; readonly setMode: (mode: ValueMode) => void }
 
@@ -42,14 +44,54 @@ export function ValueModeSwitch() {
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
-type MediaValue = Readonly<Record<string, unknown>> & {
+type BlobMediaValue = Readonly<Record<string, unknown>> & {
   readonly $media: string
   readonly blob_id: string
   readonly size_bytes: number
 }
 
-const isMediaValue = (value: unknown): value is MediaValue =>
+type FileMediaValue = Readonly<Record<string, unknown>> & {
+  readonly $media: string
+  readonly file: string
+}
+
+type MediaValue = BlobMediaValue | FileMediaValue
+
+const PATH_SEPARATOR = /[\\/]/u
+
+const NO_FILE_LOCATION: MediaFileLocator = () => null
+
+const isBlobMediaValue = (value: unknown): value is BlobMediaValue =>
   isRecord(value) && typeof value["$media"] === "string" && typeof value["blob_id"] === "string" && typeof value["size_bytes"] === "number"
+
+const isFileMediaValue = (value: unknown): value is FileMediaValue =>
+  isRecord(value) && typeof value["$media"] === "string" && typeof value["file"] === "string"
+
+const isMediaValue = (value: unknown): value is MediaValue => isFileMediaValue(value) || isBlobMediaValue(value)
+
+const mediaName = (value: MediaValue): string | null => (typeof value["name"] === "string" ? value["name"] : null)
+
+const fileName = (file: string): string => file.split(PATH_SEPARATOR).at(-1) ?? file
+
+const blobMedia = (slot: string, value: BlobMediaValue): BlobMedia => ({
+  slot,
+  mediaType: value.$media,
+  blobId: value.blob_id,
+  bytes: value.size_bytes,
+  name: mediaName(value),
+  ...(typeof value["poster_blob_id"] === "string" ? { posterBlobId: value["poster_blob_id"] } : {}),
+})
+
+const fileMedia = (slot: string, value: FileMediaValue, locate: MediaFileLocator): FileMedia => ({
+  slot,
+  mediaType: value.$media,
+  file: value.file,
+  path: locate(value.file),
+  name: mediaName(value) ?? fileName(value.file),
+})
+
+const outputMedia = (slot: string, value: MediaValue, locate: MediaFileLocator): OutputMedia =>
+  isFileMediaValue(value) ? fileMedia(slot, value, locate) : blobMedia(slot, value)
 
 const childPath = (parent: string, key: string): string => (parent.length === 0 ? key : `${parent}.${key}`)
 
@@ -92,17 +134,10 @@ export const flattenValue = (value: unknown): readonly FlatEntry[] => {
   return entries
 }
 
-export const flattenValueWithMedia = (value: unknown): readonly (FlatEntry | FlatMediaEntry)[] => {
+export const flattenValueWithMedia = (value: unknown, locate: MediaFileLocator = NO_FILE_LOCATION): readonly (FlatEntry | FlatMediaEntry)[] => {
   const entries: (FlatEntry | FlatMediaEntry)[] = []
   walkValue(value, "", (path, text) => { entries.push({ path, value: text }) }, (path, descriptor) => {
-    entries.push({ path, media: {
-      slot: path,
-      mediaType: descriptor.$media,
-      blobId: descriptor.blob_id,
-      bytes: descriptor.size_bytes,
-      name: typeof descriptor["name"] === "string" ? descriptor["name"] : null,
-      ...(typeof descriptor["poster_blob_id"] === "string" ? { posterBlobId: descriptor["poster_blob_id"] } : {}),
-    } })
+    entries.push({ path, media: outputMedia(path, descriptor, locate) })
   })
   return entries
 }
@@ -205,7 +240,7 @@ export function StructuredValue({ value, compact = false, media = [], mediaOnly 
   const entries = visibleValue === undefined || mode === "json" ? [] : flattenValue(visibleValue)
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      {mode === "flat" ? media.map((item, index) => <MediaOutput key={`${item.slot}-${item.blobId}-${String(index)}`} media={item} compact={compact} />) : null}
+      {mode === "flat" ? media.map((item, index) => <MediaOutput key={`${mediaKey(item)}-${String(index)}`} media={item} compact={compact} />) : null}
       {visibleValue === undefined ? null : mode === "json" ? (
         <pre className={`${compact ? "max-h-24 overflow-auto" : ""} min-w-0 whitespace-pre-wrap wrap-anywhere font-mono text-[11px] leading-[1.35] select-text`}>{jsonText(visibleValue)}</pre>
       ) : (
