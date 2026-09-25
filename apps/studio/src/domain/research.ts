@@ -297,6 +297,14 @@ export type SeriesSpend = { readonly usd: number; readonly capUsd: number; reado
 
 export type SeriesPause = { readonly reason: ApprovalReason; readonly spentUsd: number }
 
+export const ETA_STATES = ["estimating", "running", "paused"] as const
+export type EtaState = (typeof ETA_STATES)[number]
+
+export type SeriesEta =
+  | { readonly state: "estimating" }
+  | { readonly state: "paused" }
+  | { readonly state: "running"; readonly remainingSeconds: number; readonly finishAt: IsoDateTime; readonly attemptsPerMinute: number }
+
 type SeriesHead = {
   readonly id: SeriesId
   readonly origin: SeriesOrigin
@@ -314,6 +322,7 @@ type SeriesHead = {
   readonly startedAt: IsoDateTime
   readonly finishedAt: IsoDateTime | null
   readonly pause: SeriesPause | null
+  readonly eta: SeriesEta | null
 }
 
 export type SeriesSummary = SeriesHead & { readonly question: QuestionKind }

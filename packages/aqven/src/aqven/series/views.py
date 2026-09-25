@@ -50,6 +50,7 @@ type QuestionKind = Literal["look", "threshold", "compare", "noninferior"]
 type NodeFileRole = Literal["node", "code", "inference", "prompt"]
 type ActivitySource = Literal["files", "series"]
 type AttentionReason = Literal["spend_cap_pause", "series_invalid", "results_stale", "check_errors"]
+type EtaState = Literal["estimating", "running", "paused"]
 
 
 class LaunchRequest(RequestModel):
@@ -269,6 +270,14 @@ class SeriesSpend(ResourceModel):
     unpriced_attempts: int = Field(default=0, ge=0)
 
 
+class SeriesEta(ResourceModel):
+    state: EtaState
+    attempts_per_minute: float | None
+    remaining_seconds: int | None = Field(ge=0)
+    finish_at: AwareDatetime | None
+    window_seconds: int = Field(ge=0)
+
+
 class SeriesSummaryView(ResourceModel):
     series_id: SeriesId
     origin: SeriesOrigin
@@ -287,6 +296,7 @@ class SeriesSummaryView(ResourceModel):
     started_at: AwareDatetime
     finished_at: AwareDatetime | None
     pause: SeriesPause | None = None
+    eta: SeriesEta | None = None
 
 
 class SeriesStarted(SeriesSummaryView):

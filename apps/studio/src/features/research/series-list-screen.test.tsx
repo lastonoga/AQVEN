@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it, vi } from "vitest"
-import { ACTIVE_SERIES_STATUSES, type ApiSeriesSummary } from "@/domain"
+import { ACTIVE_SERIES_STATUSES, type ApiSeriesEta, type ApiSeriesSummary } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { initialSeries, RESEARCH_SERIES, summaryOf } from "@/mocks/data/research"
 import { server } from "@/mocks/node"
@@ -67,6 +67,21 @@ describe("SeriesListScreen", () => {
     expect(refuted.textContent).toContain("refuted")
     expect(refuted.textContent).toMatch(/\$\d+\.\d\d/)
     expect((await rowOf(RESEARCH_SERIES.lookWaiting)).textContent).toContain("look · support_case")
+  })
+
+  it("shows the time left of a running series next to its status", async () => {
+    const running = summaries.get(refOfId(RESEARCH_SERIES.escalationRunning))
+    const done = summaries.get(refOfId(RESEARCH_SERIES.panelRefuted))
+    if (running === undefined || done === undefined) throw new Error("missing series fixtures")
+    const eta: ApiSeriesEta = { state: "running", attempts_per_minute: 12, remaining_seconds: 300, finish_at: "2026-09-18T03:05:00Z", window_seconds: 240 }
+    const estimating: ApiSeriesEta = { state: "estimating", attempts_per_minute: null, remaining_seconds: null, finish_at: null, window_seconds: 0 }
+    const lookRunning = { ...running, series_id: RESEARCH_SERIES.lookWaiting, eta: estimating }
+    const items = [{ ...running, eta }, lookRunning, done]
+    server.use(http.get(`${API_BASE}/series`, () => HttpResponse.json({ items, next_cursor: null, total_estimate: items.length })))
+    await renderRoute(SERIES_LIST)
+    expect((await rowOf(RESEARCH_SERIES.escalationRunning)).textContent).toContain("RUNNING~5 min left")
+    expect((await rowOf(RESEARCH_SERIES.lookWaiting)).textContent).not.toContain("left")
+    expect((await rowOf(RESEARCH_SERIES.panelRefuted)).textContent).not.toContain("left")
   })
 
   it("opens a series from its row", async () => {
