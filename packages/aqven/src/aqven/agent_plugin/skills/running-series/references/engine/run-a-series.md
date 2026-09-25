@@ -88,7 +88,9 @@ aqven series reply_overpromise_risk --on dev --cases 2 --repeats 2
 | `--path PATH` | the module folder with `aqven.yaml`, or a path inside it; the current folder by default |
 
 The command starts the project server when it isn't running, prints the attempts and the cap, and a line
-when the size is below the recommendation, then waits and prints the progress and the verdict. The exit code tells a script what happened:
+when the size is below the recommendation, then waits and prints the progress and the verdict. Each progress line
+ends with the time left, the finish time and the speed, such as `~5 min left, finishes ~18:42, 12 attempts/min`,
+or `estimating the time left` while the first attempts finish. The exit code tells a script what happened:
 
 | Exit | Meaning |
 |---|---|

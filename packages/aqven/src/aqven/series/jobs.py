@@ -15,6 +15,7 @@ from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, active_runtime
 from aqven.ir import IrHash, IrLookupError
 from aqven.runtime.address import RunId
 from aqven.runtime.runs import Page
+from aqven.series.eta import series_eta
 from aqven.series.events import SeriesEventLog
 from aqven.series.ids import new_series_id
 from aqven.series.launch import LaunchInputs, LaunchPlanBuilder
@@ -27,6 +28,7 @@ from aqven.series.model import (
     AttemptState,
     ExperimentOrigin,
     LaunchPlan,
+    PauseSpan,
     SeriesAnalysis,
     SeriesChange,
     SeriesId,
@@ -216,6 +218,7 @@ def series_record(series_id: SeriesId, planned: PlannedSeries, launch: LaunchPla
         needs_approval=launch.needs_approval,
         created_at=now,
         pause=START_PAUSE if launch.needs_approval else None,
+        pauses=(PauseSpan(started_at=now),) if launch.needs_approval else (),
     )
 
 
@@ -444,11 +447,13 @@ class SeriesService:
     async def _facts(
         self, record: SeriesRecord, attempts: Sequence[AttemptRecord], waiting: frozenset[RunId]
     ) -> SeriesProgressFacts:
+        waits = await self._waits(record, attempts, waiting)
         return SeriesProgressFacts(
             done=finished_count(attempts),
             spend=await self.services.store.spend(record.series_id),
-            waits=await self._waits(record, attempts, waiting),
+            waits=waits,
             unpriced=unpriced_attempts(attempts),
+            eta=series_eta(record, attempts, waits, utc_now()),
         )
 
     async def _summary(self, record: SeriesRecord, waiting: frozenset[RunId]) -> SeriesSummaryView:

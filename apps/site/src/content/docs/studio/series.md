@@ -16,11 +16,14 @@ read what it found down to a single attempt. The meaning of each number is on
   the newest first by start time, whether it is running or finished. The columns are **Status**,
   **Experiment** (a look shows as `look · <flow>`), **Flow** (a series whose subject is a local flow of
   its experiment shows that flow, marked as a flow of the experiment), **On**
-  (dev or holdout), **N×R**, **Spend**, **Verdict** and **Started**. An experiment page lists its own
-  series under **Series history**.
+  (dev or holdout), **N×R**, **Spend**, **Verdict** and **Started**. A running series shows the time left
+  next to its status, such as "~5 min left". An experiment page lists its own series under **Series history**.
 - **Read the header.** The title names the series: "Series … of this experiment", or "Look at N cases" with
   the dataset and the stages for a look. Tags show the status, and **live** while Studio follows it. Below
-  them are the size and variants and when it started and finished. **Attempts** shows the progress.
+  them are the size and variants and when it started and finished. **Attempts** shows the progress, and
+  under it the estimate: "~5 min left · finishes ~18:42 · 12 attempts/min". It comes from the attempts
+  finished over the last few minutes, so it reads "estimating…" until a few have finished, and "paused"
+  while the series waits for approval or for a person.
   **Spend** shows the spend against the cap, and says "Lower bound" with a count when some attempts ran on
   a model without a known price.
 - **Continue it or stop it here.** A series that spent 90% of its cap is **AWAITING APPROVAL** and shows

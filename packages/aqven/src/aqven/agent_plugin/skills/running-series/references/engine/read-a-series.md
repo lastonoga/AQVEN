@@ -28,6 +28,12 @@ status, then the verdict, then the numbers behind it, then the cases.
   | `cancelled` | stopped by a person or an agent; no finding |
   | `failed` | every attempt hit an infrastructure error, such as a missing provider key; `error` names the first one |
 
+  While the series is active, `eta` estimates when it finishes. It divides the attempts left by the
+  attempts finished per minute over the last 5 minutes of running time, so it follows the concurrency,
+  the rate limits of the models and the retried attempts. It reads `estimating` until 3 attempts finished
+  after the first one and 30 seconds passed, and `paused` while the series awaits approval or a person;
+  time spent paused doesn't count. A finished, cancelled or failed series has no `eta`.
+
 - **Read the verdict first, and quote it.** The server writes one sentence from the interval and the
   margin in the file. Repeat it as it is: don't round the numbers or retell them. The sentence follows
   these templates:

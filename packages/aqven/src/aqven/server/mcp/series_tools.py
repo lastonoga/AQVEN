@@ -30,7 +30,11 @@ SERIES_GET_DESCRIPTION: Final = (
     "A series is failed when every attempt hit an infrastructure error, such as a missing provider key, and error "
     "names the first one; it stays done when at least one attempt was counted. "
     "spend.unpriced_attempts counts attempts that ran on a model without a known price: above 0, spend.usd is a "
-    "lower bound. include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
+    "lower bound. eta estimates when an active series finishes from the attempts finished per minute over its "
+    "last 5 minutes of running time: state estimating until 3 attempts finished after the first one, running "
+    "with attempts_per_minute, remaining_seconds and finish_at, paused while it awaits approval or a human; "
+    "eta is null once the series ends. "
+    "include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
 )
 SERIES_CANCEL_DESCRIPTION: Final = (
     "Stops a series: queued attempts never start, model calls already running finish and are paid; no finding is "

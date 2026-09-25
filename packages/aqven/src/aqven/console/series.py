@@ -1,8 +1,10 @@
 import argparse
 import asyncio
+import math
 import sys
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import tzinfo
 from decimal import Decimal, InvalidOperation
 from functools import partial
 from pathlib import Path
@@ -29,7 +31,15 @@ from aqven.series.model import (
     SeriesStatus,
 )
 from aqven.series.protocol import MAX_WAIT_SECONDS
-from aqven.series.views import SeriesDetailView, SeriesGetResult, SeriesSpend, SeriesStarted, SeriesStartRequest
+from aqven.series.views import (
+    EtaState,
+    SeriesDetailView,
+    SeriesEta,
+    SeriesGetResult,
+    SeriesSpend,
+    SeriesStarted,
+    SeriesStartRequest,
+)
 from aqven.spec import CellVerdict, ExperimentId, SeriesMetric, SeriesSplit
 from aqven.spec.experiments import MAX_REPEATS
 
@@ -50,6 +60,12 @@ STATUS_EXITS: Final[Mapping[SeriesStatus, int]] = {
 USAGE_CODES: Final = frozenset({"NOT_FOUND", "NOT_RUNNABLE", "INPUT_INVALID", "REQUEST_INVALID"})
 SHOWN_ROLES: Final = frozenset({MetricRole.PRIMARY, MetricRole.GUARDRAIL, MetricRole.CHECK})
 ALWAYS_SHOWN: Final = frozenset({SeriesMetric.SUCCESS_RATE.value})
+SECONDS_PER_MINUTE: Final = 60
+MINUTES_PER_HOUR: Final = 60
+CLOCK_FORMAT: Final = "%H:%M"
+RATE_FORMAT: Final = ".3g"
+ESTIMATING_TEXT: Final = "estimating the time left"
+PAUSED_TEXT: Final = "paused, no time estimate"
 
 
 def positive_int(text: str) -> int:
@@ -152,10 +168,48 @@ def spent_text(spend: SeriesSpend) -> str:
     return f"at least {usd(spend.usd)} ({unpriced} on a model without a known price)"
 
 
-def progress_line(series: SeriesDetailView) -> str:
+def time_left(seconds: int) -> str:
+    if seconds < SECONDS_PER_MINUTE:
+        return "under a minute left"
+    minutes = math.ceil(seconds / SECONDS_PER_MINUTE)
+    hours, rest = divmod(minutes, MINUTES_PER_HOUR)
+    if hours == 0:
+        return f"~{rest} min left"
+    return f"~{hours} h left" if rest == 0 else f"~{hours} h {rest} min left"
+
+
+def estimating_text(eta: SeriesEta, zone: tzinfo | None) -> str:
+    return ESTIMATING_TEXT
+
+
+def paused_text(eta: SeriesEta, zone: tzinfo | None) -> str:
+    return PAUSED_TEXT
+
+
+def measured_text(eta: SeriesEta, zone: tzinfo | None) -> str:
+    if eta.remaining_seconds is None or eta.finish_at is None or eta.attempts_per_minute is None:
+        return ESTIMATING_TEXT
+    finish = eta.finish_at.astimezone(zone).strftime(CLOCK_FORMAT)
+    rate = format(eta.attempts_per_minute, RATE_FORMAT)
+    return f"{time_left(eta.remaining_seconds)}, finishes ~{finish}, {rate} attempts/min"
+
+
+ETA_TEXTS: Final[Mapping[EtaState, Callable[[SeriesEta, tzinfo | None], str]]] = {
+    "estimating": estimating_text,
+    "paused": paused_text,
+    "running": measured_text,
+}
+
+
+def eta_suffix(eta: SeriesEta | None, zone: tzinfo | None) -> str:
+    return "" if eta is None else f", {ETA_TEXTS[eta.state](eta, zone)}"
+
+
+def progress_line(series: SeriesDetailView, zone: tzinfo | None = None) -> str:
     return (
         f"{series.progress.done}/{series.progress.total} attempts, "
         f"{spent_text(series.spend)} of {usd(series.spend.cap_usd)}, status {series.status}"
+        f"{eta_suffix(series.eta, zone)}"
     )
 
 
@@ -259,6 +313,7 @@ class SeriesRunner:
     link: Callable[[SeriesId], str]
     out: TextIO
     err: TextIO
+    zone: tzinfo | None = None
 
     async def run(self, request: SeriesCommandRequest) -> int:
         try:
@@ -282,7 +337,7 @@ class SeriesRunner:
     async def _settled(self, request: SeriesCommandRequest, series_id: SeriesId) -> SeriesGetResult:
         result = await self.client.series_get(series_id, MAX_WAIT_SECONDS)
         while result.series.status not in SETTLED_STATUSES:
-            self._say(request, progress_line(result.series))
+            self._say(request, progress_line(result.series, self.zone))
             result = await self.client.series_get(series_id, MAX_WAIT_SECONDS)
         return result
 

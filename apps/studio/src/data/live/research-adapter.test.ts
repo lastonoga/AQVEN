@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ApiSeriesCaseRow, ApiSeriesDetail, ApiSubject } from "@/domain"
+import type { ApiSeriesCaseRow, ApiSeriesDetail, ApiSeriesEta, ApiSubject } from "@/domain"
 import { liveExperiments } from "@/mocks/data/experiments"
 import { caseRowsOf, detailOf, initialSeries, launchPlanFor, RESEARCH_SERIES } from "@/mocks/data/research"
 import {
@@ -178,6 +178,19 @@ describe("research adapter", () => {
   it("carries how many attempts of a series ran on a model without a known price", () => {
     expect(seriesDetailOf(seriesOf(RESEARCH_SERIES.noninferiorHoldout)).spend.unpricedAttempts).toBe(0)
     expect(seriesSummaryOf(seriesOf(RESEARCH_SERIES.splitInconclusive)).spend.unpricedAttempts).toBe(6)
+  })
+
+  it("reads the estimate to finish of a series by its state", () => {
+    const running = seriesOf(RESEARCH_SERIES.escalationRunning)
+    const measured: ApiSeriesEta = { state: "running", attempts_per_minute: 12.5, remaining_seconds: 300, finish_at: "2026-09-18T03:05:00Z", window_seconds: 240 }
+    const quiet: Omit<ApiSeriesEta, "state"> = { attempts_per_minute: null, remaining_seconds: null, finish_at: null, window_seconds: 0 }
+
+    expect(seriesDetailOf({ ...running, eta: measured }).eta).toEqual({ state: "running", remainingSeconds: 300, finishAt: "2026-09-18T03:05:00Z", attemptsPerMinute: 12.5 })
+    expect(seriesSummaryOf({ ...running, eta: { state: "estimating", ...quiet } }).eta).toEqual({ state: "estimating" })
+    expect(seriesSummaryOf({ ...running, eta: { state: "paused", ...quiet } }).eta).toEqual({ state: "paused" })
+    expect(seriesSummaryOf({ ...running, eta: { ...measured, finish_at: null } }).eta).toEqual({ state: "estimating" })
+    expect(seriesSummaryOf({ ...running, eta: null }).eta).toBeNull()
+    expect(seriesDetailOf(seriesOf(RESEARCH_SERIES.noninferiorHoldout)).eta).toBeNull()
   })
 
   it("maps case rows with their split and attempts with the error of the attempt", () => {

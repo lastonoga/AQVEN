@@ -32,6 +32,7 @@ from aqven.series.views import (
     QuestionView,
     SeriesCaseRow,
     SeriesDetailView,
+    SeriesEta,
     SeriesProgress,
     SeriesSpend,
     SeriesStarted,
@@ -78,6 +79,7 @@ class SeriesProgressFacts:
     spend: Decimal
     waits: int
     unpriced: int = 0
+    eta: SeriesEta | None = None
 
 
 def unpriced_attempts(attempts: Sequence[AttemptRecord]) -> int:
@@ -129,6 +131,7 @@ def summary_view(record: SeriesRecord, facts: SeriesProgressFacts) -> SeriesSumm
         started_at=record.created_at,
         finished_at=record.finished_at,
         pause=shown_pause(record),
+        eta=facts.eta,
     )
 
 
