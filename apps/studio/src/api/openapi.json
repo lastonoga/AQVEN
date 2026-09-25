@@ -8529,6 +8529,123 @@
           }
         },
         "x-aqven-rest-only": "experiment catalogue read from the project files"
+      },
+      "post": {
+        "summary": "Post Experiment",
+        "operationId": "experiment_create",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "a person creates an experiment in Studio; an agent writes the experiment files itself"
       }
     },
     "/api/experiments/{experiment_id}": {
@@ -9935,6 +10052,382 @@
           }
         },
         "x-aqven-operation": "series_cancel"
+      }
+    },
+    "/api/research/authoring": {
+      "get": {
+        "summary": "Get Authoring Options",
+        "operationId": "research_authoring",
+        "parameters": [
+          {
+            "name": "flow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Flow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthoringOptionsView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "Studio experiment form: flows, agents, datasets, checks and question kinds of the project"
+      }
+    },
+    "/api/research/authoring/count": {
+      "post": {
+        "summary": "Count Cases",
+        "operationId": "research_case_count",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseCountView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "x-aqven-rest-only": "Studio live count of the cases a dataset and tags select"
+      }
+    },
+    "/api/experiments/{experiment_id}/cases": {
+      "put": {
+        "summary": "Put Experiment Cases",
+        "operationId": "experiment_cases_put",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentCasesWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentFileWritten"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "a person picks the experiment cases in Studio; an agent edits experiment.yaml itself"
       }
     },
     "/api/chat/status": {
@@ -12545,6 +13038,227 @@
           "check_errors"
         ]
       },
+      "AuthoringDatasetView": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Id"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "splits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/SeriesSplit"
+            },
+            "type": "object",
+            "title": "Splits"
+          },
+          "tags": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/TagValueView"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Tags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "flow_id",
+          "total",
+          "splits",
+          "tags"
+        ],
+        "title": "AuthoringDatasetView"
+      },
+      "AuthoringFlowView": {
+        "properties": {
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "input_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Type"
+          },
+          "output_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Type"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/AuthoringNodeView"
+            },
+            "type": "array",
+            "title": "Nodes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flow_id",
+          "description",
+          "input_type",
+          "output_type",
+          "nodes"
+        ],
+        "title": "AuthoringFlowView"
+      },
+      "AuthoringNodeView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "flow_node_id": {
+            "type": "string",
+            "title": "Flow Node Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NodeKind"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "agent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id"
+          },
+          "inference_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Id"
+          },
+          "calls": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calls"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "flow_node_id",
+          "kind",
+          "description",
+          "agent_id",
+          "inference_id",
+          "calls"
+        ],
+        "title": "AuthoringNodeView"
+      },
+      "AuthoringOptionsView": {
+        "properties": {
+          "flows": {
+            "items": {
+              "$ref": "#/components/schemas/AuthoringFlowView"
+            },
+            "type": "array",
+            "title": "Flows"
+          },
+          "agents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentRefView"
+            },
+            "type": "array",
+            "title": "Agents"
+          },
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/AuthoringDatasetView"
+            },
+            "type": "array",
+            "title": "Datasets"
+          },
+          "evaluators": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluatorOptionView"
+            },
+            "type": "array",
+            "title": "Evaluators"
+          },
+          "question_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionKind"
+            },
+            "type": "array",
+            "title": "Question Kinds"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesMetric"
+            },
+            "type": "array",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flows",
+          "agents",
+          "datasets",
+          "evaluators",
+          "question_kinds",
+          "metrics"
+        ],
+        "title": "AuthoringOptionsView"
+      },
       "BlobMeta": {
         "properties": {
           "blob_id": {
@@ -13019,6 +13733,59 @@
           "default"
         ]
       },
+      "CaseCountRequest": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/TagName"
+            },
+            "type": "object",
+            "title": "Tags"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id"
+        ],
+        "title": "CaseCountRequest"
+      },
+      "CaseCountView": {
+        "properties": {
+          "selected": {
+            "type": "integer",
+            "title": "Selected"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "splits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/SeriesSplit"
+            },
+            "type": "object",
+            "title": "Splits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selected",
+          "total",
+          "splits"
+        ],
+        "title": "CaseCountView"
+      },
       "CaseDraft": {
         "properties": {
           "dataset_id": {
@@ -13103,6 +13870,38 @@
           "media_type"
         ],
         "title": "CaseMediaAttached"
+      },
+      "CaseSelection": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/TagName"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset"
+        ],
+        "title": "CaseSelection",
+        "description": "Which cases the experiment runs: a dataset, optionally filtered by case tags.\n\nA case is selected when every tag listed here has the same value on the case."
       },
       "CaseSelectionView": {
         "properties": {
@@ -15276,6 +16075,66 @@
           "run"
         ],
         "title": "CodeToolSource"
+      },
+      "CompareQuestion": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "compare",
+            "title": "Kind"
+          },
+          "baseline": {
+            "type": "string",
+            "title": "Baseline"
+          },
+          "candidate": {
+            "type": "string",
+            "title": "Candidate"
+          },
+          "primary": {
+            "$ref": "#/components/schemas/MetricName"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricDirection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "margin": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Margin",
+            "default": 0
+          },
+          "guardrails": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Guardrail"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardrails"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "baseline",
+          "candidate",
+          "primary"
+        ],
+        "title": "CompareQuestion",
+        "description": "Is ``candidate`` better than ``baseline`` on ``primary`` by more than ``margin``, on the same cases."
       },
       "CompileStatus": {
         "type": "string",
@@ -18083,7 +18942,8 @@
           "W_FINDINGS_STALE",
           "W_VARIANT_DUPLICATE",
           "W_ALTERNATIVE_UNUSED",
-          "W_MEDIA_TYPE_MISMATCH"
+          "W_MEDIA_TYPE_MISMATCH",
+          "W_AGENT_SKILLS_STALE"
         ],
         "title": "DiagnosticCode"
       },
@@ -18506,6 +19366,10 @@
         ],
         "title": "Effect"
       },
+      "EntityName": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,62}$"
+      },
       "EnumType": {
         "properties": {
           "apiVersion": {
@@ -18697,6 +19561,59 @@
           "attempts"
         ],
         "title": "Estimate"
+      },
+      "EvaluatorOptionView": {
+        "properties": {
+          "use": {
+            "type": "string",
+            "title": "Use"
+          },
+          "needs_params": {
+            "type": "boolean",
+            "title": "Needs Params"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "params": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluatorParamView"
+            },
+            "type": "array",
+            "title": "Params"
+          }
+        },
+        "type": "object",
+        "required": [
+          "use",
+          "needs_params",
+          "description",
+          "kind",
+          "params"
+        ],
+        "title": "EvaluatorOptionView"
+      },
+      "EvaluatorParamView": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "required"
+        ],
+        "title": "EvaluatorParamView"
       },
       "EventCatalog": {
         "properties": {
@@ -19192,6 +20109,40 @@
           "cancelled"
         ]
       },
+      "ExpectedHash": {
+        "properties": {
+          "file_hash": {
+            "$ref": "#/components/schemas/FileHash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file_hash"
+        ],
+        "title": "ExpectedHash"
+      },
+      "ExperimentCasesWrite": {
+        "properties": {
+          "cases": {
+            "$ref": "#/components/schemas/CaseSelection"
+          },
+          "expects": {
+            "$ref": "#/components/schemas/ExpectedHash"
+          },
+          "client_op_id": {
+            "$ref": "#/components/schemas/Ulid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cases",
+          "expects",
+          "client_op_id"
+        ],
+        "title": "ExperimentCasesWrite"
+      },
       "ExperimentChangeKind": {
         "type": "string",
         "enum": [
@@ -19247,6 +20198,157 @@
           "paths"
         ],
         "title": "ExperimentChanged"
+      },
+      "ExperimentCheck": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "use": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,62}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run"
+          },
+          "inference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
+          "with": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "With"
+          },
+          "validated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validated By"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "ExperimentCheck",
+        "description": "A detector scored on every attempt: a built-in, a ``module:function`` or a judge inference with its agent.\n\n``validated_by`` names the experiment that measured this judge on planted defects; a judge without it\nproduces signals, not evidence."
+      },
+      "ExperimentCreateRequest": {
+        "properties": {
+          "experiment_id": {
+            "$ref": "#/components/schemas/EntityName"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/ExperimentSpec"
+          },
+          "prompts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PromptText"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/EntityName"
+            },
+            "type": "object",
+            "title": "Prompts"
+          },
+          "client_op_id": {
+            "$ref": "#/components/schemas/Ulid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "spec",
+          "client_op_id"
+        ],
+        "title": "ExperimentCreateRequest"
+      },
+      "ExperimentCreated": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "file_hash": {
+            "type": "string",
+            "title": "File Hash"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/Diagnostic"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "file_hash",
+          "diagnostics",
+          "experiment_id"
+        ],
+        "title": "ExperimentCreated"
       },
       "ExperimentDetailView": {
         "properties": {
@@ -19510,6 +20612,55 @@
         ],
         "title": "ExperimentDetailView"
       },
+      "ExperimentFactor": {
+        "properties": {
+          "what": {
+            "$ref": "#/components/schemas/FactorKind"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/FactorNode"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Nodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "what",
+          "nodes"
+        ],
+        "title": "ExperimentFactor",
+        "description": "The one factor the variants of an experiment change: ``what`` kind of edit on which ``nodes`` of the subject.\n\n``nodes`` lists local node ids of the subject flow, each once; a nested node is named by its own id. Every\nvariant sets values of this factor only, so a series tells which edit made the difference."
+      },
+      "ExperimentFileWritten": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "file_hash": {
+            "type": "string",
+            "title": "File Hash"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/Diagnostic"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "file_hash",
+          "diagnostics"
+        ],
+        "title": "ExperimentFileWritten"
+      },
       "ExperimentFilesView": {
         "properties": {
           "spec": {
@@ -19657,6 +20808,136 @@
           "file"
         ],
         "title": "ExperimentPromptView"
+      },
+      "ExperimentSpec": {
+        "properties": {
+          "apiVersion": {
+            "type": "string",
+            "const": "aqven/v1",
+            "title": "Apiversion"
+          },
+          "kind": {
+            "type": "string",
+            "const": "Experiment",
+            "title": "Kind"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          },
+          "failure_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,62}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Mode"
+          },
+          "archived": {
+            "type": "boolean",
+            "title": "Archived",
+            "default": false
+          },
+          "subject": {
+            "$ref": "#/components/schemas/ExperimentSubject"
+          },
+          "varies": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExperimentFactor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cases": {
+            "$ref": "#/components/schemas/CaseSelection"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/VariantSpec"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Variants"
+          },
+          "checks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExperimentCheck"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checks"
+          },
+          "question": {
+            "$ref": "#/components/schemas/Question"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/ExperimentPlan"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "apiVersion",
+          "kind",
+          "description",
+          "subject",
+          "cases",
+          "variants",
+          "question"
+        ],
+        "title": "ExperimentSpec",
+        "description": "An experiment: subject × factor × variants × cases × checks × question.\n\n``varies`` declares the one factor the variants change; it is required once there is more than one variant.\nThe question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,\nregressions, judge validation and risky hypotheses are all experiments that differ only in their factor,\nvariants and question.\n\n``archived: true`` sets the experiment aside: Studio lists it only under Archived at the end of Research,\nwhile ``aqven check`` and series treat it as any other experiment."
+      },
+      "ExperimentSubject": {
+        "properties": {
+          "flow": {
+            "type": "string",
+            "title": "Flow"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "flow"
+        ],
+        "title": "ExperimentSubject",
+        "description": "What the experiment runs: a flow, whole or as a range of its top-level nodes.\n\n``flow`` names a local flow of this experiment (``flows/<flow_id>/`` in the experiment folder) or a project\nflow; a local flow is looked up first. ``from`` and ``to`` narrow the run to a contiguous range of top-level\nnodes; nodes before the range take their outputs from the case ``node_outputs``."
       },
       "ExperimentSummaryView": {
         "properties": {
@@ -19862,6 +21143,10 @@
         "title": "FactorKind",
         "description": "The kind of edit an experiment factor makes on each of its nodes.\n\n``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm\nnode, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at\nanother flow."
       },
+      "FactorNode": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,62}$"
+      },
       "FactorSlotView": {
         "properties": {
           "node_id": {
@@ -19898,6 +21183,10 @@
           "files"
         ],
         "title": "FactorSlotView"
+      },
+      "FactorValue": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,62}$"
       },
       "FactorView": {
         "properties": {
@@ -21054,6 +22343,41 @@
           "from"
         ],
         "title": "ForkRequest"
+      },
+      "Guardrail": {
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/MetricName"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricDirection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "margin": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Margin"
+          },
+          "relative": {
+            "type": "boolean",
+            "title": "Relative",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metric",
+          "margin"
+        ],
+        "title": "Guardrail",
+        "description": "A metric that must not get worse than the baseline by more than ``margin``.\n\n``relative`` reads ``margin`` as a share of the baseline value, so 0.2 allows the candidate 20 % worse."
       },
       "GuardrailView": {
         "properties": {
@@ -22665,6 +23989,22 @@
         ],
         "title": "LookOrigin"
       },
+      "LookQuestion": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "look",
+            "title": "Kind"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "LookQuestion",
+        "description": "Run the cases and show them side by side, with no statistical verdict."
+      },
       "LookTarget": {
         "properties": {
           "flow_id": {
@@ -23443,6 +24783,10 @@
           "continuous"
         ],
         "title": "MetricKind"
+      },
+      "MetricName": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,62}$"
       },
       "MetricRole": {
         "type": "string",
@@ -25464,6 +26808,66 @@
         ],
         "title": "NodeWaitTimedOut"
       },
+      "NoninferiorQuestion": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "noninferior",
+            "title": "Kind"
+          },
+          "baseline": {
+            "type": "string",
+            "title": "Baseline"
+          },
+          "candidate": {
+            "type": "string",
+            "title": "Candidate"
+          },
+          "primary": {
+            "$ref": "#/components/schemas/MetricName"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricDirection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "margin": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Margin"
+          },
+          "guardrails": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Guardrail"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardrails"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "baseline",
+          "candidate",
+          "primary",
+          "margin"
+        ],
+        "title": "NoninferiorQuestion",
+        "description": "Is ``candidate`` not worse than ``baseline`` on ``primary`` by more than ``margin``, on the same cases."
+      },
       "OnFail": {
         "type": "string",
         "enum": [
@@ -27483,6 +28887,10 @@
         ],
         "title": "PromptSummary"
       },
+      "PromptText": {
+        "type": "string",
+        "minLength": 1
+      },
       "PromptTrace": {
         "properties": {
           "level": {
@@ -27830,6 +29238,31 @@
       "ProviderText": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+      },
+      "Question": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/LookQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/ThresholdQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/CompareQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/NoninferiorQuestion"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "compare": "#/components/schemas/CompareQuestion",
+            "look": "#/components/schemas/LookQuestion",
+            "noninferior": "#/components/schemas/NoninferiorQuestion",
+            "threshold": "#/components/schemas/ThresholdQuestion"
+          }
+        }
       },
       "QuestionKind": {
         "type": "string",
@@ -30162,6 +31595,19 @@
         ],
         "title": "SeriesMatrix"
       },
+      "SeriesMetric": {
+        "type": "string",
+        "enum": [
+          "success_rate",
+          "cost_usd",
+          "cost_of_pass",
+          "latency_p50_ms",
+          "latency_p95_ms",
+          "schema_valid_first_try",
+          "infra_error_rate"
+        ],
+        "title": "SeriesMetric"
+      },
       "SeriesOrigin": {
         "oneOf": [
           {
@@ -31623,6 +33069,28 @@
           "unreadable"
         ]
       },
+      "TagName": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,62}$"
+      },
+      "TagValueView": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "TagValueView"
+      },
       "TemplatePrompt": {
         "properties": {
           "kind": {
@@ -31707,6 +33175,65 @@
           "verdict"
         ],
         "title": "ThresholdCell"
+      },
+      "ThresholdQuestion": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "threshold",
+            "title": "Kind"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricName"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
+          },
+          "below": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Below"
+          },
+          "above": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above"
+          },
+          "margin": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Margin",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "metric"
+        ],
+        "title": "ThresholdQuestion",
+        "description": "Is ``metric`` below or above a value by more than ``margin``, for one variant or each variant.\n\nExactly one of ``below`` and ``above`` is set."
       },
       "TimeoutPolicy": {
         "oneOf": [
@@ -32381,6 +33908,39 @@
           "cases"
         ],
         "title": "VariantSlot"
+      },
+      "VariantSpec": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "title": "Id"
+          },
+          "nodes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/FactorValue"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/FactorNode"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "VariantSpec",
+        "description": "One variant of the subject: the value of the experiment factor on some of its nodes.\n\n``nodes`` maps a node of ``varies.nodes`` to its value, whose kind ``varies.what`` sets: an agent id\n(``agent``), a prompt name from the experiment ``prompts/`` folder (``prompt``), an alternative id from its\n``nodes/`` folder (``use``) or a flow id, local to the experiment first, then of the project (``flow``). A\nfactor node the variant leaves out runs as written; a variant without ``nodes`` is the subject as written."
       },
       "VariantTally": {
         "properties": {

@@ -14,6 +14,7 @@ import type {
 } from "@/domain"
 import { ATTENTION_REASONS } from "@/domain"
 import { API_BASE } from "@/api/client"
+import { authoredCases, createdExperiments, resetAuthoringMocks } from "./authoring"
 import { liveDatasets } from "./data/datasets"
 import { liveExperiments } from "./data/experiments"
 import {
@@ -52,6 +53,7 @@ let started = 0
 export const resetResearchMocks = (): void => {
   states = initialSeries()
   started = 0
+  resetAuthoringMocks()
 }
 
 const text = (params: PathParams, name: string): string => {
@@ -159,7 +161,11 @@ const summaryOfExperiment = (experiment: ApiExperimentDetail): ApiExperimentSumm
   }
 }
 
-const detailOfExperiment = (experiment: ApiExperimentDetail): ApiExperimentDetail => ({ ...experiment, ...summaryOfExperiment(experiment) })
+const detailOfExperiment = (experiment: ApiExperimentDetail): ApiExperimentDetail => ({ ...experiment, ...summaryOfExperiment(experiment), cases: authoredCases(experiment) })
+
+const knownExperiments = (): readonly ApiExperimentDetail[] => [...liveExperiments, ...createdExperiments()]
+
+const findExperiment = (id: string): ApiExperimentDetail | null => experimentOf(id) ?? createdExperiments().find((experiment) => experiment.experiment_id === id) ?? null
 
 const matchesExperiment = (experiment: ApiExperimentDetail, url: URL): boolean => {
   const flow = url.searchParams.get("flow_id")
@@ -347,11 +353,11 @@ export const researchRuns = (template: ApiRunSnapshot | undefined): readonly Api
 export const researchHandlers = [
   http.get(`${API_BASE}/experiments`, ({ request }) => {
     const url = new URL(request.url)
-    return served(page(liveExperiments.filter((experiment) => matchesExperiment(experiment, url)).map(summaryOfExperiment)))
+    return served(page(knownExperiments().filter((experiment) => matchesExperiment(experiment, url)).map(summaryOfExperiment)))
   }),
 
   http.get(`${API_BASE}/experiments/:experimentId`, ({ params }) => {
-    const experiment = experimentOf(text(params, "experimentId"))
+    const experiment = findExperiment(text(params, "experimentId"))
     return experiment === null ? failure(NOT_FOUND, "experiment_get", "NOT_FOUND", `experiment ${text(params, "experimentId")} not found`) : served(detailOfExperiment(experiment))
   }),
 

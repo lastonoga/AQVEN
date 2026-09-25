@@ -2,23 +2,22 @@ import posixpath
 import re
 from dataclasses import dataclass
 from functools import reduce
-from pathlib import Path
 from typing import Final
 
 from pydantic import JsonValue, ValidationError
 
 from aqven.client.ids import new_client_op_id
 from aqven.datasets import JsonPath, guessed_media_type, media_file_name, unused_media_file_name
-from aqven.loader import dataset_media_folder, file_hash
-from aqven.loader.aliases import AliasScope
+from aqven.loader import dataset_media_folder
 from aqven.runtime.address import JsonObject, ResourceModel
 from aqven.server.errors import ApiFailure, not_found
 from aqven.server.views.common import loaded_project
 from aqven.server.views.datasets import DatasetSummary
+from aqven.server.views.documents import alias_scope, current_document
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import MEDIA_FILE_KEY, MEDIA_KEY, DatasetId
 from aqven.spec.builtins import MEDIA_TYPE_PATTERN
-from aqven.write import canonical_yaml, parse_document
+from aqven.write import canonical_yaml
 from aqven.write.model import ExpectedFile, FileBytesWriteRequest, WriteActor
 from aqven.write.service import WriteService
 
@@ -81,7 +80,7 @@ def attach_case_media(
     source = project.datasets.get(DatasetId(upload.dataset_id))
     if source is None:
         raise not_found(f"dataset {upload.dataset_id} is not in the project")
-    document = _current_document(state.root, source.path, upload.file_hash)
+    document = current_document(state.root, source.path, upload.file_hash)
     wanted = media_file_name(upload.file_name or "")
     stored = unused_media_file_name(state.root, source.path, wanted)
     attached = AttachedFile(
@@ -91,26 +90,10 @@ def attach_case_media(
     )
     case = _case_document(document, upload)
     _place(case, case_location(upload.location), _reference(attached, wanted), upload.location)
-    scope = AliasScope(state.root.name, tuple(flow.folder for flow in project.flows.values()))
-    files = {source.path: canonical_yaml(source.path, document, scope), attached.path: upload.data}
+    files = {source.path: canonical_yaml(source.path, document, alias_scope(state)), attached.path: upload.data}
     expects = ((source.path, upload.file_hash), (attached.path, None))
     writer.write_bytes(_write_request(upload, expects, files), actor)
     return attached
-
-
-def _current_document(root: Path, path: str, expected: str) -> JsonObject:
-    location = root / path
-    if not location.is_file():
-        raise ApiFailure("FILE_VANISHED", f"{path} was deleted after it was read")
-    data = location.read_bytes()
-    current = file_hash(data)
-    if current != expected:
-        conflict: JsonObject = {"path": path, "your_hash": expected, "current_hash": current}
-        raise ApiFailure("STALE_FILE", f"{path} changed after it was read", conflict=conflict)
-    document = parse_document(path, data)
-    if document is None:
-        raise ApiFailure("REQUEST_INVALID", f"{path} does not parse as a YAML definition: fix the file first")
-    return document
 
 
 def _case_document(document: JsonObject, upload: CaseMediaUpload) -> JsonValue:

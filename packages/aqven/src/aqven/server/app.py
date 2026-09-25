@@ -19,6 +19,7 @@ from aqven.server.context import ServerContext, engine_version
 from aqven.server.errors import install_error_handlers
 from aqven.server.event_feeds import EventFeed, EventFeeds
 from aqven.server.probes import StatusProbes, project_probes
+from aqven.server.routes.authoring import build_authoring_router
 from aqven.server.routes.blobs import build_blobs_router
 from aqven.server.routes.datasets import build_datasets_router
 from aqven.server.routes.events import build_events_router
@@ -148,6 +149,7 @@ def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
         build_settings_router(context),
         build_datasets_router(context),
         build_research_router(context),
+        build_authoring_router(context),
     )
 
 

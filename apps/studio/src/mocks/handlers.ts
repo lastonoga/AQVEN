@@ -8,6 +8,7 @@ import { liveNodeDetails, liveNodePrompts, liveNodes } from "./data/nodes"
 import { liveFiles, liveFlowDetails, liveFlows, liveProject, liveProjectSettings, livePrompts, liveProviders, liveResearchBudget, liveSecrets, liveTypeDetails, liveTypes } from "./data/project"
 import { COMPLETED_RUN_ID, liveExecutionDetails, liveRunEvents, liveRunSnapshots, liveRuns } from "./data/runs"
 import { liveHealth, liveServerStatus } from "./data/server"
+import { authoringHandlers } from "./authoring"
 import { researchHandlers, researchRunSnapshot, researchRuns } from "./research"
 
 const LATENCY_MS = 20
@@ -271,6 +272,8 @@ const nodeSchemasOf = (flowId: string) =>
 
 export const handlers = [
   ...researchHandlers,
+
+  ...authoringHandlers,
 
   http.get(`${API_BASE}/ready`, () => HttpResponse.json({ status: "ready", detail: null })),
 

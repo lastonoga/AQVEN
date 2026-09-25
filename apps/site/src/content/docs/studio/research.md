@@ -1,6 +1,6 @@
 ---
 title: How to use Research in Studio
-description: Switch to Research, find the experiments that moved last or need you, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
+description: Switch to Research, find the experiments that moved last or need you, create an experiment and choose its cases, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
 ---
 
 ## When you need this
@@ -8,7 +8,7 @@ description: Switch to Research, find the experiments that moved last or need yo
 Use Research once a fix has worked on the one case you saw and you need to know whether it holds. An
 experiment asks one question of a flow or a range of its nodes, and its variants change one factor of it:
 the agent, the prompt, a node or the flow a `call` node runs. A series answers it by running the selected
-cases, for every variant, several times. Research is where you read experiments, launch a
+cases, for every variant, several times. Research is where you create and read experiments, launch a
 series, approve its spend, and ask the chat for the next hypothesis.
 
 ## Steps
@@ -60,8 +60,34 @@ series, approve its spend, and ask the chat for the next hypothesis.
   Each hypothesis comes with its failure mode, question, metric and margin, subject, the one factor its
   variants change and their values, checks and cases by tags. The agent writes no file until you pick one. Then it writes
   `experiments/<experiment_id>/experiment.yaml` and runs `{{CLI_COMMAND}} check`.
-- **Open an experiment.** The header states the question in words and holds a **Run** button. The page
-  below reads top to bottom:
+- **Create an experiment yourself.** **New experiment** in the page header opens a form. Its sections run
+  top to bottom:
+
+  | Section | What you fill in |
+  |---|---|
+  | **What you want to learn** | the question in words, saved as `description`, and the experiment id. The id follows the question until you type your own, and must not be taken |
+  | **Subject and factor** | the flow, found by name with its input and output types, and what varies: **agent**, **prompt**, **node** or **called flow**. **Nodes it changes** offers only the nodes that fit: llm nodes for an agent or a prompt, call nodes for a called flow, any node for a node |
+  | **Variants** | variant 1 runs the flow as written. Each further variant sets a value on the chosen nodes: an agent of the project, a flow with the same input and output types as the one the call node runs, or a prompt text saved as `experiments/<experiment_id>/prompts/<variant>.md` |
+  | **Cases** | the dataset and its tags, as described in the next step |
+  | **Checks** | built-in checks, such as `expected` with the output fields to compare, or none. A series always reports its built-in metrics |
+  | **Question** | **look**, **threshold**, **better** or **not worse**, with the baseline, the candidate, the metric and the margin it needs. A sentence under the fields reads the question back |
+  | **Plan** | how many of the selected cases a series runs, empty for all, and how many repeats |
+
+  **Create experiment** writes `experiments/<experiment_id>/experiment.yaml` and the prompt files, runs
+  `{{CLI_COMMAND}} check` on them and opens the new experiment. When the form is incomplete, it lists what
+  to fix and writes nothing. When the check or the server rejects the experiment, the reasons appear under
+  the form. A node factor needs alternative nodes, which are code, so the form doesn't write it: **Ask chat
+  to write the alternatives** hands the form to the chat instead. **Ask chat to draft** does the same for
+  any form, filled in or not, and the chat writes the file and runs the check.
+- **Choose the cases.** The dataset picker lists the datasets of the flow, with how many cases each has.
+  Under it, every tag of the dataset has a row of values: keep **any**, or pick one value to select only
+  the cases that have it. Each value shows how many cases carry it. The count below updates as you pick,
+  for example "5 of 12 cases", with the working and held-out split. **Open these cases** shows them on
+  the flow's **Cases** tab.
+- **Open an experiment.** The header states the question in words and holds a **Run** button. The line
+  under the title names the cases: "Dataset: support_case_cases · channel=amazon · 4 of 12 cases", or
+  "every case" when the experiment selects no tags. The dataset opens the **Cases** tab filtered by the
+  dataset and the tags, and each tag opens the cases that have it. The page below reads top to bottom:
 
   | Block | What it shows |
   |---|---|
@@ -75,6 +101,13 @@ series, approve its spend, and ask the chat for the next hypothesis.
   | **Series history** | every series of this experiment, with its state and spend |
   | **Technical details** | the files, question, subject, plan, failure mode, and the notes from `experiment.md` |
 
+- **Change the cases of an experiment.** **Change cases** on the dataset line opens **Cases** at the top of
+  the page, with the same dataset and tag picker as the form. It offers the datasets of the subject's flow,
+  or every dataset when the subject is a flow of the experiment itself. Another dataset resets the tags.
+  **Save** writes only `cases:` into `experiment.yaml` and shows what `{{CLI_COMMAND}} check` found in the
+  file. A dataset or tags the check rejects are not written, and the reasons appear under the picker. If
+  the file changed on disk after you opened the picker, nothing is written: **Reload** reads the new
+  version and keeps your pick, so you can save again. **Close** drops the pick.
 - **See what a variant runs.** Every value in the variants table is a button. An agent, a prompt or an
   alternative opens its block in **What changes**: the agent's model and settings; the prompt's text with
   the prompt as written below it; or the node's files (node, code, inference, prompt), each in its own
