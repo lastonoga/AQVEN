@@ -1,9 +1,12 @@
+import { useState } from "react"
 import type { ExperimentDetail, LaunchPlan, LaunchRequest, SeriesSummary } from "@/domain"
 import { Page } from "@/components/studio"
 import { experimentRouteApi } from "@/lib/routes"
+import { CasesEditor } from "./cases-editor"
 import { ExperimentAnswer } from "./experiment-answer"
 import { ExperimentCanvas } from "./experiment-canvas"
 import { ExperimentComparison } from "./experiment-comparison"
+import { DatasetLine } from "./experiment-dataset"
 import { ExperimentDetails } from "./experiment-details"
 import { ExperimentDisagreements } from "./experiment-disagreements"
 import { ExperimentQuestion } from "./experiment-question"
@@ -43,10 +46,28 @@ function ExperimentPage({ experiment, series, initial, plan }: ExperimentPagePro
   const blocks = changeBlocks(experiment)
   const focus = usePageFocus(views, blocks)
   const detail = latest?.series ?? null
+  const [editing, setEditing] = useState(false)
+  const cases = (
+    <DatasetLine
+      experiment={experiment}
+      editing={editing}
+      onEdit={() => {
+        setEditing(true)
+      }}
+    />
+  )
   return (
     <div className="relative h-full min-h-0">
-      <Page width="xl" header={<ExperimentQuestion experiment={experiment} latest={series[0] ?? null} launch={launch} />}>
+      <Page width="xl" header={<ExperimentQuestion experiment={experiment} latest={series[0] ?? null} launch={launch} detail={cases} />}>
         <div className="flex min-w-0 flex-col gap-7">
+          {editing ? (
+            <CasesEditor
+              experiment={experiment}
+              onClose={() => {
+                setEditing(false)
+              }}
+            />
+          ) : null}
           <ExperimentCanvas experiment={experiment} views={views} blocks={blocks} focus={focus} />
           <ExperimentAnswer experiment={experiment} latest={detail} launch={launch} />
           <ExperimentComparison latest={detail} />

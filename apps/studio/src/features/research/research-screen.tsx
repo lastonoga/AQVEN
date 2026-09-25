@@ -1,8 +1,10 @@
 import { useId, useMemo, useState, type ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
+import { Plus } from "lucide-react"
 import { useLocale, useNow, useTranslations } from "use-intl"
 import type { ExperimentFilter, ExperimentSummary, FlowId } from "@/domain"
 import { Dot, Empty, Expander, Heading, Matrix, Page, RowLink, Surface, Tag, Text, Toolbar, type MatrixField } from "@/components/studio"
+import { Button } from "@/components/ui/button"
 import { HandoffButton } from "@/features/chat-handoff"
 import { relativeTime } from "@/i18n/format"
 import { projectRouteApi, researchRouteApi, ROUTE_PATH } from "@/lib/routes"
@@ -174,6 +176,21 @@ const sectionSuggest = (label: string, scope: HypothesesScope, flow: FlowId | nu
   return <HandoffButton label={label} prompt={hypothesesPrompt(scope, flow)} variant="ghost" />
 }
 
+function HeaderActions({ scope }: { readonly scope: HypothesesScope }) {
+  const t = useTranslations("research.list")
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+      <Button asChild variant="outline" size="sm">
+        <Link to={ROUTE_PATH.newExperiment}>
+          <Plus aria-hidden />
+          {t("newExperiment")}
+        </Link>
+      </Button>
+      <HandoffButton label={t("suggest")} prompt={hypothesesPrompt(scope, null)} variant="default" />
+    </div>
+  )
+}
+
 function useSectionHead(scope: HypothesesScope): (section: ListSection) => SectionHead {
   const t = useTranslations("research.list")
   const flowTitle = useFlowTitle()
@@ -278,7 +295,7 @@ export function ResearchScreen() {
     <Page
       width="xl"
       header={
-        <Toolbar wrap className="items-start gap-2.5" end={<HandoffButton label={t("suggest")} prompt={hypothesesPrompt(scope, null)} variant="default" />}>
+        <Toolbar wrap className="items-start gap-2.5" end={<HeaderActions scope={scope} />}>
           <Heading size="page" title={t("title")} below={[t("subtitle", { project: project.package ?? project.root })]} />
         </Toolbar>
       }

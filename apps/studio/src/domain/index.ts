@@ -4,6 +4,7 @@ export type * from "./shared"
 export type * from "./setup"
 export type * from "./live"
 export type * from "./research"
+export type * from "./authoring"
 export { assertNever } from "./core"
 export {
   APPROVAL_DECISIONS,

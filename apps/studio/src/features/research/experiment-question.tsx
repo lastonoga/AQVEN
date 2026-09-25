@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { useTranslations } from "use-intl"
 import type { ExperimentDetail, SeriesSummary } from "@/domain"
 import { Heading, type TagSpec } from "@/components/studio"
@@ -25,7 +26,14 @@ function HeaderRun({ launch }: { readonly launch: Launch }) {
   return <RunButton launch={launch} label={t("run")} />
 }
 
-export function ExperimentQuestion({ experiment, latest, launch }: { readonly experiment: ExperimentDetail; readonly latest: SeriesSummary | null; readonly launch: Launch }) {
+type ExperimentQuestionProps = {
+  readonly experiment: ExperimentDetail
+  readonly latest: SeriesSummary | null
+  readonly launch: Launch
+  readonly detail?: ReactNode
+}
+
+export function ExperimentQuestion({ experiment, latest, launch, detail }: ExperimentQuestionProps) {
   const t = useTranslations("research.experiment")
   const question = useQuestionCopy()
   const tags = [...useArchivedTags(experiment.archived), ...useLatestTags(latest)]
@@ -40,6 +48,7 @@ export function ExperimentQuestion({ experiment, latest, launch }: { readonly ex
         below={[<span key="about">{experiment.id}</span>]}
         trailing={<HeaderRun launch={launch} />}
       />
+      {detail}
       {state.kind === "failed" ? <Failure message={t("launch.failed", { reason: state.message })} /> : null}
     </div>
   )

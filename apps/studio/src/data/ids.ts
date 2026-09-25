@@ -18,6 +18,7 @@ import type {
   TypeId,
   VariantId,
 } from "@/domain"
+import { ulid } from "ulid"
 
 export const flowId = (raw: string): FlowId => raw as FlowId
 export const nodeId = (raw: string): NodeId => raw as NodeId
@@ -39,3 +40,5 @@ export const checkId = (raw: string): CheckId => raw as CheckId
 export const datasetId = (raw: string): DatasetId => raw as DatasetId
 
 export const clientOpId = (): string => globalThis.crypto.randomUUID()
+
+export const writeOpId = (): string => ulid()
