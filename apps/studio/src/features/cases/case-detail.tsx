@@ -13,34 +13,38 @@ import {
   Text,
   useValueMode,
   ValueDisplayProvider,
+  type MediaFileLocator,
   type SectionSpec,
   type ValueMode,
 } from "@/components/studio"
-import { MediaOutput, type OutputMedia } from "@/components/studio/media-output"
+import { MediaOutput, mediaKey, type OutputMedia } from "@/components/studio/media-output"
 import { ROUTE_PATH } from "@/lib/routes"
+import { mediaFileLocator } from "./media-files"
 import { caseTags, hasContext, hasExpected, tagTokens, toggleName } from "./model"
 
 export type CaseDetailProps = {
   readonly id: string
   readonly item: ApiDatasetCase
+  readonly mediaFolder: string
   readonly experiments: readonly ExperimentDetail[]
+  readonly attach: ReactNode
   readonly run: ReactNode
 }
 
 const NO_NODES: ReadonlySet<string> = new Set()
 
-const mediaOf = (value: unknown): readonly OutputMedia[] =>
-  flattenValueWithMedia(value).flatMap((entry) => ("media" in entry ? [entry.media] : []))
+const mediaOf = (value: unknown, locate: MediaFileLocator): readonly OutputMedia[] =>
+  flattenValueWithMedia(value, locate).flatMap((entry) => ("media" in entry ? [entry.media] : []))
 
 const fieldCount = (value: unknown): number => (typeof value === "object" && value !== null ? Object.keys(value).length : 1)
 
-function CaseValue({ value }: { readonly value: unknown }) {
+function CaseValue({ value, locate }: { readonly value: unknown; readonly locate: MediaFileLocator }) {
   const mode = useValueMode()
-  const media = mediaOf(value)
+  const media = mediaOf(value, locate)
   return (
     <Surface variant="well" padding="sm" className="max-h-80 overflow-auto">
       <div className="flex min-w-0 flex-col gap-2">
-        {mode === "json" ? media.map((item) => <MediaOutput key={`${item.slot}-${item.blobId}`} media={item} compact />) : null}
+        {mode === "json" ? media.map((item) => <MediaOutput key={mediaKey(item)} media={item} compact />) : null}
         <StructuredValue value={value} media={media} />
       </div>
     </Surface>
@@ -65,7 +69,7 @@ function TagsLine({ tags }: { readonly tags: CaseTags }) {
   )
 }
 
-function NodeOutputs({ outputs }: { readonly outputs: Readonly<Record<string, unknown>> }) {
+function NodeOutputs({ outputs, locate }: { readonly outputs: Readonly<Record<string, unknown>>; readonly locate: MediaFileLocator }) {
   const t = useTranslations("cases.detail")
   const [open, setOpen] = useState<ReadonlySet<string>>(NO_NODES)
   const entries = Object.entries(outputs)
@@ -93,7 +97,7 @@ function NodeOutputs({ outputs }: { readonly outputs: Readonly<Record<string, un
       {entries.filter(([node]) => open.has(node)).map(([node, value]) => (
         <div key={node} className="flex min-w-0 flex-col gap-1">
           <Text role="cell" weight="semibold">{node}</Text>
-          <CaseValue value={value} />
+          <CaseValue value={value} locate={locate} />
         </div>
       ))}
     </div>
@@ -125,11 +129,19 @@ function ExperimentUses({ experiments }: { readonly experiments: readonly Experi
   )
 }
 
-const valueSection = (id: string, title: string, value: unknown, actions?: ReactNode): SectionSpec => ({
+const valueSection = (id: string, title: string, value: unknown, locate: MediaFileLocator, actions?: ReactNode, below?: ReactNode): SectionSpec => ({
   id,
   title,
   actions,
-  body: { kind: "node", node: <CaseValue value={value} /> },
+  body: {
+    kind: "node",
+    node: (
+      <div className="flex min-w-0 flex-col gap-2">
+        <CaseValue value={value} locate={locate} />
+        {below}
+      </div>
+    ),
+  },
 })
 
 function ValueModeChoice({ mode, onChange }: { readonly mode: ValueMode; readonly onChange: (mode: ValueMode) => void }) {
@@ -146,17 +158,18 @@ function ValueModeChoice({ mode, onChange }: { readonly mode: ValueMode; readonl
   )
 }
 
-export function CaseDetail({ id, item, experiments, run }: CaseDetailProps) {
+export function CaseDetail({ id, item, mediaFolder, experiments, attach, run }: CaseDetailProps) {
   const t = useTranslations("cases.detail")
   const [mode, setMode] = useState<ValueMode>("json")
   const outputs = item.node_outputs ?? {}
+  const locate = mediaFileLocator(mediaFolder)
   const sections: readonly SectionSpec[] = [
-    valueSection(`${id}-input`, t("input"), item.inputs, <ValueModeChoice mode={mode} onChange={setMode} />),
-    ...(hasContext(item) ? [valueSection(`${id}-context`, t("context"), item.context)] : []),
+    valueSection(`${id}-input`, t("input"), item.inputs, locate, <ValueModeChoice mode={mode} onChange={setMode} />, attach),
+    ...(hasContext(item) ? [valueSection(`${id}-context`, t("context"), item.context, locate)] : []),
     hasExpected(item)
-      ? valueSection(`${id}-expected`, t("expected"), item.expected_output)
+      ? valueSection(`${id}-expected`, t("expected"), item.expected_output, locate)
       : { id: `${id}-expected`, title: t("expected"), body: { kind: "node", node: <Hint>{t("noExpected")}</Hint> } },
-    { id: `${id}-outputs`, title: t("nodeOutputs"), count: Object.keys(outputs).length, body: { kind: "node", node: <NodeOutputs outputs={outputs} /> } },
+    { id: `${id}-outputs`, title: t("nodeOutputs"), count: Object.keys(outputs).length, body: { kind: "node", node: <NodeOutputs outputs={outputs} locate={locate} /> } },
     { id: `${id}-experiments`, title: t("experiments"), count: experiments.length, body: { kind: "node", node: <ExperimentUses experiments={experiments} /> } },
   ]
   return (

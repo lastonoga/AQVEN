@@ -27,5 +27,6 @@ The command names and help text below come from `aqven.cli.COMMANDS`. Use `uv ru
 | `{{CLI_COMMAND}} secrets` | every secret the project declares, where it comes from and whether it is set | Available |
 | `{{CLI_COMMAND}} prompt` | prompts of llm nodes | Available |
 | `{{CLI_COMMAND}} series` | run a series of an experiment on the project server and wait for its verdict | Available |
+| `{{CLI_COMMAND}} datasets` | dataset files: turn blob media of cases into files next to the dataset | Available |
 
 Pending commands are registered for future use but return `not implemented`; do not put them in automation. [How to check a project before committing](/engine/check/) shows a working command sequence.

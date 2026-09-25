@@ -27,6 +27,9 @@ you read them, add to them and run them. Experiments select their cases from the
   upstream nodes whose outputs it saves in `node_outputs`. Click a row to open the case in place. You see
   its input, context, expected output, `node_outputs` and tags. You also see **Experiments using this
   case**: every experiment whose dataset and tag filter select it, with a link to each.
+- **See the case's media.** An image, audio, video or document in a case shows in the open case, whether
+  the case points at a file in the project (`file`) or at a blob (`blob_id`). A file is read straight
+  from the project folder, so what you see is the file on disk.
 - **Run one case.** An open case of this flow has a **Run this case** panel. Drag the stage picker to
   choose the first and last stage, or click one node to run only that stage. Studio checks live that the
   case has what the range needs, and earlier stages take their outputs from the case. **Start run** runs
@@ -49,6 +52,12 @@ you read them, add to them and run them. Experiments select their cases from the
 - **Edit cases in the file.** A saved case isn't edited in place on this tab. Change
   `datasets/<dataset_id>.yaml`, or ask the chat to. Never rename a case that experiments already use: the
   server splits working and held-out cases by the case's name, so a renamed case is a new one.
+- **Attach a media file to a case.** Studio writes the file into `datasets/<dataset_id>/`, next to the
+  dataset, with a name that doesn't clash with the files already there, and saves a `file` reference in
+  the case instead of a blob. The file goes into git with the dataset. For private media, see
+  [how to keep case media as files in the project](/engine/dataset-media-files/). Media from a CSV import
+  and cases drafted from a run point at blobs. Run `{{CLI_COMMAND}} datasets materialize` to turn them
+  into files.
 - **Lock a fix with a case.** From a run that went wrong, **To cases** drafts a dataset case from that
   run and hands it to the chat. See [How to investigate a run](/studio/investigate-a-run/).
 
@@ -70,6 +79,8 @@ one per case, each with its outcome, cost and a link to its run.
   series that answer them.
 - [How to follow and read a series in Studio](/studio/series/): the page a look opens on.
 - [How to write an experiment](/engine/experiments/): selecting cases with `cases.tags`.
+- [How to keep case media as files in the project](/engine/dataset-media-files/): the two path forms,
+  private media and moving old blob-backed cases to files.
 - [Datasets reference](/reference/datasets/): every key of a case.
 - [How to investigate a run](/studio/investigate-a-run/): the run that **Start run** opens, and the
   **To cases** action.

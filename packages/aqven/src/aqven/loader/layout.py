@@ -15,6 +15,8 @@ VARIANTS_FOLDER: Final = "variants"
 SKIPPED_DIRECTORIES: Final = frozenset({"__pycache__", "node_modules"})
 SOURCE_SUFFIXES: Final = frozenset({".yaml", ".yml", PYTHON_SUFFIX})
 AQVEN_HEADER: Final = re.compile(rb"""^apiVersion:[ \t]*["']?aqven/""", re.MULTILINE)
+DATASET_HEADER: Final = re.compile(rb"""^kind:[ \t]*["']?Dataset["']?[ \t]*\r?$""", re.MULTILINE)
+YAML_SUFFIXES: Final = frozenset({".yaml", ".yml"})
 
 ROLE_KINDS: Final[Mapping[str, SpecKind]] = {"node": SpecKind.NODE, "inference": SpecKind.INFERENCE}
 BUILDER_ROLES: Final[Mapping[str, SpecKind]] = {"inference": SpecKind.INFERENCE}
@@ -65,6 +67,10 @@ def entity_role(path: str) -> str:
 
 def entity_stem(path: str) -> str:
     return posixpath.join(posixpath.dirname(path), entity_id(path))
+
+
+def dataset_media_folder(dataset_path: str) -> str:
+    return entity_stem(dataset_path)
 
 
 def declares(path: str, kind: SpecKind) -> bool:

@@ -1,11 +1,12 @@
-import { useRef, useState } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import { PlayIcon } from "lucide-react"
 import { useTranslations } from "use-intl"
+import type { FilePath } from "@/domain"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { API_BASE } from "@/api/client"
 
-export type OutputMedia = {
+export type BlobMedia = {
   readonly slot: string
   readonly mediaType: string
   readonly blobId: string
@@ -14,18 +15,60 @@ export type OutputMedia = {
   readonly posterBlobId?: string | null
 }
 
-const blobUrl = (blobId: string): string => `${API_BASE}/blobs/${encodeURIComponent(blobId)}`
-
-function MediaFileLink({ media, label }: { readonly media: OutputMedia; readonly label: string }) {
-  const t = useTranslations("common.media")
-  return <a data-media-interactive href={blobUrl(media.blobId)} target="_blank" rel="noreferrer" className="min-w-0 break-all text-sm text-foreground underline underline-offset-2 hover:text-primary">{t("openFile", { name: label })}</a>
+export type FileMedia = {
+  readonly slot: string
+  readonly mediaType: string
+  readonly file: string
+  readonly path: FilePath | null
+  readonly name: string | null
 }
 
-function ImageOutput({ media, label, compact }: { readonly media: OutputMedia; readonly label: string; readonly compact: boolean }) {
+export type OutputMedia = BlobMedia | FileMedia
+
+type PreviewProps = {
+  readonly src: string
+  readonly poster: string | undefined
+  readonly label: string
+  readonly compact: boolean
+}
+
+type PreviewRender = (props: PreviewProps) => ReactNode
+
+const LINK_CLASS = "min-w-0 break-all text-sm text-foreground underline underline-offset-2 hover:text-primary"
+const META_CLASS = "font-mono text-[11px] text-muted-foreground"
+const MEDIA_FAMILY_SEPARATOR = "/"
+
+export const isFileMedia = (media: OutputMedia): media is FileMedia => "file" in media
+
+export const mediaKey = (media: OutputMedia): string => `${media.slot}-${isFileMedia(media) ? media.file : media.blobId}`
+
+export const rawFileUrl = (path: FilePath): string => `${API_BASE}/raw/${path.split("/").map(encodeURIComponent).join("/")}`
+
+const blobUrl = (blobId: string): string => `${API_BASE}/blobs/${encodeURIComponent(blobId)}`
+
+const mediaSrc = (media: OutputMedia): string | null => {
+  if (!isFileMedia(media)) return blobUrl(media.blobId)
+  return media.path === null ? null : rawFileUrl(media.path)
+}
+
+const posterSrc = (media: OutputMedia): string | undefined =>
+  !isFileMedia(media) && media.posterBlobId ? blobUrl(media.posterBlobId) : undefined
+
+const mediaIdentity = (media: OutputMedia): string => (isFileMedia(media) ? media.file : media.blobId)
+
+const slotShown = (media: OutputMedia): boolean => media.slot.length > 0 && media.slot !== mediaIdentity(media)
+
+const mediaLabel = (media: OutputMedia): string => media.name || (slotShown(media) ? media.slot : media.mediaType)
+
+function MediaFileLink({ src, label }: { readonly src: string; readonly label: string }) {
+  const t = useTranslations("common.media")
+  return <a data-media-interactive href={src} target="_blank" rel="noreferrer" className={LINK_CLASS}>{t("openFile", { name: label })}</a>
+}
+
+function ImagePreview({ src, label, compact }: PreviewProps) {
   const t = useTranslations("common.media")
   const [broken, setBroken] = useState(false)
-  if (broken) return <MediaFileLink media={media} label={label} />
-  const src = blobUrl(media.blobId)
+  if (broken) return <MediaFileLink src={src} label={label} />
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -41,26 +84,26 @@ function ImageOutput({ media, label, compact }: { readonly media: OutputMedia; r
   )
 }
 
-function AudioOutput({ media, label }: { readonly media: OutputMedia; readonly label: string }) {
+function AudioPreview({ src, label }: PreviewProps) {
   const [broken, setBroken] = useState(false)
-  if (broken) return <MediaFileLink media={media} label={label} />
-  return <audio data-media-interactive aria-label={label} src={blobUrl(media.blobId)} controls preload="metadata" onError={() => { setBroken(true) }} className="h-10 w-full max-w-md" />
+  if (broken) return <MediaFileLink src={src} label={label} />
+  return <audio data-media-interactive aria-label={label} src={src} controls preload="metadata" onError={() => { setBroken(true) }} className="h-10 w-full max-w-md" />
 }
 
-function VideoOutput({ media, label, compact }: { readonly media: OutputMedia; readonly label: string; readonly compact: boolean }) {
+function VideoPreview({ src, poster, label, compact }: PreviewProps) {
   const t = useTranslations("common.media")
   const videoRef = useRef<HTMLVideoElement>(null)
   const [broken, setBroken] = useState(false)
   const [playing, setPlaying] = useState(false)
-  if (broken) return <MediaFileLink media={media} label={label} />
+  if (broken) return <MediaFileLink src={src} label={label} />
   return (
     <div data-media-interactive className={`relative aspect-video w-full ${compact ? "max-w-[28rem]" : "max-w-[40rem]"} overflow-hidden rounded-md border border-border bg-black`}>
       <video
         ref={videoRef}
         data-media-interactive
         aria-label={label}
-        src={blobUrl(media.blobId)}
-        poster={media.posterBlobId ? blobUrl(media.posterBlobId) : undefined}
+        src={src}
+        poster={poster}
         controls
         playsInline
         preload="metadata"
@@ -85,17 +128,49 @@ function VideoOutput({ media, label, compact }: { readonly media: OutputMedia; r
   )
 }
 
+const PREVIEWS: Readonly<Record<string, PreviewRender>> = {
+  image: (props) => <ImagePreview {...props} />,
+  audio: (props) => <AudioPreview {...props} />,
+  video: (props) => <VideoPreview {...props} />,
+}
+
+const linkPreview: PreviewRender = ({ src, label }) => <MediaFileLink src={src} label={label} />
+
+const renderPreview = (mediaType: string, props: PreviewProps): ReactNode =>
+  (PREVIEWS[mediaType.split(MEDIA_FAMILY_SEPARATOR)[0] ?? ""] ?? linkPreview)(props)
+
+function UnreadablePath({ file }: { readonly file: string }) {
+  const t = useTranslations("common.media")
+  return <span role="alert" className="text-sm text-destructive">{t("pathInvalid", { file })}</span>
+}
+
+function FileFooter({ media }: { readonly media: FileMedia }) {
+  const t = useTranslations("common.media")
+  if (media.path === null) return <span className={META_CLASS}>{media.file} · {media.mediaType}</span>
+  return (
+    <span className={META_CLASS}>
+      <a data-media-interactive href={rawFileUrl(media.path)} target="_blank" rel="noreferrer" title={t("openPath", { path: media.path })} className="underline underline-offset-2 hover:text-primary">{media.path}</a>
+      {" · "}{media.mediaType}
+    </span>
+  )
+}
+
+function BlobFooter({ media }: { readonly media: BlobMedia }) {
+  return <span className={META_CLASS}>{media.mediaType} · {media.bytes.toLocaleString()} B</span>
+}
+
+function MediaFooter({ media }: { readonly media: OutputMedia }) {
+  return isFileMedia(media) ? <FileFooter media={media} /> : <BlobFooter media={media} />
+}
+
 export function MediaOutput({ media, compact = false }: { readonly media: OutputMedia; readonly compact?: boolean }) {
-  const label = media.name || (media.slot && media.slot !== media.blobId ? media.slot : media.mediaType)
-  const content = media.mediaType.startsWith("image/") ? <ImageOutput media={media} label={label} compact={compact} />
-    : media.mediaType.startsWith("audio/") ? <AudioOutput media={media} label={label} />
-      : media.mediaType.startsWith("video/") ? <VideoOutput media={media} label={label} compact={compact} />
-        : <MediaFileLink media={media} label={label} />
+  const label = mediaLabel(media)
+  const src = mediaSrc(media)
   return (
     <div className="flex w-full min-w-0 flex-col items-start gap-1.5 rounded-md border border-border bg-background-subtle p-2">
-      {media.slot && media.slot !== media.blobId ? <span className="font-mono text-[11px] text-muted-foreground">{media.slot}</span> : null}
-      {content}
-      <span className="font-mono text-[11px] text-muted-foreground">{media.mediaType} · {media.bytes.toLocaleString()} B</span>
+      {slotShown(media) ? <span className={META_CLASS}>{media.slot}</span> : null}
+      {src === null ? <UnreadablePath file={mediaIdentity(media)} /> : renderPreview(media.mediaType, { src, poster: posterSrc(media), label, compact })}
+      <MediaFooter media={media} />
     </div>
   )
 }

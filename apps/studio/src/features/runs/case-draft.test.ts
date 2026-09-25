@@ -8,6 +8,7 @@ const dataset = (datasetId: string, flowId: string | null): ApiDatasetSummary =>
   dataset_id: datasetId,
   flow_id: flowId,
   path: `datasets/${datasetId}.yaml`,
+  media_folder: `datasets/${datasetId}`,
   file_hash: "sha256-1",
   cases: 3,
   splits: { dev: 2, holdout: 1 },

@@ -18,6 +18,7 @@ import type {
   ApiSettingWrite,
   BlobId,
   ChatSessionId,
+  DatasetId,
   FilePath,
   FlowId,
   NodeId,
@@ -55,6 +56,22 @@ const csvBody = (flowId: FlowId, datasetId: string, file: File): FormData => {
   form.set("flow_id", flowId)
   form.set("dataset_id", datasetId)
   form.set("file", file)
+  return form
+}
+
+export type CaseMediaAttach = {
+  readonly datasetId: DatasetId
+  readonly caseName: string
+  readonly location: string
+  readonly fileHash: string
+  readonly file: File
+}
+
+const mediaBody = (attach: CaseMediaAttach): FormData => {
+  const form = new FormData()
+  form.set("location", attach.location)
+  form.set("file_hash", attach.fileHash)
+  form.set("file", attach.file, attach.file.name)
   return form
 }
 
@@ -193,6 +210,12 @@ const datasets = {
     unwrap(await api.POST("/api/datasets/import-csv", {
       body: { dataset_id: datasetId, flow_id: flowId, file: file.name },
       bodySerializer: () => csvBody(flowId, datasetId, file),
+    })),
+  attachMedia: async (attach: CaseMediaAttach) =>
+    unwrap(await api.POST("/api/datasets/{dataset_id}/cases/{case_name}/media", {
+      params: { path: { dataset_id: attach.datasetId, case_name: attach.caseName } },
+      body: { location: attach.location, file_hash: attach.fileHash, file: attach.file.name },
+      bodySerializer: () => mediaBody(attach),
     })),
 }
 

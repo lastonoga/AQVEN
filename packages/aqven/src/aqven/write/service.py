@@ -19,6 +19,7 @@ from aqven.write.model import (
     DraftView,
     DraftWrite,
     ExpectedFile,
+    FileBytesWriteRequest,
     FilesWriteRequest,
     FlowPatchRequest,
     PromptSaveRequest,
@@ -136,6 +137,13 @@ class WriteService:
             return self._patch_locked(request, actor, lease)
 
     def write_files(self, request: FilesWriteRequest, actor: WriteActor) -> WriteResult:
+        encoded = {path: text.encode("utf-8") for path, text in request.files.items()}
+        edit = FileBytesWriteRequest(
+            expects=request.expects, files=encoded, client_op_id=request.client_op_id, intent=request.intent
+        )
+        return self.write_bytes(edit, actor)
+
+    def write_bytes(self, request: FileBytesWriteRequest, actor: WriteActor) -> WriteResult:
         replay = self.intents.find(request.client_op_id)
         if replay is not None:
             return replay
@@ -188,14 +196,13 @@ class WriteService:
             return result
         return self._committed(result, plan, (), actor, request.intent, lease)
 
-    def _files_locked(self, request: FilesWriteRequest, actor: WriteActor, lease: LockLease) -> WriteResult:
+    def _files_locked(self, request: FileBytesWriteRequest, actor: WriteActor, lease: LockLease) -> WriteResult:
         replay = self.intents.find(request.client_op_id)
         if replay is not None:
             return replay
         _verify_expects(self.root, request.expects)
-        encoded = {path: text.encode("utf-8") for path, text in request.files.items()}
         changes: dict[str, FileState] = {
-            path: data for path, data in encoded.items() if not _same_bytes(self.root, path, data)
+            path: data for path, data in request.files.items() if not _same_bytes(self.root, path, data)
         }
         _require_coverage(self.root, changes, request.expects)
         plan = _Plan(changes, self._validated(changes), None, None, ())

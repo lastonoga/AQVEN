@@ -29,7 +29,9 @@ own file tools instead.
   `AGENTS.md` and `CLAUDE.md`. Experiments are files too: `experiments/<experiment_id>/experiment.yaml`
   with its notes in `experiment.md`, the values its variants plug in under `nodes/`, `prompts/` and
   `flows/`, and its findings in `findings/`.
-  Datasets are `datasets/<dataset_id>.yaml`.
+  Datasets are `datasets/<dataset_id>.yaml`, and the media files their cases point at sit in
+  `datasets/<dataset_id>/` or, when shared, under `@root/` paths such as `samples/`. See
+  [How to keep case media as files in the project](/engine/dataset-media-files/).
 - **Use whatever your agent calls "Read", "Grep", and "Glob".** List `flows/` to see what flows exist,
   glob `flows/*/nodes/*.yaml` to see every node across all of them, grep for a node id or a field name
   across the tree, read one `flow.yaml` or `<node_id>.yaml` to see its shape. This is the same file

@@ -56,7 +56,10 @@ A project's real top-level layout is `agents/`, `code/`, `datasets/`, `experimen
 `.env`/`.env.example` pair for secrets. Once a series on held-out cases has written a finding, the
 project also has `experiments/<experiment_id>/findings/<series_id>.yaml` and a generated `FINDINGS.md`
 next to `aqven.yaml`. Both are files in git like everything else; only the raw attempts of a series stay
-in the project's local database under `.aqven/`. Shared prompt text that more than one prompt file wants to reuse
+in the project's local database under `.aqven/`. The images, audio, video and documents of dataset cases
+are files too: in `datasets/<dataset_id>/` next to the dataset, or in a shared folder such as `samples/`.
+The blob store under `.aqven/blobs/` is only a cache the engine fills from those files when a case runs;
+see [how to keep case media as files in the project](/engine/dataset-media-files/). Shared prompt text that more than one prompt file wants to reuse
 lives in `fragments/*.md`, included from a prompt the same way any other Liquid include works — there's
 no separate top-level `prompts/` folder, and no `components/`, `models/`, or `context/` either, whatever
 older sketches of the layout may have suggested.

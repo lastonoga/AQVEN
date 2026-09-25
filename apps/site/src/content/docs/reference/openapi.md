@@ -66,6 +66,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/datasets/{dataset_id}/case-names` | `dataset_case_names` |
 | `GET` | `/api/datasets/{dataset_id}/cases/{case_name}` | `dataset_case_get` |
 | `POST` | `/api/datasets/{dataset_id}/cases/from-run` | `case_from_run` |
+| `POST` | `/api/datasets/{dataset_id}/cases/{case_name}/media` | `case_media_attach` |
 | `POST` | `/api/datasets/draft` | `dataset_draft` |
 | `GET` | `/api/datasets/import-csv/template` | `dataset_csv_template` |
 | `POST` | `/api/datasets/import-csv/preview` | `dataset_csv_preview` |

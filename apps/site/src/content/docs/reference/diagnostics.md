@@ -124,6 +124,8 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_EXPECTED_MISSING` | `error` | experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem} |
 | `E_CHECK_PATH_UNKNOWN` | `error` | experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side} |
 | `E_FINDING_TAMPERED` | `error` | finding {finding} of experiment {experiment}: {problem} |
+| `E_MEDIA_FILE_MISSING` | `error` | case {case} of dataset {dataset}: media file {file} does not exist at {path} |
+| `E_MEDIA_PATH_INVALID` | `error` | case {case} of dataset {dataset}: media file path {file} {problem} |
 | `W_PROMPT_SHADOWED` | `warning` | — |
 | `W_GENERATED_STALE` | `warning` | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |
@@ -139,3 +141,4 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |
 | `W_VARIANT_DUPLICATE` | `warning` | experiment {experiment}: variant {variant} sets the same values as variant {first} |
 | `W_ALTERNATIVE_UNUSED` | `warning` | experiment {experiment}: {entity} is used by no variant |
+| `W_MEDIA_TYPE_MISMATCH` | `warning` | case {case} of dataset {dataset}: media file {file} has the extension {extension}, which does not fit $media {media_type} |
