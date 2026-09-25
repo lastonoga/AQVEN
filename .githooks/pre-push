@@ -12,3 +12,13 @@ if ! uv run --frozen python tools/generate_reference.py --check; then
   echo "pre-push: run 'uv run --frozen python tools/generate_reference.py' and commit the result" >&2
   exit 1
 fi
+
+echo "pre-push: checking the skill references and the lumen skill copies are current..."
+if ! uv run --frozen python tools/bundle_skill_docs.py --check; then
+  echo "pre-push: run 'uv run --frozen python tools/bundle_skill_docs.py' and commit the result" >&2
+  exit 1
+fi
+if ! (cd examples && uv run --frozen aqven skills status lumen); then
+  echo "pre-push: run 'uv run --frozen aqven skills sync lumen' in examples/ and commit the result" >&2
+  exit 1
+fi
