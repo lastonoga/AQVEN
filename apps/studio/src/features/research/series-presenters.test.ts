@@ -13,7 +13,11 @@ import {
   nextCapDraft,
   orderedAttempts,
   pendingOf,
+  finishFormat,
+  FINISH_CLOCK_FORMAT,
+  rateDigits,
   shareOf,
+  timeLeft,
   spendTone,
   tallyTone,
   toggledFilter,
@@ -21,6 +25,7 @@ import {
   verdictGap,
   type CheckHintCopy,
 } from "./series-presenters"
+import { STARTED_FORMAT } from "./presenters"
 import { caseRow, seriesDetail, seriesSummary } from "./test-support"
 
 const attempt = (variant: string, repeat: number, outcome: AttemptOutcome): SeriesAttempt => ({
@@ -160,5 +165,27 @@ describe("a series paused near its cap", () => {
     expect(continuedCap("1", 1)).toBeNull()
     expect(continuedCap("", 1)).toBeNull()
     expect(continuedCap("abc", 1)).toBeNull()
+  })
+})
+
+describe("series estimate to finish", () => {
+  it("rounds the time left up to whole minutes and splits hours off", () => {
+    expect(timeLeft(0)).toEqual({ key: "underMinuteLeft", hours: 0, minutes: 0 })
+    expect(timeLeft(59)).toEqual({ key: "underMinuteLeft", hours: 0, minutes: 0 })
+    expect(timeLeft(61)).toEqual({ key: "minutesLeft", hours: 0, minutes: 2 })
+    expect(timeLeft(300)).toEqual({ key: "minutesLeft", hours: 0, minutes: 5 })
+    expect(timeLeft(3600)).toEqual({ key: "hoursLeft", hours: 1, minutes: 0 })
+    expect(timeLeft(5430)).toEqual({ key: "hoursMinutesLeft", hours: 1, minutes: 31 })
+  })
+
+  it("shows the finish as a clock time, with the date once it is half a day away", () => {
+    expect(finishFormat(300)).toBe(FINISH_CLOCK_FORMAT)
+    expect(finishFormat(13 * 3600)).toBe(STARTED_FORMAT)
+  })
+
+  it("keeps one decimal of a slow speed and none of a fast one", () => {
+    expect(rateDigits(0.4)).toBe(1)
+    expect(rateDigits(9.5)).toBe(1)
+    expect(rateDigits(12)).toBe(0)
   })
 })

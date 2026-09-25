@@ -25,6 +25,7 @@ import type {
   ApiQuestion,
   ApiSeriesCaseRow,
   ApiSeriesDetail,
+  ApiSeriesEta,
   ApiSeriesOrigin,
   ApiSeriesPause,
   ApiSeriesSummary,
@@ -36,6 +37,7 @@ import type {
   CheckSource,
   CheckSourceKind,
   Contrast,
+  EtaState,
   ExperimentActivity,
   ExperimentAlternative,
   ExperimentCheck,
@@ -66,6 +68,7 @@ import type {
   SeriesAttempt,
   SeriesCaseRow,
   SeriesDetail,
+  SeriesEta,
   SeriesOrigin,
   SeriesPause,
   SeriesSummary,
@@ -304,6 +307,22 @@ const originOf = (origin: ApiSeriesOrigin): SeriesOrigin => {
 const pauseOf = (pause: ApiSeriesPause | null): SeriesPause | null =>
   pause === null ? null : { reason: pause.reason, spentUsd: money(pause.spent_usd) }
 
+const ESTIMATING: SeriesEta = { state: "estimating" }
+const PAUSED: SeriesEta = { state: "paused" }
+
+const measuredEta = (eta: ApiSeriesEta): SeriesEta => {
+  if (eta.remaining_seconds === null || eta.finish_at === null || eta.attempts_per_minute === null) return ESTIMATING
+  return { state: "running", remainingSeconds: eta.remaining_seconds, finishAt: ids.isoDateTime(eta.finish_at), attemptsPerMinute: eta.attempts_per_minute }
+}
+
+const ETAS: Readonly<Record<EtaState, (eta: ApiSeriesEta) => SeriesEta>> = {
+  estimating: () => ESTIMATING,
+  paused: () => PAUSED,
+  running: measuredEta,
+}
+
+export const etaOf = (eta: ApiSeriesEta | null | undefined): SeriesEta | null => (eta === null || eta === undefined ? null : ETAS[eta.state](eta))
+
 const seriesHeadOf = (series: ApiSeriesSummary) => ({
   id: ids.seriesId(series.series_id),
   origin: originOf(series.origin),
@@ -321,6 +340,7 @@ const seriesHeadOf = (series: ApiSeriesSummary) => ({
   startedAt: ids.isoDateTime(series.started_at),
   finishedAt: series.finished_at === null ? null : ids.isoDateTime(series.finished_at),
   pause: pauseOf(series.pause ?? null),
+  eta: etaOf(series.eta),
 })
 
 export const seriesSummaryOf = (series: ApiSeriesSummary): SeriesSummary => ({ ...seriesHeadOf(series), question: series.question })

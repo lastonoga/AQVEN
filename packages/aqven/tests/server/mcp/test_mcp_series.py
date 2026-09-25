@@ -1,9 +1,11 @@
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 from mcp_support import call, mcp_client, shop_copy, structured
-from series_fakes import DONE_ID, KNOWN_EXPERIMENT, SERIES_ID, FakeSeriesJobs
+from series_fakes import DONE_ID, KNOWN_EXPERIMENT, MOMENT, SERIES_ID, FakeSeriesJobs
 
+from aqven.series.views import SeriesEta, SeriesGetResult
 from aqven.server.mcp.endpoint import INSTRUCTIONS
 from aqven.server.mcp.series_tools import (
     SERIES_CANCEL_DESCRIPTION,
@@ -53,6 +55,30 @@ async def test_series_get_passes_wait_seconds_and_case_rows(tmp_path: Path) -> N
     assert too_long.is_error is True
     assert "wait_seconds" in str(too_long.content)
     assert len(jobs.gets) == 1
+
+
+@pytest.mark.asyncio
+async def test_series_get_returns_the_estimate_to_finish_with_the_view(tmp_path: Path) -> None:
+    jobs = FakeSeriesJobs()
+    eta = SeriesEta(
+        state="running",
+        attempts_per_minute=4.0,
+        remaining_seconds=180,
+        finish_at=MOMENT + timedelta(minutes=3),
+        window_seconds=120,
+    )
+    jobs.views[SERIES_ID] = jobs.views[SERIES_ID].model_copy(update={"eta": eta})
+    async with mcp_client(shop_copy(tmp_path), series=jobs) as client:
+        listed = await client.list_tools()
+        running = await call(client, "series_get", {"series_id": SERIES_ID})
+        done = await call(client, "series_get", {"series_id": DONE_ID})
+    tools = {tool.name: tool for tool in listed.tools}
+
+    assert SeriesGetResult.model_validate(structured(running)).series.eta == eta
+    assert SeriesGetResult.model_validate(structured(done)).series.eta is None
+    assert "eta estimates when an active series finishes" in SERIES_GET_DESCRIPTION
+    assert tools["series_get"].output_schema is not None
+    assert "SeriesEta" in tools["series_get"].output_schema["$defs"]
 
 
 @pytest.mark.asyncio

@@ -7,6 +7,7 @@ import { useFlowTitle } from "./copy"
 import { seriesRef, sizeText, STARTED_FORMAT } from "./presenters"
 import { originText, seriesListOrder } from "./series-list"
 import { SERIES_STATUS_TONE, VERDICT_TONE } from "./tones"
+import { useSeriesEta } from "./use-series-eta"
 
 const LIST_MIN_WIDTH = 920
 
@@ -26,21 +27,34 @@ function VerdictCell({ series }: { readonly series: SeriesSummary }) {
   )
 }
 
+function StatusCell({ series, left }: { readonly series: SeriesSummary; readonly left: string | null }) {
+  const t = useTranslations("research.vocabulary.status")
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <Tag size="xs" tone={SERIES_STATUS_TONE[series.status]}>
+        {t(series.status)}
+      </Tag>
+      {left === null ? null : (
+        <Text role="small" tone="neutral" truncate>
+          {left}
+        </Text>
+      )}
+    </div>
+  )
+}
+
 function useListFields(): readonly MatrixField<SeriesSummary>[] {
   const t = useTranslations("research")
   const format = useFormatter()
   const flowTitle = useFlowTitle()
+  const eta = useSeriesEta()
   const look = (flow: string) => t("seriesList.look", { flow })
   return [
     {
       id: "status",
       label: t("seriesList.column.status"),
-      track: "minmax(150px,0.8fr)",
-      render: (series) => (
-        <Tag size="xs" tone={SERIES_STATUS_TONE[series.status]}>
-          {t(`vocabulary.status.${series.status}`)}
-        </Tag>
-      ),
+      track: "minmax(190px,0.9fr)",
+      render: (series) => <StatusCell series={series} left={eta.left(series.eta)} />,
     },
     {
       id: "experiment",

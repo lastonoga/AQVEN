@@ -38,6 +38,7 @@ from aqven.series.model import (
     CheckValue,
     LookOrigin,
     OutcomeClass,
+    PauseSpan,
     RecordModel,
     SeriesChange,
     SeriesId,
@@ -462,11 +463,14 @@ async def announce(series_id: str, status: str) -> JsonObject:
 @DBOS.step(name=PAUSE_STEP)
 async def pause_series(series_id: str, spent_usd: str) -> JsonObject:
     store = active_series().store
+    now = utc_now()
     record = await require_series(store, SeriesId(series_id))
     if record.status is SeriesStatus.RUNNING:
         pause = SeriesPause(reason=ApprovalReason.SPEND_NEAR_CAP, spent_usd=Decimal(spent_usd))
-        await store.update(record.series_id, SeriesChange(status=SeriesStatus.AWAITING_APPROVAL, pause=pause))
-    return StatusMark(status=SeriesStatus.AWAITING_APPROVAL, at=utc_now()).model_dump(mode="json")
+        pauses = (*record.pauses, PauseSpan(started_at=now))
+        change = SeriesChange(status=SeriesStatus.AWAITING_APPROVAL, pause=pause, pauses=pauses)
+        await store.update(record.series_id, change)
+    return StatusMark(status=SeriesStatus.AWAITING_APPROVAL, at=now).model_dump(mode="json")
 
 
 @DBOS.step(name=APPROVED_STEP)
@@ -477,7 +481,11 @@ async def mark_approved(series_id: str, message: JsonObject) -> JsonObject:
     record = await require_series(store, SeriesId(series_id))
     if record.status is SeriesStatus.AWAITING_APPROVAL:
         change = SeriesChange(
-            status=SeriesStatus.RUNNING, approved_by=approval.approved_by, approved_at=now, cap_usd=approval.cap_usd
+            status=SeriesStatus.RUNNING,
+            approved_by=approval.approved_by,
+            approved_at=now,
+            cap_usd=approval.cap_usd,
+            pauses=tuple(span.ended(now) for span in record.pauses),
         )
         await store.update(record.series_id, change)
     return StatusMark(status=SeriesStatus.RUNNING, at=now).model_dump(mode="json")

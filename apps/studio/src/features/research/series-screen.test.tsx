@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it, vi } from "vitest"
-import type { ApiSeriesCaseRow, ApiSeriesDetail } from "@/domain"
+import type { ApiSeriesCaseRow, ApiSeriesDetail, ApiSeriesEta } from "@/domain"
 import { API_BASE } from "@/api/client"
 import type { WaitsInlineProps } from "@/features/review"
 import { attemptsOf, detailOf, initialSeries, RESEARCH_SERIES } from "@/mocks/data/research"
@@ -234,6 +234,47 @@ describe("SeriesScreen header and verdict", () => {
     expect(await screen.findByText("RUNNING")).toBeTruthy()
     expect(screen.queryByRole("button", { name: "Approve spend" })).toBeNull()
     expect((await region("Verdict")).textContent).toContain("spend approved by local")
+  })
+})
+
+const QUIET_ETA: Omit<ApiSeriesEta, "state"> = { attempts_per_minute: null, remaining_seconds: null, finish_at: null, window_seconds: 0 }
+
+const MEASURED_ETA: ApiSeriesEta = { state: "running", attempts_per_minute: 12, remaining_seconds: 300, finish_at: "2026-09-18T03:05:00Z", window_seconds: 240 }
+
+const serveEta = (key: keyof typeof RESEARCH_SERIES, eta: ApiSeriesEta | null): void => {
+  const state = initialSeries().find((series) => series.id === RESEARCH_SERIES[key])
+  if (state === undefined) throw new Error(`missing ${key} series fixture`)
+  const series = { ...detailOf(state), eta }
+  server.use(http.get(`${API_BASE}/series/:seriesId`, () => HttpResponse.json({ series, cases: null, hidden_cases: 0 })))
+}
+
+describe("SeriesScreen estimate to finish", () => {
+  it("tells the time left, the finish time and the speed next to the attempts", async () => {
+    serveEta("escalationRunning", MEASURED_ETA)
+    await renderRoute(seriesPath("escalationRunning"))
+    expect(await screen.findByText("20 of 54 attempts")).toBeTruthy()
+    expect(screen.getByText("~5 min left · finishes ~03:05 · 12 attempts/min")).toBeTruthy()
+  })
+
+  it("says it is estimating until enough attempts have finished", async () => {
+    serveEta("escalationRunning", { state: "estimating", ...QUIET_ETA })
+    await renderRoute(seriesPath("escalationRunning"))
+    expect(await screen.findByText("estimating…")).toBeTruthy()
+    expect(screen.queryByText(/min left/)).toBeNull()
+  })
+
+  it("shows a paused series without a timer", async () => {
+    serveEta("overpromiseAwaiting", { state: "paused", ...QUIET_ETA })
+    await renderRoute(seriesPath("overpromiseAwaiting"))
+    expect(await screen.findByText("AWAITING APPROVAL")).toBeTruthy()
+    expect(screen.getByText("paused")).toBeTruthy()
+    expect(screen.queryByText(/min left|finishes ~/)).toBeNull()
+  })
+
+  it("shows no estimate once the series has finished", async () => {
+    await renderRoute(seriesPath("noninferiorHoldout"))
+    expect(await screen.findByText("36 of 36 attempts")).toBeTruthy()
+    expect(screen.queryByText(/estimating|left ·|attempts\/min/)).toBeNull()
   })
 })
 

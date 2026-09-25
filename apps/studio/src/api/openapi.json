@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AQVEN Studio API",
-    "version": "0.0.2"
+    "version": "0.0.3"
   },
   "paths": {
     "/api/ready": {
@@ -19562,6 +19562,14 @@
         ],
         "title": "Estimate"
       },
+      "EtaState": {
+        "type": "string",
+        "enum": [
+          "estimating",
+          "running",
+          "paused"
+        ]
+      },
       "EvaluatorOptionView": {
         "properties": {
           "use": {
@@ -31357,6 +31365,16 @@
               }
             ]
           },
+          "eta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesEta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "question_detail": {
             "$ref": "#/components/schemas/QuestionView"
           },
@@ -31471,6 +31489,62 @@
           "error"
         ],
         "title": "SeriesDetailView"
+      },
+      "SeriesEta": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/EtaState"
+          },
+          "attempts_per_minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempts Per Minute"
+          },
+          "remaining_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Seconds"
+          },
+          "finish_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish At"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Window Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "attempts_per_minute",
+          "remaining_seconds",
+          "finish_at",
+          "window_seconds"
+        ],
+        "title": "SeriesEta"
       },
       "SeriesEvent": {
         "oneOf": [
@@ -31951,6 +32025,16 @@
               }
             ]
           },
+          "eta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesEta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "launch": {
             "$ref": "#/components/schemas/LaunchPlan"
           }
@@ -32258,6 +32342,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SeriesPause"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesEta"
               },
               {
                 "type": "null"

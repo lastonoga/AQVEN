@@ -464,6 +464,16 @@
     "progress": "{done} of {total} attempts",
     "spend": "{usd} of {cap} cap",
     "progressLabel": "Attempts",
+    "eta": {
+      "estimating": "estimating…",
+      "paused": "paused",
+      "underMinuteLeft": "under a minute left",
+      "minutesLeft": "~{minutes} min left",
+      "hoursLeft": "~{hours} h left",
+      "hoursMinutesLeft": "~{hours} h {minutes} min left",
+      "finishes": "finishes ~{time}",
+      "speed": "{rate} attempts/min"
+    },
     "spendLabel": "Spend",
     "spendLowerBound": "Lower bound: {count, plural, one {# attempt} other {# attempts}} ran on a model without a known price",
     "stop": "Stop",

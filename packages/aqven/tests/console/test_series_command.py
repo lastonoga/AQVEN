@@ -2,8 +2,9 @@ import io
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 from typing import Final
 
@@ -28,6 +29,7 @@ from aqven.console.series import (
     started_line,
     started_lines,
     studio_link,
+    time_left,
 )
 from aqven.series import (
     ApprovalReason,
@@ -50,6 +52,7 @@ from aqven.series import (
     VariantAggregates,
     VariantRole,
 )
+from aqven.series.views import EtaState, SeriesEta
 from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VariantId, VerdictReason, VerdictState
 
 SERIES: Final = SeriesId("01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c")
@@ -131,6 +134,7 @@ class FakeServer:
     states: Iterator[tuple[SeriesStatus, int]]
     start_error: tuple[str, int] | None = None
     requests: list[httpx2.Request] = field(default_factory=list[httpx2.Request])
+    eta: SeriesEta | None = None
 
     def __call__(self, request: httpx2.Request) -> httpx2.Response:
         self.requests.append(request)
@@ -140,7 +144,9 @@ class FakeServer:
             return httpx2.Response(201, json=started(self.first).model_dump(mode="json"))
         status, done = next(self.states)
         include = request.url.params.get("include_cases") == "true"
-        result = SeriesGetResult(series=detail(status, done), cases=() if include else None, hidden_cases=0)
+        eta = self.eta if status is SeriesStatus.RUNNING else None
+        shown = detail(status, done).model_copy(update={"eta": eta})
+        result = SeriesGetResult(series=shown, cases=() if include else None, hidden_cases=0)
         return httpx2.Response(200, json=result.model_dump(mode="json"))
 
 
@@ -152,7 +158,8 @@ async def drive(server: FakeServer, as_json: bool = False) -> tuple[int, str, st
     out, err = io.StringIO(), io.StringIO()
     request = SeriesCommandRequest(root=Path("/tmp/project"), experiment_id="reply_quality", as_json=as_json)
     async with httpx2.AsyncClient(transport=httpx2.MockTransport(server)) as http:
-        runner = SeriesRunner(AqvenClient(BASE, http=http), lambda series: studio_link(record(), series), out, err)
+        link = partial(studio_link, record())
+        runner = SeriesRunner(AqvenClient(BASE, http=http), link, out, err, zone=UTC)
         code = await runner.run(request)
     return code, out.getvalue(), err.getvalue()
 
@@ -411,3 +418,53 @@ def test_the_progress_line_calls_a_spend_with_unpriced_attempts_a_lower_bound() 
     assert progress_line(bounded) == (
         "4/16 attempts, at least $0.20 (3 attempts on a model without a known price) of $3.00, status running"
     )
+
+
+def eta(state: EtaState, seconds: int | None = None, rate: float | None = None) -> SeriesEta:
+    return SeriesEta(
+        state=state,
+        attempts_per_minute=rate,
+        remaining_seconds=seconds,
+        finish_at=None if seconds is None else MOMENT + timedelta(seconds=seconds),
+        window_seconds=0 if seconds is None else 240,
+    )
+
+
+def test_the_progress_line_tells_the_time_left_the_finish_and_the_speed() -> None:
+    running = detail(SeriesStatus.RUNNING, 6)
+
+    assert progress_line(running.model_copy(update={"eta": eta("running", 300, 12.5)}), UTC) == (
+        "6/16 attempts, $0.30 of $3.00, status running, ~5 min left, finishes ~10:05, 12.5 attempts/min"
+    )
+    assert progress_line(running.model_copy(update={"eta": eta("estimating")}), UTC) == (
+        "6/16 attempts, $0.30 of $3.00, status running, estimating the time left"
+    )
+    assert progress_line(running.model_copy(update={"eta": eta("paused")}), UTC).endswith("paused, no time estimate")
+    assert progress_line(running, UTC) == "6/16 attempts, $0.30 of $3.00, status running"
+
+
+@pytest.mark.parametrize(
+    ("seconds", "expected"),
+    [
+        (0, "under a minute left"),
+        (59, "under a minute left"),
+        (61, "~2 min left"),
+        (3600, "~1 h left"),
+        (5_430, "~1 h 31 min left"),
+    ],
+)
+def test_the_time_left_rounds_up_to_whole_minutes(seconds: int, expected: str) -> None:
+    assert time_left(seconds) == expected
+
+
+@pytest.mark.asyncio
+async def test_waiting_prints_the_estimate_and_json_carries_it() -> None:
+    states = iter(((SeriesStatus.RUNNING, 6), (SeriesStatus.DONE, 16), (SeriesStatus.DONE, 16)))
+    server = FakeServer(SeriesStatus.RUNNING, states, eta=eta("running", 90, 4.0))
+
+    code, out, err = await drive(server, as_json=True)
+
+    [line] = out.splitlines()
+    assert code == 0
+    assert "6/16 attempts, $0.30 of $3.00, status running, ~2 min left, finishes ~10:01, 4 attempts/min" in err
+    assert json.loads(line)["series"]["eta"] is None

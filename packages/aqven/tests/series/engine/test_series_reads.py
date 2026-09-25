@@ -7,7 +7,7 @@ from series_fixture import ABOVE_PROJECT_CAP, write_project
 from series_harness import ScriptedModels, SeriesHarness, series_engine, settled
 
 from aqven.runtime.runs import Page
-from aqven.series.model import SeriesId, SeriesStatus
+from aqven.series.model import SeriesId, SeriesRecord, SeriesStatus
 from aqven.series.views import (
     SeriesCasesQuery,
     SeriesEvent,
@@ -29,23 +29,28 @@ SOLO: Final = ExperimentId("triage_solo")
 WAIT_SECONDS: Final = 30
 
 
-async def waited(harness: SeriesHarness) -> tuple[SeriesGetResult, SeriesGetResult]:
+async def waited(harness: SeriesHarness) -> tuple[SeriesGetResult, SeriesGetResult, SeriesRecord]:
     started = await harness.service.start(SeriesStartRequest(experiment_id=SOLO, cap_usd=ABOVE_PROJECT_CAP), AGENT)
     pending = await harness.service.get(SeriesGetRequest(series_id=started.series_id, wait_seconds=WAIT_SECONDS))
     await harness.service.approve(started.series_id, HUMAN)
     done = await harness.service.get(SeriesGetRequest(series_id=started.series_id, wait_seconds=WAIT_SECONDS))
-    return pending, done
+    record = await harness.services.store.series(started.series_id)
+    assert record is not None
+    return pending, done, record
 
 
 def test_waiting_returns_at_once_for_approval_and_when_the_series_is_done(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
-        pending, done = asyncio.run(waited(harness))
+        pending, done, record = asyncio.run(waited(harness))
 
     assert pending.series.status is SeriesStatus.AWAITING_APPROVAL
+    assert pending.series.eta is not None and pending.series.eta.state == "paused"
     assert done.series.status is SeriesStatus.DONE
     assert done.series.progress.done == 8
+    assert done.series.eta is None
+    assert [(span.started_at, span.ended_at) for span in record.pauses] == [(record.created_at, record.approved_at)]
 
 
 async def followed(harness: SeriesHarness) -> tuple[list[SeriesEvent], list[SeriesEvent]]:

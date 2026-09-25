@@ -52,7 +52,11 @@ flow is the order to use them in, round after round.
   holds the answer until the series is `done`, `cancelled`, `failed`, `awaiting_approval` or
   `waiting_human`, or until the time runs out, and then returns the current snapshot. Call it again
   until the status settles. The snapshot carries progress, spend against the cap, the per-variant
-  matrix with 95% intervals, and the verdict. `spend.unpriced_attempts` counts the attempts that ran on
+  matrix with 95% intervals, and the verdict. `eta` tells when an active series should finish, from the
+  attempts finished per minute over its last 5 minutes of running time: `state` is `estimating` until
+  3 attempts finished after the first one, `running` with `attempts_per_minute`, `remaining_seconds` and
+  `finish_at`, and `paused` while it awaits approval or a person. It is `null` once the series ends. Pass
+  the time left on to the user as an estimate. `spend.unpriced_attempts` counts the attempts that ran on
   a model without a known price: when it is above 0, `spend.usd` is a lower bound, so say so. A series
   is `failed` only when every attempt hit an infrastructure error, and then `error` names the first one.
 - **Quote `verdict.text` as it is once the status is `done`.** The server writes that sentence from
@@ -152,7 +156,8 @@ never start, the status becomes `cancelled`, and the verdict is `invalid` with t
 second `series_cancel` on the same series fails with `SERIES_STATE_CONFLICT`.
 
 The same series from a terminal is `aqven series reply_overpromise_risk --cases 2 --repeats 2`.
-It starts the project server if it isn't running, then waits and prints the progress and the verdict.
+It starts the project server if it isn't running, then waits and prints the progress with the time left, and the
+verdict.
 It exits with 0 when the series is done, whatever the verdict, and with 1 when it was cancelled or failed.
 It exits with 3, printing a Studio link, when the series waits for approval or paused near its cap, and with 4 when an attempt
 waits for a person. `--cap` sets the series' own cap, and `--json` prints the final state as one JSON

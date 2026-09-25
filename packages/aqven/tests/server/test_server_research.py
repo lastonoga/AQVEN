@@ -1,7 +1,7 @@
 import json
 import os
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
@@ -16,6 +16,7 @@ from aqven.runtime.address import node_address
 from aqven.runtime.values import InlineValue
 from aqven.series.model import SeriesStatus
 from aqven.series.split import splits_of
+from aqven.series.views import SeriesEta
 from aqven.server import ServerOptions, create_app
 from aqven.spec import DatasetId, SeriesSplit
 
@@ -521,6 +522,31 @@ def test_series_get_passes_the_wait_and_the_case_rows(research_client: TestClien
     assert (series_jobs.gets[0].wait_seconds, series_jobs.gets[0].include_cases) == (5, True)
     assert too_long.status_code == 422
     assert research_client.get("/api/series/missing").status_code == 404
+
+
+def test_the_series_view_carries_the_estimate_to_finish(
+    research_client: TestClient, series_jobs: FakeSeriesJobs
+) -> None:
+    finish = MOMENT + timedelta(minutes=5)
+    eta = SeriesEta(
+        state="running", attempts_per_minute=12.5, remaining_seconds=300, finish_at=finish, window_seconds=240
+    )
+    series_jobs.views[SERIES_ID] = series_jobs.views[SERIES_ID].model_copy(update={"eta": eta})
+
+    body = research_client.get(f"/api/series/{SERIES_ID}").json()
+    listed = research_client.get("/api/series").json()
+
+    assert body["series"]["eta"] == {
+        "state": "running",
+        "attempts_per_minute": 12.5,
+        "remaining_seconds": 300,
+        "finish_at": "2026-09-24T10:05:00Z",
+        "window_seconds": 240,
+    }
+    assert {row["series_id"]: row["eta"] for row in listed["items"]} == {
+        SERIES_ID: body["series"]["eta"],
+        DONE_ID: None,
+    }
 
 
 def test_series_list_and_cases(research_client: TestClient, series_jobs: FakeSeriesJobs) -> None:

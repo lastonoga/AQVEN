@@ -11,6 +11,7 @@ import type {
   ApiQuestion,
   ApiSeriesCaseRow,
   ApiSeriesDetail,
+  ApiSeriesEta,
   ApiSeriesOrigin,
   ApiSeriesSummary,
   ApiSeriesVerdict,
@@ -546,8 +547,30 @@ const projectFlowOf = (experiment: ApiExperimentDetail | null): string | null =>
 
 const flowOf = (series: SeriesSeed): string | null => series.look?.flow ?? projectFlowOf(experimentOf(series.experiment))
 
+const ENDED_STATUSES: ReadonlySet<SeriesStatus> = new Set<SeriesStatus>(["done", "cancelled", "failed"])
+const PAUSED_STATUSES: ReadonlySet<SeriesStatus> = new Set<SeriesStatus>(["awaiting_approval", "waiting_human"])
+const ETA_SETTLING_ATTEMPTS = 4
+const MOCK_ATTEMPTS_PER_MINUTE = 6
+const SECONDS_PER_MINUTE = 60
+const MS_PER_SECOND = 1000
+const MOCK_WINDOW_SECONDS = 300
+
+const quietEta = (state: ApiSeriesEta["state"]): ApiSeriesEta => ({ state, attempts_per_minute: null, remaining_seconds: null, finish_at: null, window_seconds: 0 })
+
+const etaOf = (series: SeriesState, waits: number): ApiSeriesEta | null => {
+  if (ENDED_STATUSES.has(series.status)) return null
+  if (PAUSED_STATUSES.has(series.status) || waits > 0) return quietEta("paused")
+  const done = doneOf(series)
+  if (done < ETA_SETTLING_ATTEMPTS) return quietEta("estimating")
+  const remaining = Math.max(0, totalOf(series) - done)
+  const seconds = Math.ceil((remaining * SECONDS_PER_MINUTE) / MOCK_ATTEMPTS_PER_MINUTE)
+  const finishAt = new Date(Date.now() + seconds * MS_PER_SECOND).toISOString()
+  return { state: "running", attempts_per_minute: MOCK_ATTEMPTS_PER_MINUTE, remaining_seconds: seconds, finish_at: finishAt, window_seconds: MOCK_WINDOW_SECONDS }
+}
+
 export const summaryOf = (series: SeriesState): ApiSeriesSummary => {
   const attempts = attemptsOf(series)
+  const waits = attempts.filter((attempt) => attempt.outcome === WAITING_OUTCOME).length
   return {
     series_id: series.id,
     origin: originOf(series),
@@ -562,10 +585,11 @@ export const summaryOf = (series: SeriesState): ApiSeriesSummary => {
     progress: { done: doneOf(series), total: totalOf(series) },
     spend: { usd: money(sumUsd(attempts)), cap_usd: CAP_USD, unpriced_attempts: series.unpriced },
     verdict: series.verdict,
-    waits: attempts.filter((attempt) => attempt.outcome === WAITING_OUTCOME).length,
+    waits,
     started_at: series.startedAt,
     finished_at: series.finishedAt,
     pause: series.status === "awaiting_approval" ? START_PAUSE : null,
+    eta: etaOf(series, waits),
   }
 }
 

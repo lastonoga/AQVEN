@@ -3797,6 +3797,8 @@ export interface components {
             attempts: number;
             degenerate?: components["schemas"]["DegenerateReason"] | null;
         };
+        /** @enum {string} */
+        EtaState: "estimating" | "running" | "paused";
         /** EvaluatorOptionView */
         EvaluatorOptionView: {
             /** Use */
@@ -7332,6 +7334,7 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
             pause?: components["schemas"]["SeriesPause"] | null;
+            eta?: components["schemas"]["SeriesEta"] | null;
             question_detail: components["schemas"]["QuestionView"];
             /** Checks */
             checks: components["schemas"]["CheckView"][];
@@ -7353,6 +7356,18 @@ export interface components {
             finding_path: string | null;
             /** Error */
             error: string | null;
+        };
+        /** SeriesEta */
+        SeriesEta: {
+            state: components["schemas"]["EtaState"];
+            /** Attempts Per Minute */
+            attempts_per_minute: number | null;
+            /** Remaining Seconds */
+            remaining_seconds: number | null;
+            /** Finish At */
+            finish_at: string | null;
+            /** Window Seconds */
+            window_seconds: number;
         };
         SeriesEvent: components["schemas"]["SeriesStatusEvent"] | components["schemas"]["AttemptFinishedEvent"] | components["schemas"]["SeriesFinishedEvent"];
         /** SeriesFinishedEvent */
@@ -7500,6 +7515,7 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
             pause?: components["schemas"]["SeriesPause"] | null;
+            eta?: components["schemas"]["SeriesEta"] | null;
             launch: components["schemas"]["LaunchPlan"];
         };
         /** SeriesStartedEvent */
@@ -7607,6 +7623,7 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
             pause?: components["schemas"]["SeriesPause"] | null;
+            eta?: components["schemas"]["SeriesEta"] | null;
         };
         /** SeriesVerdict */
         SeriesVerdict: {
@@ -8400,6 +8417,7 @@ export type SchemaEnumType = components['schemas']['EnumType'];
 export type SchemaEnumValue = components['schemas']['EnumValue'];
 export type SchemaEscalateOnTimeout = components['schemas']['EscalateOnTimeout'];
 export type SchemaEstimate = components['schemas']['Estimate'];
+export type SchemaEtaState = components['schemas']['EtaState'];
 export type SchemaEvaluatorOptionView = components['schemas']['EvaluatorOptionView'];
 export type SchemaEvaluatorParamView = components['schemas']['EvaluatorParamView'];
 export type SchemaEventCatalog = components['schemas']['EventCatalog'];
@@ -8678,6 +8696,7 @@ export type SchemaSeriesApproveBody = components['schemas']['SeriesApproveBody']
 export type SchemaSeriesCancelBody = components['schemas']['SeriesCancelBody'];
 export type SchemaSeriesCaseRow = components['schemas']['SeriesCaseRow'];
 export type SchemaSeriesDetailView = components['schemas']['SeriesDetailView'];
+export type SchemaSeriesEta = components['schemas']['SeriesEta'];
 export type SchemaSeriesEvent = components['schemas']['SeriesEvent'];
 export type SchemaSeriesFinishedEvent = components['schemas']['SeriesFinishedEvent'];
 export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];

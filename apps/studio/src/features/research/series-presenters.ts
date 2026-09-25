@@ -1,5 +1,7 @@
 import { type AttemptOutcome, type CheckId, type CheckSource, type ExperimentCheck, type SeriesAttempt, type SeriesCaseFilter, type SeriesCaseRow, type SeriesDetail, type SeriesSpend, type SeriesStatus, type SeriesSummary, type VariantId, type VariantTally } from "@/domain"
+import type { DateTimeFormatOptions } from "use-intl"
 import type { Tone } from "@/components/studio"
+import { STARTED_FORMAT } from "./presenters"
 
 export type VerdictGap = "look" | "pending" | "failed" | "none"
 
@@ -119,3 +121,31 @@ export const checkHint = (checks: readonly ExperimentCheck[], id: CheckId, copy:
     .filter((part) => part !== null)
     .join(HINT_JOIN)
 }
+
+export type LeftKey = "underMinuteLeft" | "minutesLeft" | "hoursLeft" | "hoursMinutesLeft"
+
+export type TimeLeft = { readonly key: LeftKey; readonly hours: number; readonly minutes: number }
+
+const SECONDS_PER_MINUTE = 60
+const MINUTES_PER_HOUR = 60
+const CLOCK_ONLY_BELOW_SECONDS = 12 * 60 * 60
+const WHOLE_RATE_FROM = 10
+
+export const FINISH_CLOCK_FORMAT: DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+
+const leftKey = (hours: number, minutes: number): LeftKey => {
+  if (hours > 0) return minutes === 0 ? "hoursLeft" : "hoursMinutesLeft"
+  return minutes === 0 ? "underMinuteLeft" : "minutesLeft"
+}
+
+export const timeLeft = (remainingSeconds: number): TimeLeft => {
+  const whole = remainingSeconds < SECONDS_PER_MINUTE ? 0 : Math.ceil(remainingSeconds / SECONDS_PER_MINUTE)
+  const hours = Math.floor(whole / MINUTES_PER_HOUR)
+  const minutes = whole % MINUTES_PER_HOUR
+  return { key: leftKey(hours, minutes), hours, minutes }
+}
+
+export const finishFormat = (remainingSeconds: number): DateTimeFormatOptions =>
+  remainingSeconds < CLOCK_ONLY_BELOW_SECONDS ? FINISH_CLOCK_FORMAT : STARTED_FORMAT
+
+export const rateDigits = (perMinute: number): number => (perMinute < WHOLE_RATE_FROM ? 1 : 0)
