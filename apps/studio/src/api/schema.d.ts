@@ -1416,6 +1416,8 @@ export interface components {
             description: string;
             /** File */
             file: string;
+            /** Files */
+            files: components["schemas"]["NodeFileView"][];
         };
         /** ApiError */
         ApiError: {
@@ -3769,6 +3771,10 @@ export interface components {
             spent_usd: string;
             question_detail: components["schemas"]["QuestionView"];
             varies: components["schemas"]["FactorView"] | null;
+            /** Slots */
+            slots: components["schemas"]["FactorSlotView"][];
+            /** Agents */
+            agents: components["schemas"]["FactorAgentView"][];
             /** Flows */
             flows: components["schemas"]["LocalFlowView"][];
             /** Alternatives */
@@ -3869,6 +3875,16 @@ export interface components {
             /** Spent Usd */
             spent_usd: string;
         };
+        /** FactorAgentView */
+        FactorAgentView: {
+            /** Agent Id */
+            agent_id: string;
+            /** File */
+            file: string;
+            spec: components["schemas"]["AgentSpec"];
+            /** Instructions */
+            instructions: string | null;
+        };
         /**
          * FactorKind
          * @description The kind of edit an experiment factor makes on each of its nodes.
@@ -3879,6 +3895,16 @@ export interface components {
          * @enum {string}
          */
         FactorKind: "agent" | "prompt" | "use" | "flow";
+        /** FactorSlotView */
+        FactorSlotView: {
+            /** Node Id */
+            node_id: string;
+            kind: components["schemas"]["NodeKind"];
+            /** Written */
+            written: string | null;
+            /** Files */
+            files: components["schemas"]["NodeFileView"][];
+        };
         /** FactorView */
         FactorView: {
             what: components["schemas"]["FactorKind"];
@@ -5353,6 +5379,14 @@ export interface components {
              * @default []
              */
             recovered_items: components["schemas"]["ItemRecovery"][];
+        };
+        /** @enum {string} */
+        NodeFileRole: "node" | "code" | "inference" | "prompt";
+        /** NodeFileView */
+        NodeFileView: {
+            role: components["schemas"]["NodeFileRole"];
+            /** Path */
+            path: string;
         };
         /** NodeFinished */
         NodeFinished: {
@@ -7864,7 +7898,9 @@ export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
 export type SchemaExperimentPlan = components['schemas']['ExperimentPlan'];
 export type SchemaExperimentPromptView = components['schemas']['ExperimentPromptView'];
 export type SchemaExperimentSummaryView = components['schemas']['ExperimentSummaryView'];
+export type SchemaFactorAgentView = components['schemas']['FactorAgentView'];
 export type SchemaFactorKind = components['schemas']['FactorKind'];
+export type SchemaFactorSlotView = components['schemas']['FactorSlotView'];
 export type SchemaFactorView = components['schemas']['FactorView'];
 export type SchemaFailOnTimeout = components['schemas']['FailOnTimeout'];
 export type SchemaFamiliesDistinct = components['schemas']['FamiliesDistinct'];
@@ -7975,6 +8011,8 @@ export type SchemaNodeDetail = components['schemas']['NodeDetail'];
 export type SchemaNodeDisplayPreview = components['schemas']['NodeDisplayPreview'];
 export type SchemaNodeDisplaySource = components['schemas']['NodeDisplaySource'];
 export type SchemaNodeExecution = components['schemas']['NodeExecution'];
+export type SchemaNodeFileRole = components['schemas']['NodeFileRole'];
+export type SchemaNodeFileView = components['schemas']['NodeFileView'];
 export type SchemaNodeFinished = components['schemas']['NodeFinished'];
 export type SchemaNodeKind = components['schemas']['NodeKind'];
 export type SchemaNodeOutputDelta = components['schemas']['NodeOutputDelta'];

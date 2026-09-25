@@ -164,6 +164,23 @@ writeFileSync(`${OUT}/experiments.ts`, [
   '',
 ].join('\n'))
 
+const raw = async (path) => {
+  const response = await fetch(`${BASE}/api/raw/${path}`, { headers: { Authorization: `Bearer ${TOKEN}` } })
+  if (!response.ok) throw new Error(`raw ${path} -> ${response.status}`)
+  return await response.text()
+}
+const experimentFiles = [...new Set(experiments.flatMap((experiment) => [
+  ...experiment.slots.flatMap((slot) => slot.files.map((file) => file.path)),
+  ...experiment.alternatives.flatMap((alternative) => alternative.files.map((file) => file.path)),
+  ...experiment.prompts.map((prompt) => prompt.file),
+  ...experiment.agents.map((agent) => agent.file),
+]))].sort()
+const fileTexts = Object.fromEntries(await Promise.all(experimentFiles.map(async (path) => [path, await raw(path)])))
+writeFileSync(`${OUT}/files.ts`, [
+  `export const liveFileTexts: Readonly<Record<string, string>> = ${lit(fileTexts)}`,
+  '',
+].join('\n'))
+
 const notFound = await failing('/api/flows/no_such_flow')
 const conflict = await failing(`/api/runs/${COMPLETED}/resume`, {
   method: 'POST',
