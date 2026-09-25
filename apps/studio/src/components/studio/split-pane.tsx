@@ -2,6 +2,7 @@ import { Fragment, useRef, type ReactNode } from "react"
 import { cn } from "cn"
 import type { Layout, LayoutChangedMeta } from "react-resizable-panels"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { readViewerItem, writeViewerItem } from "@/lib/viewer-storage"
 
 export type SplitHandle = "ghost" | "line" | "bar"
 
@@ -30,29 +31,13 @@ const HANDLE_CLASS: Readonly<Record<SplitHandle, string>> = {
   bar: "h-[5px] w-full bg-border hover:bg-ring data-[separator=active]:bg-ring",
 }
 
-const readItem = (key: string): string | null => {
-  try {
-    return window.localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-const writeItem = (key: string, value: string): void => {
-  try {
-    window.localStorage.setItem(key, value)
-  } catch {
-    return
-  }
-}
-
 const PIXEL_KEY_PREFIX = "split-pane"
 
 const pixelKey = (groupId: string, panelId: string): string => [PIXEL_KEY_PREFIX, groupId, panelId].join(":")
 
 const storedPixels = (groupId: string, panel: SplitPanel): number | undefined => {
   if (panel.fixed !== true) return undefined
-  const raw = readItem(pixelKey(groupId, panel.id))
+  const raw = readViewerItem(pixelKey(groupId, panel.id))
   const value = Number(raw)
   return raw === null || !Number.isFinite(value) ? undefined : value
 }
@@ -67,7 +52,7 @@ export function SplitPane({ id, orientation, panels, handle = "line", handleClas
     fixedIds.forEach((panelId) => {
       const size = pixels.current.get(panelId)
       if (size === undefined) return
-      writeItem(pixelKey(id, panelId), String(Math.round(size)))
+      writeViewerItem(pixelKey(id, panelId), String(Math.round(size)))
     })
   }
   return (

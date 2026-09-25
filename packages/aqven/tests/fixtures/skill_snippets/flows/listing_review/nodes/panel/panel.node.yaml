@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "parallel"
+description: "Three models from different families decide on the listing independently"
+body:
+  gemini: "decide"
+  qwen: "decide_qwen"
+  mistral: "decide_mistral"
+join:
+  use: "quorum"
+  with:
+    min_ok: 2
+    on_error: "skip"
+out:
+- name: "votes"
+  type: "Decision[]"
+  description: "Decisions of the members who answered before the quorum closed"
+  maxItems: 3
+  from: "$ok[*].decision"

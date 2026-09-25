@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "The judge panel picks a grounded winner, one whose every quote appears in the case's knowledge base chunks, in more than 90% of attempts"
+failure_mode: "panel_wrong_winner"
+subject:
+  flow: "judge_panel"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "current"
+checks:
+- id: "grounded"
+  kind: "binary"
+  run: "@root.experiments.panel_grounding.checks:winner_grounded"
+question:
+  kind: "threshold"
+  metric: "grounded"
+  variant: "current"
+  above: 0.9
+  margin: 0.05
+plan:
+  cases: 8
+  repeats: 3

@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "switch"
+description: "Writes the seller message by decision: a fix list from its own flow, fixed text otherwise"
+on: "$tally.out.decision"
+cases:
+  publish:
+    bind:
+    - name: "message"
+      value: "Your listing is live."
+  fix:
+    node: "explain"
+    bind:
+    - name: "message"
+      from: "$explain.out.message"
+  reject:
+    bind:
+    - name: "message"
+      value: "Your listing breaks the marketplace rules and will not go live."
+out:
+- name: "message"
+  type: "Text"
+  description: "The message the seller receives"
+  maxLength: 600

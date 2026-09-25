@@ -1927,6 +1927,8 @@ def test_cli_command_table_is_complete() -> None:
         "dev",
         "mcp",
         "series",
+        "skills",
+        "hook",
         *PENDING,
     }
 

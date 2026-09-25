@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "The verdict on one aspect of a listing"
+fields:
+- name: "aspect"
+  type: "Aspect"
+  description: "The aspect that was checked"
+- name: "passed"
+  type: "Bool"
+  description: "True when the listing is fine on this aspect"
+- name: "note"
+  type: "Text"
+  description: "What the photos and the text show about this aspect"
+  maxLength: 300

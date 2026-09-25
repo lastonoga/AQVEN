@@ -1,0 +1,39 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Writing the fix list as a checklist costs at most half as much per right decision and loses at most 5 points of right decisions"
+failure_mode: "wrong_decision"
+subject:
+  flow: "listing_review"
+varies:
+  what: "flow"
+  nodes:
+  - "explain"
+cases:
+  dataset: "listing_cases"
+  tags:
+    label: "fix"
+variants:
+- id: "prose"
+- id: "checklist"
+  nodes:
+    explain: "fix_list_short"
+checks:
+- id: "decision_right"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "decision"
+question:
+  kind: "noninferior"
+  baseline: "prose"
+  candidate: "checklist"
+  primary: "decision_right"
+  margin: 0.05
+  guardrails:
+  - metric: "cost_of_pass"
+    direction: "lower_is_better"
+    margin: 0.5
+    relative: true
+plan:
+  repeats: 3

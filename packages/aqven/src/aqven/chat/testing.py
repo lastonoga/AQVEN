@@ -1,6 +1,6 @@
 import asyncio
 from collections import deque
-from collections.abc import AsyncIterable, AsyncIterator, Sequence
+from collections.abc import AsyncIterable, AsyncIterator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -16,6 +16,7 @@ from claude_agent_sdk import (
 )
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
+from aqven.chat.agent_plugin import PLUGIN_SKILLS
 from aqven.runtime.address import JsonObject
 
 SCRIPTED_SESSION_ID: Final[str] = "scripted-session"
@@ -79,9 +80,15 @@ def interrupted_result(session_id: str = SCRIPTED_SESSION_ID) -> ResultMessage:
     )
 
 
+def context_usage(skills: Iterable[str] = PLUGIN_SKILLS) -> Mapping[str, object]:
+    return {"skills": {"skillFrontmatter": [{"name": name, "source": "plugin"} for name in skills]}}
+
+
 class ScriptedClaudeClient:
     def __init__(self, options: ClaudeAgentOptions, turns: Sequence[ScriptTurn]) -> None:
         self.options = options
+        self.usage: Mapping[str, object] = context_usage()
+        self.usage_reads = 0
         self.prompts: list[str] = []
         self.queued: list[QueuedPrompt] = []
         self.permissions: list[PermissionResult] = []
@@ -118,6 +125,10 @@ class ScriptedClaudeClient:
         self.disconnects += 1
         await self._stop_script()
         self._queue.put_nowait(None)
+
+    async def get_context_usage(self) -> Mapping[str, object]:
+        self.usage_reads += 1
+        return self.usage
 
     def push(self, message: Message | None) -> None:
         self._queue.put_nowait(message)

@@ -85,6 +85,14 @@ export default defineConfig({
                 { slug: "engine/field-constraints" },
                 { slug: "engine/dynamic-shape" },
                 { slug: "engine/display-templates" },
+                { slug: "engine/image-preparation" },
+              ],
+            },
+            {
+              label: "Examples",
+              items: [
+                { slug: "engine/snippets" },
+                { slug: "engine/lumen-patterns" },
               ],
             },
             {
@@ -186,6 +194,7 @@ export default defineConfig({
               label: "Connect",
               items: [
                 { slug: "integrations/model-providers" },
+                { slug: "integrations/openrouter-model-selection" },
                 { slug: "integrations/external-mcp-servers" },
                 { slug: "integrations/secrets-and-environment" },
               ],
@@ -213,12 +222,15 @@ export default defineConfig({
                 { slug: "concepts/five-dynamic-shape-cases" },
                 { slug: "concepts/what-happens-when-a-model-is-called" },
                 { slug: "concepts/media-has-real-limits-on-both-sides" },
+                { slug: "concepts/schema-state-space" },
+                { slug: "concepts/answer-refusal-and-unknown" },
               ],
             },
             {
               label: "Debugging and changing a project",
               items: [
                 { slug: "concepts/engineering-loop" },
+                { slug: "concepts/stage-exit-criteria" },
                 { slug: "concepts/finding-the-node-that-went-wrong" },
                 { slug: "concepts/two-ways-to-change-a-project" },
                 { slug: "concepts/designing-reliable-workflows" },
@@ -229,6 +241,12 @@ export default defineConfig({
               items: [
                 { slug: "concepts/experiments-series-and-findings" },
                 { slug: "concepts/how-a-series-decides" },
+                { slug: "concepts/hypothesis-categories" },
+                { slug: "concepts/literature-scan" },
+                { slug: "concepts/case-construction" },
+                { slug: "concepts/metrics-and-controls" },
+                { slug: "concepts/validity-gate" },
+                { slug: "concepts/research-journal" },
               ],
             },
           ],

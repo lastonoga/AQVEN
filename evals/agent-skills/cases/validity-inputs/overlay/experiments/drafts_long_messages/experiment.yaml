@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A reply draft answers what a long message actually asks for, not the side topic it opens with, in more than 80% of cases"
+failure_mode: "reply_quality"
+subject:
+  flow: "draft_on_message"
+cases:
+  dataset: "long_customer_messages"
+variants:
+- id: "gpt"
+checks:
+- id: "answers_the_request"
+  kind: "binary"
+  run: "@root.experiments.drafts_long_messages.checks:answers_the_request"
+question:
+  kind: "threshold"
+  metric: "answers_the_request"
+  variant: "gpt"
+  above: 0.8
+  margin: 0.05
+plan:
+  cases: 12
+  repeats: 3

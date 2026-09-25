@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "What the marketplace does with a listing"
+values:
+- value: "publish"
+  description: "The listing goes live as written"
+- value: "fix"
+  description: "The seller gets a list of fixes before the listing goes live"
+- value: "reject"
+  description: "The listing breaks the marketplace rules and never goes live"

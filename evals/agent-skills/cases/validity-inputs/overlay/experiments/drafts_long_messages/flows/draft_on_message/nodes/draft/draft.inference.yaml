@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "A reply draft to the customer's message as the customer wrote it"
+in:
+- name: "message"
+  type: "Text"
+  description: "Text of the customer case as the customer wrote it"
+  maxLength: 4000
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked; null when no product was identified"
+out:
+- name: "reply"
+  type: "ReplyDraft"
+  description: "The reply text and the quotes it relies on"

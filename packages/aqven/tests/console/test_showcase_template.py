@@ -22,6 +22,7 @@ TOKENS: Final = ("__package__", "__project__", "__aqven_requirement__", "__uv_so
 TEXT_SUFFIXES: Final = frozenset({".py", ".yaml", ".md", ".json", ".toml", ".example", ".gitignore"})
 COPY_IGNORED: Final = ("__pycache__", ".aqven", "cassettes", "*.pyc")
 MONOREPO_MARKERS: Final = ("corepack", "pnpm", "repository root")
+SKILL_COPIES: Final = ".agents"
 
 
 def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -71,7 +72,9 @@ def test_showcase_project_has_the_example_layout(created: Path) -> None:
         "AGENTS.md",
         "CLAUDE.md",
         ".claude/settings.json",
-        ".claude/hooks/aqven_check.py",
+        ".claude/skills/building-flows/SKILL.md",
+        ".agents/skills/.aqven-skills.json",
+        ".codex/config.toml",
         "pyproject.toml",
         "tests/conftest.py",
         "tests/support.py",
@@ -87,13 +90,18 @@ def test_showcase_project_has_the_example_layout(created: Path) -> None:
     )
 
     assert [path for path in expected if not (created / path).is_file()] == []
+    assert not (created / ".claude" / "hooks").exists()
     assert not (created / "tests" / "cassettes").exists()
     assert not (created / "tests" / "test_support_case.py").exists()
     assert (created / MODULE / GENERATED_TYPES).read_text(encoding="utf-8").splitlines()[0] == GENERATED_HEADER
 
 
 def test_showcase_project_keeps_no_template_tokens(created: Path) -> None:
-    written = [path for path in created.rglob("*") if path.is_file() and "__pycache__" not in path.parts]
+    written = [
+        path
+        for path in created.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and SKILL_COPIES not in path.parts
+    ]
     texts = [path for path in written if path.suffix in TEXT_SUFFIXES or path.name.startswith(".")]
 
     assert [path for path in written if path.suffix == TEMPLATE_SUFFIX] == []
@@ -105,6 +113,15 @@ def test_showcase_rules_carry_no_monorepo_commands(created: Path) -> None:
     rules = "\n".join((created / name).read_text(encoding="utf-8") for name in ("AGENTS.md", "CLAUDE.md"))
 
     assert [marker for marker in MONOREPO_MARKERS if marker in rules] == []
+
+
+def test_showcase_agent_files_are_in_sync_with_the_engine(created: Path) -> None:
+    status = run_python(created, "-m", "aqven", "skills", "status", MODULE)
+    settings = (created / ".claude" / "settings.json").read_text(encoding="utf-8")
+
+    assert status.returncode == 0, status.stdout + status.stderr
+    assert f"aqven hook reminders {MODULE}" in settings
+    assert (created / "AGENTS.md").read_text(encoding="utf-8").rstrip().splitlines()[-3] == "## Owner's rules"
 
 
 def test_showcase_project_renames_the_package_everywhere(created: Path) -> None:

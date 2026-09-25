@@ -80,6 +80,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `kind` | `'Experiment'` | Yes | `—` | — |
 | `description` | `string` | Yes | `—` | minLength=1 |
 | `failure_mode` | `string \| null` | No | `None` | — |
+| `archived` | `boolean` | No | `False` | — |
 | `subject` | `ExperimentSubject` | Yes | `—` | — |
 | `varies` | `ExperimentFactor \| null` | No | `None` | — |
 | `cases` | `CaseSelection` | Yes | `—` | — |

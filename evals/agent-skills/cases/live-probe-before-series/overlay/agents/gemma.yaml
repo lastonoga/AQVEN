@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Google Gemma candidate for the judge panel tie-break"
+model: "openrouter:google/gemma-3-27b-it"
+settings:
+  temperature: 0
+  max_tokens: 1500
+output:
+  mode: "tool"
+  strict: false

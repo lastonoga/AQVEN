@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Decides on the listing with the reader agent"
+agent: "reader"
+in:
+- name: "title"
+  from: "$prepare.out.title"
+- name: "photos_match"
+  from: "$match_photos.out.photos_match"
+- name: "findings"
+  from: "$aspects.out.findings"

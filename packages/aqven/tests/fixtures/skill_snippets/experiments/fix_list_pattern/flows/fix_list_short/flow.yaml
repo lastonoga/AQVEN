@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Writes the fixes as a short checklist, with the same input and output as fix_list"
+input: "FixRequest"
+output: "FixList"
+returns:
+- name: "message"
+  from: "$write_short.out.message"
+order:
+- "write_short"

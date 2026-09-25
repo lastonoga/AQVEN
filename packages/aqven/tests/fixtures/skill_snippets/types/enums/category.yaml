@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "What kind of item a listing sells"
+values:
+- value: "furniture"
+  description: "Chairs, tables, shelves and other furniture"
+- value: "electronics"
+  description: "Devices that run on mains power or batteries"
+- value: "clothing"
+  description: "Clothes, shoes and accessories"

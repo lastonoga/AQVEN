@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+from aqven.chat.agent_hooks import studio_agent_hooks
 from aqven.chat.approvals import ApprovalRegistry
 from aqven.chat.claude_cli import ClaudeLoginProbe, SubprocessCommandRunner, locate_claude_cli
 from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory, default_guard
@@ -165,7 +166,7 @@ def create_claude_chat(
                 cli_path=cli.path,
                 allowed_tools=allowed_tools,
             ),
-            guard=GuardChain(default_guard(), (ServerProcessGuard(server),)),
+            guard=GuardChain(default_guard(), (ServerProcessGuard(server),), studio_agent_hooks(project_root)),
         ),
         login=ClaudeLoginProbe(cli, SubprocessCommandRunner(partial(scrubbed_environment, project_root))),
         clock=utc_now,

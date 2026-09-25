@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Second opinion from another model family: Qwen3 VL through OpenRouter"
+model: "openrouter:qwen/qwen3-vl-30b-a3b-instruct"
+settings:
+  max_tokens: 2000
+  provider_options:
+    provider:
+      require_parameters: true
+      data_collection: "deny"
+output:
+  mode: "tool"

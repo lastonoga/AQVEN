@@ -1,0 +1,25 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Two identical runs of the review get the labelled decision right equally often: the spread between them is the noise floor for every comparison of review variants"
+subject:
+  flow: "listing_review"
+cases:
+  dataset: "listing_cases"
+variants:
+- id: "run_a"
+- id: "run_b"
+checks:
+- id: "decision_right"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "decision"
+question:
+  kind: "compare"
+  baseline: "run_a"
+  candidate: "run_b"
+  primary: "decision_right"
+  margin: 0
+plan:
+  repeats: 5

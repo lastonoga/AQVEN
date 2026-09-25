@@ -24,6 +24,7 @@ from openai_codex.models import JsonObject, Notification
 from pydantic import BaseModel, SecretStr
 
 from aqven.chat.codex_backend import CodexAgentBackend
+from aqven.chat.codex_runner import STEER_METHOD
 from aqven.chat.sqlite_journal import SqliteChatJournal
 from aqven.ports.chat import (
     ChatEvent,
@@ -94,6 +95,8 @@ class SteerableCodexClient(FakeCodexClient):
         return self._notifications.get(timeout=WAIT_SECONDS)
 
     def request[M: BaseModel](self, method: str, params: JsonObject | None, *, response_model: type[M]) -> M:
+        if method != STEER_METHOD:
+            return super().request(method, params, response_model=response_model)
         steer = dict(params or {})
         self.steers.append(steer)
         if self.refuse_steers:
