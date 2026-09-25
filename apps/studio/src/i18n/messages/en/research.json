@@ -179,11 +179,12 @@
       "goal": "Goal",
       "tableAria": "Variants of this experiment",
       "factor": {
-        "agent": "Varies: agent of {nodes}",
-        "prompt": "Varies: prompt of {nodes}",
-        "use": "Varies: implementation of {nodes}",
-        "flow": "Varies: flow called by {nodes}"
+        "agent": "Varies: agent of <nodes></nodes>",
+        "prompt": "Varies: prompt of <nodes></nodes>",
+        "use": "Varies: implementation of <nodes></nodes>",
+        "flow": "Varies: flow called by <nodes></nodes>"
       },
+      "slotAria": "Show {node} on the graph",
       "column": {
         "variant": "Variant",
         "role": "Role",
@@ -196,8 +197,45 @@
         "models": "Agents · models"
       },
       "asWritten": "as written",
-      "nodeValue": "{node}: {value}",
-      "noModel": "no agent",
+      "writtenValue": "as written: {value}",
+      "nodeValue": "{nodes}: {value}",
+      "nodeWritten": "{nodes} as written: {value}",
+      "nodeWrittenUnknown": "{nodes} as written",
+      "noModel": "—",
+      "openCanvas": "Open the canvas of flow {flow}",
+      "changes": {
+        "aria": "What changes",
+        "title": "What changes",
+        "hint": "Click a value in the table or a line below to see what the variant runs there.",
+        "value": {
+          "agent": "agent {value}",
+          "prompt": "prompt {value}",
+          "use": "node {value}"
+        },
+        "written": {
+          "agent": "agent {value} as written",
+          "prompt": "prompt of {value} as written",
+          "use": "node {value} as written"
+        },
+        "writtenUnknown": "as written",
+        "row": "{nodes}: {value}",
+        "block": "{variant} · {nodes}: {value}",
+        "prompt": "Prompt {name}",
+        "writtenPrompt": "As written · {nodes}",
+        "noPrompt": "No prompt file: the prompt is built by code or the inference is missing.",
+        "noFiles": "No files for this node.",
+        "role": {
+          "node": "Node",
+          "code": "Code",
+          "inference": "Inference",
+          "prompt": "Prompt"
+        },
+        "loading": "Loading {path}…",
+        "failed": "{path} could not be loaded: {reason}",
+        "showOnGraph": "Show {node} on the graph",
+        "agentFile": "Agent file",
+        "noAgent": "Agent {agent} is not in the project."
+      },
       "rule": {
         "aria": "Decision rule",
         "primary": "{metric}: difference {op, select, atLeast {≥} other {≤}} {bound}",

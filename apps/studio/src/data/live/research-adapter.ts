@@ -5,6 +5,9 @@ import type {
   ApiExperimentFlow,
   ApiExperimentPrompt,
   ApiFactor,
+  ApiFactorAgent,
+  ApiFactorSlot,
+  ApiNodeFile,
   ApiLocalFlow,
   ApiVariantChange,
   ApiSeriesAttempt,
@@ -44,7 +47,9 @@ import type {
   ExperimentSubject,
   ExperimentSummary,
   ExperimentVariant,
+  FactorAgent,
   FactorChange,
+  FactorSlot,
   Guardrail,
   LatestSeries,
   LaunchPlan,
@@ -53,6 +58,7 @@ import type {
   MetricCell,
   MetricColumn,
   MetricId,
+  NodeFile,
   NodeRange,
   QuestionKind,
   SeriesAttempt,
@@ -169,11 +175,23 @@ const localFlowOf = (flow: ApiLocalFlow): ExperimentFlow => ({
   steps: flow.steps.map((step) => ({ node: ids.nodeId(step.node_id), kind: step.kind, agent: optionalAgent(step.agent), description: step.description })),
 })
 
+const nodeFileOf = (file: ApiNodeFile): NodeFile => ({ role: file.role, path: ids.filePath(file.path) })
+
 const alternativeOf = (alternative: ApiAlternative): ExperimentAlternative => ({
   id: ids.nodeId(alternative.alternative_id),
   kind: alternative.kind,
   description: alternative.description,
   file: ids.filePath(alternative.file),
+  files: alternative.files.map(nodeFileOf),
+})
+
+const slotOf = (slot: ApiFactorSlot): FactorSlot => ({ node: ids.nodeId(slot.node_id), kind: slot.kind, written: slot.written, files: slot.files.map(nodeFileOf) })
+
+const factorAgentOf = (agent: ApiFactorAgent): FactorAgent => ({
+  id: ids.agentId(agent.agent_id),
+  file: ids.filePath(agent.file),
+  spec: agent.spec,
+  instructions: agent.instructions,
 })
 
 const promptOf = (prompt: ApiExperimentPrompt): ExperimentPrompt => ({ name: prompt.name, file: ids.filePath(prompt.file) })
@@ -229,6 +247,8 @@ export const experimentDetailOf = (experiment: ApiExperimentDetail): ExperimentD
   ...headOf(experiment),
   question: questionOf(experiment.question_detail),
   varies: factorOf(experiment.varies),
+  slots: experiment.slots.map(slotOf),
+  agents: experiment.agents.map(factorAgentOf),
   flows: experiment.flows.map(localFlowOf),
   alternatives: experiment.alternatives.map(alternativeOf),
   prompts: experiment.prompts.map(promptOf),

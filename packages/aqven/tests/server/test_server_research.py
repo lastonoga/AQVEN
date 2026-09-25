@@ -100,6 +100,9 @@ plan:
 
 
 LOCAL_FLOW: Final = "brief"
+REPLY_NODE: Final = "flows/intake/nodes/reply/reply.node.yaml"
+REPLY_INFERENCE: Final = "flows/intake/nodes/reply/reply.inference.yaml"
+REPLY_PROMPT: Final = "flows/intake/nodes/reply/reply.prompt.md"
 
 LOCAL_FLOW_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Flow"
@@ -307,6 +310,11 @@ def test_the_detail_lists_the_local_flows_alternatives_and_prompts_of_the_experi
             "kind": "llm",
             "description": "Answer in one sentence with the nano writer",
             "file": f"{folder}/nodes/reply_short.node.yaml",
+            "files": [
+                {"role": "node", "path": f"{folder}/nodes/reply_short.node.yaml"},
+                {"role": "inference", "path": REPLY_INFERENCE},
+                {"role": "prompt", "path": REPLY_PROMPT},
+            ],
         }
     ]
     assert body["prompts"] == [{"name": "terse", "file": f"{folder}/prompts/terse.md"}]
@@ -339,6 +347,44 @@ def test_a_local_flow_serves_the_prompt_of_each_llm_step(research_client: TestCl
     assert (draft["flow_id"], draft["node_id"], draft["inference_id"]) == (LOCAL_FLOW, "draft", "reply")
     assert draft["source"]["text"] == research_client.get(f"/api/raw/{draft['path']}").text
     assert [slot["name"] for slot in draft["slots"]] == ["question"]
+
+
+def test_the_detail_tells_the_slot_as_written_and_the_agents_the_factor_names(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}").json()
+
+    assert body["slots"] == [
+        {
+            "node_id": "reply",
+            "kind": "llm",
+            "written": "writer",
+            "files": [
+                {"role": "node", "path": REPLY_NODE},
+                {"role": "inference", "path": REPLY_INFERENCE},
+                {"role": "prompt", "path": REPLY_PROMPT},
+            ],
+        }
+    ]
+    agents = {agent["agent_id"]: agent for agent in body["agents"]}
+    assert list(agents) == ["writer", "writer_alt"]
+    assert (agents["writer_alt"]["file"], agents["writer_alt"]["spec"]["model"]) == (
+        "agents/writer_alt.yaml",
+        "openai:gpt-5.4-nano",
+    )
+    assert agents["writer"]["spec"]["description"] == "Answers customer questions in one short sentence"
+    assert agents["writer"]["instructions"] is None
+
+
+def test_every_file_the_detail_names_is_served_raw(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}").json()
+    named = [
+        *(file["path"] for slot in body["slots"] for file in slot["files"]),
+        *(file["path"] for alternative in body["alternatives"] for file in alternative["files"]),
+        *(prompt["file"] for prompt in body["prompts"]),
+        *(agent["file"] for agent in body["agents"]),
+    ]
+
+    assert {research_client.get(f"/api/raw/{path}").status_code for path in named} == {200}
+    assert research_client.get(f"/api/raw/{body['prompts'][0]['file']}").text == TERSE_PROMPT
 
 
 @pytest.mark.parametrize(
