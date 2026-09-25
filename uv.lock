@@ -160,7 +160,7 @@ wheels = [
 
 [[package]]
 name = "aqven"
-version = "0.0.2"
+version = "0.0.3"
 source = { editable = "packages/aqven" }
 dependencies = [
     { name = "aqven-llm" },
@@ -254,7 +254,7 @@ provides-extras = ["anthropic", "bedrock", "cohere", "google", "groq", "huggingf
 
 [[package]]
 name = "aqven-llm"
-version = "0.0.2"
+version = "0.0.3"
 source = { editable = "packages/aqven-llm" }
 dependencies = [
     { name = "genai-prices" },

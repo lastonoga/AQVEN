@@ -1,8 +1,8 @@
-<!-- aqven:begin 0.0.2 -->
+<!-- aqven:begin 0.0.3 -->
 # Rules for coding agents
 
 `<package>` in this file is `lumen`, the aqven project root with `aqven.yaml`; every command takes it.
-Engine: aqven 0.0.2. The `aqven` MCP server of `.mcp.json` and `.codex/config.toml` is connected here.
+Engine: aqven 0.0.3. The `aqven` MCP server of `.mcp.json` and `.codex/config.toml` is connected here.
 
 ## Load the skill before you write
 

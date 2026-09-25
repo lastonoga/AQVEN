@@ -1,4 +1,4 @@
-<!-- aqven:begin 0.0.2 -->
+<!-- aqven:begin 0.0.3 -->
 @AGENTS.md
 
 In Studio the aqven skills come as plugin `aqven`; elsewhere they are in `.claude/skills/`.

@@ -1,5 +1,5 @@
 {
-  "aqven": "0.0.2",
+  "aqven": "0.0.3",
   "files": {
     "analyzing-failures/SKILL.md": "sha256-906702cc088eb2455c8ad338323396fd502efcfd8764164fbea976d9fd2ab239",
     "analyzing-failures/references/concepts/finding-the-node-that-went-wrong.md": "sha256-588eb66f7b016f819ed797b8f7b3e6234aa1e98e4761301a333d07a9b0fa47e1",
