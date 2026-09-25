@@ -1,0 +1,43 @@
+{
+  "picker": {
+    "aria": "Cases the experiment runs",
+    "dataset": "Dataset",
+    "datasetAria": "Dataset {dataset}, {cases}; choose another",
+    "search": "Find a dataset",
+    "searchPlaceholder": "Find a dataset…",
+    "listAria": "Datasets",
+    "noMatches": "No dataset matches",
+    "inProject": "{count, plural, one {# dataset fits} other {# datasets fit}} this flow",
+    "chooseDataset": "Choose a dataset",
+    "noDatasets": "No dataset fits this flow yet. Add cases on the Cases tab of the flow first.",
+    "forFlow": "cases of flow {flow}",
+    "noFlow": "cases without a flow",
+    "cases": "{count, plural, one {# case} other {# cases}}",
+    "tags": "Tags",
+    "tagsHint": "A case is selected when it has every tag value you pick.",
+    "noTags": "The cases of this dataset have no tags: every case is selected.",
+    "any": "any",
+    "tagAria": "Value of tag {tag}",
+    "valueCount": "{value} · {count}",
+    "unknownTag": "{tag}={value} is not on any case of this dataset",
+    "selected": "Selected",
+    "count": "{selected} of {total} cases",
+    "counting": "counting…",
+    "countFailed": "Could not count the cases: {reason}",
+    "openCases": "Open these cases"
+  },
+  "write": {
+    "checked": "aqven check found no problems in {file}",
+    "diagnosticsAria": "Problems aqven check found in the written file",
+    "problemsAria": "Why the file was not written",
+    "stale": "{file} changed on disk after you opened it. Reload reads the new version and keeps your pick; then save again.",
+    "reload": "Reload",
+    "exists": "Not written: {reason}",
+    "invalid": "Not written: {reason}",
+    "failed": "Could not write the file: {reason}",
+    "severity": {
+      "error": "error",
+      "warning": "warning"
+    }
+  }
+}

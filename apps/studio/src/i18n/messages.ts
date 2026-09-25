@@ -1,4 +1,5 @@
 import type { Locale } from "@/domain"
+import authoring from "./messages/en/authoring.json"
 import callSheet from "./messages/en/callSheet.json"
 import cases from "./messages/en/cases.json"
 import chat from "./messages/en/chat.json"
@@ -14,7 +15,7 @@ import setup from "./messages/en/setup.json"
 import shell from "./messages/en/shell.json"
 import trace from "./messages/en/trace.json"
 
-const en = { common, domain, shell, health, chat, flow, cases, runs, trace, callSheet, review, research, setup, project }
+const en = { common, domain, shell, health, chat, flow, cases, runs, trace, callSheet, review, research, authoring, setup, project }
 
 export type Messages = typeof en
 

@@ -155,7 +155,7 @@
     "open": "Open experiment {id}",
     "empty": "No experiments match these filters",
     "emptyAll": "No experiments yet",
-    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/",
+    "emptyHint": "Create one with New experiment, ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/",
     "group": {
       "running": "Running",
       "needsYou": "Needs you",
@@ -181,7 +181,8 @@
     },
     "new": "new",
     "openFlow": "Open the flow {flow}",
-    "filterMode": "Show only {mode}"
+    "filterMode": "Show only {mode}",
+    "newExperiment": "New experiment"
   },
   "flowSection": {
     "local": "Flows of experiments"
@@ -190,6 +191,23 @@
     "guardrails": "Guardrails: {list}",
     "question": {
       "run": "Run"
+    },
+    "dataset": {
+      "aria": "Cases this experiment runs",
+      "label": "Dataset:",
+      "openAria": "Open the cases of {dataset} this experiment runs",
+      "tagAria": "Open the cases of tag {tag}={value}",
+      "allCases": "every case",
+      "count": "{selected} of {total} cases",
+      "change": "Change cases",
+      "editorTitle": "Cases",
+      "editorDescription": "Pick the dataset and the tag values; Save writes cases into {file} and runs aqven check on it.",
+      "loading": "Loading the datasets of the project…",
+      "loadFailed": "Could not load the datasets: {reason}",
+      "hashFailed": "Could not read the experiment file: {reason}",
+      "save": "Save",
+      "saving": "Saving…",
+      "close": "Close"
     },
     "canvas": {
       "title": "What we test",
@@ -551,6 +569,200 @@
       "spend": "Spend",
       "verdict": "Verdict",
       "started": "Started"
+    }
+  },
+  "newExperiment": {
+    "title": "New experiment",
+    "subtitle": "One question, one factor the variants change, the cases and how to judge them. Create writes the experiment file and runs aqven check on it.",
+    "back": "All experiments",
+    "formAria": "New experiment",
+    "loading": "Loading the flows, agents, datasets and checks of the project…",
+    "loadFailed": "Could not load what an experiment can use",
+    "retry": "Try again",
+    "about": {
+      "title": "What you want to learn",
+      "description": "The question in words and the id of the experiment",
+      "question": "Question in words",
+      "questionHint": "Saved as description: what you expect to see and why it matters",
+      "questionPlaceholder": "mistral revises replies as well as gpt, for less money",
+      "id": "Experiment id",
+      "idHint": "Lowercase letters, digits and underscores, starting with a letter. The file: {path}"
+    },
+    "subject": {
+      "title": "Subject and factor",
+      "description": "The flow the experiment runs and the one thing its variants change",
+      "flow": "Flow",
+      "flowHint": "Every variant runs this flow on the same cases",
+      "chooseFlow": "Choose a flow",
+      "flowAria": "Flow {flow}; choose another",
+      "searchFlows": "Find a flow",
+      "flowCount": "{count, plural, one {# flow} other {# flows}} in the project",
+      "noFlowMatches": "No flow matches",
+      "openFlow": "Open flow {flow} on the canvas",
+      "factor": "What varies",
+      "factorHint": {
+        "agent": "Another agent of the project answers the chosen llm nodes: its model, settings and output mode",
+        "prompt": "Another prompt text for the chosen llm nodes; their inputs, output schema and checks stay",
+        "use": "An alternative node replaces each chosen node; alternatives are code, so the chat writes them",
+        "flow": "The chosen call nodes call another flow with the same input and output types"
+      },
+      "nodes": "Nodes it changes",
+      "nodesHint": {
+        "agent": "The llm nodes of the flow",
+        "prompt": "The llm nodes of the flow",
+        "use": "Any node of the flow",
+        "flow": "The call nodes of the flow"
+      },
+      "nodesAria": "Nodes of {flow}",
+      "nodeAria": "Vary {node}",
+      "openNode": "Open {node} of {flow} on the canvas",
+      "flowFirst": "Choose a flow first",
+      "noSlots": {
+        "agent": "Flow {flow} has no llm node to give another agent",
+        "prompt": "Flow {flow} has no llm node whose prompt could change",
+        "use": "Flow {flow} has no node",
+        "flow": "Flow {flow} has no call node to point at another flow"
+      },
+      "useNote": "The form cannot write alternative nodes: they are code. Ask the chat to write them in the nodes folder of the experiment; it gets everything you filled in here.",
+      "useHandoff": "Ask chat to write the alternatives"
+    },
+    "variants": {
+      "title": "Variants",
+      "description": "The first variant runs the flow as written; every other variant sets values of the factor",
+      "variant": "Variant {number}",
+      "variantAria": "Variant {variant}",
+      "asWritten": "as written",
+      "writtenNoFlow": "Runs the flow as written",
+      "writtenFlow": "Runs flow {flow} as written",
+      "writtenPrompt": "prompt as written",
+      "openNode": "Open {node} on the canvas",
+      "valueAria": "Value of {node} in variant {variant}",
+      "search": {
+        "agent": "Find an agent",
+        "prompt": "Find",
+        "use": "Find",
+        "flow": "Find a flow"
+      },
+      "choiceCount": "{count, plural, =0 {nothing else fits} one {# fits} other {# fit}}",
+      "noMatches": "Nothing matches",
+      "noChoices": {
+        "agent": "The project has no agent to give {node}",
+        "prompt": "Nothing to pick for {node}",
+        "use": "Nothing to pick for {node}",
+        "flow": "No flow of the project has the input and output of the flow {node} calls"
+      },
+      "prompt": "Prompt text",
+      "promptHint": "Saved as {path}; replaces the prompt text of {nodes}",
+      "promptPlaceholder": "The prompt this variant uses instead of the one as written",
+      "useValue": "The chat writes the alternative node of this variant",
+      "pickNodes": "Pick the nodes the factor changes above. With no factor node every variant runs the flow as written: an A/A experiment that measures the noise.",
+      "remove": "Remove variant {variant}",
+      "add": "Add variant"
+    },
+    "cases": {
+      "title": "Cases",
+      "description": "A dataset of the flow and the tag values that select its cases",
+      "flowFirst": "Choose a flow first: datasets belong to flows"
+    },
+    "checks": {
+      "title": "Checks",
+      "description": "Built-in checks scored on every run; a series also reports its built-in metrics",
+      "none": "No checks: a series reports its built-in metrics only, such as the share of passing runs, cost and latency",
+      "id": "Check id",
+      "idHint": "The metric name the question uses",
+      "kind": "Reads as",
+      "kindAria": "How {check} reads",
+      "fields": "Fields",
+      "fieldsHint": "Compare only these output fields with expected_output, separated by commas; empty compares the whole output",
+      "fieldsPlaceholder": "intent, priority",
+      "params": "Parameters",
+      "paramsHint": "A JSON object the check gets as with; its keys: {params}. A field is a path such as $out.reply or $in.message",
+      "optionalParam": "{name} (optional)",
+      "checkAria": "Check {check}",
+      "builtin": "built-in {use}",
+      "remove": "Remove check {check}",
+      "add": "Add a check",
+      "search": "Find a check",
+      "evaluatorCount": "{count, plural, one {# built-in check} other {# built-in checks}}",
+      "noMatches": "No check matches",
+      "noEvaluators": "The engine offers no built-in checks"
+    },
+    "question": {
+      "title": "Question",
+      "description": "Which statistic answers it and what counts as a verdict",
+      "kind": "Kind",
+      "kindHint": {
+        "look": "Run the variants and look at them side by side, without a verdict",
+        "threshold": "Does a metric stay above or below a value",
+        "compare": "Is the candidate better than the baseline by more than the margin",
+        "noninferior": "Is the candidate not worse than the baseline by more than the margin"
+      },
+      "baseline": "Baseline",
+      "candidate": "Candidate",
+      "metric": "Metric",
+      "metricHint": "A check of this experiment or a built-in metric of the series",
+      "margin": "Margin",
+      "marginHint": {
+        "look": "No margin",
+        "threshold": "The tolerance around the value; empty is 0",
+        "compare": "How much better the candidate has to be; empty is 0",
+        "noninferior": "How much worse the candidate may be; above 0"
+      },
+      "bound": "Bound",
+      "bounds": {
+        "above": "above",
+        "below": "below"
+      },
+      "value": "Value",
+      "valueHint": "The bound the metric is held to",
+      "which": "Variants",
+      "eachVariant": "each variant"
+    },
+    "plan": {
+      "title": "Plan",
+      "description": "The default size of a series; a series may run fewer or more",
+      "cases": "Cases",
+      "casesHint": "How many of the selected cases a series runs; empty runs every selected case",
+      "everyCase": "every selected case",
+      "repeats": "Repeats",
+      "repeatsHint": "Runs of each case by each variant, 1 to {max}"
+    },
+    "create": {
+      "aria": "Create the experiment",
+      "explain": "Create writes {file} and the prompt files of the variants, then runs aqven check on them.",
+      "submit": "Create experiment",
+      "askDraft": "Ask chat to draft",
+      "fixFirst": "{count, plural, one {# thing to fix} other {# things to fix}} before creating:",
+      "writtenWithErrors": "{file} is written, but aqven check found errors in it. Fix them in the file or ask the chat.",
+      "open": "Open experiment {id}",
+      "askFix": "Ask chat to fix"
+    },
+    "problem": {
+      "descriptionMissing": "Write the question in words",
+      "idMissing": "Give the experiment an id",
+      "idPattern": "The id uses lowercase letters, digits and underscores, starts with a letter and is at most 63 characters long",
+      "idTaken": "An experiment with this id exists",
+      "flowMissing": "Choose the flow the experiment runs",
+      "flowUnknown": "The flow is not in the project",
+      "useNeedsChat": "Alternative nodes are code: ask the chat to write them",
+      "variantIdPattern": "A variant id uses lowercase letters, digits and underscores and starts with a letter",
+      "variantIdDuplicate": "Two variants share this id",
+      "variantValueMissing": "Set a value on at least one node of the factor",
+      "datasetMissing": "Choose the dataset the cases come from",
+      "checkIdPattern": "A check id uses lowercase letters, digits and underscores and starts with a letter",
+      "checkIdDuplicate": "Two checks share this id",
+      "checkParamsInvalid": "Parameters are a JSON object",
+      "pairNeedsTwoVariants": "This question compares two variants: add a variant",
+      "pairVariantUnknown": "Choose the baseline and the candidate among the variants",
+      "pairSame": "The baseline and the candidate are different variants",
+      "metricMissing": "Choose the metric",
+      "metricUnknown": "The metric is neither a check of this experiment nor a built-in metric",
+      "variantUnknown": "The variant is not in the list",
+      "valueInvalid": "The value is a number",
+      "marginInvalid": "The margin is a number, 0 or more",
+      "marginPositive": "A not-worse question needs a margin above 0",
+      "planCasesInvalid": "Cases is a whole number, 1 or more, or empty for every selected case",
+      "planRepeatsInvalid": "Repeats is a whole number from 1 to 20"
     }
   }
 }

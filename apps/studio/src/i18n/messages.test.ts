@@ -19,6 +19,7 @@ const NAMESPACES = [
   "callSheet",
   "review",
   "research",
+  "authoring",
   "setup",
   "project",
 ]

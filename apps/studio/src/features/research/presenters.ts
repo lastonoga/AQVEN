@@ -9,6 +9,7 @@ import type {
   ExperimentQuestion,
   ExperimentSubject,
   ExperimentSummary,
+  FlowId,
   Guardrail,
   IsoDateTime,
   LatestSeries,
@@ -208,7 +209,16 @@ export const failureModes = (experiments: readonly ExperimentSummary[]): readonl
 export const questionMetrics = (metrics: readonly MetricColumn[]): readonly MetricColumn[] =>
   metrics.filter((column) => column.role === "primary" || column.role === "guardrail")
 
+export const casesFlowOf = (experiment: Pick<ExperimentDetail, "cases" | "flow">): FlowId | null => experiment.cases.flow ?? experiment.flow
+
 export const tagPairs = (tags: CaseTags): readonly string[] => Object.entries(tags).map(([key, value]) => `${key}${TAG_JOIN}${value}`)
+
+export type CasesLinkSearch = { readonly dataset: string; readonly tag?: readonly string[] }
+
+export const casesSearch = (dataset: string, tags: CaseTags): CasesLinkSearch => {
+  const pairs = tagPairs(tags)
+  return pairs.length === 0 ? { dataset } : { dataset, tag: pairs }
+}
 
 const thresholdSentence = (question: ThresholdQuestion, metrics: readonly MetricColumn[], copy: QuestionCopy): string => {
   const unit = unitOf(metrics, question.metric)
