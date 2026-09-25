@@ -36,6 +36,7 @@ import type {
   CheckSource,
   CheckSourceKind,
   Contrast,
+  ExperimentActivity,
   ExperimentAlternative,
   ExperimentCheck,
   ExperimentDetail,
@@ -51,6 +52,7 @@ import type {
   FactorChange,
   FactorSlot,
   Guardrail,
+  IsoDateTime,
   LatestSeries,
   LaunchPlan,
   LaunchRequest,
@@ -224,15 +226,27 @@ const latestOf = (latest: ApiLatestSeries | null): LatestSeries | null => {
   return { id: ids.seriesId(latest.series_id), on: latest.on, status: latest.status, verdict: latest.verdict }
 }
 
+const momentOrNull = (raw: string | null): IsoDateTime | null => (raw === null ? null : ids.isoDateTime(raw))
+
+const activityOf = (experiment: ApiExperimentSummary): ExperimentActivity => ({
+  created: momentOrNull(experiment.created),
+  last: momentOrNull(experiment.last_activity),
+  source: experiment.activity_source,
+  running: experiment.running,
+  attention: experiment.attention,
+})
+
 const headOf = (experiment: ApiExperimentSummary) => ({
   id: ids.experimentId(experiment.experiment_id),
   description: experiment.description,
   flow: experiment.flow_id === null ? null : ids.flowId(experiment.flow_id),
   subject: subjectOf(experiment.subject),
   failureMode: experiment.failure_mode,
+  archived: experiment.archived,
   latest: latestOf(experiment.latest),
   seriesCount: experiment.series_count,
   spentUsd: money(experiment.spent_usd),
+  activity: activityOf(experiment),
 })
 
 export const experimentSummaryOf = (experiment: ApiExperimentSummary): ExperimentSummary => ({

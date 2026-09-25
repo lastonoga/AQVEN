@@ -1,17 +1,9 @@
+import { readViewerItem, writeViewerItem } from "./viewer-storage"
+
 const storageKey = (projectRoot: string): string => `aqven:flow:last:${projectRoot}`
 
 export const rememberFlow = (projectRoot: string, flowId: string): void => {
-  try {
-    localStorage.setItem(storageKey(projectRoot), flowId)
-  } catch {
-    return
-  }
+  writeViewerItem(storageKey(projectRoot), flowId)
 }
 
-export const rememberedFlow = (projectRoot: string): string | null => {
-  try {
-    return localStorage.getItem(storageKey(projectRoot))
-  } catch {
-    return null
-  }
-}
+export const rememberedFlow = (projectRoot: string): string | null => readViewerItem(storageKey(projectRoot))

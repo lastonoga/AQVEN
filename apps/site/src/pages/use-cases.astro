@@ -1,0 +1,83 @@
+---
+import "../styles/landing.css";
+import { Navbar1 } from "@/components/navbar1";
+import { Hero1 } from "@/components/hero1";
+import { Cta10 } from "@/components/cta10";
+import { Footer2 } from "@/components/footer2";
+import {
+  SituationSections,
+  WhoDoesWhat,
+  useCasesIndexVisual,
+} from "@/components/landing/use-cases";
+import {
+  AUTH,
+  FOOTER_COPYRIGHT,
+  FOOTER_DESCRIPTION,
+  FOOTER_LEGAL,
+  FOOTER_LOGO,
+  FOOTER_SECTIONS,
+  LOGO,
+  MENU,
+  QUICKSTART,
+  REPO,
+} from "@/components/landing/site-nav";
+---
+
+<!doctype html>
+<html lang="en" class="motion-safe:scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>What AQVEN is for: use cases</title>
+    <meta
+      name="description"
+      content="Find, explain, compare, confirm and build: five things you do in AQVEN when you build multi-step AI workflows with your coding agent."
+    />
+    <link rel="icon" href="/favicon.svg" />
+    <script is:inline>
+      if (
+        localStorage.getItem("starlight-theme") === "dark" ||
+        (!localStorage.getItem("starlight-theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
+  </head>
+  <body>
+    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} />
+
+    <main>
+      <Hero1
+        badge={{ text: "Use cases" }}
+        heading="What AQVEN is for."
+        description="Five situations from building multi-step AI workflows, and what you and your coding agent do about each in AQVEN."
+        buttons={{
+          primary: { text: "Get started", url: QUICKSTART },
+          secondary: { text: "GitHub", url: REPO },
+        }}
+        visual={useCasesIndexVisual}
+      />
+
+      <WhoDoesWhat />
+      <SituationSections />
+
+      <Cta10
+        heading="Start with one question."
+        description="Run a small experiment. Inspect the evidence. Decide what comes next."
+        buttons={{
+          primary: { text: "Get started", url: QUICKSTART },
+          secondary: { text: "GitHub", url: REPO },
+        }}
+      />
+    </main>
+
+    <Footer2
+      logo={FOOTER_LOGO}
+      description={FOOTER_DESCRIPTION}
+      sections={FOOTER_SECTIONS}
+      copyright={FOOTER_COPYRIGHT}
+      legalLinks={FOOTER_LEGAL}
+    />
+  </body>
+</html>
