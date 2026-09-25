@@ -562,12 +562,17 @@
     }
   },
   "additionalProperties": false,
-  "description": "An experiment: subject \u00d7 factor \u00d7 variants \u00d7 cases \u00d7 checks \u00d7 question.\n\n``varies`` declares the one factor the variants change; it is required once there is more than one variant.\nThe question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,\nregressions, judge validation and risky hypotheses are all experiments that differ only in their factor,\nvariants and question.",
+  "description": "An experiment: subject \u00d7 factor \u00d7 variants \u00d7 cases \u00d7 checks \u00d7 question.\n\n``varies`` declares the one factor the variants change; it is required once there is more than one variant.\nThe question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,\nregressions, judge validation and risky hypotheses are all experiments that differ only in their factor,\nvariants and question.\n\n``archived: true`` sets the experiment aside: Studio lists it only under Archived at the end of Research,\nwhile ``aqven check`` and series treat it as any other experiment.",
   "properties": {
     "apiVersion": {
       "const": "aqven/v1",
       "title": "Apiversion",
       "type": "string"
+    },
+    "archived": {
+      "default": false,
+      "title": "Archived",
+      "type": "boolean"
     },
     "cases": {
       "$ref": "#/$defs/CaseSelection"

@@ -204,12 +204,16 @@ class ExperimentSpec(SpecModel):
     The question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,
     regressions, judge validation and risky hypotheses are all experiments that differ only in their factor,
     variants and question.
+
+    ``archived: true`` sets the experiment aside: Studio lists it only under Archived at the end of Research,
+    while ``aqven check`` and series treat it as any other experiment.
     """
 
     api_version: Literal["aqven/v1"] = Field(alias="apiVersion")
     kind: Literal["Experiment"]
     description: str = Field(min_length=1)
     failure_mode: str | None = Field(default=None, pattern=NAME_PATTERN)
+    archived: bool = False
     subject: ExperimentSubject
     varies: ExperimentFactor | None = None
     cases: CaseSelection
