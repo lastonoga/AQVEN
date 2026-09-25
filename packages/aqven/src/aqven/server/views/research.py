@@ -53,6 +53,7 @@ from aqven.series.views import (
 from aqven.server.errors import ApiFailure, not_found
 from aqven.server.resources import ExperimentFlowView
 from aqven.server.views.common import loaded_project, page_of
+from aqven.server.views.experiment_content import factor_agents, node_files, slot_views
 from aqven.server.views.flows import loaded_flow_schemas
 from aqven.server.views.nodes import flow_node_summaries
 from aqven.server.views.prompts import flow_prompt_details
@@ -331,17 +332,18 @@ def local_flow_views(project: LoadedProject, loaded: LoadedExperiment) -> tuple[
     )
 
 
-def alternative_view(alternative_id: NodeId, source: SourceSpec[NodeSpec]) -> AlternativeView:
+def alternative_view(project: LoadedProject, alternative_id: NodeId, source: SourceSpec[NodeSpec]) -> AlternativeView:
     return AlternativeView(
         alternative_id=alternative_id,
         kind=NodeKind(source.spec.node),
         description=source.spec.description,
         file=source.path,
+        files=node_files(project, source),
     )
 
 
-def alternative_views(loaded: LoadedExperiment) -> tuple[AlternativeView, ...]:
-    return tuple(alternative_view(node_id, source) for node_id, source in sorted(loaded.alternatives.items()))
+def alternative_views(project: LoadedProject, loaded: LoadedExperiment) -> tuple[AlternativeView, ...]:
+    return tuple(alternative_view(project, node_id, source) for node_id, source in sorted(loaded.alternatives.items()))
 
 
 def prompt_views(loaded: LoadedExperiment) -> tuple[ExperimentPromptView, ...]:
@@ -433,12 +435,15 @@ def experiment_detail(project: LoadedProject, loaded: LoadedExperiment, ledger: 
     spec = loaded.source.spec
     checks = tuple(spec.checks or ())
     summary = experiment_summary(project, loaded, ledger)
+    slots = slot_views(project, loaded)
     return ExperimentDetailView(
         **summary.model_dump(),
         question_detail=question_view(spec.question),
         varies=factor_view(spec),
+        slots=slots,
+        agents=factor_agents(project, spec, slots),
         flows=local_flow_views(project, loaded),
-        alternatives=alternative_views(loaded),
+        alternatives=alternative_views(project, loaded),
         prompts=prompt_views(loaded),
         cases=case_selection(project, spec),
         variant_details=tuple(variant_view(project, loaded, variant) for variant in spec.variants),

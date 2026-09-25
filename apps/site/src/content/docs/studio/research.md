@@ -40,7 +40,7 @@ series, approve its spend, and ask the chat for the next hypothesis.
 
   | Block | What it shows |
   |---|---|
-  | **What we test** | the **Hypothesis** card, or **Goal** for a look, with the experiment's description and its decision rule. Below it: the variants table, captioned with the factor, for example "Varies: prompt of deepseek, qwen, llama". Each row has the variant's role, a value column headed **Agent**, **Prompt**, **Alternative** or **Flow** with what the variant puts in the slots (one value when it puts the same one everywhere, `node: value` otherwise, **as written** for the subject as written), and **Agents · models** its steps run on. Then the facts. |
+  | **What we test** | the **Hypothesis** card, or **Goal** for a look, with the experiment's description and its decision rule. Below it: the variants table, captioned with the factor, for example "Varies: prompt of deepseek, qwen, llama". Each row has the variant's role, a value column headed **Agent**, **Prompt**, **Alternative** or **Flow** with what the variant puts in the slots (one value when it puts the same one everywhere, `nodes: value` otherwise, **as written:** and the slot's own agent, inference, node or flow for the subject as written, such as "as written: tie_break"), and **Agents · models** its steps run on, left out when no variant runs an agent. Under the table, **What changes** has one closed block per variant and value. Then the facts. |
   | Facts | the cases selected out of the dataset, with the working and held-out split and the tags; the checks, each built-in, code or judge, and whether a judge is validated; where the subject runs |
   | Graphs | the subject's graph first, then each flow of the experiment, then any project flow a variant calls. Each graph names the variants that run it. Steps outside the tested range are faded, and a factor slot is marked with its kind and the values the variants put there, such as "prompt: claims_first · anchored_scale". Click a step for its **Agents**, **Input**, **Prompt**, **Output** and **Results** from the latest series. |
   | **Answer** | the verdict of the latest series as its sentence, with **Run again on fresh cases**, **Ask the agent for the next hypothesis** and a link to the series |
@@ -50,6 +50,12 @@ series, approve its spend, and ask the chat for the next hypothesis.
   | **Series history** | every series of this experiment, with its state and spend |
   | **Technical details** | the files, question, subject, plan, failure mode, and the notes from `experiment.md` |
 
+- **See what a variant runs.** Every value in the variants table is a button. An agent, a prompt or an
+  alternative opens its block in **What changes**: the agent's model and settings; the prompt's text with
+  the prompt as written below it; or the node's files (node, code, inference, prompt), each in its own
+  scrolling box, with a link such as **Show aggregate on the graph**. A flow scrolls to its graph on this page and highlights
+  it; a project flow without a graph here opens its canvas. The node names in the caption select that
+  node on the graph. The address keeps what you opened, so a reload or a shared link returns to it.
 - **Launch to explore or confirm.** **Purpose** is **Explore · working cases** or **Confirm · held-out
   cases**. Explore gives numbers without a finding. Confirm gives a verdict written to `FINDINGS.md`.
   Choose **Cases** out of the ones available on that side, and **Repeats**. The panel shows the attempts
@@ -73,7 +79,8 @@ Open the showcase project, switch to **Research**, and open `reply_noninferior_m
 `support_case` section. The Hypothesis
 reads "mistral in the revision step of the polish loop is not worse than gpt by the critic's score, and a
 passing reply costs at most 20% more". The variants table is captioned "Varies: agent of revise": its
-**Agent** column reads **as written** for `gpt`, the flow as written, and `mistral` for the other variant. The facts
+**Agent** column reads **as written: gpt** for `gpt`, the flow as written, and `mistral` for the other variant.
+Click `mistral` to see its model and settings under the table. The facts
 show all twelve cases of `support_case_cases`, split between working and
 held-out. The `critique` judge is marked as validated by `critique_planted_defects`.
 

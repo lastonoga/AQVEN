@@ -1,5 +1,5 @@
 import type { AgentId, CheckId, DatasetId, ExperimentId, FilePath, FlowId, IsoDateTime, NodeId, RunId, SeriesId, VariantId } from "./core"
-import type { ApiFlowSchemas, ApiNode, ApiPromptDetail } from "./live"
+import type { ApiAgentSpec, ApiFlowSchemas, ApiNode, ApiPromptDetail } from "./live"
 import type { NodeKind } from "./vocabulary"
 
 export const QUESTION_KINDS = ["look", "threshold", "compare", "noninferior"] as const
@@ -10,6 +10,9 @@ export type SubjectKind = (typeof SUBJECT_KINDS)[number]
 
 export const FACTOR_KINDS = ["agent", "prompt", "use", "flow"] as const
 export type FactorKind = (typeof FACTOR_KINDS)[number]
+
+export const NODE_FILE_ROLES = ["node", "code", "inference", "prompt"] as const
+export type NodeFileRole = (typeof NODE_FILE_ROLES)[number]
 
 export const CHECK_KINDS = ["binary", "continuous", "ordinal"] as const
 export type CheckKind = (typeof CHECK_KINDS)[number]
@@ -104,7 +107,19 @@ export type FlowStep = {
 
 export type ExperimentFlow = { readonly id: FlowId; readonly description: string; readonly file: FilePath | null; readonly steps: readonly FlowStep[] }
 
-export type ExperimentAlternative = { readonly id: NodeId; readonly kind: NodeKind; readonly description: string; readonly file: FilePath }
+export type NodeFile = { readonly role: NodeFileRole; readonly path: FilePath }
+
+export type ExperimentAlternative = {
+  readonly id: NodeId
+  readonly kind: NodeKind
+  readonly description: string
+  readonly file: FilePath
+  readonly files: readonly NodeFile[]
+}
+
+export type FactorSlot = { readonly node: NodeId; readonly kind: NodeKind; readonly written: string | null; readonly files: readonly NodeFile[] }
+
+export type FactorAgent = { readonly id: AgentId; readonly file: FilePath; readonly spec: ApiAgentSpec; readonly instructions: string | null }
 
 export type ExperimentPrompt = { readonly name: string; readonly file: FilePath }
 
@@ -218,6 +233,8 @@ export type ExperimentFiles = { readonly spec: FilePath; readonly notes: FilePat
 export type ExperimentDetail = ExperimentHead & {
   readonly question: ExperimentQuestion
   readonly varies: ExperimentFactor | null
+  readonly slots: readonly FactorSlot[]
+  readonly agents: readonly FactorAgent[]
   readonly flows: readonly ExperimentFlow[]
   readonly alternatives: readonly ExperimentAlternative[]
   readonly prompts: readonly ExperimentPrompt[]

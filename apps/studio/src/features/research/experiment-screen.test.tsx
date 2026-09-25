@@ -26,6 +26,15 @@ const rowsOf = (table: HTMLElement): readonly (readonly string[])[] => within(ta
 
 const factsOf = (what: HTMLElement): HTMLElement => within(what).getByRole("region", { name: "How this experiment is run" })
 
+const captionOf = (what: HTMLElement, text: string): HTMLElement => within(what).getByText((_, element) => element?.tagName === "P" && element.textContent === text)
+
+const tableOf = (what: HTMLElement): HTMLElement => within(what).getByRole("table", { name: "Variants of this experiment" })
+
+const changesOf = (what: HTMLElement): HTMLElement => within(what).getByRole("region", { name: "What changes" })
+
+const scrolledTo = (scroll: { readonly mock: { readonly instances: readonly unknown[] } }, id: string): boolean =>
+  scroll.mock.instances.some((element) => element instanceof Element && element.id === id)
+
 const tileOf = (scope: HTMLElement, name: string): HTMLElement => within(scope).getByRole("group", { name })
 
 const itemsOf = (list: HTMLElement): readonly string[] => within(list).getAllByRole("listitem").map((item) => item.textContent)
@@ -153,11 +162,11 @@ describe("ExperimentScreen: what we test", () => {
     expect(rulesOf(what)).toEqual(["critique: difference ≥ −0.05", "cost per passing run ≤ +20%"])
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
     expect(hypothesis.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    const caption = within(what).getByText("Varies: agent of revise")
+    const caption = captionOf(what, "Varies: agent of revise")
     expect(caption.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(headersOf(table)).toEqual(["Variant", "Role", "Agent", "Agents · models"])
     expect(rowsOf(table)).toEqual([
-      ["gpt", "baseline", "as written", "mistralmistral-nemogptgpt-oss-20b"],
+      ["gpt", "baseline", "as written: gpt", "mistralmistral-nemogptgpt-oss-20b"],
       ["mistral", "candidate", "mistral", "mistralmistral-nemo"],
     ])
     expect(within(table).getAllByText("mistral-nemo")[0]?.getAttribute("title")).toBe("openrouter:mistralai/mistral-nemo")
@@ -197,13 +206,15 @@ describe("ExperimentScreen: what we test", () => {
   it("names the flow each variant calls at the slot of a flow factor and the flows of the experiment", async () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
     const what = await section("What we test")
-    expect(within(what).getByText("Varies: flow called by classify")).toBeTruthy()
-    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Flow", "Agents · models"])
+    expect(captionOf(what, "Varies: flow called by classify")).toBeTruthy()
+    const table = tableOf(what)
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Flow"])
     expect(rowsOf(table)).toEqual([
-      ["one_step", "baseline", "as written", "no agent"],
-      ["two_step", "candidate", "two_step", "no agent"],
+      ["one_step", "baseline", "as written: one_step"],
+      ["two_step", "candidate", "two_step"],
     ])
+    expect(within(what).queryByText("no agent")).toBeNull()
+    expect(within(what).queryByRole("region", { name: "What changes" })).toBeNull()
     const where = tileOf(factsOf(what), "Where")
     expect(within(where).getByText("experiment flow")).toBeTruthy()
     expect(within(where).getByText("message_intent")).toBeTruthy()
@@ -213,11 +224,11 @@ describe("ExperimentScreen: what we test", () => {
   it("names the prompt of each variant under a prompt factor", async () => {
     await renderRoute("/research/experiments/panel_judge_prompt")
     const what = await section("What we test")
-    expect(within(what).getByText("Varies: prompt of deepseek, qwen, llama")).toBeTruthy()
-    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(captionOf(what, "Varies: prompt of deepseek, qwen, llama")).toBeTruthy()
+    const table = tableOf(what)
     expect(headersOf(table)).toEqual(["Variant", "Role", "Prompt", "Agents · models"])
     expect(rowsOf(table).map((row) => row.slice(0, 3))).toEqual([
-      ["as_written", "baseline", "as written"],
+      ["as_written", "baseline", "as written: tie_break"],
       ["claims_first", "candidate", "claims_first"],
       ["anchored_scale", "other", "anchored_scale"],
     ])
@@ -226,10 +237,10 @@ describe("ExperimentScreen: what we test", () => {
   it("names the alternative node of each variant under a use factor and lists the alternatives in the details", async () => {
     await renderRoute("/research/experiments/panel_merge_rule")
     const what = await section("What we test")
-    expect(within(what).getByText("Varies: implementation of aggregate")).toBeTruthy()
-    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(captionOf(what, "Varies: implementation of aggregate")).toBeTruthy()
+    const table = tableOf(what)
     expect(headersOf(table)).toEqual(["Variant", "Role", "Alternative", "Agents · models"])
-    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written", "majority_only", "always_tie_break"])
+    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written: aggregate", "majority_only", "always_tie_break"])
     const details = await section("Technical details")
     fireEvent.click(within(details).getByRole("button", { name: "Technical details" }))
     expect(within(details).getByText("Alternative nodes")).toBeTruthy()
@@ -256,10 +267,10 @@ describe("ExperimentScreen: what we test", () => {
   it("lists the value per node when a variant sets only some nodes of the factor", async () => {
     await renderRoute("/research/experiments/reply_stage_budget")
     const what = await section("What we test")
-    expect(within(what).getByText("Varies: agent of gpt, gemini, mistral")).toBeTruthy()
-    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(captionOf(what, "Varies: agent of gpt, gemini, mistral")).toBeTruthy()
+    const table = tableOf(what)
     expect(headersOf(table)).toEqual(["Variant", "Role", "Agent", "Agents · models"])
-    expect(rowsOf(table)[1]).toEqual(["mistral_only", "tested", "gpt: mistralgemini: mistral", "mistralmistral-nemo"])
+    expect(rowsOf(table)[1]).toEqual(["mistral_only", "tested", "gpt, gemini: mistralmistral as written: mistral", "mistralmistral-nemo"])
   })
 
   it("names the goal of a look with no verdict, and its cases by tag", async () => {
@@ -279,7 +290,166 @@ describe("ExperimentScreen: what we test", () => {
   it("shows the value a variant sets even when it repeats the subject as written", async () => {
     await renderRoute("/research/experiments/panel_aa_noise")
     const table = within(await section("What we test")).getByRole("table", { name: "Variants of this experiment" })
-    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written", "gpt"])
+    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written: gpt", "gpt"])
+  })
+})
+
+describe("ExperimentScreen: what changes", () => {
+  it("opens the prompt a variant gives under the table, with the prompt as written below it, from a click on the value", async () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    const router = await renderRoute("/research/experiments/panel_judge_prompt")
+    const what = await section("What we test")
+    const changes = changesOf(what)
+    expect(within(changes).getAllByRole("button", { expanded: false }).map((button) => button.textContent)).toEqual([
+      "as_writtendeepseek, qwen, llama: prompt of tie_break as written",
+      "claims_firstdeepseek, qwen, llama: prompt claims_first",
+      "anchored_scaledeepseek, qwen, llama: prompt anchored_scale",
+    ])
+    expect(tableOf(what).compareDocumentPosition(changes) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "claims_first" }))
+    const block = await within(changes).findByRole("region", { name: "claims_first · deepseek, qwen, llama: prompt claims_first" })
+    const variant = within(block).getByRole("region", { name: "Prompt claims_first" })
+    const written = within(block).getByRole("region", { name: "As written · deepseek, qwen, llama" })
+    expect(within(variant).getByText("experiments/panel_judge_prompt/prompts/claims_first.md")).toBeTruthy()
+    expect(await within(variant).findByText(/^Before you score, read every candidate claim by claim/)).toBeTruthy()
+    expect(within(written).getByText("flows/judge_panel/nodes/decide/tie_break.prompt.md")).toBeTruthy()
+    expect(await within(written).findByText(/^Score against the three rubric criteria/)).toBeTruthy()
+    expect(variant.compareDocumentPosition(written) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await waitFor(() => {
+      expect(scrolledTo(scroll, "change-claims_first-deepseek")).toBe(true)
+    })
+    expect(router.state.location.hash).toBe("change-claims_first-deepseek")
+    fireEvent.click(within(changes).getByRole("button", { name: /^claims_first/, expanded: true }))
+    expect(within(changes).queryByRole("region", { name: /^claims_first · / })).toBeNull()
+    await waitFor(() => {
+      expect(router.state.location.hash).toBe("")
+    })
+    scroll.mockRestore()
+  })
+
+  it("opens and closes a block from its line with the keyboard-reachable toggle, and keeps the address on open", async () => {
+    const router = await renderRoute("/research/experiments/panel_judge_prompt")
+    const changes = changesOf(await section("What we test"))
+    const toggle = within(changes).getByRole("button", { name: /^anchored_scale/ })
+    expect(toggle.getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute("aria-expanded")).toBe("true")
+    expect(document.getElementById(toggle.getAttribute("aria-controls") ?? "")?.getAttribute("aria-label")).toBe("anchored_scale · deepseek, qwen, llama: prompt anchored_scale")
+    await waitFor(() => {
+      expect(router.state.location.hash).toBe("change-anchored_scale-deepseek")
+    })
+  })
+
+  it("shows the prompt as written of the variant that keeps the subject", async () => {
+    await renderRoute("/research/experiments/panel_judge_prompt")
+    const what = await section("What we test")
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "as written: tie_break" }))
+    const block = await within(changesOf(what)).findByRole("region", { name: "as_written · deepseek, qwen, llama: prompt of tie_break as written" })
+    expect(await within(block).findByText(/^Score against the three rubric criteria/)).toBeTruthy()
+    expect(within(block).queryByRole("region", { name: /^Prompt / })).toBeNull()
+  })
+
+  it("shows the files of an alternative node and shows its slot on the graph", async () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    const router = await renderRoute("/research/experiments/panel_merge_rule")
+    const what = await section("What we test")
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "majority_only" }))
+    const block = await within(changesOf(what)).findByRole("region", { name: "majority_only · aggregate: node majority_only" })
+    expect(within(block).getByText(/^Merges the verdicts by majority alone/)).toBeTruthy()
+    expect(within(block).getAllByRole("region").map((file) => file.getAttribute("aria-label"))).toEqual(["Node", "Code"])
+    const code = within(block).getByRole("region", { name: "Code" })
+    expect(within(code).getByText("experiments/panel_merge_rule/nodes/majority_only/majority_only.py")).toBeTruthy()
+    expect(await within(code).findByText(/def majority_only\(verdicts/)).toBeTruthy()
+    fireEvent.click(within(block).getByRole("button", { name: "Show aggregate on the graph" }))
+    expect(await screen.findByRole("dialog", { name: "aggregate" })).toBeTruthy()
+    await waitFor(() => {
+      expect(scrolledTo(scroll, "graph-judge_panel")).toBe(true)
+    })
+    expect(router.state.location.hash).toBe("step-aggregate")
+    scroll.mockRestore()
+  })
+
+  it("shows the node as written with its own code", async () => {
+    await renderRoute("/research/experiments/panel_merge_rule")
+    const what = await section("What we test")
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "as written: aggregate" }))
+    const block = await within(changesOf(what)).findByRole("region", { name: "majority_and_spread · aggregate: node aggregate as written" })
+    expect(await within(within(block).getByRole("region", { name: "Code" })).findByText(/def aggregate\(verdicts/)).toBeTruthy()
+  })
+
+  it("shows the model and the settings of the agent a variant gives", async () => {
+    await renderRoute("/research/experiments/judge_panel_agents")
+    const what = await section("What we test")
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "deepseek" }))
+    const block = await within(changesOf(what)).findByRole("region", { name: "deepseek_tie_break · tie_break: agent deepseek" })
+    expect(within(block).getByText("agents/deepseek.yaml")).toBeTruthy()
+    expect(within(block).getByText("deepseek/deepseek-v4-flash-0731")).toBeTruthy()
+    expect(within(block).getByText("Temperature")).toBeTruthy()
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "as written: gpt" }))
+    const written = await within(changesOf(what)).findByRole("region", { name: "gpt_tie_break · tie_break: agent gpt as written" })
+    expect(within(written).getByText("openai/gpt-oss-20b")).toBeTruthy()
+  })
+
+  it("scrolls to the graph of the flow a variant calls and highlights it", async () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    const router = await renderRoute("/research/experiments/intent_split_long_messages")
+    const what = await section("What we test")
+    const two = await section("Graph of two_step")
+    expect(two.getAttribute("data-highlighted")).toBe("false")
+    fireEvent.click(within(tableOf(what)).getByRole("button", { name: "two_step" }))
+    await waitFor(() => {
+      expect(scrolledTo(scroll, "graph-two_step")).toBe(true)
+    })
+    expect(two.getAttribute("data-highlighted")).toBe("true")
+    expect((await section("Graph of one_step")).getAttribute("data-highlighted")).toBe("false")
+    expect(router.state.location.hash).toBe("graph-two_step")
+    scroll.mockRestore()
+  })
+
+  it("links a project flow without a graph on the page to its canvas", async () => {
+    await renderRoute("/research/experiments/panel_single_judge")
+    const table = tableOf(await section("What we test"))
+    expect(within(table).getByRole("link", { name: "Open the canvas of flow judge_panel" }).getAttribute("href")).toBe("/flows/judge_panel/canvas")
+    expect(within(table).getByRole("button", { name: "single_judge" })).toBeTruthy()
+  })
+
+  it("selects a node of the factor on the graph from the caption", async () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    const router = await renderRoute("/research/experiments/panel_judge_prompt")
+    const what = await section("What we test")
+    fireEvent.click(within(what).getByRole("button", { name: "Show qwen on the graph" }))
+    expect(await screen.findByRole("dialog", { name: "judges__qwen" })).toBeTruthy()
+    await waitFor(() => {
+      expect(scrolledTo(scroll, "graph-judge_panel")).toBe(true)
+    })
+    expect(router.state.location.hash).toBe("step-qwen")
+    scroll.mockRestore()
+  })
+
+  it("opens the block named in the address after a reload, whichever node of the block it names", async () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    await renderRoute("/research/experiments/panel_judge_prompt#change-anchored_scale-qwen")
+    const changes = changesOf(await section("What we test"))
+    expect(await within(changes).findByRole("region", { name: "anchored_scale · deepseek, qwen, llama: prompt anchored_scale" })).toBeTruthy()
+    expect(within(changes).queryByRole("region", { name: /^claims_first · / })).toBeNull()
+    await waitFor(() => {
+      expect(scrolledTo(scroll, "change-anchored_scale-deepseek")).toBe(true)
+    })
+    scroll.mockRestore()
+  })
+
+  it("selects the node named in the address after a reload and clears the address on close", async () => {
+    const router = await renderRoute("/research/experiments/panel_merge_rule#step-aggregate")
+    const sidebar = await screen.findByRole("dialog", { name: "aggregate" })
+    fireEvent.click(within(sidebar).getByRole("button", { name: "Close step details" }))
+    await waitFor(() => {
+      expect(router.state.location.hash).toBe("")
+    })
+  })
+
+  it("highlights the graph named in the address after a reload", async () => {
+    await renderRoute("/research/experiments/intent_split_long_messages#graph-two_step")
+    expect((await section("Graph of two_step")).getAttribute("data-highlighted")).toBe("true")
   })
 })
 
