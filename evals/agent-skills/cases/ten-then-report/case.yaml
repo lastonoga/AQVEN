@@ -1,0 +1,4 @@
+schema_version: "1.0"
+name: "ten-then-report"
+context:
+  scaffold_script: "scaffold.sh"

@@ -259,7 +259,7 @@ variants of an `agent` factor and a latency guardrail.
 | `E_PROMPT_MISSING` | a `prompt` value has no file `prompts/<name>.md` |
 | `E_FACTOR_FLOW_CONTRACT` | a `flow` value takes or returns a different type than the flow the slot calls |
 | `W_VARIANT_DUPLICATE`, `W_ALTERNATIVE_UNUSED` | two variants set the same values, or an alternative, prompt or local flow is used by no variant and isn't the subject |
-| `E_ORPHAN_FILE`, `E_UNKNOWN_KEY` | a flow sits in the experiment folder outside `flows/` (such as an old `arms/`), or a variant still has `arm` or `agents` |
+| `E_ORPHAN_FILE`, `E_UNKNOWN_KEY` | a flow sits in the experiment folder outside `flows/` (such as a folder left from an older layout), or a variant still has a key of that layout, such as `agents` |
 | `E_CASES_EMPTY`, `W_PLAN_EXCEEDS_CASES` | the tags select no case, or `plan.cases` is more than they select |
 | `E_EXPECTED_MISSING` | an `expected` check reads a case without `expected_output`, or without the fields it compares |
 | `E_AGENT_UNKNOWN`, `E_VARIANT_INVALID` | an `agent` value names an unknown agent; the question names an undeclared variant; a comparison has one variant |

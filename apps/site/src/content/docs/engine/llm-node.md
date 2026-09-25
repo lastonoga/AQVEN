@@ -102,7 +102,7 @@ out:
 ```
 
 Notice the order of those `out` fields: `rationale` comes first, then `scores`, then `best_index`. That's
-deliberate, not cosmetic. A model writes its response one field at a time, in the order you declare them,
+deliberate, not a matter of taste. A model writes its response one field at a time, in the order you declare them,
 so a field can't lean on the value of a field that comes after it. Declare the reasoning field before the
 answer field and the reasoning happens before the model commits; declare it after, and it's just a
 justification for a choice already made. `tie_break.inference.yaml` gets this right: the judge writes its

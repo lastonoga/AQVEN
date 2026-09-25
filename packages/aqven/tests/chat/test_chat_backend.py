@@ -5,7 +5,9 @@ from pathlib import Path
 import pytest
 from claude_agent_sdk import ClaudeAgentOptions, CLINotFoundError, PermissionResultAllow, PermissionResultDeny
 
+from aqven.chat.agent_plugin import claude_plugins, claude_skills
 from aqven.chat.errors import ChatFailure
+from aqven.chat.host_block import HostFacts, host_block
 from aqven.chat.testing import ApprovalStep, ScriptedClaudeClient, ScriptedClientFactory
 from aqven.ports.chat import (
     AgentBackend,
@@ -93,8 +95,10 @@ def test_session_options_isolate_claude_and_route_mcp_with_bearer_token(tmp_path
     assert options.system_prompt == {
         "type": "preset",
         "preset": "claude_code",
-        "append": "Run aqven_check after every edit.",
+        "append": f"Run aqven_check after every edit.\n\n{host_block('claude', HostFacts.of(tmp_path, MCP_URL))}",
     }
+    assert options.plugins == claude_plugins()
+    assert options.skills == claude_skills()
     assert options.resume is None
 
 

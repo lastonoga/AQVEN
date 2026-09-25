@@ -1,0 +1,7 @@
+mcp-cli/runs.md
+concepts/finding-the-node-that-went-wrong.md
+studio/investigate-a-run.md
+studio/read-the-dev-console.md
+concepts/what-happens-when-a-model-is-called.md
+reference/error-codes.md
+reference/diagnostics.md

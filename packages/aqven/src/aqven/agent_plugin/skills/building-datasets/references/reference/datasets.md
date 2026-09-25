@@ -1,0 +1,30 @@
+# Datasets
+
+Generated field reference from the AQVEN Python package.
+
+This reference is generated from the package's Pydantic models. Fields use their YAML aliases. Unknown fields are rejected. Cross-field rules implemented by validators may not appear in JSON Schema; run `aqven check` on a complete project.
+
+## DatasetCase
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `name` | `string` | Yes | `—` | minLength=1 |
+| `inputs` | `JsonValue` | Yes | `—` | — |
+| `context` | `map<string, JsonValue> \| null` | No | `None` | — |
+| `node_outputs` | `map<string, JsonValue> \| null` | No | `None` | — |
+| `metadata` | `map<string, JsonValue> \| null` | No | `None` | — |
+| `tags` | `map<string, string> \| null` | No | `None` | — |
+| `expected_output` | `JsonValue` | No | `None` | — |
+
+JSON Schema
+
+## DatasetFile
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `apiVersion` | `'aqven/v1'` | Yes | `—` | — |
+| `kind` | `'Dataset'` | Yes | `—` | — |
+| `flow` | `string \| null` | No | `None` | — |
+| `cases` | `DatasetCase[]` | Yes | `—` | minItems=1 |
+
+JSON Schema

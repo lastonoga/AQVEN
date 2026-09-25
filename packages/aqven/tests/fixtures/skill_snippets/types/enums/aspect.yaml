@@ -1,0 +1,11 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "enum"
+description: "One thing a reviewer checks in a listing"
+values:
+- value: "condition"
+  description: "Wear, damage and defects the photos show"
+- value: "completeness"
+  description: "Whether every part the description promises is in the photos"
+- value: "safety"
+  description: "Exposed wiring, swollen batteries, burn marks and other hazards"

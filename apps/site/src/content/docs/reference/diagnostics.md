@@ -139,3 +139,4 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |
 | `W_VARIANT_DUPLICATE` | `warning` | experiment {experiment}: variant {variant} sets the same values as variant {first} |
 | `W_ALTERNATIVE_UNUSED` | `warning` | experiment {experiment}: {entity} is used by no variant |
+| `W_AGENT_SKILLS_STALE` | `warning` | out of sync with the installed aqven {version} in {target}: {problem} |

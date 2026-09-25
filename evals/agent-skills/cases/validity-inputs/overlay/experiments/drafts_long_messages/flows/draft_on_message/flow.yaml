@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "A reply draft written from the customer's message by the gpt agent"
+input: "CaseRequest"
+output: "ReplyDraft"
+returns:
+- name: "text"
+  from: "$draft.out.reply.text"
+- name: "citations"
+  from: "$draft.out.reply.citations"
+order:
+- "draft"

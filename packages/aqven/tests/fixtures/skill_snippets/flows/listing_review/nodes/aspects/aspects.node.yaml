@@ -1,0 +1,20 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "map"
+description: "Judges each aspect of the listing on its own"
+over: "$prepare.out.aspects"
+body: "judge_aspect"
+concurrency: 3
+on_item_error:
+  use: "skip"
+out:
+- name: "findings"
+  type: "Finding[]"
+  description: "Verdicts on the aspects that were read"
+  maxItems: 3
+  from: "$ok[*].finding"
+- name: "unread"
+  type: "MapItemError[]"
+  description: "Aspects that failed, each with its index, code and message"
+  maxItems: 3
+  from: "$failed"

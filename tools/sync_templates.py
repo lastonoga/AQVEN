@@ -20,9 +20,6 @@ PACKAGE_PATTERN: Final = re.compile(rf"\b{EXAMPLE_PACKAGE}\b")
 SOURCES: Final = (
     ".mcp.json",
     ".gitignore",
-    "CLAUDE.md",
-    "AGENTS.md",
-    ".claude",
     EXAMPLE_PACKAGE,
     "tests",
 )

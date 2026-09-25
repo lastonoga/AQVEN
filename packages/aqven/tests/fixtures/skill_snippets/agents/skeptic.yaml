@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Third opinion from another model family: Mistral Small through OpenRouter"
+model: "openrouter:mistralai/mistral-small-3.2-24b-instruct"
+settings:
+  max_tokens: 2000
+  provider_options:
+    provider:
+      require_parameters: true
+      data_collection: "deny"
+output:
+  mode: "tool"

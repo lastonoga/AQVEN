@@ -1,0 +1,173 @@
+# Statuses and verdicts
+
+Generated index of series statuses, pause reasons, verdicts, attempt outcomes and run statuses.
+
+## Contents
+
+- [Series status](#series-status)
+- [Pause reasons](#pause-reasons)
+- [Verdicts](#verdicts)
+- [Verdict reasons](#verdict-reasons)
+- [Attempt outcomes](#attempt-outcomes)
+- [Attempt rows](#attempt-rows)
+- [Check cells](#check-cells)
+- [Recommendation reasons](#recommendation-reasons)
+- [Degenerate estimates](#degenerate-estimates)
+- [Run status](#run-status)
+- [Step status](#step-status)
+- [Exit codes of `aqven series`](#exit-codes-of-aqven-series)
+
+The values below come from the enums of the AQVEN package. How a series decides explains how they are reached.
+
+## Series status
+
+`status` of a series. The command `aqven series` stops waiting at a settled status and exits with the code shown.
+
+| Status | Meaning | Final | Settled | Exit code |
+| --- | --- | --- | --- | --- |
+| `awaiting_approval` | waits for a person to decide on spend in Studio; `pause.reason` says why | no | yes | 3 |
+| `running` | attempts are running | no | no | — |
+| `waiting_human` | a running attempt waits for a person to answer the form of a `human` step | no | yes | 4 |
+| `done` | every attempt has finished; the verdict is final | yes | yes | 0 |
+| `cancelled` | cancelled before every attempt finished; the verdict is `invalid` | yes | yes | 1 |
+| `failed` | the series itself failed; the verdict is `invalid` | yes | yes | 1 |
+
+## Pause reasons
+
+`pause.reason` of a series in `awaiting_approval`.
+
+| Reason | Meaning |
+| --- | --- |
+| `cap_above_project` | the series was started with `cap_usd` above the project's spend cap; no attempt runs before a person approves |
+| `spend_near_cap` | the series has spent 90% of its cap; no new attempt starts before a person decides |
+
+## Verdicts
+
+`verdict.state` of a series; a `look` has no verdict.
+
+| Verdict | Meaning |
+| --- | --- |
+| `confirmed` | every primary metric and guardrail passed |
+| `refuted` | a primary metric or a guardrail failed |
+| `inconclusive` | neither; `reason` says why, for example `below_mde` |
+| `invalid` | the series cannot answer the question: cancelled, failed, cut by the budget, inputs changed while it ran, too many infrastructure errors, or no data |
+| `signal` | a result on dev cases or from a judge that no experiment validated: evidence to act on, not a finding |
+
+## Verdict reasons
+
+`verdict.reason`: why a verdict is not a plain answer.
+
+| Value |
+| --- |
+| `below_mde` |
+| `uninformative` |
+| `no_discordance` |
+| `compute_confounded` |
+| `inputs_changed` |
+| `infra_errors` |
+| `no_data` |
+| `budget_cut` |
+| `cancelled` |
+| `dev_split` |
+| `judge_not_validated` |
+
+## Attempt outcomes
+
+How a series counts one attempt. Counted outcomes enter the metrics of the checks; the others are infrastructure and do not.
+
+| Outcome | Error codes | Counted | Checks of the attempt |
+| --- | --- | --- | --- |
+| `ok` | — | yes | scored on the output |
+| `model_fail` | `check_failed`, `truncated` | yes | binary checks fail, other checks are skipped |
+| `schema_invalid` | `MODEL_NO_STRUCTURED_OUTPUT`, `MODEL_INVALID_JSON`, `MODEL_SCHEMA_MISMATCH`, `MODEL_RETRIES_EXHAUSTED`, `OUTPUT_SCHEMA_REJECTED`, `output_invalid` | yes | binary checks fail, other checks are skipped |
+| `refusal` | `refusal` | yes | binary checks fail, other checks are skipped |
+| `infra_error` | `provider_error`, `timeout`, `MODEL_STREAM_STALLED`, `provider_key_missing`, `MODEL_FEATURE_UNSUPPORTED`, `cassette_miss`, `media_unavailable`, `INTERNAL`, `PLAN_MISSING`, `FLOW_NOT_FOUND`, `INPUT_INVALID`, `HUMAN_TIMED_OUT`, `code_invalid`, `prompt_invalid`, `RETURNS_UNRESOLVED`, any other error code | no | skipped |
+| `budget_cut` | `budget_exceeded` | no | skipped |
+| `cancelled` | — | no | skipped |
+
+## Attempt rows
+
+`outcome` of an attempt in the rows of a series.
+
+| Outcome | Meaning |
+| --- | --- |
+| `passed` | finished with outcome `ok` and every check passed |
+| `failed` | finished with a counted outcome and did not pass |
+| `error` | finished with an outcome that is not counted, or stopped before it finished |
+| `waiting` | its run waits for a person |
+| `running` | its run is running |
+
+## Check cells
+
+`verdict` of one metric of one variant in the series matrix.
+
+| Value |
+| --- |
+| `pass` |
+| `fail` |
+| `unclear` |
+| `reference` |
+| `none` |
+
+## Recommendation reasons
+
+`recommended.reason` in the launch plan of a series.
+
+| Value |
+| --- |
+| `look` |
+| `wide` |
+| `enough` |
+| `no_margin` |
+| `no_history` |
+| `short_of_cases` |
+
+## Degenerate estimates
+
+`degenerate` of an estimate that has no usable interval.
+
+| Value |
+| --- |
+| `no_data` |
+| `too_few_cases` |
+| `too_few_attempts` |
+| `no_discordance` |
+| `uninformative` |
+| `numeric` |
+
+## Run status
+
+`status` of a run.
+
+| Value |
+| --- |
+| `queued` |
+| `running` |
+| `suspended` |
+| `completed` |
+| `failed` |
+| `cancelled` |
+
+## Step status
+
+`status` of one step of a run.
+
+| Value |
+| --- |
+| `pending` |
+| `running` |
+| `ok` |
+| `failed` |
+| `skipped` |
+| `suspended` |
+| `cancelled` |
+
+## Exit codes of `aqven series`
+
+| Exit code | When |
+| --- | --- |
+| 0 | `done` |
+| 1 | `cancelled`; `failed`; the command failed, for example the project server did not answer |
+| 2 | the server refused the series: `INPUT_INVALID`, `NOT_FOUND`, `NOT_RUNNABLE`, `REQUEST_INVALID` |
+| 3 | `awaiting_approval` |
+| 4 | `waiting_human` |

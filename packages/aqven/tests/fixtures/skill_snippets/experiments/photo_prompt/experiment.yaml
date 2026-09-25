@@ -1,0 +1,34 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Asking for the photo notes before the comparison with the text loses at most 5 points of right decisions on every node that reads photos"
+failure_mode: "wrong_decision"
+subject:
+  flow: "listing_review"
+varies:
+  what: "prompt"
+  nodes:
+  - "match_photos"
+cases:
+  dataset: "listing_cases"
+  tags:
+    source: "seller"
+variants:
+- id: "as_written"
+- id: "photos_first"
+  nodes:
+    match_photos: "photos_first"
+checks:
+- id: "decision_right"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "decision"
+question:
+  kind: "noninferior"
+  baseline: "as_written"
+  candidate: "photos_first"
+  primary: "decision_right"
+  margin: 0.05
+plan:
+  repeats: 3

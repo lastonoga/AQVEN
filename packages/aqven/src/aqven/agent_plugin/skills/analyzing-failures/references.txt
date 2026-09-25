@@ -1,0 +1,6 @@
+concepts/finding-the-node-that-went-wrong.md
+mcp-cli/research-loop.md
+studio/investigate-a-run.md
+engine/custom-evaluator.md
+concepts/hypothesis-categories.md
+concepts/literature-scan.md

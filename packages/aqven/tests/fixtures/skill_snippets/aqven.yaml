@@ -1,0 +1,16 @@
+apiVersion: "aqven/v1"
+kind: "Project"
+description: "Reviews marketplace listings from their text and photos"
+package: "skill_snippets"
+providers:
+- id: "openrouter"
+  api_key: "ref:env/OPENROUTER_API_KEY"
+  data_policy:
+    allows_pii: false
+    allows_sensitive: false
+    retention: "unknown"
+  limits:
+    concurrency: 4
+  on_rate_limit: "auto"
+research:
+  spend_cap_usd: 2.00

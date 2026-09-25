@@ -27,5 +27,7 @@ The command names and help text below come from `aqven.cli.COMMANDS`. Use `uv ru
 | `{{CLI_COMMAND}} secrets` | every secret the project declares, where it comes from and whether it is set | Available |
 | `{{CLI_COMMAND}} prompt` | prompts of llm nodes | Available |
 | `{{CLI_COMMAND}} series` | run a series of an experiment on the project server and wait for its verdict | Available |
+| `{{CLI_COMMAND}} skills` | the aqven skills and agent rules of a project for Claude Code and Codex outside Studio | Available |
+| `{{CLI_COMMAND}} hook` | answer one Claude Code hook event read from stdin with reminders for the agent; it never blocks a tool call; hooks: reminders, compaction | Available |
 
 Pending commands are registered for future use but return `not implemented`; do not put them in automation. [How to check a project before committing](/engine/check/) shows a working command sequence.
