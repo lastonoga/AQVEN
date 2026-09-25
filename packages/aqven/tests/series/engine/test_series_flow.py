@@ -152,6 +152,6 @@ def test_subject_and_judge_runs_name_their_series_and_experiment(tmp_path: Path)
     with series_engine(root, ScriptedModels()) as harness:
         series_id, subject, judge = asyncio.run(subject_and_judge_runs(harness))
 
-    assert (subject.series_id, subject.experiment_id, subject.arm_id) == (series_id, EXPERIMENT, None)
-    assert (judge.series_id, judge.experiment_id, judge.arm_id) == (series_id, EXPERIMENT, None)
+    assert (subject.series_id, subject.experiment_id, subject.flow_experiment_id) == (series_id, EXPERIMENT, None)
+    assert (judge.series_id, judge.experiment_id, judge.flow_experiment_id) == (series_id, EXPERIMENT, None)
     assert subject.flow_id == "triage"

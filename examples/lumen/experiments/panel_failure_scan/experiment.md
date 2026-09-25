@@ -6,8 +6,8 @@ The panel has no failure mode on record yet besides "wrong winner". This experim
 tie-break agents and puts the detectors side by side, so the failures can be grouped and named before any of them
 becomes a hypothesis. `failure_mode` stays unset until they are.
 
-**Variants.** `gpt_tie_break` is the flow as written. `mistral_tie_break` puts the Mistral agent on
-`decide__tie_break`. Mistral also writes one of the drafts upstream, so this variant shows whether a tie-break from an
+**Variants.** The factor is the agent on the `tie_break` node. `gpt_tie_break` is the flow as written.
+`mistral_tie_break` puts the Mistral agent on `tie_break`. Mistral also writes one of the drafts upstream, so this variant shows whether a tie-break from an
 author family favours its own style.
 
 **Detectors.** None of them is a verdict; each points at a kind of failure.

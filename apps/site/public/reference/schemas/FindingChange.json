@@ -1,0 +1,37 @@
+{
+  "$defs": {
+    "FactorKind": {
+      "description": "The kind of edit an experiment factor makes on each of its nodes.\n\n``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm\nnode, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at\nanother flow.",
+      "enum": [
+        "agent",
+        "prompt",
+        "use",
+        "flow"
+      ],
+      "title": "FactorKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One value of the experiment factor the variant set: ``what`` kind of edit on node ``node_id``.\n\n``value`` reads by ``what``: an agent id (``agent``), a prompt name of the experiment ``prompts/`` folder\n(``prompt``), an alternative id of its ``nodes/`` folder (``use``) or a flow id (``flow``).",
+  "properties": {
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "string"
+    },
+    "what": {
+      "$ref": "#/$defs/FactorKind"
+    }
+  },
+  "required": [
+    "node_id",
+    "what",
+    "value"
+  ],
+  "title": "FindingChange",
+  "type": "object"
+}

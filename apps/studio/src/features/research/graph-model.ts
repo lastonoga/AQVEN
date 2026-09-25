@@ -1,26 +1,36 @@
-import type { AgentRef, ApiNode, ApiPromptDetail, ArmId, ArmStep, ExperimentDetail, ExperimentVariant, FlowId, NodeKind, NodeRange, VariantId } from "@/domain"
+import type { AgentRef, ApiNode, ApiPromptDetail, ExperimentDetail, ExperimentVariant, FactorKind, FlowId, FlowStep, NodeKind, NodeRange, VariantId } from "@/domain"
 import type { CanvasGraph, FlowStepSchemas, StepSchemas } from "@/features/flow"
-import { variantArm } from "./variant-table"
+import { changeAt, localNode } from "./variant-table"
 
 export type PromptSource =
   | { readonly kind: "flow"; readonly flow: FlowId }
-  | { readonly kind: "arm"; readonly prompts: Readonly<Record<string, ApiPromptDetail>> }
+  | { readonly kind: "local"; readonly prompts: Readonly<Record<string, ApiPromptDetail>> }
 
 export type SubjectGraph = {
   readonly key: string
-  readonly arm: ArmId | null
+  readonly flow: FlowId
+  readonly local: boolean
   readonly nodes: readonly ApiNode[]
   readonly order: readonly string[]
   readonly schemas: FlowStepSchemas
   readonly prompts: PromptSource
 }
 
+export type GraphRole = "subject" | "called"
+
+export type StepMark =
+  | { readonly kind: "swap"; readonly agents: string }
+  | { readonly kind: "factor"; readonly what: FactorKind; readonly values: readonly string[] }
+
 export type GraphView = {
   readonly source: SubjectGraph
+  readonly role: GraphRole
   readonly variants: readonly ExperimentVariant[]
   readonly dimmed: ReadonlySet<string>
-  readonly swaps: ReadonlyMap<string, string>
+  readonly marks: ReadonlyMap<string, StepMark>
 }
+
+type Experiment = Pick<ExperimentDetail, "subject" | "varies" | "flows" | "variants">
 
 export type NodeAgent = {
   readonly variant: VariantId
@@ -79,23 +89,30 @@ export const outsideRange = (graph: SubjectGraph, range: NodeRange | null): Read
   return new Set(graph.nodes.map((node) => node.node_id).filter((id) => !inside.has(rootOf(nodes, id))))
 }
 
+const isSubject = (experiment: Pick<ExperimentDetail, "subject">, graph: SubjectGraph): boolean => experiment.subject.flow === graph.flow
+
 const rangeOf = (experiment: Pick<ExperimentDetail, "subject">, graph: SubjectGraph): NodeRange | null => {
   const { subject } = experiment
-  if (subject.kind === "range") return subject.range
-  if (subject.kind === "arm" && subject.arm === graph.arm) return subject.range
-  return null
+  if (subject.kind !== "range" || !isSubject(experiment, graph)) return null
+  return subject.range
 }
 
-export const variantsOn = (experiment: Pick<ExperimentDetail, "subject" | "variants">, arm: ArmId | null): readonly ExperimentVariant[] =>
-  experiment.variants.filter((variant) => variantArm(experiment, variant) === arm)
+const callsFlow = (variant: ExperimentVariant, flow: FlowId): boolean => variant.changes.some((change) => change.what === "flow" && change.value === flow)
 
-const stepOf = (experiment: Pick<ExperimentDetail, "arms">, arm: ArmId | null, node: string): ArmStep | null =>
-  experiment.arms.find((item) => item.id === arm)?.steps.find((step) => step.node === node) ?? null
+export const variantsOn = (experiment: Experiment, graph: SubjectGraph): readonly ExperimentVariant[] => {
+  if (isSubject(experiment, graph)) return experiment.variants
+  return experiment.variants.filter((variant) => callsFlow(variant, graph.flow))
+}
+
+const stepOf = (experiment: Pick<ExperimentDetail, "flows">, graph: SubjectGraph, node: string): FlowStep | null => {
+  if (!graph.local) return null
+  return experiment.flows.find((item) => item.id === graph.flow)?.steps.find((step) => step.node === node) ?? null
+}
 
 const agentText = (agent: AgentRef | null): Fallback => ({ agent: agent?.id ?? null, model: agent?.model ?? null })
 
-const fallbackOf = (experiment: Pick<ExperimentDetail, "arms">, graph: SubjectGraph, node: ApiNode): Fallback => {
-  const step = stepOf(experiment, graph.arm, node.node_id)
+const fallbackOf = (experiment: Pick<ExperimentDetail, "flows">, graph: SubjectGraph, node: ApiNode): Fallback => {
+  const step = stepOf(experiment, graph, node.node_id)
   if (step !== null) return agentText(step.agent)
   return { agent: node.agent, model: null }
 }
@@ -113,48 +130,68 @@ export const swapText = (agents: readonly NodeAgent[]): string | null => {
   return distinct.join(distinct.length === PAIR ? PAIR_JOIN : MANY_JOIN)
 }
 
-const swapsOf = (experiment: Pick<ExperimentDetail, "arms">, graph: SubjectGraph, variants: readonly ExperimentVariant[]): ReadonlyMap<string, string> =>
+const swapMark = (experiment: Experiment, graph: SubjectGraph, variants: readonly ExperimentVariant[], node: ApiNode): StepMark | null => {
+  const agents = swapText(nodeAgents(variants, node.node_id, fallbackOf(experiment, graph, node)))
+  return agents === null ? null : { kind: "swap", agents }
+}
+
+const factorMark = (experiment: Experiment, graph: SubjectGraph, node: ApiNode): StepMark | null => {
+  const factor = experiment.varies
+  if (factor === null || !isSubject(experiment, graph)) return null
+  const local = localNode(node.node_id)
+  if (!factor.nodes.includes(local)) return null
+  const values = [...new Set(experiment.variants.flatMap((variant) => changeAt(variant, local)?.value ?? []))]
+  return { kind: "factor", what: factor.what, values }
+}
+
+const marksOf = (experiment: Experiment, graph: SubjectGraph, variants: readonly ExperimentVariant[]): ReadonlyMap<string, StepMark> =>
   new Map(
     graph.nodes.flatMap((node) => {
-      const swap = swapText(nodeAgents(variants, node.node_id, fallbackOf(experiment, graph, node)))
-      return swap === null ? [] : [[node.node_id, swap] as const]
+      const mark = swapMark(experiment, graph, variants, node) ?? factorMark(experiment, graph, node)
+      return mark === null ? [] : [[node.node_id, mark] as const]
     }),
   )
 
-export const graphViews = (experiment: Pick<ExperimentDetail, "subject" | "arms" | "variants">, graphs: readonly SubjectGraph[]): readonly GraphView[] =>
+export const graphViews = (experiment: Experiment, graphs: readonly SubjectGraph[]): readonly GraphView[] =>
   graphs.map((source) => {
-    const variants = variantsOn(experiment, source.arm)
-    return { source, variants, dimmed: outsideRange(source, rangeOf(experiment, source)), swaps: swapsOf(experiment, source, variants) }
+    const variants = variantsOn(experiment, source)
+    return {
+      source,
+      role: isSubject(experiment, source) ? "subject" : "called",
+      variants,
+      dimmed: outsideRange(source, rangeOf(experiment, source)),
+      marks: marksOf(experiment, source, variants),
+    }
   })
 
-export const markSwaps = (graph: CanvasGraph, swaps: ReadonlyMap<string, string>, label: (agents: string) => string): CanvasGraph => ({
+export const markSteps = (graph: CanvasGraph, marks: ReadonlyMap<string, StepMark>, label: (mark: StepMark) => string): CanvasGraph => ({
   ...graph,
   nodes: graph.nodes.map((node) => {
-    const swap = swaps.get(node.id)
-    if (swap === undefined || node.role !== "step") return node
-    return { ...node, meta: label(swap) }
+    const mark = marks.get(node.id)
+    if (mark === undefined || node.role !== "step") return node
+    return { ...node, meta: label(mark) }
   }),
 })
 
 const NO_PROMPT: StepPrompt = { kind: "none" }
 
-const armPrompt = (prompts: Readonly<Record<string, ApiPromptDetail>>, node: string): StepPrompt => {
+const localPrompt = (prompts: Readonly<Record<string, ApiPromptDetail>>, node: string): StepPrompt => {
   const prompt = prompts[node]
   return prompt === undefined ? NO_PROMPT : { kind: "ready", prompt }
 }
 
 const promptOf = (source: PromptSource, node: ApiNode): StepPrompt => {
   if (node.inference === null) return NO_PROMPT
-  if (source.kind === "arm") return armPrompt(source.prompts, node.node_id)
+  if (source.kind === "local") return localPrompt(source.prompts, node.node_id)
   return { kind: "remote", flow: source.flow, node: node.node_id }
 }
 
-const descriptionOf = (experiment: Pick<ExperimentDetail, "arms">, source: SubjectGraph, node: string): StepDescription => {
+const descriptionOf = (experiment: Pick<ExperimentDetail, "flows">, source: SubjectGraph, node: string): StepDescription => {
   if (source.prompts.kind === "flow") return { kind: "remote", flow: source.prompts.flow, node }
-  return { kind: "ready", text: stepOf(experiment, source.arm, node)?.description ?? null }
+  return { kind: "ready", text: stepOf(experiment, source, node)?.description ?? null }
 }
 
-export const nodeFacts = (experiment: Pick<ExperimentDetail, "arms">, view: GraphView, id: string): NodeFacts | null => {
+export const nodeFacts = (experiment: Pick<ExperimentDetail, "flows">, view: GraphView, id: string): NodeFacts | null => {
   const node = byNode(view.source.nodes).get(id)
   if (node === undefined) return null
   return {
@@ -170,7 +207,7 @@ export const nodeFacts = (experiment: Pick<ExperimentDetail, "arms">, view: Grap
 
 export type StepSelection = { readonly graph: string; readonly node: string }
 
-export const selectedFacts = (experiment: Pick<ExperimentDetail, "arms">, views: readonly GraphView[], selection: StepSelection | null): NodeFacts | null => {
+export const selectedFacts = (experiment: Pick<ExperimentDetail, "flows">, views: readonly GraphView[], selection: StepSelection | null): NodeFacts | null => {
   if (selection === null) return null
   const view = views.find((item) => item.source.key === selection.graph)
   if (view === undefined) return null

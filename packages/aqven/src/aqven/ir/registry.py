@@ -35,6 +35,7 @@ from aqven.spec import (
     ToolId,
     TypeId,
 )
+from aqven.spec.builtins import absent
 
 type ModelText = Annotated[ModelString, Field(pattern=MODEL_PATTERN)]
 type ProviderText = Annotated[ProviderName, Field(pattern=PROVIDER_NAME_PATTERN)]
@@ -143,6 +144,7 @@ class CompiledInference(IrModel):
     checks: tuple[CompiledCheck, ...] = ()
     display: CompiledInferenceDisplay | None = None
     file: str | None = None
+    origin: InferenceId | None = Field(default=None, exclude_if=absent)
 
 
 class CodeToolSource(IrModel):

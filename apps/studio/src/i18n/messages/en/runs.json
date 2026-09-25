@@ -101,7 +101,7 @@
     "changed": "The flow changed after this run",
     "timelineAria": "Executions of this run",
     "series": "attempt of series {series}",
-    "arm": "arm {arm} of experiment {experiment}"
+    "experimentFlow": "flow {flow} of experiment {experiment}"
   },
   "dataset": {
     "label": "Dataset",

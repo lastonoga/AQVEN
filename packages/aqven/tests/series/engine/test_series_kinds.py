@@ -2,7 +2,8 @@ import asyncio
 from pathlib import Path
 from typing import Final
 
-from series_fixture import ABOVE_PROJECT_CAP, write_project
+from dbos import DBOS, WorkflowHandleAsync
+from series_fixture import ABOVE_PROJECT_CAP, TERSE_MARKER, write_project
 from series_harness import (
     CHEAP_NAME,
     FINDING_PATH,
@@ -14,12 +15,12 @@ from series_harness import (
     settled,
 )
 
-from aqven.engine import DbosEngineFacade
+from aqven.engine import DbosEngineFacade, RunRecord
 from aqven.ports.engine import RunListQuery
-from aqven.runtime.address import ClientOpId
+from aqven.runtime.address import ClientOpId, JsonObject
 from aqven.series.model import AttemptRecord, CheckState, OutcomeClass, SeriesRecord, SeriesStatus
 from aqven.series.views import LookTarget, SeriesListQuery, SeriesStarted, SeriesStartRequest
-from aqven.spec import ArmId, DatasetId, ExperimentId, FlowId, SeriesSplit, VerdictReason, VerdictState
+from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
 AGENT: Final = WriteActor(kind="agent", id="mcp")
@@ -68,32 +69,112 @@ def test_a_range_series_runs_from_the_recorded_node_outputs(tmp_path: Path) -> N
     assert all(attempt.models == {} for attempt in attempts)
 
 
-type RunTags = set[tuple[FlowId, str | None, ExperimentId | None, ArmId | None]]
+type RunTags = set[tuple[FlowId, str | None, ExperimentId | None, ExperimentId | None]]
 
 
-async def arm_runs(harness: SeriesHarness) -> tuple[SeriesRecord, tuple[AttemptRecord, ...], RunTags, RunTags]:
+async def local_runs(harness: SeriesHarness) -> tuple[SeriesRecord, tuple[AttemptRecord, ...], RunTags, RunTags]:
     record, attempts = await finished(harness, SeriesStartRequest(experiment_id=ExperimentId("triage_solo")))
     facade = DbosEngineFacade(runtime=harness.runtime)
     page = await facade.list_runs(RunListQuery(mode="experiment"))
-    listed = {(row.flow_id, row.series_id, row.experiment_id, row.arm_id) for row in page.items}
+    listed = {(row.flow_id, row.series_id, row.experiment_id, row.flow_experiment_id) for row in page.items}
     detail = await facade.get_run(attempts[0].run_id)
-    return record, attempts, listed, {(detail.flow_id, detail.series_id, detail.experiment_id, detail.arm_id)}
+    shown = {(detail.flow_id, detail.series_id, detail.experiment_id, detail.flow_experiment_id)}
+    return record, attempts, listed, shown
 
 
-def test_an_arm_series_runs_the_arm_flow_with_each_variant_agent(tmp_path: Path) -> None:
+def test_a_local_flow_series_runs_the_flow_of_the_experiment_with_each_variant_agent(tmp_path: Path) -> None:
     root = write_project(tmp_path)
 
     with series_engine(root, ScriptedModels()) as harness:
-        record, attempts, listed, detail = asyncio.run(arm_runs(harness))
+        record, attempts, listed, detail = asyncio.run(local_runs(harness))
 
     assert record.status is SeriesStatus.DONE
     assert record.flow_id is None
+    assert record.plan.subject.local_flow
     assert len(attempts) == 8
-    assert listed == detail == {("solo", record.series_id, "triage_solo", "solo")}
+    assert listed == detail == {("solo", record.series_id, "triage_solo", "triage_solo")}
     assert {attempt.variant_id: attempt.models["answer"] for attempt in attempts} == {
         "writer": f"openai:{WRITER_NAME}",
         "cheap": f"openai:{CHEAP_NAME}",
     }
+
+
+async def outputs_of(attempts: tuple[AttemptRecord, ...]) -> dict[str, set[str]]:
+    outputs: dict[str, set[str]] = {}
+    for attempt in attempts:
+        handle: WorkflowHandleAsync[JsonObject] = await DBOS.retrieve_workflow_async(attempt.run_id)
+        record = RunRecord.model_validate(await handle.get_result())
+        label = record.output.get("label") if isinstance(record.output, dict) else None
+        outputs.setdefault(attempt.variant_id, set()).add(str(label))
+    return outputs
+
+
+async def factor_series(
+    harness: SeriesHarness, experiment_id: str
+) -> tuple[SeriesRecord, tuple[AttemptRecord, ...], dict[str, set[str]]]:
+    record, attempts = await finished(harness, SeriesStartRequest(experiment_id=ExperimentId(experiment_id)))
+    return record, attempts, await outputs_of(attempts)
+
+
+def models_by_variant(attempts: tuple[AttemptRecord, ...]) -> dict[str, set[str]]:
+    found: dict[str, set[str]] = {}
+    for attempt in attempts:
+        found.setdefault(attempt.variant_id, set()).update(attempt.models.values())
+    return found
+
+
+def test_an_agent_variant_answers_with_its_own_agent(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels()) as harness:
+        record, attempts, _ = asyncio.run(factor_series(harness, "triage_agents"))
+
+    assert record.status is SeriesStatus.DONE
+    assert {attempt.variant_id: attempt.models["classify"] for attempt in attempts} == {
+        "writer": f"openai:{WRITER_NAME}",
+        "cheap": f"openai:{CHEAP_NAME}",
+    }
+
+
+def test_a_prompt_variant_sends_the_experiment_prompt_to_the_model(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+    log = tmp_path / "prompts.log"
+    models = ScriptedModels(writer=ScriptedLabels(WRITER_NAME, log=log))
+
+    with series_engine(root, models) as harness:
+        record, attempts, _ = asyncio.run(factor_series(harness, "triage_prompts"))
+    prompts = log.read_text(encoding="utf-8").splitlines()
+
+    assert record.status is SeriesStatus.DONE
+    assert [attempt.outcome for attempt in attempts] == [OutcomeClass.OK] * 4
+    assert sum(TERSE_MARKER in line for line in prompts) == 2
+    assert sum(TERSE_MARKER not in line for line in prompts) == 2
+    assert {variant.variant_id: len(variant.changes) for variant in record.plan.variants} == {
+        "as_written": 0,
+        "terse": 1,
+    }
+
+
+def test_a_use_variant_answers_with_the_alternative_node(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels()) as harness:
+        record, _, outputs = asyncio.run(factor_series(harness, "triage_use"))
+
+    assert record.status is SeriesStatus.DONE
+    assert outputs == {"as_written": {"ok", "bad"}, "shout": {"OK", "BAD"}}
+
+
+def test_a_flow_variant_runs_the_other_flow_behind_the_call_node(tmp_path: Path) -> None:
+    root = write_project(tmp_path)
+
+    with series_engine(root, ScriptedModels()) as harness:
+        record, attempts, outputs = asyncio.run(factor_series(harness, "desk_flows"))
+
+    assert record.status is SeriesStatus.DONE
+    assert record.flow_id == "desk"
+    assert models_by_variant(attempts) == {"full": {f"openai:{WRITER_NAME}"}, "quick": {f"openai:{CHEAP_NAME}"}}
+    assert outputs == {"full": {"ok", "bad"}, "quick": {"ok", "bad"}}
 
 
 def test_a_holdout_series_publishes_its_finding(tmp_path: Path) -> None:

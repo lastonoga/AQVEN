@@ -28,13 +28,13 @@ from aqven.runtime.address import RunId
 from aqven.runtime.human import HumanWait
 from aqven.runtime.runs import Lineage, NodeCounts, RunSummary
 from aqven.runtime.vocabulary import RunMode, RunStatus, TerminalRunStatus
-from aqven.spec import ArmId, ExperimentId, FlowId, NodeId
+from aqven.spec import ExperimentId, FlowId, NodeId
 
 SUMMARY_DATABASE: Final = "aqven.sqlite"
 SUMMARIES_TABLE: Final = "aqven_run_summaries"
 VERSIONS_TABLE: Final = "aqven_schema_versions"
 SCHEMA_COMPONENT: Final = "run_summaries"
-SCHEMA_VERSION: Final = 1
+SCHEMA_VERSION: Final = 2
 CONNECT_TIMEOUT: Final = 30
 RUNNING: Final[RunStatus] = "running"
 QUEUED: Final[RunStatus] = "queued"
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS {SUMMARIES_TABLE} (
     end_node TEXT,
     series_id TEXT,
     experiment_id TEXT,
-    arm_id TEXT,
+    flow_experiment_id TEXT,
     dbos_status TEXT,
     dbos_closed_at INTEGER,
     finished_status TEXT CHECK (finished_status IN ('completed', 'failed', 'cancelled')),
@@ -113,7 +113,7 @@ CREATE INDEX IF NOT EXISTS {SUMMARIES_TABLE}_open
 ADMIT: Final = f"""
 INSERT INTO {SUMMARIES_TABLE} (
     run_id, admission, flow_id, mode, created_at, forked_from, dataset_item_id, selected_nodes,
-    start_node, end_node, series_id, experiment_id, arm_id, dbos_status, dbos_closed_at
+    start_node, end_node, series_id, experiment_id, flow_experiment_id, dbos_status, dbos_closed_at
 ) VALUES (?, 'listed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (run_id) DO UPDATE SET
     admission = 'listed',
@@ -127,7 +127,7 @@ ON CONFLICT (run_id) DO UPDATE SET
     end_node = excluded.end_node,
     series_id = excluded.series_id,
     experiment_id = excluded.experiment_id,
-    arm_id = excluded.arm_id,
+    flow_experiment_id = excluded.flow_experiment_id,
     dbos_status = excluded.dbos_status,
     dbos_closed_at = excluded.dbos_closed_at
 """
@@ -177,7 +177,7 @@ RECORD_COLUMNS: Final = (
     "end_node",
     "series_id",
     "experiment_id",
-    "arm_id",
+    "flow_experiment_id",
     "finished_status",
     "finished_at",
     "dbos_closed_at",
@@ -222,7 +222,7 @@ class SummaryRecord(BaseModel):
     end_node: NodeId | None
     series_id: str | None
     experiment_id: ExperimentId | None
-    arm_id: ArmId | None
+    flow_experiment_id: ExperimentId | None
     finished_status: TerminalRunStatus | None
     finished_at: str | None
     dbos_closed_at: int | None
@@ -267,7 +267,7 @@ class SummaryRecord(BaseModel):
             end_node=self.end_node,
             series_id=self.series_id,
             experiment_id=self.experiment_id,
-            arm_id=self.arm_id,
+            flow_experiment_id=self.flow_experiment_id,
         )
 
 
@@ -297,7 +297,7 @@ def admitted_row(run: AdmittedRun) -> tuple[SqlValue, ...]:
         spec.end_node,
         None if series is None else series.series_id,
         None if series is None else series.experiment_id,
-        None if series is None else series.arm_id,
+        None if series is None else series.flow_experiment_id,
         run.status.dbos_status,
         run.status.closed_at,
     )

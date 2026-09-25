@@ -5,10 +5,9 @@ from pydantic import Field, model_validator
 from aqven.spec.common import SpecModel
 from aqven.spec.names import (
     NAME_PATTERN,
-    AgentId,
-    ArmId,
     DatasetId,
     ExperimentId,
+    FactorKind,
     FlowId,
     MetricDirection,
     MetricKind,
@@ -21,26 +20,43 @@ MAX_REPEATS = 20
 
 type MetricName = Annotated[str, Field(pattern=NAME_PATTERN)]
 type TagName = Annotated[str, Field(pattern=NAME_PATTERN)]
+type FactorNode = Annotated[NodeId, Field(pattern=NAME_PATTERN)]
+type FactorValue = Annotated[str, Field(pattern=NAME_PATTERN)]
 
 
 class ExperimentSubject(SpecModel):
-    """What the experiment runs: a project flow, an arm of this experiment, or a range of top-level nodes.
+    """What the experiment runs: a flow, whole or as a range of its top-level nodes.
 
-    Exactly one of ``flow`` and ``arm`` is set. ``from`` and ``to`` narrow the run to a contiguous range of
-    top-level nodes; nodes before the range take their outputs from the case ``node_outputs``.
+    ``flow`` names a local flow of this experiment (``flows/<flow_id>/`` in the experiment folder) or a project
+    flow; a local flow is looked up first. ``from`` and ``to`` narrow the run to a contiguous range of top-level
+    nodes; nodes before the range take their outputs from the case ``node_outputs``.
     """
 
-    flow: FlowId | None = None
-    arm: ArmId | None = None
+    flow: FlowId
     from_: NodeId | None = Field(default=None, alias="from")
     to: NodeId | None = None
 
     @model_validator(mode="after")
-    def _one_target(self) -> Self:
-        if (self.flow is None) == (self.arm is None):
-            raise ValueError("a subject sets exactly one of flow (a project flow) or arm (an arm of this experiment)")
+    def _both_ends(self) -> Self:
         if (self.from_ is None) != (self.to is None):
             raise ValueError("a range sets both from and to")
+        return self
+
+
+class ExperimentFactor(SpecModel):
+    """The one factor the variants of an experiment change: ``what`` kind of edit on which ``nodes`` of the subject.
+
+    ``nodes`` lists local node ids of the subject flow, each once; a nested node is named by its own id. Every
+    variant sets values of this factor only, so a series tells which edit made the difference.
+    """
+
+    what: FactorKind
+    nodes: list[FactorNode] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _distinct_nodes(self) -> Self:
+        if len(set(self.nodes)) != len(self.nodes):
+            raise ValueError("varies.nodes names every node once")
         return self
 
 
@@ -55,15 +71,16 @@ class CaseSelection(SpecModel):
 
 
 class VariantSpec(SpecModel):
-    """One variant of the subject: agents assigned to LLM nodes, another arm, or the subject as written.
+    """One variant of the subject: the value of the experiment factor on some of its nodes.
 
-    ``agents`` maps a node id of the subject (or of ``arm``) to an agent id; nodes not listed keep their own agent.
-    A variant never names a bare model: an agent carries the model, its settings and the output mode.
+    ``nodes`` maps a node of ``varies.nodes`` to its value, whose kind ``varies.what`` sets: an agent id
+    (``agent``), a prompt name from the experiment ``prompts/`` folder (``prompt``), an alternative id from its
+    ``nodes/`` folder (``use``) or a flow id, local to the experiment first, then of the project (``flow``). A
+    factor node the variant leaves out runs as written; a variant without ``nodes`` is the subject as written.
     """
 
     id: VariantId = Field(pattern=NAME_PATTERN)
-    arm: ArmId | None = None
-    agents: dict[NodeId, AgentId] | None = None
+    nodes: dict[FactorNode, FactorValue] | None = None
 
 
 class CheckMetric(SpecModel):
@@ -181,10 +198,12 @@ class ExperimentPlan(SpecModel):
 
 
 class ExperimentSpec(SpecModel):
-    """An experiment: subject × variants × cases × checks × question.
+    """An experiment: subject × factor × variants × cases × checks × question.
 
-    The question picks the statistic and the verdict. Evals, agent comparisons, regressions, judge validation
-    and risky hypotheses are all experiments that differ only in their question and variants.
+    ``varies`` declares the one factor the variants change; it is required once there is more than one variant.
+    The question picks the statistic and the verdict. Evals, agent comparisons, prompt and pattern comparisons,
+    regressions, judge validation and risky hypotheses are all experiments that differ only in their factor,
+    variants and question.
     """
 
     api_version: Literal["aqven/v1"] = Field(alias="apiVersion")
@@ -192,6 +211,7 @@ class ExperimentSpec(SpecModel):
     description: str = Field(min_length=1)
     failure_mode: str | None = Field(default=None, pattern=NAME_PATTERN)
     subject: ExperimentSubject
+    varies: ExperimentFactor | None = None
     cases: CaseSelection
     variants: list[VariantSpec] = Field(min_length=1)
     checks: list[ExperimentCheck] | None = None

@@ -92,8 +92,8 @@ That is a failure mode worth an experiment. First check that the triage prompt s
 doesn't, fix the prompt, no experiment needed. In the showcase it does: `{{CLI_COMMAND}} prompt preview
 support_case.triage` shows `observations[].value: at most 200 characters` in the output contract. So write
 the risk down as a `threshold` on `success_rate` for the range `from: triage, to: triage`, with the
-current agent as one variant and a candidate agent as another, and read `schema_valid_first_try` next to
-it. Explore it on working cases, then confirm it on held-out cases.
+current agent as one variant and a candidate agent as another (an `agent` factor on `triage`), and read
+`schema_valid_first_try` next to it. Explore it on working cases, then confirm it on held-out cases.
 
 ## See also
 

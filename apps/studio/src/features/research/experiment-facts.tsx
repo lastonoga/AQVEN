@@ -6,7 +6,7 @@ import { Dot, Tag, Text, Tile, TileNote, TileValue } from "@/components/studio"
 import { ROUTE_PATH } from "@/lib/routes"
 import { rangeText, splitShare, tagPairs } from "./presenters"
 import { SPLIT_TONE } from "./tones"
-import { whereOf, whereView, type WhereView } from "./variant-table"
+import { whereView, type WhereView } from "./variant-table"
 
 const CHECK_ICON: Readonly<Record<CheckSourceKind, LucideIcon>> = {
   judge: Scale,
@@ -138,7 +138,6 @@ function MeasuredTile({ experiment }: { readonly experiment: ExperimentDetail })
 
 function WhereScope({ view }: { readonly view: WhereView }) {
   const t = useTranslations("research.experiment.what.facts")
-  if (view.kind === "arms") return null
   if (view.range === null) return <TileNote>{t("everyStep")}</TileNote>
   return (
     <>
@@ -150,9 +149,18 @@ function WhereScope({ view }: { readonly view: WhereView }) {
   )
 }
 
+const FLOW_JOIN = ", "
+
+function OtherFlows({ experiment }: { readonly experiment: ExperimentDetail }) {
+  const t = useTranslations("research.experiment.what.facts")
+  const others = experiment.flows.filter((flow) => flow.id !== experiment.subject.flow).map((flow) => flow.id)
+  if (others.length === 0) return null
+  return <TileNote>{t("localFlows", { flows: others.join(FLOW_JOIN) })}</TileNote>
+}
+
 function WhereTile({ experiment }: { readonly experiment: ExperimentDetail }) {
   const t = useTranslations("research.experiment.what.facts")
-  const view = whereView(whereOf(experiment))
+  const view = whereView(experiment.subject)
   return (
     <Tile label={t("where")} className={TILE_CLASS}>
       <div className="flex min-w-0 items-center gap-2">
@@ -164,6 +172,7 @@ function WhereTile({ experiment }: { readonly experiment: ExperimentDetail }) {
         </Text>
       </div>
       <WhereScope view={view} />
+      <OtherFlows experiment={experiment} />
     </Tile>
   )
 }

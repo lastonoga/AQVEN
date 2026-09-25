@@ -17,9 +17,11 @@ flow](/mcp-cli/research-loop/) is the order to use them in, round after round.
 
 - **Write the experiment first, then run `aqven_check`.** There is no tool that creates an experiment:
   it is a file, and you write it like any other ([How to write an experiment](/engine/experiments/)).
-  Give it a `failure_mode` and a falsifiable `description`. `aqven_check` validates the subject and its
-  range, the variants' agents, the dataset and its tag filter, the checks and the fields they read, the
-  metric names and `validated_by`. A series refuses to start on a project with errors, or when a case
+  Give it a `failure_mode` and a falsifiable `description`, and one factor in `varies`: the variants set
+  only its values. `aqven_check` validates the subject and its range, the factor and every variant's
+  values (agents, prompt files, alternative nodes, flows), each variant assembled and compiled like a flow,
+  the dataset and its tag filter, the checks and the fields they read, the metric names and
+  `validated_by`. A series refuses to start on a project with errors, or when a case
   can't run for a variant. It fails with `NOT_RUNNABLE` and one problem per case and variant, before a
   single model call.
 - **`series_start`** takes exactly one of `experiment_id` or `look` (below), plus `on` (`dev` or

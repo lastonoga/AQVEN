@@ -8,6 +8,7 @@ from aqven.check.datasets import selected_cases
 from aqven.compiler.bindings import evaluator
 from aqven.compiler.context import CompileContext
 from aqven.compiler.errors import CompileError
+from aqven.factors import is_local_subject
 from aqven.ir import BuiltinEvaluator, CompiledEvaluator, CompiledProject, JudgeEvaluator
 from aqven.loader import LoadedExperiment, LoadedProject, SourceSpec
 from aqven.runtime.address import Problem
@@ -23,20 +24,26 @@ from aqven.series.model import (
     VariantRole,
 )
 from aqven.series.plans import (
+    CompiledSeries,
+    CompiledVariant,
+    ExperimentAssembler,
+    FlowAssembler,
     JudgeBuild,
     JudgeDraft,
     PlanRegistrar,
     SnapshotSources,
+    VariantAssembler,
     VariantBuild,
     VariantDraft,
-    base_plan,
+    VariantNotBuilt,
     build_judges,
     build_variant,
+    compiled_series,
     series_snapshot,
 )
 from aqven.series.protocol import MAX_ATTEMPTS
 from aqven.series.split import FixedPackage, SplitAssigner
-from aqven.series.subjects import SUBJECTS, SubjectBinding, TypeSource, subject_kind, subject_strategy
+from aqven.series.subjects import SubjectBinding, TypeSource, subject_kind, subject_strategy
 from aqven.series.views import SeriesStartRequest
 from aqven.server.errors import ApiFailure, diagnostic_problem
 from aqven.server.workspace import TreeSnapshot
@@ -119,7 +126,7 @@ class CheckDraft:
 class SeriesDraft:
     origin: SeriesOrigin
     subject: SubjectRecord
-    experiment_subject: ExperimentSubject
+    assembler: VariantAssembler
     question: Question
     experiment: LoadedExperiment | None
     flow_id: FlowId | None
@@ -153,7 +160,7 @@ class CaseChoice:
 class PlannedSeries:
     draft: SeriesDraft
     choice: CaseChoice
-    base: CompiledProject
+    subject: CompiledVariant
     variants: tuple[VariantBuild, ...]
     judges: JudgeBuild
     checks: tuple[CheckPlan, ...]
@@ -211,25 +218,22 @@ def role_of(question: Question, variant_id: VariantId) -> VariantRole:
     return ROLE_RULES[question.kind](question, variant_id)
 
 
-def subject_record(subject: ExperimentSubject) -> SubjectRecord:
+def subject_record(subject: ExperimentSubject, local_flow: bool) -> SubjectRecord:
     return SubjectRecord(
         kind=subject_kind(subject),
         flow_id=subject.flow,
-        arm_id=subject.arm,
+        local_flow=local_flow,
         start_node=subject.from_,
         end_node=subject.to,
     )
 
 
-def variant_draft(subject: ExperimentSubject, question: Question, variant: VariantSpec) -> VariantDraft:
-    strategy = SUBJECTS[(subject.arm is not None, subject.from_ is not None)]
-    return VariantDraft(
-        variant_id=variant.id,
-        role=role_of(question, variant.id),
-        arm_id=variant.arm,
-        flow_id=strategy.target(subject, variant),
-        agents=dict(variant.agents or {}),
-    )
+def variant_draft(question: Question, variant: VariantSpec) -> VariantDraft:
+    return VariantDraft(variant_id=variant.id, role=role_of(question, variant.id), spec=variant)
+
+
+def project_flow(subject: ExperimentSubject, local_flow: bool) -> FlowId | None:
+    return None if local_flow else subject.flow
 
 
 def compile_context(project: LoadedProject) -> CompileContext:
@@ -270,16 +274,17 @@ def from_experiment(project: LoadedProject, request: PlanRequest) -> SeriesDraft
         raise ApiFailure("NOT_FOUND", f"experiment {experiment_id} is not in the project")
     spec = loaded.source.spec
     subject = spec.subject
+    local_flow = is_local_subject(loaded)
     return SeriesDraft(
         origin=ExperimentOrigin(experiment_id=experiment_id),
-        subject=subject_record(subject),
-        experiment_subject=subject,
+        subject=subject_record(subject, local_flow),
+        assembler=ExperimentAssembler(project, loaded),
         question=spec.question,
         experiment=loaded,
-        flow_id=subject.flow,
+        flow_id=project_flow(subject, local_flow),
         dataset_id=spec.cases.dataset,
         dataset=dataset_of(project, spec.cases.dataset),
-        variants=tuple(variant_draft(subject, spec.question, variant) for variant in spec.variants),
+        variants=tuple(variant_draft(spec.question, variant) for variant in spec.variants),
         checks=experiment_checks(project, loaded),
         on=request.on,
         repeats=request.repeats or spec.plan.repeats,
@@ -318,14 +323,14 @@ def from_look(project: LoadedProject, request: PlanRequest) -> SeriesDraft:
             start_node=subject.from_,
             end_node=subject.to,
         ),
-        subject=subject_record(subject),
-        experiment_subject=subject,
+        subject=subject_record(subject, local_flow=False),
+        assembler=FlowAssembler(project, flow_id),
         question=question,
         experiment=None,
         flow_id=flow_id,
         dataset_id=dataset_id,
         dataset=dataset,
-        variants=(variant_draft(subject, question, variant),),
+        variants=(variant_draft(question, variant),),
         checks=(look_check(),),
         on=SeriesSplit.DEV,
         repeats=request.repeats or LOOK_REPEATS,
@@ -395,14 +400,14 @@ def attempt_limit(choice: CaseChoice, draft: SeriesDraft) -> None:
 
 
 def case_problems(
-    base: CompiledProject, draft: SeriesDraft, cases: Sequence[CaseSnapshot], binding: SubjectBinding
+    compiled: CompiledSeries, cases: Sequence[CaseSnapshot], binding: SubjectBinding
 ) -> tuple[Problem, ...]:
     strategy = subject_strategy(binding)
     return tuple(
-        Problem(path=(CASES_KEY, case.name, variant.variant_id), code=CASE_PROBLEM, message=message)
+        Problem(path=(CASES_KEY, case.name, draft.variant_id), code=CASE_PROBLEM, message=message)
         for case in cases
-        for variant in draft.variants
-        for message in strategy.problems(base, variant.flow_id, case)
+        for draft, variant in compiled.variants
+        for message in strategy.problems(variant.plan, variant.flow_id, case)
     )
 
 
@@ -412,12 +417,12 @@ def registered(registrar: PlanRegistrar | None, plan: CompiledProject | None) ->
     return registrar.register(plan)
 
 
-def compiled_base(project: LoadedProject, experiment: LoadedExperiment | None) -> CompiledProject:
+def built_series(draft: SeriesDraft) -> CompiledSeries:
     try:
-        return base_plan(project, experiment)
-    except CompileError as error:
+        return compiled_series(draft.assembler, draft.variants)
+    except VariantNotBuilt as error:
         problems = tuple(diagnostic_problem(item) for item in error.diagnostics)
-        raise not_runnable("the project does not compile with the experiment arms", problems) from error
+        raise not_runnable(str(error), problems) from error
 
 
 def plan_request(request: SeriesStartRequest) -> PlanRequest:
@@ -467,13 +472,15 @@ class SeriesPlanner:
 
     async def plan(self, request: PlanRequest, state: PlanningState, registrar: PlanRegistrar | None) -> PlannedSeries:
         draft, choice, package = await self.draft(request, state)
-        project = loaded_project(state.report)
-        base = await asyncio.to_thread(compiled_base, project, draft.experiment)
+        compiled = await asyncio.to_thread(built_series, draft)
         binding = SubjectBinding(subject=draft.subject, types=self.types, package=package)
-        problems = case_problems(base, draft, choice.cases, binding)
+        problems = case_problems(compiled, choice.cases, binding)
         if problems:
             raise not_runnable("some cases cannot run on the subject: nothing was started", problems)
-        variants = tuple(build_variant(base, draft.subject, variant, registrar) for variant in draft.variants)
+        variants = tuple(
+            build_variant(variant, draft.subject, drafted, registrar) for drafted, variant in compiled.variants
+        )
+        base = compiled.subject.plan
         judges = build_judges(base, [judge for check in draft.checks if (judge := check.judge()) is not None])
         judge_ir_hash = registered(registrar, judges.plan)
         sources = SnapshotSources(
@@ -485,7 +492,7 @@ class SeriesPlanner:
         return PlannedSeries(
             draft=draft,
             choice=choice,
-            base=base,
+            subject=compiled.subject,
             variants=variants,
             judges=judges,
             checks=tuple(check.plan(judges) for check in draft.checks),

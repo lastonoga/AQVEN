@@ -315,7 +315,7 @@ describe("CasesScreen", () => {
   it("keeps cases of another dataset kind readable but not runnable from this flow", async () => {
     const router = await renderRoute(`${CASES}?dataset=planted_defect_replies&case=strip_heat_clean`)
     const list = await caseList()
-    expect(screen.getByText("Cases without a flow: experiments run them on an arm, not from here")).toBeTruthy()
+    expect(screen.getByText("Cases without a flow: experiments run them on a flow of their own, not from here")).toBeTruthy()
     fireEvent.click(within(list).getByRole("checkbox", { name: "Select strip_heat_clean" }))
     expect(within(selectionBar()).getByText("Only cases of this flow run from here")).toBeTruthy()
     expect(within(selectionBar()).queryByRole("combobox", { name: "From stage" })).toBeNull()
@@ -334,7 +334,7 @@ describe("CasesScreen", () => {
     fireEvent.click(trigger)
     const options = await screen.findByRole("listbox", { name: "Datasets in this project" })
     expect(within(options).getByRole("option", { name: /support_case_cases.*Flow · support_case · current/u }).getAttribute("data-checked")).toBe("true")
-    fireEvent.click(within(options).getByRole("option", { name: /planted_defect_replies.*No flow · arms/u }))
+    fireEvent.click(within(options).getByRole("option", { name: /planted_defect_replies.*No flow · experiment flows/u }))
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ dataset: "planted_defect_replies" })
     })

@@ -38,7 +38,6 @@ ModelString = NewType("ModelString", str)
 McpServerId = NewType("McpServerId", str)
 DatasetId = NewType("DatasetId", str)
 ExperimentId = NewType("ExperimentId", str)
-ArmId = NewType("ArmId", str)
 VariantId = NewType("VariantId", str)
 SecretRef = NewType("SecretRef", str)
 ProviderName = NewType("ProviderName", str)
@@ -160,6 +159,20 @@ class RunContextKey(StrEnum):
     TIME_ZONE = "time_zone"
     LOCALE = "locale"
     TENANT_ID = "tenant_id"
+
+
+class FactorKind(StrEnum):
+    """The kind of edit an experiment factor makes on each of its nodes.
+
+    ``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm
+    node, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at
+    another flow.
+    """
+
+    AGENT = "agent"
+    PROMPT = "prompt"
+    USE = "use"
+    FLOW = "flow"
 
 
 class MetricKind(StrEnum):

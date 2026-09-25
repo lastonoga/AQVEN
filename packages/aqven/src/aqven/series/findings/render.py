@@ -3,6 +3,7 @@ from datetime import UTC
 from typing import Final
 
 from aqven.series.findings.layout import FINDING_GLOB, finding_file
+from aqven.series.findings.summary import finding_document
 from aqven.spec import FindingSpec, VerdictState
 from aqven.write.canonical import document_bytes
 
@@ -21,7 +22,7 @@ SHELVES: Final[tuple[tuple[str, frozenset[VerdictState]], ...]] = (
 
 
 def finding_bytes(spec: FindingSpec) -> bytes:
-    return document_bytes(spec.model_dump(mode="json", by_alias=True))
+    return document_bytes(finding_document(spec))
 
 
 def render_findings_md(findings: Sequence[FindingSpec], paths: Mapping[str, str]) -> str:

@@ -7,16 +7,14 @@ import pytest
 from aqven.check import CheckReport, check_project
 from aqven.codegen import GENERATED_TYPES, generate_types
 from aqven.diagnostics import DiagnosticCode, Severity
-from aqven.loader import load_project
-from aqven.server.views.files import declared_kinds, file_kind
 from aqven.testing import copy_project
 
 FIXTURE: Final = Path(__file__).parent / "fixtures" / "fixture_shop"
 
 TRIAGE_EXPERIMENT: Final = "experiments/triage_agents/experiment.yaml"
 JUDGE_EXPERIMENT: Final = "experiments/judge_check/experiment.yaml"
-ARM_FLOW: Final = "experiments/judge_check/arms/judge/flow.yaml"
-ARM_NODE: Final = "experiments/judge_check/arms/judge/nodes/judge.node.yaml"
+LOCAL_FLOW: Final = "experiments/judge_check/flows/judge/flow.yaml"
+LOCAL_NODE: Final = "experiments/judge_check/flows/judge/nodes/judge.node.yaml"
 TRIAGE_CASES: Final = "datasets/triage_cases.yaml"
 JUDGE_CASES: Final = "datasets/judge_cases.yaml"
 JUDGE_INFERENCE: Final = "triage/quality/triage_judge.inference.yaml"
@@ -155,11 +153,15 @@ cases:
   dataset: "triage_cases"
   tags:
     lang: "en"
+varies:
+  what: "agent"
+  nodes:
+  - "classify"
 variants:
 - id: "writer"
 - id: "cheap"
-  agents:
-    classify: "cheap"
+  nodes:
+    classify: "mini"
 checks:
 - id: "category_matches"
   kind: "binary"
@@ -195,7 +197,7 @@ JUDGE_EXPERIMENT_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Experiment"
 description: "The triage judge finds planted wrong queues"
 subject:
-  arm: "judge"
+  flow: "judge"
 cases:
   dataset: "judge_cases"
 variants:
@@ -214,9 +216,9 @@ question:
   above: 0.8
 """
 
-ARM_FLOW_YAML: Final = """apiVersion: "aqven/v1"
+LOCAL_FLOW_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Flow"
-description: "The triage judge as a one-step arm"
+description: "The triage judge as a one-step local flow"
 input: "JudgeCase"
 output: "JudgeScore"
 returns:
@@ -228,7 +230,7 @@ order:
 - "judge"
 """
 
-ARM_NODE_YAML: Final = """apiVersion: "aqven/v1"
+LOCAL_NODE_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
 description: "Scores the chosen queue"
@@ -241,9 +243,9 @@ in:
   from: "$input.category"
 """
 
-ARM_STEP: Final = "experiments/judge_check/arms/judge/nodes/verdict.node.yaml"
+LOCAL_STEP: Final = "experiments/judge_check/flows/judge/nodes/verdict.node.yaml"
 
-ARM_STEP_YAML: Final = """apiVersion: "aqven/v1"
+LOCAL_STEP_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
 description: "Reads the judge score as a pass"
@@ -259,14 +261,23 @@ out:
   description: "Whether the score passes"
 """
 
-ARM_STEP_MODULE: Final = """from fixture_shop.types import JudgeCheckJudgeVerdictOut
+LOCAL_STEP_MODULE: Final = """from fixture_shop.types import JudgeCheckJudgeVerdictOut
 
 
 def verdict(score: int) -> JudgeCheckJudgeVerdictOut:
     return JudgeCheckJudgeVerdictOut(passed=score >= 4)
 """
 
+MINI_AGENT: Final = """apiVersion: "aqven/v1"
+kind: "Agent"
+description: "The writer model at temperature zero"
+model: "openai:gpt-5.4-mini"
+settings:
+  temperature: 0.0
+"""
+
 PROJECT_FILES: Final = {
+    "shared/mini.yaml": MINI_AGENT,
     "triage/types/judge_case.yaml": JUDGE_CASE_TYPE,
     "triage/types/judge_score.yaml": JUDGE_SCORE_TYPE,
     JUDGE_INFERENCE: TRIAGE_JUDGE,
@@ -277,8 +288,8 @@ PROJECT_FILES: Final = {
     TRIAGE_EXPERIMENT: TRIAGE_EXPERIMENT_YAML,
     JUDGE_EXPERIMENT: JUDGE_EXPERIMENT_YAML,
     "experiments/judge_check/experiment.md": "Measures the triage judge on planted wrong queues.\n",
-    ARM_FLOW: ARM_FLOW_YAML,
-    ARM_NODE: ARM_NODE_YAML,
+    LOCAL_FLOW: LOCAL_FLOW_YAML,
+    LOCAL_NODE: LOCAL_NODE_YAML,
 }
 
 
@@ -317,7 +328,7 @@ def lab(tmp_path: Path) -> Path:
     return root
 
 
-def test_experiments_with_arms_datasets_and_checks_are_clean(lab: Path) -> None:
+def test_experiments_with_local_flows_datasets_and_checks_are_clean(lab: Path) -> None:
     report = check_project(lab)
 
     assert report.diagnostics == ()
@@ -333,19 +344,26 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_FLOW_UNKNOWN,
         (TRIAGE_EXPERIMENT, ("subject", "flow")),
     ),
-    "subject_arm_unknown": Mutation(
+    "subject_local_flow_unknown": Mutation(
         JUDGE_EXPERIMENT,
-        'arm: "judge"',
-        'arm: "critic"',
-        DiagnosticCode.E_ARM_UNKNOWN,
-        (JUDGE_EXPERIMENT, ("subject", "arm")),
+        'flow: "judge"',
+        'flow: "critic"',
+        DiagnosticCode.E_FLOW_UNKNOWN,
+        (JUDGE_EXPERIMENT, ("subject", "flow")),
     ),
-    "variant_arm_unknown": Mutation(
+    "removed_arm_key": Mutation(
         JUDGE_EXPERIMENT,
         '- id: "writer"\n',
-        '- id: "writer"\n- id: "critic"\n  arm: "critic"\n',
-        DiagnosticCode.E_ARM_UNKNOWN,
-        (JUDGE_EXPERIMENT, ("variants", 1, "arm")),
+        '- id: "writer"\n  arm: "judge"\n',
+        DiagnosticCode.E_UNKNOWN_KEY,
+        (JUDGE_EXPERIMENT, ("variants", 0, "arm")),
+    ),
+    "removed_agents_key": Mutation(
+        TRIAGE_EXPERIMENT,
+        '  nodes:\n    classify: "mini"\n',
+        '  agents:\n    classify: "mini"\n',
+        DiagnosticCode.E_UNKNOWN_KEY,
+        (TRIAGE_EXPERIMENT, ("variants", 1, "agents")),
     ),
     "range_node_nested": Mutation(
         TRIAGE_EXPERIMENT,
@@ -375,7 +393,7 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_DATASET_MISMATCH,
         (TRIAGE_EXPERIMENT, ("cases", "dataset")),
     ),
-    "flow_dataset_for_an_arm_with_other_input": Mutation(
+    "flow_dataset_for_a_local_flow_with_other_input": Mutation(
         JUDGE_EXPERIMENT,
         'dataset: "judge_cases"',
         'dataset: "triage_cases"',
@@ -398,31 +416,52 @@ MUTATIONS: Final[dict[str, Mutation]] = {
     ),
     "variant_agent_unknown": Mutation(
         TRIAGE_EXPERIMENT,
-        'classify: "cheap"',
+        'classify: "mini"',
         'classify: "mystery"',
         DiagnosticCode.E_AGENT_UNKNOWN,
-        (TRIAGE_EXPERIMENT, ("variants", 1, "agents", "classify")),
+        (TRIAGE_EXPERIMENT, ("variants", 1, "nodes", "classify")),
     ),
-    "variant_agent_on_code_node": Mutation(
+    "factor_missing": Mutation(
         TRIAGE_EXPERIMENT,
-        'classify: "cheap"',
-        'summarize: "cheap"',
-        DiagnosticCode.E_VARIANT_INVALID,
-        (TRIAGE_EXPERIMENT, ("variants", 1, "agents", "summarize")),
+        'varies:\n  what: "agent"\n  nodes:\n  - "classify"\n',
+        "",
+        DiagnosticCode.E_FACTOR_MISSING,
+        (TRIAGE_EXPERIMENT, ("variants",)),
     ),
-    "variant_agent_on_nested_human_node": Mutation(
+    "factor_node_unknown": Mutation(
         TRIAGE_EXPERIMENT,
-        'classify: "cheap"',
-        'route__confirm: "cheap"',
-        DiagnosticCode.E_VARIANT_INVALID,
-        (TRIAGE_EXPERIMENT, ("variants", 1, "agents", "route__confirm")),
+        '  - "classify"\nvariants:',
+        '  - "classify"\n  - "ghost"\nvariants:',
+        DiagnosticCode.E_FACTOR_NODE_UNKNOWN,
+        (TRIAGE_EXPERIMENT, ("varies", "nodes", 1)),
     ),
-    "variant_agent_outside_the_range": Mutation(
+    "agent_factor_on_code_node": Mutation(
+        TRIAGE_EXPERIMENT,
+        '  - "classify"\nvariants:',
+        '  - "classify"\n  - "summarize"\nvariants:',
+        DiagnosticCode.E_FACTOR_KIND,
+        (TRIAGE_EXPERIMENT, ("varies", "nodes", 1)),
+    ),
+    "agent_factor_on_nested_human_node": Mutation(
+        TRIAGE_EXPERIMENT,
+        '  - "classify"\nvariants:',
+        '  - "classify"\n  - "confirm"\nvariants:',
+        DiagnosticCode.E_FACTOR_KIND,
+        (TRIAGE_EXPERIMENT, ("varies", "nodes", 1)),
+    ),
+    "factor_node_outside_the_range": Mutation(
         TRIAGE_EXPERIMENT,
         'flow: "triage"\n',
         'flow: "triage"\n  from: "route"\n  to: "summarize"\n',
-        DiagnosticCode.E_VARIANT_INVALID,
-        (TRIAGE_EXPERIMENT, ("variants", 1, "agents", "classify")),
+        DiagnosticCode.E_FACTOR_NODE_UNKNOWN,
+        (TRIAGE_EXPERIMENT, ("varies", "nodes", 0)),
+    ),
+    "variant_outside_the_factor": Mutation(
+        TRIAGE_EXPERIMENT,
+        '    classify: "mini"\n',
+        '    classify: "mini"\n    summarize: "cheap"\n',
+        DiagnosticCode.E_VARIANT_OUTSIDE_FACTOR,
+        (TRIAGE_EXPERIMENT, ("variants", 1, "nodes", "summarize")),
     ),
     "baseline_undeclared": Mutation(
         TRIAGE_EXPERIMENT,
@@ -440,7 +479,7 @@ MUTATIONS: Final[dict[str, Mutation]] = {
     ),
     "comparison_with_one_variant": Mutation(
         TRIAGE_EXPERIMENT,
-        '- id: "cheap"\n  agents:\n    classify: "cheap"\n',
+        '- id: "cheap"\n  nodes:\n    classify: "mini"\n',
         "",
         DiagnosticCode.E_VARIANT_INVALID,
         (TRIAGE_EXPERIMENT, ("variants",)),
@@ -559,7 +598,7 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_SPEC_INVALID,
         (TRIAGE_CASES, ("cases", 1, "inputs")),
     ),
-    "arm_case_input_type": Mutation(
+    "local_flow_case_input_type": Mutation(
         JUDGE_CASES,
         'category: "billing"',
         'category: "returns"',
@@ -580,7 +619,7 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_EXPECTED_MISSING,
         (TRIAGE_CASES, ("cases", 1, "expected_output")),
     ),
-    "arm_expected_output_lacks_a_compared_field": Mutation(
+    "local_flow_expected_output_lacks_a_compared_field": Mutation(
         JUDGE_CASES,
         "    score: 1\n",
         '    rationale: "wrong queue"\n',
@@ -601,26 +640,26 @@ MUTATIONS: Final[dict[str, Mutation]] = {
         DiagnosticCode.E_FLOW_UNKNOWN,
         (TRIAGE_CASES, ("flow",)),
     ),
-    "arm_node_agent_unknown": Mutation(
-        ARM_NODE,
+    "local_node_agent_unknown": Mutation(
+        LOCAL_NODE,
         'agent: "writer"',
         'agent: "ghost"',
         DiagnosticCode.E_AGENT_UNKNOWN,
-        (ARM_NODE, ("agent",)),
+        (LOCAL_NODE, ("agent",)),
     ),
-    "arm_node_binding_missing": Mutation(
-        ARM_NODE,
+    "local_node_binding_missing": Mutation(
+        LOCAL_NODE,
         'from: "$input.category"',
         'from: "$input.queue"',
         DiagnosticCode.E_REF_MISSING,
-        (ARM_NODE, ("in", 1, "from")),
+        (LOCAL_NODE, ("in", 1, "from")),
     ),
-    "arm_returns_type": Mutation(
-        ARM_FLOW,
+    "local_flow_returns_type": Mutation(
+        LOCAL_FLOW,
         'output: "JudgeScore"',
         'output: "JudgeCase"',
         DiagnosticCode.E_BINDING_TYPE,
-        (ARM_FLOW, ("returns",)),
+        (LOCAL_FLOW, ("returns",)),
     ),
 }
 
@@ -700,19 +739,19 @@ def test_expected_is_not_an_inference_check_because_a_live_request_has_no_case(l
     )
 
 
-def with_arm_step(root: Path, folder: str = "experiments/judge_check") -> None:
-    write(root, f"{folder}/arms/judge/nodes/verdict.node.yaml", ARM_STEP_YAML)
-    write(root, f"{folder}/arms/judge/nodes/verdict.py", ARM_STEP_MODULE)
-    arm_flow = f"{folder}/arms/judge/flow.yaml"
-    replace(root, arm_flow, 'order:\n- "judge"\n', 'order:\n- "judge"\n- "verdict"\n')
+def with_local_step(root: Path, folder: str = "experiments/judge_check") -> None:
+    write(root, f"{folder}/flows/judge/nodes/verdict.node.yaml", LOCAL_STEP_YAML)
+    write(root, f"{folder}/flows/judge/nodes/verdict.py", LOCAL_STEP_MODULE)
+    local_flow = f"{folder}/flows/judge/flow.yaml"
+    replace(root, local_flow, 'order:\n- "judge"\n', 'order:\n- "judge"\n- "verdict"\n')
 
 
 def generated_source(root: Path) -> str:
     return (root / GENERATED_TYPES).read_text(encoding="utf-8")
 
 
-def test_code_step_of_an_arm_imports_typed_models_named_after_experiment_and_arm(lab: Path) -> None:
-    with_arm_step(lab)
+def test_code_step_of_a_local_flow_imports_typed_models_named_after_experiment_and_flow(lab: Path) -> None:
+    with_local_step(lab)
 
     stale = check_project(lab)
     generate_types(lab)
@@ -724,13 +763,13 @@ def test_code_step_of_an_arm_imports_typed_models_named_after_experiment_and_arm
     assert "class JudgeCheckJudgeVerdictOut(BaseModel):" in generated_source(lab)
 
 
-def test_same_arm_step_in_two_experiments_gets_two_models(lab: Path) -> None:
+def test_same_local_step_in_two_experiments_gets_two_models(lab: Path) -> None:
     folder = "experiments/judge_again"
     write(lab, f"{folder}/experiment.yaml", JUDGE_EXPERIMENT_YAML)
-    write(lab, f"{folder}/arms/judge/flow.yaml", ARM_FLOW_YAML)
-    write(lab, f"{folder}/arms/judge/nodes/judge.node.yaml", ARM_NODE_YAML)
-    with_arm_step(lab)
-    with_arm_step(lab, folder)
+    write(lab, f"{folder}/flows/judge/flow.yaml", LOCAL_FLOW_YAML)
+    write(lab, f"{folder}/flows/judge/nodes/judge.node.yaml", LOCAL_NODE_YAML)
+    with_local_step(lab)
+    with_local_step(lab, folder)
     generate_types(lab)
 
     report = check_project(lab)
@@ -740,14 +779,14 @@ def test_same_arm_step_in_two_experiments_gets_two_models(lab: Path) -> None:
     assert "class JudgeCheckJudgeVerdictOut(BaseModel):" in generated_source(lab)
 
 
-def test_arm_step_model_name_taken_by_a_type_is_reported_on_the_arm_node(lab: Path) -> None:
-    with_arm_step(lab)
+def test_local_step_model_name_taken_by_a_type_is_reported_on_the_local_node(lab: Path) -> None:
+    with_local_step(lab)
     write(lab, "triage/types/judge_check_judge_verdict_out.yaml", JUDGE_SCORE_TYPE)
     generate_types(lab)
 
     report = check_project(lab)
 
-    assert (ARM_STEP, ()) in located(report, DiagnosticCode.E_ID_DUPLICATE)
+    assert (LOCAL_STEP, ()) in located(report, DiagnosticCode.E_ID_DUPLICATE)
 
 
 def test_range_subject_tolerates_partial_case_inputs(lab: Path) -> None:
@@ -840,25 +879,6 @@ def test_a_judge_input_bound_from_an_earlier_node_output_is_in_scope(lab: Path) 
     assert check_project(lab).diagnostics == ()
 
 
-def test_a_variant_arm_without_the_ends_of_the_range_is_reported(lab: Path) -> None:
-    replace(lab, JUDGE_EXPERIMENT, 'arm: "judge"\n', 'arm: "judge"\n  from: "judge"\n  to: "judge"\n')
-    replace(lab, JUDGE_EXPERIMENT, '- id: "writer"\n', '- id: "writer"\n- id: "strict"\n  arm: "strict"\n')
-    strict = "experiments/judge_check/arms/strict"
-    write(lab, f"{strict}/flow.yaml", ARM_FLOW_YAML.replace('"judge"', '"grade"').replace("$judge.", "$grade."))
-    write(lab, f"{strict}/nodes/grade.node.yaml", ARM_NODE_YAML)
-    generate_types(lab)
-
-    report = check_project(lab)
-
-    assert [(item.code, item.path) for item in report.errors] == [
-        (DiagnosticCode.E_RANGE_INVALID, ("variants", 1, "arm"))
-    ]
-    assert report.errors[0].message == (
-        "experiment judge_check: variant strict runs arm strict, whose top-level nodes lack judge "
-        "of the range judge to judge"
-    )
-
-
 def test_partial_case_inputs_pass_a_dataset_that_no_experiment_runs_whole(lab: Path) -> None:
     replace(lab, TRIAGE_EXPERIMENT, 'dataset: "triage_cases"', 'dataset: "late_cases"')
     write(lab, "datasets/late_cases.yaml", (lab / TRIAGE_CASES).read_text(encoding="utf-8"))
@@ -876,49 +896,40 @@ def test_flow_dataset_that_no_experiment_runs_is_checked_against_the_flow_input(
     assert located(report, DiagnosticCode.E_SPEC_INVALID) == [(unused, ("cases", 1, "inputs"))]
 
 
-def test_arm_with_other_output_than_the_subject_is_reported_on_the_arm(lab: Path) -> None:
-    other = "experiments/judge_check/arms/strict/flow.yaml"
-    write(lab, other, ARM_FLOW_YAML.replace('output: "JudgeScore"', 'output: "JudgeCase"'))
-    write(lab, "experiments/judge_check/arms/strict/nodes/judge.node.yaml", ARM_NODE_YAML)
+def test_local_flow_id_taken_by_a_project_flow_is_reported(lab: Path) -> None:
+    write(lab, "experiments/judge_check/flows/triage/flow.yaml", LOCAL_FLOW_YAML)
+    write(lab, "experiments/judge_check/flows/triage/nodes/judge.node.yaml", LOCAL_NODE_YAML)
 
     report = check_project(lab)
 
-    assert (other, ("output",)) in located(report, DiagnosticCode.E_DATASET_MISMATCH)
-    assert (ARM_FLOW, ("output",)) not in located(report, DiagnosticCode.E_DATASET_MISMATCH)
+    assert located(report, DiagnosticCode.E_ID_DUPLICATE) == [("experiments/judge_check/flows/triage/flow.yaml", ())]
 
 
-def test_arm_id_taken_by_a_project_flow_is_reported(lab: Path) -> None:
-    write(lab, "experiments/judge_check/arms/triage/flow.yaml", ARM_FLOW_YAML)
-    write(lab, "experiments/judge_check/arms/triage/nodes/judge.node.yaml", ARM_NODE_YAML)
-
-    report = check_project(lab)
-
-    assert located(report, DiagnosticCode.E_ID_DUPLICATE) == [("experiments/judge_check/arms/triage/flow.yaml", ())]
-
-
-def test_arm_diagnostics_carry_positions_and_stay_inside_the_experiment(lab: Path) -> None:
-    replace(lab, ARM_NODE, 'agent: "writer"', 'agent: "ghost"')
+def test_local_flow_diagnostics_carry_positions_and_stay_inside_the_experiment(lab: Path) -> None:
+    replace(lab, LOCAL_NODE, 'agent: "writer"', 'agent: "ghost"')
 
     report = check_project(lab)
 
     (problem,) = report.errors
-    assert (problem.file, problem.code, problem.line) == (ARM_NODE, DiagnosticCode.E_AGENT_UNKNOWN, 6)
+    assert (problem.file, problem.code, problem.line) == (LOCAL_NODE, DiagnosticCode.E_AGENT_UNKNOWN, 6)
 
 
-def test_same_arm_name_in_two_experiments_is_checked_per_experiment(lab: Path) -> None:
+def test_same_local_flow_name_in_two_experiments_is_checked_per_experiment(lab: Path) -> None:
     folder = "experiments/judge_again"
     write(lab, f"{folder}/experiment.yaml", JUDGE_EXPERIMENT_YAML)
-    write(lab, f"{folder}/arms/judge/flow.yaml", ARM_FLOW_YAML)
-    write(lab, f"{folder}/arms/judge/nodes/judge.node.yaml", ARM_NODE_YAML.replace('agent: "writer"', 'agent: "ghost"'))
+    write(lab, f"{folder}/flows/judge/flow.yaml", LOCAL_FLOW_YAML)
+    write(
+        lab, f"{folder}/flows/judge/nodes/judge.node.yaml", LOCAL_NODE_YAML.replace('agent: "writer"', 'agent: "ghost"')
+    )
 
     report = check_project(lab)
 
     assert located(report, DiagnosticCode.E_AGENT_UNKNOWN) == [
-        (f"{folder}/arms/judge/nodes/judge.node.yaml", ("agent",))
+        (f"{folder}/flows/judge/nodes/judge.node.yaml", ("agent",))
     ]
 
 
-def test_broken_experiment_keeps_its_arms_out_of_the_project_flows(lab: Path) -> None:
+def test_broken_experiment_keeps_its_local_flows_out_of_the_project_flows(lab: Path) -> None:
     replace(lab, JUDGE_EXPERIMENT, 'description: "The triage judge finds planted wrong queues"\n', "")
 
     report = check_project(lab)
@@ -926,13 +937,3 @@ def test_broken_experiment_keeps_its_arms_out_of_the_project_flows(lab: Path) ->
     assert report.project is not None
     assert "judge" not in report.project.flows
     assert {item.code for item in report.diagnostics} == {DiagnosticCode.E_SPEC_INVALID}
-
-
-def test_file_index_knows_experiment_and_arm_files(lab: Path) -> None:
-    project = load_project(lab).project
-    declared = declared_kinds(project)
-
-    kinds = {path: file_kind(path, declared) for path in (JUDGE_EXPERIMENT, ARM_FLOW, ARM_NODE)}
-
-    assert kinds == {JUDGE_EXPERIMENT: "Experiment", ARM_FLOW: "Flow", ARM_NODE: "Node"}
-    assert file_kind("experiments/draft/experiment.yaml", {}) == "Experiment"

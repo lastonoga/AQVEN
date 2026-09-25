@@ -5,6 +5,12 @@ subject:
   flow: "support_case"
   from: "drafts"
   to: "panel"
+varies:
+  what: "agent"
+  nodes:
+  - "gpt"
+  - "gemini"
+  - "mistral"
 cases:
   dataset: "support_case_cases"
   tags:
@@ -13,13 +19,13 @@ cases:
 variants:
 - id: "three_families"
 - id: "mistral_only"
-  agents:
-    drafts__gpt: "mistral"
-    drafts__gemini: "mistral"
+  nodes:
+    gpt: "mistral"
+    gemini: "mistral"
 - id: "gemini_only"
-  agents:
-    drafts__gpt: "gemini"
-    drafts__mistral: "gemini"
+  nodes:
+    gpt: "gemini"
+    mistral: "gemini"
 question:
   kind: "threshold"
   metric: "cost_usd"

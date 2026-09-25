@@ -1,37 +1,34 @@
 import { useTranslations } from "use-intl"
-import type { ExperimentDetail } from "@/domain"
+import type { ExperimentDetail, ExperimentFactor } from "@/domain"
 import { Matrix, Surface, Text, type MatrixField } from "@/components/studio"
-import type { Translator } from "@/i18n/translator"
 import { ExperimentFacts } from "./experiment-facts"
 import { HypothesisCard } from "./hypothesis-card"
 import { RowRoleTag } from "./role-tag"
-import { stepName, variantTable, type AgentModel, type ChangeColumn, type VariantChange, type VariantRow } from "./variant-table"
+import { stepName, variantTable, type AgentModel, type VariantRow, type VariantValue } from "./variant-table"
 
-const STEP_CHAIN = " → "
+const NODE_JOIN = ", "
 
-const changeLabel = (column: ChangeColumn, t: Translator<"research.experiment.what">): string | null => {
-  if (column.kind === "none") return null
-  if (column.kind === "reference") return t("column.reference", { variant: column.variant })
-  return t(`column.${column.kind}`)
+function FactorCaption({ factor }: { readonly factor: ExperimentFactor | null }) {
+  const t = useTranslations("research.experiment.what.factor")
+  if (factor === null) return null
+  return (
+    <Text as="p" role="hint" tone="neutral" className="wrap-anywhere">
+      {t(factor.what, { nodes: factor.nodes.map(stepName).join(NODE_JOIN) })}
+    </Text>
+  )
 }
 
-function ChangeCell({ change }: { readonly change: VariantChange }) {
+function ValueCell({ value }: { readonly value: VariantValue }) {
   const t = useTranslations("research.experiment.what")
-  if (change.kind === "reference") return <Text role="cell" tone="neutral">{t("reference")}</Text>
-  if (change.kind === "steps") return <Text role="cell" tone="default" className="wrap-anywhere">{change.steps.map(stepName).join(STEP_CHAIN)}</Text>
-  if (change.swaps.length === 0) return <Text role="cell" tone="neutral">{t("same")}</Text>
+  if (value.kind === "written") return <Text role="cell" tone="neutral">{t("asWritten")}</Text>
+  if (value.kind === "same") return <Text role="cell" tone="default" className="wrap-anywhere">{value.value}</Text>
   return (
-    <ul className="flex min-w-0 flex-col gap-1">
-      {change.swaps.map((swap) => (
-        <li key={swap.node} className="flex min-w-0 flex-col">
+    <ul className="flex min-w-0 flex-col gap-0.5">
+      {value.values.map((item) => (
+        <li key={item.node}>
           <Text role="cell" tone="default" className="wrap-anywhere">
-            {t("swap", { step: stepName(swap.node), from: swap.from.agent, to: swap.to.agent })}
+            {t("nodeValue", { node: stepName(item.node), value: item.value })}
           </Text>
-          {swap.from.model.full === swap.to.model.full ? null : (
-            <Text role="meta" tone="neutral" title={`${swap.from.model.full}${STEP_CHAIN}${swap.to.model.full}`} className="wrap-anywhere">
-              {t("swapModels", { from: swap.from.model.short, to: swap.to.model.short })}
-            </Text>
-          )}
         </li>
       ))}
     </ul>
@@ -53,11 +50,10 @@ function AgentsCell({ agents }: { readonly agents: readonly AgentModel[] }) {
   )
 }
 
-function useFields(column: ChangeColumn): readonly MatrixField<VariantRow>[] {
+function useFields(factor: ExperimentFactor | null): readonly MatrixField<VariantRow>[] {
   const what = useTranslations("research.experiment.what")
-  const label = changeLabel(column, what)
-  const change: readonly MatrixField<VariantRow>[] =
-    label === null ? [] : [{ id: "change", label, track: "minmax(0,2.2fr)", render: (row) => <ChangeCell change={row.change} /> }]
+  const value: readonly MatrixField<VariantRow>[] =
+    factor === null ? [] : [{ id: "value", label: what(`column.value.${factor.what}`), track: "minmax(0,2.2fr)", render: (row) => <ValueCell value={row.value} /> }]
   return [
     {
       id: "variant",
@@ -75,7 +71,7 @@ function useFields(column: ChangeColumn): readonly MatrixField<VariantRow>[] {
       track: "96px",
       render: (row) => <RowRoleTag role={row.role} size="xs" />,
     },
-    ...change,
+    ...value,
     { id: "models", label: what("column.models"), track: "minmax(0,1.4fr)", render: (row) => <AgentsCell agents={row.agents} /> },
   ]
 }
@@ -83,11 +79,14 @@ function useFields(column: ChangeColumn): readonly MatrixField<VariantRow>[] {
 function VariantsTable({ experiment }: { readonly experiment: ExperimentDetail }) {
   const t = useTranslations("research.experiment.what")
   const table = variantTable(experiment)
-  const fields = useFields(table.column)
+  const fields = useFields(table.factor)
   return (
-    <Surface variant="panel" className="overflow-hidden">
-      <Matrix orientation="rows" rules="rows" label={t("tableAria")} items={table.rows} itemKey={(row) => row.id} fields={fields} />
-    </Surface>
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <FactorCaption factor={table.factor} />
+      <Surface variant="panel" className="overflow-hidden">
+        <Matrix orientation="rows" rules="rows" label={t("tableAria")} items={table.rows} itemKey={(row) => row.id} fields={fields} />
+      </Surface>
+    </div>
   )
 }
 

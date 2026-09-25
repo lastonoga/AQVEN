@@ -95,10 +95,10 @@ const servePaused = (): PauseCalls => {
   return calls
 }
 
-const firstArmRun = (): string => {
+const firstLocalFlowRun = (): string => {
   const series = initialSeries().find((item) => item.id === RESEARCH_SERIES.critiqueDev)
   const attempt = series === undefined ? undefined : attemptsOf(series)[0]
-  if (attempt === undefined) throw new Error("missing arm attempt fixture")
+  if (attempt === undefined) throw new Error("missing attempt fixture on a flow of an experiment")
   return attempt.run_id
 }
 
@@ -177,7 +177,7 @@ describe("SeriesScreen header and verdict", () => {
     const verdict = await region("Verdict")
     expect(verdict.textContent).toContain("No verdict: the series stopped on an error before it could measure.")
     expect(within(verdict).getByRole("alert").textContent).toBe("The series failed: workflow was not started")
-    expect(screen.getByText("30 of 45 attempts")).toBeTruthy()
+    expect(screen.getByText("30 of 30 attempts")).toBeTruthy()
     expect(screen.getByRole("table", { name: "Metrics by variant" })).toBeTruthy()
     expect((await caseButtons()).length).toBeGreaterThan(0)
     expect(screen.queryByRole("button", { name: "Stop" })).toBeNull()
@@ -329,7 +329,7 @@ describe("SeriesScreen cases", () => {
     expect(link.getAttribute("href")).toMatch(/^\/runs\/01a0c100-0000-7000-8000-/)
   })
 
-  it("opens an attempt of an arm in the run view of its own", async () => {
+  it("opens an attempt on a flow of an experiment in the run view of its own", async () => {
     const router = await renderRoute(seriesPath("critiqueDev"))
     const attempts = await openFirstCase()
     expect(screen.queryByRole("link", { name: "Variants disagree" })).toBeNull()
@@ -343,10 +343,10 @@ describe("SeriesScreen cases", () => {
     expect(screen.getByRole("link", { name: /^attempt of series #/ }).getAttribute("href")).toBe(`/research/series/${RESEARCH_SERIES.critiqueDev}`)
   })
 
-  it("shows the node metadata of the arm on the run of an arm attempt", async () => {
-    await renderRoute(`/runs/${firstArmRun()}`)
+  it("tags the run of an attempt on a flow of an experiment and shows the node metadata of that flow", async () => {
+    await renderRoute(`/runs/${firstLocalFlowRun()}`)
     expect(await screen.findByRole("heading", { level: 1, name: /^Run #/ })).toBeTruthy()
-    expect(screen.getByRole("link", { name: "arm critique_only of experiment critique_planted_defects" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "flow critique_only of experiment critique_planted_defects" }).getAttribute("href")).toBe(
       "/research/experiments/critique_planted_defects",
     )
     expect(screen.getByText(/^The reply critic on its own: /)).toBeTruthy()
@@ -354,11 +354,12 @@ describe("SeriesScreen cases", () => {
     expect(screen.getByText("inference critique")).toBeTruthy()
   })
 
-  it("still opens the run of an arm attempt when the arm cannot be read", async () => {
-    server.use(http.get(`${API_BASE}/experiments/:experimentId/arms/:armId`, () => HttpResponse.json({ ok: false, op: "experiment_arm", code: "NOT_FOUND", message: "gone", problems: [], candidates: [], conflict: null, retry_after_ms: null }, { status: 404 })))
-    await renderRoute(`/runs/${firstArmRun()}`)
+  it("still opens and tags the run of an attempt on a flow of an experiment when that flow cannot be read", async () => {
+    server.use(http.get(`${API_BASE}/experiments/:experimentId/flows/:flowId`, () => HttpResponse.json({ ok: false, op: "experiment_flow", code: "NOT_FOUND", message: "gone", problems: [], candidates: [], conflict: null, retry_after_ms: null }, { status: 404 })))
+    await renderRoute(`/runs/${firstLocalFlowRun()}`)
     expect(await screen.findByRole("heading", { level: 1, name: /^Run #/ })).toBeTruthy()
-    expect(screen.queryByRole("link", { name: /^arm critique_only/ })).toBeNull()
+    expect(screen.getByRole("link", { name: "flow critique_only of experiment critique_planted_defects" })).toBeTruthy()
+    expect(screen.queryByText(/^The reply critic on its own: /)).toBeNull()
     expect(screen.queryByText("agent deepseek")).toBeNull()
   })
 

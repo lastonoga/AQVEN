@@ -25,6 +25,16 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 [JSON Schema](/reference/schemas/FindingCell.json)
 
+## FindingChange
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `node_id` | `string` | Yes | `—` | — |
+| `what` | `'agent' \| 'prompt' \| 'use' \| 'flow'` | Yes | `—` | — |
+| `value` | `string` | Yes | `—` | — |
+
+[JSON Schema](/reference/schemas/FindingChange.json)
+
 ## FindingEstimate
 
 | YAML field | Type | Required | Default | Constraints |
@@ -112,6 +122,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | `—` | — |
 | `arm` | `string \| null` | No | `None` | — |
+| `changes` | `FindingChange[] \| null` | No | `None` | — |
 | `agents` | `map<string, string>` | Yes | `—` | — |
 | `models` | `string[]` | Yes | `—` | — |
 | `flow_hash` | `string` | Yes | `—` | — |

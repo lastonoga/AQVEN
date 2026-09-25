@@ -6,13 +6,17 @@ subject:
   flow: "support_case"
   from: "polish"
   to: "polish"
+varies:
+  what: "agent"
+  nodes:
+  - "revise"
 cases:
   dataset: "support_case_cases"
 variants:
 - id: "gpt"
 - id: "mistral"
-  agents:
-    polish__revise: "mistral"
+  nodes:
+    revise: "mistral"
 checks:
 - id: "critique"
   kind: "continuous"

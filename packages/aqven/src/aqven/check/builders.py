@@ -5,7 +5,7 @@ from typing import Final
 from aqven.check.resolver import CodeFailure, CodeResolver
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader import LoadedExperiment, LoadedFlow, LoadedInference, LoadedProject, SourceSpec, file_hash
-from aqven.spec import ArmId, ExperimentId, Flow, FlowId, InferenceId, InferenceSpec, NodeId, NodeSpec
+from aqven.spec import ExperimentId, Flow, FlowId, InferenceId, InferenceSpec, NodeId, NodeSpec
 
 BUILD_FUNCTION: Final = "build"
 
@@ -18,11 +18,11 @@ class Materialized:
 
 def materialize_builders(project: LoadedProject, code: CodeResolver) -> Materialized:
     flow_outcomes = {flow_id: _flow(project, flow, code) for flow_id, flow in project.flows.items() if _unbuilt(flow)}
-    arm_outcomes = {
-        (experiment_id, arm_id): _flow(project, arm, code)
+    local_outcomes = {
+        (experiment_id, flow_id): _flow(project, flow, code)
         for experiment_id, experiment in project.experiments.items()
-        for arm_id, arm in experiment.arms.items()
-        if _unbuilt(arm)
+        for flow_id, flow in experiment.flows.items()
+        if _unbuilt(flow)
     }
     inference_outcomes = {
         inference_id: _inference(project, inference, code)
@@ -38,12 +38,12 @@ def materialize_builders(project: LoadedProject, code: CodeResolver) -> Material
         **{inference_id: inference for inference_id, (inference, _) in inference_outcomes.items()},
     }
     experiments = {
-        experiment_id: _with_arms(experiment_id, experiment, arm_outcomes)
+        experiment_id: _with_local_flows(experiment_id, experiment, local_outcomes)
         for experiment_id, experiment in project.experiments.items()
     }
     diagnostics = (
         *(item for _, problems in flow_outcomes.values() for item in problems),
-        *(item for _, problems in arm_outcomes.values() for item in problems),
+        *(item for _, problems in local_outcomes.values() for item in problems),
         *(item for _, problems in inference_outcomes.values() for item in problems),
     )
     materialized = replace(project, flows=flows, inferences=inferences, experiments=experiments)
@@ -54,13 +54,13 @@ def _unbuilt(flow: LoadedFlow) -> bool:
     return flow.builder_path is not None and flow.source is None
 
 
-def _with_arms(
+def _with_local_flows(
     experiment_id: ExperimentId,
     experiment: LoadedExperiment,
-    outcomes: Mapping[tuple[ExperimentId, ArmId], tuple[LoadedFlow, tuple[Diagnostic, ...]]],
+    outcomes: Mapping[tuple[ExperimentId, FlowId], tuple[LoadedFlow, tuple[Diagnostic, ...]]],
 ) -> LoadedExperiment:
-    built = {arm_id: flow for (owner, arm_id), (flow, _) in outcomes.items() if owner == experiment_id}
-    return replace(experiment, arms={**experiment.arms, **built}) if built else experiment
+    built = {flow_id: flow for (owner, flow_id), (flow, _) in outcomes.items() if owner == experiment_id}
+    return replace(experiment, flows={**experiment.flows, **built}) if built else experiment
 
 
 def _flow(project: LoadedProject, flow: LoadedFlow, code: CodeResolver) -> tuple[LoadedFlow, tuple[Diagnostic, ...]]:

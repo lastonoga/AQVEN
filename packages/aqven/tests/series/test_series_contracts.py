@@ -76,7 +76,7 @@ def record() -> SeriesRecord:
     variant = VariantPlanRecord(
         variant_id=VariantId("gpt"),
         role=VariantRole.BASELINE,
-        arm_id=None,
+        changes=(),
         flow_id=FlowId("support_case"),
         ir_hash="a" * 64,
         flow_hash="sha256-" + "b" * 64,
@@ -86,7 +86,7 @@ def record() -> SeriesRecord:
     )
     plan = SeriesPlanRecord(
         subject=SubjectRecord(
-            kind=SubjectKind.FLOW, flow_id=FlowId("support_case"), arm_id=None, start_node=None, end_node=None
+            kind=SubjectKind.FLOW, flow_id=FlowId("support_case"), local_flow=False, start_node=None, end_node=None
         ),
         question=ThresholdQuestion(kind="threshold", metric="success_rate", above=0.8, margin=0.02),
         variants=(variant,),

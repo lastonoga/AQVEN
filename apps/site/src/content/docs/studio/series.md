@@ -14,7 +14,8 @@ read what it found down to a single attempt. The meaning of each number is on
 
 - **Find it on the Series tab.** In Research, **Series** lists every series of the project in one table,
   the newest first by start time, whether it is running or finished. The columns are **Status**,
-  **Experiment** (a look shows as `look · <flow>`), **Flow** (a series of an arm shows **Arms**), **On**
+  **Experiment** (a look shows as `look · <flow>`), **Flow** (a series whose subject is a local flow of
+  its experiment shows that flow, marked as a flow of the experiment), **On**
   (dev or holdout), **N×R**, **Spend**, **Verdict** and **Started**. An experiment page lists its own
   series under **Series history**.
 - **Read the header.** The title names the series: "Series … of this experiment", or "Look at N cases" with
@@ -48,7 +49,8 @@ read what it found down to a single attempt. The meaning of each number is on
   failed check to see what it is: a code check shows its `module:function`, a built-in check its name and
   the fields it reads, and a judge its inference, its agent and the experiment that validated it.
 - **Follow an attempt to its run.** The run link opens the ordinary run page for that attempt, with its
-  timeline, the failed attempts of each node and the exact prompt. See
+  timeline, the failed attempts of each node and the exact prompt. A run of a flow local to an experiment
+  carries the tag "flow `<flow>` of experiment `<experiment>`". See
   [How to investigate a run](/studio/investigate-a-run/).
 
 ### Example

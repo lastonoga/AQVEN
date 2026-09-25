@@ -3,7 +3,11 @@ kind: "Experiment"
 description: "Each candidate critic agent stops more than 80% of replies with a planted defect, by a score below the approval threshold or a blocking remark"
 failure_mode: "judge_misses_defect"
 subject:
-  arm: "critic"
+  flow: "critic"
+varies:
+  what: "agent"
+  nodes:
+  - "critique"
 cases:
   dataset: "planted_defect_replies"
   tags:
@@ -11,10 +15,10 @@ cases:
 variants:
 - id: "deepseek"
 - id: "qwen"
-  agents:
+  nodes:
     critique: "qwen"
 - id: "llama"
-  agents:
+  nodes:
     critique: "llama"
 checks:
 - id: "blocked"

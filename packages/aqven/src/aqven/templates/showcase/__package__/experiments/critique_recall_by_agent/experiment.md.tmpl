@@ -5,7 +5,7 @@
 `critique_planted_defects` measures the DeepSeek critic's overall agreement with the labels. This experiment asks a
 narrower question for three agents at once: on replies that do carry a defect, how often does the critic stop them?
 
-**Subject.** The arm `critic` is a Python flow builder (`arms/critic/flow.py`) with one step: the project's `critique`
+**Subject.** The local flow `critic` is a Python flow builder (`flows/critic/flow.py`) with one step: the project's `critique`
 inference on a `ReplyReview`, returning the `Critique` as it is. There is no verdict step; the `blocked` check reads the
 critique the way the polish loop does.
 
@@ -13,8 +13,9 @@ critique the way the polish loop does.
 on purpose, so a critic that blocks everything scores 1.0 here. Read this result together with the clean-reply pass
 rate of `critique_planted_defects` before trusting it.
 
-**Variants.** `deepseek` is the arm as written; `qwen` and `llama` put the Qwen and Llama agents on `critique`. Both are
-cheaper panel families, so a pass would make the critic cheaper too.
+**Variants.** The factor is the agent on the `critique` node (`varies: what: agent`). `deepseek` is the flow as written;
+`qwen` and `llama` put the Qwen and Llama agents on `critique`. Both are cheaper panel families, so a pass would make the
+critic cheaper too. The rows are agents, the columns are the two checks below.
 
 **Checks.**
 

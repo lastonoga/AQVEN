@@ -1,0 +1,56 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A judge prompt that checks every claim of a draft against the chunks before scoring makes the three panel judges pick the expected winner more often, at most 25% dearer per correct pick"
+failure_mode: "panel_wrong_winner"
+subject:
+  flow: "judge_panel"
+varies:
+  what: "prompt"
+  nodes:
+  - "deepseek"
+  - "qwen"
+  - "llama"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "as_written"
+- id: "claims_first"
+  nodes:
+    deepseek: "claims_first"
+    qwen: "claims_first"
+    llama: "claims_first"
+- id: "anchored_scale"
+  nodes:
+    deepseek: "anchored_scale"
+    qwen: "anchored_scale"
+    llama: "anchored_scale"
+checks:
+- id: "winner"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "winner"
+- id: "winner_quotes_in_chunks"
+  kind: "binary"
+  use: "citations_in_sources"
+  with:
+    citations: "$out.winner.citations"
+    sources: "$in.chunks"
+    id: "chunk_id"
+    quote: "quote"
+    text: "text"
+question:
+  kind: "compare"
+  baseline: "as_written"
+  candidate: "claims_first"
+  primary: "winner"
+  margin: 0.05
+  guardrails:
+  - metric: "cost_of_pass"
+    direction: "lower_is_better"
+    margin: 0.25
+    relative: true
+plan:
+  cases: 8
+  repeats: 3

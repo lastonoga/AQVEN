@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest"
-import type { ExperimentDetail, ExperimentVariant, ThresholdQuestion, VariantRole } from "@/domain"
+import type { ExperimentDetail, ExperimentFactor, ExperimentVariant, FactorChange, FactorKind, ThresholdQuestion, VariantRole } from "@/domain"
 import * as ids from "@/data/ids"
-import { changeColumn, rowRole, shortModel, stepName, swapsBetween, variantTable, whereOf, whereView } from "./variant-table"
+import { changeAt, localNode, rowRole, shortModel, stepName, variantTable, variantValue, whereView } from "./variant-table"
 
-type Subject = Pick<ExperimentDetail, "subject" | "arms" | "variants" | "question">
+type Subject = Pick<ExperimentDetail, "varies" | "variants" | "question">
 
 const GPT = { id: ids.agentId("gpt"), model: "openrouter:openai/gpt-oss-20b" }
 const MISTRAL = { id: ids.agentId("mistral"), model: "openrouter:mistralai/mistral-nemo" }
-const TERSE_GPT = { id: ids.agentId("terse_gpt"), model: "openrouter:openai/gpt-oss-20b" }
 
-const variant = (id: string, role: VariantRole, agents: Readonly<Record<string, typeof GPT>>, arm: string | null = null): ExperimentVariant => ({
+const change = (node: string, what: FactorKind, value: string): FactorChange => ({ node: ids.nodeId(node), what, value })
+
+const variant = (id: string, role: VariantRole, agents: Readonly<Record<string, typeof GPT>>, changes: readonly FactorChange[] = []): ExperimentVariant => ({
   id: ids.variantId(id),
-  arm: arm === null ? null : ids.armId(arm),
   role,
+  changes,
   assignments: Object.entries(agents).map(([node, agent]) => ({ node: ids.nodeId(node), agent, overridden: false })),
 })
 
-const FLOW = ids.flowId("support_case")
+const factor = (what: FactorKind, ...nodes: readonly string[]): ExperimentFactor => ({ what, nodes: nodes.map(ids.nodeId) })
 
-const pair = (variants: readonly ExperimentVariant[]): Subject => ({
-  subject: { kind: "range", flow: FLOW, range: { from: ids.nodeId("polish"), to: ids.nodeId("polish") } },
-  arms: [],
+const pair = (variants: readonly ExperimentVariant[], varies: ExperimentFactor | null = factor("agent", "revise")): Subject => ({
+  varies,
   variants,
   question: {
     kind: "noninferior",
@@ -41,25 +41,18 @@ describe("variant table", () => {
     expect(shortModel("gpt-4o")).toBe("gpt-4o")
     expect(stepName("polish__revise")).toBe("polish › revise")
     expect(stepName("decide__tie_break")).toBe("decide › tie_break")
+    expect(localNode("polish__revise")).toBe("revise")
+    expect(localNode("triage")).toBe("triage")
   })
 
-  it("writes the difference from the baseline as the swapped agents per step, with their models", () => {
+  it("carries the factor and gives each variant its value, empty for the subject as written", () => {
     const baseline = variant("gpt", "baseline", { polish__critique: MISTRAL, polish__revise: GPT })
-    const candidate = variant("mistral", "candidate", { polish__critique: MISTRAL, polish__revise: MISTRAL })
+    const candidate = variant("mistral", "candidate", { polish__critique: MISTRAL, polish__revise: MISTRAL }, [change("revise", "agent", "mistral")])
     const table = variantTable(pair([baseline, candidate]))
-    expect(table.column).toEqual({ kind: "baseline" })
-    expect(table.rows.map((row) => row.change)).toEqual([
-      { kind: "reference" },
-      {
-        kind: "swaps",
-        swaps: [
-          {
-            node: "polish__revise",
-            from: { agent: GPT.id, model: { short: "gpt-oss-20b", full: GPT.model } },
-            to: { agent: MISTRAL.id, model: { short: "mistral-nemo", full: MISTRAL.model } },
-          },
-        ],
-      },
+    expect(table.factor).toEqual({ what: "agent", nodes: ["revise"] })
+    expect(table.rows.map((row) => [row.id, row.role, row.value])).toEqual([
+      ["gpt", "baseline", { kind: "written" }],
+      ["mistral", "candidate", { kind: "same", value: "mistral" }],
     ])
     expect(table.rows[0]?.agents).toEqual([
       { agent: MISTRAL.id, model: { short: "mistral-nemo", full: MISTRAL.model } },
@@ -67,61 +60,52 @@ describe("variant table", () => {
     ])
   })
 
-  it("keeps the swap when only the agent changes and the model stays", () => {
-    const baseline = variant("gpt", "baseline", { revise: GPT })
-    const candidate = variant("mistral", "candidate", { revise: TERSE_GPT })
-    expect(swapsBetween(pair([baseline, candidate]), baseline, candidate)).toEqual([
-      { node: "revise", from: { agent: GPT.id, model: { short: "gpt-oss-20b", full: GPT.model } }, to: { agent: TERSE_GPT.id, model: { short: "gpt-oss-20b", full: TERSE_GPT.model } } },
-    ])
+  it("names one value when a variant sets every factor node to it", () => {
+    const prompts = factor("prompt", "deepseek", "qwen", "llama")
+    const everyNode = variant("claims_first", "other", {}, ["deepseek", "qwen", "llama"].map((node) => change(node, "prompt", "claims_first")))
+    expect(variantValue(prompts, everyNode)).toEqual({ kind: "same", value: "claims_first" })
   })
 
-  it("lists the steps of each arm when the variants run on different arms", () => {
-    const experiment: Subject = {
-      ...pair([variant("gpt", "baseline", { classify: GPT }), variant("mistral", "candidate", { condense: GPT, classify: GPT }, "two_step")]),
-      subject: { kind: "arm", arm: ids.armId("one_step"), range: null },
-      arms: [
-        { id: ids.armId("one_step"), description: "", steps: [{ node: ids.nodeId("classify"), kind: "llm", agent: GPT, description: "" }] },
-        {
-          id: ids.armId("two_step"),
-          description: "",
-          steps: [
-            { node: ids.nodeId("condense"), kind: "llm", agent: GPT, description: "" },
-            { node: ids.nodeId("classify"), kind: "llm", agent: GPT, description: "" },
-          ],
-        },
+  it("lists the value of each node when a variant sets some nodes or several values", () => {
+    const agents = factor("agent", "gpt", "gemini", "mistral")
+    const some = variant("mistral_only", "other", {}, [change("gpt", "agent", "mistral"), change("gemini", "agent", "mistral")])
+    const mixed = variant("mixed", "other", {}, [change("gpt", "agent", "qwen"), change("gemini", "agent", "llama"), change("mistral", "agent", "qwen")])
+    expect(variantValue(agents, some)).toEqual({
+      kind: "nodes",
+      values: [
+        { node: "gpt", value: "mistral" },
+        { node: "gemini", value: "mistral" },
       ],
-    }
-    const table = variantTable(experiment)
-    expect(table.column).toEqual({ kind: "steps" })
-    expect(table.rows.map((row) => row.change)).toEqual([
-      { kind: "steps", steps: ["classify"] },
-      { kind: "steps", steps: ["condense", "classify"] },
-    ])
-    expect(whereOf(experiment)).toEqual({ kind: "arms", arms: ["one_step", "two_step"] })
+    })
+    expect(variantValue(agents, mixed)).toMatchObject({ kind: "nodes" })
   })
 
-  it("marks the variants a threshold or a look tests and drops the column for one variant", () => {
+  it("keeps every variant as written without a factor", () => {
+    const table = variantTable(pair([variant("current", "other", {})], null))
+    expect(table.factor).toBeNull()
+    expect(table.rows.map((row) => row.value)).toEqual([{ kind: "written" }])
+  })
+
+  it("finds the change a variant makes on a node", () => {
+    const swapped = variant("one_reader", "candidate", {}, [change("panel", "flow", "one_reader")])
+    expect(changeAt(swapped, ids.nodeId("panel"))).toEqual({ node: "panel", what: "flow", value: "one_reader" })
+    expect(changeAt(swapped, ids.nodeId("gather"))).toBeNull()
+  })
+
+  it("marks the variants a threshold or a look tests", () => {
     const one = variant("deepseek", "other", { critique: GPT })
     const threshold: ThresholdQuestion = { kind: "threshold", metric: ids.checkId("label"), bound: "above", value: 0.85, margin: 0.05, variant: null }
     expect(rowRole(threshold, one)).toBe("tested")
     expect(rowRole({ ...threshold, variant: ids.variantId("qwen") }, one)).toBe("other")
     expect(rowRole({ kind: "look" }, one)).toBe("tested")
     expect(rowRole(pair([]).question, variant("gpt", "baseline", {}))).toBe("baseline")
-    expect(changeColumn({ ...pair([one]), question: threshold })).toEqual({ kind: "none" })
-    expect(changeColumn({ ...pair([one, variant("qwen", "other", { critique: MISTRAL })]), question: threshold })).toEqual({ kind: "reference", variant: "deepseek" })
-  })
-
-  it("keeps the subject as the place when every variant runs on it", () => {
-    const experiment = pair([variant("gpt", "baseline", {}), variant("mistral", "candidate", {})])
-    expect(whereOf(experiment)).toEqual(experiment.subject)
   })
 
   it("names the place by its kind and keeps the tested range", () => {
     const flow = ids.flowId("support_case")
     const range = { from: ids.nodeId("triage"), to: ids.nodeId("polish") }
-    expect(whereView({ kind: "flow", flow })).toEqual({ kind: "flow", name: "support_case", range: null })
-    expect(whereView({ kind: "range", flow, range })).toEqual({ kind: "flow", name: "support_case", range })
-    expect(whereView({ kind: "arm", arm: ids.armId("critique_only"), range: null })).toEqual({ kind: "arm", name: "critique_only", range: null })
-    expect(whereView({ kind: "arms", arms: [ids.armId("one_step"), ids.armId("two_step")] })).toEqual({ kind: "arms", name: "one_step, two_step", range: null })
+    expect(whereView({ kind: "flow", flow, local: false })).toEqual({ kind: "flow", name: "support_case", range: null })
+    expect(whereView({ kind: "range", flow, local: false, range })).toEqual({ kind: "flow", name: "support_case", range })
+    expect(whereView({ kind: "flow", flow: ids.flowId("critique_only"), local: true })).toEqual({ kind: "local", name: "critique_only", range: null })
   })
 })

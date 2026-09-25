@@ -47,7 +47,7 @@ def variant(variant_id: str, role: VariantRole) -> VariantPlanRecord:
     return VariantPlanRecord(
         variant_id=VariantId(variant_id),
         role=role,
-        arm_id=None,
+        changes=(),
         flow_id=FlowId("triage"),
         ir_hash="",
         flow_hash="",
