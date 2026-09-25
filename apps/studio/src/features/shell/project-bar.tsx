@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { ServerIndicator } from "@/features/health"
 import { rememberFlow } from "@/lib/last-flow"
 import { ROUTE_ID, ROUTE_PATH } from "@/lib/routes"
+import { ChatToggle } from "./chat-toggle"
+import type { ChatVisibility } from "./chat-visibility"
 import { FlowPicker } from "./flow-picker"
 import { FlowTabs } from "./flow-tabs"
 import { ModeSwitch } from "./mode-switch"
@@ -17,7 +19,12 @@ import { ResearchTabs } from "./research-tabs"
 import { RunBadge } from "./run-badge"
 import { fallbackFlow, useRoutedFlow, type FlowScope } from "./selected-flow"
 
-export type ProjectBarProps = { readonly project: ApiProject; readonly flows: readonly ApiFlow[] }
+export type ProjectBarProps = {
+  readonly project: ApiProject
+  readonly flows: readonly ApiFlow[]
+  readonly chat: ChatVisibility
+  readonly chatPanelId: string
+}
 
 type MenuProps = { readonly selected: FlowScope }
 
@@ -59,7 +66,9 @@ function ModeMenu({ mode, selected }: MenuProps & { readonly mode: ProjectMode |
   return <Menu selected={selected} />
 }
 
-function FlowSelect({ project, flows, selected, mode }: ProjectBarProps & MenuProps & { readonly mode: ProjectMode | null }) {
+type FlowSelectProps = Pick<ProjectBarProps, "project" | "flows"> & MenuProps & { readonly mode: ProjectMode | null }
+
+function FlowSelect({ project, flows, selected, mode }: FlowSelectProps) {
   if (flows.length === 0 || selected === null || !showsFlowPicker(mode)) return null
   return <FlowPicker project={project} flows={flows} selected={selected} />
 }
@@ -91,7 +100,7 @@ function useSelectedFlow(project: ApiProject, flows: readonly ApiFlow[]): FlowSc
   return routed ?? fallbackFlow(project, flows)
 }
 
-export function ProjectBar({ project, flows }: ProjectBarProps) {
+export function ProjectBar({ project, flows, chat, chatPanelId }: ProjectBarProps) {
   const t = useTranslations("shell")
   const mode = useCurrentMode()
   const selected = useSelectedFlow(project, flows)
@@ -99,7 +108,7 @@ export function ProjectBar({ project, flows }: ProjectBarProps) {
     <Surface variant="bar" asChild>
       <Toolbar
         size="lg"
-        className="gap-3 pr-2 pl-3.5"
+        className="gap-3 pr-2 pl-2"
         end={
           <>
             <OpenRunBadge />
@@ -108,6 +117,7 @@ export function ProjectBar({ project, flows }: ProjectBarProps) {
           </>
         }
       >
+        <ChatToggle open={chat.open} controls={chatPanelId} onToggle={chat.toggle} />
         <nav aria-label={t("crumbsAria")} className="flex min-w-0 shrink items-center gap-1.5">
           <Tag fill="solid" tone="primary" shape="square" size="sm">
             {projectInitial(project)}
