@@ -465,13 +465,19 @@ const TAB_SECTIONS: Readonly<Record<InspectorTab, (props: TabBodyProps, t: Inspe
   problems: ({ detail }, t) => problemSections(detail, t),
 }
 
+function NodeAgent({ detail, raw }: { readonly detail: ApiNodeDetail; readonly raw: boolean }) {
+  const agent = detail.agent_spec
+  if (agent === null || agent === undefined) return null
+  return <AgentSections agent={agent} runtime={detail.agent_runtime ?? null} raw={raw} />
+}
+
 function NodeTabBody({ tab, ...props }: TabBodyProps & { readonly tab: InspectorTab }) {
   const t = useTranslations("flow.inspector")
   const sections = TAB_SECTIONS[tab](props, t)
   const agent = tab === "config" && hasAgent(props.detail)
   return (
     <div className="space-y-6">
-      {agent ? <AgentSections detail={props.detail} raw={props.raw} /> : null}
+      {agent ? <NodeAgent detail={props.detail} raw={props.raw} /> : null}
       {sections.length === 0 && !agent ? <Empty title={t("noPrompt")} /> : null}
       {sections.length > 0 ? <SectionStack sections={sections} gap="lg" /> : null}
     </div>

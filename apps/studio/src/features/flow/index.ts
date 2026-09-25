@@ -4,4 +4,5 @@ export { stepSchemas, withFieldCounts, type FlowStepSchemas, type StepSchemas } 
 export { InspectorPanel, type InspectorPage, type InspectorPanelProps } from "./inspector-panel"
 export { buildGraph, type CanvasGraph } from "./layout"
 export { specDescription } from "./node-facts"
+export { AgentSections, type AgentSectionsProps } from "./node-agent-sections"
 export { PromptBody, SchemaBody, type SchemaBodyProps } from "./node-inspector"

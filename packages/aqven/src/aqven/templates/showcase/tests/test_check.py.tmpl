@@ -46,7 +46,11 @@ UNUSED_ALTERNATIVE: Final[Breakage] = (
     '- id: "always_tie_break"\n  nodes:\n    aggregate: "always_tie_break"\n',
     "",
 )
-DUPLICATE_VARIANT: Final[Breakage] = (AA_NOISE, '  nodes:\n    tie_break: "gpt"\n', "")
+DUPLICATE_VARIANT: Final[Breakage] = (
+    PANEL_AGENTS,
+    '    tie_break: "deepseek"\n',
+    '    tie_break: "deepseek"\n- id: "deepseek_again"\n  nodes:\n    tie_break: "deepseek"\n',
+)
 UNBOUND_JUDGE_INPUT: Final[Breakage] = (
     "flows/support_case/nodes/polish/critique.inference.yaml",
     'in:\n- name: "summary"',
@@ -170,6 +174,11 @@ def test_unused_alternative_warns(aqven_project_root: Path, tmp_path: Path) -> N
 def test_identical_variants_warn(aqven_project_root: Path, tmp_path: Path) -> None:
     copy = broken_copy(aqven_project_root, tmp_path, *DUPLICATE_VARIANT)
     assert "W_VARIANT_DUPLICATE" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_aa_pair_needs_no_factor_and_does_not_warn(aqven_project_root: Path) -> None:
+    report = check_project(aqven_project_root)
+    assert not [item for item in report.diagnostics if item.file == AA_NOISE]
 
 
 def test_check_typed_for_the_revise_inference_warns_on_the_polish_range(
