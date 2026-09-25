@@ -48,6 +48,8 @@ from aqven.write.model import Ulid
 
 type QuestionKind = Literal["look", "threshold", "compare", "noninferior"]
 type NodeFileRole = Literal["node", "code", "inference", "prompt"]
+type ActivitySource = Literal["files", "series"]
+type AttentionReason = Literal["spend_cap_pause", "series_invalid", "results_stale", "check_errors"]
 
 
 class LaunchRequest(RequestModel):
@@ -111,6 +113,12 @@ class ExperimentSummaryView(ResourceModel):
     latest: LatestSeries | None
     series_count: int
     spent_usd: Decimal
+    archived: bool
+    created: AwareDatetime | None
+    last_activity: AwareDatetime | None
+    activity_source: ActivitySource | None
+    running: bool
+    attention: tuple[AttentionReason, ...]
 
 
 class AgentRefView(ResourceModel):

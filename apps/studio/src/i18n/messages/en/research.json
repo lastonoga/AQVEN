@@ -121,13 +121,19 @@
   },
   "list": {
     "title": "Research",
-    "subtitle": "Experiments of {project} by flow: a question, its variants and the series that answer it",
+    "subtitle": "Experiments of {project}: a question, its variants and the series that answer it",
     "suggest": "Suggest hypotheses",
     "filtersAria": "Filter experiments",
     "question": "Question",
     "failureMode": "Failure mode",
     "any": "all",
     "clear": "Clear filters",
+    "groupBy": "Group by",
+    "grouping": {
+      "activity": "Activity",
+      "flow": "Flow",
+      "failureMode": "Failure mode"
+    },
     "tableAria": "Experiments on {section}",
     "count": "{count, plural, one {# experiment} other {# experiments}}",
     "column": {
@@ -149,7 +155,33 @@
     "open": "Open experiment {id}",
     "empty": "No experiments match these filters",
     "emptyAll": "No experiments yet",
-    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/"
+    "emptyHint": "Ask the agent to suggest hypotheses, or add an experiment.yaml under experiments/",
+    "group": {
+      "running": "Running",
+      "needsYou": "Needs you",
+      "today": "Changed today",
+      "noFailureMode": "No failure mode",
+      "older": "Older ({count})",
+      "archived": "Archived ({count})"
+    },
+    "groupHint": {
+      "running": "A series is running or waits for a person",
+      "needsYou": "Spend to approve, an invalid last series, results older than the files, or check errors",
+      "today": "Created, edited or run today"
+    },
+    "activity": {
+      "files": "changed {when}",
+      "series": "last series {when}"
+    },
+    "attention": {
+      "spend_cap_pause": "spend waits for approval",
+      "series_invalid": "last series invalid",
+      "results_stale": "files changed after the last series",
+      "check_errors": "check errors"
+    },
+    "new": "new",
+    "openFlow": "Open the flow {flow}",
+    "filterMode": "Show only {mode}"
   },
   "flowSection": {
     "local": "Flows of experiments"
@@ -392,7 +424,8 @@
         "attempt": "{name} · repeat {repeat}",
         "openRun": "Open the run of {name}, repeat {repeat}"
       }
-    }
+    },
+    "archived": "Archived"
   },
   "pause": {
     "aria": "Spend paused near the cap",

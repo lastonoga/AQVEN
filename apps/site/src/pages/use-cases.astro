@@ -5,16 +5,10 @@ import { Hero1 } from "@/components/hero1";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
 import {
-  Comparison,
-  FAQ,
-  ResearchLoop,
-  Situations,
-  Stack,
-  StudioEvidence,
-  TrustStrip,
-} from "@/components/landing/sections";
-import { Providers } from "@/components/landing/provider-logos";
-import { heroCanvasVisual } from "@/components/landing/schematics";
+  SituationSections,
+  WhoDoesWhat,
+  useCasesIndexVisual,
+} from "@/components/landing/use-cases";
 import {
   AUTH,
   FOOTER_COPYRIGHT,
@@ -27,22 +21,17 @@ import {
   QUICKSTART,
   REPO,
 } from "@/components/landing/site-nav";
-
-const startButtons = {
-  primary: { text: "Get started", url: QUICKSTART },
-  secondary: { text: "GitHub", url: REPO },
-};
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="motion-safe:scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AQVEN: Discover what your AI workflow needs to work reliably</title>
+    <title>What AQVEN is for: use cases</title>
     <meta
       name="description"
-      content="A Python framework and a local Studio for multi-step AI workflows. Your coding agent builds, runs and experiments on the workflow. You inspect the evidence and decide what to change."
+      content="Find, explain, compare, confirm and build: five things you do in AQVEN when you build multi-step AI workflows with your coding agent."
     />
     <link rel="icon" href="/favicon.svg" />
     <script is:inline>
@@ -60,27 +49,26 @@ const startButtons = {
 
     <main>
       <Hero1
-        badge={{ text: "For engineers building multi-step AI workflows" }}
-        heading="Discover what your AI workflow needs to work reliably."
-        description="AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, and you see the evidence."
-        command="uv tool install aqven"
-        buttons={startButtons}
-        visual={heroCanvasVisual}
+        badge={{ text: "Use cases" }}
+        heading="What AQVEN is for."
+        description="Five situations from building multi-step AI workflows, and what you and your coding agent do about each in AQVEN."
+        buttons={{
+          primary: { text: "Get started", url: QUICKSTART },
+          secondary: { text: "GitHub", url: REPO },
+        }}
+        visual={useCasesIndexVisual}
       />
 
-      <TrustStrip />
-      <Situations />
-      <ResearchLoop />
-      <StudioEvidence />
-      <Comparison />
-      <Stack />
-      <Providers />
-      <FAQ client:visible />
+      <WhoDoesWhat />
+      <SituationSections />
 
       <Cta10
         heading="Start with one question."
         description="Run a small experiment. Inspect the evidence. Decide what comes next."
-        buttons={startButtons}
+        buttons={{
+          primary: { text: "Get started", url: QUICKSTART },
+          secondary: { text: "GitHub", url: REPO },
+        }}
       />
     </main>
 

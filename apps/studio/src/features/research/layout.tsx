@@ -5,15 +5,16 @@ export type Fact = { readonly id: string; readonly label: string; readonly value
 
 export type ResearchSectionProps = {
   readonly title: string
+  readonly heading?: ReactNode
   readonly description?: ReactNode
   readonly trailing?: ReactNode
   readonly children: ReactNode
 }
 
-export function ResearchSection({ title, description, trailing, children }: ResearchSectionProps) {
+export function ResearchSection({ title, heading, description, trailing, children }: ResearchSectionProps) {
   return (
     <section aria-label={title} className="min-w-0">
-      <Heading size="section" title={title} description={description} trailing={trailing} />
+      <Heading size="section" title={heading ?? title} description={description} trailing={trailing} />
       <div className="mt-2 flex min-w-0 flex-col gap-3">{children}</div>
     </section>
   )
