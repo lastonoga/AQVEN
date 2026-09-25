@@ -15,6 +15,11 @@ function useLatestTags(latest: SeriesSummary | null): readonly TagSpec[] {
   return [{ children: t(`verdict.${latest.verdict.state}`), tone: VERDICT_TONE[latest.verdict.state], fill: "soft" }]
 }
 
+function useArchivedTags(archived: boolean): readonly TagSpec[] {
+  const t = useTranslations("research.experiment")
+  return archived ? [{ children: t("archived"), tone: "neutral", fill: "outline" }] : []
+}
+
 function HeaderRun({ launch }: { readonly launch: Launch }) {
   const t = useTranslations("research.experiment.question")
   return <RunButton launch={launch} label={t("run")} />
@@ -23,7 +28,7 @@ function HeaderRun({ launch }: { readonly launch: Launch }) {
 export function ExperimentQuestion({ experiment, latest, launch }: { readonly experiment: ExperimentDetail; readonly latest: SeriesSummary | null; readonly launch: Launch }) {
   const t = useTranslations("research.experiment")
   const question = useQuestionCopy()
-  const tags = useLatestTags(latest)
+  const tags = [...useArchivedTags(experiment.archived), ...useLatestTags(latest)]
   const { state } = launch.action
   return (
     <div className="flex flex-col gap-2">

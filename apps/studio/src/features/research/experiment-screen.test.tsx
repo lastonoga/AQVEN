@@ -60,6 +60,20 @@ describe("ExperimentScreen: question", () => {
   })
 })
 
+describe("ExperimentScreen: archived", () => {
+  it("still opens an archived experiment and tags it in the header", async () => {
+    await renderRoute("/research/experiments/panel_failure_scan")
+    const heading = await screen.findByRole("heading", { level: 1 })
+    expect(heading.parentElement?.textContent).toContain("Archived")
+  })
+
+  it("does not tag an experiment in use", async () => {
+    await renderRoute("/research/experiments/reply_noninferior_mistral")
+    const heading = await screen.findByRole("heading", { level: 1, name: /mistral is not worse/ })
+    expect(heading.parentElement?.textContent).not.toContain("Archived")
+  })
+})
+
 describe("ExperimentScreen: what we test", () => {
   it("draws the subject flow with the range in focus and marks the swapped agent", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
