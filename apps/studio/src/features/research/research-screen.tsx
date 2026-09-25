@@ -21,7 +21,7 @@ const hypothesesPrompt = ({ experiments, filter }: HypothesesScope, flow: FlowId
     `Read flows/, the cases of each flow and the experiments already in experiments/: ${experiments.map((item) => item.id).join(", ") || "none yet"}.`,
     flow === null ? null : `Focus on the flow ${flow}.`,
     filter.failureMode === undefined ? null : `Focus on the failure mode ${filter.failureMode}.`,
-    "For each hypothesis give the failure_mode it targets, the question (look, threshold, compare or noninferior) with its metric and margin, the subject (flow, range or arm), the variants as agents from agents/, the checks and the cases by tags.",
+    "For each hypothesis give the failure_mode it targets, the question (look, threshold, compare or noninferior) with its metric and margin, the subject (a flow or a range of it), the one factor the variants change (varies: agent, prompt, use or flow) with its nodes, the variants as values of that factor, the checks and the cases by tags.",
     "Do not write files yet: I will pick one, then you write experiments/<experiment_id>/experiment.yaml and run aqven check.",
   ]
     .filter((line) => line !== null)

@@ -54,6 +54,15 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 [JSON Schema](/reference/schemas/ExperimentCheck.json)
 
+## ExperimentFactor
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `what` | `'agent' \| 'prompt' \| 'use' \| 'flow'` | Yes | `—` | — |
+| `nodes` | `FactorNode[]` | Yes | `—` | minItems=1 |
+
+[JSON Schema](/reference/schemas/ExperimentFactor.json)
+
 ## ExperimentPlan
 
 | YAML field | Type | Required | Default | Constraints |
@@ -72,6 +81,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 | `description` | `string` | Yes | `—` | minLength=1 |
 | `failure_mode` | `string \| null` | No | `None` | — |
 | `subject` | `ExperimentSubject` | Yes | `—` | — |
+| `varies` | `ExperimentFactor \| null` | No | `None` | — |
 | `cases` | `CaseSelection` | Yes | `—` | — |
 | `variants` | `VariantSpec[]` | Yes | `—` | minItems=1 |
 | `checks` | `ExperimentCheck[] \| null` | No | `None` | — |
@@ -84,8 +94,7 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
-| `flow` | `string \| null` | No | `None` | — |
-| `arm` | `string \| null` | No | `None` | — |
+| `flow` | `string` | Yes | `—` | — |
 | `from` | `string \| null` | No | `None` | — |
 | `to` | `string \| null` | No | `None` | — |
 
@@ -142,7 +151,6 @@ This reference is generated from the package's Pydantic models. Fields use their
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | `—` | pattern=^[a-z][a-z0-9_]{0,62}$ |
-| `arm` | `string \| null` | No | `None` | — |
-| `agents` | `map<string, string> \| null` | No | `None` | — |
+| `nodes` | `map<string, FactorValue> \| null` | No | `None` | — |
 
 [JSON Schema](/reference/schemas/VariantSpec.json)

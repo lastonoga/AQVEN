@@ -12,8 +12,9 @@ from pydantic import JsonValue, TypeAdapter
 from aqven.codegen import (
     GENERATED_HEADER,
     GENERATED_TYPES,
-    ArmStepShape,
+    AlternativeStepShape,
     InferenceShape,
+    LocalStepShape,
     StepShape,
     ToolShape,
     generate_types,
@@ -21,7 +22,6 @@ from aqven.codegen import (
     render_types,
 )
 from aqven.spec import (
-    ArmId,
     CodeNodeSpec,
     ExperimentId,
     FieldDecl,
@@ -171,7 +171,7 @@ def steps() -> dict[tuple[FlowId, NodeId], CodeNodeSpec]:
     }
 
 
-ARM_STEPS: Final[Mapping[tuple[str, str, str], dict[str, JsonValue]]] = {
+LOCAL_STEPS: Final[Mapping[tuple[str, str, str], dict[str, JsonValue]]] = {
     ("judge_check", "judge", "verdict"): {
         "run": "verdict",
         "in": [{**field("score", "Score"), "from": "$judge.out.score"}],
@@ -189,12 +189,32 @@ ARM_STEPS: Final[Mapping[tuple[str, str, str], dict[str, JsonValue]]] = {
 }
 
 
-def arm_steps() -> dict[tuple[ExperimentId, ArmId, NodeId], CodeNodeSpec]:
+def local_steps() -> dict[tuple[ExperimentId, FlowId, NodeId], CodeNodeSpec]:
     return {
-        (ExperimentId(experiment_id), ArmId(arm_id), NodeId(node_id)): STEP_ADAPTER.validate_python(
+        (ExperimentId(experiment_id), FlowId(flow_id), NodeId(node_id)): STEP_ADAPTER.validate_python(
             {**STEP_HEADER, **data}
         )
-        for (experiment_id, arm_id, node_id), data in ARM_STEPS.items()
+        for (experiment_id, flow_id, node_id), data in LOCAL_STEPS.items()
+    }
+
+
+ALTERNATIVE_STEPS: Final[Mapping[tuple[str, str], dict[str, JsonValue]]] = {
+    ("judge_check", "verdict_strict"): {
+        "run": "verdict_strict",
+        "in": [{**field("score", "Score"), "from": "$judge.out.score"}],
+        "out": [field("flag", "Flag")],
+    },
+    ("support", "case_prepare"): {
+        "run": "case_prepare",
+        "out": [field("flag", "Flag")],
+    },
+}
+
+
+def alternative_steps() -> dict[tuple[ExperimentId, NodeId], CodeNodeSpec]:
+    return {
+        (ExperimentId(experiment_id), NodeId(node_id)): STEP_ADAPTER.validate_python({**STEP_HEADER, **data})
+        for (experiment_id, node_id), data in ALTERNATIVE_STEPS.items()
     }
 
 
@@ -370,11 +390,11 @@ def test_step_model_name_taken_by_a_type_is_a_conflict() -> None:
     ]
 
 
-def test_arm_step_models_carry_the_experiment_and_arm_and_follow_the_flow_steps(tmp_path: Path) -> None:
+def test_local_step_models_carry_the_experiment_and_flow_and_follow_the_flow_steps(tmp_path: Path) -> None:
     declared = types()
-    plan = plan_types(declared, steps=steps(), arm_steps=arm_steps())
+    plan = plan_types(declared, steps=steps(), local_steps=local_steps())
     target = tmp_path / "types.py"
-    target.write_text(render_types(declared, steps=steps(), arm_steps=arm_steps()), encoding="utf-8")
+    target.write_text(render_types(declared, steps=steps(), local_steps=local_steps()), encoding="utf-8")
     module = load_module(target)
     models = build_type_models(declared)
     names = [record.name for record in plan.records]
@@ -386,12 +406,34 @@ def test_arm_step_models_carry_the_experiment_and_arm_and_follow_the_flow_steps(
         "JudgeCheckJudgeVerdictOut",
     ]
     assert [(record.name, record.owner) for record in plan.conflicts] == [
-        ("SupportCasePrepareIn", ArmStepShape(ExperimentId("support"), ArmId("case"), NodeId("prepare"))),
-        ("SupportCasePrepareOut", ArmStepShape(ExperimentId("support"), ArmId("case"), NodeId("prepare"))),
+        ("SupportCasePrepareIn", LocalStepShape(ExperimentId("support"), FlowId("case"), NodeId("prepare"))),
+        ("SupportCasePrepareOut", LocalStepShape(ExperimentId("support"), FlowId("case"), NodeId("prepare"))),
     ]
-    verdict = arm_steps()[(ExperimentId("judge_check"), ArmId("judge"), NodeId("verdict"))]
+    verdict = local_steps()[(ExperimentId("judge_check"), FlowId("judge"), NodeId("verdict"))]
     expected = normalized_schema(models.record("JudgeCheckJudgeVerdictIn", verdict.in_))
     assert normalized_schema(generated_annotation(module, "JudgeCheckJudgeVerdictIn")) == expected
+
+
+def test_alternative_step_models_carry_the_experiment_and_follow_the_local_steps(tmp_path: Path) -> None:
+    declared = types()
+    plan = plan_types(declared, steps=steps(), local_steps=local_steps(), alternative_steps=alternative_steps())
+    target = tmp_path / "types.py"
+    source = render_types(declared, steps=steps(), alternative_steps=alternative_steps())
+    target.write_text(source, encoding="utf-8")
+    module = load_module(target)
+    names = [record.name for record in plan.records]
+
+    assert names[names.index("JudgeCheckJudgeVerdictOut") + 1 :] == [
+        "JudgeCheckVerdictStrictIn",
+        "JudgeCheckVerdictStrictOut",
+    ]
+    assert [(record.name, record.owner) for record in plan.conflicts][-2:] == [
+        ("SupportCasePrepareIn", AlternativeStepShape(ExperimentId("support"), NodeId("case_prepare"))),
+        ("SupportCasePrepareOut", AlternativeStepShape(ExperimentId("support"), NodeId("case_prepare"))),
+    ]
+    strict = alternative_steps()[(ExperimentId("judge_check"), NodeId("verdict_strict"))]
+    expected = normalized_schema(build_type_models(declared).record("JudgeCheckVerdictStrictOut", strict.out))
+    assert normalized_schema(generated_annotation(module, "JudgeCheckVerdictStrictOut")) == expected
 
 
 def test_generate_writes_only_when_the_text_changes(tmp_path: Path) -> None:

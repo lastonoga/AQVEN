@@ -1,7 +1,7 @@
 from decimal import Decimal
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, cast
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter, model_validator
 
 from aqven.ports.execution import NodeOutcome, NodeUsage
 from aqven.runtime.address import JsonObject
@@ -11,9 +11,12 @@ from aqven.runtime.options import CassetteConfig, ModelProfile, RunContext, RunO
 from aqven.runtime.overrides import NodeOutputOverride
 from aqven.runtime.replay import McpToolStub, ProviderFault
 from aqven.runtime.vocabulary import RunMode, TerminalRunStatus
-from aqven.spec import ArmId, ExperimentId, FlowId, Limits, NodeId
+from aqven.spec import ExperimentId, FlowId, Limits, NodeId
 
 RECORD_CONFIG: Final = ConfigDict(extra="forbid", frozen=True)
+LEGACY_ARM_KEY: Final = "arm_id"
+EXPERIMENT_KEY: Final = "experiment_id"
+FLOW_EXPERIMENT_KEY: Final = "flow_experiment_id"
 
 
 class SeriesTag(BaseModel):
@@ -26,7 +29,19 @@ class SeriesTag(BaseModel):
     repeat: int = Field(ge=1)
     check_id: str | None = None
     experiment_id: ExperimentId | None = None
-    arm_id: ArmId | None = None
+    flow_experiment_id: ExperimentId | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_arm(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            return value
+        stored = cast(dict[str, JsonValue], value)
+        if LEGACY_ARM_KEY not in stored:
+            return stored
+        tag = {key: item for key, item in stored.items() if key != LEGACY_ARM_KEY}
+        owner = stored.get(EXPERIMENT_KEY) if stored[LEGACY_ARM_KEY] is not None else None
+        return {**tag, FLOW_EXPERIMENT_KEY: tag.get(FLOW_EXPERIMENT_KEY, owner)}
 
 
 class RunSpec(BaseModel):

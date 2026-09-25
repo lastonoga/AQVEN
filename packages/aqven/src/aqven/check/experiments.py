@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import Final, assert_never
 
@@ -6,33 +6,29 @@ from pydantic import ValidationError
 
 from aqven.check.context import CheckContext
 from aqven.check.datasets import PARTIAL, STRICT, case_inputs, input_model, repeated, selected_cases
-from aqven.check.registry import known, known_agent
-from aqven.check.subjects import flow_spec, range_order, subject_flow, subject_label
+from aqven.check.experiment_site import ExperimentRule, ExperimentSite
+from aqven.check.factors import FACTOR_RULES
+from aqven.check.registry import known
+from aqven.check.subjects import flow_spec
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic, templated_diagnostic
-from aqven.loader import NODE_ID_SEPARATOR, LoadedExperiment, LoadedFlow, SourceSpec, YamlPath, local_node_id
+from aqven.factors import is_local_subject
+from aqven.loader import SourceSpec, YamlPath
 from aqven.policies.evaluators import EXPECTED_CHECK, ExpectedParams, expectation_gap
 from aqven.spec import (
-    AgentId,
-    ArmId,
     CompareQuestion,
     DatasetFile,
     ExperimentCheck,
     ExperimentSpec,
-    FlowSpec,
-    LlmNodeSpec,
     LookQuestion,
-    NodeId,
     NoninferiorQuestion,
     SeriesMetric,
     ThresholdQuestion,
     VariantId,
-    VariantSpec,
 )
 
 SERIES_METRICS: Final = tuple(metric.value for metric in SeriesMetric)
 NONE: Final = "none"
 RANGE_KEYS: Final = ("from", "to")
-TYPE_KEYS: Final = ("input", "output")
 EXPECTED_OUTPUT_KEY: Final = "expected_output"
 
 
@@ -48,63 +44,17 @@ class Expectation:
         return f"{EXPECTED_OUTPUT_KEY} with the fields {', '.join(self.fields)}"
 
 
-@dataclass(frozen=True, slots=True)
-class ExperimentSite:
-    context: CheckContext
-    loaded: LoadedExperiment
-
-    @property
-    def spec(self) -> ExperimentSpec:
-        return self.loaded.source.spec
-
-    @property
-    def file(self) -> str:
-        return self.loaded.source.path
-
-    @property
-    def subject(self) -> LoadedFlow | None:
-        return subject_flow(self.context, self.loaded)
-
-    @property
-    def label(self) -> str:
-        return subject_label(self.spec.subject)
-
-    @property
-    def variant_ids(self) -> tuple[VariantId, ...]:
-        return tuple(variant.id for variant in self.spec.variants)
-
-    @property
-    def check_ids(self) -> tuple[str, ...]:
-        return tuple(check.id for check in self.spec.checks or ())
-
-    def values(self, **values: str) -> Mapping[str, str]:
-        return {"experiment": self.loaded.experiment_id, **values}
-
-    def problem(self, code: DiagnosticCode, path: YamlPath, problem: str, fix: str) -> Diagnostic:
-        return templated_diagnostic(code, self.file, path, self.values(problem=problem, fix=fix))
-
-
-type ExperimentRule = Callable[[ExperimentSite], Iterator[Diagnostic]]
-
-
 def check_experiments(context: CheckContext) -> Iterable[Diagnostic]:
     sites = (ExperimentSite(context, loaded) for loaded in context.project.experiments.values())
     return tuple(item for site in sites for rule in EXPERIMENT_RULES for item in rule(site))
 
 
 def _subject(site: ExperimentSite) -> Iterator[Diagnostic]:
-    subject = site.spec.subject
-    if subject.arm is not None and subject.arm not in site.loaded.arms:
-        yield _arm_unknown(site, ("subject", "arm"), subject.arm)
-    if subject.flow is not None and not known(site.context, site.context.project.flows, subject.flow):
-        message = f"flow {subject.flow} does not exist in the project"
-        yield diagnostic(DiagnosticCode.E_FLOW_UNKNOWN, site.file, ("subject", "flow"), message)
-
-
-def _arm_unknown(site: ExperimentSite, path: YamlPath, arm: ArmId) -> Diagnostic:
-    arms = ", ".join(sorted(site.loaded.arms)) or NONE
-    values = site.values(arm=arm, arms=arms, folder=site.loaded.folder)
-    return templated_diagnostic(DiagnosticCode.E_ARM_UNKNOWN, site.file, path, values)
+    flow = site.spec.subject.flow
+    if site.subject is not None or known(site.context, site.context.project.flows, flow):
+        return
+    message = f"flow {flow} is neither a flow of {site.loaded.folder}/flows nor a flow of the project"
+    yield diagnostic(DiagnosticCode.E_FLOW_UNKNOWN, site.file, ("subject", "flow"), message)
 
 
 def _range(site: ExperimentSite) -> Iterator[Diagnostic]:
@@ -123,35 +73,6 @@ def _range(site: ExperimentSite) -> Iterator[Diagnostic]:
         return
     problem = f"range from {subject.from_} comes after to {subject.to} in the order of {site.label}"
     yield site.problem(DiagnosticCode.E_RANGE_INVALID, ("subject", "from"), problem, "swap from and to")
-
-
-def _variant_ranges(site: ExperimentSite) -> Iterator[Diagnostic]:
-    subject = site.spec.subject
-    if subject.from_ is None or subject.to is None:
-        return
-    for index, variant in enumerate(site.spec.variants):
-        yield from _variant_range(site, index, variant)
-
-
-def _variant_range(site: ExperimentSite, index: int, variant: VariantSpec) -> Iterator[Diagnostic]:
-    subject = site.spec.subject
-    arm = site.loaded.arms.get(variant.arm) if variant.arm is not None else None
-    spec = flow_spec(arm)
-    if spec is None or subject.from_ is None or subject.to is None:
-        return
-    ends = tuple(dict.fromkeys((subject.from_, subject.to)))
-    missing = tuple(node for node in ends if node not in spec.order)
-    reversed_ends = not missing and spec.order.index(subject.from_) > spec.order.index(subject.to)
-    if not missing and not reversed_ends:
-        return
-    ranged = f"the range {subject.from_} to {subject.to}"
-    problem = (
-        f"variant {variant.id} runs arm {variant.arm}, whose top-level nodes lack {', '.join(missing)} of {ranged}"
-        if missing
-        else f"variant {variant.id} runs arm {variant.arm}, where {ranged} is reversed"
-    )
-    fix = f"give arm {variant.arm} the top-level nodes {subject.from_} and {subject.to} in this order"
-    yield site.problem(DiagnosticCode.E_RANGE_INVALID, ("variants", index, "arm"), problem, fix)
 
 
 def _cases(site: ExperimentSite) -> Iterator[Diagnostic]:
@@ -181,26 +102,25 @@ def _dataset_unknown(site: ExperimentSite) -> Iterator[Diagnostic]:
 def _dataset_flow(site: ExperimentSite, source: SourceSpec[DatasetFile]) -> Iterator[Diagnostic]:
     subject = site.spec.subject.flow
     owner = source.spec.flow
-    if subject is None or owner == subject:
+    if owner == subject or is_local_subject(site.loaded):
         return
     holder = f"flow {owner}" if owner is not None else "no flow"
     problem = f"dataset {site.spec.cases.dataset} belongs to {holder}, but the subject is flow {subject}"
-    fix = f"pick a dataset with flow: {subject}; only an arm subject runs a dataset without flow"
+    fix = f"pick a dataset with flow: {subject}; only a local flow of the experiment runs a dataset without flow"
     yield site.problem(DiagnosticCode.E_DATASET_MISMATCH, ("cases", "dataset"), problem, fix)
 
 
 def _dataset_input(site: ExperimentSite, source: SourceSpec[DatasetFile]) -> Iterator[Diagnostic]:
-    arm = site.spec.subject.arm
     owner = source.spec.flow
     subject = flow_spec(site.subject)
     other = flow_spec(site.context.project.flows.get(owner)) if owner is not None else None
-    if arm is None or subject is None or other is None or other.input == subject.input:
+    if not is_local_subject(site.loaded) or subject is None or other is None or other.input == subject.input:
         return
     problem = (
         f"dataset {site.spec.cases.dataset} holds inputs {other.input} of flow {owner}, "
-        f"but arm {arm} takes {subject.input}"
+        f"but local flow {site.spec.subject.flow} takes {subject.input}"
     )
-    fix = "pick a dataset without flow or a flow dataset whose input type is the arm input type"
+    fix = "pick a dataset without flow or a flow dataset whose input type is the input type of the local flow"
     yield site.problem(DiagnosticCode.E_DATASET_MISMATCH, ("cases", "dataset"), problem, fix)
 
 
@@ -271,48 +191,6 @@ def _variants(site: ExperimentSite) -> Iterator[Diagnostic]:
     for index, _ in repeated(site.variant_ids):
         message = f"variant id {site.variant_ids[index]} is already declared in this experiment"
         yield diagnostic(DiagnosticCode.E_ID_DUPLICATE, site.file, ("variants", index, "id"), message)
-    for index, variant in enumerate(site.spec.variants):
-        yield from _variant(site, ("variants", index), variant)
-
-
-def _variant(site: ExperimentSite, path: YamlPath, variant: VariantSpec) -> Iterator[Diagnostic]:
-    if variant.arm is not None and variant.arm not in site.loaded.arms:
-        yield _arm_unknown(site, (*path, "arm"), variant.arm)
-    target = site.loaded.arms.get(variant.arm) if variant.arm is not None else site.subject
-    for node_id, agent_id in (variant.agents or {}).items():
-        yield from _assignment(site, (*path, "agents", node_id), variant, target, node_id, agent_id)
-
-
-def _assignment(
-    site: ExperimentSite,
-    path: YamlPath,
-    variant: VariantSpec,
-    target: LoadedFlow | None,
-    node_id: NodeId,
-    agent_id: AgentId,
-) -> Iterator[Diagnostic]:
-    if not known_agent(site.context, agent_id):
-        message = f"agent {agent_id} does not exist in the project"
-        yield diagnostic(DiagnosticCode.E_AGENT_UNKNOWN, site.file, path, message)
-    if target is None or local_node_id(node_id) in site.context.project.broken_ids:
-        return
-    label = f"arm {variant.arm}" if variant.arm is not None else site.label
-    node = target.nodes.get(node_id)
-    if node is None or not isinstance(node.spec, LlmNodeSpec):
-        problem = f"variant {variant.id} assigns agent {agent_id} to {node_id}, which is not an llm node of {label}"
-        fix = f"use an llm node id ({', '.join(_llm_nodes(target)) or NONE}); a nested node is <container>__<node>"
-        yield site.problem(DiagnosticCode.E_VARIANT_INVALID, path, problem, fix)
-        return
-    ranged = range_order(site.spec.subject, flow_spec(site.subject))
-    if variant.arm is not None or ranged is None or node_id.split(NODE_ID_SEPARATOR)[0] in ranged:
-        return
-    problem = f"variant {variant.id} assigns agent {agent_id} to {node_id}, which lies outside the range of {label}"
-    fix = f"assign agents inside the range ({', '.join(ranged)}): nodes before it replay the case node_outputs"
-    yield site.problem(DiagnosticCode.E_VARIANT_INVALID, path, problem, fix)
-
-
-def _llm_nodes(flow: LoadedFlow) -> tuple[NodeId, ...]:
-    return tuple(node_id for node_id, source in flow.nodes.items() if isinstance(source.spec, LlmNodeSpec))
 
 
 def _checks(site: ExperimentSite) -> Iterator[Diagnostic]:
@@ -383,36 +261,12 @@ def _declared(site: ExperimentSite, path: YamlPath, variant: VariantId) -> Itera
     yield site.problem(DiagnosticCode.E_VARIANT_INVALID, path, problem, fix)
 
 
-def _arm_types(site: ExperimentSite) -> Iterator[Diagnostic]:
-    subject = flow_spec(site.subject)
-    if subject is None:
-        return
-    arms = ((arm_id, arm) for arm_id, arm in site.loaded.arms.items() if arm is not site.subject)
-    for arm_id, arm in arms:
-        yield from _arm_type(site, arm_id, arm, subject)
-
-
-def _arm_type(site: ExperimentSite, arm_id: ArmId, arm: LoadedFlow, subject: FlowSpec) -> Iterator[Diagnostic]:
-    source = arm.source
-    if source is None:
-        return
-    sides = zip(TYPE_KEYS, (source.spec.input, source.spec.output), (subject.input, subject.output), strict=True)
-    for key, own, expected in sides:
-        if own == expected:
-            continue
-        problem = f"arm {arm_id} has {key} {own}, but the subject {site.label} has {key} {expected}"
-        fix = f"give every arm the {key} type of the subject: all variants run the same cases and checks"
-        values = site.values(problem=problem, fix=fix)
-        yield templated_diagnostic(DiagnosticCode.E_DATASET_MISMATCH, source.path, (key,), values)
-
-
 EXPERIMENT_RULES: Final[tuple[ExperimentRule, ...]] = (
     _subject,
     _range,
-    _variant_ranges,
     _cases,
     _variants,
     _checks,
     _question,
-    _arm_types,
+    *FACTOR_RULES,
 )

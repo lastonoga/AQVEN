@@ -115,11 +115,13 @@ before any data. Each claim could come out against us, which is why it is worth 
   verdict must match the label in more than 85% of attempts on sixteen replies, half clean, half with one
   planted defect such as a wrong amount or a dropped safety instruction.
 
-A variant never names a bare model. It puts an agent on a step, `agents: {polish__revise: "mistral"}`,
-and `agents/mistral.yaml` carries the model, its settings and its output mode.
+The experiment changes one factor, the agent on the `revise` step (`varies` with `what: "agent"`), and
+the `mistral` variant sets it to `mistral`. A variant never names a bare model: `agents/mistral.yaml`
+carries the model, its settings and its output mode.
 
 In Studio I switch to **Research** and open `reply_noninferior_mistral`. I see the **Hypothesis** card and
-the variants table with its swap, `polish › revise: agent gpt → agent mistral`. The `critique` judge has
+the variants table: its caption names the factor, the agent on `revise`, and its **Agent** column reads **as
+written** for `gpt`, the flow as written, and `mistral` for the other variant. The `critique` judge has
 a **validated** tag that points to `critique_planted_defects`. The tag only says which test vouches for
 the judge, so I want that test confirmed before I trust this question. I read the margins closely,
 because they are business decisions: 0.05 is how much reply quality I will give up for a cheaper step.

@@ -27,15 +27,151 @@ the next round starts.
 | Series | one live execution of an experiment: every selected case, every variant, `repeats` times | the project database, `.aqven/aqven.sqlite` |
 | Finding | the verdict of a series on held-out cases, written once | `experiments/<experiment_id>/findings/<series_id>.yaml`, summed up in `FINDINGS.md` |
 
-The **subject** is what runs: a project flow, a range of its top-level nodes, or an **arm**. An arm is a
-small flow that only one experiment runs. A **variant** is what differs between attempts: other agents on
-some `llm` nodes, or another arm. A variant never names a bare model, because the agent carries the model,
-its settings and its output mode. The **question** picks the statistic: `look`, `threshold`, `compare` or
-`noninferior`. [How to write an experiment](/engine/experiments/) covers every key.
+The **subject** is what runs: a flow, or a range of its top-level nodes. The **question** picks the
+statistic: `look`, `threshold`, `compare` or `noninferior`. What sits between them, the variants, is the
+part that decides what an experiment can tell you, so it has its own section below.
+[How to write an experiment](/engine/experiments/) covers every key.
 
 Every attempt of a series is an ordinary run with its own trace. You open it the same way as a run you
 started by hand. Raw attempts stay in the project database, outside git. The finding file carries
 everything its verdict rests on.
+
+## One factor per experiment
+
+An experiment compares **variants** on **checks**. Picture a table: every variant is a row, every check is
+a column, and a series fills the cells. The rows are the things you compare, and the columns are how you
+measure them. When the thing you want to compare ends up as a column, a check that computes the other
+method, the table can't rank it.
+
+Each experiment changes **one factor** of its subject. `varies` names what kind of change it is and which
+nodes it touches, and each variant only sets values for those nodes. A variant without values runs the
+subject as written. Because only one kind of thing changes, a difference between rows has one cause: the
+model, the prompt, the step or the logic, never a mix of them.
+
+| `what` | The slot | A variant's value | What changes |
+|---|---|---|---|
+| `agent` | an `llm` node | an agent of the project | the node answers with another model, settings or output mode |
+| `prompt` | an `llm` node | a file `prompts/<name>.md` of the experiment | the node's prompt text; its inputs, output schema and checks stay |
+| `use` | any node | an alternative node from `nodes/` of the experiment | the node is replaced by the alternative, which takes the slot's id |
+| `flow` | a `call` node | another flow: a local one from `flows/`, else a project flow | the flow the node calls; its input bindings stay, and the new flow has the same input and output types |
+
+A variant never names a bare model. The agent carries the model, its settings and its output mode, so
+`agent` is how you compare models.
+
+Each kind has an experiment in the showcase project.
+
+**`agent`: which model answers this step.** `reply_noninferior_mistral` puts `mistral` on the `revise` step
+of `support_case`:
+
+```yaml
+subject:
+  flow: "support_case"
+  from: "polish"
+  to: "polish"
+varies:
+  what: "agent"
+  nodes:
+  - "revise"
+variants:
+- id: "gpt"
+- id: "mistral"
+  nodes:
+    revise: "mistral"
+```
+
+**`prompt`: which wording works better.** `panel_judge_prompt` gives the three judges of `judge_panel` other
+prompt texts. They live in `experiments/panel_judge_prompt/prompts/claims_first.md` and
+`anchored_scale.md`. Each judge keeps its inputs, output schema and checks, and the tie-break judge keeps
+its own prompt:
+
+```yaml
+subject:
+  flow: "judge_panel"
+varies:
+  what: "prompt"
+  nodes:
+  - "deepseek"
+  - "qwen"
+  - "llama"
+variants:
+- id: "as_written"
+- id: "claims_first"
+  nodes:
+    deepseek: "claims_first"
+    qwen: "claims_first"
+    llama: "claims_first"
+- id: "anchored_scale"
+  nodes:
+    deepseek: "anchored_scale"
+    qwen: "anchored_scale"
+    llama: "anchored_scale"
+```
+
+**`use`: which implementation of one step.** `panel_merge_rule` replaces the `aggregate` code step of
+`judge_panel`. Each alternative is an ordinary node in `experiments/panel_merge_rule/nodes/<alt>/`, with its
+own `.node.yaml` and code. It runs under the slot's id, so the nodes after it read `$aggregate.out` as
+before:
+
+```yaml
+subject:
+  flow: "judge_panel"
+varies:
+  what: "use"
+  nodes:
+  - "aggregate"
+variants:
+- id: "majority_and_spread"
+- id: "majority_only"
+  nodes:
+    aggregate: "majority_only"
+- id: "always_tie_break"
+  nodes:
+    aggregate: "always_tie_break"
+```
+
+**`flow`: which way of splitting the task.** This is the pattern for comparing logic. Fix what already
+works, the models and the prompts, and give the part you want to rethink its own flow behind a `call`
+node, the slot. In `panel_single_judge` the subject is `winner_pick`, a flow that lives only in
+`experiments/panel_single_judge/flows/` and whose one node, `panel`, calls the project's `judge_panel`.
+The other variant plugs in `single_judge`, a second local flow. Both flows in the slot take the same input
+and return the same output, so the same cases and checks run on both:
+
+```yaml
+subject:
+  flow: "winner_pick"
+varies:
+  what: "flow"
+  nodes:
+  - "panel"
+variants:
+- id: "panel"
+- id: "single_judge"
+  nodes:
+    panel: "single_judge"
+```
+
+A factor can touch several nodes at once: `nodes` of `varies` may list three `llm` nodes, and a variant
+gives each of them the same or a different agent. A combination of kinds, such as a cheaper model with a
+prompt tuned for it, goes into one alternative node and is compared with `use`.
+
+Everything an experiment needs sits in its folder:
+
+```text
+experiments/<experiment_id>/
+  experiment.yaml          the question, the factor and the variants
+  experiment.md            notes for people, optional
+  nodes/<alt>/...          alternative nodes for use
+  prompts/<name>.md        alternative prompt texts for prompt
+  flows/<flow_id>/...      flows only this experiment runs, for flow or as the subject
+  findings/<series>.yaml   written by the server
+```
+
+A local flow stays out of the project's flow list, and its id can't be the id of a project flow. When the
+subject or a `flow` value names a flow, the experiment's `flows/` is searched first.
+
+In Studio, the variants table of an experiment has a caption that names the factor, such as "Varies:
+prompt of deepseek, qwen, llama", and a value column: what each variant puts in the slots. A variant with
+no values reads **as written**.
 
 ## Working and held-out cases
 

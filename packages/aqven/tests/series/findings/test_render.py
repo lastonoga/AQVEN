@@ -9,7 +9,7 @@ from finding_fixtures import (
     signal_case,
     threshold_case,
 )
-from pydantic import JsonValue
+from pydantic import JsonValue, ValidationError
 from ruamel.yaml import YAML
 
 from aqven.loader import read_strict_yaml
@@ -21,7 +21,16 @@ from aqven.series.findings import (
     finding_of,
     render_findings_md,
 )
-from aqven.spec import DatasetId, FindingSpec, FlowId, LookQuestion, SeriesSplit, VerdictState
+from aqven.spec import (
+    DatasetId,
+    FactorKind,
+    FindingSpec,
+    FindingVariant,
+    FlowId,
+    LookQuestion,
+    SeriesSplit,
+    VerdictState,
+)
 
 GOLDEN: Final = Path(__file__).with_name("golden")
 
@@ -153,3 +162,31 @@ def test_a_variant_without_llm_nodes_reads_back_with_empty_mappings() -> None:
     assert back == rewritten
     assert (back.variants[0].agents, back.variants[0].metrics) == ({}, {})
     assert finding_hash(back) == back.self_sha256
+
+
+def test_a_new_finding_lists_the_factor_values_of_every_variant_and_writes_no_arm() -> None:
+    spec = spec_of(noninferior_case())
+    text = finding_bytes(spec).decode("utf-8")
+
+    written = [
+        [(change.node_id, change.what, change.value) for change in variant.changes or ()] for variant in spec.variants
+    ]
+    assert written == [[], [("revise", FactorKind.AGENT, "mistral")]]
+    assert all(variant.changes is not None for variant in spec.variants)
+    assert "arm:" not in text
+    assert text.count("changes:") == 2
+
+
+def test_a_finding_written_before_the_factor_keeps_its_arm_and_verifies() -> None:
+    legacy = parsed((GOLDEN / "legacy_finding.yaml").read_bytes())
+
+    assert [(variant.arm, variant.changes) for variant in legacy.variants] == [(None, None), (None, None)]
+    assert finding_hash(legacy) == legacy.self_sha256
+    assert finding_bytes(legacy) == (GOLDEN / "legacy_finding.yaml").read_bytes()
+
+
+def test_a_variant_cannot_carry_both_an_arm_and_factor_values() -> None:
+    variant = spec_of(noninferior_case()).variants[0].model_dump(mode="json", by_alias=True)
+
+    with pytest.raises(ValidationError, match="arm belongs to findings written before ADR-0056"):
+        FindingVariant.model_validate({**variant, "arm": "solo"})

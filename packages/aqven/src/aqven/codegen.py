@@ -26,7 +26,6 @@ from aqven.spec import (
     TEXT,
     TIME_ZONE,
     VIDEO,
-    ArmId,
     CodeNodeSpec,
     Constraints,
     EnumType,
@@ -66,12 +65,16 @@ IMPORT_GROUPS: Final = (("datetime", "typing"), ("pydantic",), ("aqven.spec",))
 INPUT_SUFFIX: Final = "In"
 OUTPUT_SUFFIX: Final = "Out"
 type StepKey = tuple[FlowId, NodeId]
-type ArmStepKey = tuple[ExperimentId, ArmId, NodeId]
+type LocalStepKey = tuple[ExperimentId, FlowId, NodeId]
+type AlternativeStepKey = tuple[ExperimentId, NodeId]
 
 NO_INFERENCES: Final[Mapping[InferenceId, InferenceSpec]] = MappingProxyType[InferenceId, InferenceSpec]({})
 NO_TOOLS: Final[Mapping[ToolId, ToolSpec]] = MappingProxyType[ToolId, ToolSpec]({})
 NO_STEPS: Final[Mapping[StepKey, CodeNodeSpec]] = MappingProxyType[StepKey, CodeNodeSpec]({})
-NO_ARM_STEPS: Final[Mapping[ArmStepKey, CodeNodeSpec]] = MappingProxyType[ArmStepKey, CodeNodeSpec]({})
+NO_LOCAL_STEPS: Final[Mapping[LocalStepKey, CodeNodeSpec]] = MappingProxyType[LocalStepKey, CodeNodeSpec]({})
+NO_ALTERNATIVE_STEPS: Final[Mapping[AlternativeStepKey, CodeNodeSpec]] = MappingProxyType[
+    AlternativeStepKey, CodeNodeSpec
+]({})
 
 BUILTIN_NAMES: Final[Mapping[TypeId, tuple[str, str]]] = {
     TEXT: ("", "str"),
@@ -122,17 +125,27 @@ class StepShape:
 
 
 @dataclass(frozen=True, slots=True)
-class ArmStepShape:
+class LocalStepShape:
     experiment_id: ExperimentId
-    arm_id: ArmId
+    flow_id: FlowId
     node_id: NodeId
 
     @property
     def stem(self) -> str:
-        return f"{_pascal(self.experiment_id)}{_pascal(self.arm_id)}{_pascal(local_node_id(self.node_id))}"
+        return f"{_pascal(self.experiment_id)}{_pascal(self.flow_id)}{_pascal(local_node_id(self.node_id))}"
 
 
-type ShapeOwner = InferenceShape | ToolShape | StepShape | ArmStepShape
+@dataclass(frozen=True, slots=True)
+class AlternativeStepShape:
+    experiment_id: ExperimentId
+    node_id: NodeId
+
+    @property
+    def stem(self) -> str:
+        return f"{_pascal(self.experiment_id)}{_pascal(self.node_id)}"
+
+
+type ShapeOwner = InferenceShape | ToolShape | StepShape | LocalStepShape | AlternativeStepShape
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,12 +182,21 @@ def project_steps(project: LoadedProject) -> Mapping[StepKey, CodeNodeSpec]:
     return {(flow_id, node_id): spec for flow_id, flow in project.flows.items() for node_id, spec in _code_steps(flow)}
 
 
-def project_arm_steps(project: LoadedProject) -> Mapping[ArmStepKey, CodeNodeSpec]:
+def project_local_steps(project: LoadedProject) -> Mapping[LocalStepKey, CodeNodeSpec]:
     return {
-        (experiment_id, arm_id, node_id): spec
+        (experiment_id, flow_id, node_id): spec
         for experiment_id, experiment in project.experiments.items()
-        for arm_id, arm in experiment.arms.items()
-        for node_id, spec in _code_steps(arm)
+        for flow_id, flow in experiment.flows.items()
+        for node_id, spec in _code_steps(flow)
+    }
+
+
+def project_alternative_steps(project: LoadedProject) -> Mapping[AlternativeStepKey, CodeNodeSpec]:
+    return {
+        (experiment_id, node_id): spec
+        for experiment_id, experiment in project.experiments.items()
+        for node_id, source in experiment.alternatives.items()
+        if isinstance(spec := source.spec, CodeNodeSpec)
     }
 
 
@@ -184,7 +206,8 @@ def project_plan(project: LoadedProject) -> GeneratedTypes:
         project_inferences(project),
         project_tools(project),
         project_steps(project),
-        project_arm_steps(project),
+        project_local_steps(project),
+        project_alternative_steps(project),
     )
 
 
@@ -199,7 +222,8 @@ def declared_records(
     inferences: Mapping[InferenceId, InferenceSpec],
     tools: Mapping[ToolId, ToolSpec],
     steps: Mapping[StepKey, CodeNodeSpec],
-    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
+    local_steps: Mapping[LocalStepKey, CodeNodeSpec] = NO_LOCAL_STEPS,
+    alternative_steps: Mapping[AlternativeStepKey, CodeNodeSpec] = NO_ALTERNATIVE_STEPS,
 ) -> Iterator[ShapeRecord]:
     for inference_id in sorted(inferences):
         spec = inferences[inference_id]
@@ -211,9 +235,12 @@ def declared_records(
     for key in sorted(steps):
         step = steps[key]
         yield from shape_records(StepShape(*key), step.in_, step.out)
-    for key in sorted(arm_steps):
-        step = arm_steps[key]
-        yield from shape_records(ArmStepShape(*key), step.in_, step.out)
+    for key in sorted(local_steps):
+        step = local_steps[key]
+        yield from shape_records(LocalStepShape(*key), step.in_, step.out)
+    for key in sorted(alternative_steps):
+        step = alternative_steps[key]
+        yield from shape_records(AlternativeStepShape(*key), step.in_, step.out)
 
 
 def plan_types(
@@ -221,11 +248,12 @@ def plan_types(
     inferences: Mapping[InferenceId, InferenceSpec] = NO_INFERENCES,
     tools: Mapping[ToolId, ToolSpec] = NO_TOOLS,
     steps: Mapping[StepKey, CodeNodeSpec] = NO_STEPS,
-    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
+    local_steps: Mapping[LocalStepKey, CodeNodeSpec] = NO_LOCAL_STEPS,
+    alternative_steps: Mapping[AlternativeStepKey, CodeNodeSpec] = NO_ALTERNATIVE_STEPS,
 ) -> GeneratedTypes:
     models = build_type_models(types)
     buildable = {type_id: spec for type_id, spec in types.items() if type_id in models.annotations}
-    declared = declared_records(inferences, tools, steps, arm_steps)
+    declared = declared_records(inferences, tools, steps, local_steps, alternative_steps)
     candidates = (record for record in declared if _buildable(models, record))
     taken = set(_defined_names(buildable))
     records: list[ShapeRecord] = []
@@ -241,9 +269,10 @@ def render_types(
     inferences: Mapping[InferenceId, InferenceSpec] = NO_INFERENCES,
     tools: Mapping[ToolId, ToolSpec] = NO_TOOLS,
     steps: Mapping[StepKey, CodeNodeSpec] = NO_STEPS,
-    arm_steps: Mapping[ArmStepKey, CodeNodeSpec] = NO_ARM_STEPS,
+    local_steps: Mapping[LocalStepKey, CodeNodeSpec] = NO_LOCAL_STEPS,
+    alternative_steps: Mapping[AlternativeStepKey, CodeNodeSpec] = NO_ALTERNATIVE_STEPS,
 ) -> str:
-    return render_plan(plan_types(types, inferences, tools, steps, arm_steps))
+    return render_plan(plan_types(types, inferences, tools, steps, local_steps, alternative_steps))
 
 
 def render_plan(plan: GeneratedTypes) -> str:

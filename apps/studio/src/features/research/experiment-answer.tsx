@@ -17,7 +17,7 @@ const nextHypothesisPrompt = (experiment: ExperimentDetail, series: SeriesDetail
   [
     `Suggest the next hypothesis after the experiment ${experiment.id} (${experiment.files.spec}).`,
     `Its latest series ${series.id} on ${series.on} cases ended ${series.verdict?.state ?? series.status}: ${series.verdict?.text ?? "no verdict"}.`,
-    "Give the failure_mode it targets, the question with its metric and margin, the subject, the variants as agents from agents/, the checks and the cases by tags.",
+    "Give the failure_mode it targets, the question with its metric and margin, the subject, the one factor the variants change (varies: agent, prompt, use or flow) with its nodes, the variants as values of that factor, the checks and the cases by tags.",
     "Do not write files yet: I will pick one, then you write experiments/<experiment_id>/experiment.yaml and run aqven check.",
   ].join("\n")
 

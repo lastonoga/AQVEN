@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The winning reply draft from one slot: the panel node calls the judging pattern a variant picks, the project judge panel as written"
+input: "PanelRequest"
+output: "PanelOutcome"
+returns:
+- name: "winner"
+  from: "$panel.out.winner"
+- name: "verdict"
+  from: "$panel.out.verdict"
+order:
+- "panel"

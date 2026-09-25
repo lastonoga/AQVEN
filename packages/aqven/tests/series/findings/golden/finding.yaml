@@ -49,7 +49,7 @@ cells:
   verdict: "pass"
 variants:
 - id: "gpt"
-  arm: null
+  changes: []
   agents:
     polish__revise: "gpt"
   models:
@@ -75,7 +75,10 @@ variants:
       cases: 12
       attempts: 36
 - id: "mistral"
-  arm: null
+  changes:
+  - node_id: "revise"
+    what: "agent"
+    value: "mistral"
   agents:
     polish__revise: "mistral"
   models:
@@ -126,4 +129,4 @@ inputs:
   judges:
     critique: "sha256-3333333333333333333333333333333333333333333333333333333333333333"
 spend_usd: "0.288"
-self_sha256: "sha256-90b4ac43351e41347c67026b9e25fd6f74185d6f2a5009a550889ec264575a68"
+self_sha256: "sha256-ea69739784564058024a439026d980b893217053b9423c10de0be0d9711c2cb4"

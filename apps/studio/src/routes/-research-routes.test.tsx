@@ -12,7 +12,7 @@ type Loaded = { readonly routeId: string; readonly loaderData?: unknown }
 
 const loaded = (matches: readonly Loaded[], routeId: string): unknown => matches.find((match) => match.routeId === routeId)?.loaderData
 
-const ARM_RUN = `${RESEARCH_SERIES.critiqueDev.slice(0, 24)}0001${RESEARCH_SERIES.critiqueDev.slice(-8)}`
+const LOCAL_FLOW_RUN = `${RESEARCH_SERIES.critiqueDev.slice(0, 24)}0001${RESEARCH_SERIES.critiqueDev.slice(-8)}`
 
 describe("research routes", () => {
   it("loads the experiments of every flow filtered by the question in the search and drops a flow", async () => {
@@ -24,6 +24,7 @@ describe("research routes", () => {
           { id: "intent_split_long_messages" },
           { id: "judge_panel_agents" },
           { id: "panel_aa_noise" },
+          { id: "panel_judge_prompt" },
           { id: "panel_single_judge" },
         ],
       })
@@ -68,15 +69,16 @@ describe("research routes", () => {
 })
 
 describe("run route", () => {
-  it("shows a run whose flow is not a project flow on its own page", async () => {
-    const router = await renderRoute(`/runs/${ARM_RUN}`)
+  it("shows a run on a flow of an experiment on its own page with that flow", async () => {
+    const router = await renderRoute(`/runs/${LOCAL_FLOW_RUN}`)
     await waitFor(() => {
       expect(loaded(router.state.matches, "/_project/runs/$runId")).toMatchObject({
-        snapshot: { run_id: ARM_RUN, flow_id: "critique_only", mode: "experiment", series_id: RESEARCH_SERIES.critiqueDev },
+        snapshot: { run_id: LOCAL_FLOW_RUN, flow_id: "critique_only", mode: "experiment", series_id: RESEARCH_SERIES.critiqueDev, flow_experiment_id: "critique_planted_defects" },
+        experimentFlow: { experiment: "critique_planted_defects", flow: "critique_only", order: ["critique", "verdict"] },
       })
     })
     expect(await screen.findByRole("heading", { level: 1, name: /^Run #/ })).toBeTruthy()
-    expect(router.state.location.pathname).toBe(`/runs/${ARM_RUN}`)
+    expect(router.state.location.pathname).toBe(`/runs/${LOCAL_FLOW_RUN}`)
   })
 
   it("sends a run of a project flow to the runs of that flow", async () => {

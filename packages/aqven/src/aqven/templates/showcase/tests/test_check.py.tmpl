@@ -18,6 +18,12 @@ RESEARCH_POLICY: Final = "agents/resolver/research_policy.inference.yaml"
 NONINFERIOR: Final = "experiments/reply_noninferior_mistral/experiment.yaml"
 PANEL_AGENTS: Final = "experiments/judge_panel_agents/experiment.yaml"
 INTENT_SPLIT: Final = "experiments/intent_split_long_messages/experiment.yaml"
+SINGLE_JUDGE: Final = "experiments/panel_single_judge/experiment.yaml"
+JUDGE_PROMPT: Final = "experiments/panel_judge_prompt/experiment.yaml"
+MERGE_RULE: Final = "experiments/panel_merge_rule/experiment.yaml"
+AA_NOISE: Final = "experiments/panel_aa_noise/experiment.yaml"
+MAJORITY_ONLY: Final = "experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml"
+CLAIMS_FIRST: Final = "experiments/panel_judge_prompt/prompts/claims_first.md"
 REPLY_LOOK: Final = "experiments/reply_look/experiment.yaml"
 OVERPROMISE: Final = "experiments/reply_overpromise_risk/experiment.yaml"
 SUPPORT_CASES: Final = "datasets/support_case_cases.yaml"
@@ -29,6 +35,18 @@ INFERENCE_TYPED_CHECK: Final[Breakage] = (
     'code.support_case:reply_keeps_resolution"',
     'code.support_case:promises_match_resolution"',
 )
+BROKEN_ALTERNATIVE: Final[Breakage] = (MAJORITY_ONLY, '- name: "spread"\n', '- name: "spread_max"\n')
+UNDECLARED_PROMPT_VARIABLE: Final[Breakage] = (
+    CLAIMS_FIRST,
+    "The text of the candidates",
+    "{{ undeclared }} The text of the candidates",
+)
+UNUSED_ALTERNATIVE: Final[Breakage] = (
+    MERGE_RULE,
+    '- id: "always_tie_break"\n  nodes:\n    aggregate: "always_tie_break"\n',
+    "",
+)
+DUPLICATE_VARIANT: Final[Breakage] = (AA_NOISE, '  nodes:\n    tie_break: "gpt"\n', "")
 UNBOUND_JUDGE_INPUT: Final[Breakage] = (
     "flows/support_case/nodes/polish/critique.inference.yaml",
     'in:\n- name: "summary"',
@@ -66,9 +84,16 @@ BREAKAGES: Final[Mapping[str, Breakage]] = {
         'type="DeliveryDamage", enum=["crushed_box", "broken_item", "missing_item"],',
     ),
     "E_UNKNOWN_KEY": (SUPPORT_CASES, 'kind: "Dataset"\n', 'kind: "Dataset"\nname: "support_case_cases"\n'),
-    "E_AGENT_UNKNOWN": (NONINFERIOR, 'polish__revise: "mistral"', 'polish__revise: "claude"'),
-    "E_VARIANT_INVALID": (NONINFERIOR, 'polish__revise: "mistral"', 'prepare: "mistral"'),
-    "E_ARM_UNKNOWN": (INTENT_SPLIT, 'arm: "two_step"', 'arm: "three_step"'),
+    "E_AGENT_UNKNOWN": (NONINFERIOR, 'revise: "mistral"', 'revise: "claude"'),
+    "E_VARIANT_INVALID": (PANEL_AGENTS, 'candidate: "deepseek_tie_break"', 'candidate: "qwen_tie_break"'),
+    "E_FLOW_UNKNOWN": (INTENT_SPLIT, 'classify: "two_step"', 'classify: "three_step"'),
+    "E_FACTOR_MISSING": (PANEL_AGENTS, 'varies:\n  what: "agent"\n  nodes:\n  - "tie_break"\n', ""),
+    "E_FACTOR_NODE_UNKNOWN": (NONINFERIOR, '  - "revise"\n', '  - "triage"\n'),
+    "E_FACTOR_KIND": (PANEL_AGENTS, '  - "tie_break"\n', '  - "aggregate"\n'),
+    "E_VARIANT_OUTSIDE_FACTOR": (PANEL_AGENTS, 'tie_break: "deepseek"', 'tie_break: "deepseek"\n    qwen: "deepseek"'),
+    "E_ALTERNATIVE_UNKNOWN": (MERGE_RULE, 'aggregate: "majority_only"', 'aggregate: "majority_vote"'),
+    "E_PROMPT_MISSING": (JUDGE_PROMPT, 'deepseek: "claims_first"', 'deepseek: "claims_last"'),
+    "E_FACTOR_FLOW_CONTRACT": (SINGLE_JUDGE, 'panel: "single_judge"', 'panel: "support_case"'),
     "E_METRIC_UNKNOWN": (PANEL_AGENTS, 'primary: "winner"', 'primary: "accuracy"'),
     "E_DATASET_MISMATCH": (PANEL_AGENTS, 'dataset: "judge_panel_cases"', 'dataset: "support_case_cases"'),
     "E_CASE_DUPLICATE": (
@@ -120,6 +145,31 @@ def test_prompt_beside_explicit_path_is_shadowed(aqven_project_root: Path, tmp_p
 def test_plan_beyond_selected_cases_warns(aqven_project_root: Path, tmp_path: Path) -> None:
     copy = broken_copy(aqven_project_root, tmp_path, *PLAN_BEYOND_CASES)
     assert "W_PLAN_EXCEEDS_CASES" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_alternative_that_breaks_the_flow_is_reported_at_its_variant(aqven_project_root: Path, tmp_path: Path) -> None:
+    report = check_project(broken_copy(aqven_project_root, tmp_path, *BROKEN_ALTERNATIVE))
+    at_variant = [item for item in report.errors if item.path == ("variants", 1, "nodes", "aggregate")]
+    assert {item.file for item in at_variant} == {MERGE_RULE}
+    assert "E_REF_MISSING" in {item.code.value for item in at_variant}
+    assert all(item.message.startswith("variant majority_only: ") for item in at_variant)
+
+
+def test_prompt_file_of_a_variant_is_checked_at_its_variant(aqven_project_root: Path, tmp_path: Path) -> None:
+    report = check_project(broken_copy(aqven_project_root, tmp_path, *UNDECLARED_PROMPT_VARIABLE))
+    undeclared = [item for item in report.errors if item.code.value == "E_PROMPT_VARIABLE_UNDECLARED"]
+    assert {(item.file, item.path) for item in undeclared} == {(JUDGE_PROMPT, ("variants", 1, "nodes", "deepseek"))}
+    assert all(item.message.startswith(f"variant claims_first: {CLAIMS_FIRST}") for item in undeclared)
+
+
+def test_unused_alternative_warns(aqven_project_root: Path, tmp_path: Path) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *UNUSED_ALTERNATIVE)
+    assert "W_ALTERNATIVE_UNUSED" in {item.code.value for item in check_project(copy).warnings}
+
+
+def test_identical_variants_warn(aqven_project_root: Path, tmp_path: Path) -> None:
+    copy = broken_copy(aqven_project_root, tmp_path, *DUPLICATE_VARIANT)
+    assert "W_VARIANT_DUPLICATE" in {item.code.value for item in check_project(copy).warnings}
 
 
 def test_check_typed_for_the_revise_inference_warns_on_the_polish_range(

@@ -107,9 +107,15 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_SIM_PROMPT_RENDER` | `error` | simulated run of flow {flow} (pass {pass}): node {address} cannot build its prompt: {message} |
 | `E_SIM_OUTPUT_INVALID` | `error` | simulated run of flow {flow} (pass {pass}): node {address} returned an output its schema rejects: {message} |
 | `E_SIM_RUN_FAILED` | `error` | simulated run of flow {flow} (pass {pass}) did not finish: {code}: {message} |
-| `E_ARM_UNKNOWN` | `error` | arm {arm} is not an arm of experiment {experiment}; its arms: {arms} |
 | `E_RANGE_INVALID` | `error` | experiment {experiment}: {problem} |
 | `E_VARIANT_INVALID` | `error` | experiment {experiment}: {problem} |
+| `E_FACTOR_MISSING` | `error` | experiment {experiment}: {problem}, but the experiment declares no varies |
+| `E_FACTOR_NODE_UNKNOWN` | `error` | experiment {experiment}: varies.nodes names {node}, {problem} |
+| `E_FACTOR_KIND` | `error` | experiment {experiment}: varies.what {what} changes {wanted} nodes, but {node} is a {kind} node |
+| `E_VARIANT_OUTSIDE_FACTOR` | `error` | experiment {experiment}: variant {variant} sets {node}, which is not in varies.nodes ({nodes}) |
+| `E_ALTERNATIVE_UNKNOWN` | `error` | experiment {experiment}: variant {variant} puts alternative {alternative} at {node}, but {folder} has no such node; its alternatives: {alternatives} |
+| `E_ALTERNATIVE_ID_TAKEN` | `error` | experiment {experiment}: alternative {alternative} has the id of a node of {subject} |
+| `E_FACTOR_FLOW_CONTRACT` | `error` | experiment {experiment}: variant {variant} calls flow {flow} at {node}, whose {side} {own} differs from {side} {expected} of flow {original} |
 | `E_METRIC_UNKNOWN` | `error` | experiment {experiment}: metric {metric} is neither a check id of the experiment nor a series metric |
 | `E_EXPERIMENT_UNKNOWN` | `error` | check {check}: validated_by names experiment {target}, which does not exist in the project |
 | `E_DATASET_MISMATCH` | `error` | experiment {experiment}: {problem} |
@@ -131,3 +137,5 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_CHECK_CONTEXT_MISMATCH` | `warning` | experiment {experiment}: check {check}: {problem} |
 | `W_JUDGE_INPUT_UNBOUND` | `warning` | experiment {experiment}: judge {judge} of check {check} needs input {field}, which no document of its scope carries in {target} |
 | `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |
+| `W_VARIANT_DUPLICATE` | `warning` | experiment {experiment}: variant {variant} sets the same values as variant {first} |
+| `W_ALTERNATIVE_UNUSED` | `warning` | experiment {experiment}: {entity} is used by no variant |

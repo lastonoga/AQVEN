@@ -3,14 +3,18 @@ kind: "Experiment"
 description: "Condensing a long customer message before deciding the intent beats deciding it from the whole message, at most 50% dearer per correct intent"
 failure_mode: "intent_misread"
 subject:
-  arm: "one_step"
+  flow: "message_intent"
+varies:
+  what: "flow"
+  nodes:
+  - "classify"
 cases:
   dataset: "long_customer_messages"
 variants:
 - id: "one_step"
-  arm: "one_step"
 - id: "two_step"
-  arm: "two_step"
+  nodes:
+    classify: "two_step"
 checks:
 - id: "intent"
   kind: "binary"

@@ -14,15 +14,15 @@ from aqven.views import render_tree
 FIXTURE: Final = Path(__file__).parent / "fixtures" / "fixture_shop"
 TRIAGE: Final = EntityKey(EntityKind.EXPERIMENT, "triage_agents")
 JUDGE: Final = EntityKey(EntityKind.EXPERIMENT, "judge_check")
-ARM: Final = EntityKey(EntityKind.ARM, "judge_check.judge")
-ARM_NODE: Final = EntityKey(EntityKind.NODE, "judge_check.judge.judge")
+LOCAL_FLOW: Final = EntityKey(EntityKind.LOCAL_FLOW, "judge_check.judge")
+LOCAL_NODE: Final = EntityKey(EntityKind.NODE, "judge_check.judge.judge")
 FINDING: Final = EntityKey(EntityKind.FINDING, f"triage_agents.{SERIES}")
 
 EXPERIMENT_GROUPS: Final = f"""experiment (2)
   judge_check    experiments/judge_check/experiment.yaml
   triage_agents  experiments/triage_agents/experiment.yaml
-arm (1)
-  judge_check.judge  experiments/judge_check/arms/judge/flow.yaml
+local_flow (1)
+  judge_check.judge  experiments/judge_check/flows/judge/flow.yaml
 finding (1)
   triage_agents.{SERIES}  {FINDING_FILE}"""
 
@@ -49,41 +49,45 @@ def targets(index: ProjectIndex, key: EntityKey) -> list[tuple[str, str]]:
     return sorted({(str(item.target), ".".join(str(part) for part in item.field)) for item in index.outgoing(key)})
 
 
-def test_the_tree_lists_experiments_their_arms_and_findings(index: ProjectIndex) -> None:
+def test_the_tree_lists_experiments_their_local_flows_and_findings(index: ProjectIndex) -> None:
     tree = render_tree(index)
 
     assert tree.endswith(EXPERIMENT_GROUPS)
-    assert "  judge_check.judge.judge  experiments/judge_check/arms/judge/nodes/judge.node.yaml" in tree
+    assert "  judge_check.judge.judge  experiments/judge_check/flows/judge/nodes/judge.node.yaml" in tree
 
 
-def test_an_experiment_references_its_flow_dataset_agents_checks_and_arms(index: ProjectIndex) -> None:
+def test_an_experiment_references_its_flow_factor_nodes_values_dataset_and_checks(index: ProjectIndex) -> None:
     assert targets(index, TRIAGE) == [
-        ("agent:cheap", "variants.1.agents.classify"),
+        ("agent:mini", "variants.1.nodes.classify"),
         ("agent:writer", "checks.2.agent"),
         ("code:fixture_shop.triage.experiment_checks:summary_written", "checks.1.run"),
         ("dataset:triage_cases", "cases.dataset"),
         ("experiment:judge_check", "checks.2.validated_by"),
         ("flow:triage", "subject.flow"),
         ("inference:triage_judge", "checks.2.inference"),
+        ("node:triage.classify", "varies.nodes.0"),
     ]
-    assert targets(index, JUDGE) == [("arm:judge_check.judge", "subject.arm"), ("dataset:judge_cases", "cases.dataset")]
+    assert targets(index, JUDGE) == [
+        ("dataset:judge_cases", "cases.dataset"),
+        ("local_flow:judge_check.judge", "subject.flow"),
+    ]
     assert targets(index, FINDING) == [("experiment:triage_agents", "experiment")]
 
 
-def test_an_arm_and_its_nodes_keep_their_references_inside_the_experiment(index: ProjectIndex) -> None:
-    assert ("node:judge_check.judge.judge", "order.0") in targets(index, ARM)
-    assert ("agent:writer", "agent") in targets(index, ARM_NODE)
-    assert [str(item.source) for item in index.incoming(ARM)] == ["experiment:judge_check"]
+def test_a_local_flow_and_its_nodes_keep_their_references_inside_the_experiment(index: ProjectIndex) -> None:
+    assert ("node:judge_check.judge.judge", "order.0") in targets(index, LOCAL_FLOW)
+    assert ("agent:writer", "agent") in targets(index, LOCAL_NODE)
+    assert [str(item.source) for item in index.incoming(LOCAL_FLOW)] == ["experiment:judge_check"]
 
 
 def test_qualified_entities_are_found_by_their_own_name(index: ProjectIndex) -> None:
-    assert index.find(EntityKind.ARM, "judge") == (ARM,)
+    assert index.find(EntityKind.LOCAL_FLOW, "judge") == (LOCAL_FLOW,)
     assert index.find(EntityKind.FINDING, SERIES) == (FINDING,)
-    assert ARM_NODE in index.find(EntityKind.NODE, "judge")
+    assert LOCAL_NODE in index.find(EntityKind.NODE, "judge")
 
 
 def test_cli_refs_find_the_experiments_that_assign_an_agent(lab: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["refs", "agent:cheap", str(lab)]) == 0
+    assert main(["refs", "agent:mini", str(lab)]) == 0
     assert "experiment:triage_agents  experiments/triage_agents/experiment.yaml" in capsys.readouterr().out
     assert main(["tree", str(lab)]) == 0
     assert EXPERIMENT_GROUPS in capsys.readouterr().out

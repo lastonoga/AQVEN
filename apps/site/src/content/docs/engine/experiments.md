@@ -1,6 +1,6 @@
 ---
 title: How to write an experiment
-description: Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the variants, the checks and one of four questions — with an example from the showcase project for each question kind.
+description: Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the one factor its variants change, the checks and one of four questions — with an example from the showcase project for each question kind.
 ---
 
 ## When you need this
@@ -19,30 +19,57 @@ before the data. A series then answers it: see [How to run a series](/engine/run
 
 - **Create the folder `experiments/<experiment_id>/`.** The folder name is the experiment id.
   `experiment.yaml` holds the question. `experiment.md` beside it is for people: the purpose, why these
-  cases, how to read the result. `arms/` holds small flows that only this experiment runs. A Python module
-  for your own checks can sit here too. The server writes `findings/`, never you.
+  cases, how to read the result. Three folders hold what the variants plug in: `nodes/` for alternative
+  nodes, `prompts/` for alternative prompt texts, and `flows/` for flows that only this experiment runs. A
+  Python module for your own checks can sit here too. The server writes `findings/`, never you.
+
+  ```text
+  experiments/<experiment_id>/
+    experiment.yaml
+    experiment.md
+    nodes/<alt>/...          alternative nodes: .node.yaml, .py, .inference.yaml, .prompt.md
+    prompts/<name>.md        alternative prompt texts
+    flows/<flow_id>/...      local flows: flow.yaml with nodes/, or flow.py
+    findings/<series>.yaml   written by the server
+  ```
 - **`description` is one falsifiable sentence with a number.** Studio shows it as the **Hypothesis**, or
   as the **Goal** of a look. "The polish loop keeps the reply within the decision in more than 97% of
   attempts" can be refuted; "the reply is good" can't.
 - **`failure_mode` names the failure the experiment tests**, as a snake_case id such as `overpromise` or
   `intent_misread`. It's optional. Several experiments can share one. `FINDINGS.md` groups findings by it,
   and Studio's Research list filters by it.
-- **`subject` is what runs.** Set exactly one of these:
-  - `flow: <flow_id>` runs a project flow.
-  - `arm: <arm_id>` runs a small flow in `arms/<arm_id>/`, written as `flow.yaml` with its nodes, or as a
-    Python `flow.py` whose `build()` returns the flow. An arm stays out of the project's flow list, and its
-    id only has to be unique within the experiment. Every arm has the subject's input and output types.
+- **`subject` is what runs.**
+  - `flow: <flow_id>` names the flow. A local flow in `flows/<flow_id>/` of this experiment is found first,
+    then a project flow. A local flow is written like any flow, as `flow.yaml` with its nodes or as a Python
+    `flow.py` whose `build()` returns it. It stays out of the project's flow list, and its id can't be the id
+    of a project flow.
   - Add `from` and `to` to narrow the run to a range of top-level nodes. The nodes above the range take
     their outputs from each case's `node_outputs`, and the subject's output is the output of `to`.
 - **`cases` selects them by tags.** Set `dataset: <dataset_id>`, and optionally `tags: {<dimension>:
-  <value>}`. A case is selected when it has every listed tag with that value. A flow subject needs a
-  dataset of that flow. An arm can run a dataset bound to no flow, or a flow dataset with the arm's input
-  type.
-- **`variants` is what differs between attempts.** Every variant has an `id`. A variant with only an id
-  runs the subject as written. `agents: {<node_id>: <agent_id>}` puts other agents on `llm` nodes: a
-  nested node is `<container>__<node>`, and in a range only nodes inside the range can change. `arm:
-  <arm_id>` runs another arm. A variant never names a bare model, because the agent carries the model, its
-  settings and its output mode.
+  <value>}`. A case is selected when it has every listed tag with that value. A project flow needs a
+  dataset of that flow. A local flow can run a dataset bound to no flow, or a flow dataset with the same
+  input and output types.
+- **`varies` names the one factor the variants change.** `what` is the kind of change, and `nodes` lists
+  the subject's nodes it touches, one or more, each once. A node is named by its local id, the name of its
+  file: `revise` for the node in `nodes/polish/revise.node.yaml`, even inside a container. With more than
+  one variant, `varies` is required.
+
+  | `what` | Allowed on | A variant's value |
+  |---|---|---|
+  | `agent` | `llm` nodes | an agent id of the project |
+  | `prompt` | `llm` nodes | the name of a file `prompts/<name>.md` of this experiment |
+  | `use` | any node | the id of an alternative node in `nodes/` of this experiment |
+  | `flow` | `call` nodes | a flow id: a local flow from `flows/` first, else a project flow |
+
+  A `prompt` value replaces only the prompt text of that node: its inputs, output schema and inference
+  checks stay. A `use` alternative takes the slot's id, so bindings like `$gather.out.present` keep working
+  when it has the same outputs; its own child nodes are looked up among the alternatives first, then in
+  the subject, and subject nodes nothing reaches any more are dropped. A `flow` value keeps the slot's
+  input bindings and must have the same input and output types as the flow the slot calls now.
+- **`variants` sets values of that factor.** Every variant has an `id`, and `nodes` maps nodes from
+  `varies.nodes` to values. A variant without `nodes` runs the subject as written, and a factor node a
+  variant leaves out stays as written too. A variant has no other keys. It never names a bare model,
+  because the agent carries the model, its settings and its output mode.
 - **`checks` are scored on every attempt.** Each has an `id` and a `kind`: `binary`, `ordinal` or
   `continuous`. Use the cheapest check that works:
   - a built-in `use:` with its `with:` parameters: `expected` (against the case's `expected_output`),
@@ -126,16 +153,23 @@ planted label in more than 85% of cases.
 ### `compare`: is the candidate better by more than the margin
 
 `intent_split_long_messages` asks whether condensing a long message first beats one step, without getting
-more than 50% dearer per correct intent:
+more than 50% dearer per correct intent. Both ways of reading the intent are local flows of the experiment,
+`flows/one_step/` and `flows/two_step/`, with the same input and output types. The subject is a third local
+flow, `message_intent`, whose only node `classify` is a `call` node that calls `one_step` as written: the
+slot the variants plug a flow into.
 
 ```yaml
 subject:
-  arm: "one_step"
+  flow: "message_intent"
+varies:
+  what: "flow"
+  nodes:
+  - "classify"
 variants:
 - id: "one_step"
-  arm: "one_step"
 - id: "two_step"
-  arm: "two_step"
+  nodes:
+    classify: "two_step"
 checks:
 - id: "intent"
   kind: "binary"
@@ -159,8 +193,13 @@ question:
 A guardrail is a metric the candidate must not worsen by more than its margin. `relative: true` reads the
 margin as a share of the baseline. `panel_single_judge` compares on latency instead
 (`primary: "latency_p50_ms"`, `margin: 1500`), with the winner, the success rate and the infrastructure
-error rate as guardrails. `panel_aa_noise` compares two identical variants with `margin: 0` to measure
-the noise floor.
+error rate as guardrails. It uses the same pattern: its subject `winner_pick` is a local flow whose `panel`
+node calls the project's `judge_panel`, and a `flow` factor on `panel` plugs the local `single_judge` flow
+into that slot. The models and prompts that already work stay fixed, and only the way the task is split
+changes. `panel_aa_noise` measures the noise floor: both variants leave the flow as written, so the
+experiment declares no `varies`, and a `compare` with `margin: 0` shows the spread between two identical runs.
+An experiment whose variants all keep the subject is an A/A experiment: `aqven check` asks for no factor and
+does not warn that the variants repeat each other.
 
 ### `noninferior`: is the candidate not worse by more than the margin
 
@@ -171,11 +210,15 @@ subject:
   flow: "support_case"
   from: "polish"
   to: "polish"
+varies:
+  what: "agent"
+  nodes:
+  - "revise"
 variants:
 - id: "gpt"
 - id: "mistral"
-  agents:
-    polish__revise: "mistral"
+  nodes:
+    revise: "mistral"
 checks:
 - id: "critique"
   kind: "continuous"
@@ -196,27 +239,40 @@ question:
 ```
 
 `noninferior` needs a margin above 0. It answers the most common practical question: can a cheaper agent
-take this step? `intent_escalation_agents` asks the same of an arm narrowed to one node, with three
-variants and a latency guardrail.
+take this step? `intent_escalation_agents` asks the same of a local flow narrowed to one node, with three
+variants of an `agent` factor and a latency guardrail.
 
 ## What `{{CLI_COMMAND}} check` catches
 
 | Code | What is wrong |
 |---|---|
-| `E_FLOW_UNKNOWN`, `E_ARM_UNKNOWN` | the subject or a variant names a flow or arm that doesn't exist |
-| `E_RANGE_INVALID` | `from` or `to` isn't a top-level node of the subject, or of an arm a variant runs, or the range is reversed |
-| `E_DATASET_UNKNOWN`, `E_DATASET_MISMATCH` | the dataset doesn't exist, belongs to another flow, or an arm's input or output type differs from the subject's |
+| `E_FLOW_UNKNOWN` | the subject or a `flow` value names a flow that is neither in the experiment's `flows/` nor in the project |
+| `E_RANGE_INVALID` | `from` or `to` isn't a top-level node of the subject, or the range is reversed |
+| `E_DATASET_UNKNOWN`, `E_DATASET_MISMATCH` | the dataset doesn't exist, belongs to another flow, or a local subject's input or output type differs from the dataset's |
+| `E_FACTOR_MISSING` | there is more than one variant and no `varies` |
+| `E_FACTOR_NODE_UNKNOWN`, `E_FACTOR_KIND` | a node in `varies.nodes` isn't in the subject, or doesn't fit `what`: `agent` and `prompt` need an `llm` node, `flow` a `call` node |
+| `E_VARIANT_OUTSIDE_FACTOR` | a variant sets a node that isn't in `varies.nodes` |
+| `E_ALTERNATIVE_UNKNOWN`, `E_ALTERNATIVE_ID_TAKEN` | a `use` value isn't in the experiment's `nodes/`, or an alternative has the id of a subject node |
+| `E_PROMPT_MISSING` | a `prompt` value has no file `prompts/<name>.md` |
+| `E_FACTOR_FLOW_CONTRACT` | a `flow` value takes or returns a different type than the flow the slot calls |
+| `W_VARIANT_DUPLICATE`, `W_ALTERNATIVE_UNUSED` | two variants set the same values, or an alternative, prompt or local flow is used by no variant and isn't the subject |
+| `E_ORPHAN_FILE`, `E_UNKNOWN_KEY` | a flow sits in the experiment folder outside `flows/` (such as an old `arms/`), or a variant still has `arm` or `agents` |
 | `E_CASES_EMPTY`, `W_PLAN_EXCEEDS_CASES` | the tags select no case, or `plan.cases` is more than they select |
 | `E_EXPECTED_MISSING` | an `expected` check reads a case without `expected_output`, or without the fields it compares |
-| `E_AGENT_UNKNOWN`, `E_VARIANT_INVALID` | a variant names an unknown agent or a node that isn't an `llm` node in range; the question names an undeclared variant; a comparison has one variant |
-| `E_ID_DUPLICATE`, `E_METRIC_UNKNOWN` | a repeated variant or check id, a check id that is a series metric name, or a metric that is neither |
+| `E_AGENT_UNKNOWN`, `E_VARIANT_INVALID` | an `agent` value names an unknown agent; the question names an undeclared variant; a comparison has one variant |
+| `E_ID_DUPLICATE`, `E_METRIC_UNKNOWN` | a repeated variant or check id, a local flow with a project flow's id, a check id that is a series metric name, or a metric that is neither |
 | `E_EXPERIMENT_UNKNOWN` | `validated_by` names no experiment |
 | `W_JUDGE_INPUT_UNBOUND`, `W_CHECK_CONTEXT_MISMATCH` | a judge needs an input nothing supplies, or a `run:` function's type hints don't fit the subject |
 | `E_FINDING_TAMPERED`, `W_FINDINGS_STALE` | a finding file was edited, or `FINDINGS.md` doesn't match the findings |
 
+Every variant is also assembled and compiled like any flow, so an alternative whose outputs don't fit the
+nodes after it fails with the usual compiler code. Such an error points at `experiment.yaml`, at
+`variants[i].nodes.<slot>`, and its message starts with `variant <id>: ` and names the file where the rule
+fired.
+
 ### Example
 
-A typo in a tag, a metric and a node id, each in a different experiment of the showcase. This is real
+A typo in a tag and in a metric, each in a different experiment of the showcase. This is real
 output of `{{CLI_COMMAND}} check . --static`, trimmed to these errors:
 
 ```text
@@ -224,8 +280,6 @@ experiments/reply_look/experiment.yaml:10:3: error E_CASES_EMPTY cases.tags: exp
   hint: tag the cases of the dataset or relax the tag filter under cases.tags
 experiments/reply_overpromise_risk/experiment.yaml:25:3: error E_METRIC_UNKNOWN question.metric: experiment reply_overpromise_risk: metric promise is neither a check id of the experiment nor a series metric
   hint: name a check id (promises, customer_language) or a series metric (success_rate, cost_usd, cost_of_pass, latency_p50_ms, latency_p95_ms, schema_valid_first_try, infra_error_rate)
-experiments/reply_noninferior_mistral/experiment.yaml:15:5: error E_VARIANT_INVALID variants[1].agents.polish__revize: experiment reply_noninferior_mistral: variant mistral assigns agent mistral to polish__revize, which is not an llm node of flow support_case
-  hint: use an llm node id (drafts__gemini, drafts__gpt, drafts__mistral, illustrate, intent__escalate, polish__critique, polish__revise, record__extract, route__resolve, triage, vote__ballot); a nested node is <container>__<node>
 ```
 
 Each hint names the values that would fit. A series refuses to start on a project with errors, so these

@@ -25,6 +25,15 @@ These values come from enum classes in `aqven.spec.names`.
 | `write` |
 | `external` |
 
+## FactorKind
+
+| Value |
+| --- |
+| `agent` |
+| `prompt` |
+| `use` |
+| `flow` |
+
 ## LoopStopReason
 
 | Value |

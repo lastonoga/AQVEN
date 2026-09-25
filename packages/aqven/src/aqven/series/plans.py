@@ -1,15 +1,25 @@
-from collections.abc import Iterator, Mapping, Sequence
-from dataclasses import dataclass, replace
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from typing import Final, Protocol
 
 from pydantic import JsonValue
 
 from aqven.compiler import compile_project
+from aqven.compiler.errors import CompileError
+from aqven.diagnostics import Diagnostic
 from aqven.engine.selection import range_order
+from aqven.factors import (
+    AssembledVariant,
+    AssemblyFailure,
+    FactorChange,
+    VariantAssembly,
+    assemble_subject,
+    assemble_variant,
+    called_flows,
+)
 from aqven.ir import (
     CompiledFlow,
     CompiledLlmNode,
-    CompiledNode,
     CompiledProject,
     IrHash,
     JudgeEvaluator,
@@ -17,18 +27,29 @@ from aqven.ir import (
     canonical_json,
     flow_hash,
 )
-from aqven.loader import LoadedExperiment, LoadedFlow, LoadedProject, file_hash
+from aqven.loader import LoadedExperiment, LoadedProject, file_hash, local_node_id
 from aqven.series.model import (
     Assignment,
     CaseSnapshot,
     JudgePlan,
     SeriesSnapshot,
     SubjectRecord,
+    VariantChange,
     VariantPlanRecord,
     VariantRole,
 )
 from aqven.server.workspace import TreeSnapshot
-from aqven.spec import AgentId, ArmId, ExperimentId, FlowId, InferenceId, NodeId, TypeId, VariantId
+from aqven.spec import (
+    AgentId,
+    ExperimentId,
+    FactorKind,
+    FlowId,
+    InferenceId,
+    NodeId,
+    TypeId,
+    VariantId,
+    VariantSpec,
+)
 
 JUDGE_NODE: Final = NodeId("subject")
 JUDGE_OUTPUT: Final = "output"
@@ -38,19 +59,67 @@ JUDGE_OUTPUT_TYPE: Final = "JudgeCaseOut"
 UNIQUE_SUFFIX: Final = "_x"
 UNREGISTERED: Final = IrHash("")
 PYTHON_SUFFIX: Final = ".py"
+SUBJECT_VARIANT: Final = VariantId("subject")
+NOT_ASSEMBLED: Final = "does not assemble"
+NOT_COMPILED: Final = "does not compile"
 
 
 class PlanRegistrar(Protocol):
     def register(self, plan: CompiledProject) -> IrHash: ...
 
 
+class VariantNotBuilt(ValueError):
+    def __init__(self, variant_id: VariantId, reason: str, diagnostics: Sequence[Diagnostic]) -> None:
+        super().__init__(f"variant {variant_id} {reason}")
+        self.variant_id = variant_id
+        self.reason = reason
+        self.diagnostics = tuple(diagnostics)
+
+
+class VariantAssembler(Protocol):
+    def subject(self) -> VariantAssembly: ...
+
+    def variant(self, variant: VariantSpec) -> VariantAssembly: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentAssembler:
+    project: LoadedProject
+    experiment: LoadedExperiment
+
+    def subject(self) -> VariantAssembly:
+        return assemble_subject(self.project, self.experiment, SUBJECT_VARIANT)
+
+    def variant(self, variant: VariantSpec) -> VariantAssembly:
+        return assemble_variant(self.project, self.experiment, variant)
+
+
+@dataclass(frozen=True, slots=True)
+class FlowAssembler:
+    project: LoadedProject
+    flow_id: FlowId
+
+    def subject(self) -> VariantAssembly:
+        return self._as_written(SUBJECT_VARIANT)
+
+    def variant(self, variant: VariantSpec) -> VariantAssembly:
+        return self._as_written(variant.id)
+
+    def _as_written(self, variant_id: VariantId) -> VariantAssembly:
+        return AssembledVariant(variant_id, self.flow_id, closure_project(self.project, self.flow_id), ())
+
+
+def closure_project(project: LoadedProject, flow_id: FlowId) -> LoadedProject:
+    reached = called_flows(project.flows, (flow_id,))
+    flows = {reached_id: project.flows[reached_id] for reached_id in reached}
+    return replace(project, flows=flows, experiments={}, datasets={})
+
+
 @dataclass(frozen=True, slots=True)
 class VariantDraft:
     variant_id: VariantId
     role: VariantRole
-    arm_id: ArmId | None
-    flow_id: FlowId
-    agents: Mapping[NodeId, AgentId]
+    spec: VariantSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +127,13 @@ class JudgeDraft:
     check_id: str
     evaluator: JudgeEvaluator
     validated_by: ExperimentId | None
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledVariant:
+    flow_id: FlowId
+    changes: tuple[FactorChange, ...]
+    plan: CompiledProject
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,15 +148,52 @@ class JudgeBuild:
     judges: Mapping[str, JudgePlan]
 
 
-def arm_flows(experiment: LoadedExperiment | None) -> Mapping[FlowId, LoadedFlow]:
-    if experiment is None:
-        return {}
-    return {FlowId(arm_id): flow for arm_id, flow in experiment.arms.items()}
+@dataclass(frozen=True, slots=True)
+class CompiledSeries:
+    subject: CompiledVariant
+    variants: tuple[tuple[VariantDraft, CompiledVariant], ...]
 
 
-def base_plan(project: LoadedProject, experiment: LoadedExperiment | None) -> CompiledProject:
-    flows = {**project.flows, **arm_flows(experiment)}
-    return compile_project(replace(project, flows=flows, experiments={}, datasets={}))
+def assembled(assembly: VariantAssembly) -> AssembledVariant:
+    if isinstance(assembly, AssemblyFailure):
+        raise VariantNotBuilt(assembly.variant_id, NOT_ASSEMBLED, assembly.diagnostics)
+    return assembly
+
+
+@dataclass(slots=True)
+class VariantCompiler:
+    assembler: VariantAssembler
+    plans: dict[tuple[FlowId, tuple[FactorChange, ...]], CompiledProject] = field(
+        default_factory=dict[tuple[FlowId, tuple[FactorChange, ...]], CompiledProject]
+    )
+
+    def subject(self) -> CompiledVariant:
+        return self._compiled(self.assembler.subject())
+
+    def variant(self, variant: VariantSpec) -> CompiledVariant:
+        return self._compiled(self.assembler.variant(variant))
+
+    def _compiled(self, assembly: VariantAssembly) -> CompiledVariant:
+        built = assembled(assembly)
+        key = (built.flow_id, built.changes)
+        plan = self.plans.get(key)
+        if plan is None:
+            plan = self._compile(built)
+            self.plans[key] = plan
+        return CompiledVariant(flow_id=built.flow_id, changes=built.changes, plan=plan)
+
+    def _compile(self, built: AssembledVariant) -> CompiledProject:
+        try:
+            return compile_project(built.project)
+        except CompileError as error:
+            raise VariantNotBuilt(built.variant_id, NOT_COMPILED, error.diagnostics) from error
+
+
+def compiled_series(assembler: VariantAssembler, drafts: Sequence[VariantDraft]) -> CompiledSeries:
+    compiler = VariantCompiler(assembler)
+    subject = compiler.subject()
+    variants = tuple((draft, compiler.variant(draft.spec)) for draft in drafts)
+    return CompiledSeries(subject=subject, variants=variants)
 
 
 def top_level(flow: CompiledFlow, node_id: NodeId) -> NodeId:
@@ -96,17 +209,6 @@ def scope_nodes(flow: CompiledFlow, subject: SubjectRecord) -> frozenset[NodeId]
     return frozenset(range_order(flow, subject.start_node, subject.end_node))
 
 
-def swapped_node(plan: CompiledProject, node: CompiledNode, agent_id: AgentId | None) -> CompiledNode:
-    if agent_id is None or not isinstance(node, CompiledLlmNode):
-        return node
-    return node.model_copy(update={"agent": agent_id, "output_mode": plan.agent(agent_id).output.mode})
-
-
-def swapped_flow(plan: CompiledProject, flow: CompiledFlow, agents: Mapping[NodeId, AgentId]) -> CompiledFlow:
-    nodes = {node_id: swapped_node(plan, node, agents.get(node_id)) for node_id, node in flow.nodes.items()}
-    return flow.model_copy(update={"nodes": nodes})
-
-
 def revalidated(plan: CompiledProject) -> CompiledProject:
     return CompiledProject.model_validate(plan.model_dump(mode="json"))
 
@@ -115,28 +217,32 @@ def with_flows(plan: CompiledProject, flows: Mapping[FlowId, CompiledFlow]) -> C
     return revalidated(plan.model_copy(update={"flows": {**plan.flows, **flows}}))
 
 
-def variant_plan(base: CompiledProject, flow_id: FlowId, agents: Mapping[NodeId, AgentId]) -> CompiledProject:
-    return with_flows(base, {flow_id: swapped_flow(base, base.flow(flow_id), agents)})
-
-
 def llm_nodes(flow: CompiledFlow, scope: frozenset[NodeId]) -> Iterator[CompiledLlmNode]:
     for node in flow.nodes.values():
         if isinstance(node, CompiledLlmNode) and top_level(flow, node.node_id) in scope:
             yield node
 
 
+def agent_nodes(changes: Iterable[FactorChange]) -> frozenset[NodeId]:
+    return frozenset(change.node_id for change in changes if change.what is FactorKind.AGENT)
+
+
 def assignments(
-    plan: CompiledProject, flow: CompiledFlow, scope: frozenset[NodeId], agents: Mapping[NodeId, AgentId]
+    plan: CompiledProject, flow: CompiledFlow, scope: frozenset[NodeId], overridden: frozenset[NodeId]
 ) -> tuple[Assignment, ...]:
     return tuple(
         Assignment(
             node_id=node.node_id,
             agent_id=node.agent,
             model=plan.agent(node.agent).primary.model,
-            overridden=node.node_id in agents,
+            overridden=local_node_id(node.node_id) in overridden,
         )
         for node in llm_nodes(flow, scope)
     )
+
+
+def variant_change(change: FactorChange) -> VariantChange:
+    return VariantChange(node_id=change.node_id, what=change.what, value=change.value)
 
 
 def output_type(flow: CompiledFlow, subject: SubjectRecord) -> TypeId | None:
@@ -144,21 +250,21 @@ def output_type(flow: CompiledFlow, subject: SubjectRecord) -> TypeId | None:
 
 
 def build_variant(
-    base: CompiledProject, subject: SubjectRecord, draft: VariantDraft, registrar: PlanRegistrar | None
+    compiled: CompiledVariant, subject: SubjectRecord, draft: VariantDraft, registrar: PlanRegistrar | None
 ) -> VariantBuild:
-    plan = variant_plan(base, draft.flow_id, draft.agents)
-    flow = plan.flow(draft.flow_id)
+    plan = compiled.plan
+    flow = plan.flow(compiled.flow_id)
     ir_hash = registrar.register(plan) if registrar is not None else UNREGISTERED
     record = VariantPlanRecord(
         variant_id=draft.variant_id,
         role=draft.role,
-        arm_id=draft.arm_id,
-        flow_id=draft.flow_id,
+        changes=tuple(variant_change(change) for change in compiled.changes),
+        flow_id=compiled.flow_id,
         ir_hash=ir_hash,
-        flow_hash=flow_hash(plan, draft.flow_id),
+        flow_hash=flow_hash(plan, compiled.flow_id),
         input_type=TypeId(flow.input_type),
         output_type=output_type(flow, subject),
-        assignments=assignments(plan, flow, scope_nodes(flow, subject), draft.agents),
+        assignments=assignments(plan, flow, scope_nodes(flow, subject), agent_nodes(compiled.changes)),
     )
     return VariantBuild(record=record, plan=plan)
 

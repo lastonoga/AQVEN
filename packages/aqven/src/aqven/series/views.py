@@ -21,16 +21,17 @@ from aqven.series.model import (
     SubjectKind,
     ThresholdCell,
     VariantAggregates,
+    VariantChange,
     VariantRole,
 )
 from aqven.series.protocol import MAX_LOOK_CASES, MAX_WAIT_SECONDS
 from aqven.spec import (
     AgentId,
-    ArmId,
     DatasetCase,
     DatasetId,
     ExperimentId,
     ExperimentPlan,
+    FactorKind,
     FlowId,
     InferenceId,
     MetricDirection,
@@ -82,8 +83,8 @@ class SeriesStartRequest(LaunchRequest):
 
 class SubjectView(ResourceModel):
     kind: SubjectKind
-    flow_id: FlowId | None
-    arm_id: ArmId | None
+    flow_id: FlowId
+    local_flow: bool
     from_node: NodeId | None
     to_node: NodeId | None
 
@@ -115,17 +116,35 @@ class AgentRefView(ResourceModel):
     model: str
 
 
-class ArmStepView(ResourceModel):
+class FactorView(ResourceModel):
+    what: FactorKind
+    nodes: tuple[NodeId, ...]
+
+
+class FlowStepView(ResourceModel):
     node_id: NodeId
     kind: NodeKind
     agent: AgentRefView | None
     description: str
 
 
-class ArmView(ResourceModel):
-    arm_id: ArmId
+class LocalFlowView(ResourceModel):
+    flow_id: FlowId
     description: str
-    steps: tuple[ArmStepView, ...]
+    file: str | None
+    steps: tuple[FlowStepView, ...]
+
+
+class AlternativeView(ResourceModel):
+    alternative_id: NodeId
+    kind: NodeKind
+    description: str
+    file: str
+
+
+class ExperimentPromptView(ResourceModel):
+    name: str
+    file: str
 
 
 class CaseSelectionView(ResourceModel):
@@ -145,8 +164,8 @@ class AssignmentView(ResourceModel):
 
 class VariantView(ResourceModel):
     variant_id: VariantId
-    arm_id: ArmId | None
     role: VariantRole
+    changes: tuple[VariantChange, ...]
     assignments: tuple[AssignmentView, ...]
 
 
@@ -194,7 +213,10 @@ class ExperimentFilesView(ResourceModel):
 
 class ExperimentDetailView(ExperimentSummaryView):
     question_detail: QuestionView
-    arms: tuple[ArmView, ...]
+    varies: FactorView | None
+    flows: tuple[LocalFlowView, ...]
+    alternatives: tuple[AlternativeView, ...]
+    prompts: tuple[ExperimentPromptView, ...]
     cases: CaseSelectionView
     variant_details: tuple[VariantView, ...]
     checks: tuple[CheckView, ...]

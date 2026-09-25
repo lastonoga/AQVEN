@@ -53,9 +53,11 @@ def spec_paths(project: LoadedProject) -> Iterator[tuple[str, SpecKind]]:
         SpecKind.FINDING, (item for experiment in project.experiments.values() for item in experiment.findings.values())
     )
     yield from _paths(SpecKind.INFERENCE, (inference.source for inference in project.inferences.values()))
-    flows = (*project.flows.values(), *(arm for item in project.experiments.values() for arm in item.arms.values()))
+    experiments = tuple(project.experiments.values())
+    flows = (*project.flows.values(), *(flow for item in experiments for flow in item.flows.values()))
+    alternatives = (source for item in experiments for source in item.alternatives.values())
     yield from _paths(SpecKind.FLOW, (flow.source for flow in flows))
-    yield from _paths(SpecKind.NODE, (node for flow in flows for node in flow.nodes.values()))
+    yield from _paths(SpecKind.NODE, (*(node for flow in flows for node in flow.nodes.values()), *alternatives))
 
 
 def declared_kinds(project: LoadedProject | None) -> Mapping[str, FileKind]:

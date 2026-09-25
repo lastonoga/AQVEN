@@ -8512,10 +8512,10 @@
         "x-aqven-rest-only": "experiment catalogue read from the project files"
       }
     },
-    "/api/experiments/{experiment_id}/arms/{arm_id}": {
+    "/api/experiments/{experiment_id}/flows/{flow_id}": {
       "get": {
-        "summary": "Get Experiment Arm",
-        "operationId": "experiment_arm",
+        "summary": "Get Experiment Flow",
+        "operationId": "experiment_flow",
         "parameters": [
           {
             "name": "experiment_id",
@@ -8527,12 +8527,12 @@
             }
           },
           {
-            "name": "arm_id",
+            "name": "flow_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Arm Id"
+              "title": "Flow Id"
             }
           }
         ],
@@ -8542,7 +8542,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ArmFlowView"
+                  "$ref": "#/components/schemas/ExperimentFlowView"
                 }
               }
             }
@@ -8638,7 +8638,7 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-rest-only": "arm nodes and schemas for the Studio run view, read from the project files"
+        "x-aqven-rest-only": "nodes and schemas of a local flow of an experiment for the Studio run view, from the project files"
       }
     },
     "/api/experiments/{experiment_id}/launch-plan": {
@@ -11859,6 +11859,33 @@
         ],
         "title": "AllowedSetSpec"
       },
+      "AlternativeView": {
+        "properties": {
+          "alternative_id": {
+            "type": "string",
+            "title": "Alternative Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NodeKind"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alternative_id",
+          "kind",
+          "description",
+          "file"
+        ],
+        "title": "AlternativeView"
+      },
       "ApiError": {
         "properties": {
           "ok": {
@@ -11978,128 +12005,6 @@
           "interrupt",
           "session_closed"
         ]
-      },
-      "ArmFlowView": {
-        "properties": {
-          "experiment_id": {
-            "type": "string",
-            "title": "Experiment Id"
-          },
-          "arm_id": {
-            "type": "string",
-            "title": "Arm Id"
-          },
-          "flow_id": {
-            "type": "string",
-            "title": "Flow Id"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "order": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Order"
-          },
-          "nodes": {
-            "items": {
-              "$ref": "#/components/schemas/NodeSummary"
-            },
-            "type": "array",
-            "title": "Nodes"
-          },
-          "schemas": {
-            "$ref": "#/components/schemas/FlowSchemas"
-          },
-          "prompts": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/PromptDetail"
-            },
-            "type": "object",
-            "title": "Prompts"
-          }
-        },
-        "type": "object",
-        "required": [
-          "experiment_id",
-          "arm_id",
-          "flow_id",
-          "description",
-          "order",
-          "nodes",
-          "schemas",
-          "prompts"
-        ],
-        "title": "ArmFlowView"
-      },
-      "ArmStepView": {
-        "properties": {
-          "node_id": {
-            "type": "string",
-            "title": "Node Id"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/NodeKind"
-          },
-          "agent": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AgentRefView"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          }
-        },
-        "type": "object",
-        "required": [
-          "node_id",
-          "kind",
-          "agent",
-          "description"
-        ],
-        "title": "ArmStepView"
-      },
-      "ArmView": {
-        "properties": {
-          "arm_id": {
-            "type": "string",
-            "title": "Arm Id"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "steps": {
-            "items": {
-              "$ref": "#/components/schemas/ArmStepView"
-            },
-            "type": "array",
-            "title": "Steps"
-          }
-        },
-        "type": "object",
-        "required": [
-          "arm_id",
-          "description",
-          "steps"
-        ],
-        "title": "ArmView"
       },
       "AssigneeSource": {
         "type": "string",
@@ -15892,6 +15797,17 @@
               }
             ],
             "title": "File"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
           }
         },
         "additionalProperties": false,
@@ -17901,9 +17817,15 @@
           "E_SIM_PROMPT_RENDER",
           "E_SIM_OUTPUT_INVALID",
           "E_SIM_RUN_FAILED",
-          "E_ARM_UNKNOWN",
           "E_RANGE_INVALID",
           "E_VARIANT_INVALID",
+          "E_FACTOR_MISSING",
+          "E_FACTOR_NODE_UNKNOWN",
+          "E_FACTOR_KIND",
+          "E_VARIANT_OUTSIDE_FACTOR",
+          "E_ALTERNATIVE_UNKNOWN",
+          "E_ALTERNATIVE_ID_TAKEN",
+          "E_FACTOR_FLOW_CONTRACT",
           "E_METRIC_UNKNOWN",
           "E_EXPERIMENT_UNKNOWN",
           "E_DATASET_MISMATCH",
@@ -17924,7 +17846,9 @@
           "W_PLAN_EXCEEDS_CASES",
           "W_CHECK_CONTEXT_MISMATCH",
           "W_JUDGE_INPUT_UNBOUND",
-          "W_FINDINGS_STALE"
+          "W_FINDINGS_STALE",
+          "W_VARIANT_DUPLICATE",
+          "W_ALTERNATIVE_UNUSED"
         ],
         "title": "DiagnosticCode"
       },
@@ -19178,12 +19102,36 @@
           "question_detail": {
             "$ref": "#/components/schemas/QuestionView"
           },
-          "arms": {
+          "varies": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactorView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "flows": {
             "items": {
-              "$ref": "#/components/schemas/ArmView"
+              "$ref": "#/components/schemas/LocalFlowView"
             },
             "type": "array",
-            "title": "Arms"
+            "title": "Flows"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeView"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "prompts": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentPromptView"
+            },
+            "type": "array",
+            "title": "Prompts"
           },
           "cases": {
             "$ref": "#/components/schemas/CaseSelectionView"
@@ -19242,7 +19190,10 @@
           "series_count",
           "spent_usd",
           "question_detail",
-          "arms",
+          "varies",
+          "flows",
+          "alternatives",
+          "prompts",
           "cases",
           "variant_details",
           "checks",
@@ -19277,6 +19228,64 @@
           "notes"
         ],
         "title": "ExperimentFilesView"
+      },
+      "ExperimentFlowView": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Order"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeSummary"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "schemas": {
+            "$ref": "#/components/schemas/FlowSchemas"
+          },
+          "prompts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PromptDetail"
+            },
+            "type": "object",
+            "title": "Prompts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "flow_id",
+          "description",
+          "order",
+          "nodes",
+          "schemas",
+          "prompts"
+        ],
+        "title": "ExperimentFlowView"
       },
       "ExperimentOrigin": {
         "properties": {
@@ -19324,6 +19333,24 @@
         "type": "object",
         "title": "ExperimentPlan",
         "description": "The default size of a series: how many cases and how many repeats per case.\n\nThese are the author's defaults, not limits: a series may run fewer or more, and the Studio shows the\nrecommended size next to them. ``cases`` unset means every selected case."
+      },
+      "ExperimentPromptView": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "file"
+        ],
+        "title": "ExperimentPromptView"
       },
       "ExperimentSummaryView": {
         "properties": {
@@ -19428,6 +19455,37 @@
           "spent_usd"
         ],
         "title": "ExperimentSummaryView"
+      },
+      "FactorKind": {
+        "type": "string",
+        "enum": [
+          "agent",
+          "prompt",
+          "use",
+          "flow"
+        ],
+        "title": "FactorKind",
+        "description": "The kind of edit an experiment factor makes on each of its nodes.\n\n``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm\nnode, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at\nanother flow."
+      },
+      "FactorView": {
+        "properties": {
+          "what": {
+            "$ref": "#/components/schemas/FactorKind"
+          },
+          "nodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Nodes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "what",
+          "nodes"
+        ],
+        "title": "FactorView"
       },
       "FailOnTimeout": {
         "properties": {
@@ -20370,6 +20428,39 @@
           "nodes"
         ],
         "title": "FlowSpecView"
+      },
+      "FlowStepView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NodeKind"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentRefView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "kind",
+          "agent",
+          "description"
+        ],
+        "title": "FlowStepView"
       },
       "FlowSummary": {
         "properties": {
@@ -21960,6 +22051,44 @@
           "agent"
         ],
         "title": "LlmNodeSpec"
+      },
+      "LocalFlowView": {
+        "properties": {
+          "flow_id": {
+            "type": "string",
+            "title": "Flow Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/FlowStepView"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flow_id",
+          "description",
+          "file",
+          "steps"
+        ],
+        "title": "LocalFlowView"
       },
       "LocalUserView": {
         "properties": {
@@ -28336,7 +28465,7 @@
             ],
             "title": "Experiment Id"
           },
-          "arm_id": {
+          "flow_experiment_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -28345,7 +28474,7 @@
                 "type": "null"
               }
             ],
-            "title": "Arm Id"
+            "title": "Flow Experiment Id"
           },
           "execution_id": {
             "type": "string",
@@ -28914,7 +29043,7 @@
             ],
             "title": "Experiment Id"
           },
-          "arm_id": {
+          "flow_experiment_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -28923,7 +29052,7 @@
                 "type": "null"
               }
             ],
-            "title": "Arm Id"
+            "title": "Flow Experiment Id"
           }
         },
         "type": "object",
@@ -30880,8 +31009,7 @@
         "type": "string",
         "enum": [
           "flow",
-          "range",
-          "arm"
+          "range"
         ],
         "title": "SubjectKind"
       },
@@ -30891,26 +31019,12 @@
             "$ref": "#/components/schemas/SubjectKind"
           },
           "flow_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Flow Id"
           },
-          "arm_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Arm Id"
+          "local_flow": {
+            "type": "boolean",
+            "title": "Local Flow"
           },
           "from_node": {
             "anyOf": [
@@ -30939,7 +31053,7 @@
         "required": [
           "kind",
           "flow_id",
-          "arm_id",
+          "local_flow",
           "from_node",
           "to_node"
         ],
@@ -31742,6 +31856,28 @@
         ],
         "title": "VariantAggregates"
       },
+      "VariantChange": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "what": {
+            "$ref": "#/components/schemas/FactorKind"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "what",
+          "value"
+        ],
+        "title": "VariantChange"
+      },
       "VariantRef": {
         "type": "string",
         "pattern": "^([a-z][a-z0-9_]{0,62}|(@(flow|root)/|(\\.{1,2}/)*)([A-Za-z0-9_][A-Za-z0-9_.-]*/)*[A-Za-z0-9_][A-Za-z0-9_.-]*\\.md)$"
@@ -31831,19 +31967,15 @@
             "type": "string",
             "title": "Variant Id"
           },
-          "arm_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Arm Id"
-          },
           "role": {
             "$ref": "#/components/schemas/VariantRole"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/VariantChange"
+            },
+            "type": "array",
+            "title": "Changes"
           },
           "assignments": {
             "items": {
@@ -31856,8 +31988,8 @@
         "type": "object",
         "required": [
           "variant_id",
-          "arm_id",
           "role",
+          "changes",
           "assignments"
         ],
         "title": "VariantView"

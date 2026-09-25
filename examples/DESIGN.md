@@ -87,8 +87,8 @@ gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `para
 | types | `types/`, with subfolders by type kind: `enums/`, `ids/`, `records/`, `unions/`, `values/` (constrained scalars) | all 49 types of both workflows and the tools |
 | shared prompt fragments | `fragments/<fragment>.md` | `untrusted_input`, `safety_escalation`, `citation_rules`, `brand_voice`, `judge_protocol` |
 | Python used in several places | `code/<module>.py` — several nodes, a node and an experiment, several workflows | `code/support_case.py`: the promise rules serve the evaluator `promises_match_resolution` (a check on the `revise` inference) and `reply_keeps_resolution` (the `promises` check of three `reply_*` experiments) |
-| datasets | `datasets/<dataset>.yaml` — the cases of a workflow (`flow: <workflow>`) or of an experiment arm | `support_case_cases`, `judge_panel_cases`, `long_customer_messages`, `planted_defect_replies` |
-| experiments | `experiments/<experiment>/experiment.yaml`, notes in `experiment.md`, arms in `arms/<arm>/flow.yaml`, the experiment's own code in `checks.py` | thirteen experiments, one for every question kind (§10) |
+| datasets | `datasets/<dataset>.yaml` — the cases of a workflow (`flow: <workflow>`) or of an experiment's local flow | `support_case_cases`, `judge_panel_cases`, `long_customer_messages`, `planted_defect_replies` |
+| experiments | `experiments/<experiment>/experiment.yaml`, notes in `experiment.md`, the experiment's own code in `checks.py`; local flows in `flows/<flow>/`, alternative nodes in `nodes/<node>/`, prompt texts in `prompts/<name>.md` | fifteen experiments, one for every question kind and every kind of factor (§10) |
 | workflow | `flows/<workflow>/flow.yaml` | `support_case`, `judge_panel` |
 | top-level node | `flows/<workflow>/nodes/<node>/<node>.node.yaml` | `nodes/route/route.node.yaml` |
 | a node's descendant, at any depth | flat in the top-level node's folder: `nodes/<node>/<child>.node.yaml` | `nodes/route/resolve.node.yaml`, `nodes/polish/revise.node.yaml` |
@@ -97,14 +97,14 @@ gets its own `nodes/<node>/` folder, and all of its descendants (`body` of `para
 | generated | `types.py` at the module root — the models of every type and of the inputs and outputs of every inference, tool and `code` step | `aqven generate`, in `.gitignore` |
 
 **A shared inference.** The inference sits beside the node that owns it, under that node's name, and takes its id.
-Other nodes, experiment checks and experiment arms reference it with `inference: <id>`. The owner is the first node
+Other nodes, experiment checks and the local flows of experiments reference it with `inference: <id>`. The owner is the first node
 in workflow order that uses it and whose id does not match the agent's id:
 
 | Inference | File | Who references it with `inference: <id>` |
 |---|---|---|
 | `ballot` | `flows/support_case/nodes/vote/ballot.inference.yaml` | `intent__escalate` |
 | `revise` | `flows/support_case/nodes/polish/revise.inference.yaml` | `drafts__gpt`, `drafts__mistral`, `drafts__gemini` |
-| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | the `critique` judge check of the `reply_look` and `reply_noninferior_mistral` experiments, the `critique_only` arm |
+| `critique` | `flows/support_case/nodes/polish/critique.inference.yaml` | the `critique` judge check of the `reply_look` and `reply_noninferior_mistral` experiments, the local flows `critique_only` and `critic` |
 | `tie_break` | `flows/judge_panel/nodes/decide/tie_break.inference.yaml` | `judges__deepseek`, `judges__qwen`, `judges__llama`, `decide__tie_break` |
 
 **A subagent inference.** The `research_policy` inference belongs to no node: it is called by a subagent of the
@@ -132,7 +132,7 @@ types/
 fragments/                                         untrusted_input, safety_escalation, citation_rules, brand_voice, judge_protocol
 code/support_case.py                               promises_match_resolution: a check on revise; reply_keeps_resolution: the promises check of experiments
 datasets/<dataset>.yaml                            kind Dataset: cases with inputs, node_outputs, expected_output and tags
-experiments/<experiment>/                          kind Experiment in experiment.yaml, notes in experiment.md, arms/<arm>/
+experiments/<experiment>/                          kind Experiment in experiment.yaml, notes in experiment.md, flows/, nodes/, prompts/
 flows/
   support_case/                                    the case workflow
     flow.yaml                                      kind Flow: input, output, node order
@@ -471,7 +471,7 @@ vendor prefix in `aqven.spec.model_ref` (`openai:`, `anthropic:`, `google:`; `me
 
 An inference's id is the file name up to the first dot. The inference sits beside the node that owns it, under that
 node's name, and takes its id (`triage`, `ballot`, `extract`, `resolve`, `revise`, `critique`, `illustrate`,
-`tie_break`); other nodes, experiment checks and arms name a shared inference with `inference: <id>` (§3). A
+`tie_break`); other nodes, experiment checks and local flows name a shared inference with `inference: <id>` (§3). A
 subagent's inference sits in the folder of the agent that calls it (`research_policy` in `agents/resolver/`). Below is
 a fragment of `flows/support_case/nodes/polish/revise.inference.yaml`: the `product` and `chunks` inputs, the output
 and every key except some of the checks.
@@ -766,18 +766,29 @@ follows its slot contract (§6.6). **Proposal — not in an ADR** (ADR-0026 §5 
   replay load trace. The `clip` and `voice` tools stay `MockTransport` stubs, and the helpdesk MCP stays an
   `McpToolStub`. The engine is stopped after every test: DBOS installs its own thread pool as the event loop's
   default, and anyio closes it at the end of the test.
-- **Experiments (ADR-0047).** An experiment is subject × variants × cases × checks × question, in
-  `experiments/<experiment>/experiment.yaml`, with its id taken from the folder. The subject is a workflow
-  (`flow`), a range of its top-level nodes (`from`, `to`; the nodes above the range take their outputs from the case
-  `node_outputs`), or an arm — a small workflow in `experiments/<experiment>/arms/<arm>/` that only this experiment
-  runs. A variant assigns agents to nodes (`agents: {<node>: <agent>}`) or picks another arm; it never names a bare
-  model. The cases are a dataset in `datasets/`, selected by `tags`; `name` is the case key. The checks are the same
-  evaluator references the inference checks use (O11), plus `id`, `kind` and, on a judge, `validated_by`. The
-  question is `look`, `threshold`, `compare` or `noninferior`; `plan {cases, repeats}` is the recommended series
-  size, not a limit. The example has thirteen experiments: `reply_look`, `reply_overpromise_risk`,
+- **Experiments (ADR-0047, ADR-0056).** An experiment is subject × factor × variants × cases × checks × question, in
+  `experiments/<experiment>/experiment.yaml`, with its id taken from the folder. The subject is a workflow (`flow`) or
+  a range of its top-level nodes (`from`, `to`; the nodes above the range take their outputs from the case
+  `node_outputs`); the workflow is a local flow of the experiment, `experiments/<experiment>/flows/<flow>/`, looked up
+  first, or a project workflow. `varies` declares the one factor the variants change: `what` — `agent` (an `llm` node
+  answers with another agent), `prompt` (an `llm` node gets the text of `prompts/<name>.md`; the inputs, the output
+  schema and the checks of its inference stay), `use` (any node is replaced by an alternative from `nodes/`, which
+  runs under the node's id) or `flow` (a `call` node calls another workflow with the same input and output types) —
+  and `nodes`, the nodes it touches by their own ids. A variant only sets values of the factor under `nodes`; without
+  values it is the subject as written, and it never names a bare model. The compared things are variants and the
+  measures are checks. The cases are a dataset in `datasets/`, selected by `tags`; `name` is the case key. The checks
+  are the same evaluator references the inference checks use (O11), plus `id`, `kind` and, on a judge,
+  `validated_by`. The question is `look`, `threshold`, `compare` or `noninferior`; `plan {cases, repeats}` is the
+  recommended series size, not a limit. The example has fifteen experiments: `reply_look`, `reply_overpromise_risk`,
   `reply_stage_budget` and `reply_noninferior_mistral` on ranges of `support_case`; `judge_panel_agents`,
-  `panel_aa_noise`, `panel_failure_scan` and `panel_single_judge` on `judge_panel`; and `intent_split_long_messages`,
-  `intent_ballot_pair`, `intent_escalation_agents`, `critique_planted_defects` and `critique_recall_by_agent` on arms.
+  `panel_aa_noise`, `panel_failure_scan`, `panel_judge_prompt` and `panel_merge_rule` on `judge_panel`; and
+  `panel_single_judge`, `intent_split_long_messages`, `intent_ballot_pair`, `intent_escalation_agents`,
+  `critique_planted_defects` and `critique_recall_by_agent` on local flows. Every kind of factor is shown:
+  `agent` on the tie-break, the reviser, the drafts, the escalation and the critic; `prompt` on the three panel judges
+  (`panel_judge_prompt`); `use` on the `aggregate` code step with two merge rules (`panel_merge_rule`); and `flow` on
+  a slot — a local flow with one `call` node — that calls `judge_panel` or the local `single_judge`
+  (`panel_single_judge`), `one_step` or `two_step` (`intent_split_long_messages`), `single` or `pair`
+  (`intent_ballot_pair`). `aqven check` assembles and compiles every variant as the flow it runs.
   The `critique` judge check (`inference: critique`, `agent: deepseek`) carries
   `validated_by: critique_planted_defects`, the experiment that measures that critic on planted defects; `promises`
   is `run: @root.code.support_case:reply_keeps_resolution`: on the `polish` range `$in` is the flow input

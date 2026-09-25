@@ -10,10 +10,10 @@ from aqven.engine.request import RECORD_CONFIG
 from aqven.runtime.address import JsonObject, ResourceModel, RunId
 from aqven.spec import (
     AgentId,
-    ArmId,
     CellVerdict,
     DatasetId,
     ExperimentId,
+    FactorKind,
     FlowId,
     InferenceId,
     MetricDirection,
@@ -79,7 +79,6 @@ class AttemptOutcome(StrEnum):
 class SubjectKind(StrEnum):
     FLOW = "flow"
     RANGE = "range"
-    ARM = "arm"
 
 
 class VariantRole(StrEnum):
@@ -306,10 +305,16 @@ class CaseSnapshot(RecordModel):
 
 class SubjectRecord(RecordModel):
     kind: SubjectKind
-    flow_id: FlowId | None
-    arm_id: ArmId | None
+    flow_id: FlowId
+    local_flow: bool
     start_node: NodeId | None
     end_node: NodeId | None
+
+
+class VariantChange(ResourceModel):
+    node_id: NodeId
+    what: FactorKind
+    value: str
 
 
 class Assignment(RecordModel):
@@ -322,7 +327,7 @@ class Assignment(RecordModel):
 class VariantPlanRecord(RecordModel):
     variant_id: VariantId
     role: VariantRole
-    arm_id: ArmId | None
+    changes: tuple[VariantChange, ...]
     flow_id: FlowId
     ir_hash: str
     flow_hash: str

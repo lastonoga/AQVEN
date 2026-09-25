@@ -1,15 +1,15 @@
 from decimal import Decimal
-from typing import Final, Literal
+from typing import Final, Literal, Self
 
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, model_validator
 
 from aqven.spec.common import SpecModel
 from aqven.spec.names import (
     AgentId,
-    ArmId,
     CellVerdict,
     DatasetId,
     ExperimentId,
+    FactorKind,
     InferenceId,
     MetricDirection,
     NodeId,
@@ -60,19 +60,41 @@ class FindingCell(SpecModel):
     verdict: CellVerdict
 
 
-class FindingVariant(SpecModel):
-    """A variant as it ran: the agents on its nodes, the models that answered and the hash of its flow.
+class FindingChange(SpecModel):
+    """One value of the experiment factor the variant set: ``what`` kind of edit on node ``node_id``.
 
-    ``models`` lists the models recorded on the attempts, which may differ from the declared ones when a model
-    profile routes the call. ``metrics`` holds the variant's own estimate of every metric of the series.
+    ``value`` reads by ``what``: an agent id (``agent``), a prompt name of the experiment ``prompts/`` folder
+    (``prompt``), an alternative id of its ``nodes/`` folder (``use``) or a flow id (``flow``).
+    """
+
+    node_id: NodeId
+    what: FactorKind
+    value: str
+
+
+class FindingVariant(SpecModel):
+    """A variant as it ran: the factor values it set, the agents on its nodes, the models and the hash of its flow.
+
+    ``changes`` lists the factor values of the variant, empty for the subject as written. ``agents`` names the agent
+    that answered on every llm node, changed or not. ``models`` lists the models recorded on the attempts, which may
+    differ from the declared ones when a model profile routes the call. ``metrics`` holds the variant's own estimate
+    of every metric of the series. ``arm`` is read only in findings written before ADR-0056, which have no
+    ``changes``; a new finding never writes it.
     """
 
     id: VariantId
-    arm: ArmId | None = None
+    arm: str | None = None
+    changes: list[FindingChange] | None = None
     agents: dict[NodeId, AgentId]
     models: list[str]
     flow_hash: str
     metrics: dict[str, FindingEstimate]
+
+    @model_validator(mode="after")
+    def _one_form(self) -> Self:
+        if self.arm is not None and self.changes is not None:
+            raise ValueError("arm belongs to findings written before ADR-0056, which have no changes")
+        return self
 
 
 class FindingJudge(SpecModel):

@@ -244,7 +244,7 @@ def scoring(outcome: OutcomeClass, checks: tuple[CheckPlan, ...], expected: str 
     variant = VariantPlanRecord(
         variant_id=VariantId("writer"),
         role=VariantRole.OTHER,
-        arm_id=None,
+        changes=(),
         flow_id=FlowId("triage"),
         ir_hash="",
         flow_hash="",

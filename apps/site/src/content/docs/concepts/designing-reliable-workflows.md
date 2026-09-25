@@ -124,7 +124,7 @@ own cases, and the showcase has one for most of them:
 
 | The choice | The showcase experiment | Its question |
 |---|---|---|
-| a split step: condense first, then classify | `intent_split_long_messages` | `compare`: the two-step arm against the one-step arm, at most 50% dearer per correct intent |
+| a split step: condense first, then classify | `intent_split_long_messages` | `compare` with a `flow` factor: a two-step flow against a one-step flow in the same `call` slot, at most 50% dearer per correct intent |
 | a second vote on the evidence | `intent_ballot_pair` | `compare`: a pair of ballots settled by confidence against one ballot, with valid first outputs as a guardrail |
 | a three-judge panel or one judge | `panel_single_judge` | `compare` on median latency, with the winner and the success rate as guardrails |
 | which model breaks the tie | `judge_panel_agents` | `compare`: a DeepSeek tie-break against the gpt one, at most 30% dearer per correct pick |

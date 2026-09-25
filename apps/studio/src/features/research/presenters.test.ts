@@ -29,8 +29,8 @@ import { experimentSummary, seriesSummary } from "./test-support"
 const SUBJECT: SubjectCopy = {
   flow: (flow) => `flow ${flow}`,
   range: (flow, range) => `${flow} · ${range}`,
-  arm: (arm) => `arm ${arm}`,
-  armRange: (arm, range) => `arm ${arm} · ${range}`,
+  local: (flow) => `experiment flow ${flow}`,
+  localRange: (flow, range) => `experiment flow ${flow} · ${range}`,
 }
 
 const QUESTION: QuestionCopy = {
@@ -92,11 +92,11 @@ describe("experiment list rows", () => {
   it("names the subject of each kind in plain words", () => {
     const flow = ids.flowId("support_case")
     const range = { from: ids.nodeId("polish"), to: ids.nodeId("polish") }
-    expect(subjectText({ kind: "flow", flow }, SUBJECT)).toBe("flow support_case")
-    expect(subjectText({ kind: "range", flow, range }, SUBJECT)).toBe("support_case · polish")
-    expect(subjectText({ kind: "range", flow, range: { from: ids.nodeId("triage"), to: ids.nodeId("route") } }, SUBJECT)).toBe("support_case · triage → route")
-    expect(subjectText({ kind: "arm", arm: ids.armId("one_step"), range: null }, SUBJECT)).toBe("arm one_step")
-    expect(subjectText({ kind: "arm", arm: ids.armId("escalation"), range }, SUBJECT)).toBe("arm escalation · polish")
+    expect(subjectText({ kind: "flow", flow, local: false }, SUBJECT)).toBe("flow support_case")
+    expect(subjectText({ kind: "range", flow, local: false, range }, SUBJECT)).toBe("support_case · polish")
+    expect(subjectText({ kind: "range", flow, local: false, range: { from: ids.nodeId("triage"), to: ids.nodeId("route") } }, SUBJECT)).toBe("support_case · triage → route")
+    expect(subjectText({ kind: "flow", flow: ids.flowId("one_step"), local: true }, SUBJECT)).toBe("experiment flow one_step")
+    expect(subjectText({ kind: "range", flow: ids.flowId("escalation"), local: true, range }, SUBJECT)).toBe("experiment flow escalation · polish")
   })
 
   it("shows the variants as baseline to candidate and keeps the others after them", () => {

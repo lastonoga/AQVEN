@@ -1006,15 +1006,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/experiments/{experiment_id}/arms/{arm_id}": {
+    "/api/experiments/{experiment_id}/flows/{flow_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Experiment Arm */
-        get: operations["experiment_arm"];
+        /** Get Experiment Flow */
+        get: operations["experiment_flow"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1407,6 +1407,16 @@ export interface components {
             /** Labels From */
             labels_from?: string | null;
         };
+        /** AlternativeView */
+        AlternativeView: {
+            /** Alternative Id */
+            alternative_id: string;
+            kind: components["schemas"]["NodeKind"];
+            /** Description */
+            description: string;
+            /** File */
+            file: string;
+        };
         /** ApiError */
         ApiError: {
             /**
@@ -1445,44 +1455,6 @@ export interface components {
         ApprovalReason: "cap_above_project" | "spend_near_cap";
         /** @enum {string} */
         ApprovalResolver: "user" | "interrupt" | "session_closed";
-        /** ArmFlowView */
-        ArmFlowView: {
-            /** Experiment Id */
-            experiment_id: string;
-            /** Arm Id */
-            arm_id: string;
-            /** Flow Id */
-            flow_id: string;
-            /** Description */
-            description: string | null;
-            /** Order */
-            order: string[];
-            /** Nodes */
-            nodes: components["schemas"]["NodeSummary"][];
-            schemas: components["schemas"]["FlowSchemas"];
-            /** Prompts */
-            prompts: {
-                [key: string]: components["schemas"]["PromptDetail"];
-            };
-        };
-        /** ArmStepView */
-        ArmStepView: {
-            /** Node Id */
-            node_id: string;
-            kind: components["schemas"]["NodeKind"];
-            agent: components["schemas"]["AgentRefView"] | null;
-            /** Description */
-            description: string;
-        };
-        /** ArmView */
-        ArmView: {
-            /** Arm Id */
-            arm_id: string;
-            /** Description */
-            description: string;
-            /** Steps */
-            steps: components["schemas"]["ArmStepView"][];
-        };
         /** @enum {string} */
         AssigneeSource: "setting" | "os_user";
         /** AssignmentView */
@@ -2746,6 +2718,8 @@ export interface components {
             display?: components["schemas"]["CompiledInferenceDisplay"] | null;
             /** File */
             file?: string | null;
+            /** Origin */
+            origin?: string | null;
         };
         /** CompiledInferenceDisplay */
         CompiledInferenceDisplay: {
@@ -3372,7 +3346,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_ARM_UNKNOWN" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_FACTOR_MISSING" | "E_FACTOR_NODE_UNKNOWN" | "E_FACTOR_KIND" | "E_VARIANT_OUTSIDE_FACTOR" | "E_ALTERNATIVE_UNKNOWN" | "E_ALTERNATIVE_ID_TAKEN" | "E_FACTOR_FLOW_CONTRACT" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE" | "W_VARIANT_DUPLICATE" | "W_ALTERNATIVE_UNUSED";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -3794,8 +3768,13 @@ export interface components {
             /** Spent Usd */
             spent_usd: string;
             question_detail: components["schemas"]["QuestionView"];
-            /** Arms */
-            arms: components["schemas"]["ArmView"][];
+            varies: components["schemas"]["FactorView"] | null;
+            /** Flows */
+            flows: components["schemas"]["LocalFlowView"][];
+            /** Alternatives */
+            alternatives: components["schemas"]["AlternativeView"][];
+            /** Prompts */
+            prompts: components["schemas"]["ExperimentPromptView"][];
             cases: components["schemas"]["CaseSelectionView"];
             /** Variant Details */
             variant_details: components["schemas"]["VariantView"][];
@@ -3814,6 +3793,24 @@ export interface components {
             spec: string;
             /** Notes */
             notes: string | null;
+        };
+        /** ExperimentFlowView */
+        ExperimentFlowView: {
+            /** Experiment Id */
+            experiment_id: string;
+            /** Flow Id */
+            flow_id: string;
+            /** Description */
+            description: string | null;
+            /** Order */
+            order: string[];
+            /** Nodes */
+            nodes: components["schemas"]["NodeSummary"][];
+            schemas: components["schemas"]["FlowSchemas"];
+            /** Prompts */
+            prompts: {
+                [key: string]: components["schemas"]["PromptDetail"];
+            };
         };
         /** ExperimentOrigin */
         ExperimentOrigin: {
@@ -3841,6 +3838,13 @@ export interface components {
              */
             repeats: number;
         };
+        /** ExperimentPromptView */
+        ExperimentPromptView: {
+            /** Name */
+            name: string;
+            /** File */
+            file: string;
+        };
         /** ExperimentSummaryView */
         ExperimentSummaryView: {
             /** Experiment Id */
@@ -3864,6 +3868,22 @@ export interface components {
             series_count: number;
             /** Spent Usd */
             spent_usd: string;
+        };
+        /**
+         * FactorKind
+         * @description The kind of edit an experiment factor makes on each of its nodes.
+         *
+         *     ``agent`` answers an llm node with another agent of the project, ``prompt`` replaces the prompt text of an llm
+         *     node, ``use`` replaces a node with an alternative node of the experiment, ``flow`` points a call node at
+         *     another flow.
+         * @enum {string}
+         */
+        FactorKind: "agent" | "prompt" | "use" | "flow";
+        /** FactorView */
+        FactorView: {
+            what: components["schemas"]["FactorKind"];
+            /** Nodes */
+            nodes: string[];
         };
         /** FailOnTimeout */
         FailOnTimeout: {
@@ -4143,6 +4163,15 @@ export interface components {
             nodes: {
                 [key: string]: components["schemas"]["NodeSpec"];
             };
+        };
+        /** FlowStepView */
+        FlowStepView: {
+            /** Node Id */
+            node_id: string;
+            kind: components["schemas"]["NodeKind"];
+            agent: components["schemas"]["AgentRefView"] | null;
+            /** Description */
+            description: string;
         };
         /** FlowSummary */
         FlowSummary: {
@@ -4665,6 +4694,17 @@ export interface components {
             agent: string;
             /** In */
             in?: components["schemas"]["FieldBinding"][];
+        };
+        /** LocalFlowView */
+        LocalFlowView: {
+            /** Flow Id */
+            flow_id: string;
+            /** Description */
+            description: string;
+            /** File */
+            file: string | null;
+            /** Steps */
+            steps: components["schemas"]["FlowStepView"][];
         };
         /** LocalUserView */
         LocalUserView: {
@@ -6515,8 +6555,8 @@ export interface components {
             series_id?: string | null;
             /** Experiment Id */
             experiment_id?: string | null;
-            /** Arm Id */
-            arm_id?: string | null;
+            /** Flow Experiment Id */
+            flow_experiment_id?: string | null;
             /** Execution Id */
             execution_id: string;
             context: components["schemas"]["RunContext"] | null;
@@ -6667,8 +6707,8 @@ export interface components {
             series_id?: string | null;
             /** Experiment Id */
             experiment_id?: string | null;
-            /** Arm Id */
-            arm_id?: string | null;
+            /** Flow Experiment Id */
+            flow_experiment_id?: string | null;
         };
         /** RunSuspended */
         RunSuspended: {
@@ -7277,14 +7317,14 @@ export interface components {
          * SubjectKind
          * @enum {string}
          */
-        SubjectKind: "flow" | "range" | "arm";
+        SubjectKind: "flow" | "range";
         /** SubjectView */
         SubjectView: {
             kind: components["schemas"]["SubjectKind"];
             /** Flow Id */
-            flow_id: string | null;
-            /** Arm Id */
-            arm_id: string | null;
+            flow_id: string;
+            /** Local Flow */
+            local_flow: boolean;
             /** From Node */
             from_node: string | null;
             /** To Node */
@@ -7555,6 +7595,14 @@ export interface components {
             /** Models */
             models: string[];
         };
+        /** VariantChange */
+        VariantChange: {
+            /** Node Id */
+            node_id: string;
+            what: components["schemas"]["FactorKind"];
+            /** Value */
+            value: string;
+        };
         VariantRef: string;
         /**
          * VariantRole
@@ -7588,9 +7636,9 @@ export interface components {
         VariantView: {
             /** Variant Id */
             variant_id: string;
-            /** Arm Id */
-            arm_id: string | null;
             role: components["schemas"]["VariantRole"];
+            /** Changes */
+            changes: components["schemas"]["VariantChange"][];
             /** Assignments */
             assignments: components["schemas"]["AssignmentView"][];
         };
@@ -7636,14 +7684,12 @@ export type SchemaAgentSpec = components['schemas']['AgentSpec'];
 export type SchemaAllowedSetMember = components['schemas']['AllowedSetMember'];
 export type SchemaAllowedSetMode = components['schemas']['AllowedSetMode'];
 export type SchemaAllowedSetSpec = components['schemas']['AllowedSetSpec'];
+export type SchemaAlternativeView = components['schemas']['AlternativeView'];
 export type SchemaApiError = components['schemas']['ApiError'];
 export type SchemaApiErrorCode = components['schemas']['ApiErrorCode'];
 export type SchemaApprovalDecision = components['schemas']['ApprovalDecision'];
 export type SchemaApprovalReason = components['schemas']['ApprovalReason'];
 export type SchemaApprovalResolver = components['schemas']['ApprovalResolver'];
-export type SchemaArmFlowView = components['schemas']['ArmFlowView'];
-export type SchemaArmStepView = components['schemas']['ArmStepView'];
-export type SchemaArmView = components['schemas']['ArmView'];
 export type SchemaAssigneeSource = components['schemas']['AssigneeSource'];
 export type SchemaAssignmentView = components['schemas']['AssignmentView'];
 export type SchemaAttempt = components['schemas']['Attempt'];
@@ -7813,9 +7859,13 @@ export type SchemaExperimentChangeKind = components['schemas']['ExperimentChange
 export type SchemaExperimentChanged = components['schemas']['ExperimentChanged'];
 export type SchemaExperimentDetailView = components['schemas']['ExperimentDetailView'];
 export type SchemaExperimentFilesView = components['schemas']['ExperimentFilesView'];
+export type SchemaExperimentFlowView = components['schemas']['ExperimentFlowView'];
 export type SchemaExperimentOrigin = components['schemas']['ExperimentOrigin'];
 export type SchemaExperimentPlan = components['schemas']['ExperimentPlan'];
+export type SchemaExperimentPromptView = components['schemas']['ExperimentPromptView'];
 export type SchemaExperimentSummaryView = components['schemas']['ExperimentSummaryView'];
+export type SchemaFactorKind = components['schemas']['FactorKind'];
+export type SchemaFactorView = components['schemas']['FactorView'];
 export type SchemaFailOnTimeout = components['schemas']['FailOnTimeout'];
 export type SchemaFamiliesDistinct = components['schemas']['FamiliesDistinct'];
 export type SchemaFamilyDisjointFromInput = components['schemas']['FamilyDisjointFromInput'];
@@ -7838,6 +7888,7 @@ export type SchemaFlowIr = components['schemas']['FlowIr'];
 export type SchemaFlowSchemas = components['schemas']['FlowSchemas'];
 export type SchemaFlowSpec = components['schemas']['FlowSpec'];
 export type SchemaFlowSpecView = components['schemas']['FlowSpecView'];
+export type SchemaFlowStepView = components['schemas']['FlowStepView'];
 export type SchemaFlowSummary = components['schemas']['FlowSummary'];
 export type SchemaForkBase = components['schemas']['ForkBase'];
 export type SchemaForkOverrides = components['schemas']['ForkOverrides'];
@@ -7878,6 +7929,7 @@ export type SchemaLineage = components['schemas']['Lineage'];
 export type SchemaLineageRelation = components['schemas']['LineageRelation'];
 export type SchemaLiteralBinding = components['schemas']['LiteralBinding'];
 export type SchemaLlmNodeSpec = components['schemas']['LlmNodeSpec'];
+export type SchemaLocalFlowView = components['schemas']['LocalFlowView'];
 export type SchemaLocalUserView = components['schemas']['LocalUserView'];
 export type SchemaLoginMethod = components['schemas']['LoginMethod'];
 export type SchemaLoginState = components['schemas']['LoginState'];
@@ -8124,6 +8176,7 @@ export type SchemaValueRef = components['schemas']['ValueRef'];
 export type SchemaValueSettingWrite = components['schemas']['ValueSettingWrite'];
 export type SchemaValueType = components['schemas']['ValueType'];
 export type SchemaVariantAggregates = components['schemas']['VariantAggregates'];
+export type SchemaVariantChange = components['schemas']['VariantChange'];
 export type SchemaVariantRef = components['schemas']['VariantRef'];
 export type SchemaVariantRole = components['schemas']['VariantRole'];
 export type SchemaVariantSlot = components['schemas']['VariantSlot'];
@@ -14780,13 +14833,13 @@ export interface operations {
             };
         };
     };
-    experiment_arm: {
+    experiment_flow: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 experiment_id: string;
-                arm_id: string;
+                flow_id: string;
             };
             cookie?: never;
         };
@@ -14798,7 +14851,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ArmFlowView"];
+                    "application/json": components["schemas"]["ExperimentFlowView"];
                 };
             };
             /** @description Bad Request */

@@ -1,4 +1,5 @@
-import type { ExperimentArm, ExperimentDetail, FlowId, SeriesCaseRow, SeriesDetail, SeriesSummary } from "@/domain"
+import type { ExperimentDetail, ExperimentId, FlowId, SeriesCaseRow, SeriesDetail, SeriesSummary } from "@/domain"
+import * as ids from "@/data/ids"
 import type { LiveSources } from "@/data/live/sources"
 import { stepSchemas } from "@/features/flow"
 import type { SubjectGraph } from "@/features/research"
@@ -10,27 +11,35 @@ const DIVERGENT = { divergent: true }
 
 const flowGraph = async (api: LiveSources, flowId: FlowId): Promise<SubjectGraph> => {
   const [detail, nodes, schemas] = await Promise.all([api.flow.detail(flowId), api.flow.nodes(flowId), api.flow.schemas(flowId)])
-  return { key: flowId, arm: null, nodes, order: detail.order, schemas: stepSchemas(schemas), prompts: { kind: "flow", flow: flowId } }
+  return { key: flowId, flow: flowId, local: false, nodes, order: detail.order, schemas: stepSchemas(schemas), prompts: { kind: "flow", flow: flowId } }
 }
 
-const armGraph = async (api: LiveSources, experiment: ExperimentDetail, arm: ExperimentArm): Promise<SubjectGraph> => {
-  const flow = await api.research.armFlow(experiment.id, arm.id)
+const localGraph = async (api: LiveSources, experiment: ExperimentId, flowId: FlowId): Promise<SubjectGraph> => {
+  const flow = await api.research.experimentFlow(experiment, flowId)
   return {
-    key: arm.id,
-    arm: arm.id,
+    key: flowId,
+    flow: flowId,
+    local: true,
     nodes: flow.nodes,
-    order: arm.steps.map((step) => step.node),
+    order: flow.order,
     schemas: stepSchemas(flow.schemas),
-    prompts: { kind: "arm", prompts: flow.prompts },
+    prompts: { kind: "local", prompts: flow.prompts },
   }
 }
 
-const subjectGraphs = (api: LiveSources, experiment: ExperimentDetail): Promise<readonly SubjectGraph[]> => {
-  const { subject } = experiment
-  if (subject.kind !== "arm") return Promise.all([flowGraph(api, subject.flow), ...experiment.arms.map((arm) => armGraph(api, experiment, arm))])
-  const ordered = [...experiment.arms.filter((arm) => arm.id === subject.arm), ...experiment.arms.filter((arm) => arm.id !== subject.arm)]
-  return Promise.all(ordered.map((arm) => armGraph(api, experiment, arm)))
-}
+const isLocal = (experiment: ExperimentDetail, flow: FlowId): boolean => experiment.flows.some((item) => item.id === flow)
+
+const calledFlows = (experiment: ExperimentDetail): readonly FlowId[] =>
+  experiment.variants.flatMap((variant) => variant.changes.flatMap((change) => (change.what === "flow" ? [ids.flowId(change.value)] : [])))
+
+const shownFlows = (experiment: ExperimentDetail): readonly FlowId[] =>
+  [...new Set([experiment.subject.flow, ...experiment.flows.map((flow) => flow.id), ...calledFlows(experiment)])]
+
+const graphOf = (api: LiveSources, experiment: ExperimentDetail) => (flow: FlowId): Promise<SubjectGraph> =>
+  isLocal(experiment, flow) ? localGraph(api, experiment.id, flow) : flowGraph(api, flow)
+
+const subjectGraphs = (api: LiveSources, experiment: ExperimentDetail): Promise<readonly SubjectGraph[]> =>
+  Promise.all(shownFlows(experiment).map(graphOf(api, experiment)))
 
 export const loadGraphs = (api: LiveSources, experiment: ExperimentDetail): Promise<readonly SubjectGraph[]> =>
   subjectGraphs(api, experiment).catch(() => NO_GRAPHS)

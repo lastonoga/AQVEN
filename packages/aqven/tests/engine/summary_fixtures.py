@@ -29,7 +29,7 @@ from aqven.runtime.executions import ItemError, ItemRecovery, RunError
 from aqven.runtime.human import HumanWait, OpenWaitFilter
 from aqven.runtime.runs import RunSummary
 from aqven.runtime.vocabulary import FinishedExecutionStatus, ItemRecoveryDecision, RunMode, TerminalRunStatus
-from aqven.spec import ArmId, ExperimentId, FlowId, NodeId, NodeKind, TypeId
+from aqven.spec import ExperimentId, FlowId, NodeId, NodeKind, TypeId
 
 type DbosStatus = Literal["PENDING", "SUCCESS", "ERROR", "CANCELLED", "ENQUEUED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"]
 
@@ -245,7 +245,7 @@ def series_tag() -> SeriesTag:
         case_name="bulb",
         repeat=1,
         experiment_id=ExperimentId("triage_solo"),
-        arm_id=ArmId("solo"),
+        flow_experiment_id=ExperimentId("triage_solo"),
     )
 
 

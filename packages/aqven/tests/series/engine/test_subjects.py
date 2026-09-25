@@ -10,15 +10,14 @@ from aqven.check import check_project
 from aqven.engine import RunRecord, SeriesTag
 from aqven.engine.loading import CodeLoader
 from aqven.ir import CompiledLlmNode, flow_hash
-from aqven.series.model import CaseSnapshot, JudgePlan, SubjectKind, SubjectRecord, VariantRole
+from aqven.series.model import CaseSnapshot, JudgePlan, SubjectKind, SubjectRecord, VariantChange, VariantRole
 from aqven.series.planner import PlannedSeries, PlanningState, SeriesPlanner, plan_request
-from aqven.series.plans import base_plan
 from aqven.series.scoring import judge_input
-from aqven.series.subjects import ArmSubject, FlowSubject, RangeSubject, SubjectBinding, subject_strategy
+from aqven.series.subjects import FlowSubject, RangeSubject, SubjectBinding, subject_strategy
 from aqven.series.views import LookTarget, SeriesStartRequest
 from aqven.server.errors import ApiFailure
 from aqven.server.workspace import take_snapshot
-from aqven.spec import AgentId, DatasetId, ExperimentId, FlowId, InferenceId, NodeId, SeriesSplit
+from aqven.spec import AgentId, DatasetId, ExperimentId, FactorKind, FlowId, InferenceId, NodeId, SeriesSplit
 
 TAG: Final = SeriesTag(
     series_id="01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2c",
@@ -73,6 +72,12 @@ def test_a_flow_subject_swaps_agents_with_their_output_mode_and_registers_nothin
     assert [(item.node_id, item.agent_id, item.overridden) for item in cheap.record.assignments] == [
         ("classify", "cheap", True)
     ]
+    assert [(item.node_id, item.overridden) for item in writer.record.assignments] == [("classify", False)]
+    assert (writer.record.changes, cheap.record.changes) == (
+        (),
+        (VariantChange(node_id=NodeId("classify"), what=FactorKind.AGENT, value="cheap"),),
+    )
+    assert writer.plan is series.subject.plan
     assert cheap.record.flow_hash == flow_hash(cheap.plan, FlowId("triage"))
     assert writer.record.flow_hash != cheap.record.flow_hash
     assert writer.record.ir_hash == ""
@@ -122,21 +127,23 @@ def test_a_range_subject_runs_from_the_case_node_outputs_and_reads_out_of_the_la
     assert series.variants[0].record.assignments == ()
 
 
-def test_an_arm_subject_and_an_arm_with_a_range_target_the_arm_flow(project_root: Path) -> None:
+def test_a_local_flow_subject_and_a_range_on_it_target_the_local_flow(project_root: Path) -> None:
     series = planned(project_root, SeriesStartRequest(experiment_id=ExperimentId("triage_solo")))
-    report = check_project(project_root)
-    assert report.project is not None
-    arm_plan = base_plan(report.project, report.project.experiments[ExperimentId("triage_solo")])
-    ranged = SubjectRecord(
-        kind=SubjectKind.RANGE, flow_id=None, arm_id=None, start_node=NodeId("answer"), end_node=NodeId("answer")
+    ranged = series.draft.subject.model_copy(
+        update={"kind": SubjectKind.RANGE, "start_node": NodeId("answer"), "end_node": NodeId("answer")}
     )
-    ranged_strategy = subject_strategy(binding(project_root, ranged.model_copy(update={"arm_id": "solo"})))
+    ranged_strategy = subject_strategy(binding(project_root, ranged))
     plain = case("always_1", {"text": "always right"})
 
-    assert isinstance(subject_strategy(binding(project_root, series.draft.subject)), ArmSubject)
+    assert series.draft.subject == SubjectRecord(
+        kind=SubjectKind.FLOW, flow_id=FlowId("solo"), local_flow=True, start_node=None, end_node=None
+    )
+    assert series.draft.flow_id is None
+    assert isinstance(subject_strategy(binding(project_root, series.draft.subject)), FlowSubject)
     assert [variant.record.flow_id for variant in series.variants] == ["solo", "solo"]
     assert [variant.record.role for variant in series.variants] == [VariantRole.CANDIDATE, VariantRole.CANDIDATE]
-    assert ranged_strategy.problems(arm_plan, FlowId("solo"), plain) == ()
+    assert set(series.subject.plan.flows) == {"solo"}
+    assert ranged_strategy.problems(series.subject.plan, FlowId("solo"), plain) == ()
     prepared = ranged_strategy.prepare(series.variants[0].record, plain, DatasetId("triage_cases"), TAG, 1)
     assert (prepared.spec.flow_id, prepared.spec.start_node, prepared.spec.end_node) == ("solo", "answer", "answer")
 
@@ -162,7 +169,7 @@ def test_problems_refuse_a_flow_case_whose_input_fails_the_input_type(project_ro
     series = planned(project_root, SeriesStartRequest(experiment_id=ExperimentId("triage_agents")))
     strategy = FlowSubject().bind(binding(project_root, series.draft.subject))
 
-    problems = strategy.problems(series.base, FlowId("triage"), case("broken", {"subject": "no text"}))
+    problems = strategy.problems(series.subject.plan, FlowId("triage"), case("broken", {"subject": "no text"}))
 
     assert problems
     assert any("text" in problem for problem in problems)
@@ -170,7 +177,7 @@ def test_problems_refuse_a_flow_case_whose_input_fails_the_input_type(project_ro
 
 def test_the_judge_scope_orders_input_node_outputs_out_and_expected_output(project_root: Path) -> None:
     series = planned(project_root, SeriesStartRequest(experiment_id=ExperimentId("triage_agents")))
-    flow = series.base.flow(FlowId("triage"))
+    flow = series.subject.plan.flow(FlowId("triage"))
     strategy = subject_strategy(binding(project_root, series.draft.subject))
     record = RunRecord(status="completed", output={"label": "final"})
     top_outputs: dict[NodeId, JsonValue] = {
@@ -197,7 +204,7 @@ def test_the_judge_scope_orders_input_node_outputs_out_and_expected_output(proje
 
 def test_the_range_scope_adds_boundary_outputs_before_the_range(project_root: Path) -> None:
     series = planned(project_root, SeriesStartRequest(experiment_id=ExperimentId("triage_range")))
-    flow = series.base.flow(FlowId("triage"))
+    flow = series.subject.plan.flow(FlowId("triage"))
     strategy = subject_strategy(binding(project_root, series.draft.subject))
     record = RunRecord(status="completed", output={"tidy": {"label": "ok"}})
 

@@ -32,7 +32,7 @@ const rowsOf = (id: string): readonly ApiSeriesCaseRow[] => {
   return caseRowsOf(found)
 }
 
-const subject = (fields: Partial<ApiSubject>): ApiSubject => ({ kind: "flow", flow_id: null, arm_id: null, from_node: null, to_node: null, ...fields })
+const subject = (fields: Partial<ApiSubject>): ApiSubject => ({ kind: "flow", flow_id: "judge_panel", local_flow: false, from_node: null, to_node: null, ...fields })
 
 describe("research adapter", () => {
   it("reads decimal strings as numbers and keeps unknown values at zero", () => {
@@ -48,18 +48,20 @@ describe("research adapter", () => {
   })
 
   it("builds the subject union from its kind", () => {
-    expect(subjectOf(subject({ kind: "flow", flow_id: "judge_panel" }))).toEqual({ kind: "flow", flow: "judge_panel" })
+    expect(subjectOf(subject({ kind: "flow", flow_id: "judge_panel" }))).toEqual({ kind: "flow", flow: "judge_panel", local: false })
     expect(subjectOf(subject({ kind: "range", flow_id: "support_case", from_node: "polish", to_node: "polish" }))).toEqual({
       kind: "range",
       flow: "support_case",
+      local: false,
       range: { from: "polish", to: "polish" },
     })
-    expect(subjectOf(subject({ kind: "arm", arm_id: "escalation", from_node: "escalate", to_node: "escalate" }))).toEqual({
-      kind: "arm",
-      arm: "escalation",
+    expect(subjectOf(subject({ kind: "range", flow_id: "escalation", local_flow: true, from_node: "escalate", to_node: "escalate" }))).toEqual({
+      kind: "range",
+      flow: "escalation",
+      local: true,
       range: { from: "escalate", to: "escalate" },
     })
-    expect(subjectOf(subject({ kind: "arm", arm_id: "critique_only" }))).toEqual({ kind: "arm", arm: "critique_only", range: null })
+    expect(subjectOf(subject({ flow_id: "critique_only", local_flow: true }))).toEqual({ kind: "flow", flow: "critique_only", local: true })
   })
 
   it("maps an experiment summary and its full question, checks, variants and split counts", () => {
@@ -86,14 +88,33 @@ describe("research adapter", () => {
     expect(detail.files).toEqual({ spec: "experiments/reply_noninferior_mistral/experiment.yaml", notes: "experiments/reply_noninferior_mistral/experiment.md" })
   })
 
-  it("maps a threshold question and the steps of an arm", () => {
+  it("maps a threshold question and the steps of a flow of the experiment", () => {
     const detail = experimentDetailOf(experiment("critique_planted_defects"))
     expect(detail.question).toEqual({ kind: "threshold", metric: "label", bound: "above", value: 0.85, margin: 0.05, variant: "deepseek" })
-    expect(detail.arms[0]?.steps.map((step) => [step.node, step.kind, step.agent?.id ?? null])).toEqual([
+    expect(detail.flows.map((flow) => flow.id)).toEqual(["critique_only"])
+    expect(detail.flows[0]?.steps.map((step) => [step.node, step.kind, step.agent?.id ?? null])).toEqual([
       ["critique", "llm", "deepseek"],
       ["verdict", "code", null],
     ])
+    expect(detail.varies).toBeNull()
     expect(detail.flow).toBeNull()
+  })
+
+  it("maps the factor, the changes of each variant, the alternatives and the prompts", () => {
+    const prompts = experimentDetailOf(experiment("panel_judge_prompt"))
+    expect(prompts.varies).toEqual({ what: "prompt", nodes: ["deepseek", "qwen", "llama"] })
+    expect(prompts.variants.map((variant) => [variant.id, variant.changes.map((change) => `${change.node}:${change.what}:${change.value}`)])).toEqual([
+      ["as_written", []],
+      ["claims_first", ["deepseek:prompt:claims_first", "qwen:prompt:claims_first", "llama:prompt:claims_first"]],
+      ["anchored_scale", ["deepseek:prompt:anchored_scale", "qwen:prompt:anchored_scale", "llama:prompt:anchored_scale"]],
+    ])
+    expect(prompts.prompts.map((prompt) => prompt.name)).toEqual(["anchored_scale", "claims_first"])
+    const merge = experimentDetailOf(experiment("panel_merge_rule"))
+    expect(merge.varies).toEqual({ what: "use", nodes: ["aggregate"] })
+    expect(merge.alternatives.map((alternative) => [alternative.id, alternative.kind])).toEqual([
+      ["always_tie_break", "code"],
+      ["majority_only", "code"],
+    ])
   })
 
   it("maps the launch plan with its recommendation and cap, and no price", () => {

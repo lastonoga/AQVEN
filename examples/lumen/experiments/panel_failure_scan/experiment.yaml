@@ -3,13 +3,17 @@ kind: "Experiment"
 description: "Where the judge panel goes wrong: every case with the winner's grounding, length and privacy, the shape of the verdict, its weakest criterion, cost and time, for the gpt tie-break and a Mistral one"
 subject:
   flow: "judge_panel"
+varies:
+  what: "agent"
+  nodes:
+  - "tie_break"
 cases:
   dataset: "judge_panel_cases"
 variants:
 - id: "gpt_tie_break"
 - id: "mistral_tie_break"
-  agents:
-    decide__tie_break: "mistral"
+  nodes:
+    tie_break: "mistral"
 checks:
 - id: "quotes_in_chunks"
   kind: "binary"

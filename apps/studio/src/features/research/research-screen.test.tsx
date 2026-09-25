@@ -51,25 +51,26 @@ const clickWhenReady = async (button: HTMLElement): Promise<void> => {
 }
 
 describe("ResearchScreen", () => {
-  it("shows every experiment of the project in one section per flow, ordered by flow name with arms last", async () => {
+  it("shows every experiment of the project in one section per flow, ordered by flow name with experiment flows last", async () => {
     await renderRoute("/research")
-    expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Arms"])
-    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_failure_scan", "panel_single_judge"])
+    expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Flows of experiments"])
+    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_failure_scan", "panel_judge_prompt", "panel_merge_rule"])
     expect(await experimentsIn("support_case")).toEqual(["reply_look", "reply_noninferior_mistral", "reply_overpromise_risk", "reply_stage_budget"])
     expect(within(await sectionOf("support_case")).getByText("4 experiments")).toBeTruthy()
-    expect(screen.getByText("13 experiments")).toBeTruthy()
+    expect(screen.getByText("15 experiments")).toBeTruthy()
   })
 
-  it("files experiments whose subject is an arm under arms, even when their cases belong to a flow", async () => {
+  it("files experiments whose subject is a flow of their own under experiment flows, even when their cases belong to a flow", async () => {
     await renderRoute("/research")
-    expect(await experimentsIn("Arms")).toEqual([
+    expect(await experimentsIn("Flows of experiments")).toEqual([
       "critique_planted_defects",
       "critique_recall_by_agent",
       "intent_ballot_pair",
       "intent_escalation_agents",
       "intent_split_long_messages",
+      "panel_single_judge",
     ])
-    expect(within(await sectionOf("Arms")).getByText("5 experiments")).toBeTruthy()
+    expect(within(await sectionOf("Flows of experiments")).getByText("6 experiments")).toBeTruthy()
   })
 
   it("shows the question, subject, variants, last series and spend of each experiment", async () => {
@@ -80,12 +81,12 @@ describe("ResearchScreen", () => {
     expect(row.textContent).toContain("gpt → mistral")
     expect(row.textContent).toContain("confirmedholdout")
     expect(row.textContent).toMatch(/2 series · \$0\.\d\d$/)
-    expect((await rowOf("intent_split_long_messages")).textContent).toContain("arm one_step")
+    expect((await rowOf("intent_split_long_messages")).textContent).toContain("experiment flow message_intent")
     expect((await rowOf("critique_planted_defects")).textContent).toContain("signaldev")
     expect((await rowOf("reply_look")).textContent).toContain("no series")
     expect((await rowOf("reply_overpromise_risk")).textContent).toContain("AWAITING APPROVAL")
     expect((await rowOf("intent_escalation_agents")).textContent).toContain("deepseek → qwen, gpt")
-    expect((await rowOf("intent_escalation_agents")).textContent).toContain("arm escalation · escalate")
+    expect((await rowOf("intent_escalation_agents")).textContent).toContain("experiment flow escalation · escalate")
   })
 
   it("filters every section by question and failure mode and hides the flows left empty", async () => {
@@ -96,10 +97,10 @@ describe("ResearchScreen", () => {
       expect(router.state.location.search).toEqual({ question: "compare" })
     })
     await waitFor(async () => {
-      expect(await sectionTitles()).toEqual(["judge_panel", "Arms"])
+      expect(await sectionTitles()).toEqual(["judge_panel", "Flows of experiments"])
     })
-    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_single_judge"])
-    expect(await experimentsIn("Arms")).toEqual(["intent_ballot_pair", "intent_split_long_messages"])
+    expect(await experimentsIn("judge_panel")).toEqual(["judge_panel_agents", "panel_aa_noise", "panel_judge_prompt"])
+    expect(await experimentsIn("Flows of experiments")).toEqual(["intent_ballot_pair", "intent_split_long_messages", "panel_single_judge"])
     fireEvent.change(screen.getByRole("combobox", { name: "Failure mode" }), { target: { value: "reply_quality" } })
     expect(await screen.findByText("No experiments match these filters")).toBeTruthy()
     expect(screen.queryByRole("heading", { level: 2 })).toBeNull()
@@ -108,17 +109,17 @@ describe("ResearchScreen", () => {
       expect(router.state.location.search).toEqual({})
     })
     await waitFor(async () => {
-      expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Arms"])
+      expect(await sectionTitles()).toEqual(["judge_panel", "support_case", "Flows of experiments"])
     })
   })
 
   it("offers the failure modes of the project in the filter", async () => {
     await renderRoute("/research?question=%22threshold%22")
-    expect(await sectionTitles()).toEqual(["support_case", "Arms"])
+    expect(await sectionTitles()).toEqual(["support_case", "Flows of experiments"])
     const options = within(screen.getByRole("combobox", { name: "Failure mode" })).getAllByRole("option")
     expect(options.map((option) => option.textContent)).toEqual(["all", "intent_misread", "judge_misses_defect", "overpromise", "panel_wrong_winner", "reply_quality"])
     expect(await experimentsIn("support_case")).toEqual(["reply_overpromise_risk", "reply_stage_budget"])
-    expect(await experimentsIn("Arms")).toEqual(["critique_planted_defects", "critique_recall_by_agent"])
+    expect(await experimentsIn("Flows of experiments")).toEqual(["critique_planted_defects", "critique_recall_by_agent"])
   })
 
   it("opens an experiment from its row", async () => {
@@ -140,11 +141,11 @@ describe("ResearchScreen", () => {
     expect(String(sent[0])).not.toContain("support_case.")
   })
 
-  it("hands project-wide hypotheses from the page header and offers none on the arms section", async () => {
+  it("hands project-wide hypotheses from the page header and offers none on the section of experiment flows", async () => {
     const sent = captureHandoffs()
     await renderRoute("/research?failureMode=%22intent_misread%22")
-    expect(await sectionTitles()).toEqual(["Arms"])
-    expect(within(await sectionOf("Arms")).queryByRole("button")).toBeNull()
+    expect(await sectionTitles()).toEqual(["Flows of experiments"])
+    expect(within(await sectionOf("Flows of experiments")).queryByRole("button")).toBeNull()
     const [pageButton] = screen.getAllByRole("button", { name: "Suggest hypotheses" })
     if (pageButton === undefined) throw new Error("no page-level hypotheses button")
     await clickWhenReady(pageButton)

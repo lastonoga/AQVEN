@@ -7,6 +7,10 @@ panel. The hypothesis is that DeepSeek, the strongest family on the panel, settl
 a tie-breaker from a family that has already voted sides with its own vote, so this is worth measuring before the
 flow changes.
 
+**Variants.** The factor is the agent on the `tie_break` node (`varies: what: agent`). A nested node is named by its
+own id, so the factor names `tie_break`, not `decide__tie_break`. `gpt_tie_break` is the flow as written,
+`deepseek_tie_break` puts the DeepSeek agent on `tie_break`.
+
 **Cases.** `judge_panel_cases` holds eight panel inputs built from real Lumen cases. Each has three reply candidates
 and a winner that a support lead picked by hand (`expected_output.winner`). The tags are:
 

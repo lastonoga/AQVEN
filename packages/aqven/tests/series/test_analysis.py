@@ -62,7 +62,7 @@ def variant(variant_id: VariantId, role: VariantRole = VariantRole.OTHER) -> Var
     return VariantPlanRecord(
         variant_id=variant_id,
         role=role,
-        arm_id=None,
+        changes=(),
         flow_id=FlowId("reply"),
         ir_hash="sha256-plan",
         flow_hash="sha256-flow",

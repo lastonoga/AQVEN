@@ -79,8 +79,8 @@ lumen/
   types/enums/, ids/, records/, unions/, values/
   fragments/                         brand_voice, citation_rules, judge_protocol, safety_escalation, untrusted_input
   code/support_case.py               Python used in several places: a check on the revise inference and in experiments
-  datasets/                          cases of a flow or of an experiment arm: input, expected output, tags
-  experiments/<experiment>/          experiment.yaml, experiment.md, arms/<arm>/ — see Experiments below
+  datasets/                          cases of a flow or of an experiment's local flow: input, expected output, tags
+  experiments/<experiment>/          experiment.yaml, experiment.md, flows/, nodes/, prompts/ — see Experiments below
   flows/
     support_case/
       flow.yaml
@@ -101,7 +101,7 @@ lumen/
 | What | Where |
 |---|---|
 | The inference of one node | beside the node under its name: `nodes/triage/triage.inference.yaml`, `nodes/record/extract.inference.yaml`, `nodes/route/resolve.inference.yaml`, `nodes/illustrate/illustrate.inference.yaml` |
-| A shared inference | at the first node that owns it, the rest reference it with `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini`; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — the judge checks of the experiments; the experiment arms reference `triage`, `ballot`, `critique` and `tie_break` the same way |
+| A shared inference | at the first node that owns it, the rest reference it with `inference: <id>`: `revise` — `drafts__gpt`, `drafts__mistral`, `drafts__gemini`; `ballot` — `intent__escalate`; `tie_break` — `judges__deepseek`, `judges__qwen`, `judges__llama`; `critique` — the judge checks of the experiments; the local flows of experiments reference `triage`, `ballot`, `critique` and `tie_break` the same way |
 | A subagent inference | in the agent's folder: `agents/resolver/research_policy.inference.yaml` |
 | Child nodes | flat in the folder of the top-level node: `nodes/route/resolve.node.yaml`, `flows/judge_panel/nodes/judges/deepseek.node.yaml`; the expanded id is `route__resolve`, `judges__deepseek` |
 | A prompt | `<inference>.prompt.md` beside `<inference>.inference.yaml`; at level 3 it is `prompt: "illustrate_prompt"` from `nodes/illustrate/illustrate.py` |
@@ -112,8 +112,9 @@ lumen/
 | Types | YAML only, under `types/` at the root; the code imports the models of types and of inference inputs and outputs (`ReviseIn`, `ReviseOut`), of tools (`SearchKbOut`) and of `code` steps (`SupportCasePrepareOut`) from `lumen.types` (`from lumen.types import CaseRequest`); a step whose output equals a registry type returns that type (`pick` — `PanelOutcome`, `finalize` — `CaseOutcome`) |
 | Code references | `run: "tally"` — `tally.py` beside `tally.node.yaml`, loaded by file path; `@root.tools.functions:…` and `@root.code.support_case:…` — an import path from the package root; the full path `lumen.code.support_case:promises_match_resolution` works too |
 
-`aqven tree` lists entities by kind with their file paths and the output mode of every agent, experiments and their
-arms included; an arm's nodes read `<experiment>.<arm>.<node>`. Prompts, variants, fragments and Python are not in it.
+`aqven tree` lists entities by kind with their file paths and the output mode of every agent, experiments with their
+local flows and alternative nodes included; a local flow's nodes read `<experiment>.<flow>.<node>`. Prompts, variants,
+fragments and Python are not in it.
 
 ```
 $ uv run aqven tree examples/lumen
@@ -193,9 +194,9 @@ type (52)
   VotePerspective   types/enums/vote_perspective.yaml
 inference (12)
   ballot            flows/support_case/nodes/vote/ballot.inference.yaml
-  classify_message  experiments/intent_split_long_messages/arms/one_step/nodes/classify_message/classify_message.inference.yaml
-  classify_summary  experiments/intent_split_long_messages/arms/two_step/nodes/classify_summary/classify_summary.inference.yaml
-  condense_message  experiments/intent_split_long_messages/arms/two_step/nodes/condense_message/condense_message.inference.yaml
+  classify_message  experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.inference.yaml
+  classify_summary  experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.inference.yaml
+  condense_message  experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.inference.yaml
   critique          flows/support_case/nodes/polish/critique.inference.yaml
   extract           flows/support_case/nodes/record/extract.inference.yaml
   illustrate        flows/support_case/nodes/illustrate/illustrate.inference.yaml
@@ -207,23 +208,25 @@ inference (12)
 flow (2)
   judge_panel   flows/judge_panel/flow.yaml
   support_case  flows/support_case/flow.yaml  run context: date, tenant_id
-node (56)
-  critique_planted_defects.critique_only.critique       experiments/critique_planted_defects/arms/critique_only/nodes/critique/critique.node.yaml
-  critique_planted_defects.critique_only.verdict        experiments/critique_planted_defects/arms/critique_only/nodes/verdict/verdict.node.yaml
-  intent_ballot_pair.pair.evidence                      experiments/intent_ballot_pair/arms/pair/nodes/evidence/evidence.node.yaml
-  intent_ballot_pair.pair.prepare                       experiments/intent_ballot_pair/arms/pair/nodes/prepare/prepare.node.yaml
-  intent_ballot_pair.pair.settle                        experiments/intent_ballot_pair/arms/pair/nodes/settle/settle.node.yaml
-  intent_ballot_pair.pair.triage                        experiments/intent_ballot_pair/arms/pair/nodes/triage/triage.node.yaml
-  intent_ballot_pair.pair.words                         experiments/intent_ballot_pair/arms/pair/nodes/words/words.node.yaml
-  intent_ballot_pair.single.ballot                      experiments/intent_ballot_pair/arms/single/nodes/ballot/ballot.node.yaml
-  intent_ballot_pair.single.prepare                     experiments/intent_ballot_pair/arms/single/nodes/prepare/prepare.node.yaml
-  intent_ballot_pair.single.triage                      experiments/intent_ballot_pair/arms/single/nodes/triage/triage.node.yaml
-  intent_escalation_agents.escalation.escalate          experiments/intent_escalation_agents/arms/escalation/nodes/escalate/escalate.node.yaml
-  intent_escalation_agents.escalation.prepare           experiments/intent_escalation_agents/arms/escalation/nodes/prepare/prepare.node.yaml
-  intent_escalation_agents.escalation.triage            experiments/intent_escalation_agents/arms/escalation/nodes/triage/triage.node.yaml
-  intent_split_long_messages.one_step.classify_message  experiments/intent_split_long_messages/arms/one_step/nodes/classify_message/classify_message.node.yaml
-  intent_split_long_messages.two_step.classify_summary  experiments/intent_split_long_messages/arms/two_step/nodes/classify_summary/classify_summary.node.yaml
-  intent_split_long_messages.two_step.condense_message  experiments/intent_split_long_messages/arms/two_step/nodes/condense_message/condense_message.node.yaml
+node (59)
+  critique_planted_defects.critique_only.critique       experiments/critique_planted_defects/flows/critique_only/nodes/critique/critique.node.yaml
+  critique_planted_defects.critique_only.verdict        experiments/critique_planted_defects/flows/critique_only/nodes/verdict/verdict.node.yaml
+  intent_ballot_pair.intent_decision.ballots            experiments/intent_ballot_pair/flows/intent_decision/nodes/ballots/ballots.node.yaml
+  intent_ballot_pair.pair.evidence                      experiments/intent_ballot_pair/flows/pair/nodes/evidence/evidence.node.yaml
+  intent_ballot_pair.pair.prepare                       experiments/intent_ballot_pair/flows/pair/nodes/prepare/prepare.node.yaml
+  intent_ballot_pair.pair.settle                        experiments/intent_ballot_pair/flows/pair/nodes/settle/settle.node.yaml
+  intent_ballot_pair.pair.triage                        experiments/intent_ballot_pair/flows/pair/nodes/triage/triage.node.yaml
+  intent_ballot_pair.pair.words                         experiments/intent_ballot_pair/flows/pair/nodes/words/words.node.yaml
+  intent_ballot_pair.single.ballot                      experiments/intent_ballot_pair/flows/single/nodes/ballot/ballot.node.yaml
+  intent_ballot_pair.single.prepare                     experiments/intent_ballot_pair/flows/single/nodes/prepare/prepare.node.yaml
+  intent_ballot_pair.single.triage                      experiments/intent_ballot_pair/flows/single/nodes/triage/triage.node.yaml
+  intent_escalation_agents.escalation.escalate          experiments/intent_escalation_agents/flows/escalation/nodes/escalate/escalate.node.yaml
+  intent_escalation_agents.escalation.prepare           experiments/intent_escalation_agents/flows/escalation/nodes/prepare/prepare.node.yaml
+  intent_escalation_agents.escalation.triage            experiments/intent_escalation_agents/flows/escalation/nodes/triage/triage.node.yaml
+  intent_split_long_messages.message_intent.classify    experiments/intent_split_long_messages/flows/message_intent/nodes/classify/classify.node.yaml
+  intent_split_long_messages.one_step.classify_message  experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.node.yaml
+  intent_split_long_messages.two_step.classify_summary  experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.node.yaml
+  intent_split_long_messages.two_step.condense_message  experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.node.yaml
   judge_panel.aggregate                                 flows/judge_panel/nodes/aggregate/aggregate.node.yaml
   judge_panel.decide                                    flows/judge_panel/nodes/decide/decide.node.yaml
   judge_panel.decide__tie_break                         flows/judge_panel/nodes/decide/tie_break.node.yaml
@@ -232,8 +235,9 @@ node (56)
   judge_panel.judges__llama                             flows/judge_panel/nodes/judges/llama.node.yaml
   judge_panel.judges__qwen                              flows/judge_panel/nodes/judges/qwen.node.yaml
   judge_panel.pick                                      flows/judge_panel/nodes/pick/pick.node.yaml
-  panel_single_judge.single_judge.judge                 experiments/panel_single_judge/arms/single_judge/nodes/judge/judge.node.yaml
-  panel_single_judge.single_judge.pick                  experiments/panel_single_judge/arms/single_judge/nodes/pick/pick.node.yaml
+  panel_single_judge.single_judge.judge                 experiments/panel_single_judge/flows/single_judge/nodes/judge/judge.node.yaml
+  panel_single_judge.single_judge.pick                  experiments/panel_single_judge/flows/single_judge/nodes/pick/pick.node.yaml
+  panel_single_judge.winner_pick.panel                  experiments/panel_single_judge/flows/winner_pick/nodes/panel/panel.node.yaml
   support_case.approvals                                flows/support_case/nodes/approvals/approvals.node.yaml
   support_case.approvals__brand                         flows/support_case/nodes/approvals/brand.node.yaml
   support_case.approvals__lead                          flows/support_case/nodes/approvals/lead.node.yaml
@@ -272,7 +276,7 @@ dataset (7)
   support_case_csv_review       datasets/support_case_csv_review.yaml
   support_case_csv_ui_demo      datasets/support_case_csv_ui_demo.yaml
   support_case_multimodal_demo  datasets/support_case_multimodal_demo.yaml
-experiment (13)
+experiment (15)
   critique_planted_defects    experiments/critique_planted_defects/experiment.yaml
   critique_recall_by_agent    experiments/critique_recall_by_agent/experiment.yaml
   intent_ballot_pair          experiments/intent_ballot_pair/experiment.yaml
@@ -281,50 +285,91 @@ experiment (13)
   judge_panel_agents          experiments/judge_panel_agents/experiment.yaml
   panel_aa_noise              experiments/panel_aa_noise/experiment.yaml
   panel_failure_scan          experiments/panel_failure_scan/experiment.yaml
+  panel_judge_prompt          experiments/panel_judge_prompt/experiment.yaml
+  panel_merge_rule            experiments/panel_merge_rule/experiment.yaml
   panel_single_judge          experiments/panel_single_judge/experiment.yaml
   reply_look                  experiments/reply_look/experiment.yaml
   reply_noninferior_mistral   experiments/reply_noninferior_mistral/experiment.yaml
   reply_overpromise_risk      experiments/reply_overpromise_risk/experiment.yaml
   reply_stage_budget          experiments/reply_stage_budget/experiment.yaml
-arm (8)
-  critique_planted_defects.critique_only  experiments/critique_planted_defects/arms/critique_only/flow.yaml
-  critique_recall_by_agent.critic         experiments/critique_recall_by_agent/arms/critic/flow.py
-  intent_ballot_pair.pair                 experiments/intent_ballot_pair/arms/pair/flow.yaml
-  intent_ballot_pair.single               experiments/intent_ballot_pair/arms/single/flow.yaml
-  intent_escalation_agents.escalation     experiments/intent_escalation_agents/arms/escalation/flow.yaml
-  intent_split_long_messages.one_step     experiments/intent_split_long_messages/arms/one_step/flow.yaml
-  intent_split_long_messages.two_step     experiments/intent_split_long_messages/arms/two_step/flow.yaml
-  panel_single_judge.single_judge         experiments/panel_single_judge/arms/single_judge/flow.yaml
+local_flow (11)
+  critique_planted_defects.critique_only     experiments/critique_planted_defects/flows/critique_only/flow.yaml
+  critique_recall_by_agent.critic            experiments/critique_recall_by_agent/flows/critic/flow.py
+  intent_ballot_pair.intent_decision         experiments/intent_ballot_pair/flows/intent_decision/flow.yaml
+  intent_ballot_pair.pair                    experiments/intent_ballot_pair/flows/pair/flow.yaml
+  intent_ballot_pair.single                  experiments/intent_ballot_pair/flows/single/flow.yaml
+  intent_escalation_agents.escalation        experiments/intent_escalation_agents/flows/escalation/flow.yaml
+  intent_split_long_messages.message_intent  experiments/intent_split_long_messages/flows/message_intent/flow.yaml
+  intent_split_long_messages.one_step        experiments/intent_split_long_messages/flows/one_step/flow.yaml
+  intent_split_long_messages.two_step        experiments/intent_split_long_messages/flows/two_step/flow.yaml
+  panel_single_judge.single_judge            experiments/panel_single_judge/flows/single_judge/flow.yaml
+  panel_single_judge.winner_pick             experiments/panel_single_judge/flows/winner_pick/flow.yaml
+alternative (2)
+  panel_merge_rule.always_tie_break  experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.node.yaml
+  panel_merge_rule.majority_only     experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml
 ```
 
 ## Experiments
 
-An experiment asks one quality question of a subject: a flow, a range of its top-level nodes, or an arm — a small
-flow in `experiments/<experiment>/arms/<arm>/` (`flow.yaml` or `flow.py`) that only this experiment runs. Its
-`description` states the hypothesis with its number, `failure_mode` names the failure it tests, its variants swap the
-agents of nodes or swap arms, its cases come from a dataset, selected by tags, and its checks are the same evaluator
-references an inference uses. `plan` is the series size the author recommends, not a limit. `lumen/experiments/`
-covers every question kind and every kind of variant:
+An experiment asks one quality question of a subject: a flow, or a range of its top-level nodes. The subject is a
+project flow or a local flow of the experiment, a flow in `experiments/<experiment>/flows/<flow>/` (`flow.yaml` or
+`flow.py`) that only this experiment runs. Its `description` states the hypothesis with its number, `failure_mode`
+names the failure it tests, its cases come from a dataset, selected by tags, and its checks are the same evaluator
+references an inference uses. `plan` is the series size the author recommends, not a limit.
 
-| Experiment | Failure mode | Subject and variants | Question |
+**One factor per experiment.** `varies` names the one thing the variants change, `what`, on which nodes of the subject,
+`nodes`; each variant only sets values of that factor, and a variant without values is the subject as written. The
+things compared are variants, the rows of a series; what is measured are checks, its columns. A comparison that
+changes two things at once cannot say which one made the difference.
+
+```yaml
+subject:
+  flow: "judge_panel"
+varies:
+  what: "use"
+  nodes:
+  - "aggregate"
+variants:
+- id: "majority_and_spread"
+- id: "majority_only"
+  nodes:
+    aggregate: "majority_only"
+```
+
+| `what` | The node | A variant's value | Where it lives |
 |---|---|---|---|
-| `reply_look` | | `support_case`, only `polish`, the regression cases | `look`: every case with its checks, no verdict |
-| `reply_overpromise_risk` | `overpromise` | `support_case`, only `polish` | `threshold`: `promises` above 0.97 |
-| `reply_stage_budget` | | `support_case`, `drafts` to `panel`, three drafting line-ups | `threshold`: `cost_usd` below one cent for each |
-| `reply_noninferior_mistral` | `reply_quality` | `support_case`, only `polish`; gpt or mistral on `polish__revise` | `noninferior`: `critique` within 0.05, `cost_of_pass` guardrail |
-| `judge_panel_agents` | `panel_wrong_winner` | `judge_panel`; gpt or deepseek on `decide__tie_break` | `compare`: `winner`, cost and latency guardrails |
-| `panel_aa_noise` | | `judge_panel`, two identical variants | `compare` with margin 0: the noise floor of panel comparisons |
-| `panel_failure_scan` | | `judge_panel`; gpt or mistral on the tie-break | `look`: nine built-in evaluators and its own `weakest_criterion` |
-| `panel_single_judge` | `panel_wrong_winner` | `judge_panel` or the arm `single_judge`, on deepseek or qwen | `compare`: `latency_p50_ms`, with `winner` and failure guardrails |
-| `intent_split_long_messages` | `intent_misread` | arms `one_step` and `two_step` | `compare`: `intent`, `cost_of_pass` guardrail |
-| `intent_ballot_pair` | `intent_misread` | arms `single` and `pair` | `compare`: `intent`, `schema_valid_first_try` guardrail |
-| `intent_escalation_agents` | `intent_misread` | arm `escalation`, only `escalate`, three agents | `noninferior`: `intent` within 0.1 |
-| `critique_planted_defects` | `judge_misses_defect` | arm `critique_only` on planted defects | `threshold`: the verdict matches the label above 0.85; the `validated_by` of every `critique` judge check |
-| `critique_recall_by_agent` | `judge_misses_defect` | arm `critic` written in Python (`flow.py`), three critic agents | `threshold`: `blocked` above 0.8 |
+| `agent` | an `llm` node | an agent of the project | `agents/<agent>.yaml` |
+| `prompt` | an `llm` node | a prompt text; inputs, output schema and checks of the inference stay | `experiments/<experiment>/prompts/<name>.md` |
+| `use` | any node | an alternative node that runs under the slot's id | `experiments/<experiment>/nodes/<alternative>/` |
+| `flow` | a `call` node | a flow with the same input and output types | `experiments/<experiment>/flows/<flow>/`, else a project flow |
 
-`aqven check` validates every experiment: the subject and its range, the arms, the agents of every variant, the
-dataset and its tag filter, the references of the checks and the fields they read, the metric names, `validated_by`,
-an `expected_output` on every case an `expected` check reads, and the finding files.
+A node of `varies.nodes` is named by its own id: `tie_break`, not `decide__tie_break`. To compare whole structures,
+the subject is a local flow with one `call` node, the slot, and each structure is a flow a variant plugs into it.
+`lumen/experiments/` covers every question kind and every kind of factor:
+
+| Experiment | Failure mode | Subject | Factor and variants | Question |
+|---|---|---|---|---|
+| `reply_look` | | `support_case`, only `polish`, the regression cases | none, one variant | `look`: every case with its checks, no verdict |
+| `reply_overpromise_risk` | `overpromise` | `support_case`, only `polish` | none, one variant | `threshold`: `promises` above 0.97 |
+| `reply_stage_budget` | | `support_case`, `drafts` to `panel` | `agent` on `gpt`, `gemini`, `mistral`: three drafting line-ups | `threshold`: `cost_usd` below one cent for each |
+| `reply_noninferior_mistral` | `reply_quality` | `support_case`, only `polish` | `agent` on `revise`: gpt or mistral | `noninferior`: `critique` within 0.05, `cost_of_pass` guardrail |
+| `judge_panel_agents` | `panel_wrong_winner` | `judge_panel` | `agent` on `tie_break`: gpt or deepseek | `compare`: `winner`, cost and latency guardrails |
+| `panel_aa_noise` | | `judge_panel` | `agent` on `tie_break`: as written, and gpt named again | `compare` with margin 0: the noise floor of panel comparisons |
+| `panel_failure_scan` | | `judge_panel` | `agent` on `tie_break`: gpt or mistral | `look`: nine built-in evaluators and its own `weakest_criterion` |
+| `panel_judge_prompt` | `panel_wrong_winner` | `judge_panel` | `prompt` on `deepseek`, `qwen`, `llama`: as written, `claims_first`, `anchored_scale` | `compare`: `winner`, `cost_of_pass` guardrail |
+| `panel_merge_rule` | `panel_wrong_winner` | `judge_panel` | `use` on `aggregate`: as written, `majority_only`, `always_tie_break` | `noninferior`: `winner` within 0.05 |
+| `panel_single_judge` | `panel_wrong_winner` | local flow `winner_pick`, a slot | `flow` on `panel`: `judge_panel` or the local flow `single_judge` | `compare`: `latency_p50_ms`, with `winner` and failure guardrails |
+| `intent_split_long_messages` | `intent_misread` | local flow `message_intent`, a slot | `flow` on `classify`: local flows `one_step` or `two_step` | `compare`: `intent`, `cost_of_pass` guardrail |
+| `intent_ballot_pair` | `intent_misread` | local flow `intent_decision`, a slot | `flow` on `ballots`: local flows `single` or `pair` | `compare`: `intent`, `schema_valid_first_try` guardrail |
+| `intent_escalation_agents` | `intent_misread` | local flow `escalation`, only `escalate` | `agent` on `escalate`: three agents | `noninferior`: `intent` within 0.1 |
+| `critique_planted_defects` | `judge_misses_defect` | local flow `critique_only` on planted defects | none, one variant | `threshold`: the verdict matches the label above 0.85; the `validated_by` of every `critique` judge check |
+| `critique_recall_by_agent` | `judge_misses_defect` | local flow `critic` written in Python (`flow.py`) | `agent` on `critique`: three critic agents | `threshold`: `blocked` above 0.8 |
+
+`aqven check` validates every experiment: the subject and its range, the local flows, the factor and its nodes, every
+variant assembled and compiled as the flow it runs (an error inside an alternative, a prompt or a local flow is
+reported at `variants[i].nodes.<node>` and names the file it comes from), the dataset and its tag filter, the
+references of the checks and the fields they read, the metric names, `validated_by`, an `expected_output` on every
+case an `expected` check reads, and the finding files.
 
 A series runs an experiment on the project server: every selected case for every variant, `repeats` times, each
 attempt an ordinary run with a trace, the attempts interleaved case by case. The agent starts one with the MCP tools

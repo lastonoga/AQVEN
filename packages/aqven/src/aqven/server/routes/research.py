@@ -25,19 +25,19 @@ from aqven.series.views import (
 )
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES
-from aqven.server.resources import ArmFlowView
+from aqven.server.resources import ExperimentFlowView
 from aqven.server.routes.runs import event_cursor
 from aqven.server.views.research import (
     ExperimentCatalog,
     SeriesApproveBody,
     SeriesCancelBody,
-    arm_flow,
+    local_flow,
     series_jobs,
 )
 from aqven.spec import ExperimentId
 
 EXPERIMENT_CATALOGUE: Final = "experiment catalogue read from the project files"
-ARM_FLOW: Final = "arm nodes and schemas for the Studio run view, read from the project files"
+LOCAL_FLOW: Final = "nodes and schemas of a local flow of an experiment for the Studio run view, from the project files"
 LAUNCH_PLAN_ON_MCP: Final = "the launch plan comes back from series_start on MCP"
 SERIES_HISTORY: Final = "series history for Studio"
 CASE_ROWS: Final = "per-case rows for Studio, holdout included"
@@ -75,12 +75,12 @@ def build_research_router(context: ServerContext) -> APIRouter:
         return await catalog.detail(await context.workspace.state(), experiment_id)
 
     @router.get(
-        "/experiments/{experiment_id}/arms/{arm_id}",
-        operation_id="experiment_arm",
-        openapi_extra=rest_only(ARM_FLOW),
+        "/experiments/{experiment_id}/flows/{flow_id}",
+        operation_id="experiment_flow",
+        openapi_extra=rest_only(LOCAL_FLOW),
     )
-    async def get_experiment_arm(experiment_id: str, arm_id: str) -> ArmFlowView:
-        return arm_flow(await context.workspace.state(), experiment_id, arm_id)
+    async def get_experiment_flow(experiment_id: str, flow_id: str) -> ExperimentFlowView:
+        return local_flow(await context.workspace.state(), experiment_id, flow_id)
 
     @router.post(
         "/experiments/{experiment_id}/launch-plan",
