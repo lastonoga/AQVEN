@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "$media": {
+      "maxLength": 255,
+      "minLength": 3,
+      "pattern": "^[a-z]+/[a-z0-9.+-]+$",
+      "title": "$Media",
+      "type": "string"
+    },
+    "file": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "File",
+      "type": "string"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    }
+  },
+  "required": [
+    "$media",
+    "file"
+  ],
+  "title": "MediaFileRef",
+  "type": "object"
+}

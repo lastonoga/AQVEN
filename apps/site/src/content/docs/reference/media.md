@@ -87,6 +87,16 @@ This reference is generated from the package's Pydantic models. Fields use their
 
 [JSON Schema](/reference/schemas/MapItemError.json)
 
+## MediaFileRef
+
+| YAML field | Type | Required | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| `$media` | `string` | Yes | `—` | minLength=3, maxLength=255, pattern=^[a-z]+/[a-z0-9.+-]+$ |
+| `file` | `string` | Yes | `—` | minLength=1, maxLength=1024 |
+| `name` | `string \| null` | No | `None` | — |
+
+[JSON Schema](/reference/schemas/MediaFileRef.json)
+
 ## MediaValue
 
 | YAML field | Type | Required | Default | Constraints |

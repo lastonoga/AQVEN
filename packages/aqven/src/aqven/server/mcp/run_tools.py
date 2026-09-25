@@ -124,6 +124,9 @@ class RunTools:
                     "Pass exactly one of input and dataset_item_id; human_answers are scripted answers for human "
                     "nodes; context carries the run context keys the flow reads through $run.context.*, "
                     "a missing key is CONTEXT_MISSING with the key in problems[]. "
+                    "A dataset case keeps its media as files: {$media, file} with file relative to "
+                    'datasets/<dataset_id>/ or "@root/<path>" from the project root; with dataset_item_id '
+                    "each file is read and stored as a blob before the run, so the run sees a blob_id. "
                     "Then call run_get and run_events."
                 ),
                 input_model=RunStartRequest,

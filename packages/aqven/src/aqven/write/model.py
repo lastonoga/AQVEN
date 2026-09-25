@@ -137,6 +137,13 @@ class FilesWriteRequest(RequestModel):
     intent: str | None = None
 
 
+class FileBytesWriteRequest(RequestModel):
+    expects: list[ExpectedFile] = Field(min_length=1)
+    files: dict[ProjectPath, bytes]
+    client_op_id: Ulid
+    intent: str | None = None
+
+
 class DraftWrite(RequestModel):
     text: str
     base_file_hash: FileHash | None

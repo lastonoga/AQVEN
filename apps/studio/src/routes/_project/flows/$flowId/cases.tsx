@@ -30,14 +30,15 @@ export const Route = createFileRoute("/_project/flows/$flowId/cases")({
   validateSearch: validateCasesSearch,
   loaderDeps: ({ search }) => ({ dataset: search.dataset }),
   loader: async ({ context: { api }, params, deps }) => {
-    const [datasets, experiments] = await Promise.all([
+    const [datasets, experiments, schemas] = await Promise.all([
       api.datasets.list(),
       experimentsOf(api).catch(() => NO_EXPERIMENTS),
+      api.flow.schemas(params.flowId).catch(() => null),
     ])
     const selected = pickDataset(datasets, deps.dataset, params.flowId)
     const cases = selected === null ? [] : await api.datasets.cases(selected.dataset_id)
     const used = selected === null ? NO_EXPERIMENTS : experiments.filter((experiment) => experiment.cases.dataset === selected.dataset_id)
-    return { datasets, selected, cases, experiments: used }
+    return { datasets, selected, cases, schemas, experiments: used }
   },
   component: CasesScreen,
 })

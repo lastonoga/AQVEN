@@ -38,6 +38,7 @@ const summary = (dataset: string, flow: string | null): ApiDatasetSummary => ({
   dataset_id: dataset,
   flow_id: flow,
   path: `datasets/${dataset}.yaml`,
+  media_folder: `datasets/${dataset}`,
   file_hash: "sha256-test",
   cases: 3,
   splits: {},

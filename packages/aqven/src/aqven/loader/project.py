@@ -12,6 +12,7 @@ from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
 from aqven.loader.aliases import RESERVED_ALIASES, Alias, AliasScope, reserved_flow, resolve_aliases
 from aqven.loader.layout import (
     AQVEN_HEADER,
+    DATASET_HEADER,
     EXPERIMENT_FILES,
     EXPERIMENT_NOTES,
     FLOW_FILES,
@@ -20,9 +21,11 @@ from aqven.loader.layout import (
     PROJECT_FILE,
     SKIPPED_DIRECTORIES,
     TEXT_SUFFIX,
+    YAML_SUFFIXES,
     alternatives_folder,
     ancestors,
     builder_kind,
+    dataset_media_folder,
     declares,
     entity_id,
     entity_stem,
@@ -175,7 +178,7 @@ def load_project(root: Path) -> LoadResult:
     if not (root / PROJECT_FILE).is_file():
         message = f"{root} has no {PROJECT_FILE}: it is not an aqven project root"
         return LoadResult(None, (diagnostic(DiagnosticCode.E_PROJECT_NOT_FOUND, PROJECT_FILE, (), message),))
-    files = project_files(root)
+    files = spec_files(root)
     inference_stems = frozenset(entity_stem(path) for path in files if declares(path, SpecKind.INFERENCE))
     flow_folders = tuple(sorted({posixpath.dirname(path) for path in files if _named(path, FLOW_FILES)}))
     experiment_folders = frozenset(posixpath.dirname(path) for path in files if _named(path, EXPERIMENT_FILES))
@@ -192,6 +195,18 @@ def project_files(root: Path) -> tuple[str, ...]:
     return tuple(sorted(path.as_posix() for path in kept))
 
 
+def spec_files(root: Path) -> tuple[str, ...]:
+    files = project_files(root)
+    media = dataset_media_folders(root, files)
+    return tuple(path for path in files if not _in_media_folder(path, media))
+
+
+def dataset_media_folders(root: Path, files: tuple[str, ...]) -> frozenset[str]:
+    folders = frozenset(folder for path in files for folder in ancestors(posixpath.dirname(path)) if folder)
+    candidates = (path for path in files if _yaml(path) and dataset_media_folder(path) in folders)
+    return frozenset(dataset_media_folder(path) for path in candidates if _declares_dataset(root / path))
+
+
 def file_hash(data: bytes) -> str:
     return f"{HASH_PREFIX}{hashlib.sha256(data).hexdigest()}"
 
@@ -201,6 +216,19 @@ def _read_listed(location: Path) -> bytes | None:
         return location.read_bytes()
     except OSError:
         return None
+
+
+def _in_media_folder(path: str, media: frozenset[str]) -> bool:
+    return bool(media) and any(folder in media for folder in ancestors(posixpath.dirname(path)))
+
+
+def _yaml(path: str) -> bool:
+    return PurePosixPath(path).suffix in YAML_SUFFIXES
+
+
+def _declares_dataset(location: Path) -> bool:
+    data = _read_listed(location)
+    return data is not None and AQVEN_HEADER.search(data) is not None and DATASET_HEADER.search(data) is not None
 
 
 def _skipped(part: str) -> bool:

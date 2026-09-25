@@ -43,6 +43,42 @@ const useTaggedCases = (): void => {
   server.use(http.get(`${API_BASE}/datasets/support_case_cases/cases`, () => HttpResponse.json({ items: TAGGED_CASES, next_cursor: null, total_estimate: TAGGED_CASES.length })))
 }
 
+const MEDIA_FOLDER = "datasets/support_case_cases"
+const ATTACH = `${API_BASE}/datasets/support_case_cases/cases/parcel_photo/media`
+
+const IMAGE_SCHEMA = { type: "object", properties: { $media: { type: "string", pattern: "^image/[a-z0-9.+-]+$" }, blob_id: { type: "string" } } }
+
+const MEDIA_CASE = {
+  name: "parcel_photo",
+  inputs: {
+    message: "The parcel arrived broken",
+    photo: { $media: "image/jpeg", file: "photo_01.jpg" },
+    voice_note: { $media: "audio/wav", file: "@root/samples/voice.wav" },
+    invoice: { $media: "application/pdf", blob_id: "sha256-invoice", size_bytes: 633, name: "invoice.pdf" },
+  },
+}
+
+const formField = (body: string, name: string): string | null =>
+  new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)\\r\\n`, "u").exec(body)?.[1] ?? null
+
+const formFileType = (body: string, name: string): string | null =>
+  new RegExp(`name="${name}"; filename="[^"]*"\\r\\nContent-Type: ([^\\r]*)`, "u").exec(body)?.[1] ?? null
+
+const useMediaCase = (inputs: Readonly<Record<string, unknown>>): { readonly set: (next: Readonly<Record<string, unknown>>) => void } => {
+  let current = inputs
+  server.use(
+    http.get(`${API_BASE}/datasets/support_case_cases/cases`, () => HttpResponse.json({ items: [{ name: "parcel_photo", inputs: current }], next_cursor: null, total_estimate: 1 })),
+    http.get(`${API_BASE}/flows/support_case/schemas`, () => HttpResponse.json({
+      flow_id: "support_case",
+      input: { type: "object", properties: { message: { type: "string" }, photo: { anyOf: [IMAGE_SCHEMA, { type: "null" }] } } },
+      output: {},
+      context: [],
+      nodes: {},
+    })),
+  )
+  return { set: (next) => { current = next } }
+}
+
 const caseList = (): Promise<HTMLElement> => screen.findByRole("list", { name: "Cases" })
 
 const rowNames = (list: HTMLElement): readonly string[] =>
@@ -372,5 +408,73 @@ describe("CasesScreen", () => {
     expect(screen.getByRole("button", { name: "Ask the agent to write cases" })).toBeTruthy()
     expect(screen.queryByRole("button", { name: /^Run/u })).toBeNull()
     expect(screen.queryByRole("combobox", { name: /Selected dataset/u })).toBeNull()
+  })
+
+  it("shows file media from the project next to blob media, each with where it comes from", async () => {
+    server.use(http.get(`${API_BASE}/datasets/support_case_cases/cases`, () => HttpResponse.json({ items: [MEDIA_CASE], next_cursor: null, total_estimate: 1 })))
+    await renderRoute(`${CASES}?case=parcel_photo`)
+    const detail = await screen.findByRole("region", { name: "Case parcel_photo" })
+    const photo = within(detail).getByRole("button", { name: "Open image: photo_01.jpg" })
+    expect(within(photo).getByRole("img").getAttribute("src")).toBe(`/api/raw/${MEDIA_FOLDER}/photo_01.jpg`)
+    expect(within(detail).getByRole("link", { name: `${MEDIA_FOLDER}/photo_01.jpg` }).getAttribute("href")).toBe(`/api/raw/${MEDIA_FOLDER}/photo_01.jpg`)
+    expect(within(detail).getByLabelText("voice.wav").getAttribute("src")).toBe("/api/raw/samples/voice.wav")
+    expect(within(detail).getByRole("link", { name: "samples/voice.wav" })).toBeTruthy()
+    expect(within(detail).getByRole("link", { name: "Open invoice.pdf" }).getAttribute("href")).toBe("/api/blobs/sha256-invoice")
+    expect(within(detail).getByText("application/pdf · 633 B")).toBeTruthy()
+    expect(within(detail).getByText(/"file": "photo_01.jpg"/u)).toBeTruthy()
+    fireEvent.click(within(detail).getByRole("radio", { name: "Flat" }))
+    expect(await within(detail).findByText("message:")).toBeTruthy()
+    expect(within(detail).queryByText("photo.file:")).toBeNull()
+    expect(within(detail).getAllByRole("img")).toHaveLength(1)
+  })
+
+  it("attaches a file to a case: the file goes next to the dataset and the case shows it from there", async () => {
+    const posted: string[] = []
+    const cases = useMediaCase({ message: "The parcel arrived broken", photo: null })
+    server.use(http.post(ATTACH, async ({ request }) => {
+      posted.push(await request.text())
+      cases.set({ message: "The parcel arrived broken", photo: { $media: "image/png", file: "parcel.png" } })
+      const dataset = { ...liveDatasets[0], file_hash: "sha256-after-attach" }
+      return HttpResponse.json({ dataset, case_name: "parcel_photo", location: "inputs.photo", file: "parcel.png", path: `${MEDIA_FOLDER}/parcel.png`, media_type: "image/png" }, { status: 201 })
+    }))
+    await renderRoute(`${CASES}?case=parcel_photo`)
+    const detail = await screen.findByRole("region", { name: "Case parcel_photo" })
+    const media = within(detail).getByRole("group", { name: "Media files of this case" })
+    expect(within(media).getByText(`Studio writes the file into ${MEDIA_FOLDER}/ next to the dataset and saves a file reference in the case.`)).toBeTruthy()
+    expect(within(media).getByLabelText("File for photo").getAttribute("accept")).toBe("image/*")
+    expect(within(detail).queryByRole("img")).toBeNull()
+
+    fireEvent.change(within(media).getByLabelText("File for photo"), { target: { files: [new File(["png"], "parcel.png", { type: "image/png" })] } })
+
+    const saved = await within(media).findByRole("link", { name: `${MEDIA_FOLDER}/parcel.png` })
+    expect(saved.getAttribute("href")).toBe(`/api/raw/${MEDIA_FOLDER}/parcel.png`)
+    expect(posted).toHaveLength(1)
+    const body = posted[0] ?? ""
+    expect(formField(body, "location")).toBe("inputs.photo")
+    expect(formField(body, "file_hash")).toBe(liveDatasets[0]?.file_hash)
+    expect(formFileType(body, "file")).toBe("image/png")
+    const image = await within(detail).findByRole("button", { name: "Open image: parcel.png" })
+    expect(within(image).getByRole("img").getAttribute("src")).toBe(`/api/raw/${MEDIA_FOLDER}/parcel.png`)
+    expect(within(media).getByRole("button", { name: "Replace photo" })).toBeTruthy()
+  })
+
+  it("reloads the case and asks to attach again when the dataset file changed on disk", async () => {
+    useMediaCase({ message: "The parcel arrived broken", photo: null })
+    server.use(http.post(ATTACH, () => HttpResponse.json(
+      { ok: false, op: "case_media_attach", code: "STALE_FILE", message: "datasets/support_case_cases.yaml changed after it was read", problems: [], candidates: [], conflict: null, retry_after_ms: null },
+      { status: 412 },
+    )))
+    await renderRoute(`${CASES}?case=parcel_photo`)
+    const detail = await screen.findByRole("region", { name: "Case parcel_photo" })
+    fireEvent.change(within(detail).getByLabelText("File for photo"), { target: { files: [new File(["png"], "parcel.png", { type: "image/png" })] } })
+    expect(await within(detail).findByText("The dataset file changed on disk, so nothing was saved. Studio reloaded the case: attach the file again.")).toBeTruthy()
+    expect(within(detail).getByRole("button", { name: "Attach photo" })).toHaveProperty("disabled", false)
+  })
+
+  it("offers no attach control for a case without media fields", async () => {
+    useTaggedCases()
+    await renderRoute(`${CASES}?case=strip_flicker_credit`)
+    const detail = await screen.findByRole("region", { name: "Case strip_flicker_credit" })
+    expect(within(detail).queryByRole("group", { name: "Media files of this case" })).toBeNull()
   })
 })

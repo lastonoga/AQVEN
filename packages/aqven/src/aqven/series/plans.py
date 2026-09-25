@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from pathlib import PurePosixPath
 from typing import Final, Protocol
 
 from pydantic import JsonValue
@@ -338,9 +339,14 @@ def judge_hashes(build: JudgeBuild) -> dict[str, str]:
     return {check_id: flow_hash(plan, judge.flow_id) for check_id, judge in build.judges.items()}
 
 
-def code_sha256(tree: TreeSnapshot) -> str:
+def code_file(path: str, media_folders: frozenset[str]) -> bool:
+    folders = PurePosixPath(path).parents
+    return path.endswith(PYTHON_SUFFIX) and not any(folder.as_posix() in media_folders for folder in folders)
+
+
+def code_sha256(tree: TreeSnapshot, media_folders: frozenset[str]) -> str:
     listing: dict[str, JsonValue] = {
-        path: stat.file_hash for path, stat in sorted(tree.files.items()) if path.endswith(PYTHON_SUFFIX)
+        path: stat.file_hash for path, stat in sorted(tree.files.items()) if code_file(path, media_folders)
     }
     return file_hash(canonical_json(listing))
 
@@ -361,6 +367,7 @@ class SnapshotSources:
     dataset_sha256: str
     tree: TreeSnapshot
     engine_version: str
+    media_folders: frozenset[str]
 
 
 def series_snapshot(
@@ -375,6 +382,6 @@ def series_snapshot(
         cases_sha256=cases_sha256(cases),
         flows={build.record.variant_id: build.record.flow_hash for build in variants},
         judges=judge_hashes(judges),
-        code_sha256=code_sha256(sources.tree),
+        code_sha256=code_sha256(sources.tree, sources.media_folders),
         engine_version=sources.engine_version,
     )

@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Final
 
 import httpx2
@@ -127,3 +128,11 @@ RUNTIME_SLOT: Final = RuntimeSlot()
 
 def active_runtime() -> EngineRuntime:
     return RUNTIME_SLOT.require()
+
+
+def engine_blob_store(root: Path) -> FileBlobStore:
+    project = root.resolve()
+    runtime = RUNTIME_SLOT.current
+    if runtime is None or runtime.paths.root != project:
+        return FileBlobStore(EnginePaths(project).blobs)
+    return runtime.services.blobs

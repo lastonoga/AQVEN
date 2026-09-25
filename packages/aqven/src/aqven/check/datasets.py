@@ -6,8 +6,10 @@ from pydantic import TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
 
 from aqven.check.context import CheckContext
+from aqven.check.dataset_media import dataset_media
 from aqven.check.registry import known
 from aqven.check.subjects import flow_spec
+from aqven.datasets import with_media_placeholders
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic, templated_diagnostic
 from aqven.loader import SourceSpec, YamlPath
 from aqven.spec import DatasetFile, DatasetId
@@ -58,7 +60,10 @@ def case_inputs(
     if model is None:
         return
     cases = source.spec.cases
-    problems = ((index, first_problem(model.adapter, cases[index].inputs, model.tolerated)) for index in indexes)
+    problems = (
+        (index, first_problem(model.adapter, with_media_placeholders(cases[index].inputs), model.tolerated))
+        for index in indexes
+    )
     for index, problem in problems:
         if problem is None:
             continue
@@ -82,6 +87,7 @@ def _problem(item: ErrorDetails) -> str:
 
 def _dataset(context: CheckContext, dataset_id: DatasetId, source: SourceSpec[DatasetFile]) -> Iterator[Diagnostic]:
     yield from _duplicates(dataset_id, source)
+    yield from dataset_media(context.project.root, dataset_id, source)
     flow_id = source.spec.flow
     if flow_id is None:
         return

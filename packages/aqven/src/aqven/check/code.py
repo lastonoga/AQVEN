@@ -12,7 +12,7 @@ from aqven.check.nodes import typed_entries
 from aqven.check.resolver import CodeFailure
 from aqven.check.typeinfo import decl_type_id
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
-from aqven.loader import SourceSpec, YamlPath, is_bare, project_files
+from aqven.loader import SourceSpec, YamlPath, is_bare, spec_files
 from aqven.runtime.steps import JobHandle, JobPoll
 from aqven.spec import MEDIA_TYPES, CodeNodeSpec, FieldDecl, InferenceSpec, RenderedPrompt, ToolSpec
 
@@ -241,7 +241,7 @@ def _job_poll_of(output: object) -> object:
 
 def _docstrings(context: CheckContext) -> Iterator[Diagnostic]:
     root = context.project.root
-    for path in (path for path in project_files(root) if path.endswith(PYTHON_SUFFIX)):
+    for path in (path for path in spec_files(root) if path.endswith(PYTHON_SUFFIX)):
         yield from _file_docstrings(path, (root / path).read_text(encoding="utf-8"))
 
 

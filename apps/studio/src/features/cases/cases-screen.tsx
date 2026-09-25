@@ -11,9 +11,11 @@ import { messageOf } from "@/lib/errors"
 import { CaseDetail } from "./case-detail"
 import { CaseFilterBar } from "./case-filter"
 import { CaseList } from "./case-list"
+import { CaseMediaAttach } from "./case-media-attach"
 import { CaseRun } from "./case-run"
 import { CsvImport } from "./csv-import"
 import { DatasetPicker } from "./dataset-picker"
+import { attachTargets } from "./media-files"
 import { SelectionBar, type LaunchState } from "./selection-bar"
 import { useLookRange } from "./use-look-range"
 import {
@@ -81,12 +83,13 @@ type CasesBodyProps = {
   readonly dataset: ApiDatasetSummary
   readonly scope: DatasetScope
   readonly cases: readonly ApiDatasetCase[]
+  readonly inputSchema: unknown
   readonly experiments: readonly ExperimentDetail[]
   readonly selection: ReadonlySet<string>
   readonly onSelection: (next: ReadonlySet<string>) => void
 }
 
-function CasesBody({ flowId, order, dataset, scope, cases, experiments, selection, onSelection }: CasesBodyProps) {
+function CasesBody({ flowId, order, dataset, scope, cases, inputSchema, experiments, selection, onSelection }: CasesBodyProps) {
   const search = casesRouteApi.useSearch()
   const params = casesRouteApi.useParams()
   const navigate = useNavigate()
@@ -109,7 +112,9 @@ function CasesBody({ flowId, order, dataset, scope, cases, experiments, selectio
     <CaseDetail
       id={id}
       item={item}
+      mediaFolder={dataset.media_folder}
       experiments={experimentsUsing(experiments, dataset.dataset_id, item)}
+      attach={<CaseMediaAttach key={item.name} dataset={dataset} caseName={item.name} targets={attachTargets(item.inputs, scope === "flow" ? inputSchema : null)} />}
       run={scope === "flow" ? <CaseRun key={item.name} flowId={flowId} datasetId={dataset.dataset_id} caseName={item.name} order={order} /> : null}
     />
   )
@@ -150,7 +155,7 @@ function CasesBody({ flowId, order, dataset, scope, cases, experiments, selectio
 }
 
 function CasesPage() {
-  const { datasets, selected, cases, experiments } = casesRouteApi.useLoaderData()
+  const { datasets, selected, cases, schemas, experiments } = casesRouteApi.useLoaderData()
   const { flow } = flowRouteApi.useLoaderData()
   const { flowId } = casesRouteApi.useParams()
   const { api } = casesRouteApi.useRouteContext()
@@ -201,6 +206,7 @@ function CasesPage() {
           dataset={selected}
           scope={scope}
           cases={cases}
+          inputSchema={schemas?.input ?? null}
           experiments={experiments}
           selection={selection}
           onSelection={setSelection}

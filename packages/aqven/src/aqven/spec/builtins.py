@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from pathlib import PurePosixPath
 from typing import Final, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
@@ -45,6 +46,10 @@ FIELD_SPEC_MAX_ENUM: Final = 50
 
 MEDIA_URL_LIMIT: Final = 2048
 MEDIA_NOTE_LIMIT: Final = 1000
+MEDIA_FILE_LIMIT: Final = 1024
+MEDIA_KEY: Final = "$media"
+MEDIA_FILE_KEY: Final = "file"
+MEDIA_TYPE_PATTERN: Final = r"^[a-z]+/[a-z0-9.+-]+$"
 READ_ONLY: Final[dict[str, JsonValue]] = {"readOnly": True}
 
 
@@ -75,7 +80,7 @@ class MediaValue(BaseModel):
         serialization_alias="$media",
         min_length=3,
         max_length=255,
-        pattern=r"^[a-z]+/[a-z0-9.+-]+$",
+        pattern=MEDIA_TYPE_PATTERN,
     )
     blob_id: BlobId = Field(pattern=BLOB_ID_PATTERN)
     size_bytes: int = Field(ge=0)
@@ -85,6 +90,30 @@ class MediaValue(BaseModel):
         default=None, pattern=BLOB_ID_PATTERN, json_schema_extra=READ_ONLY, exclude_if=absent
     )
     note: str | None = Field(default=None, max_length=MEDIA_NOTE_LIMIT, json_schema_extra=READ_ONLY, exclude_if=absent)
+
+
+class MediaFileRef(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        validate_by_alias=True,
+        validate_by_name=True,
+        serialize_by_alias=True,
+    )
+
+    media_type: str = Field(
+        validation_alias=MEDIA_KEY,
+        serialization_alias=MEDIA_KEY,
+        min_length=3,
+        max_length=255,
+        pattern=MEDIA_TYPE_PATTERN,
+    )
+    file: str = Field(min_length=1, max_length=MEDIA_FILE_LIMIT)
+    name: str | None = Field(default=None, max_length=255, exclude_if=absent)
+
+    @property
+    def media_name(self) -> str:
+        return self.name or PurePosixPath(self.file.replace("\\", "/")).name
 
 
 class Image(MediaValue):

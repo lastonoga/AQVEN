@@ -128,6 +128,8 @@ class DiagnosticCode(StrEnum):
     E_EXPECTED_MISSING = "E_EXPECTED_MISSING"
     E_CHECK_PATH_UNKNOWN = "E_CHECK_PATH_UNKNOWN"
     E_FINDING_TAMPERED = "E_FINDING_TAMPERED"
+    E_MEDIA_FILE_MISSING = "E_MEDIA_FILE_MISSING"
+    E_MEDIA_PATH_INVALID = "E_MEDIA_PATH_INVALID"
     W_PROMPT_SHADOWED = "W_PROMPT_SHADOWED"
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
@@ -143,6 +145,7 @@ class DiagnosticCode(StrEnum):
     W_FINDINGS_STALE = "W_FINDINGS_STALE"
     W_VARIANT_DUPLICATE = "W_VARIANT_DUPLICATE"
     W_ALTERNATIVE_UNUSED = "W_ALTERNATIVE_UNUSED"
+    W_MEDIA_TYPE_MISMATCH = "W_MEDIA_TYPE_MISMATCH"
     W_AGENT_SKILLS_STALE = "W_AGENT_SKILLS_STALE"
 
 
@@ -346,6 +349,20 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_ALTERNATIVE_UNUSED: DiagnosticText(
         "experiment {experiment}: {entity} is used by no variant",
         "name it in variants[].nodes or delete {file}",
+    ),
+    DiagnosticCode.E_MEDIA_FILE_MISSING: DiagnosticText(
+        "case {case} of dataset {dataset}: media file {file} does not exist at {path}",
+        "put the file at {path} or fix file: a relative path starts in {folder}/, @root/<path> at the project root",
+    ),
+    DiagnosticCode.E_MEDIA_PATH_INVALID: DiagnosticText(
+        "case {case} of dataset {dataset}: media file path {file} {problem}",
+        "write a path relative to {folder}/ or @root/<path>; an absolute path, a path out of its folder "
+        "and a path into .aqven/ are not allowed",
+    ),
+    DiagnosticCode.W_MEDIA_TYPE_MISMATCH: DiagnosticText(
+        "case {case} of dataset {dataset}: media file {file} has the extension {extension}, "
+        "which does not fit $media {media_type}",
+        "set $media to {guessed}, or point file at a {media_type} file",
     ),
     DiagnosticCode.W_AGENT_SKILLS_STALE: DiagnosticText(
         "out of sync with the installed aqven {version} in {target}: {problem}",

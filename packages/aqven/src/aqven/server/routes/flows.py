@@ -16,6 +16,7 @@ from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineError
 from aqven.preview import PromptPreview
 from aqven.runtime.address import RequestModel, ResourceModel
 from aqven.runtime.runs import Page, RunSummary
+from aqven.server.case_media import case_with_placeholders
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES, ApiFailure
 from aqven.server.resources import (
@@ -200,7 +201,7 @@ def build_flows_router(context: ServerContext) -> APIRouter:
             raise ApiFailure("NOT_RUNNABLE", f"dataset {body.dataset_id} is not a flow dataset for {flow_id}")
         if not body.case_names or len(set(body.case_names)) != len(body.case_names):
             raise ApiFailure("REQUEST_INVALID", "case_names must be nonempty and unique")
-        cases = {case.name: case for case in source.spec.cases}
+        cases = {case.name: case_with_placeholders(case) for case in source.spec.cases}
         unknown = set(body.case_names) - cases.keys()
         if unknown:
             raise ApiFailure("NOT_FOUND", f"cases not in dataset {body.dataset_id}: {', '.join(sorted(unknown))}")

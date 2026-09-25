@@ -94,6 +94,17 @@
     "allCases": "all cases",
     "tags": "Tags"
   },
+  "media": {
+    "aria": "Media files of this case",
+    "attach": "Attach {field}",
+    "replace": "Replace {field}",
+    "fileFor": "File for {field}",
+    "hint": "Studio writes the file into {folder}/ next to the dataset and saves a file reference in the case.",
+    "saving": "Saving {field}…",
+    "saved": "Saved <link>{path}</link> and its reference in the case.",
+    "stale": "The dataset file changed on disk, so nothing was saved. Studio reloaded the case: attach the file again.",
+    "failed": "Could not attach the file: {reason}"
+  },
   "run": {
     "title": "Run this case",
     "hint": "One run over the chosen stages. It opens in Runs.",
