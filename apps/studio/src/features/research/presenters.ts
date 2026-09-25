@@ -1,12 +1,16 @@
 import type {
+  ActivitySource,
+  AttentionReason,
   CaseTags,
   CompareQuestion,
+  ExperimentActivity,
   ExperimentDetail,
   ExperimentFilter,
   ExperimentQuestion,
   ExperimentSubject,
   ExperimentSummary,
   Guardrail,
+  IsoDateTime,
   LatestSeries,
   LaunchPlan,
   LaunchRequest,
@@ -45,6 +49,8 @@ export type ListCopy = {
   readonly split: (split: SeriesSplit) => string
   readonly series: (count: number) => string
   readonly spent: (amount: string) => string
+  readonly activity: (source: ActivitySource, at: IsoDateTime) => string
+  readonly attention: (reason: AttentionReason) => string
 }
 
 export type ExperimentRow = {
@@ -55,6 +61,9 @@ export type ExperimentRow = {
   readonly variants: string
   readonly latest: Badge | null
   readonly series: string
+  readonly activity: string | null
+  readonly attention: string | null
+  readonly fresh: boolean
 }
 
 type ThresholdValues = { readonly variant: string; readonly metric: string; readonly bound: ThresholdBound; readonly value: string; readonly margin: string }
@@ -107,6 +116,7 @@ export const STARTED_FORMAT: DateTimeFormatOptions = { month: "short", day: "num
 
 const ARROW = " → "
 const LIST_SEPARATOR = ", "
+const REASON_SEPARATOR = " · "
 const TAG_JOIN = "="
 const WHOLE_NUMBER = /^\d+$/
 const LAUNCH_FIELDS: readonly LaunchProblem[] = ["cases", "repeats"]
@@ -154,7 +164,15 @@ export const latestBadge = (latest: LatestSeries | null, copy: Pick<ListCopy, "v
 export const seriesText = (summary: Pick<ExperimentSummary, "seriesCount" | "spentUsd">, copy: Pick<ListCopy, "series" | "spent">): string =>
   joinMeta([copy.series(summary.seriesCount), summary.spentUsd > 0 ? copy.spent(usd(summary.spentUsd)) : null])
 
-export const experimentRows = (experiments: readonly ExperimentSummary[], copy: ListCopy): readonly ExperimentRow[] =>
+export const activityText = (activity: ExperimentActivity, copy: Pick<ListCopy, "activity">): string | null => {
+  if (activity.last === null || activity.source === null) return null
+  return copy.activity(activity.source, activity.last)
+}
+
+export const attentionText = (activity: ExperimentActivity, copy: Pick<ListCopy, "attention">): string | null =>
+  activity.attention.length === 0 ? null : activity.attention.map(copy.attention).join(REASON_SEPARATOR)
+
+export const experimentRows = (experiments: readonly ExperimentSummary[], copy: ListCopy, fresh: (experiment: ExperimentSummary) => boolean): readonly ExperimentRow[] =>
   experiments.map((experiment) => ({
     id: experiment.id,
     description: experiment.description,
@@ -163,6 +181,9 @@ export const experimentRows = (experiments: readonly ExperimentSummary[], copy: 
     variants: variantsText(experiment),
     latest: latestBadge(experiment.latest, copy),
     series: seriesText(experiment, copy),
+    activity: activityText(experiment.activity, copy),
+    attention: attentionText(experiment.activity, copy),
+    fresh: fresh(experiment),
   }))
 
 const patched = <T>(current: T | undefined, next: T | null | undefined): T | null => {

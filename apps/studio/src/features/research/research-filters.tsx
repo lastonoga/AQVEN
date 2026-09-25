@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useTranslations } from "use-intl"
 import { QUESTION_KINDS, type ExperimentFilter } from "@/domain"
-import { Text, Toolbar } from "@/components/studio"
+import { ChoiceGroup, Text, Toolbar } from "@/components/studio"
 import { parseEnum } from "@/lib/search"
 import { ROUTE_PATH } from "@/lib/routes"
+import { GROUPINGS, type Grouping } from "./experiment-groups"
 import { hasNarrowing, withFilter } from "./presenters"
 
 type FilterOption = { readonly value: string; readonly label: string }
@@ -19,6 +20,8 @@ export type ResearchFiltersProps = {
   readonly filter: ExperimentFilter
   readonly failureModes: readonly string[]
   readonly count: number
+  readonly grouping: Grouping
+  readonly onGroupingChange: (grouping: Grouping) => void
 }
 
 const ANY = ""
@@ -52,7 +55,26 @@ function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
   )
 }
 
-export function ResearchFilters({ filter, failureModes, count }: ResearchFiltersProps) {
+function GroupingSwitch({ grouping, onGroupingChange }: Pick<ResearchFiltersProps, "grouping" | "onGroupingChange">) {
+  const t = useTranslations("research.list")
+  return (
+    <div className="flex items-center gap-2">
+      <Text role="hint" tone="neutral">
+        {t("groupBy")}
+      </Text>
+      <ChoiceGroup
+        appearance="segmented"
+        size="sm"
+        label={t("groupBy")}
+        value={grouping}
+        items={GROUPINGS.map((value) => ({ value, label: t(`grouping.${value}`) }))}
+        onValueChange={onGroupingChange}
+      />
+    </div>
+  )
+}
+
+export function ResearchFilters({ filter, failureModes, count, grouping, onGroupingChange }: ResearchFiltersProps) {
   const t = useTranslations("research")
   const navigate = useNavigate()
   const apply = (next: ExperimentFilter): void => {
@@ -60,6 +82,7 @@ export function ResearchFilters({ filter, failureModes, count }: ResearchFilters
   }
   return (
     <Toolbar wrap aria-label={t("list.filtersAria")} role="group" className="gap-x-4 gap-y-2" end={<Text role="hint" tone="neutral">{t("list.count", { count })}</Text>}>
+      <GroupingSwitch grouping={grouping} onGroupingChange={onGroupingChange} />
       <FilterSelect
         label={t("list.question")}
         value={filter.question}

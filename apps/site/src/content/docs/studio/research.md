@@ -1,6 +1,6 @@
 ---
 title: How to use Research in Studio
-description: Switch to Research, browse the experiments of every flow, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
+description: Switch to Research, find the experiments that moved last or need you, read an experiment page block by block, launch a series to explore or confirm, and hand the next hypothesis to the chat.
 ---
 
 ## When you need this
@@ -17,20 +17,45 @@ series, approve its spend, and ask the chat for the next hypothesis.
   tabs: **Experiments** and **Series**. Research opens on **Experiments** with every experiment of the
   project, so there is no flow to pick. The flow picker belongs to Flow mode and is hidden in Research. The
   chat panel stays open in both modes.
-- **Browse the experiments.** The list has one section per flow, ordered by flow name. Each section is a
-  heading with the flow name and the number of experiments, then a table. An experiment sits under the flow
-  it tests, as a whole or as a range of nodes. Experiments whose subject is a flow local to the experiment
-  come last, under **Flows of experiments**, even when their cases come from a project flow. Each row shows the
-  experiment id with its description, the question kind (look, threshold, better, not worse), the subject (a
-  flow, a range like `support_case · polish`, or a local flow), the variants, the state of the last series,
-  and how many series ran and what they cost. Filter by
-  **Question** or **Failure mode**. The filters apply to every section, and a flow with no matching
-  experiment drops out of the list. You don't need to reload: when a series starts, progresses, waits for
-  approval or for a person, or finishes, the lists and the open experiment or series page update in place,
-  whether you, the chat agent or the CLI started it. They also update when an experiment's files or a
-  finding change on disk.
+- **Find what moved last.** The experiment that moved last is on top of every section. Each row says when
+  that was: "changed 12m ago" when its files changed last, "last series 2h ago" when a series started or
+  finished after that. The findings a series writes don't count as a change of the files. The list is
+  grouped by activity, and an experiment sits in the first group it fits:
+
+  | Group | Which experiments |
+  |---|---|
+  | **Running** | a series of it is running or waits for a person |
+  | **Needs you** | a series waits for you to approve its spend, the last series is invalid, a file of the experiment other than `experiment.md` changed after its last finished series started, or `{{CLI_COMMAND}} check` reports an error in its files. The row says which |
+  | **Changed today** | its files changed, or a series started or finished, today |
+  | **Older (N)** | all the others, folded until you open it |
+
+  Each row also shows the experiment id with its description, the question kind (look, threshold, better,
+  not worse), the subject (a flow, a range like `support_case · polish`, or a local flow), the variants, the
+  state of the last series, and how many series ran and what they cost. Click a row to open the experiment.
+- **Group another way.** **Group by** switches between **Activity**, **Flow** and **Failure mode**. **Flow**
+  has one section per flow, ordered by flow name. An experiment sits under the flow it tests, as a whole or
+  as a range of nodes. Experiments whose subject is a flow local to the experiment come last, under **Flows
+  of experiments**, even when their cases come from a project flow. A flow's name opens its canvas.
+  **Failure mode** has one section per `failure_mode`, ordered by name, with the experiments that have none
+  under **No failure mode**. A failure mode's name filters the list by it. Studio remembers the grouping
+  in this browser.
+- **Filter.** Filter by **Question** or **Failure mode**. The filters apply to every section, and a section
+  with no matching experiment drops out of the list. You don't need to reload: when a series starts,
+  progresses, waits for approval or for a person, or finishes, the lists and the open experiment or series
+  page update in place, whether you, the chat agent or the CLI started it. They also update when an
+  experiment's files or a finding change on disk.
+- **Spot what is new.** A dot marks the experiments created or changed since you last opened the list in
+  this browser, such as the ones the chat agent wrote while you were away. Studio moves the mark when you
+  leave the list or after a few seconds on it, so the dots stay while you read and are gone next time. Your
+  first visit shows no dots. A browser that keeps no site data shows the same list, without dots and
+  without remembering the grouping.
+- **Archive an experiment.** Add `archived: true` to its `experiment.yaml`. The experiment leaves every
+  group and moves to **Archived (N)**, folded at the end of the list. Its page still opens, with an
+  **Archived** tag next to the question. `{{CLI_COMMAND}} check` and series treat it like any other
+  experiment. Delete the key to bring it back.
 - **Suggest hypotheses** hands a prompt to the chat. The button in the page header asks about the whole
-  project. The button in a flow's section heading asks the agent to focus on that flow. The prompt asks
+  project. With **Group by** set to **Flow**, the button in a flow's section heading asks the agent to focus
+  on that flow. The prompt asks
   the agent to read the flows, their cases and the experiments already there, and to propose hypotheses.
   Each hypothesis comes with its failure mode, question, metric and margin, subject, the one factor its
   variants change and their values, checks and cases by tags. The agent writes no file until you pick one. Then it writes
@@ -75,8 +100,8 @@ series, approve its spend, and ask the chat for the next hypothesis.
 
 ### Example
 
-Open the showcase project, switch to **Research**, and open `reply_noninferior_mistral` in the
-`support_case` section. The Hypothesis
+Open the showcase project, switch to **Research**, set **Group by** to **Flow**, and open
+`reply_noninferior_mistral` in the `support_case` section. The Hypothesis
 reads "mistral in the revision step of the polish loop is not worse than gpt by the critic's score, and a
 passing reply costs at most 20% more". The variants table is captioned "Varies: agent of revise": its
 **Agent** column reads **as written: gpt** for `gpt`, the flow as written, and `mistral` for the other variant.

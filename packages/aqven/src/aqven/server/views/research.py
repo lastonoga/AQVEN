@@ -1,6 +1,6 @@
 import posixpath
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, assert_never
@@ -42,7 +42,6 @@ from aqven.series.views import (
     ExperimentSummaryView,
     FactorView,
     FlowStepView,
-    LatestSeries,
     LocalFlowView,
     QuestionKind,
     SeriesListQuery,
@@ -53,6 +52,17 @@ from aqven.series.views import (
 from aqven.server.errors import ApiFailure, not_found
 from aqven.server.resources import ExperimentFlowView
 from aqven.server.views.common import loaded_project, page_of
+from aqven.server.views.experiment_activity import (
+    EMPTY_LEDGER,
+    UNSEEN_FOLDER,
+    ActivityFacts,
+    ExperimentActivity,
+    FolderTimes,
+    SeriesLedger,
+    error_count,
+    experiment_activity,
+    folder_times,
+)
 from aqven.server.views.experiment_content import factor_agents, node_files, slot_views
 from aqven.server.views.flows import loaded_flow_schemas
 from aqven.server.views.nodes import flow_node_summaries
@@ -94,16 +104,6 @@ class SeriesApproveBody(RequestModel):
     cap_usd: Decimal | None = Field(default=None, gt=0)
 
 
-@dataclass(frozen=True, slots=True)
-class SeriesLedger:
-    latest: LatestSeries | None
-    count: int
-    spent_usd: Decimal
-
-
-EMPTY_LEDGER: Final = SeriesLedger(latest=None, count=0, spent_usd=Decimal(0))
-
-
 def series_jobs(jobs: SeriesJobs | None) -> SeriesJobs:
     if jobs is None:
         raise ApiFailure("NOT_RUNNABLE", SERIES_UNAVAILABLE)
@@ -121,20 +121,10 @@ async def experiment_series(jobs: SeriesJobs, experiment_id: ExperimentId) -> tu
             return tuple(rows)
 
 
-def latest_series(rows: Sequence[SeriesSummaryView]) -> LatestSeries | None:
-    if not rows:
-        return None
-    newest = max(rows, key=lambda row: (row.started_at, row.series_id))
-    verdict = None if newest.verdict is None else newest.verdict.state
-    return LatestSeries(series_id=newest.series_id, on=newest.on, status=newest.status, verdict=verdict)
-
-
 async def series_ledger(jobs: SeriesJobs | None, experiment_id: ExperimentId) -> SeriesLedger:
     if jobs is None:
         return EMPTY_LEDGER
-    rows = await experiment_series(jobs, experiment_id)
-    spent = sum((row.spend.usd for row in rows), Decimal(0))
-    return SeriesLedger(latest=latest_series(rows), count=len(rows), spent_usd=spent)
+    return SeriesLedger(rows=await experiment_series(jobs, experiment_id))
 
 
 def question_kind(question: Question) -> QuestionKind:
@@ -407,9 +397,26 @@ def experiment_flow(project: LoadedProject, loaded: LoadedExperiment) -> FlowId 
     return None if dataset is None else dataset.spec.flow
 
 
-def experiment_summary(project: LoadedProject, loaded: LoadedExperiment, ledger: SeriesLedger) -> ExperimentSummaryView:
+@dataclass(frozen=True, slots=True)
+class ExperimentRecord:
+    ledger: SeriesLedger
+    activity: ExperimentActivity
+
+
+def experiment_record(
+    state: WorkspaceState, loaded: LoadedExperiment, ledger: SeriesLedger, times: FolderTimes
+) -> ExperimentRecord:
+    facts = ActivityFacts(ledger=ledger, times=times, errors=error_count(state, loaded.folder))
+    return ExperimentRecord(ledger=ledger, activity=experiment_activity(facts))
+
+
+def experiment_summary(
+    project: LoadedProject, loaded: LoadedExperiment, record: ExperimentRecord
+) -> ExperimentSummaryView:
     spec = loaded.source.spec
     baseline, candidate = pair_of(spec.question)
+    ledger = record.ledger
+    activity = record.activity
     return ExperimentSummaryView(
         experiment_id=loaded.experiment_id,
         description=spec.description,
@@ -423,6 +430,12 @@ def experiment_summary(project: LoadedProject, loaded: LoadedExperiment, ledger:
         latest=ledger.latest,
         series_count=ledger.count,
         spent_usd=ledger.spent_usd,
+        archived=spec.archived,
+        created=activity.created,
+        last_activity=activity.last_activity,
+        activity_source=activity.activity_source,
+        running=activity.running,
+        attention=activity.attention,
     )
 
 
@@ -431,10 +444,12 @@ def experiment_files(loaded: LoadedExperiment) -> ExperimentFilesView:
     return ExperimentFilesView(spec=loaded.source.path, notes=notes)
 
 
-def experiment_detail(project: LoadedProject, loaded: LoadedExperiment, ledger: SeriesLedger) -> ExperimentDetailView:
+def experiment_detail(
+    project: LoadedProject, loaded: LoadedExperiment, record: ExperimentRecord
+) -> ExperimentDetailView:
     spec = loaded.source.spec
     checks = tuple(spec.checks or ())
-    summary = experiment_summary(project, loaded, ledger)
+    summary = experiment_summary(project, loaded, record)
     slots = slot_views(project, loaded)
     return ExperimentDetailView(
         **summary.model_dump(),
@@ -497,9 +512,10 @@ class ExperimentCatalog:
         project = loaded_project(state)
         ids = sorted(key for key, loaded in project.experiments.items() if listed(loaded, project, query))
         chosen = page_of(ids, str, query.cursor, query.limit)
+        experiments = [project.experiments[key] for key in chosen.items]
+        times = folder_times(state.snapshot, (loaded.folder for loaded in experiments))
         items = [
-            experiment_summary(project, project.experiments[key], await series_ledger(self.jobs, key))
-            for key in chosen.items
+            experiment_summary(project, loaded, await self._record(state, loaded, times)) for loaded in experiments
         ]
         return Page[ExperimentSummaryView](
             items=tuple(items), next_cursor=chosen.next_cursor, total_estimate=chosen.total_estimate
@@ -508,4 +524,11 @@ class ExperimentCatalog:
     async def detail(self, state: WorkspaceState, experiment_id: str) -> ExperimentDetailView:
         project = loaded_project(state)
         loaded = loaded_experiment(state, experiment_id)
-        return experiment_detail(project, loaded, await series_ledger(self.jobs, loaded.experiment_id))
+        times = folder_times(state.snapshot, (loaded.folder,))
+        return experiment_detail(project, loaded, await self._record(state, loaded, times))
+
+    async def _record(
+        self, state: WorkspaceState, loaded: LoadedExperiment, times: Mapping[str, FolderTimes]
+    ) -> ExperimentRecord:
+        ledger = await series_ledger(self.jobs, loaded.experiment_id)
+        return experiment_record(state, loaded, ledger, times.get(loaded.folder, UNSEEN_FOLDER))

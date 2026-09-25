@@ -11578,6 +11578,13 @@
         "type": "string",
         "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*$"
       },
+      "ActivitySource": {
+        "type": "string",
+        "enum": [
+          "files",
+          "series"
+        ]
+      },
       "ActorKind": {
         "type": "string",
         "enum": [
@@ -12389,6 +12396,15 @@
           "latency_ms"
         ],
         "title": "AttemptView"
+      },
+      "AttentionReason": {
+        "type": "string",
+        "enum": [
+          "spend_cap_pause",
+          "series_invalid",
+          "results_stale",
+          "check_errors"
+        ]
       },
       "BlobMeta": {
         "properties": {
@@ -19107,6 +19123,55 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Spent Usd"
           },
+          "archived": {
+            "type": "boolean",
+            "title": "Archived"
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "last_activity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity"
+          },
+          "activity_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActivitySource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/AttentionReason"
+            },
+            "type": "array",
+            "title": "Attention"
+          },
           "question_detail": {
             "$ref": "#/components/schemas/QuestionView"
           },
@@ -19211,6 +19276,12 @@
           "latest",
           "series_count",
           "spent_usd",
+          "archived",
+          "created",
+          "last_activity",
+          "activity_source",
+          "running",
+          "attention",
           "question_detail",
           "varies",
           "slots",
@@ -19461,6 +19532,55 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Spent Usd"
+          },
+          "archived": {
+            "type": "boolean",
+            "title": "Archived"
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "last_activity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity"
+          },
+          "activity_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActivitySource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/AttentionReason"
+            },
+            "type": "array",
+            "title": "Attention"
           }
         },
         "type": "object",
@@ -19476,7 +19596,13 @@
           "candidate",
           "latest",
           "series_count",
-          "spent_usd"
+          "spent_usd",
+          "archived",
+          "created",
+          "last_activity",
+          "activity_source",
+          "running",
+          "attention"
         ],
         "title": "ExperimentSummaryView"
       },
