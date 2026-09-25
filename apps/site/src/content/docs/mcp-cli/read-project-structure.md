@@ -27,7 +27,8 @@ own file tools instead.
   and it is what the project already knows: every finding of a series on held-out cases, grouped by
   failure mode, with the cases, repeats and models it holds for. Studio's chat agent gets it with
   `AGENTS.md` and `CLAUDE.md`. Experiments are files too: `experiments/<experiment_id>/experiment.yaml`
-  with its notes in `experiment.md`, its arms in `arms/<arm_id>/`, and its findings in `findings/`.
+  with its notes in `experiment.md`, the values its variants plug in under `nodes/`, `prompts/` and
+  `flows/`, and its findings in `findings/`.
   Datasets are `datasets/<dataset_id>.yaml`.
 - **Use whatever your agent calls "Read", "Grep", and "Glob".** List `flows/` to see what flows exist,
   glob `flows/*/nodes/*.yaml` to see every node across all of them, grep for a node id or a field name

@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The intent of a case from one slot: the ballots node calls the ballot pattern a variant picks, one ballot as written"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$ballots.out.rationale"
+- name: "intent"
+  from: "$ballots.out.intent"
+- name: "confidence"
+  from: "$ballots.out.confidence"
+order:
+- "ballots"

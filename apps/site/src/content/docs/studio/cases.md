@@ -17,7 +17,8 @@ you read them, add to them and run them. Experiments select their cases from the
   under the heading says which kind you picked:
   - **Cases of this flow** can run from here.
   - **Cases of another flow** run only from that flow's tab.
-  - **Cases without a flow** feed the arms of experiments, not runs from this tab.
+  - **Cases without a flow** feed experiments whose subject is a flow local to the experiment, not runs
+    from this tab.
 - **Filter by tag, then by name.** **Filter** lists the tag dimensions the cases use, such as `length`,
   `channel` or `regression`, then the values of the one you pick, with a count for each. Each filter you
   add shows as a chip. The search box narrows the list by case name, and the counter says how many cases

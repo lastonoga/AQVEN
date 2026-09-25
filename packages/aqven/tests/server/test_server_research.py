@@ -63,10 +63,14 @@ cases:
   dataset: "intake_cases"
   tags:
     topic: "orders"
+varies:
+  what: "agent"
+  nodes:
+  - "reply"
 variants:
 - id: "base"
 - id: "alt"
-  agents:
+  nodes:
     reply: "writer_alt"
 checks:
 - id: "short"
@@ -95,9 +99,9 @@ plan:
 """
 
 
-ARM: Final = "brief"
+LOCAL_FLOW: Final = "brief"
 
-ARM_FLOW: Final = """apiVersion: "aqven/v1"
+LOCAL_FLOW_YAML: Final = """apiVersion: "aqven/v1"
 kind: "Flow"
 description: "Draft an answer, then polish it"
 input: "Note"
@@ -110,7 +114,7 @@ order:
 - "polish"
 """
 
-ARM_DRAFT: Final = """apiVersion: "aqven/v1"
+LOCAL_DRAFT: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
 description: "Draft the answer"
@@ -121,7 +125,7 @@ in:
   from: "$input.text"
 """
 
-ARM_POLISH: Final = """apiVersion: "aqven/v1"
+LOCAL_POLISH: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
 description: "Polish the draft"
@@ -132,7 +136,26 @@ in:
   from: "$draft.out.answer"
 """
 
-ARM_FILES: Final = {"flow.yaml": ARM_FLOW, "nodes/draft.node.yaml": ARM_DRAFT, "nodes/polish.node.yaml": ARM_POLISH}
+SHORT_REPLY: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Answer in one sentence with the nano writer"
+inference: "reply"
+agent: "writer_alt"
+in:
+- name: "question"
+  from: "$input.text"
+"""
+
+TERSE_PROMPT: Final = "Answer in one sentence: {{ question }}\n{{ output_format }}\n"
+
+EXPERIMENT_FILES: Final = {
+    f"flows/{LOCAL_FLOW}/flow.yaml": LOCAL_FLOW_YAML,
+    f"flows/{LOCAL_FLOW}/nodes/draft.node.yaml": LOCAL_DRAFT,
+    f"flows/{LOCAL_FLOW}/nodes/polish.node.yaml": LOCAL_POLISH,
+    "nodes/reply_short.node.yaml": SHORT_REPLY,
+    "prompts/terse.md": TERSE_PROMPT,
+}
 
 
 @pytest.fixture
@@ -144,8 +167,8 @@ def research_project(tmp_path: Path) -> Path:
     folder.mkdir(parents=True)
     (folder / "experiment.yaml").write_text(EXPERIMENT_YAML, encoding="utf-8")
     (folder / "experiment.md").write_text("Why the nano writer might be enough.\n", encoding="utf-8")
-    for relative, text in ARM_FILES.items():
-        target = folder / "arms" / ARM / relative
+    for relative, text in EXPERIMENT_FILES.items():
+        target = folder / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
     return root
@@ -184,7 +207,13 @@ def test_experiment_list_carries_the_question_and_the_series_history(research_cl
 
     assert (row["experiment_id"], row["question"], row["flow_id"]) == (EXPERIMENT, "compare", "intake")
     assert (row["baseline"], row["candidate"], row["variants"]) == ("base", "alt", ["base", "alt"])
-    assert row["subject"] == {"kind": "flow", "flow_id": "intake", "arm_id": None, "from_node": None, "to_node": None}
+    assert row["subject"] == {
+        "kind": "flow",
+        "flow_id": "intake",
+        "local_flow": False,
+        "from_node": None,
+        "to_node": None,
+    }
     assert (row["series_count"], Decimal(row["spent_usd"])) == (2, Decimal("0.14"))
     assert row["latest"]["series_id"] == DONE_ID
     assert research_client.get("/api/experiments", params={"question": "threshold"}).json()["items"] == []
@@ -213,10 +242,15 @@ def test_experiment_detail_resolves_variants_checks_columns_and_cases(research_c
         "schema_valid_first_try",
         "infra_error_rate",
     ]
-    alt = body["variant_details"][1]
+    base, alt = body["variant_details"]
     assert (alt["variant_id"], alt["role"]) == ("alt", "candidate")
+    assert body["varies"] == {"what": "agent", "nodes": ["reply"]}
+    assert (base["changes"], alt["changes"]) == ([], [{"node_id": "reply", "what": "agent", "value": "writer_alt"}])
     assert alt["assignments"] == [
         {"node_id": "reply", "agent": {"agent_id": "writer_alt", "model": "openai:gpt-5.4-nano"}, "overridden": True}
+    ]
+    assert base["assignments"] == [
+        {"node_id": "reply", "agent": {"agent_id": "writer", "model": "openai:gpt-5.4-mini"}, "overridden": False}
     ]
     sources = {check["check_id"]: check["source"] for check in body["checks"]}
     assert (sources["short"]["kind"], sources["short"]["use"]) == ("builtin", "max_words")
@@ -240,41 +274,98 @@ def test_experiment_detail_resolves_variants_checks_columns_and_cases(research_c
     assert body["plan"] == {"cases": 2, "repeats": 2}
 
 
-def test_an_arm_serves_its_nodes_and_schemas_for_the_run_view(research_client: TestClient) -> None:
-    body = research_client.get(f"/api/experiments/{EXPERIMENT}/arms/{ARM}").json()
+def test_the_detail_lists_the_local_flows_alternatives_and_prompts_of_the_experiment(
+    research_client: TestClient,
+) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}").json()
+    folder = f"experiments/{EXPERIMENT}"
 
-    assert (body["experiment_id"], body["arm_id"], body["flow_id"]) == (EXPERIMENT, ARM, ARM)
+    assert body["flows"] == [
+        {
+            "flow_id": LOCAL_FLOW,
+            "description": "Draft an answer, then polish it",
+            "file": f"{folder}/flows/{LOCAL_FLOW}/flow.yaml",
+            "steps": [
+                {
+                    "node_id": "draft",
+                    "kind": "llm",
+                    "agent": {"agent_id": "writer", "model": "openai:gpt-5.4-mini"},
+                    "description": "Draft the answer",
+                },
+                {
+                    "node_id": "polish",
+                    "kind": "llm",
+                    "agent": {"agent_id": "writer_alt", "model": "openai:gpt-5.4-nano"},
+                    "description": "Polish the draft",
+                },
+            ],
+        }
+    ]
+    assert body["alternatives"] == [
+        {
+            "alternative_id": "reply_short",
+            "kind": "llm",
+            "description": "Answer in one sentence with the nano writer",
+            "file": f"{folder}/nodes/reply_short.node.yaml",
+        }
+    ]
+    assert body["prompts"] == [{"name": "terse", "file": f"{folder}/prompts/terse.md"}]
+    assert "arms" not in body
+
+
+def test_a_local_flow_serves_its_nodes_and_schemas_for_the_run_view(research_client: TestClient) -> None:
+    body = research_client.get(f"/api/experiments/{EXPERIMENT}/flows/{LOCAL_FLOW}").json()
+
+    assert (body["experiment_id"], body["flow_id"]) == (EXPERIMENT, LOCAL_FLOW)
+    assert "arm_id" not in body
     assert (body["description"], body["order"]) == ("Draft an answer, then polish it", ["draft", "polish"])
     nodes = {node["node_id"]: node for node in body["nodes"]}
     assert list(nodes) == ["draft", "polish"]
     assert (nodes["draft"]["kind"], nodes["draft"]["agent"], nodes["draft"]["inference"]) == ("llm", "writer", "reply")
-    assert nodes["polish"]["path"] == f"experiments/{EXPERIMENT}/arms/{ARM}/nodes/polish.node.yaml"
+    assert nodes["polish"]["path"] == f"experiments/{EXPERIMENT}/flows/{LOCAL_FLOW}/nodes/polish.node.yaml"
     assert (nodes["draft"]["downstream"], nodes["polish"]["upstream"]) == (["polish"], ["draft"])
     schemas = body["schemas"]
-    assert schemas["flow_id"] == ARM
+    assert schemas["flow_id"] == LOCAL_FLOW
     assert schemas["input"]["required"] == ["text"]
     assert sorted(schemas["nodes"]) == ["draft", "polish"]
     assert "answer" in schemas["nodes"]["draft"]["out"]["properties"]
 
 
-def test_an_arm_serves_the_prompt_of_each_llm_step(research_client: TestClient) -> None:
-    prompts = research_client.get(f"/api/experiments/{EXPERIMENT}/arms/{ARM}").json()["prompts"]
+def test_a_local_flow_serves_the_prompt_of_each_llm_step(research_client: TestClient) -> None:
+    prompts = research_client.get(f"/api/experiments/{EXPERIMENT}/flows/{LOCAL_FLOW}").json()["prompts"]
 
     assert sorted(prompts) == ["draft", "polish"]
     draft = prompts["draft"]
-    assert (draft["flow_id"], draft["node_id"], draft["inference_id"]) == (ARM, "draft", "reply")
+    assert (draft["flow_id"], draft["node_id"], draft["inference_id"]) == (LOCAL_FLOW, "draft", "reply")
     assert draft["source"]["text"] == research_client.get(f"/api/raw/{draft['path']}").text
     assert [slot["name"] for slot in draft["slots"]] == ["question"]
 
 
 @pytest.mark.parametrize(
-    "path", [f"/api/experiments/{EXPERIMENT}/arms/nothing", f"/api/experiments/nothing/arms/{ARM}"]
+    "path",
+    [
+        f"/api/experiments/{EXPERIMENT}/flows/nothing",
+        f"/api/experiments/nothing/flows/{LOCAL_FLOW}",
+        f"/api/experiments/{EXPERIMENT}/arms/{LOCAL_FLOW}",
+    ],
 )
-def test_an_unknown_arm_is_not_found(research_client: TestClient, path: str) -> None:
+def test_an_unknown_local_flow_is_not_found(research_client: TestClient, path: str) -> None:
     response = research_client.get(path)
 
     assert response.status_code == 404
-    assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_the_file_list_knows_the_local_flows_alternatives_and_prompts_of_an_experiment(
+    research_client: TestClient,
+) -> None:
+    folder = f"experiments/{EXPERIMENT}"
+    listed = research_client.get("/api/files", params={"prefix": folder, "limit": 200}).json()["items"]
+    kinds = {entry["path"]: entry["kind"] for entry in listed}
+
+    assert kinds[f"{folder}/flows/{LOCAL_FLOW}/flow.yaml"] == "Flow"
+    assert kinds[f"{folder}/flows/{LOCAL_FLOW}/nodes/draft.node.yaml"] == "Node"
+    assert kinds[f"{folder}/nodes/reply_short.node.yaml"] == "Node"
+    assert kinds[f"{folder}/prompts/terse.md"] == "prompt"
 
 
 def test_an_unknown_experiment_is_not_found(research_client: TestClient) -> None:

@@ -49,12 +49,12 @@ describe("SeriesListScreen", () => {
     expect(screen.queryByRole("heading", { level: 2 })).toBeNull()
   })
 
-  it("names the flow of each series and arms for a series of an arm", async () => {
+  it("names the flow of each series and experiment flows for a series on a flow of its experiment", async () => {
     await renderRoute(SERIES_LIST)
     expect(await screen.findByRole("columnheader", { name: "Flow" })).toBeTruthy()
     expect((await rowOf(RESEARCH_SERIES.panelRefuted)).textContent).toContain("judge_panel")
     expect((await rowOf(RESEARCH_SERIES.lookWaiting)).textContent).toContain("support_case")
-    expect((await rowOf(RESEARCH_SERIES.escalationRunning)).textContent).toContain("Arms")
+    expect((await rowOf(RESEARCH_SERIES.escalationRunning)).textContent).toContain("Flows of experiments")
   })
 
   it("shows status, experiment, split, size, spend and verdict of a series", async () => {

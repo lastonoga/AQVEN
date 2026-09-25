@@ -82,14 +82,29 @@ prompt fix if the prompt never states the limit, and a hypothesis about the agen
 |---|---|---|
 | Output contract and limits | agent A on step S passes its output contract in fewer than X of attempts | `threshold` on `success_rate`, `below`, `variant: A`, range `from: S, to: S`; read `schema_valid_first_try`; cases that push fields to their limits; `{{CLI_COMMAND}} models shapes <agent> --live` first |
 | Instruction following | instruction I of the prompt is broken more often than X | one binary check per instruction (`regex`, `language`, `max_words`, `no_pii`, `run:`), `threshold` |
-| Long or noisy input | on `length: very_long` the right answer drops below X; condensing first beats one step | `threshold` with `cases.tags` on one level; `compare` of two arms |
+| Long or noisy input | on `length: very_long` the right answer drops below X; condensing first beats one step | `threshold` with `cases.tags` on one level; `compare` with a `flow` factor: the reading step behind a `call` node, one local flow per way of reading |
 | Class boundaries | cases whose opening topic differs from the intent are decided right less than X | `expected` on the label field, cases selected by tags |
 | Error propagation | a wrong output of S1 reaches the flow's output | a range below S1 with a planted wrong S1 output in `node_outputs`; checks for "noticed" and "final output right" |
-| Judge reliability | judge J catches more than X of planted defects and passes more than Y of clean answers | an arm that runs the judge; clean answers and copies with one planted defect, tagged; one threshold per tag |
+| Judge reliability | judge J catches more than X of planted defects and passes more than Y of clean answers | a local flow that runs only the judge as the subject; clean answers and copies with one planted defect, tagged; one threshold per tag |
 | Cost and latency | a variant stays under $X per case, or p95 under Y ms | `threshold` on `cost_usd` or `latency_p95_ms`, `below`, on the longest cases; p95 needs 20 attempts |
 | Stability | a share of cases passes only sometimes | `repeats: 3` or more, read stability and pass^k; an A/A pair (two identical variants, `compare`, `margin: 0`) gives the noise floor |
-| Agent per step | agent B on step S is not worse than A by more than m, and a pass costs less | `noninferior` on the range `from: S, to: S`, guardrails `cost_of_pass`, `schema_valid_first_try`, `latency_p95_ms`; one step at a time |
-| Split a step | a chain S1 → S2 beats one call by more than m, and not only by calling more | `compare` against an arm of equal budget, with the single step as a third variant; guardrail `cost_of_pass`, `relative: true` |
+| Agent per step | agent B on step S is not worse than A by more than m, and a pass costs less | `noninferior` with an `agent` factor on S, on the range `from: S, to: S`, guardrails `cost_of_pass`, `schema_valid_first_try`, `latency_p95_ms`; one step at a time |
+| Split a step | a chain S1 → S2 beats one call by more than m, and not only by calling more | a `flow` factor on a `call` slot: the chain, a local flow of equal budget and the single step as three variants; `compare` the chain against the equal-budget flow; guardrail `cost_of_pass`, `relative: true` |
+
+Every experiment changes one factor, named in `varies`, and each variant only sets its values. Pick the
+factor from what the hypothesis is about:
+
+| The hypothesis is about | `varies.what` | The variants set |
+|---|---|---|
+| which model or agent takes a step | `agent` | an agent per `llm` node |
+| how a step is worded | `prompt` | a file from the experiment's `prompts/` per `llm` node |
+| how one step is implemented: a different algorithm, or a cheaper model with a prompt tuned for it | `use` | an alternative node from the experiment's `nodes/` |
+| how the task is split into steps | `flow` | a flow for a `call` node, local from the experiment's `flows/` or from the project |
+
+For a question about the logic, fix what already works (the models and the prompts) and give the part you
+want to rethink its own flow behind a `call` node. Each variant plugs a different flow into that slot. A
+way of combining results that you want to rank is a variant, never a check: checks are the columns every
+variant is measured on.
 
 The showcase project's experiments are worked examples of several rows:
 
@@ -144,7 +159,7 @@ The showcase project's experiments are worked examples of several rows:
 |---|---|
 | step S breaks its output contract | first check the prompt states the limit; then another agent, more `output.retries`, or trimming in a `code` step; raise a limit only if the developer confirms it isn't a requirement |
 | B is not worse and cheaper | point the node's `agent:` at B |
-| the chain beats the equal-budget arm | move the arm's nodes into the flow with `flow_patch`; there's no tool that promotes an arm |
+| the chain beats the equal-budget flow | a project flow in the slot: point the `call` node at the winning flow, moving a local flow into `flows/` of the project with `flow_patch`; a winning `prompt`, `agent` or `use` value is copied into the node the same way. No tool promotes a variant |
 | a risk is real but no fix is proven | a structural guard, then a new hypothesis: "the guard keeps the risk below X" |
 | the judge passes its planted-defect test | add `validated_by: <experiment_id>` to every check that uses it |
 
@@ -156,11 +171,11 @@ changes, only a new held-out series speaks for the new flow.
 
 ## Never
 
-- Change two things between series.
+- Change two things between series, or two kinds of thing in one experiment.
 - Fix a downstream failure before the first upstream one.
 - Drop hard cases so that a finding passes.
 - Tune a prompt on held-out cases.
-- Compare a multi-call arm only against a single call.
+- Compare a multi-call flow only against a single call.
 - Use a judge where `regex` or code can check.
 - Weaken a type or a limit so that a series passes.
 - Edit `findings/*.yaml` or `FINDINGS.md`.
@@ -184,13 +199,13 @@ Some rules above are discipline, not enforcement:
 
 - **Failure modes.** No file type holds them, so they live in the look experiment's `experiment.md`.
   Nothing checks that you read the first traces or agreed the list.
-- **Equal budgets.** The server doesn't check that a multi-call arm is compared against an arm with the
+- **Equal budgets.** The server doesn't check that a multi-call flow is compared against a flow with the
   same number of calls.
 - **Stability.** pass^k and the flaky share are shown but can't be a question's metric, so they never
   get a verdict.
 - **Stale findings.** Nothing marks a finding stale when the flow changes. The hashes in the file tell
   what it measured.
-- **Promoting an arm.** No tool moves a winning arm into the flow: the agent does it with `flow_patch`.
+- **Promoting a variant.** No tool moves a winning value into the flow: the agent does it with `flow_patch`.
 
 ## See also
 

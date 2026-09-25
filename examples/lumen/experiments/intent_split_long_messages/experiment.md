@@ -1,17 +1,23 @@
 # Condense first, then classify
 
-**Purpose:** checking a risky hypothesis before building it into the flow (a comparison of two arms).
+**Purpose:** checking a risky hypothesis before building it into the flow (two flows compared in one slot).
 
 Long customer messages often open with something other than the request: a late parcel that did arrive, praise, a
 side question about colours. A cheap model reading the whole message tends to classify the opening topic. The
 hypothesis is that condensing the message to "what the customer needs now" first, and classifying that summary,
 gets the intent right more often.
 
-**Arms.** Both arms take a `CaseRequest` and return an `IntentBallot`, and both use the cheap `llama` agent, so the
-only difference is the structure.
+**Subject.** The local flow `message_intent` (`flows/message_intent/`) is a slot: one `call` node, `classify`, that
+passes the whole case on and returns the `IntentBallot` it gets back. As written it calls the local flow `one_step`.
 
-- `one_step`: `classify_message` reads the whole message.
-- `two_step`: `condense_message` writes a summary of at most 600 characters, and `classify_summary` decides from it.
+**Variants.** The factor is the flow called at the slot (`varies: what: flow, nodes: [classify]`). Both flows take a
+`CaseRequest` and return an `IntentBallot`, as a flow factor requires, and both use the cheap `llama` agent, so the only
+difference is the structure.
+
+| Variant | `classify` calls | Steps |
+|---|---|---|
+| `one_step` | `one_step` (as written) | `classify_message` reads the whole message |
+| `two_step` | `two_step` | `condense_message` writes a summary of at most 600 characters, `classify_summary` decides from it |
 
 Both classifiers share the intent rubric in `fragments/intent_rubric.md`.
 

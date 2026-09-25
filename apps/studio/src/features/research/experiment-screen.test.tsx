@@ -58,7 +58,7 @@ describe("ExperimentScreen: what we test", () => {
     expect(await within(graph).findByText("swap: gpt → mistral")).toBeTruthy()
     expect(nodeBox(graph, "triage")?.className).toContain("opacity-35")
     expect(nodeBox(graph, "revise")?.className).not.toContain("opacity-35")
-    expect(within(graph).getByText("flow support_case")).toBeTruthy()
+    expect(within(graph).getByText("subject · flow support_case")).toBeTruthy()
   })
 
   it("opens the clicked step in a sidebar beside the page, not inside the canvas, and closes it", async () => {
@@ -94,7 +94,7 @@ describe("ExperimentScreen: what we test", () => {
     expect(within(sidebar).getByRole("link", { name: /^Open series/ }).getAttribute("href")).toBe(`/research/series/${RESEARCH_SERIES.noninferiorHoldout}`)
   })
 
-  it("shows the fields and the prompt of an arm step", async () => {
+  it("shows the fields and the prompt of a step of a flow of the experiment", async () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
     const graph = await section("Graph of one_step")
     expect(nodeBox(graph, "classify_message")?.textContent).toMatch(/1 input.*3 outputs/)
@@ -122,17 +122,30 @@ describe("ExperimentScreen: what we test", () => {
     expect(await within(sidebar).findByText(/^Разбирает текст обращения и все вложения/)).toBeTruthy()
   })
 
-  it("stacks one graph per arm with its variants above it", async () => {
+  it("stacks the subject graph first, then one graph per flow of the experiment with the variants that call it", async () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
+    const subject = await section("Graph of message_intent")
     const one = await section("Graph of one_step")
     const two = await section("Graph of two_step")
+    expect(subject.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(one.compareDocumentPosition(two) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(one).getByText("arm one_step")).toBeTruthy()
+    expect(within(subject).getByText("subject · flow message_intent of this experiment")).toBeTruthy()
+    expect(within(subject).getByText("one_step", { selector: "span" })).toBeTruthy()
+    expect(await within(subject).findByText("called flow: two_step")).toBeTruthy()
+    expect(within(one).getByText("flow one_step of this experiment")).toBeTruthy()
+    expect(within(one).queryByText("two_step", { selector: "span" })).toBeNull()
+    expect(within(two).getByText("flow two_step of this experiment")).toBeTruthy()
     expect(within(two).getByText("two_step", { selector: "span" })).toBeTruthy()
     expect(await within(two).findByText("condense_message")).toBeTruthy()
   })
 
-  it("states the hypothesis with its decision rule, then the variants with the difference from the baseline, then the fact tiles, above the canvas", async () => {
+  it("marks the nodes a prompt factor changes with the prompts the variants give them", async () => {
+    await renderRoute("/research/experiments/panel_judge_prompt")
+    const graph = await section("Graph of judge_panel")
+    expect(await within(graph).findAllByText("prompt: claims_first · anchored_scale")).toHaveLength(3)
+  })
+
+  it("states the hypothesis with its decision rule, then the factor and the value of each variant, then the fact tiles, above the canvas", async () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     const what = await section("What we test")
     const hypothesis = within(what).getByRole("region", { name: "Hypothesis" })
@@ -140,10 +153,12 @@ describe("ExperimentScreen: what we test", () => {
     expect(rulesOf(what)).toEqual(["critique: difference ≥ −0.05", "cost per passing run ≤ +20%"])
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
     expect(hypothesis.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from baseline", "Agents · models"])
+    const caption = within(what).getByText("Varies: agent of revise")
+    expect(caption.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Agent", "Agents · models"])
     expect(rowsOf(table)).toEqual([
-      ["gpt", "baseline", "—", "mistralmistral-nemogptgpt-oss-20b"],
-      ["mistral", "candidate", "polish › revise: agent gpt → agent mistralgpt-oss-20b → mistral-nemo", "mistralmistral-nemo"],
+      ["gpt", "baseline", "as written", "mistralmistral-nemogptgpt-oss-20b"],
+      ["mistral", "candidate", "mistral", "mistralmistral-nemo"],
     ])
     expect(within(table).getAllByText("mistral-nemo")[0]?.getAttribute("title")).toBe("openrouter:mistralai/mistral-nemo")
     const facts = factsOf(what)
@@ -179,21 +194,49 @@ describe("ExperimentScreen: what we test", () => {
     expect(within(where).getByText("Earlier steps come from the case")).toBeTruthy()
   })
 
-  it("shows the step chain of each arm when the variants run on different arms", async () => {
+  it("names the flow each variant calls at the slot of a flow factor and the flows of the experiment", async () => {
     await renderRoute("/research/experiments/intent_split_long_messages")
     const what = await section("What we test")
+    expect(within(what).getByText("Varies: flow called by classify")).toBeTruthy()
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Steps", "Agents · models"])
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Flow", "Agents · models"])
     expect(rowsOf(table)).toEqual([
-      ["one_step", "baseline", "classify_message", "llamallama-3.1-8b-instruct"],
-      ["two_step", "candidate", "condense_message → classify_summary", "llamallama-3.1-8b-instruct"],
+      ["one_step", "baseline", "as written", "no agent"],
+      ["two_step", "candidate", "two_step", "no agent"],
     ])
     const where = tileOf(factsOf(what), "Where")
-    expect(within(where).getByText("arms")).toBeTruthy()
-    expect(within(where).getByText("one_step, two_step")).toBeTruthy()
+    expect(within(where).getByText("experiment flow")).toBeTruthy()
+    expect(within(where).getByText("message_intent")).toBeTruthy()
+    expect(within(where).getByText("flows of this experiment: one_step, two_step")).toBeTruthy()
   })
 
-  it("marks the one variant of a threshold as tested, with no difference column and the threshold as the rule", async () => {
+  it("names the prompt of each variant under a prompt factor", async () => {
+    await renderRoute("/research/experiments/panel_judge_prompt")
+    const what = await section("What we test")
+    expect(within(what).getByText("Varies: prompt of deepseek, qwen, llama")).toBeTruthy()
+    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Prompt", "Agents · models"])
+    expect(rowsOf(table).map((row) => row.slice(0, 3))).toEqual([
+      ["as_written", "baseline", "as written"],
+      ["claims_first", "candidate", "claims_first"],
+      ["anchored_scale", "other", "anchored_scale"],
+    ])
+  })
+
+  it("names the alternative node of each variant under a use factor and lists the alternatives in the details", async () => {
+    await renderRoute("/research/experiments/panel_merge_rule")
+    const what = await section("What we test")
+    expect(within(what).getByText("Varies: implementation of aggregate")).toBeTruthy()
+    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Alternative", "Agents · models"])
+    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written", "majority_only", "always_tie_break"])
+    const details = await section("Technical details")
+    fireEvent.click(within(details).getByRole("button", { name: "Technical details" }))
+    expect(within(details).getByText("Alternative nodes")).toBeTruthy()
+    expect(within(details).getByText(/^always_tie_break · experiments\/panel_merge_rule\/nodes\/always_tie_break\/always_tie_break\.node\.yaml; majority_only · /)).toBeTruthy()
+  })
+
+  it("marks the one variant of a threshold as tested, with no factor and the threshold as the rule", async () => {
     await renderRoute("/research/experiments/critique_planted_defects")
     const what = await section("What we test")
     const table = within(what).getByRole("table", { name: "Variants of this experiment" })
@@ -203,22 +246,20 @@ describe("ExperimentScreen: what we test", () => {
     const facts = factsOf(what)
     expect(itemsOf(within(tileOf(facts, "Measured by")).getByRole("list", { name: "Checks" }))).toEqual(["labelbuilt-in"])
     const where = tileOf(facts, "Where")
-    expect(within(where).getByText("arm")).toBeTruthy()
+    expect(within(what).queryByText(/^Varies:/)).toBeNull()
+    expect(within(where).getByText("experiment flow")).toBeTruthy()
     expect(within(where).getByText("critique_only")).toBeTruthy()
     expect(within(where).getByText("every step")).toBeTruthy()
     expect(within(within(what).getByRole("region", { name: "Graph of critique_only" })).getByText("tested")).toBeTruthy()
   })
 
-  it("compares the variants of a threshold on many variants with the first one", async () => {
+  it("lists the value per node when a variant sets only some nodes of the factor", async () => {
     await renderRoute("/research/experiments/reply_stage_budget")
-    const table = within(await section("What we test")).getByRole("table", { name: "Variants of this experiment" })
-    expect(headersOf(table)).toEqual(["Variant", "Role", "Difference from three_families", "Agents · models"])
-    expect(rowsOf(table)[1]).toEqual([
-      "mistral_only",
-      "tested",
-      "drafts › gemini: agent gemini → agent mistralgemini-2.5-flash-lite → mistral-nemodrafts › gpt: agent gpt → agent mistralgpt-oss-20b → mistral-nemo",
-      "mistralmistral-nemo",
-    ])
+    const what = await section("What we test")
+    expect(within(what).getByText("Varies: agent of gpt, gemini, mistral")).toBeTruthy()
+    const table = within(what).getByRole("table", { name: "Variants of this experiment" })
+    expect(headersOf(table)).toEqual(["Variant", "Role", "Agent", "Agents · models"])
+    expect(rowsOf(table)[1]).toEqual(["mistral_only", "tested", "gpt: mistralgemini: mistral", "mistralmistral-nemo"])
   })
 
   it("names the goal of a look with no verdict, and its cases by tag", async () => {
@@ -235,10 +276,10 @@ describe("ExperimentScreen: what we test", () => {
     expect(within(cases).getByRole("link", { name: /Open the cases/ }).getAttribute("href")).toContain("/flows/support_case/cases")
   })
 
-  it("says so when two variants run the same setup", async () => {
+  it("shows the value a variant sets even when it repeats the subject as written", async () => {
     await renderRoute("/research/experiments/panel_aa_noise")
     const table = within(await section("What we test")).getByRole("table", { name: "Variants of this experiment" })
-    expect(rowsOf(table)[1]?.[2]).toBe("no difference")
+    expect(rowsOf(table).map((row) => row[2])).toEqual(["as written", "gpt"])
   })
 })
 

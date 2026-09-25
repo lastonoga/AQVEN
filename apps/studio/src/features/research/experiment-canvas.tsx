@@ -3,7 +3,8 @@ import { useTranslations } from "use-intl"
 import type { ExperimentDetail, ExperimentQuestion } from "@/domain"
 import { Empty, SIDE_PANEL_WIDTH, Surface, Text } from "@/components/studio"
 import { buildGraph, GraphCanvas, withFieldCounts } from "@/features/flow"
-import { markSwaps, type GraphView, type StepSelection } from "./graph-model"
+import { joinMeta } from "@/lib/format"
+import { markSteps, type GraphView, type StepMark, type StepSelection } from "./graph-model"
 import { ResearchSection } from "./layout"
 import { RoleTag } from "./role-tag"
 import { WhatWeTest } from "./what-we-test"
@@ -24,8 +25,21 @@ export type ExperimentCanvasProps = {
   readonly onSelect: (selection: StepSelection) => void
 }
 
+const MARK_JOIN = " · "
+
+function useMarkLabel(): (mark: StepMark) => string {
+  const t = useTranslations("research.experiment.canvas")
+  const factor = useTranslations("research.vocabulary.factor")
+  return (mark) => {
+    if (mark.kind === "swap") return t("swap", { agents: mark.agents })
+    if (mark.values.length === 0) return t("factorWritten", { what: factor(mark.what) })
+    return t("factor", { what: factor(mark.what), values: mark.values.join(MARK_JOIN) })
+  }
+}
+
 function GraphTitle({ view, question }: { readonly view: GraphView; readonly question: ExperimentQuestion }) {
   const t = useTranslations("research.experiment.canvas")
+  const { source } = view
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
       {view.variants.map((variant) => (
@@ -37,7 +51,7 @@ function GraphTitle({ view, question }: { readonly view: GraphView; readonly que
         </span>
       ))}
       <Text role="hint" tone="neutral">
-        {view.source.arm === null ? t("flow", { flow: view.source.key }) : t("arm", { arm: view.source.arm })}
+        {joinMeta([view.role === "subject" ? t("subject") : null, source.local ? t("localFlow", { flow: source.flow }) : t("flow", { flow: source.flow })])}
       </Text>
     </div>
   )
@@ -45,7 +59,8 @@ function GraphTitle({ view, question }: { readonly view: GraphView; readonly que
 
 function GraphBlock({ view, question, selected, legend, onSelect, onToggleLegend }: GraphBlockProps) {
   const t = useTranslations("research.experiment.canvas")
-  const graph = withFieldCounts(markSwaps(buildGraph(view.source.nodes, view.source.order), view.swaps, (agents) => t("swap", { agents })), view.source.schemas)
+  const label = useMarkLabel()
+  const graph = withFieldCounts(markSteps(buildGraph(view.source.nodes, view.source.order), view.marks, label), view.source.schemas)
   return (
     <section aria-label={t("graphAria", { graph: view.source.key })} className="flex min-w-0 flex-col gap-2">
       <GraphTitle view={view} question={question} />

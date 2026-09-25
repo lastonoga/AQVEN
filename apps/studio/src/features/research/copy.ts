@@ -40,14 +40,14 @@ export function useSubjectCopy(): SubjectCopy {
   return {
     flow: (flow) => t("flow", { flow }),
     range: (flow, range) => t("range", { flow, range }),
-    arm: (arm) => t("arm", { arm }),
-    armRange: (arm, range) => t("armRange", { arm, range }),
+    local: (flow) => t("local", { flow }),
+    localRange: (flow, range) => t("localRange", { flow, range }),
   }
 }
 
 export function useFlowTitle(): (flow: FlowId | null) => string {
   const t = useTranslations("research.flowSection")
-  return (flow) => flow ?? t("arms")
+  return (flow) => flow ?? t("local")
 }
 
 export function useCheckHintCopy(): CheckHintCopy {

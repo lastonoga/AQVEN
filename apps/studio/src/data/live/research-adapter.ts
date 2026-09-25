@@ -1,9 +1,12 @@
 import type {
   AgentRef,
-  ArmFlow,
   ApiAgentRef,
-  ApiArm,
-  ApiArmFlow,
+  ApiAlternative,
+  ApiExperimentFlow,
+  ApiExperimentPrompt,
+  ApiFactor,
+  ApiLocalFlow,
+  ApiVariantChange,
   ApiSeriesAttempt,
   ApiCaseSelection,
   ApiCheck,
@@ -30,13 +33,18 @@ import type {
   CheckSource,
   CheckSourceKind,
   Contrast,
-  ExperimentArm,
+  ExperimentAlternative,
   ExperimentCheck,
   ExperimentDetail,
+  ExperimentFactor,
+  ExperimentFlow,
+  ExperimentFlowDetail,
+  ExperimentPrompt,
   ExperimentQuestion,
   ExperimentSubject,
   ExperimentSummary,
   ExperimentVariant,
+  FactorChange,
   Guardrail,
   LatestSeries,
   LaunchPlan,
@@ -92,9 +100,13 @@ const optionalAgent = (agent: ApiAgentRef | null | undefined): AgentRef | null =
 const NO_RANGE: NodeRange = { from: ids.nodeId(NO_TEXT), to: ids.nodeId(NO_TEXT) }
 
 const SUBJECTS: Readonly<Record<SubjectKind, (subject: ApiSubject) => ExperimentSubject>> = {
-  flow: (subject) => ({ kind: "flow", flow: ids.flowId(subject.flow_id ?? NO_TEXT) }),
-  range: (subject) => ({ kind: "range", flow: ids.flowId(subject.flow_id ?? NO_TEXT), range: rangeOf(subject.from_node, subject.to_node) ?? NO_RANGE }),
-  arm: (subject) => ({ kind: "arm", arm: ids.armId(subject.arm_id ?? NO_TEXT), range: rangeOf(subject.from_node, subject.to_node) }),
+  flow: (subject) => ({ kind: "flow", flow: ids.flowId(subject.flow_id), local: subject.local_flow }),
+  range: (subject) => ({
+    kind: "range",
+    flow: ids.flowId(subject.flow_id),
+    local: subject.local_flow,
+    range: rangeOf(subject.from_node, subject.to_node) ?? NO_RANGE,
+  }),
 }
 
 export const subjectOf = (subject: ApiSubject): ExperimentSubject => SUBJECTS[subject.kind](subject)
@@ -150,16 +162,31 @@ const columnOf = (column: ApiMetricColumn): MetricColumn => ({
   relative: column.relative,
 })
 
-const armOf = (arm: ApiArm): ExperimentArm => ({
-  id: ids.armId(arm.arm_id),
-  description: arm.description,
-  steps: arm.steps.map((step) => ({ node: ids.nodeId(step.node_id), kind: step.kind, agent: optionalAgent(step.agent), description: step.description })),
+const localFlowOf = (flow: ApiLocalFlow): ExperimentFlow => ({
+  id: ids.flowId(flow.flow_id),
+  description: flow.description,
+  file: flow.file === null ? null : ids.filePath(flow.file),
+  steps: flow.steps.map((step) => ({ node: ids.nodeId(step.node_id), kind: step.kind, agent: optionalAgent(step.agent), description: step.description })),
 })
+
+const alternativeOf = (alternative: ApiAlternative): ExperimentAlternative => ({
+  id: ids.nodeId(alternative.alternative_id),
+  kind: alternative.kind,
+  description: alternative.description,
+  file: ids.filePath(alternative.file),
+})
+
+const promptOf = (prompt: ApiExperimentPrompt): ExperimentPrompt => ({ name: prompt.name, file: ids.filePath(prompt.file) })
+
+const factorOf = (factor: ApiFactor | null): ExperimentFactor | null =>
+  factor === null ? null : { what: factor.what, nodes: factor.nodes.map(ids.nodeId) }
+
+const changeOf = (change: ApiVariantChange): FactorChange => ({ node: ids.nodeId(change.node_id), what: change.what, value: change.value })
 
 const variantOf = (variant: ApiVariant): ExperimentVariant => ({
   id: ids.variantId(variant.variant_id),
-  arm: variant.arm_id === null ? null : ids.armId(variant.arm_id),
   role: variant.role,
+  changes: variant.changes.map(changeOf),
   assignments: variant.assignments.map((assignment) => ({ node: ids.nodeId(assignment.node_id), agent: agentOf(assignment.agent), overridden: assignment.overridden })),
 })
 
@@ -201,7 +228,10 @@ export const experimentSummaryOf = (experiment: ApiExperimentSummary): Experimen
 export const experimentDetailOf = (experiment: ApiExperimentDetail): ExperimentDetail => ({
   ...headOf(experiment),
   question: questionOf(experiment.question_detail),
-  arms: experiment.arms.map(armOf),
+  varies: factorOf(experiment.varies),
+  flows: experiment.flows.map(localFlowOf),
+  alternatives: experiment.alternatives.map(alternativeOf),
+  prompts: experiment.prompts.map(promptOf),
   cases: selectionOf(experiment.cases),
   variants: experiment.variant_details.map(variantOf),
   checks: experiment.checks.map(checkOf),
@@ -330,10 +360,11 @@ export const caseRowOf = (row: ApiSeriesCaseRow): SeriesCaseRow => ({
   attempts: row.attempts.map(attemptOf),
 })
 
-export const armFlowOf = (view: ApiArmFlow): ArmFlow => ({
+export const experimentFlowOf = (view: ApiExperimentFlow): ExperimentFlowDetail => ({
   experiment: ids.experimentId(view.experiment_id),
-  arm: ids.armId(view.arm_id),
+  flow: ids.flowId(view.flow_id),
   description: view.description,
+  order: view.order.map(ids.nodeId),
   nodes: view.nodes,
   schemas: view.schemas,
   prompts: view.prompts,

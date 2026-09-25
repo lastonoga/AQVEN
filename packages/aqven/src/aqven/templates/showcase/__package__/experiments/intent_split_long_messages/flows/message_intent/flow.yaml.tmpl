@@ -1,0 +1,14 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The intent of a case from one slot: the classify node calls the reading pattern a variant picks, one step as written"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$classify.out.rationale"
+- name: "intent"
+  from: "$classify.out.intent"
+- name: "confidence"
+  from: "$classify.out.confidence"
+order:
+- "classify"

@@ -3,7 +3,7 @@
 **Purpose:** validating a judge. Until this experiment passes, every experiment that scores with this critic (see
 `validated_by` in `reply_noninferior_mistral` and `reply_look`) gives a signal, not evidence.
 
-**Subject.** The arm `critique_only` runs the critic outside the polish loop. The `critique` step is the project's
+**Subject.** The local flow `critique_only` (`flows/critique_only/`) runs the critic outside the polish loop. The `critique` step is the project's
 `critique` inference with the `deepseek` agent, exactly as the other experiments use it as a check. The `verdict` step
 reads the critique the way the loop does: a reply may go out when the score reaches the loop's approval threshold
 of 0.85 and there are no blocking remarks. It is deterministic, so it adds no noise of its own.

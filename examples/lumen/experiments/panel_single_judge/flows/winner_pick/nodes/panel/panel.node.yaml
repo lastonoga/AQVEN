@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "call"
+description: "The slot of the experiment: calls a judging pattern with the case summary, the drafts and the chunks, as written the project judge panel"
+flow: "judge_panel"
+in:
+- name: "summary"
+  from: "$input.summary"
+- name: "candidates"
+  from: "$input.candidates"
+- name: "chunks"
+  from: "$input.chunks"

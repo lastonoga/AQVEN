@@ -6,6 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final, Literal, assert_never
 
+from pydantic import JsonValue
+
 from aqven.loader import file_hash
 from aqven.series.model import (
     AttemptRecord,
@@ -22,6 +24,7 @@ from aqven.series.model import (
     SeriesVerdict,
     ThresholdCell,
     VariantAggregates,
+    VariantChange,
     VariantPlanRecord,
 )
 from aqven.spec import (
@@ -43,6 +46,7 @@ from aqven.spec import (
     SeriesSplit,
     ThresholdQuestion,
 )
+from aqven.spec.findings import FindingChange
 
 type FindingQuestion = Literal["threshold", "compare", "noninferior"]
 
@@ -53,6 +57,9 @@ DIGITS: Final = 6
 FIRST_LOOK: Final = 1
 SPEND_QUANTUM: Final = Decimal("0.000001")
 SELF_HASH_FIELD: Final = "self_sha256"
+VARIANTS_FIELD: Final = "variants"
+LEGACY_ONLY_FIELDS: Final = frozenset({"arm"})
+CURRENT_ONLY_FIELDS: Final = frozenset({"changes"})
 BOUND_DIRECTIONS: Final[Mapping[Literal["above", "below"], MetricDirection]] = {
     "above": MetricDirection.HIGHER_IS_BETTER,
     "below": MetricDirection.LOWER_IS_BETTER,
@@ -102,8 +109,18 @@ def finding_at_look(
     return draft.model_copy(update={SELF_HASH_FIELD: finding_hash(draft)})
 
 
+def finding_document(spec: FindingSpec) -> dict[str, JsonValue]:
+    document = spec.model_dump(mode="json", by_alias=True)
+    return {**document, VARIANTS_FIELD: [variant_document(variant) for variant in spec.variants]}
+
+
+def variant_document(variant: FindingVariant) -> dict[str, JsonValue]:
+    hidden = CURRENT_ONLY_FIELDS if variant.changes is None else LEGACY_ONLY_FIELDS
+    return variant.model_dump(mode="json", by_alias=True, exclude=set(hidden))
+
+
 def finding_hash(spec: FindingSpec) -> str:
-    body = spec.model_dump(mode="json", by_alias=True, exclude={SELF_HASH_FIELD})
+    body = {key: value for key, value in finding_document(spec).items() if key != SELF_HASH_FIELD}
     text = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return f"{HASH_PREFIX}{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
 
@@ -236,12 +253,16 @@ def _variant(variant: VariantPlanRecord, analysis: SeriesAnalysis, attempts: Seq
     metrics = {} if aggregates is None else aggregates.metrics
     return FindingVariant(
         id=variant.variant_id,
-        arm=variant.arm_id,
+        changes=[_change(change) for change in variant.changes],
         agents={assignment.node_id: assignment.agent_id for assignment in variant.assignments},
         models=_models(variant, attempts),
         flow_hash=variant.flow_hash,
         metrics={name: finding_estimate(estimate) for name, estimate in sorted(metrics.items())},
     )
+
+
+def _change(change: VariantChange) -> FindingChange:
+    return FindingChange(node_id=change.node_id, what=change.what, value=change.value)
 
 
 def _judge(check: CheckPlan) -> FindingJudge | None:

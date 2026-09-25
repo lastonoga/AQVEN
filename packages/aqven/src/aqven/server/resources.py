@@ -10,7 +10,6 @@ from aqven.runtime.address import ResourceModel, RunId
 from aqven.runtime.vocabulary import RunStatus
 from aqven.spec import (
     AgentSpec,
-    ArmId,
     DynamicLimits,
     EnumValue,
     ExperimentId,
@@ -303,9 +302,8 @@ class PromptDetail(PromptSummary):
     problems: tuple[Diagnostic, ...]
 
 
-class ArmFlowView(ResourceModel):
+class ExperimentFlowView(ResourceModel):
     experiment_id: ExperimentId
-    arm_id: ArmId
     flow_id: FlowId
     description: str | None
     order: tuple[str, ...]

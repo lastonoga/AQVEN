@@ -4,11 +4,12 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from aqven.check.arms import arm_view
 from aqven.check.context import CheckContext
+from aqven.check.local_flows import experiment_view
 from aqven.check.scopes import EvaluatedRecords, Side
+from aqven.factors import subject_flow as resolved_subject
 from aqven.loader import LoadedExperiment, LoadedFlow
-from aqven.spec import ArmId, ExperimentSubject, FlowId, FlowSpec, NodeId
+from aqven.spec import ExperimentSubject, FlowId, FlowSpec, NodeId
 
 UNKNOWN_RECORDS: Final = EvaluatedRecords(None, None)
 EXPECTED_OUTPUT: Final = "expected_output"
@@ -45,14 +46,11 @@ type ScopeDocuments = Callable[[Target, ExperimentSubject], tuple[object | None,
 
 
 def subject_flow(context: CheckContext, experiment: LoadedExperiment) -> LoadedFlow | None:
-    subject = experiment.source.spec.subject
-    if subject.arm is not None:
-        return experiment.arms.get(subject.arm)
-    return context.project.flows.get(subject.flow) if subject.flow is not None else None
+    return resolved_subject(context.project, experiment)
 
 
 def subject_label(subject: ExperimentSubject) -> str:
-    return f"arm {subject.arm}" if subject.arm is not None else f"flow {subject.flow}"
+    return f"flow {subject.flow}"
 
 
 def flow_spec(flow: LoadedFlow | None) -> FlowSpec | None:
@@ -95,36 +93,17 @@ def subject_evaluated(context: CheckContext, experiment: LoadedExperiment) -> Ev
     )
 
 
-def experiment_view(context: CheckContext, experiment: LoadedExperiment) -> CheckContext:
-    arms = {
-        FlowId(arm_id): arm for arm_id, arm in experiment.arms.items() if FlowId(arm_id) not in context.project.flows
-    }
-    if not arms:
-        return context
-    return arm_view(context, arms)
-
-
 def subject_target(context: CheckContext, experiment: LoadedExperiment) -> Target | None:
     subject = experiment.source.spec.subject
-    flow_id = FlowId(subject.arm) if subject.arm is not None else subject.flow
     spec = flow_spec(subject_flow(context, experiment))
-    if flow_id is None or spec is None:
+    if spec is None:
         return None
-    return Target(experiment_view(context, experiment), flow_id, spec, subject_label(subject))
+    return Target(experiment_view(context, experiment), subject.flow, spec, subject_label(subject))
 
 
 def experiment_targets(context: CheckContext, experiment: LoadedExperiment) -> tuple[Target, ...]:
     subject = subject_target(context, experiment)
-    if subject is None:
-        return ()
-    arms = dict.fromkeys(variant.arm for variant in experiment.source.spec.variants if variant.arm is not None)
-    others = (_arm_target(subject.view, experiment, arm) for arm in arms if FlowId(arm) != subject.flow_id)
-    return (subject, *(item for item in others if item is not None))
-
-
-def _arm_target(view: CheckContext, experiment: LoadedExperiment, arm: ArmId) -> Target | None:
-    spec = flow_spec(experiment.arms.get(arm))
-    return None if spec is None else Target(view, FlowId(arm), spec, f"arm {arm}")
+    return () if subject is None else (subject,)
 
 
 def judge_scope(target: Target, subject: ExperimentSubject) -> JudgeScope:

@@ -1,10 +1,9 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiArm, ApiArmFlow, ApiExperimentDetail, ApiExperimentSummary, ApiNode, ApiPromptDetail, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
+import type { ApiExperimentDetail, ApiExperimentFlow, ApiLocalFlow, ApiExperimentSummary, ApiNode, ApiPromptDetail, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveDatasets } from "./data/datasets"
 import { liveExperiments } from "./data/experiments"
 import {
-  armOf,
   attemptRun,
   attemptsOf,
   caseRowsOf,
@@ -14,6 +13,7 @@ import {
   experimentOf,
   initialSeries,
   launchPlanFor,
+  localFlowOf,
   subjectFlowOf,
   summaryOf,
   type Attempt,
@@ -192,65 +192,67 @@ const cancelled = (series: SeriesState): SeriesState => {
 const seriesEventsBody = (series: SeriesState): string =>
   `event: series_status\ndata: ${JSON.stringify({ seq: 1, at: series.startedAt, series_id: series.id, type: "series_status", status: series.status })}\nid: 1\n\n`
 
-type ArmExecution = ApiRunSnapshot["executions"][number]
+type FlowStep = ApiLocalFlow["steps"][number]
 
-const armStepExecution = (step: ApiArm["steps"][number], template: ApiRunSnapshot): readonly ArmExecution[] => {
+type StepExecution = ApiRunSnapshot["executions"][number]
+
+const stepExecution = (step: FlowStep, template: ApiRunSnapshot): readonly StepExecution[] => {
   const shape = template.executions.find((execution) => execution.kind === step.kind && execution.address.node_id.indexOf("__") < 0)
   if (shape === undefined) return []
   return [{ ...shape, address: { ...shape.address, node_id: step.node_id }, agent: null, inference: null }]
 }
 
-const armTrace = (series: SeriesState, template: ApiRunSnapshot): Pick<ApiRunSnapshot, "order" | "executions"> => {
-  const arm = armOf(series)
-  if (arm === null) return { order: template.order, executions: template.executions }
-  return { order: arm.steps.map((step) => step.node_id), executions: arm.steps.flatMap((step) => armStepExecution(step, template)) }
+const localTrace = (series: SeriesState, template: ApiRunSnapshot): Pick<ApiRunSnapshot, "order" | "executions"> => {
+  const flow = localFlowOf(series)
+  if (flow === null) return { order: template.order, executions: template.executions }
+  return { order: flow.steps.map((step) => step.node_id), executions: flow.steps.flatMap((step) => stepExecution(step, template)) }
 }
 
-const armNode = (experimentId: string, arm: ApiArm, step: ApiArm["steps"][number], index: number): ApiNode => ({
+const stepFolder = (experimentId: string, flow: ApiLocalFlow, step: FlowStep): string => `experiments/${experimentId}/flows/${flow.flow_id}/nodes/${step.node_id}`
+
+const stepNode = (experimentId: string, flow: ApiLocalFlow, step: FlowStep, index: number): ApiNode => ({
   node_id: step.node_id,
   local_id: step.node_id,
   parent: null,
   kind: step.kind,
-  path: `experiments/${experimentId}/arms/${arm.arm_id}/nodes/${step.node_id}.node.yaml`,
+  path: `${stepFolder(experimentId, flow, step)}/${step.node_id}.node.yaml`,
   file_hash: "",
   agent: step.agent?.agent_id ?? null,
   inference: step.kind === "llm" ? step.node_id : null,
   prompt_level: null,
   code_ref: null,
   problems_count: 0,
-  upstream: arm.steps.slice(0, index).map((item) => item.node_id),
-  downstream: arm.steps.slice(index + 1).map((item) => item.node_id),
+  upstream: flow.steps.slice(0, index).map((item) => item.node_id),
+  downstream: flow.steps.slice(index + 1).map((item) => item.node_id),
 })
-
-type ArmStep = ApiArm["steps"][number]
 
 const textField = (description: string) => ({ type: "string", description })
 
-const ARM_INPUT = { type: "object", properties: { message: textField("Case text the customer wrote") }, required: ["message"] }
+const STEP_INPUT = { type: "object", properties: { message: textField("Case text the customer wrote") }, required: ["message"] }
 
-const ARM_OUTPUT = {
+const STEP_OUTPUT = {
   type: "object",
   properties: { rationale: textField("Why this intent"), intent: textField("Intent of the case"), confidence: { type: "number", description: "Confidence from 0 to 1" } },
   required: ["rationale", "intent", "confidence"],
 }
 
-const armStepSchemas = (arm: ApiArm) =>
-  Object.fromEntries(arm.steps.map((step, index) => [step.node_id, { in: index === 0 ? ARM_INPUT : ARM_OUTPUT, out: ARM_OUTPUT, form: null }]))
+const stepSchemas = (flow: ApiLocalFlow) =>
+  Object.fromEntries(flow.steps.map((step, index) => [step.node_id, { in: index === 0 ? STEP_INPUT : STEP_OUTPUT, out: STEP_OUTPUT, form: null }]))
 
-const ARM_PROMPT_TEXT = "{% message system %}\nYou decide the intent of a case to the support desk.\n{% endmessage %}\n{% message user %}\n{{ message }}\n{{ output_format }}\n{% endmessage %}\n"
+const STEP_PROMPT_TEXT = "{% message system %}\nYou decide the intent of a case to the support desk.\n{% endmessage %}\n{% message user %}\n{{ message }}\n{{ output_format }}\n{% endmessage %}\n"
 
-const armPrompt = (experimentId: string, arm: ApiArm, step: ArmStep): ApiPromptDetail => ({
-  flow_id: arm.arm_id,
+const stepPrompt = (experimentId: string, flow: ApiLocalFlow, step: FlowStep): ApiPromptDetail => ({
+  flow_id: flow.flow_id,
   node_id: step.node_id,
   inference_id: step.node_id,
   level: 2,
-  path: `experiments/${experimentId}/arms/${arm.arm_id}/nodes/${step.node_id}/${step.node_id}.prompt.md`,
+  path: `${stepFolder(experimentId, flow, step)}/${step.node_id}.prompt.md`,
   file_hash: null,
   builder_ref: null,
   has_draft: false,
   draft_stale: false,
   problems_count: 0,
-  source: { text: ARM_PROMPT_TEXT, file_hash: null },
+  source: { text: STEP_PROMPT_TEXT, file_hash: null },
   analysis: null,
   slots: [{ name: "message", type_id: "Text", used: true }],
   unused_inputs: [],
@@ -258,25 +260,24 @@ const armPrompt = (experimentId: string, arm: ApiArm, step: ArmStep): ApiPromptD
   problems: [],
 })
 
-const armPrompts = (experimentId: string, arm: ApiArm): Readonly<Record<string, ApiPromptDetail>> =>
-  Object.fromEntries(arm.steps.filter((step) => step.kind === "llm").map((step) => [step.node_id, armPrompt(experimentId, arm, step)]))
+const stepPrompts = (experimentId: string, flow: ApiLocalFlow): Readonly<Record<string, ApiPromptDetail>> =>
+  Object.fromEntries(flow.steps.filter((step) => step.kind === "llm").map((step) => [step.node_id, stepPrompt(experimentId, flow, step)]))
 
-const armFlowOf = (experiment: ApiExperimentDetail, arm: ApiArm): ApiArmFlow => ({
+const experimentFlowOf = (experiment: ApiExperimentDetail, flow: ApiLocalFlow): ApiExperimentFlow => ({
   experiment_id: experiment.experiment_id,
-  arm_id: arm.arm_id,
-  flow_id: arm.arm_id,
-  description: arm.description,
-  order: arm.steps.map((step) => step.node_id),
-  nodes: arm.steps.map((step, index) => armNode(experiment.experiment_id, arm, step, index)),
-  schemas: { flow_id: arm.arm_id, input: null, output: null, context: [], nodes: armStepSchemas(arm) },
-  prompts: armPrompts(experiment.experiment_id, arm),
+  flow_id: flow.flow_id,
+  description: flow.description,
+  order: flow.steps.map((step) => step.node_id),
+  nodes: flow.steps.map((step, index) => stepNode(experiment.experiment_id, flow, step, index)),
+  schemas: { flow_id: flow.flow_id, input: null, output: null, context: [], nodes: stepSchemas(flow) },
+  prompts: stepPrompts(experiment.experiment_id, flow),
 })
 
 const attemptSnapshot = (series: SeriesState, attempt: Attempt, template: ApiRunSnapshot): ApiRunSnapshot => ({
   ...template,
-  ...armTrace(series, template),
+  ...localTrace(series, template),
   experiment_id: series.experiment,
-  arm_id: armOf(series)?.arm_id ?? null,
+  flow_experiment_id: localFlowOf(series) === null ? null : series.experiment,
   run_id: attempt.run_id,
   execution_id: attempt.run_id,
   started_at: series.startedAt,
@@ -312,11 +313,11 @@ export const researchHandlers = [
     return experiment === null ? failure(NOT_FOUND, "experiment_get", "NOT_FOUND", `experiment ${text(params, "experimentId")} not found`) : served(detailOfExperiment(experiment))
   }),
 
-  http.get(`${API_BASE}/experiments/:experimentId/arms/:armId`, ({ params }) => {
+  http.get(`${API_BASE}/experiments/:experimentId/flows/:flowId`, ({ params }) => {
     const experiment = experimentOf(text(params, "experimentId"))
-    const arm = experiment?.arms.find((item) => item.arm_id === text(params, "armId"))
-    if (experiment === null || arm === undefined) return failure(NOT_FOUND, "experiment_arm", "NOT_FOUND", `arm ${text(params, "armId")} not found`)
-    return served(armFlowOf(experiment, arm))
+    const flow = experiment?.flows.find((item) => item.flow_id === text(params, "flowId"))
+    if (experiment === null || flow === undefined) return failure(NOT_FOUND, "experiment_flow", "NOT_FOUND", `flow ${text(params, "flowId")} not found`)
+    return served(experimentFlowOf(experiment, flow))
   }),
 
   http.post(`${API_BASE}/experiments/:experimentId/launch-plan`, async ({ params, request }) => {

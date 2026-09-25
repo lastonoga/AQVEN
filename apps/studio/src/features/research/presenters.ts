@@ -34,8 +34,8 @@ export type Badge = { readonly label: string; readonly tone: Tone; readonly deta
 export type SubjectCopy = {
   readonly flow: (flow: string) => string
   readonly range: (flow: string, range: string) => string
-  readonly arm: (arm: string) => string
-  readonly armRange: (arm: string, range: string) => string
+  readonly local: (flow: string) => string
+  readonly localRange: (flow: string, range: string) => string
 }
 
 export type ListCopy = {
@@ -131,10 +131,9 @@ const THRESHOLD_OP: Readonly<Record<ThresholdBound, RuleOp>> = {
 export const rangeText = (range: NodeRange): string => (range.from === range.to ? range.from : `${range.from}${ARROW}${range.to}`)
 
 export const subjectText = (subject: ExperimentSubject, copy: SubjectCopy): string => {
-  if (subject.kind === "flow") return copy.flow(subject.flow)
-  if (subject.kind === "range") return copy.range(subject.flow, rangeText(subject.range))
-  if (subject.range === null) return copy.arm(subject.arm)
-  return copy.armRange(subject.arm, rangeText(subject.range))
+  if (subject.kind === "flow") return subject.local ? copy.local(subject.flow) : copy.flow(subject.flow)
+  const range = rangeText(subject.range)
+  return subject.local ? copy.localRange(subject.flow, range) : copy.range(subject.flow, range)
 }
 
 export const variantsText = (summary: Pick<ExperimentSummary, "variants" | "baseline" | "candidate">): string => {

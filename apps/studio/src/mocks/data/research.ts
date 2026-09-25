@@ -1,10 +1,10 @@
 import type {
-  ApiArm,
   ApiSeriesAttempt,
   ApiContrast,
   ApiExperimentDetail,
   ApiLaunchPlan,
   ApiLaunchRequest,
+  ApiLocalFlow,
   ApiMatrixRow,
   ApiMetricCell,
   ApiMetricColumn,
@@ -539,7 +539,12 @@ const originOf = (series: SeriesSeed): ApiSeriesOrigin => {
   return { kind: "experiment", experiment_id: series.experiment ?? "" }
 }
 
-const flowOf = (series: SeriesSeed): string | null => series.look?.flow ?? experimentOf(series.experiment)?.subject.flow_id ?? null
+const projectFlowOf = (experiment: ApiExperimentDetail | null): string | null => {
+  if (experiment === null || experiment.subject.local_flow) return null
+  return experiment.subject.flow_id
+}
+
+const flowOf = (series: SeriesSeed): string | null => series.look?.flow ?? projectFlowOf(experimentOf(series.experiment))
 
 export const summaryOf = (series: SeriesState): ApiSeriesSummary => {
   const attempts = attemptsOf(series)
@@ -664,14 +669,13 @@ export const attemptRun = (states: readonly SeriesState[], runId: string): { rea
   return found[0] ?? null
 }
 
-export const armOf = (series: SeriesSeed): ApiArm | null => {
+export const localFlowOf = (series: SeriesSeed): ApiLocalFlow | null => {
   const experiment = experimentOf(series.experiment)
-  const armId = experiment?.subject.arm_id ?? null
-  if (experiment === null || armId === null) return null
-  return experiment.arms.find((arm) => arm.arm_id === armId) ?? null
+  if (experiment === null || !experiment.subject.local_flow) return null
+  return experiment.flows.find((flow) => flow.flow_id === experiment.subject.flow_id) ?? null
 }
 
 export const subjectFlowOf = (series: SeriesSeed): string => {
   const experiment = experimentOf(series.experiment)
-  return flowOf(series) ?? experiment?.subject.arm_id ?? ""
+  return flowOf(series) ?? experiment?.subject.flow_id ?? ""
 }

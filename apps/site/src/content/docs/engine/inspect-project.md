@@ -6,19 +6,20 @@ description: What {{CLI_COMMAND}} tree lists and what {{CLI_COMMAND}} refs shows
 ## When you need this
 
 Use `{{CLI_COMMAND}} tree` when you need an inventory of everything a project defines — every agent,
-tool, type, flow, node, dataset, experiment, and arm, with the file it lives in. Use
+tool, type, flow, node, dataset, experiment, and flow local to an experiment, with the file it lives in. Use
 `{{CLI_COMMAND}} refs` when you're looking at one specific entity and need to know where it's defined,
 what points at it, and what it points at in turn — before you rename it, delete it, or change its shape.
 
 ## Steps
 
 - `{{CLI_COMMAND}} tree <path>` prints every entity in the project, grouped by kind: `project`, `agent`,
-  `tool`, `mcp_server`, `type`, `inference`, `flow`, `node`, `dataset`, `experiment`, `arm`. Each row is
+  `tool`, `mcp_server`, `type`, `inference`, `flow`, `node`, `dataset`, `experiment`, `local_flow`, `alternative`. Each row is
   the entity's id and the file it's defined in, relative to the project root. A kind with nothing defined
   in the project gets no heading at all.
-- An arm is a small flow inside an experiment, so its id is `<experiment_id>.<arm_id>`, and its nodes
-  are listed with the other nodes as `<experiment_id>.<arm_id>.<node_id>`. An arm written in Python shows
-  its `flow.py` instead of a `flow.yaml`.
+- A local flow lives in `experiments/<experiment_id>/flows/`, so its id is `<experiment_id>.<flow_id>`,
+  and its nodes are listed with the other nodes as `<experiment_id>.<flow_id>.<node_id>`. A local flow
+  written in Python shows its `flow.py` instead of a `flow.yaml`. Alternative nodes in the experiment's
+  `nodes/` get their own `alternative` group, with ids `<experiment_id>.<alternative_id>`.
 - `{{CLI_COMMAND}} refs KIND:ID <path>` looks up one entity by kind and id and prints three things: the
   file it's defined in, every entity that references it ("referenced by"), and every entity it
   references itself. Each reference line names the other entity, the file, the line, and the YAML field
@@ -27,12 +28,13 @@ what points at it, and what it points at in turn — before you rename it, delet
   tool, or check calls into. A `code` entity only ever shows up as a target — its "definition" line always
   reads `—`, because no YAML file declares it, and that's also why `code` never gets a group in `tree`.
 - For a `node`, you can pass either its full id (`flow_id.node_id`, or `flow_id.parent__child` for a
-  node nested inside a group) or just its local name. A local name that several flows or arms share
+  node nested inside a group) or just its local name. A local name that several flows share, local ones included,
   prints one block per match: in the showcase, `refs node:triage .` prints the `triage` of
-  `support_case` and of three experiment arms. Pass `node:support_case.triage` for just one.
-- Experiments show up on both sides. `refs experiment:<id> .` lists the flow or arm, the dataset, the
-  check functions, the judge's inference and agent, and the `validated_by` experiment it uses.
-  `refs agent:mistral .` lists, among the nodes, every experiment variant that puts `mistral` on a node.
+  `support_case` and of three local flows of experiments. Pass `node:support_case.triage` for just one.
+- Experiments show up on both sides. `refs experiment:<id> .` lists the subject flow, the dataset, the
+  values its variants plug in (agents, prompt files, alternative nodes, flows), the check functions, the
+  judge's inference and agent, and the `validated_by` experiment it uses. `refs agent:mistral .` lists,
+  among the nodes, every experiment variant that puts `mistral` on a node.
   Check that list before you change or delete an agent.
 - A reference whose field reads `(by convention)` instead of a file and line isn't written anywhere in
   YAML — it's implied by a naming rule, such as a node picking up the inference file that shares its
@@ -92,9 +94,9 @@ type (52)
   ... 47 more types, run it yourself for the full list
 inference (12)
   ballot            flows/support_case/nodes/vote/ballot.inference.yaml
-  classify_message  experiments/intent_split_long_messages/arms/one_step/nodes/classify_message/classify_message.inference.yaml
-  classify_summary  experiments/intent_split_long_messages/arms/two_step/nodes/classify_summary/classify_summary.inference.yaml
-  condense_message  experiments/intent_split_long_messages/arms/two_step/nodes/condense_message/condense_message.inference.yaml
+  classify_message  experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.inference.yaml
+  classify_summary  experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.inference.yaml
+  condense_message  experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.inference.yaml
   critique          flows/support_case/nodes/polish/critique.inference.yaml
   extract           flows/support_case/nodes/record/extract.inference.yaml
   illustrate        flows/support_case/nodes/illustrate/illustrate.inference.yaml
@@ -106,11 +108,11 @@ inference (12)
 flow (2)
   judge_panel   flows/judge_panel/flow.yaml
   support_case  flows/support_case/flow.yaml  run context: date, tenant_id
-node (56)
-  critique_planted_defects.critique_only.critique       experiments/critique_planted_defects/arms/critique_only/nodes/critique/critique.node.yaml
-  critique_planted_defects.critique_only.verdict        experiments/critique_planted_defects/arms/critique_only/nodes/verdict/verdict.node.yaml
-  intent_ballot_pair.pair.evidence                      experiments/intent_ballot_pair/arms/pair/nodes/evidence/evidence.node.yaml
-  ... 53 more nodes, run it yourself for the full list
+node (59)
+  critique_planted_defects.critique_only.critique       experiments/critique_planted_defects/flows/critique_only/nodes/critique/critique.node.yaml
+  critique_planted_defects.critique_only.verdict        experiments/critique_planted_defects/flows/critique_only/nodes/verdict/verdict.node.yaml
+  intent_ballot_pair.intent_decision.ballots            experiments/intent_ballot_pair/flows/intent_decision/nodes/ballots/ballots.node.yaml
+  ... 56 more nodes, run it yourself for the full list
 dataset (7)
   judge_panel_cases             datasets/judge_panel_cases.yaml
   long_customer_messages        datasets/long_customer_messages.yaml
@@ -119,16 +121,19 @@ dataset (7)
   support_case_csv_review       datasets/support_case_csv_review.yaml
   support_case_csv_ui_demo      datasets/support_case_csv_ui_demo.yaml
   support_case_multimodal_demo  datasets/support_case_multimodal_demo.yaml
-experiment (13)
+experiment (15)
   critique_planted_defects    experiments/critique_planted_defects/experiment.yaml
   critique_recall_by_agent    experiments/critique_recall_by_agent/experiment.yaml
   intent_ballot_pair          experiments/intent_ballot_pair/experiment.yaml
-  ... 10 more experiments, run it yourself for the full list
-arm (8)
-  critique_planted_defects.critique_only  experiments/critique_planted_defects/arms/critique_only/flow.yaml
-  critique_recall_by_agent.critic         experiments/critique_recall_by_agent/arms/critic/flow.py
-  intent_ballot_pair.pair                 experiments/intent_ballot_pair/arms/pair/flow.yaml
-  ... 5 more arms, run it yourself for the full list
+  ... 12 more experiments, run it yourself for the full list
+local_flow (11)
+  critique_planted_defects.critique_only     experiments/critique_planted_defects/flows/critique_only/flow.yaml
+  critique_recall_by_agent.critic            experiments/critique_recall_by_agent/flows/critic/flow.py
+  intent_ballot_pair.intent_decision         experiments/intent_ballot_pair/flows/intent_decision/flow.yaml
+  ... 8 more local flows, run it yourself for the full list
+alternative (2)
+  panel_merge_rule.always_tie_break  experiments/panel_merge_rule/nodes/always_tie_break/always_tie_break.node.yaml
+  panel_merge_rule.majority_only     experiments/panel_merge_rule/nodes/majority_only/majority_only.node.yaml
 ```
 
 An agent row's third column, when present, is its resolved output mode: what you set (or `auto` if you
@@ -180,7 +185,7 @@ references (5):
 ```
 
 That's `refs node:extract .` — just the local name, no flow prefix — resolving on its own to
-`node:support_case.record__extract`, because no other flow or arm in this project has a node called
+`node:support_case.record__extract`, because no other flow, local ones included, in this project has a node called
 `extract`.
 The `inference:extract (by convention)` line is the node picking up `extract.inference.yaml` by folder
 and stem, not by anything written in `extract.node.yaml`.

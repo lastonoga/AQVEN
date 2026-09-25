@@ -4,13 +4,17 @@ description: "A DeepSeek tie-break picks the expected winner more often than the
 failure_mode: "panel_wrong_winner"
 subject:
   flow: "judge_panel"
+varies:
+  what: "agent"
+  nodes:
+  - "tie_break"
 cases:
   dataset: "judge_panel_cases"
 variants:
 - id: "gpt_tie_break"
 - id: "deepseek_tie_break"
-  agents:
-    decide__tie_break: "deepseek"
+  nodes:
+    tie_break: "deepseek"
 checks:
 - id: "winner"
   kind: "binary"

@@ -1,13 +1,13 @@
 # Escalation agent of the intent cascade
 
-**Purpose:** choosing an agent (a non-inferiority question on a range of an arm).
+**Purpose:** choosing an agent (a non-inferiority question on a range of a local flow).
 
 In `support_case`, three cheap Llama ballots vote on the intent, and when they split, the `intent__escalate` step asks
 DeepSeek to decide. Qwen is a smaller mixture-of-experts model that answers faster and costs less per call. The
 hypothesis is that it can take over the escalation without misreading more cases.
 
-**Subject.** The arm `escalation` is the escalation path on its own: the product's `prepare` and `triage` steps, then
-`escalate`, the project's `ballot` inference with no perspective and the `deepseek` agent. The arm is a complete flow,
+**Subject.** The local flow `escalation` (`flows/escalation/`) is the escalation path on its own: the product's `prepare` and `triage` steps, then
+`escalate`, the project's `ballot` inference with no perspective and the `deepseek` agent. It is a complete flow,
 so it can run on fresh cases too. Here the range `escalate`..`escalate` runs only the last step: `prepare` and
 `triage` come from the `node_outputs` recorded in `support_case_cases`. Every variant reads the same triage, the
 Gemini parsing is not paid again on every attempt, and any difference comes from the escalation agent.
@@ -17,8 +17,9 @@ the rubric in `fragments/intent_rubric.md`: six defects, two delivery problems a
 hard on purpose: in `dimmer_buzz_advice` the customer claims a defect that the decision later turns into advice, and in
 `nova_runtime_advice` the customer asks whether the battery is faulty without claiming it is.
 
-**Variants.** `deepseek` is the arm as written, `qwen` puts the Qwen agent on `escalate`, and `gpt` is measured on the
-same cases for the Pareto view; the verdict compares only `deepseek` and `qwen`.
+**Variants.** The factor is the agent on `escalate` (`varies: what: agent`). `deepseek` is the flow as written, `qwen`
+puts the Qwen agent on `escalate`, and `gpt` is measured on the same cases for the Pareto view; the verdict compares
+only `deepseek` and `qwen`.
 
 **Reading the result.** `qwen` passes when its `intent` pass rate is at most 0.1 below DeepSeek's. Two guardrails
 keep the switch honest:

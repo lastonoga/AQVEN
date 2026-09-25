@@ -22,7 +22,9 @@ FLOW_BUILDER: Final = "flow.py"
 FLOW_FILES: Final = frozenset({"flow.yaml", "flow.yml", FLOW_BUILDER})
 EXPERIMENT_FILES: Final = frozenset({"experiment.yaml", "experiment.yml"})
 EXPERIMENT_NOTES: Final = "experiment.md"
-ARMS_FOLDER: Final = "arms"
+EXPERIMENT_FLOWS_FOLDER: Final = "flows"
+EXPERIMENT_NODES_FOLDER: Final = "nodes"
+EXPERIMENT_PROMPTS_FOLDER: Final = "prompts"
 FINDINGS_FOLDER: Final = "findings"
 FINDINGS_FILE: Final = "FINDINGS.md"
 FOLDER_NAMED_FILES: Final = FLOW_FILES | EXPERIMENT_FILES
@@ -86,11 +88,31 @@ def ancestors(folder: str) -> Iterator[str]:
     yield ""
 
 
-def arm_experiment_folder(flow_folder: str) -> str | None:
-    arms = posixpath.dirname(flow_folder)
-    if posixpath.basename(arms) != ARMS_FOLDER:
+def local_flow_experiment_folder(flow_folder: str) -> str | None:
+    flows = posixpath.dirname(flow_folder)
+    if posixpath.basename(flows) != EXPERIMENT_FLOWS_FOLDER:
         return None
-    return posixpath.dirname(arms)
+    return posixpath.dirname(flows)
+
+
+def local_flow_folder(experiment_folder: str, flow_id: str) -> str:
+    return posixpath.join(experiment_folder, EXPERIMENT_FLOWS_FOLDER, flow_id)
+
+
+def alternatives_folder(experiment_folder: str) -> str:
+    return posixpath.join(experiment_folder, EXPERIMENT_NODES_FOLDER)
+
+
+def prompts_folder(experiment_folder: str) -> str:
+    return posixpath.join(experiment_folder, EXPERIMENT_PROMPTS_FOLDER)
+
+
+def experiment_prompt_file(experiment_folder: str, name: str) -> str:
+    return posixpath.join(prompts_folder(experiment_folder), f"{name}{TEXT_SUFFIX}")
+
+
+def inside(path: str, folder: str) -> bool:
+    return bool(folder) and path.startswith(f"{folder}/")
 
 
 def finding_experiment_folder(path: str) -> str | None:

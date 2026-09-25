@@ -1,0 +1,39 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Merging the panel by a two-judge majority alone, without the score-spread rule, picks the expected winner at most 0.05 less often than the current merge"
+failure_mode: "panel_wrong_winner"
+subject:
+  flow: "judge_panel"
+varies:
+  what: "use"
+  nodes:
+  - "aggregate"
+cases:
+  dataset: "judge_panel_cases"
+variants:
+- id: "majority_and_spread"
+- id: "majority_only"
+  nodes:
+    aggregate: "majority_only"
+- id: "always_tie_break"
+  nodes:
+    aggregate: "always_tie_break"
+checks:
+- id: "winner"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "winner"
+- id: "settled_by_panel"
+  kind: "binary"
+  run: "@root.experiments.panel_merge_rule.checks:settled_by_panel"
+question:
+  kind: "noninferior"
+  baseline: "majority_and_spread"
+  candidate: "majority_only"
+  primary: "winner"
+  margin: 0.05
+plan:
+  cases: 8
+  repeats: 3

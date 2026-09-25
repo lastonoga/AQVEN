@@ -1,0 +1,28 @@
+from aqven.spec import Flow, flow, llm
+from lumen.types import Critique, ReplyReview
+
+
+def build() -> Flow:
+    critique = llm(
+        "critique",
+        inference="critique",
+        agent="deepseek",
+        bind={
+            "summary": "$input.summary",
+            "resolution": "$input.resolution",
+            "chunks": "$input.chunks",
+            "reply": "$input.reply",
+        },
+        description="The critic scores a finished reply against the decision and the knowledge base chunks",
+    )
+    return flow(
+        description="The reply critic as a one-step local flow: the project's critique inference on a finished reply",
+        input=ReplyReview,
+        output=Critique,
+        returns={
+            "rationale": "$critique.out.rationale",
+            "score": "$critique.out.score",
+            "blocking": "$critique.out.blocking",
+        },
+        nodes=[critique],
+    )

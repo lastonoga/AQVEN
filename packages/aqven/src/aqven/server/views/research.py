@@ -8,20 +8,29 @@ from typing import Final, assert_never
 from pydantic import Field
 
 from aqven.check.datasets import selected_cases
-from aqven.loader import NODE_ID_SEPARATOR, LoadedExperiment, LoadedFlow, LoadedProject, scoped
+from aqven.factors import AssembledVariant, assemble_variant, is_local_subject, subject_flow, variant_changes
+from aqven.loader import (
+    NODE_ID_SEPARATOR,
+    LoadedExperiment,
+    LoadedFlow,
+    LoadedProject,
+    SourceSpec,
+    local_node_id,
+    scoped,
+)
 from aqven.loader.layout import EXPERIMENT_NOTES
 from aqven.ports.engine import MAX_PAGE_LIMIT
 from aqven.runtime.address import RequestModel
 from aqven.runtime.runs import Page
-from aqven.series.model import CheckPlan, MetricColumn, MetricRole, SubjectKind, VariantRole
+from aqven.series.model import CheckPlan, MetricColumn, MetricRole, VariantChange, VariantRole
 from aqven.series.ports import SeriesJobs
 from aqven.series.presenter import UNKNOWN_MODEL, field_names, question_view
 from aqven.series.split import splits_of
 from aqven.series.stats.metrics import MetricDefinition, MetricRegistry
+from aqven.series.subjects import subject_kind
 from aqven.series.views import (
     AgentRefView,
-    ArmStepView,
-    ArmView,
+    AlternativeView,
     AssignmentView,
     CaseSelectionView,
     CheckSourceView,
@@ -29,8 +38,12 @@ from aqven.series.views import (
     ExperimentDetailView,
     ExperimentFilesView,
     ExperimentListQuery,
+    ExperimentPromptView,
     ExperimentSummaryView,
+    FactorView,
+    FlowStepView,
     LatestSeries,
+    LocalFlowView,
     QuestionKind,
     SeriesListQuery,
     SeriesSummaryView,
@@ -38,7 +51,7 @@ from aqven.series.views import (
     VariantView,
 )
 from aqven.server.errors import ApiFailure, not_found
-from aqven.server.resources import ArmFlowView
+from aqven.server.resources import ExperimentFlowView
 from aqven.server.views.common import loaded_project, page_of
 from aqven.server.views.flows import loaded_flow_schemas
 from aqven.server.views.nodes import flow_node_summaries
@@ -46,13 +59,13 @@ from aqven.server.views.prompts import flow_prompt_details
 from aqven.server.workspace import WorkspaceState
 from aqven.spec import (
     AgentId,
-    ArmId,
     CompareQuestion,
     DatasetFile,
     DatasetId,
     ExperimentCheck,
     ExperimentId,
     ExperimentSpec,
+    FactorKind,
     FlowId,
     Guardrail,
     LlmNodeSpec,
@@ -60,6 +73,7 @@ from aqven.spec import (
     MetricDirection,
     NodeId,
     NodeKind,
+    NodeSpec,
     NoninferiorQuestion,
     Question,
     SeriesSplit,
@@ -196,11 +210,15 @@ def variant_role(question: Question, variant_id: VariantId) -> VariantRole:
     return roles.get(variant_id, VariantRole.OTHER)
 
 
-def subject_view(spec: ExperimentSpec) -> SubjectView:
-    subject = spec.subject
-    kinds = {(True, False): SubjectKind.ARM, (True, True): SubjectKind.ARM, (False, True): SubjectKind.RANGE}
-    kind = kinds.get((subject.arm is not None, subject.from_ is not None), SubjectKind.FLOW)
-    return SubjectView(kind=kind, flow_id=subject.flow, arm_id=subject.arm, from_node=subject.from_, to_node=subject.to)
+def subject_view(loaded: LoadedExperiment) -> SubjectView:
+    subject = loaded.source.spec.subject
+    return SubjectView(
+        kind=subject_kind(subject),
+        flow_id=subject.flow,
+        local_flow=is_local_subject(loaded),
+        from_node=subject.from_,
+        to_node=subject.to,
+    )
 
 
 def agent_ref(project: LoadedProject, agent_id: AgentId) -> AgentRefView:
@@ -208,17 +226,11 @@ def agent_ref(project: LoadedProject, agent_id: AgentId) -> AgentRefView:
     return AgentRefView(agent_id=agent_id, model=UNKNOWN_MODEL if agent is None else agent.spec.model)
 
 
-def subject_target(project: LoadedProject, loaded: LoadedExperiment) -> LoadedFlow | None:
-    subject = loaded.source.spec.subject
-    if subject.arm is not None:
-        return loaded.arms.get(subject.arm)
-    return None if subject.flow is None else project.flows.get(subject.flow)
-
-
-def variant_target(project: LoadedProject, loaded: LoadedExperiment, variant: VariantSpec) -> LoadedFlow | None:
-    if variant.arm is not None:
-        return loaded.arms.get(variant.arm)
-    return subject_target(project, loaded)
+def variant_flow(project: LoadedProject, loaded: LoadedExperiment, variant: VariantSpec) -> LoadedFlow | None:
+    assembly = assemble_variant(project, loaded, variant)
+    if isinstance(assembly, AssembledVariant):
+        return assembly.project.flows.get(assembly.flow_id)
+    return subject_flow(project, loaded)
 
 
 def range_nodes(spec: ExperimentSpec, flow: LoadedFlow) -> frozenset[str] | None:
@@ -236,13 +248,17 @@ def in_scope(node_id: NodeId, scope: frozenset[str] | None) -> bool:
     return scope is None or node_id.split(NODE_ID_SEPARATOR)[0] in scope
 
 
+def agent_changes(changes: Sequence[VariantChange]) -> frozenset[NodeId]:
+    return frozenset(change.node_id for change in changes if change.what is FactorKind.AGENT)
+
+
 def assignments(
-    project: LoadedProject, spec: ExperimentSpec, flow: LoadedFlow | None, variant: VariantSpec
+    project: LoadedProject, spec: ExperimentSpec, flow: LoadedFlow | None, changes: Sequence[VariantChange]
 ) -> tuple[AssignmentView, ...]:
     if flow is None:
         return ()
     scope = range_nodes(spec, flow)
-    chosen = variant.agents or {}
+    overridden = agent_changes(changes)
     nodes = sorted(
         (node_id, source.spec)
         for node_id, source in flow.nodes.items()
@@ -251,29 +267,44 @@ def assignments(
     return tuple(
         AssignmentView(
             node_id=node_id,
-            agent=agent_ref(project, chosen.get(node_id, node.agent)),
-            overridden=node_id in chosen,
+            agent=agent_ref(project, node.agent),
+            overridden=local_node_id(node_id) in overridden,
         )
         for node_id, node in nodes
     )
 
 
-def variant_view(project: LoadedProject, loaded: LoadedExperiment, variant: VariantSpec) -> VariantView:
-    spec = loaded.source.spec
-    return VariantView(
-        variant_id=variant.id,
-        arm_id=variant.arm,
-        role=variant_role(spec.question, variant.id),
-        assignments=assignments(project, spec, variant_target(project, loaded, variant), variant),
+def change_views(spec: ExperimentSpec, variant: VariantSpec) -> tuple[VariantChange, ...]:
+    return tuple(
+        VariantChange(node_id=change.node_id, what=change.what, value=change.value)
+        for change in variant_changes(spec, variant)
     )
 
 
-def arm_steps(project: LoadedProject, flow: LoadedFlow) -> tuple[ArmStepView, ...]:
+def variant_view(project: LoadedProject, loaded: LoadedExperiment, variant: VariantSpec) -> VariantView:
+    spec = loaded.source.spec
+    changes = change_views(spec, variant)
+    return VariantView(
+        variant_id=variant.id,
+        role=variant_role(spec.question, variant.id),
+        changes=changes,
+        assignments=assignments(project, spec, variant_flow(project, loaded, variant), changes),
+    )
+
+
+def factor_view(spec: ExperimentSpec) -> FactorView | None:
+    factor = spec.varies
+    if factor is None:
+        return None
+    return FactorView(what=factor.what, nodes=tuple(factor.nodes))
+
+
+def flow_steps(project: LoadedProject, flow: LoadedFlow) -> tuple[FlowStepView, ...]:
     if flow.source is None:
         return ()
     steps = ((node_id, flow.nodes.get(node_id)) for node_id in flow.source.spec.order)
     return tuple(
-        ArmStepView(
+        FlowStepView(
             node_id=node_id,
             kind=NodeKind(node.spec.node),
             agent=agent_ref(project, node.spec.agent) if isinstance(node.spec, LlmNodeSpec) else None,
@@ -284,15 +315,37 @@ def arm_steps(project: LoadedProject, flow: LoadedFlow) -> tuple[ArmStepView, ..
     )
 
 
-def arm_views(project: LoadedProject, loaded: LoadedExperiment) -> tuple[ArmView, ...]:
+def flow_file(flow: LoadedFlow) -> str | None:
+    return flow.builder_path if flow.source is None else flow.source.path
+
+
+def local_flow_views(project: LoadedProject, loaded: LoadedExperiment) -> tuple[LocalFlowView, ...]:
     return tuple(
-        ArmView(
-            arm_id=arm_id,
+        LocalFlowView(
+            flow_id=flow_id,
             description="" if flow.source is None else flow.source.spec.description,
-            steps=arm_steps(project, flow),
+            file=flow_file(flow),
+            steps=flow_steps(project, flow),
         )
-        for arm_id, flow in sorted(loaded.arms.items())
+        for flow_id, flow in sorted(loaded.flows.items())
     )
+
+
+def alternative_view(alternative_id: NodeId, source: SourceSpec[NodeSpec]) -> AlternativeView:
+    return AlternativeView(
+        alternative_id=alternative_id,
+        kind=NodeKind(source.spec.node),
+        description=source.spec.description,
+        file=source.path,
+    )
+
+
+def alternative_views(loaded: LoadedExperiment) -> tuple[AlternativeView, ...]:
+    return tuple(alternative_view(node_id, source) for node_id, source in sorted(loaded.alternatives.items()))
+
+
+def prompt_views(loaded: LoadedExperiment) -> tuple[ExperimentPromptView, ...]:
+    return tuple(ExperimentPromptView(name=name, file=prompt.path) for name, prompt in sorted(loaded.prompts.items()))
 
 
 def check_source(project: LoadedProject, check: ExperimentCheck) -> CheckSourceView:
@@ -344,8 +397,9 @@ def case_selection(project: LoadedProject, spec: ExperimentSpec) -> CaseSelectio
     )
 
 
-def experiment_flow(project: LoadedProject, spec: ExperimentSpec) -> FlowId | None:
-    if spec.subject.flow is not None:
+def experiment_flow(project: LoadedProject, loaded: LoadedExperiment) -> FlowId | None:
+    spec = loaded.source.spec
+    if not is_local_subject(loaded):
         return spec.subject.flow
     dataset = project.datasets.get(spec.cases.dataset)
     return None if dataset is None else dataset.spec.flow
@@ -357,8 +411,8 @@ def experiment_summary(project: LoadedProject, loaded: LoadedExperiment, ledger:
     return ExperimentSummaryView(
         experiment_id=loaded.experiment_id,
         description=spec.description,
-        flow_id=experiment_flow(project, spec),
-        subject=subject_view(spec),
+        flow_id=experiment_flow(project, loaded),
+        subject=subject_view(loaded),
         failure_mode=spec.failure_mode,
         question=question_kind(spec.question),
         variants=tuple(variant.id for variant in spec.variants),
@@ -382,7 +436,10 @@ def experiment_detail(project: LoadedProject, loaded: LoadedExperiment, ledger: 
     return ExperimentDetailView(
         **summary.model_dump(),
         question_detail=question_view(spec.question),
-        arms=arm_views(project, loaded),
+        varies=factor_view(spec),
+        flows=local_flow_views(project, loaded),
+        alternatives=alternative_views(loaded),
+        prompts=prompt_views(loaded),
         cases=case_selection(project, spec),
         variant_details=tuple(variant_view(project, loaded, variant) for variant in spec.variants),
         checks=check_views(project, spec),
@@ -396,7 +453,7 @@ def experiment_detail(project: LoadedProject, loaded: LoadedExperiment, ledger: 
 def listed(loaded: LoadedExperiment, project: LoadedProject, query: ExperimentListQuery) -> bool:
     spec = loaded.source.spec
     filters = (
-        query.flow_id is None or experiment_flow(project, spec) == query.flow_id,
+        query.flow_id is None or experiment_flow(project, loaded) == query.flow_id,
         query.question is None or spec.question.kind == query.question,
         query.failure_mode is None or spec.failure_mode == query.failure_mode,
     )
@@ -410,21 +467,20 @@ def loaded_experiment(state: WorkspaceState, experiment_id: str) -> LoadedExperi
     return loaded
 
 
-def arm_flow(state: WorkspaceState, experiment_id: str, arm_id: str) -> ArmFlowView:
+def local_flow(state: WorkspaceState, experiment_id: str, flow_id: str) -> ExperimentFlowView:
     loaded = loaded_experiment(state, experiment_id)
-    arm = loaded.arms.get(ArmId(arm_id))
-    if arm is None:
-        raise not_found(f"arm {arm_id} is not in experiment {experiment_id}")
-    source = arm.source
-    return ArmFlowView(
+    flow = loaded.flows.get(FlowId(flow_id))
+    if flow is None:
+        raise not_found(f"flow {flow_id} is not a local flow of experiment {experiment_id}")
+    source = flow.source
+    return ExperimentFlowView(
         experiment_id=loaded.experiment_id,
-        arm_id=ArmId(arm_id),
-        flow_id=arm.flow_id,
+        flow_id=flow.flow_id,
         description=None if source is None else source.spec.description,
         order=() if source is None else tuple(source.spec.order),
-        nodes=flow_node_summaries(state, arm, scoped(loaded.experiment_id, arm_id)),
-        schemas=loaded_flow_schemas(state, arm),
-        prompts=flow_prompt_details(state, arm),
+        nodes=flow_node_summaries(state, flow, scoped(loaded.experiment_id, flow_id)),
+        schemas=loaded_flow_schemas(state, flow),
+        prompts=flow_prompt_details(state, flow),
     )
 
 

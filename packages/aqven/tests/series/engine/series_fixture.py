@@ -250,6 +250,8 @@ RANGE_DATASET: Final = dataset(
 
 REVIEW_DATASET: Final = dataset("review", case_yaml("always_1", "always right", "ok"))
 
+DESK_CASES: Final = TRIAGE_CASES.replace('flow: "triage"', 'flow: "desk"')
+
 AGENTS_EXPERIMENT: Final = """apiVersion: "aqven/v1"
 kind: "Experiment"
 description: "The cheap agent labels tickets as well as the writer"
@@ -257,10 +259,14 @@ subject:
   flow: "triage"
 cases:
   dataset: "triage_cases"
+varies:
+  what: "agent"
+  nodes:
+  - "classify"
 variants:
 - id: "writer"
 - id: "cheap"
-  agents:
+  nodes:
     classify: "cheap"
 checks:
 - id: "matches"
@@ -306,17 +312,21 @@ question:
   kind: "look"
 """
 
-ARM_EXPERIMENT: Final = """apiVersion: "aqven/v1"
+LOCAL_EXPERIMENT: Final = """apiVersion: "aqven/v1"
 kind: "Experiment"
 description: "One labelling step labels tickets"
 subject:
-  arm: "solo"
+  flow: "solo"
 cases:
   dataset: "triage_cases"
+varies:
+  what: "agent"
+  nodes:
+  - "answer"
 variants:
 - id: "writer"
 - id: "cheap"
-  agents:
+  nodes:
     answer: "cheap"
 checks:
 - id: "matches"
@@ -351,6 +361,150 @@ kind: "Node"
 node: "llm"
 description: "Label the ticket in one step"
 agent: "writer"
+inference: "classify"
+in:
+- name: "text"
+  from: "$input.text"
+"""
+
+MATCHES_CHECK: Final = """checks:
+- id: "matches"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "label"
+question:
+  kind: "look"
+plan:
+  cases: 2
+  repeats: 1
+"""
+
+PROMPT_EXPERIMENT: Final = f"""apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A terse prompt labels tickets"
+subject:
+  flow: "triage"
+cases:
+  dataset: "triage_cases"
+varies:
+  what: "prompt"
+  nodes:
+  - "classify"
+variants:
+- id: "as_written"
+- id: "terse"
+  nodes:
+    classify: "terse"
+{MATCHES_CHECK}"""
+
+TERSE_MARKER: Final = "TERSE-PROMPT"
+
+TERSE_PROMPT: Final = f"""{TERSE_MARKER} Give the ticket a one word label.
+<ticket>{{{{ text }}}}</ticket>
+{{{{ output_format }}}}
+"""
+
+USE_EXPERIMENT: Final = f"""apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Shouting the label instead of tidying it"
+subject:
+  flow: "triage"
+cases:
+  dataset: "triage_cases"
+varies:
+  what: "use"
+  nodes:
+  - "tidy"
+variants:
+- id: "as_written"
+- id: "shout"
+  nodes:
+    tidy: "shout"
+{MATCHES_CHECK}"""
+
+SHOUT_NODE: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Shout the label"
+run: "shout"
+in:
+- name: "label"
+  type: "Text"
+  description: "Raw label"
+  from: "$classify.out.label"
+out:
+- name: "label"
+  type: "Text"
+  description: "Loud label"
+  maxLength: 50
+"""
+
+SHOUT_CODE: Final = f"""from {PACKAGE}.types import TriageUseShoutOut
+
+
+def shout(label: str) -> TriageUseShoutOut:
+    return TriageUseShoutOut(label=label.strip().upper())
+"""
+
+DESK_FLOW: Final = """apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The help desk hands a ticket to labelling"
+input: "Ticket"
+output: "Label"
+returns:
+- name: "label"
+  from: "$sort.out.label"
+order:
+- "sort"
+"""
+
+SORT_CALL_NODE: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "call"
+description: "Label the ticket"
+flow: "triage"
+in:
+- name: "text"
+  from: "$input.text"
+"""
+
+FLOW_EXPERIMENT: Final = f"""apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "A quick guess labels tickets at the help desk"
+subject:
+  flow: "desk"
+cases:
+  dataset: "desk_cases"
+varies:
+  what: "flow"
+  nodes:
+  - "sort"
+variants:
+- id: "full"
+- id: "quick"
+  nodes:
+    sort: "quick"
+{MATCHES_CHECK}"""
+
+QUICK_FLOW: Final = """apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Guess a label in one cheap step"
+input: "Ticket"
+output: "Label"
+returns:
+- name: "label"
+  from: "$guess.out.label"
+order:
+- "guess"
+"""
+
+GUESS_NODE: Final = """apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Guess the label"
+agent: "cheap"
 inference: "classify"
 in:
 - name: "text"
@@ -415,9 +569,23 @@ FILES: Final[Mapping[str, str]] = {
     "datasets/review_cases.yaml": REVIEW_DATASET,
     "experiments/triage_agents/experiment.yaml": AGENTS_EXPERIMENT,
     "experiments/triage_range/experiment.yaml": RANGE_EXPERIMENT,
-    "experiments/triage_solo/experiment.yaml": ARM_EXPERIMENT,
-    "experiments/triage_solo/arms/solo/flow.yaml": SOLO_FLOW,
-    "experiments/triage_solo/arms/solo/nodes/answer.node.yaml": SOLO_NODE,
+    "experiments/triage_solo/experiment.yaml": LOCAL_EXPERIMENT,
+    "experiments/triage_solo/flows/solo/flow.yaml": SOLO_FLOW,
+    "experiments/triage_solo/flows/solo/nodes/answer.node.yaml": SOLO_NODE,
+    "flows/desk/flow.yaml": DESK_FLOW,
+    "flows/desk/nodes/sort.node.yaml": SORT_CALL_NODE,
+    "datasets/desk_cases.yaml": DESK_CASES,
+    "experiments/triage_prompts/experiment.yaml": PROMPT_EXPERIMENT,
+    "experiments/triage_prompts/prompts/terse.md": TERSE_PROMPT,
+    "experiments/__init__.py": "",
+    "experiments/triage_use/__init__.py": "",
+    "experiments/triage_use/experiment.yaml": USE_EXPERIMENT,
+    "experiments/triage_use/nodes/__init__.py": "",
+    "experiments/triage_use/nodes/shout.node.yaml": SHOUT_NODE,
+    "experiments/triage_use/nodes/shout.py": SHOUT_CODE,
+    "experiments/desk_flows/experiment.yaml": FLOW_EXPERIMENT,
+    "experiments/desk_flows/flows/quick/flow.yaml": QUICK_FLOW,
+    "experiments/desk_flows/flows/quick/nodes/guess.node.yaml": GUESS_NODE,
 }
 
 

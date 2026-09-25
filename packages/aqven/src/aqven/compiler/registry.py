@@ -85,6 +85,7 @@ def compile_inference(context: CompileContext, loaded: LoadedInference) -> Compi
             else None
         ),
         file=source.path,
+        origin=loaded.origin,
     )
 
 

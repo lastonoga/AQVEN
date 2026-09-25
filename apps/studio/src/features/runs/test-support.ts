@@ -206,7 +206,7 @@ export const faceSnapshot = (): ApiRunSnapshot => ({
   end_node: null,
   series_id: null,
   experiment_id: null,
-  arm_id: null,
+  flow_experiment_id: null,
   waits: [],
   human_answers: [],
   input_ref: null,

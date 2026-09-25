@@ -5,6 +5,9 @@
 The revision step `polish__revise` runs on gpt. mistral already writes one of the three drafts and costs less per
 token, so we want to know whether it can take over the revision without the reply getting worse.
 
+**Variants.** The factor is the agent on the `revise` node inside the loop (`varies: what: agent`, the node named by its
+own id). `gpt` is the flow as written, `mistral` puts the Mistral agent on `revise`.
+
 **What we measure.** Only the `polish` loop runs, on each case of `support_case_cases`. The steps before it come from
 the case `node_outputs`: the parsed case (`triage`), the channel (`prepare`), the knowledge base chunks (`search_kb`),
 the decision (`route`) and the draft the panel picked (`panel`). Both variants therefore revise the same draft for the

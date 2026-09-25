@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Never merges the verdicts: every case goes to the tie-break judge with the three verdicts in view, and the spread is kept for the panel result"
+run: "always_tie_break"
+in:
+- name: "verdicts"
+  type: "JudgeVerdict[]"
+  description: "Judge verdicts"
+  maxItems: 3
+  from: "$judges.out.verdicts"
+out:
+- name: "consensus"
+  type: "JudgeVerdict"
+  description: "The first verdict, unused: the tie-break decides every case"
+- name: "level"
+  type: "Agreement"
+  description: "Always split, so the tie-break judge runs"
+- name: "spread"
+  type: "Float"
+  description: "Largest score spread on a single criterion among the judges who picked the majority candidate"
+  minimum: 0
+  maximum: 4
