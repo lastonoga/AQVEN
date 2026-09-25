@@ -1,0 +1,244 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+flow: "support_case"
+cases:
+- name: "ladder_padding_0"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "0"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_1"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "1"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_2"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "2"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_3"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. We compared four brands in a shop in town, and the staff there were very helpful, although the demo strip on the shelf was a different model and ran at a much lower brightness. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "3"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_4"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. We compared four brands in a shop in town, and the staff there were very helpful, although the demo strip on the shelf was a different model and ran at a much lower brightness. The dog was terrified of the drill during the installation, so we did the whole job in two evenings with long breaks, and my neighbour lent us a spirit level because ours had gone missing in the move. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "4"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_5"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. We compared four brands in a shop in town, and the staff there were very helpful, although the demo strip on the shelf was a different model and ran at a much lower brightness. The dog was terrified of the drill during the installation, so we did the whole job in two evenings with long breaks, and my neighbour lent us a spirit level because ours had gone missing in the move. Our old halogen spots used to make the kitchen warm in the evenings, and we are glad to be rid of them; the electricity bill for September was noticeably lower, which we were pleased about. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "5"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_6"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. We compared four brands in a shop in town, and the staff there were very helpful, although the demo strip on the shelf was a different model and ran at a much lower brightness. The dog was terrified of the drill during the installation, so we did the whole job in two evenings with long breaks, and my neighbour lent us a spirit level because ours had gone missing in the move. Our old halogen spots used to make the kitchen warm in the evenings, and we are glad to be rid of them; the electricity bill for September was noticeably lower, which we were pleased about. We also bought two Glow bulbs for the hallway at the same time, and they have been fine, apart from once needing to be added to the app again after our internet provider changed the router. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "6"
+    intent: "defect"
+  expected_output:
+    intent: "defect"
+- name: "ladder_padding_7"
+  inputs:
+    customer:
+      customer_id: "cus_7q2w4e6r8t1y"
+      display_name: "Marta Novak"
+      email: null
+      tier: "standard"
+      locale: "en-GB"
+    origin:
+      kind: "storefront"
+      page: "/help/contact"
+    message: "We moved into a new flat in July, and it took most of the summer to unpack; the kitchen was the last room we finished, so the cabinets only went up at the end of August. My partner works from home three days a week and wanted brighter light over the worktop for video calls, which is why we looked at strips in the first place rather than another ceiling lamp. We compared four brands in a shop in town, and the staff there were very helpful, although the demo strip on the shelf was a different model and ran at a much lower brightness. The dog was terrified of the drill during the installation, so we did the whole job in two evenings with long breaks, and my neighbour lent us a spirit level because ours had gone missing in the move. Our old halogen spots used to make the kitchen warm in the evenings, and we are glad to be rid of them; the electricity bill for September was noticeably lower, which we were pleased about. We also bought two Glow bulbs for the hallway at the same time, and they have been fine, apart from once needing to be added to the app again after our internet provider changed the router. Last weekend we had friends over for dinner and everyone liked the colour of the light over the worktop, one of them is even thinking of ordering the same strip for her own kitchen. I installed the Lumen Flow Strip 5 m under the kitchen cabinets, following the manual step by step. Since Sunday the part of the strip closest to the controller flickers all the time, even at full brightness. I have pushed the controller plug in until it clicked and restarted the strip from the app three times, and nothing changed. What can you do about it?"
+    order_id: "LUM-20260903"
+    product:
+      sku: "SKU-LS5M01"
+      name: "Lumen Flow Strip 5 m"
+      category: "light_strip"
+      lamp_kind: "smart_wifi"
+    tags:
+    - "flicker"
+    urgent: false
+    photo: null
+    voice_note: null
+    video: null
+    invoice: null
+  tags:
+    padding: "7"
+    intent: "defect"
+  expected_output:
+    intent: "defect"

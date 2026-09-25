@@ -1,6 +1,6 @@
 import re
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Final, Protocol
@@ -42,10 +42,23 @@ class ToolRule(Protocol):
     def violation(self, tool_name: str, tool_input: Mapping[str, object]) -> str | None: ...
 
 
-class ChatGuard(ToolRule, Protocol):
+class HookSource(Protocol):
+    def hooks(self) -> dict[HookEvent, list[HookMatcher]]: ...
+
+
+class ChatGuard(ToolRule, HookSource, Protocol):
     def permission_rules(self, protected_files: Iterable[Path]) -> list[str]: ...
 
-    def hooks(self) -> dict[HookEvent, list[HookMatcher]]: ...
+
+@dataclass(frozen=True, slots=True)
+class NoHooks:
+    def hooks(self) -> dict[HookEvent, list[HookMatcher]]:
+        return {}
+
+
+def merged_hooks(*sources: Mapping[HookEvent, list[HookMatcher]]) -> dict[HookEvent, list[HookMatcher]]:
+    events: dict[HookEvent, None] = dict.fromkeys(event for source in sources for event in source)
+    return {event: [matcher for source in sources for matcher in source.get(event, ())] for event in events}
 
 
 def input_fields(*names: str) -> InputTexts:
@@ -159,6 +172,7 @@ class SecretFileGuard:
 class GuardChain:
     secrets: SecretFileGuard
     rules: tuple[ToolRule, ...] = ()
+    reminders: HookSource = field(default_factory=NoHooks)
 
     def violation(self, tool_name: str, tool_input: Mapping[str, object]) -> str | None:
         reasons = (rule.violation(tool_name, tool_input) for rule in (self.secrets, *self.rules))
@@ -168,7 +182,10 @@ class GuardChain:
         return self.secrets.permission_rules(protected_files)
 
     def hooks(self) -> dict[HookEvent, list[HookMatcher]]:
-        return {PRE_TOOL_USE: [HookMatcher(matcher=GUARDED_TOOL_MATCHER, hooks=[self.pre_tool_use])]}
+        own: dict[HookEvent, list[HookMatcher]] = {
+            PRE_TOOL_USE: [HookMatcher(matcher=GUARDED_TOOL_MATCHER, hooks=[self.pre_tool_use])]
+        }
+        return merged_hooks(own, self.reminders.hooks())
 
     async def pre_tool_use(
         self, hook_input: HookInput, tool_use_id: str | None, context: HookContext

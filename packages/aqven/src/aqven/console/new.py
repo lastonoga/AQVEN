@@ -14,6 +14,7 @@ from typing import Final, Protocol, cast
 
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
+from aqven.agent_files import sync_agent_files
 from aqven.app.locations import ProjectState, StudioState, studio_data_dir
 from aqven.app.settings_store import open_settings_store
 from aqven.app.workers import MAX_PARALLEL_KEY
@@ -50,6 +51,10 @@ PACKAGE_SEPARATOR: Final = "_"
 FILE_ENCODING: Final = "utf-8"
 ENV_EXAMPLE: Final = ".env.example"
 LIMITS_KEY: Final = "limits"
+AGENT_FILES_LINE: Final = (
+    "wrote AGENTS.md, CLAUDE.md, the aqven skills in .agents/skills and .claude/skills, the Claude Code hooks and "
+    "the aqven MCP server for Claude Code and Codex"
+)
 
 
 class NewProjectFailed(Exception):
@@ -190,6 +195,12 @@ class WriteFiles:
 
 
 @dataclass(frozen=True, slots=True)
+class WriteAgentFiles:
+    def apply(self, draft: ProjectDraft) -> None:
+        sync_agent_files(draft.module_root, draft.target)
+
+
+@dataclass(frozen=True, slots=True)
 class SyncEnvironment:
     runner: CommandRunner
     executable: str | None
@@ -270,7 +281,7 @@ class ProjectCreator:
         sync: tuple[ProjectStep, ...] = (
             (SyncEnvironment(self.runner, self.locate(UV_EXECUTABLE)),) if request.sync else ()
         )
-        return (WriteFiles(), *wizard, *sync, GenerateModels())
+        return (WriteFiles(), *wizard, WriteAgentFiles(), *sync, GenerateModels())
 
     def create(self, request: NewProjectRequest) -> int:
         try:
@@ -290,6 +301,7 @@ def created_message(draft: ProjectDraft, wizard: WizardAnswers | None) -> str:
         (
             f"created {draft.values.project} in {draft.target} from the {draft.template.name} template",
             f"generated {module}/{GENERATED_TYPES}",
+            AGENT_FILES_LINE,
             "next steps:",
             f"  cd {draft.target}",
             env_next_step(module, wizard),

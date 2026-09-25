@@ -1,0 +1,56 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+flow: "listing_review"
+cases:
+- name: "oak_table_scratched"
+  inputs:
+    title: "Oak table scratched"
+    description: "Oak dining table, 160 cm, a deep scratch on the top, four legs."
+    category: "furniture"
+    photos:
+    - $media: "image/jpeg"
+      blob_id: "sha256-9f2c4e1a7b3d5c8e0f6a2b4d8c1e3f5a7b9d0c2e4f6a8b1d3c5e7f9a0b2c4d6e"
+      size_bytes: 2481907
+      name: "oak_table_top.jpg"
+  tags:
+    category: "furniture"
+    label: "fix"
+    source: "seller"
+  expected_output:
+    decision: "fix"
+- name: "phone_charger_frayed"
+  inputs:
+    title: "Phone charger frayed"
+    description: "Phone charger, cable frayed near the plug, copper visible."
+    category: "electronics"
+    photos: []
+  tags:
+    category: "electronics"
+    label: "reject"
+    source: "seller"
+  expected_output:
+    decision: "reject"
+- name: "wool_coat_as_new"
+  inputs:
+    title: "Wool coat as new"
+    description: "Wool coat, size M, worn twice, no stains or holes."
+    category: "clothing"
+    photos: []
+  tags:
+    category: "clothing"
+    label: "publish"
+    source: "seller"
+  expected_output:
+    decision: "publish"
+- name: "desk_lamp_no_bulb"
+  inputs:
+    title: "Desk lamp no bulb"
+    description: "Desk lamp, works, sold without the bulb shown in the photos."
+    category: "electronics"
+    photos: []
+  tags:
+    category: "electronics"
+    label: "fix"
+    source: "seller"
+  expected_output:
+    decision: "fix"

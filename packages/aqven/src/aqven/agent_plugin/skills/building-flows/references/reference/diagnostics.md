@@ -1,0 +1,142 @@
+# Diagnostics and error codes
+
+Generated diagnostic-code index from the AQVEN Python package.
+
+## Contents
+
+
+Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes also include implementation-provided message text.
+
+| Code | Severity | Message template |
+| --- | --- | --- |
+| `E_PROJECT_NOT_FOUND` | `error` | — |
+| `E_YAML_SYNTAX` | `error` | — |
+| `E_YAML_DUPLICATE_KEY` | `error` | — |
+| `E_YAML_COMMENT` | `error` | — |
+| `E_YAML_ANCHOR` | `error` | — |
+| `E_YAML_TAG` | `error` | — |
+| `E_YAML_DIRECTIVE` | `error` | — |
+| `E_YAML_FLOW_STYLE` | `error` | — |
+| `E_YAML_BLOCK_SCALAR` | `error` | — |
+| `E_YAML_MULTI_DOCUMENT` | `error` | — |
+| `E_YAML_NOT_MAPPING` | `error` | — |
+| `E_API_VERSION` | `error` | — |
+| `E_KIND_UNKNOWN` | `error` | — |
+| `E_KIND_PATH_MISMATCH` | `error` | — |
+| `E_UNKNOWN_KEY` | `error` | — |
+| `E_SPEC_INVALID` | `error` | — |
+| `E_NODE_KIND_UNSUPPORTED` | `error` | — |
+| `E_BAD_NAME` | `error` | — |
+| `E_ID_DUPLICATE` | `error` | — |
+| `E_PACKAGE_MISMATCH` | `error` | — |
+| `E_SOURCE_CONFLICT` | `error` | — |
+| `E_BUILDER_FAILED` | `error` | — |
+| `E_NODE_UNORDERED` | `error` | — |
+| `E_ORPHAN_FILE` | `error` | — |
+| `E_TYPE_REF_SYNTAX` | `error` | — |
+| `E_TYPE_UNKNOWN` | `error` | — |
+| `E_TYPE_CONSTRAINT_MISMATCH` | `error` | — |
+| `E_TYPE_RECURSIVE` | `error` | — |
+| `E_REF_SYNTAX` | `error` | — |
+| `E_REF_MISSING` | `error` | — |
+| `E_REF_SCOPE` | `error` | — |
+| `E_CYCLE` | `error` | — |
+| `E_BINDING_TYPE` | `error` | — |
+| `E_INPUT_UNBOUND` | `error` | — |
+| `E_INPUT_UNKNOWN` | `error` | — |
+| `E_INFERENCE_UNKNOWN` | `error` | — |
+| `E_AGENT_UNKNOWN` | `error` | — |
+| `E_AGENT_RECURSION` | `error` | — |
+| `E_TOOL_UNKNOWN` | `error` | — |
+| `E_PROVIDER_UNKNOWN` | `error` | — |
+| `E_MODALITY_UNSUPPORTED` | `error` | — |
+| `E_TEXT_OUTPUT` | `error` | — |
+| `E_SECRET_LITERAL` | `error` | — |
+| `E_SECRET_REF_SYNTAX` | `error` | — |
+| `E_PII_PROVIDER` | `error` | — |
+| `E_PROMPT_MISSING` | `error` | — |
+| `E_FRAGMENT_MISSING` | `error` | — |
+| `E_PROMPT_SYNTAX` | `error` | — |
+| `E_PROMPT_TAG_FORBIDDEN` | `error` | — |
+| `E_PROMPT_FILTER_FORBIDDEN` | `error` | — |
+| `E_PROMPT_MESSAGE_NESTED` | `error` | — |
+| `E_PROMPT_VARIABLE_UNDECLARED` | `error` | — |
+| `E_PROMPT_INPUT_UNUSED` | `error` | — |
+| `E_PROMPT_OUTPUT_FORMAT` | `error` | — |
+| `E_PROMPT_CASE_NOT_EXHAUSTIVE` | `error` | — |
+| `E_PROMPT_MEDIA_RENDERED` | `error` | — |
+| `E_VARIANT_MISSING` | `error` | — |
+| `E_VARIANT_NOT_EXHAUSTIVE` | `error` | — |
+| `E_EXAMPLE_INVALID` | `error` | — |
+| `E_CHECK_PARAMS` | `error` | — |
+| `E_POLICY_UNKNOWN` | `error` | — |
+| `E_POLICY_PARAMS` | `error` | — |
+| `E_CODE_REF_UNRESOLVED` | `error` | — |
+| `E_CODE_SIGNATURE_MISMATCH` | `error` | — |
+| `E_CODE_NOT_FOUND` | `error` | — |
+| `E_ALIAS_UNKNOWN` | `error` | — |
+| `E_ALIAS_RESERVED` | `error` | — |
+| `E_ALIAS_OUTSIDE_PACKAGE` | `error` | — |
+| `E_DOCSTRING` | `error` | — |
+| `E_TOOL_IDEMPOTENCY` | `error` | — |
+| `E_OUTPUT_UNBOUNDED` | `error` | — |
+| `E_SWITCH_NOT_EXHAUSTIVE` | `error` | — |
+| `E_SWITCH_ON_TYPE` | `error` | — |
+| `E_HUMAN_FORM_TYPE` | `error` | — |
+| `E_HUMAN_DEFAULT_INVALID` | `error` | — |
+| `E_APPROVAL_TOOL` | `error` | — |
+| `E_OUTCOME_FALLBACK` | `error` | — |
+| `E_DYNAMIC_LIMITS` | `error` | — |
+| `E_DYNAMIC_SOURCE` | `error` | — |
+| `E_DYNAMIC_VALUE_TYPE` | `error` | — |
+| `E_OPAQUE_ACCESS` | `error` | — |
+| `E_NARROW_TARGET` | `error` | — |
+| `E_ALLOWED_SET_TYPE` | `error` | — |
+| `E_FLOW_UNKNOWN` | `error` | — |
+| `E_CONTRACT_VIOLATION` | `error` | — |
+| `E_FLOW_RECURSION` | `error` | — |
+| `E_MCP_SERVER_UNKNOWN` | `error` | — |
+| `E_DATASET_UNKNOWN` | `error` | — |
+| `E_PROVIDER_EXTRA_MISSING` | `error` | model {model} needs provider {provider}, which is not installed |
+| `E_PROVIDER_NO_STREAMING` | `error` | model {model}: provider {provider} does not support streaming, and aqven streams every model request |
+| `E_PROVIDER_FACTORY_INVALID` | `error` | provider {provider}: {problem} |
+| `E_PROVIDER_ID_RESERVED` | `error` | provider id {provider} belongs to a built-in provider and cannot be declared with kind {kind} |
+| `E_OUTPUT_MODE_UNSUPPORTED` | `error` | output.mode {mode} is not supported by model {model} |
+| `E_TYPES_PACKAGE` | `error` | — |
+| `E_SIM_NODE_FAILED` | `error` | simulated run of flow {flow} (pass {pass}): node {address} failed: {code}: {message} |
+| `E_SIM_PROMPT_RENDER` | `error` | simulated run of flow {flow} (pass {pass}): node {address} cannot build its prompt: {message} |
+| `E_SIM_OUTPUT_INVALID` | `error` | simulated run of flow {flow} (pass {pass}): node {address} returned an output its schema rejects: {message} |
+| `E_SIM_RUN_FAILED` | `error` | simulated run of flow {flow} (pass {pass}) did not finish: {code}: {message} |
+| `E_RANGE_INVALID` | `error` | experiment {experiment}: {problem} |
+| `E_VARIANT_INVALID` | `error` | experiment {experiment}: {problem} |
+| `E_FACTOR_MISSING` | `error` | experiment {experiment}: {problem}, but the experiment declares no varies |
+| `E_FACTOR_NODE_UNKNOWN` | `error` | experiment {experiment}: varies.nodes names {node}, {problem} |
+| `E_FACTOR_KIND` | `error` | experiment {experiment}: varies.what {what} changes {wanted} nodes, but {node} is a {kind} node |
+| `E_VARIANT_OUTSIDE_FACTOR` | `error` | experiment {experiment}: variant {variant} sets {node}, which is not in varies.nodes ({nodes}) |
+| `E_ALTERNATIVE_UNKNOWN` | `error` | experiment {experiment}: variant {variant} puts alternative {alternative} at {node}, but {folder} has no such node; its alternatives: {alternatives} |
+| `E_ALTERNATIVE_ID_TAKEN` | `error` | experiment {experiment}: alternative {alternative} has the id of a node of {subject} |
+| `E_FACTOR_FLOW_CONTRACT` | `error` | experiment {experiment}: variant {variant} calls flow {flow} at {node}, whose {side} {own} differs from {side} {expected} of flow {original} |
+| `E_METRIC_UNKNOWN` | `error` | experiment {experiment}: metric {metric} is neither a check id of the experiment nor a series metric |
+| `E_EXPERIMENT_UNKNOWN` | `error` | check {check}: validated_by names experiment {target}, which does not exist in the project |
+| `E_DATASET_MISMATCH` | `error` | experiment {experiment}: {problem} |
+| `E_CASE_DUPLICATE` | `error` | case name {name} is already taken by cases[{first}] of dataset {dataset} |
+| `E_CASES_EMPTY` | `error` | experiment {experiment}: tags {tags} select no case of dataset {dataset} |
+| `E_EXPECTED_MISSING` | `error` | experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem} |
+| `E_CHECK_PATH_UNKNOWN` | `error` | experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side} |
+| `E_FINDING_TAMPERED` | `error` | finding {finding} of experiment {experiment}: {problem} |
+| `W_PROMPT_SHADOWED` | `warning` | — |
+| `W_GENERATED_STALE` | `warning` | — |
+| `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |
+| `W_SAMPLING_IGNORED` | `warning` | {setting} is ignored by {model} (reasoning model); remove it |
+| `W_TYPES_SHADOWS_STDLIB` | `warning` | generated {module}/types.py shadows the standard library module types while {folder} is on sys.path |
+| `W_SIM_NODE_UNREACHED` | `warning` | node {node} does not run in any simulated pass of flow {flow} |
+| `W_PROMPT_VALUE_UNREADABLE` | `warning` | — |
+| `W_TOOL_ARG_UNREACHABLE` | `warning` | — |
+| `W_CONTEXT_KEY_UNUSED` | `warning` | — |
+| `W_PLAN_EXCEEDS_CASES` | `warning` | experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases |
+| `W_CHECK_CONTEXT_MISMATCH` | `warning` | experiment {experiment}: check {check}: {problem} |
+| `W_JUDGE_INPUT_UNBOUND` | `warning` | experiment {experiment}: judge {judge} of check {check} needs input {field}, which no document of its scope carries in {target} |
+| `W_FINDINGS_STALE` | `warning` | FINDINGS.md does not match the finding files: {problem} |
+| `W_VARIANT_DUPLICATE` | `warning` | experiment {experiment}: variant {variant} sets the same values as variant {first} |
+| `W_ALTERNATIVE_UNUSED` | `warning` | experiment {experiment}: {entity} is used by no variant |
+| `W_AGENT_SKILLS_STALE` | `warning` | out of sync with the installed aqven {version} in {target}: {problem} |

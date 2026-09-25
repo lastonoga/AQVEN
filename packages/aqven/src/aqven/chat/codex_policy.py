@@ -5,6 +5,7 @@ from typing import Final
 
 from openai_codex.client import CodexConfig
 
+from aqven.chat.agent_plugin import agent_skills_root
 from aqven.ports.chat import ChatPermissionMode
 
 MCP_TOKEN_NAME: Final[str] = "AQVEN_MCP_TOKEN"
@@ -31,7 +32,8 @@ def filesystem_profile(mode: ChatPermissionMode) -> str:
     root_access = "read" if mode == "plan" else "write"
     entries = [f'"."="{root_access}"', *(f'{json.dumps(path)}="deny"' for path in DENIED_PROJECT_PATHS)]
     scoped = ",".join(entries)
-    return f'{{":root"="deny",":minimal"="read",":workspace_roots"={{{scoped}}}}}'
+    skills = f'{json.dumps(str(agent_skills_root()))}="read"'
+    return f'{{":root"="deny",":minimal"="read",{skills},":workspace_roots"={{{scoped}}}}}'
 
 
 def codex_config(project_root: Path, mcp_url: str, mcp_token: str, mode: ChatPermissionMode) -> CodexConfig:

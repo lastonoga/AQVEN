@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from collections.abc import AsyncIterable, AsyncIterator, Callable
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -25,6 +25,8 @@ class ClaudeClient(Protocol):
     async def interrupt(self) -> None: ...
 
     async def disconnect(self) -> None: ...
+
+    async def get_context_usage(self) -> Mapping[str, object]: ...
 
 
 type ClaudeClientFactory = Callable[[ClaudeAgentOptions], ClaudeClient]

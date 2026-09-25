@@ -1,0 +1,239 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "strip_heat_clean"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €15.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "store_credit"
+    subtlety: "none"
+- name: "strip_heat_wrong_amount_obvious"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €150.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "yes"
+    defect: "wrong_amount"
+    action: "store_credit"
+    subtlety: "obvious"
+- name: "strip_heat_wrong_amount_moderate"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €20.00 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "yes"
+    defect: "wrong_amount"
+    action: "store_credit"
+    subtlety: "moderate"
+- name: "strip_heat_wrong_amount_subtle"
+  inputs:
+    summary: "The Lumen Flow Strip 5 m flickers near the controller, and the controller turns hot to the touch after half an hour; the customer, a Lumen Plus member, is afraid to leave it on and asks for a warranty fix. A photo of the controller and the invoice are attached."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the strip controller overheating"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_strip0flck"
+      title: "Flow strip flicker"
+      text: "If a Flow strip flickers near the controller, cut the power, check that the controller plug is pushed in until it clicks, and restart the strip from the Lumen app. If the flicker comes back, the controller is replaced under warranty."
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "Thank you for the photo and the invoice. Please unplug the strip now and keep it off until it has been checked: a controller that is hot to the touch is a sign of a faulty power supply. We have issued store credit of €15.50 under your warranty; it reaches your account within 24 hours and is valid for 12 months."
+      citations:
+      - chunk_id: "kb_ctrlheat01"
+        quote: "If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked"
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    planted: "yes"
+    defect: "wrong_amount"
+    action: "store_credit"
+    subtlety: "subtle"
+- name: "crushed_lamp_clean"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "no"
+    defect: "none"
+    action: "reship"
+    subtlety: "none"
+- name: "crushed_lamp_unsupported_claim_obvious"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense by express delivery, so the new lamp is guaranteed to reach you tomorrow morning, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "yes"
+    defect: "unsupported_claim"
+    action: "reship"
+    subtlety: "obvious"
+- name: "crushed_lamp_unsupported_claim_moderate"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense by express delivery, so the new lamp reaches you within 24 hours, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "yes"
+    defect: "unsupported_claim"
+    action: "reship"
+    subtlety: "moderate"
+- name: "crushed_lamp_unsupported_claim_subtle"
+  inputs:
+    summary: "The Lumen Arc Floor lamp arrived through Ozon in a crushed box with a cracked shade; a photo of the packaging is attached. The customer asks for the delivery damage to be sorted out."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    - chunk_id: "kb_ozonclaim1"
+      title: "Ozon orders"
+      text: "For Ozon orders a reshipment is arranged through Lumen support; there is no need to raise a separate claim on the marketplace."
+    reply:
+      text: "We are sorry the Arc Floor lamp arrived damaged. Please keep the packaging and the photo you took. We will ship the order again at our expense right away, so the new lamp should be with you this week, and a courier will collect the damaged lamp. There is no need to raise a separate claim on Ozon: we arrange the reshipment here."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+      - chunk_id: "kb_ozonclaim1"
+        quote: "there is no need to raise a separate claim on the marketplace."
+  tags:
+    planted: "yes"
+    defect: "unsupported_claim"
+    action: "reship"
+    subtlety: "subtle"

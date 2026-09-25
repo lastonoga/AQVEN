@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "The review of one listing"
+fields:
+- name: "decision"
+  type: "Decision"
+  description: "What the marketplace does with the listing"
+- name: "message"
+  type: "Text"
+  description: "The message the seller receives"
+  maxLength: 600
+- name: "findings"
+  type: "Finding[]"
+  description: "Verdicts on the aspects that were read"
+  maxItems: 3
+- name: "unread"
+  type: "MapItemError[]"
+  description: "Aspects that could not be read, with the error of each"
+  maxItems: 3
+- name: "votes"
+  type: "Decision[]"
+  description: "Decisions of the panel members who answered"
+  maxItems: 3

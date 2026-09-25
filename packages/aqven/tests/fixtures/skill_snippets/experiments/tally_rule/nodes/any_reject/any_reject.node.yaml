@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Rejects the listing when any member rejects it, otherwise a strict majority wins"
+run: "any_reject"
+in:
+- name: "votes"
+  type: "Decision[]"
+  description: "Decisions of the panel members who answered"
+  maxItems: 3
+  from: "$panel.out.votes"
+out:
+- name: "decision"
+  type: "Decision"
+  description: "The decision of the panel"
