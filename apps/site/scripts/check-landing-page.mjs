@@ -9,37 +9,41 @@ assert.ok(existsSync(pagePath), "Build the site before checking the landing page
 const page = readFileSync(pagePath, "utf8");
 
 const requiredMarkers = [
-  "Build AI workflows you can trust to run the business.",
-  "AI workflows get hard to follow, fast.",
-  "It runs thousands of times before anyone notices something drifted.",
-  "Your team can finally read the workflow.",
-  "Your coding agent stops guessing.",
-  "Not a tracing tool. Not a drag-and-drop builder.",
-  "Keep your models. Keep your code.",
-  "Source available.",
-  "Know what your workflow does before it runs.",
-  "uv tool install aqven",
+  "Discover what your AI workflow needs to work reliably.",
+  "For engineers building multi-step AI workflows",
+  ">Alpha<",
+  "Find. Explain. Compare. Confirm. Build.",
+  ">Find<",
+  ">Explain<",
+  ">Compare<",
+  ">Confirm<",
+  ">Build<",
+  "What am I missing?",
+  "Why did this fail?",
+  "All use cases",
+  "Your agent does the work. You direct the investigation.",
+  "Confirm on held-out cases.",
+  "Keep the finding.",
+  "FINDINGS.md",
+  "Caught by an experiment, not by a customer.",
+  "MODEL_RETRIES_EXHAUSTED",
+  "Built for inspection, not blind trust.",
   "aqven check: 0 errors",
   "E_REF_MISSING",
+  "It checks the wiring, not whether the answers are right.",
   "billing, technical, refund, other.",
-  "classify.prompt.md",
-  "No more guessing why an answer went wrong.",
-  "Know an edit helped, before you ship it.",
-  "Fix a bug once. It stays fixed.",
-  "No surprise on the bill.",
-  "holdout: confirmed",
-  "angry_refund_request",
-  "Your agent keeps testing until the workflow holds.",
-  "Confirm on held-out cases.",
-  "MODEL_RETRIES_EXHAUSTED",
+  "See where an answer went wrong.",
+  "See what each step costs.",
+  "Not a tracing tool. Not a drag-and-drop builder.",
+  "Keep your models. Keep your code.",
   "collect_orders.node.yaml",
   "def collect_orders(queue_id: QueueId)",
+  "Source available.",
   "Frequently asked questions.",
   "Is AQVEN open source?",
-  "llms.txt",
-  "I spent a week tuning it by hand. The next round took a day and $30.",
-  "The loop around it is.",
-  "Kir Burkhanov",
+  "Is AQVEN ready for production?",
+  "Start with one question.",
+  "uv tool install aqven",
 ];
 
 for (const marker of requiredMarkers) {
@@ -59,10 +63,47 @@ const forbiddenMarkers = [
     reason:
       "claims AQVEN adopts a workflow you already run. The only way to create a project is `aqven new`, and every flow, node and prompt is authored as a file",
   },
+  {
+    marker: "stays fixed",
+    reason: "promises a fixed bug never returns. A regression case lowers the risk of it coming back, it doesn't rule it out",
+  },
+  {
+    marker: "can't fake",
+    reason: "claims the engine enforces discipline it leaves to the agent (see What the engine leaves to the agent in the research loop page)",
+  },
+  {
+    marker: "can't wire",
+    reason: "promises a wrong connection is impossible. aqven check reports it as an error, it doesn't prevent writing it",
+  },
+  {
+    marker: "until the workflow holds",
+    reason: "promises reliability as an outcome. A verdict holds only for the cases, checks and versions it measured",
+  },
+  {
+    marker: "until it holds",
+    reason: "promises reliability as an outcome. A verdict holds only for the cases, checks and versions it measured",
+  },
+  {
+    marker: "until the workflow is reliable",
+    reason: "promises reliability as an outcome. A verdict holds only for the cases, checks and versions it measured",
+  },
+  {
+    marker: "Tonicc",
+    reason: "tells the removed case study. The landing page hooks through the engineer's problems and the research loop, not a personal story",
+  },
+  {
+    marker: "showcase",
+    reason: "names an example project. The landing page shows the example without pointing at the template it came from",
+  },
 ];
 
+const pageWithPlainApostrophes = page.replaceAll("\u2019", "'").replaceAll("&#x27;", "'").replaceAll("&#39;", "'");
+
 for (const { marker, reason } of forbiddenMarkers) {
-  assert.ok(!page.includes(marker), `The landing page must not say "${marker}": it ${reason}.`);
+  assert.ok(
+    !pageWithPlainApostrophes.includes(marker),
+    `The landing page must not say "${marker}": it ${reason}.`
+  );
 }
 
 // Zero em-dashes anywhere visible on the page - a deliberate design-taste rule (headlines, body
@@ -96,10 +137,7 @@ assert.ok(
   "The landing page must route visitors to the documentation."
 );
 
-const counts = [
-  { label: "documentation tiles", needle: "after:absolute after:inset-0", expected: 12 },
-  { label: "problem quotes", needle: "<blockquote", expected: 4 },
-];
+const counts = [{ label: "use case cards", needle: 'href="/use-cases/#', expected: 5 }];
 
 for (const { label, needle, expected } of counts) {
   const found = page.split(needle).length - 1;

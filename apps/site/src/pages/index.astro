@@ -2,38 +2,36 @@
 import "../styles/landing.css";
 import { Navbar1 } from "@/components/navbar1";
 import { Hero1 } from "@/components/hero1";
-import { Feature15 } from "@/components/feature15";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
 import {
-  AGENT_FEATURES,
   Comparison,
   FAQ,
-  Problem,
   ResearchLoop,
+  Situations,
   Stack,
   StudioEvidence,
-  Testimonial,
-  WhatsInside,
   TrustStrip,
 } from "@/components/landing/sections";
 import { Providers } from "@/components/landing/provider-logos";
 import { heroCanvasVisual } from "@/components/landing/schematics";
+import {
+  AUTH,
+  FOOTER_COPYRIGHT,
+  FOOTER_DESCRIPTION,
+  FOOTER_LEGAL,
+  FOOTER_LOGO,
+  FOOTER_SECTIONS,
+  LOGO,
+  MENU,
+  QUICKSTART,
+  REPO,
+} from "@/components/landing/site-nav";
 
-const repo = "https://github.com/lastonoga/AQVEN";
-const docs = "/start/";
-const quickstart = "/start/quickstart/";
-
-const logo = {
-  url: "/",
-  title: "aqven",
+const startButtons = {
+  primary: { text: "Get started", url: QUICKSTART },
+  secondary: { text: "GitHub", url: REPO },
 };
-
-const menu = [
-  { title: "Documentation", url: docs },
-  { title: "Engine", url: "/engine/" },
-  { title: "Studio", url: "/studio/" },
-];
 ---
 
 <!doctype html>
@@ -41,10 +39,10 @@ const menu = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AQVEN: The source-available workbench for AI workflows</title>
+    <title>AQVEN: Discover what your AI workflow needs to work reliably</title>
     <meta
       name="description"
-      content="Built for humans and coding agents. Build your AI workflow, check it before it runs, see exactly what it did, and let your agent test it with experiments until it holds."
+      content="A Python framework and a local Studio for multi-step AI workflows. Your coding agent builds, runs and experiments on the workflow. You inspect the evidence and decide what to change."
     />
     <link rel="icon" href="/favicon.svg" />
     <script is:inline>
@@ -58,92 +56,40 @@ const menu = [
     </script>
   </head>
   <body>
-    <Navbar1
-      client:load
-      logo={logo}
-      menu={menu}
-      auth={{
-        login: { title: "GitHub", url: repo },
-        signup: { title: "Get started", url: quickstart },
-      }}
-    />
+    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} />
 
     <main>
       <Hero1
-        badge={{ text: "Source available · Runs on your machine" }}
-        heading="Build AI workflows you can trust to run the business."
-        description="AQVEN helps engineers build, inspect, test, and improve AI agents, automations, and business processes, before unreliable behavior reaches customers."
+        badge={{ text: "For engineers building multi-step AI workflows" }}
+        heading="Discover what your AI workflow needs to work reliably."
+        description="AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, and you see the evidence."
         command="uv tool install aqven"
-        buttons={{
-          primary: { text: "Get started", url: quickstart },
-          secondary: { text: "GitHub", url: repo },
-        }}
+        buttons={startButtons}
         visual={heroCanvasVisual}
       />
 
       <TrustStrip />
-      <Problem />
-      <StudioEvidence />
-      <WhatsInside />
-
-      <Feature15
-        label="For coding agents"
-        heading="Your coding agent stops guessing."
-        description="Claude Code and Cursor are already writing your AI workflows. Give them something to read."
-        features={AGENT_FEATURES}
-      />
-
+      <Situations />
       <ResearchLoop />
+      <StudioEvidence />
       <Comparison />
       <Stack />
       <Providers />
       <FAQ client:visible />
-      <Testimonial />
 
       <Cta10
-        heading="Know what your workflow does before it runs."
-        description="One install, one command. Every flow, node and prompt becomes a file you can check offline, before a run costs a token. No account, runs on your machine."
-        buttons={{
-          primary: { text: "Get started", url: quickstart },
-          secondary: { text: "GitHub", url: repo },
-        }}
+        heading="Start with one question."
+        description="Run a small experiment. Inspect the evidence. Decide what comes next."
+        buttons={startButtons}
       />
     </main>
 
     <Footer2
-      logo={{ url: "/", src: "/favicon.svg", alt: "AQVEN", title: "AQVEN" }}
-      description="The source-available workbench for AI workflows."
-      sections={[
-        {
-          title: "Documentation",
-          links: [
-            { name: "Overview", href: docs },
-            { name: "Engine", href: "/engine/" },
-            { name: "Studio", href: "/studio/" },
-            { name: "Concepts", href: "/concepts/" },
-          ],
-        },
-        {
-          title: "Build",
-          links: [
-            { name: "Workflows", href: "/concepts/files-as-source-of-truth/" },
-            { name: "Nodes", href: "/concepts/ten-kinds-of-nodes/" },
-            { name: "Prompts", href: "/engine/prompts/" },
-            { name: "Tools", href: "/engine/tool-node/" },
-          ],
-        },
-        {
-          title: "Improve",
-          links: [
-            { name: "Runs", href: "/studio/investigate-a-run/" },
-            { name: "Cases", href: "/studio/cases/" },
-            { name: "Experiments", href: "/studio/research/" },
-            { name: "Debugging", href: "/concepts/finding-the-node-that-went-wrong/" },
-          ],
-        },
-      ]}
-      copyright="AQVEN. Source available."
-      legalLinks={[{ name: "GitHub", href: repo }]}
+      logo={FOOTER_LOGO}
+      description={FOOTER_DESCRIPTION}
+      sections={FOOTER_SECTIONS}
+      copyright={FOOTER_COPYRIGHT}
+      legalLinks={FOOTER_LEGAL}
     />
   </body>
 </html>

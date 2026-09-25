@@ -15,7 +15,7 @@
     "reference:check": "uv run --project ../.. python ../../tools/generate_reference.py --check",
     "llms": "node scripts/generate_llms.mjs",
     "llms:check": "node scripts/generate_llms.mjs --check",
-    "landing:check": "corepack pnpm build && node scripts/check-landing-page.mjs"
+    "landing:check": "corepack pnpm build && node scripts/check-landing-page.mjs && node scripts/check-use-cases-page.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
