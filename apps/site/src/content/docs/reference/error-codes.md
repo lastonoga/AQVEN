@@ -229,6 +229,8 @@ The project server answers a refused MCP tool call or REST request with one of t
 | `E_EXPECTED_MISSING` | `error` | — | experiment {experiment}: check {check} uses the built-in expected, but in case {case} {problem} | add {wanted} to case {case} of dataset {dataset}, or narrow cases.tags to cases that carry it |
 | `E_CHECK_PATH_UNKNOWN` | `error` | — | experiment {experiment}: check {check}: path {ref} starts with {field}, which is not a field of {side} | name a field of {side}: {fields} |
 | `E_FINDING_TAMPERED` | `error` | — | finding {finding} of experiment {experiment}: {problem} | a finding is written once by its series and never edited: restore the file from git or run a new series on holdout cases |
+| `E_MEDIA_FILE_MISSING` | `error` | — | case {case} of dataset {dataset}: media file {file} does not exist at {path} | put the file at {path} or fix file: a relative path starts in {folder}/, @root/<path> at the project root |
+| `E_MEDIA_PATH_INVALID` | `error` | — | case {case} of dataset {dataset}: media file path {file} {problem} | write a path relative to {folder}/ or @root/<path>; an absolute path, a path out of its folder and a path into .aqven/ are not allowed |
 | `W_PROMPT_SHADOWED` | `warning` | — | — | — |
 | `W_GENERATED_STALE` | `warning` | — | — | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | — | output.mode auto resolves to {mode} for model {model} ({source}) | set output.mode: {mode} to pin it |
@@ -244,4 +246,5 @@ The project server answers a refused MCP tool call or REST request with one of t
 | `W_FINDINGS_STALE` | `warning` | — | FINDINGS.md does not match the finding files: {problem} | FINDINGS.md is generated from experiments/*/findings/*.yaml and is not edited by hand: restore it from git, the next finding on holdout cases rewrites it |
 | `W_VARIANT_DUPLICATE` | `warning` | — | experiment {experiment}: variant {variant} sets the same values as variant {first} | change the values of one of them or remove it; to measure noise on purpose, leave every variant as written |
 | `W_ALTERNATIVE_UNUSED` | `warning` | — | experiment {experiment}: {entity} is used by no variant | name it in variants[].nodes or delete {file} |
+| `W_MEDIA_TYPE_MISMATCH` | `warning` | — | case {case} of dataset {dataset}: media file {file} has the extension {extension}, which does not fit $media {media_type} | set $media to {guessed}, or point file at a {media_type} file |
 | `W_AGENT_SKILLS_STALE` | `warning` | — | out of sync with the installed aqven {version} in {target}: {problem} | run uv run aqven skills sync {package} in the folder of AGENTS.md: it rewrites the skill copies and the aqven block and keeps your text outside the block, including ## Owner's rules |

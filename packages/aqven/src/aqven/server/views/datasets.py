@@ -1,11 +1,14 @@
 from collections import Counter
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Annotated, Final
 
 from pydantic import Field, JsonValue, TypeAdapter, ValidationError
 
+from aqven.datasets import CaseMediaResolver, with_media_placeholders
+from aqven.loader import dataset_media_folder
 from aqven.loader.aliases import AliasScope
 from aqven.loader.strict_yaml import read_strict_yaml
 from aqven.preview.samples import sample_document
@@ -16,6 +19,7 @@ from aqven.runtime.runs import RunSnapshot, RunStartRequest
 from aqven.runtime.values import InlineValue
 from aqven.series.split import splits_of
 from aqven.series.views import CaseDraft, CaseFromRunRequest
+from aqven.server.case_media import case_with_media
 from aqven.server.errors import ApiFailure, not_found, validation_problems
 from aqven.server.run_inputs import input_adapter
 from aqven.server.views.common import loaded_flow, loaded_project
@@ -41,6 +45,7 @@ class DatasetSummary(ResourceModel):
     dataset_id: DatasetId
     flow_id: FlowId | None = None
     path: str
+    media_folder: str
     file_hash: str
     cases: Annotated[int, Field(ge=0)]
     splits: dict[str, int] = {}
@@ -62,6 +67,7 @@ def dataset_summaries(state: WorkspaceState) -> tuple[DatasetSummary, ...]:
             dataset_id=dataset_id,
             flow_id=source.spec.flow,
             path=source.path,
+            media_folder=dataset_media_folder(source.path),
             file_hash=source.file_hash,
             cases=len(source.spec.cases),
             splits=split_counts(case_splits(state, dataset_id, source.spec.cases)),
@@ -97,10 +103,13 @@ def filtered_dataset_cases(
     )
 
 
-def resolve_dataset_run(state: WorkspaceState, request: RunStartRequest) -> RunStartRequest:
-    item_id = request.dataset_item_id
-    if item_id is None:
-        return request
+@dataclass(frozen=True, slots=True)
+class DatasetItem:
+    dataset_path: str
+    case: DatasetCase
+
+
+def dataset_item(state: WorkspaceState, request: RunStartRequest, item_id: str) -> DatasetItem:
     dataset_id, separator, case_name = item_id.partition("/")
     if not separator or not dataset_id or not case_name:
         raise ApiFailure("REQUEST_INVALID", "dataset_item_id must be <dataset_id>/<case_name>")
@@ -114,16 +123,28 @@ def resolve_dataset_run(state: WorkspaceState, request: RunStartRequest) -> RunS
         raise not_found(f"case {case_name} is not in dataset {dataset_id}")
     if not isinstance(case.inputs, dict):
         raise ApiFailure("INPUT_INVALID", f"case {case_name} does not contain a flow input record")
-    context = request.context
-    if context is None and case.context is not None:
-        try:
-            context = RunContext.model_validate(case.context)
-        except ValidationError as error:
-            raise ApiFailure(
-                "INPUT_INVALID",
-                f"case {case_name} has invalid run context",
-                problems=validation_problems(error.errors(), ("context",)),
-            ) from error
+    return DatasetItem(dataset_path=source.path, case=case)
+
+
+def case_context(request: RunStartRequest, case: DatasetCase) -> RunContext | None:
+    if request.context is not None or case.context is None:
+        return request.context
+    try:
+        return RunContext.model_validate(case.context)
+    except ValidationError as error:
+        raise ApiFailure(
+            "INPUT_INVALID",
+            f"case {case.name} has invalid run context",
+            problems=validation_problems(error.errors(), ("context",)),
+        ) from error
+
+
+def run_part(request: RunStartRequest, case: DatasetCase) -> DatasetCase:
+    node_outputs = case.node_outputs if request.start_node is not None else None
+    return case.model_copy(update={"node_outputs": node_outputs, "expected_output": None})
+
+
+def case_run_request(request: RunStartRequest, case: DatasetCase, context: RunContext | None) -> RunStartRequest:
     return RunStartRequest(
         flow_id=request.flow_id,
         at=request.at,
@@ -133,10 +154,22 @@ def resolve_dataset_run(state: WorkspaceState, request: RunStartRequest) -> RunS
         selected_nodes=request.selected_nodes,
         start_node=request.start_node,
         end_node=request.end_node,
-        node_outputs=(case.node_outputs or {}) if request.start_node is not None else {},
+        node_outputs=case.node_outputs or {},
         cassette_id=request.cassette_id,
         human_answers=request.human_answers,
     )
+
+
+async def resolve_dataset_run(
+    state: WorkspaceState, request: RunStartRequest, media: CaseMediaResolver
+) -> RunStartRequest:
+    item_id = request.dataset_item_id
+    if item_id is None:
+        return request
+    item = dataset_item(state, request, item_id)
+    context = case_context(request, item.case)
+    case = await case_with_media(media, run_part(request, item.case), item.dataset_path)
+    return case_run_request(request, case, context)
 
 
 def run_input(snapshot: RunSnapshot) -> JsonValue:
@@ -218,7 +251,7 @@ def validate_flow_cases(state: WorkspaceState, request: DatasetCreateRequest) ->
         if not isinstance(case.inputs, dict):
             raise ApiFailure("INPUT_INVALID", f"case {case.name} needs an input record")
         try:
-            adapter.validate_python(case.inputs)
+            adapter.validate_python(with_media_placeholders(case.inputs))
         except ValidationError as error:
             invalid = tuple(item for item in error.errors() if item["type"] != "missing")
             if invalid:

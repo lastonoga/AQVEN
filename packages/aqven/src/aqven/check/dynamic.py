@@ -9,7 +9,7 @@ from aqven.check.nodes import FieldRole, field_sites, typed_entries
 from aqven.check.scopes import InferenceScope, Resolution, Resolved
 from aqven.check.shapes import Missing, NotList, Opaque, is_dynamic, max_items, step_element, unwrap
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic
-from aqven.loader import YamlPath, project_files
+from aqven.loader import YamlPath, spec_files
 from aqven.spec import (
     BUILTIN_TYPE_IDS,
     DYNAMIC,
@@ -183,7 +183,7 @@ def _narrow(context: CheckContext, entry: NodeEntry, spec: NarrowNodeSpec) -> It
 def _field_spec_calls(context: CheckContext) -> Iterator[Diagnostic]:
     root = context.project.root
     types = context.type_models.specs
-    for path in (path for path in project_files(root) if path.endswith(PYTHON_SUFFIX)):
+    for path in (path for path in spec_files(root) if path.endswith(PYTHON_SUFFIX)):
         calls = _file_field_spec_calls(path, (root / path).read_text(encoding="utf-8"))
         yield from (item for call in calls for item in _field_spec_call(call, types))
 

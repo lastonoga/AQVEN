@@ -98,6 +98,7 @@ export default defineConfig({
             {
               label: "Checks & experiments",
               items: [
+                { slug: "engine/dataset-media-files" },
                 { slug: "engine/experiments" },
                 { slug: "engine/run-a-series" },
                 { slug: "engine/read-a-series" },

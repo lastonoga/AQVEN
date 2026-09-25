@@ -7728,6 +7728,145 @@
         "x-aqven-rest-only": "a case draft; the agent writes the dataset file"
       }
     },
+    "/api/datasets/{dataset_id}/cases/{case_name}/media": {
+      "post": {
+        "summary": "Attach Media",
+        "operationId": "case_media_attach",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "case_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_case_media_attach"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseMediaAttached"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "x-aqven-rest-only": "Studio attaches a media file to a case; an agent writes the file and the reference itself"
+      }
+    },
     "/api/datasets/draft": {
       "post": {
         "summary": "Generate Dataset Draft",
@@ -12542,6 +12681,33 @@
         ],
         "title": "Body_blob_upload"
       },
+      "Body_case_media_attach": {
+        "properties": {
+          "location": {
+            "type": "string",
+            "maxLength": 512,
+            "pattern": "^(inputs|expected_output|node_outputs\\.[A-Za-z_][A-Za-z0-9_]*)(\\.[^.\\[\\]]+|\\[[0-9]+\\])+$",
+            "title": "Location"
+          },
+          "file_hash": {
+            "type": "string",
+            "pattern": "^sha256-[0-9a-f]{64}$",
+            "title": "File Hash"
+          },
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "file_hash",
+          "file"
+        ],
+        "title": "Body_case_media_attach"
+      },
       "Body_dataset_csv_import": {
         "properties": {
           "dataset_id": {
@@ -12900,6 +13066,43 @@
           "run_id"
         ],
         "title": "CaseFromRunRequest"
+      },
+      "CaseMediaAttached": {
+        "properties": {
+          "dataset": {
+            "$ref": "#/components/schemas/DatasetSummary"
+          },
+          "case_name": {
+            "type": "string",
+            "title": "Case Name"
+          },
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset",
+          "case_name",
+          "location",
+          "file",
+          "path",
+          "media_type"
+        ],
+        "title": "CaseMediaAttached"
       },
       "CaseSelectionView": {
         "properties": {
@@ -17596,6 +17799,10 @@
             "type": "string",
             "title": "Path"
           },
+          "media_folder": {
+            "type": "string",
+            "title": "Media Folder"
+          },
           "file_hash": {
             "type": "string",
             "title": "File Hash"
@@ -17618,6 +17825,7 @@
         "required": [
           "dataset_id",
           "path",
+          "media_folder",
           "file_hash",
           "cases"
         ],
@@ -17858,6 +18066,8 @@
           "E_EXPECTED_MISSING",
           "E_CHECK_PATH_UNKNOWN",
           "E_FINDING_TAMPERED",
+          "E_MEDIA_FILE_MISSING",
+          "E_MEDIA_PATH_INVALID",
           "W_PROMPT_SHADOWED",
           "W_GENERATED_STALE",
           "W_OUTPUT_MODE_RESOLVED",
@@ -17872,7 +18082,8 @@
           "W_JUDGE_INPUT_UNBOUND",
           "W_FINDINGS_STALE",
           "W_VARIANT_DUPLICATE",
-          "W_ALTERNATIVE_UNUSED"
+          "W_ALTERNATIVE_UNUSED",
+          "W_MEDIA_TYPE_MISMATCH"
         ],
         "title": "DiagnosticCode"
       },

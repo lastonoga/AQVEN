@@ -904,6 +904,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datasets/{dataset_id}/cases/{case_name}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Attach Media */
+        post: operations["case_media_attach"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/draft": {
         parameters: {
             query?: never;
@@ -1626,6 +1643,15 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_case_media_attach */
+        Body_case_media_attach: {
+            /** Location */
+            location: string;
+            /** File Hash */
+            file_hash: string;
+            /** File */
+            file: string;
+        };
         /** Body_dataset_csv_import */
         Body_dataset_csv_import: {
             /** Dataset Id */
@@ -1741,6 +1767,20 @@ export interface components {
             run_id: string;
             /** Name */
             name?: string | null;
+        };
+        /** CaseMediaAttached */
+        CaseMediaAttached: {
+            dataset: components["schemas"]["DatasetSummary"];
+            /** Case Name */
+            case_name: string;
+            /** Location */
+            location: string;
+            /** File */
+            file: string;
+            /** Path */
+            path: string;
+            /** Media Type */
+            media_type: string;
         };
         /** CaseSelectionView */
         CaseSelectionView: {
@@ -3303,6 +3343,8 @@ export interface components {
             flow_id?: string | null;
             /** Path */
             path: string;
+            /** Media Folder */
+            media_folder: string;
             /** File Hash */
             file_hash: string;
             /** Cases */
@@ -3352,7 +3394,7 @@ export interface components {
          * DiagnosticCode
          * @enum {string}
          */
-        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_FACTOR_MISSING" | "E_FACTOR_NODE_UNKNOWN" | "E_FACTOR_KIND" | "E_VARIANT_OUTSIDE_FACTOR" | "E_ALTERNATIVE_UNKNOWN" | "E_ALTERNATIVE_ID_TAKEN" | "E_FACTOR_FLOW_CONTRACT" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE" | "W_VARIANT_DUPLICATE" | "W_ALTERNATIVE_UNUSED";
+        DiagnosticCode: "E_PROJECT_NOT_FOUND" | "E_YAML_SYNTAX" | "E_YAML_DUPLICATE_KEY" | "E_YAML_COMMENT" | "E_YAML_ANCHOR" | "E_YAML_TAG" | "E_YAML_DIRECTIVE" | "E_YAML_FLOW_STYLE" | "E_YAML_BLOCK_SCALAR" | "E_YAML_MULTI_DOCUMENT" | "E_YAML_NOT_MAPPING" | "E_API_VERSION" | "E_KIND_UNKNOWN" | "E_KIND_PATH_MISMATCH" | "E_UNKNOWN_KEY" | "E_SPEC_INVALID" | "E_NODE_KIND_UNSUPPORTED" | "E_BAD_NAME" | "E_ID_DUPLICATE" | "E_PACKAGE_MISMATCH" | "E_SOURCE_CONFLICT" | "E_BUILDER_FAILED" | "E_NODE_UNORDERED" | "E_ORPHAN_FILE" | "E_TYPE_REF_SYNTAX" | "E_TYPE_UNKNOWN" | "E_TYPE_CONSTRAINT_MISMATCH" | "E_TYPE_RECURSIVE" | "E_REF_SYNTAX" | "E_REF_MISSING" | "E_REF_SCOPE" | "E_CYCLE" | "E_BINDING_TYPE" | "E_INPUT_UNBOUND" | "E_INPUT_UNKNOWN" | "E_INFERENCE_UNKNOWN" | "E_AGENT_UNKNOWN" | "E_AGENT_RECURSION" | "E_TOOL_UNKNOWN" | "E_PROVIDER_UNKNOWN" | "E_MODALITY_UNSUPPORTED" | "E_TEXT_OUTPUT" | "E_SECRET_LITERAL" | "E_SECRET_REF_SYNTAX" | "E_PII_PROVIDER" | "E_PROMPT_MISSING" | "E_FRAGMENT_MISSING" | "E_PROMPT_SYNTAX" | "E_PROMPT_TAG_FORBIDDEN" | "E_PROMPT_FILTER_FORBIDDEN" | "E_PROMPT_MESSAGE_NESTED" | "E_PROMPT_VARIABLE_UNDECLARED" | "E_PROMPT_INPUT_UNUSED" | "E_PROMPT_OUTPUT_FORMAT" | "E_PROMPT_CASE_NOT_EXHAUSTIVE" | "E_PROMPT_MEDIA_RENDERED" | "E_VARIANT_MISSING" | "E_VARIANT_NOT_EXHAUSTIVE" | "E_EXAMPLE_INVALID" | "E_CHECK_PARAMS" | "E_POLICY_UNKNOWN" | "E_POLICY_PARAMS" | "E_CODE_REF_UNRESOLVED" | "E_CODE_SIGNATURE_MISMATCH" | "E_CODE_NOT_FOUND" | "E_ALIAS_UNKNOWN" | "E_ALIAS_RESERVED" | "E_ALIAS_OUTSIDE_PACKAGE" | "E_DOCSTRING" | "E_TOOL_IDEMPOTENCY" | "E_OUTPUT_UNBOUNDED" | "E_SWITCH_NOT_EXHAUSTIVE" | "E_SWITCH_ON_TYPE" | "E_HUMAN_FORM_TYPE" | "E_HUMAN_DEFAULT_INVALID" | "E_APPROVAL_TOOL" | "E_OUTCOME_FALLBACK" | "E_DYNAMIC_LIMITS" | "E_DYNAMIC_SOURCE" | "E_DYNAMIC_VALUE_TYPE" | "E_OPAQUE_ACCESS" | "E_NARROW_TARGET" | "E_ALLOWED_SET_TYPE" | "E_FLOW_UNKNOWN" | "E_CONTRACT_VIOLATION" | "E_FLOW_RECURSION" | "E_MCP_SERVER_UNKNOWN" | "E_DATASET_UNKNOWN" | "E_PROVIDER_EXTRA_MISSING" | "E_PROVIDER_NO_STREAMING" | "E_PROVIDER_FACTORY_INVALID" | "E_PROVIDER_ID_RESERVED" | "E_OUTPUT_MODE_UNSUPPORTED" | "E_TYPES_PACKAGE" | "E_SIM_NODE_FAILED" | "E_SIM_PROMPT_RENDER" | "E_SIM_OUTPUT_INVALID" | "E_SIM_RUN_FAILED" | "E_RANGE_INVALID" | "E_VARIANT_INVALID" | "E_FACTOR_MISSING" | "E_FACTOR_NODE_UNKNOWN" | "E_FACTOR_KIND" | "E_VARIANT_OUTSIDE_FACTOR" | "E_ALTERNATIVE_UNKNOWN" | "E_ALTERNATIVE_ID_TAKEN" | "E_FACTOR_FLOW_CONTRACT" | "E_METRIC_UNKNOWN" | "E_EXPERIMENT_UNKNOWN" | "E_DATASET_MISMATCH" | "E_CASE_DUPLICATE" | "E_CASES_EMPTY" | "E_EXPECTED_MISSING" | "E_CHECK_PATH_UNKNOWN" | "E_FINDING_TAMPERED" | "E_MEDIA_FILE_MISSING" | "E_MEDIA_PATH_INVALID" | "W_PROMPT_SHADOWED" | "W_GENERATED_STALE" | "W_OUTPUT_MODE_RESOLVED" | "W_SAMPLING_IGNORED" | "W_TYPES_SHADOWS_STDLIB" | "W_SIM_NODE_UNREACHED" | "W_PROMPT_VALUE_UNREADABLE" | "W_TOOL_ARG_UNREACHABLE" | "W_CONTEXT_KEY_UNUSED" | "W_PLAN_EXCEEDS_CASES" | "W_CHECK_CONTEXT_MISMATCH" | "W_JUDGE_INPUT_UNBOUND" | "W_FINDINGS_STALE" | "W_VARIANT_DUPLICATE" | "W_ALTERNATIVE_UNUSED" | "W_MEDIA_TYPE_MISMATCH";
         /** DiagnosticsChanged */
         DiagnosticsChanged: {
             /** Seq */
@@ -7765,6 +7807,7 @@ export type SchemaBlobMeta = components['schemas']['BlobMeta'];
 export type SchemaBlobUploaded = components['schemas']['BlobUploaded'];
 export type SchemaBlobValue = components['schemas']['BlobValue'];
 export type SchemaBodyBlobUpload = components['schemas']['Body_blob_upload'];
+export type SchemaBodyCaseMediaAttach = components['schemas']['Body_case_media_attach'];
 export type SchemaBodyDatasetCsvImport = components['schemas']['Body_dataset_csv_import'];
 export type SchemaBodyDatasetCsvPreview = components['schemas']['Body_dataset_csv_preview'];
 export type SchemaBoundField = components['schemas']['BoundField'];
@@ -7777,6 +7820,7 @@ export type SchemaCancelResult = components['schemas']['CancelResult'];
 export type SchemaCapSource = components['schemas']['CapSource'];
 export type SchemaCaseDraft = components['schemas']['CaseDraft'];
 export type SchemaCaseFromRunRequest = components['schemas']['CaseFromRunRequest'];
+export type SchemaCaseMediaAttached = components['schemas']['CaseMediaAttached'];
 export type SchemaCaseSelectionView = components['schemas']['CaseSelectionView'];
 export type SchemaCellVerdict = components['schemas']['CellVerdict'];
 export type SchemaChangeKind = components['schemas']['ChangeKind'];
@@ -14186,6 +14230,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseDraft"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    case_media_attach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                case_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_case_media_attach"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseMediaAttached"];
                 };
             };
             /** @description Bad Request */

@@ -11,6 +11,7 @@ from aqven.loader.layout import (
     alternatives_folder,
     code_file_parts,
     code_file_ref,
+    dataset_media_folder,
     entity_id,
     entity_stem,
     expanded_node_id,
@@ -37,11 +38,13 @@ from aqven.loader.project import (
     LoadResult,
     ProjectNotFound,
     SourceSpec,
+    dataset_media_folders,
     expand_node_table,
     file_hash,
     find_project_root,
     load_project,
     project_files,
+    spec_files,
 )
 from aqven.loader.strict_yaml import Position, YamlDocument, YamlPath, locate, read_strict_yaml
 from aqven.loader.validation import header_diagnostics, spec_kind, validation_diagnostics
@@ -75,6 +78,8 @@ __all__ = [
     "scoped",
     "code_file_parts",
     "code_file_ref",
+    "dataset_media_folder",
+    "dataset_media_folders",
     "entity_id",
     "entity_stem",
     "expand_node_table",
@@ -95,6 +100,7 @@ __all__ = [
     "project_files",
     "prompts_folder",
     "read_strict_yaml",
+    "spec_files",
     "spec_kind",
     "text_file",
     "text_key",

@@ -568,6 +568,22 @@ export const handlers = [
     return served({ ...result, items: result.items.map((item) => item.name) })
   }),
 
+  http.post(`${API_BASE}/datasets/:datasetId/cases/:caseName/media`, async ({ params, request }) => {
+    const datasetId = text(params, "datasetId")
+    const caseName = text(params, "caseName")
+    const dataset = [...liveDatasets, ...createdDatasets].find((item) => item.dataset_id === datasetId)
+    const cases = createdDatasetCases.get(datasetId) ?? liveDatasetCases[datasetId]
+    if (dataset === undefined || cases?.some((item) => item.name === caseName) !== true) return notFound("case_media_attach", `case ${caseName} is not in dataset ${datasetId}`)
+    const form = await request.formData()
+    const location = form.get("location")
+    const file = form.get("file")
+    const field = typeof location === "string" && location.startsWith("inputs.") ? location.slice("inputs.".length) : ""
+    if (field.length === 0 || field.includes(".") || field.includes("[") || !(file instanceof File)) return inputInvalid("case_media_attach", "the demo attaches only top-level input fields")
+    const media = { $media: file.type || "application/octet-stream", file: file.name }
+    createdDatasetCases.set(datasetId, cases.map((item) => item.name === caseName && isRecord(item.inputs) ? { ...item, inputs: { ...item.inputs, [field]: media } } : item))
+    return HttpResponse.json({ dataset, case_name: caseName, location, file: file.name, path: `${dataset.media_folder}/${file.name}`, media_type: media.$media }, { status: CREATED })
+  }),
+
   http.get(`${API_BASE}/datasets/:datasetId/cases/:caseName`, ({ params }) => {
     const datasetId = text(params, "datasetId")
     const caseName = text(params, "caseName")
@@ -617,6 +633,7 @@ export const handlers = [
       dataset_id: datasetId,
       flow_id: body["flow_id"],
       path: `datasets/${datasetId}.yaml`,
+      media_folder: `datasets/${datasetId}`,
       file_hash: "sha256-demo-created-dataset",
       cases: cases.length,
       splits,
@@ -681,6 +698,7 @@ export const handlers = [
           dataset_id: datasetId,
           flow_id: flowId,
           path: `datasets/${datasetId}.yaml`,
+          media_folder: `datasets/${datasetId}`,
           file_hash: "sha256-demo-generated-dataset",
           cases: cases.length,
           splits: { unassigned: cases.length },
