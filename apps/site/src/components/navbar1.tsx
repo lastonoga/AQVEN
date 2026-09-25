@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import type { Release } from "@/lib/latest-release";
 import {
   Sheet,
   SheetContent,
@@ -45,7 +46,20 @@ interface Navbar1Props {
       url: string;
     };
   };
+  release?: Release | null;
 }
+
+const ReleaseTag = ({ release }: { release: Release }) => (
+  <a
+    href={release.url}
+    title={`Latest release, ${release.released}`}
+    className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 font-mono text-xs whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+  >
+    <span className="font-medium text-foreground">{`v${release.version}`}</span>
+    <span aria-hidden="true">·</span>
+    <time dateTime={release.releasedIso}>{release.released}</time>
+  </a>
+);
 
 const Navbar1 = ({
   logo = {
@@ -130,6 +144,7 @@ const Navbar1 = ({
     login: { title: "Login", url: "#" },
     signup: { title: "Sign up", url: "#" },
   },
+  release = null,
   className,
 }: Navbar1Props) => {
   return (
@@ -151,7 +166,8 @@ const Navbar1 = ({
               {menu.map((item) => renderMenuItem(item))}
             </ul>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {release && <ReleaseTag release={release} />}
             <Button asChild variant="outline" size="sm">
               <a href={auth.login.url}>{auth.login.title}</a>
             </Button>
@@ -198,6 +214,11 @@ const Navbar1 = ({
                     <Button asChild>
                       <a href={auth.signup.url}>{auth.signup.title}</a>
                     </Button>
+                    {release && (
+                      <span className="self-center">
+                        <ReleaseTag release={release} />
+                      </span>
+                    )}
                   </div>
                 </div>
               </SheetContent>
