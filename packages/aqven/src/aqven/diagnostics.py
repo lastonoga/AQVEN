@@ -143,6 +143,7 @@ class DiagnosticCode(StrEnum):
     W_FINDINGS_STALE = "W_FINDINGS_STALE"
     W_VARIANT_DUPLICATE = "W_VARIANT_DUPLICATE"
     W_ALTERNATIVE_UNUSED = "W_ALTERNATIVE_UNUSED"
+    W_AGENT_SKILLS_STALE = "W_AGENT_SKILLS_STALE"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -345,6 +346,11 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
     DiagnosticCode.W_ALTERNATIVE_UNUSED: DiagnosticText(
         "experiment {experiment}: {entity} is used by no variant",
         "name it in variants[].nodes or delete {file}",
+    ),
+    DiagnosticCode.W_AGENT_SKILLS_STALE: DiagnosticText(
+        "out of sync with the installed aqven {version} in {target}: {problem}",
+        "run uv run aqven skills sync {package} in the folder of AGENTS.md: it rewrites the skill copies and the "
+        "aqven block and keeps your text outside the block, including ## Owner's rules",
     ),
 }
 

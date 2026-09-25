@@ -1,0 +1,35 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Rejecting a listing when any panel member rejects it gets the labelled decision right on more than 80 percent of cases"
+failure_mode: "wrong_decision"
+subject:
+  flow: "listing_review"
+varies:
+  what: "use"
+  nodes:
+  - "tally"
+cases:
+  dataset: "listing_cases"
+variants:
+- id: "majority"
+- id: "any_reject"
+  nodes:
+    tally: "any_reject"
+checks:
+- id: "decision_right"
+  kind: "binary"
+  use: "expected"
+  with:
+    fields:
+    - "decision"
+- id: "every_aspect_read"
+  kind: "binary"
+  run: "@root.code.checks:every_aspect_read"
+question:
+  kind: "threshold"
+  metric: "decision_right"
+  variant: "any_reject"
+  above: 0.8
+  margin: 0.05
+plan:
+  repeats: 2

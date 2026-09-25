@@ -21,6 +21,7 @@ from claude_agent_sdk import (
 )
 
 from aqven.chat.agent import session_agent
+from aqven.chat.agent_plugin import report_claude_skills
 from aqven.chat.approvals import DENY_MESSAGES, ApprovalVerdict, await_verdict, forced_verdict
 from aqven.chat.builders import (
     ChatEventBuilders,
@@ -117,6 +118,7 @@ class ClaudeSessionRunner:
         self._sending = asyncio.Lock()
         self._pending = PendingMessages()
         self._writes: set[asyncio.Task[None]] = set()
+        self._probes: set[asyncio.Task[None]] = set()
         self._written: dict[str, int] = {}
         self._generation = 0
         self._closed = False
@@ -247,7 +249,13 @@ class ClaudeSessionRunner:
             self._generation += 1
             self._normalizer.restart_cost()
             self._reader = asyncio.create_task(self._read(client))
+            self._probe_skills(client)
             return client
+
+    def _probe_skills(self, client: ClaudeClient) -> None:
+        probe = asyncio.create_task(report_claude_skills(client))
+        self._probes.add(probe)
+        probe.add_done_callback(self._probes.discard)
 
     def _stored(self) -> StoredChatSession:
         stored = self._runtime.journal.get_session(self._session_id)
@@ -330,6 +338,8 @@ class ClaudeSessionRunner:
         self._generation += 1
         if reader is not None and reader is not asyncio.current_task():
             reader.cancel()
+        for probe in tuple(self._probes):
+            probe.cancel()
         if client is not None:
             with suppress(Exception):
                 await client.disconnect()

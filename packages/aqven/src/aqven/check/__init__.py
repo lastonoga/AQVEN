@@ -2,6 +2,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Final
 
+from aqven.check.agent_skills import check_agent_skills
 from aqven.check.bindings import check_bindings
 from aqven.check.bounds import check_bounds
 from aqven.check.builders import materialize_builders
@@ -65,12 +66,14 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_experiments,
     check_findings,
     check_generated,
+    check_agent_skills,
 )
 PROJECT_OUTPUT_RULES: Final[tuple[CheckRule, ...]] = (
     check_datasets,
     check_experiments,
     check_findings,
     check_generated,
+    check_agent_skills,
 )
 FLOW_RULES: Final[tuple[CheckRule, ...]] = tuple(rule for rule in RULES if rule not in PROJECT_OUTPUT_RULES)
 

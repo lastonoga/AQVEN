@@ -1,24 +1,134 @@
 {
+  "enabledMcpjsonServers": [
+    "aqven"
+  ],
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|mcp__aqven__series_start|mcp__aqven__series_get",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/aqven_check.py\" --static",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
             "timeout": 120
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(uv *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(aqven *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(curl *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(wget *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(rm *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(mv *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(cp *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(sed *)"
           }
         ]
       }
     ],
-    "Stop": [
+    "PostToolUse": [
       {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Skill|mcp__aqven__series_start|mcp__aqven__series_get",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/aqven_check.py\"",
-            "timeout": 600
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(uv *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(aqven *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(rm *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(mv *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(cp *)"
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook reminders lumen || true",
+            "timeout": 120,
+            "if": "Bash(sed *)"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR\" aqven hook compaction lumen || true",
+            "timeout": 60
           }
         ]
       }

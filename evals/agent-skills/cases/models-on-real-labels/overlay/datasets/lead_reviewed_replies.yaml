@@ -1,0 +1,228 @@
+apiVersion: "aqven/v1"
+kind: "Dataset"
+cases:
+- name: "archive_strip_cut_length_sent"
+  inputs:
+    summary: "The customer bought a Lumen Flow Strip 5 m for a 3.2 m shelf and asks whether the strip can be shortened and what happens to the leftover piece."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_stripcut001"
+      title: "Shortening a Flow strip"
+      text: "A Flow strip can be cut only on the marked copper lines, every 10 cm. The piece after the cut is no longer powered and cannot be reconnected without the Flow connector kit."
+    - chunk_id: "kb_stripkit002"
+      title: "Flow connector kit"
+      text: "The Flow connector kit joins two cut pieces or adds a corner. It is sold separately."
+    reply:
+      text: "Yes, you can shorten the strip: cut it only on one of the marked copper lines, which come every 10 cm, so for your shelf cut at 3.2 m. The leftover piece is no longer powered; to use it later you would need the Flow connector kit, which is sold separately."
+      citations:
+      - chunk_id: "kb_stripcut001"
+        quote: "A Flow strip can be cut only on the marked copper lines, every 10 cm."
+      - chunk_id: "kb_stripkit002"
+        quote: "The Flow connector kit joins two cut pieces or adds a corner."
+  tags:
+    source: "archive"
+    lead_verdict: "send"
+    action: "advice"
+  metadata:
+    ticket: "LUM-T-240811"
+    reviewed_by: "support lead"
+  expected_output:
+    verdict: "send"
+- name: "archive_bulb_5ghz_blocked"
+  inputs:
+    summary: "After a new router was installed, the customer's Glow A60 bulbs dropped off the app; the customer asks how to connect them to the new network."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_bulbwifi24"
+      title: "Connecting a Glow bulb to Wi-Fi"
+      text: "Glow bulbs work only on a 2.4 GHz network. After a router or password change the bulb has to be added to the app again: remove it from the device list and pair it once more."
+    reply:
+      text: "Sorry for the trouble with the new router. Connect the bulbs to the 5 GHz network of the new router for a faster connection, then remove each bulb from the device list and pair it again."
+      citations:
+      - chunk_id: "kb_bulbwifi24"
+        quote: "remove it from the device list and pair it once more."
+  tags:
+    source: "archive"
+    lead_verdict: "block"
+    action: "advice"
+  metadata:
+    ticket: "LUM-T-240902"
+    reviewed_by: "support lead"
+    lead_note: "Glow bulbs do not work on 5 GHz; the reply tells the customer the opposite of the article."
+  expected_output:
+    verdict: "block"
+- name: "archive_lamp_reship_sent"
+  inputs:
+    summary: "The Lumen Arc Desk lamp arrived with a snapped stem; the box was dented and the customer attached a photo of both. The customer asks for a working lamp."
+    resolution:
+      action: "reship"
+      summary: "The order is shipped again at the store's expense"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_shipdmg001"
+      title: "Damage in delivery"
+      text: "If a product arrives damaged, keep the packaging and photograph it. Lumen ships the order again at its own expense, and a courier collects the damaged product."
+    reply:
+      text: "Thank you for the photos, and sorry the Arc Desk arrived broken. We are shipping a new lamp at our expense; a courier will collect the damaged one, so please keep the box until then."
+      citations:
+      - chunk_id: "kb_shipdmg001"
+        quote: "Lumen ships the order again at its own expense, and a courier collects the damaged product."
+  tags:
+    source: "archive"
+    lead_verdict: "send"
+    action: "reship"
+  metadata:
+    ticket: "LUM-T-240915"
+    reviewed_by: "support lead"
+  expected_output:
+    verdict: "send"
+- name: "archive_credit_timing_blocked"
+  inputs:
+    summary: "The Lumen Flow Strip controller of a Lumen Plus member stopped responding after five months; the customer asks for compensation and when it will arrive."
+    resolution:
+      action: "store_credit"
+      summary: "Store credit of €15.00 under warranty for the unresponsive controller"
+      credit:
+        amount_minor: 1500
+        currency: "eur"
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_credit2026"
+      title: "Store credit under warranty"
+      text: "Lumen Plus customers receive store credit for a faulty product within the warranty period. The credit reaches the account within 24 hours and is valid for 12 months."
+    reply:
+      text: "We are sorry the controller stopped responding. We have issued store credit of €15.00 under your warranty. It reaches your account within 24 hours, and you can also ask us to pay it out to your card at any time."
+      citations:
+      - chunk_id: "kb_credit2026"
+        quote: "The credit reaches the account within 24 hours and is valid for 12 months."
+  tags:
+    source: "archive"
+    lead_verdict: "block"
+    action: "store_credit"
+  metadata:
+    ticket: "LUM-T-241003"
+    reviewed_by: "support lead"
+    lead_note: "Store credit is never paid out to a card; the promise is not in any article."
+  expected_output:
+    verdict: "block"
+- name: "archive_zigbee_range_sent"
+  inputs:
+    summary: "A Glow E27 Zigbee bulb in the garden shed keeps going offline; the Lumen Hub is in the house about 15 m away. The customer asks how to keep it connected."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_zigpair001"
+      title: "Pairing a Zigbee lamp with the Lumen Hub"
+      text: "Zigbee lamps pair through the Lumen Hub, not over Wi-Fi. Put the hub into pairing mode from the app, then switch the lamp on within 60 seconds. Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+    reply:
+      text: "The shed is about 15 m from the hub, which is past the 10 m the bulb can reach on its own. Put a mains-powered Zigbee device, such as another Glow bulb or a smart plug, between the house and the shed; it repeats the signal and keeps the bulb connected."
+      citations:
+      - chunk_id: "kb_zigpair001"
+        quote: "Keep the lamp within 10 m of the hub or of a mains-powered Zigbee device that repeats the signal."
+  tags:
+    source: "archive"
+    lead_verdict: "send"
+    action: "advice"
+  metadata:
+    ticket: "LUM-T-241017"
+    reviewed_by: "support lead"
+  expected_output:
+    verdict: "send"
+- name: "archive_two_questions_blocked"
+  inputs:
+    summary: "The Nova Cordless lamp lasts about four hours on a charge instead of the eight it did when new; the customer asks whether that is normal and whether the battery can be replaced."
+    resolution:
+      action: "advice"
+      summary: "A knowledge base answer with no compensation"
+      credit: null
+      policy: null
+    chunks:
+    - chunk_id: "kb_novabatt01"
+      title: "Nova battery life"
+      text: "The Nova battery keeps about 80% of its capacity after 300 full charges; runtime falls gradually with use. This is normal wear, not a fault."
+    - chunk_id: "kb_novabatt02"
+      title: "Replacing the Nova battery"
+      text: "The Nova battery can be replaced by a Lumen service centre for a fixed fee; the lamp is sent in with the prepaid label from the app."
+    reply:
+      text: "A shorter runtime after long use is normal: the Nova battery keeps about 80% of its capacity after 300 full charges, and the runtime falls gradually. This is wear, not a fault."
+      citations:
+      - chunk_id: "kb_novabatt01"
+        quote: "This is normal wear, not a fault."
+  tags:
+    source: "archive"
+    lead_verdict: "block"
+    action: "advice"
+  metadata:
+    ticket: "LUM-T-241029"
+    reviewed_by: "support lead"
+    lead_note: "The customer asked whether the battery can be replaced; the reply never answers it."
+  expected_output:
+    verdict: "block"
+- name: "archive_warranty_replacement_sent"
+  inputs:
+    summary: "The Nova Cordless lamp of a customer stopped charging after two months: the charging ring never lights with two cables and two adapters. The customer asks for a working lamp."
+    resolution:
+      action: "replacement"
+      summary: "A replacement lamp under warranty"
+      credit: null
+      policy: "7a1d9c4e-2f6b-4e83-b5a0-9c3e1d7f2a58"
+    chunks:
+    - chunk_id: "kb_novachrg01"
+      title: "Nova does not charge"
+      text: "If the charging ring does not light with a working cable and adapter, the charging board is faulty. Within the warranty period Lumen sends a replacement lamp; the faulty one is returned with the prepaid label."
+    reply:
+      text: "Thank you for trying the other cables and adapters; that tells us the charging board is faulty. We are sending you a replacement lamp under warranty. Please return the faulty one with the prepaid label you will find in the app."
+      citations:
+      - chunk_id: "kb_novachrg01"
+        quote: "Within the warranty period Lumen sends a replacement lamp; the faulty one is returned with the prepaid label."
+  tags:
+    source: "archive"
+    lead_verdict: "send"
+    action: "replacement"
+  metadata:
+    ticket: "LUM-T-241104"
+    reviewed_by: "support lead"
+  expected_output:
+    verdict: "send"
+- name: "archive_heat_warning_blocked"
+  inputs:
+    summary: "The controller of a Lumen Flow Strip gets hot to the touch after an hour and smells faintly of plastic; the customer asks whether it is safe to keep using it until a fix arrives."
+    resolution:
+      action: "replacement"
+      summary: "A replacement controller under warranty"
+      credit: null
+      policy: "3f6c2a1e-8b4d-4c7a-9e21-5d0f7b8a6c34"
+    chunks:
+    - chunk_id: "kb_ctrlheat01"
+      title: "Controller heat"
+      text: "A Flow strip controller runs warm, but not hot. If the controller body is hot to the touch, unplug the strip at once and do not switch it on until it has been checked: that is a sign of a faulty power supply."
+    - chunk_id: "kb_ctrlrepl01"
+      title: "Replacing a Flow controller"
+      text: "A faulty Flow controller is replaced under warranty; the new controller ships within two working days."
+    reply:
+      text: "Thanks for letting us know. We are sending a replacement controller under warranty; it ships within two working days. Until it arrives, you can keep using the strip at a lower brightness."
+      citations:
+      - chunk_id: "kb_ctrlrepl01"
+        quote: "the new controller ships within two working days."
+  tags:
+    source: "archive"
+    lead_verdict: "block"
+    action: "replacement"
+  metadata:
+    ticket: "LUM-T-241118"
+    reviewed_by: "support lead"
+    lead_note: "A hot controller must be unplugged at once; the reply tells the customer to keep using it."
+  expected_output:
+    verdict: "block"

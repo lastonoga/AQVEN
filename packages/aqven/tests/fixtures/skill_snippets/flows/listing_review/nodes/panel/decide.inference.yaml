@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "What the marketplace does with a listing, from the verdicts on its aspects"
+in:
+- name: "title"
+  type: "Text"
+  description: "Listing title"
+  maxLength: 120
+- name: "photos_match"
+  type: "Bool"
+  description: "True when the photos show the item the text describes"
+- name: "findings"
+  type: "Finding[]"
+  description: "Verdicts on the aspects that were read"
+  maxItems: 3
+out:
+- name: "decision"
+  type: "Decision"
+  description: "What the marketplace does with the listing"
+- name: "reason"
+  type: "Text"
+  description: "Why, in one sentence"
+  maxLength: 300

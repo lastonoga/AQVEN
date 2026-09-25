@@ -6,6 +6,7 @@ from aqven.loader.layout import FINDINGS_FILE
 from aqven.loader.roots import project_workspace
 
 PROJECT_RULE_FILES: Final[tuple[str, ...]] = ("AGENTS.md", "CLAUDE.md")
+RULE_SEPARATOR: Final = "\n\n"
 
 
 def rule_roots(project_root: Path) -> tuple[Path, ...]:
@@ -20,4 +21,10 @@ def rule_files(project_root: Path) -> Iterator[Path]:
 
 def project_rules(project_root: Path) -> str:
     files = rule_files(project_root)
-    return "\n\n".join(path.read_text(encoding="utf-8") for path in files if path.is_file() and not path.is_symlink())
+    return RULE_SEPARATOR.join(
+        path.read_text(encoding="utf-8") for path in files if path.is_file() and not path.is_symlink()
+    )
+
+
+def studio_instructions(project_root: Path, host_block: str) -> str:
+    return RULE_SEPARATOR.join(part for part in (project_rules(project_root), host_block) if part)

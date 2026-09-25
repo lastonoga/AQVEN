@@ -44,7 +44,8 @@ INSTRUCTIONS: Final = (
     "aqven_check, then series_start and series_get with wait_seconds. Explore on dev as often as needed, one change "
     "between series: it gives a signal, never a finding. Confirm once on holdout: the verdict is written to "
     "FINDINGS.md and experiments/<id>/findings. Quote verdict.text as it is; inconclusive means fresh held-out cases, "
-    "not a rerun. A series above the project spend cap waits for the person's approval in Studio."
+    "not a rerun. A running series pauses at 90% of its spend cap and waits for the person to continue or stop it "
+    "in Studio: report the spend and wait, and never raise research.spend_cap_usd to get past it."
 )
 
 

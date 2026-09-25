@@ -44,6 +44,17 @@ jobs:
         run: uv run --frozen pytest examples -q
       - name: aqven check
         run: uv run --frozen aqven check examples/lumen
+      - name: agent skills
+        run: uv run --frozen python tools/check_skills.py
+      - name: skill references are current
+        run: uv run --frozen python tools/bundle_skill_docs.py --check
+      - name: skill snippets project
+        run: uv run --frozen aqven check packages/aqven/tests/fixtures/skill_snippets
+      - name: agent plugin passes plugin validate --strict
+        run: |
+          claude_cli="$(uv run --frozen python -c "import claude_agent_sdk, pathlib; print(pathlib.Path(claude_agent_sdk.__file__).parent / '_bundled' / 'claude')")"
+          "$claude_cli" --version
+          "$claude_cli" plugin validate --strict packages/aqven/src/aqven/agent_plugin
 
   types:
     name: pyright (non-blocking)

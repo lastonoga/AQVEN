@@ -1,0 +1,1713 @@
+{
+  "tools": [
+    {
+      "name": "aqven_check",
+      "description": "Full project check with the same compiler as `aqven check`: regenerates the type models, checks the definitions statically and then simulates every flow without network or tokens, and returns diagnostics (code, severity, file, path, line, column, message, hint). paths filters by path prefixes relative to the project root with aqven.yaml; static skips the simulated runs. Call it after every edit of YAML, a prompt or code.",
+      "inputSchema": {
+        "properties": {
+          "paths": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "include_warnings": {
+            "default": true,
+            "title": "Include Warnings",
+            "type": "boolean"
+          },
+          "static": {
+            "default": false,
+            "title": "Static",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 100,
+            "maximum": 500,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "maximum": 600,
+            "minimum": 1,
+            "title": "Timeout Seconds",
+            "type": "integer"
+          }
+        },
+        "title": "aqven_checkArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "flow_patch",
+      "description": "Atomically applies 1..50 operations to flow files: add_node, remove_node, rename_node, move_node, set, unset, bind, unbind, rename_flow, rename_agent, delete_agent. expects[{path, file_hash}] is a CAS on \"sha256-\" + the sha256 of the current bytes of every file the operations touch (null means the file must not exist); client_op_id is a ULID, a repeat returns the first result. Validates the tree before writing; dry_run does not touch the disk. On STALE_FILE, re-read the file and replay the intent.",
+      "inputSchema": {
+        "$defs": {
+          "AddNodeOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "add_node",
+                "title": "Op",
+                "type": "string"
+              },
+              "node_id": {
+                "$ref": "#/$defs/EntityName"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NodeRef"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "index": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Index"
+              },
+              "spec": {
+                "$ref": "#/$defs/JsonObject"
+              },
+              "inference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/JsonObject"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "prompt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Prompt"
+              }
+            },
+            "required": [
+              "op",
+              "node_id",
+              "spec"
+            ],
+            "title": "AddNodeOp",
+            "type": "object"
+          },
+          "BindOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "bind",
+                "title": "Op",
+                "type": "string"
+              },
+              "target": {
+                "pattern": "^[a-z][a-z0-9_]{0,62}(__[a-z][a-z0-9_]{0,62})*\\.[a-z][a-z0-9_]{0,62}$",
+                "title": "Target",
+                "type": "string"
+              },
+              "source": {
+                "minLength": 1,
+                "title": "Source",
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "target",
+              "source"
+            ],
+            "title": "BindOp",
+            "type": "object"
+          },
+          "DeleteAgentOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "delete_agent",
+                "title": "Op",
+                "type": "string"
+              },
+              "agent_id": {
+                "$ref": "#/$defs/EntityName"
+              }
+            },
+            "required": [
+              "op",
+              "agent_id"
+            ],
+            "title": "DeleteAgentOp",
+            "type": "object"
+          },
+          "EntityName": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "type": "string"
+          },
+          "ExpectedFile": {
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/ProjectPath"
+              },
+              "file_hash": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FileHash"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "file_hash"
+            ],
+            "title": "ExpectedFile",
+            "type": "object"
+          },
+          "FileHash": {
+            "pattern": "^sha256-[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "JsonObject": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "type": "object"
+          },
+          "JsonValue": {},
+          "MoveNodeOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "move_node",
+                "title": "Op",
+                "type": "string"
+              },
+              "node_id": {
+                "$ref": "#/$defs/NodeRef"
+              },
+              "index": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Index"
+              },
+              "to_flow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityName"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "op",
+              "node_id"
+            ],
+            "title": "MoveNodeOp",
+            "type": "object"
+          },
+          "NodeRef": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}(__[a-z][a-z0-9_]{0,62})*$",
+            "type": "string"
+          },
+          "PatchOp": {
+            "discriminator": {
+              "mapping": {
+                "add_node": "#/$defs/AddNodeOp",
+                "bind": "#/$defs/BindOp",
+                "delete_agent": "#/$defs/DeleteAgentOp",
+                "move_node": "#/$defs/MoveNodeOp",
+                "remove_node": "#/$defs/RemoveNodeOp",
+                "rename_agent": "#/$defs/RenameAgentOp",
+                "rename_flow": "#/$defs/RenameFlowOp",
+                "rename_node": "#/$defs/RenameNodeOp",
+                "set": "#/$defs/SetOp",
+                "unbind": "#/$defs/UnbindOp",
+                "unset": "#/$defs/UnsetOp"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/AddNodeOp"
+              },
+              {
+                "$ref": "#/$defs/RemoveNodeOp"
+              },
+              {
+                "$ref": "#/$defs/RenameNodeOp"
+              },
+              {
+                "$ref": "#/$defs/MoveNodeOp"
+              },
+              {
+                "$ref": "#/$defs/SetOp"
+              },
+              {
+                "$ref": "#/$defs/UnsetOp"
+              },
+              {
+                "$ref": "#/$defs/BindOp"
+              },
+              {
+                "$ref": "#/$defs/UnbindOp"
+              },
+              {
+                "$ref": "#/$defs/RenameFlowOp"
+              },
+              {
+                "$ref": "#/$defs/RenameAgentOp"
+              },
+              {
+                "$ref": "#/$defs/DeleteAgentOp"
+              }
+            ]
+          },
+          "ProjectPath": {
+            "type": "string"
+          },
+          "RemoveNodeOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "remove_node",
+                "title": "Op",
+                "type": "string"
+              },
+              "node_id": {
+                "$ref": "#/$defs/NodeRef"
+              }
+            },
+            "required": [
+              "op",
+              "node_id"
+            ],
+            "title": "RemoveNodeOp",
+            "type": "object"
+          },
+          "RenameAgentOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rename_agent",
+                "title": "Op",
+                "type": "string"
+              },
+              "agent_id": {
+                "$ref": "#/$defs/EntityName"
+              },
+              "to": {
+                "$ref": "#/$defs/EntityName"
+              }
+            },
+            "required": [
+              "op",
+              "agent_id",
+              "to"
+            ],
+            "title": "RenameAgentOp",
+            "type": "object"
+          },
+          "RenameFlowOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rename_flow",
+                "title": "Op",
+                "type": "string"
+              },
+              "to": {
+                "$ref": "#/$defs/EntityName"
+              }
+            },
+            "required": [
+              "op",
+              "to"
+            ],
+            "title": "RenameFlowOp",
+            "type": "object"
+          },
+          "RenameNodeOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rename_node",
+                "title": "Op",
+                "type": "string"
+              },
+              "node_id": {
+                "$ref": "#/$defs/NodeRef"
+              },
+              "to": {
+                "$ref": "#/$defs/EntityName"
+              }
+            },
+            "required": [
+              "op",
+              "node_id",
+              "to"
+            ],
+            "title": "RenameNodeOp",
+            "type": "object"
+          },
+          "SetOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set",
+                "title": "Op",
+                "type": "string"
+              },
+              "path": {
+                "pattern": "^(flow|nodes/[a-z][a-z0-9_]*|inferences/[a-z][a-z0-9_]*)(/[A-Za-z0-9_-]+)+$",
+                "title": "Path",
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/$defs/JsonValue"
+              }
+            },
+            "required": [
+              "op",
+              "path",
+              "value"
+            ],
+            "title": "SetOp",
+            "type": "object"
+          },
+          "Ulid": {
+            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+            "type": "string"
+          },
+          "UnbindOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "unbind",
+                "title": "Op",
+                "type": "string"
+              },
+              "target": {
+                "pattern": "^[a-z][a-z0-9_]{0,62}(__[a-z][a-z0-9_]{0,62})*\\.[a-z][a-z0-9_]{0,62}$",
+                "title": "Target",
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "target"
+            ],
+            "title": "UnbindOp",
+            "type": "object"
+          },
+          "UnsetOp": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "unset",
+                "title": "Op",
+                "type": "string"
+              },
+              "path": {
+                "pattern": "^(flow|nodes/[a-z][a-z0-9_]*|inferences/[a-z][a-z0-9_]*)(/[A-Za-z0-9_-]+)+$",
+                "title": "Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "path"
+            ],
+            "title": "UnsetOp",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "flow_id": {
+            "$ref": "#/$defs/EntityName"
+          },
+          "expects": {
+            "items": {
+              "$ref": "#/$defs/ExpectedFile"
+            },
+            "minItems": 1,
+            "title": "Expects",
+            "type": "array"
+          },
+          "ops": {
+            "items": {
+              "$ref": "#/$defs/PatchOp"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Ops",
+            "type": "array"
+          },
+          "client_op_id": {
+            "$ref": "#/$defs/Ulid"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Intent"
+          },
+          "expect_lock": {
+            "default": false,
+            "title": "Expect Lock",
+            "type": "boolean"
+          },
+          "exclusive": {
+            "default": false,
+            "title": "Exclusive",
+            "type": "boolean"
+          },
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "flow_id",
+          "expects",
+          "ops",
+          "client_op_id"
+        ],
+        "title": "flow_patchArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "prompt_preview",
+      "description": "Exactly what an llm node sends to the model: instructions with the output limits, every message with fragments and the chosen prompt variants, the attachments, the tools and the resolved output.mode. Without input it fills sample values from the input schema; variants forces a prompt variant slot. Call it after editing a prompt, a fragment, a variant or the inference contract.",
+      "inputSchema": {
+        "$defs": {
+          "JsonObject": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "properties": {
+          "flow_id": {
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JsonObject"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "variants": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Variants"
+          }
+        },
+        "required": [
+          "flow_id",
+          "node_id"
+        ],
+        "title": "prompt_previewArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "pyright_check",
+      "description": "pyright type check in the project folder with the interpreter of the project environment. paths are files or folders relative to the project root; without paths, the whole folder per pyrightconfig or [tool.pyright]. Lines and columns start at 1.",
+      "inputSchema": {
+        "properties": {
+          "paths": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "maximum": 500,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "default": 180,
+            "maximum": 900,
+            "minimum": 1,
+            "title": "Timeout Seconds",
+            "type": "integer"
+          }
+        },
+        "title": "pyright_checkArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "pytest_run",
+      "description": "Runs pytest in the project folder with the interpreter of the project environment. paths are files, folders or node ids (tests/test_x.py::test_y) relative to the project root; keyword is a -k expression; max_failures is --maxfail. Returns the outcome, counters, failed tests with their messages and the output tail.",
+      "inputSchema": {
+        "properties": {
+          "paths": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "keyword": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "^[^-]",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keyword"
+          },
+          "max_failures": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Failures"
+          },
+          "limit": {
+            "default": 50,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "default": 300,
+            "maximum": 1800,
+            "minimum": 1,
+            "title": "Timeout Seconds",
+            "type": "integer"
+          }
+        },
+        "title": "pytest_runArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_cancel",
+      "description": "Cancels a run with a reason.",
+      "inputSchema": {
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "run_id"
+        ],
+        "title": "run_cancelArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_events",
+      "description": "Run event log by seq. Without after_seq, the tail: the last limit events; with after_seq, the events after it, to continue reading.",
+      "inputSchema": {
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "after_seq": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "After Seq"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "run_eventsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_fork",
+      "description": "New run from run run_id starting at node address (execution address): nodes before it are taken from the source run, it and later nodes run again. A node waiting for a human answer asks again.",
+      "inputSchema": {
+        "$defs": {
+          "ExecutionAddress": {
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "title": "Node Id",
+                "type": "string"
+              },
+              "branch_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Branch Key"
+              },
+              "iteration": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Iteration"
+              },
+              "item_index": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Item Index"
+              }
+            },
+            "required": [
+              "node_id",
+              "branch_key",
+              "iteration",
+              "item_index"
+            ],
+            "title": "ExecutionAddress",
+            "type": "object"
+          },
+          "ForkBase": {
+            "enum": [
+              "original",
+              "working"
+            ],
+            "type": "string"
+          },
+          "ForkOverrides": {
+            "additionalProperties": false,
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/JsonValue",
+                "default": null
+              },
+              "agent": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Agent"
+              },
+              "prompt_source": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PromptSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "title": "ForkOverrides",
+            "type": "object"
+          },
+          "JsonValue": {},
+          "PromptSource": {
+            "enum": [
+              "disk",
+              "draft"
+            ],
+            "type": "string"
+          }
+        },
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "address": {
+            "$ref": "#/$defs/ExecutionAddress"
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ForkOverrides"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "at": {
+            "$ref": "#/$defs/ForkBase",
+            "default": "original"
+          }
+        },
+        "required": [
+          "run_id",
+          "address"
+        ],
+        "title": "run_forkArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_get",
+      "description": "Run status, cost, node executions, open waits for a human answer and last_seq.",
+      "inputSchema": {
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "run_getArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_get_node",
+      "description": "Node execution at an address (node_id, branch_key, iteration, item_index): prompt, response, attempts, checks, cost; a waiting node also has human with form_schema and attempt for run_resume.",
+      "inputSchema": {
+        "$defs": {
+          "IncludePayloads": {
+            "enum": [
+              "none",
+              "truncated",
+              "full"
+            ],
+            "type": "string"
+          }
+        },
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "branch_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Branch Key"
+          },
+          "iteration": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Iteration"
+          },
+          "item_index": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Item Index"
+          },
+          "include_payloads": {
+            "$ref": "#/$defs/IncludePayloads",
+            "default": "truncated"
+          }
+        },
+        "required": [
+          "run_id",
+          "node_id"
+        ],
+        "title": "run_get_nodeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_list",
+      "description": "Page of runs filtered by flow_id, status, mode, assignee, parent_run_id and the time window since and until; for what is waiting for a human use status=suspended, and for the inbox add assignee=me (the local user), overdue=true, deadline_before and sort=deadline_at. Cursor: next_cursor.",
+      "inputSchema": {
+        "$defs": {
+          "RunMode": {
+            "enum": [
+              "live",
+              "replay",
+              "experiment",
+              "dryrun"
+            ],
+            "type": "string"
+          },
+          "RunSort": {
+            "enum": [
+              "started_at",
+              "deadline_at"
+            ],
+            "type": "string"
+          },
+          "RunStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "suspended",
+              "completed",
+              "failed",
+              "cancelled"
+            ],
+            "type": "string"
+          }
+        },
+        "properties": {
+          "flow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Flow Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "assignee": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Assignee"
+          },
+          "parent_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parent Run Id"
+          },
+          "deadline_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deadline Before"
+          },
+          "overdue": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Overdue"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Since"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Until"
+          },
+          "sort": {
+            "$ref": "#/$defs/RunSort",
+            "default": "started_at"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "run_listArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_resume",
+      "description": "Answers a wait for a human answer: address and attempt from waits[] or run_get_node, payload per form_schema, client_op_id is the idempotency key. Errors: NOT_WAITING, ALREADY_RESUMED, WAIT_ATTEMPT_STALE, RUN_TIMED_OUT, INPUT_INVALID.",
+      "inputSchema": {
+        "$defs": {
+          "ExecutionAddress": {
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "title": "Node Id",
+                "type": "string"
+              },
+              "branch_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Branch Key"
+              },
+              "iteration": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Iteration"
+              },
+              "item_index": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Item Index"
+              }
+            },
+            "required": [
+              "node_id",
+              "branch_key",
+              "iteration",
+              "item_index"
+            ],
+            "title": "ExecutionAddress",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "properties": {
+          "address": {
+            "$ref": "#/$defs/ExecutionAddress"
+          },
+          "attempt": {
+            "minimum": 1,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "payload": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "client_op_id": {
+            "title": "Client Op Id",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "attempt",
+          "payload",
+          "client_op_id",
+          "run_id"
+        ],
+        "title": "run_resumeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_start",
+      "description": "Starts a flow run from the working copy and returns run_id at once, without waiting for the end. Pass exactly one of input and dataset_item_id; human_answers are scripted answers for human nodes; context carries the run context keys the flow reads through $run.context.*, a missing key is CONTEXT_MISSING with the key in problems[]. Then call run_get and run_events.",
+      "inputSchema": {
+        "$defs": {
+          "ExecutionAddress": {
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "title": "Node Id",
+                "type": "string"
+              },
+              "branch_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Branch Key"
+              },
+              "iteration": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Iteration"
+              },
+              "item_index": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Item Index"
+              }
+            },
+            "required": [
+              "node_id",
+              "branch_key",
+              "iteration",
+              "item_index"
+            ],
+            "title": "ExecutionAddress",
+            "type": "object"
+          },
+          "JsonValue": {},
+          "RunContext": {
+            "additionalProperties": false,
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "time_zone": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Time Zone"
+              },
+              "locale": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Locale"
+              },
+              "tenant_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Tenant Id"
+              }
+            },
+            "title": "RunContext",
+            "type": "object"
+          },
+          "RunMode": {
+            "enum": [
+              "live",
+              "replay",
+              "experiment",
+              "dryrun"
+            ],
+            "type": "string"
+          },
+          "ScriptedAnswer": {
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/$defs/ExecutionAddress"
+              },
+              "attempt": {
+                "default": 1,
+                "minimum": 1,
+                "title": "Attempt",
+                "type": "integer"
+              },
+              "payload": {
+                "$ref": "#/$defs/JsonValue"
+              }
+            },
+            "required": [
+              "address",
+              "payload"
+            ],
+            "title": "ScriptedAnswer",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "flow_id": {
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "at": {
+            "default": "working",
+            "title": "At",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/$defs/RunMode"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunContext"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "input": {
+            "$ref": "#/$defs/JsonValue",
+            "default": null
+          },
+          "dataset_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dataset Item Id"
+          },
+          "selected_nodes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Selected Nodes"
+          },
+          "start_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Node"
+          },
+          "end_node": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "End Node"
+          },
+          "node_outputs": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "default": {},
+            "title": "Node Outputs",
+            "type": "object"
+          },
+          "cassette_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cassette Id"
+          },
+          "human_answers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ScriptedAnswer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Human Answers"
+          }
+        },
+        "required": [
+          "flow_id",
+          "mode"
+        ],
+        "title": "run_startArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "series_cancel",
+      "description": "Stops a series: queued attempts never start, model calls already running finish and are paid; no finding is written.",
+      "inputSchema": {
+        "properties": {
+          "series_id": {
+            "title": "Series Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "series_id"
+        ],
+        "title": "series_cancelArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "series_get",
+      "description": "Status, spend, per-variant metrics with 95% CI and the verdict of a series. wait_seconds holds the answer until the series is done, cancelled, failed, awaiting approval or waiting for a human, or the time runs out. When the spend of a running series reaches 90% of its cap, it starts no new attempts, lets the running ones finish and waits in awaiting_approval with pause.reason spend_near_cap and pause.spent_usd; a human continues it in Studio with a higher cap or stops it. A series is failed when every attempt hit an infrastructure error, such as a missing provider key, and error names the first one; it stays done when at least one attempt was counted. spend.unpriced_attempts counts attempts that ran on a model without a known price: above 0, spend.usd is a lower bound. include_cases adds per-case rows for dev cases only. Quote the verdict text as it is.",
+      "inputSchema": {
+        "properties": {
+          "series_id": {
+            "title": "Series Id",
+            "type": "string"
+          },
+          "wait_seconds": {
+            "default": 0,
+            "maximum": 50,
+            "minimum": 0,
+            "title": "Wait Seconds",
+            "type": "integer"
+          },
+          "include_cases": {
+            "default": false,
+            "title": "Include Cases",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "series_id"
+        ],
+        "title": "series_getArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "series_start",
+      "description": "Starts a series of an experiment, or a look over named cases of a flow dataset, on dev or holdout cases, and returns at once with the launch plan and the status: running, or awaiting_approval when the cap_usd you passed is above the project spend cap and a human approves it in Studio. The launch plan counts the attempts, recommends a number of cases with its reason and names the cap; it has no price, since spend is known only as attempts finish. Every attempt calls the models live. Then call series_get with wait_seconds.",
+      "inputSchema": {
+        "$defs": {
+          "LookTarget": {
+            "additionalProperties": false,
+            "properties": {
+              "flow_id": {
+                "title": "Flow Id",
+                "type": "string"
+              },
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "case_names": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 500,
+                "minItems": 1,
+                "title": "Case Names",
+                "type": "array"
+              },
+              "start_node": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Start Node"
+              },
+              "end_node": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "End Node"
+              }
+            },
+            "required": [
+              "flow_id",
+              "dataset_id",
+              "case_names"
+            ],
+            "title": "LookTarget",
+            "type": "object"
+          },
+          "SeriesSplit": {
+            "enum": [
+              "dev",
+              "holdout"
+            ],
+            "title": "SeriesSplit",
+            "type": "string"
+          },
+          "Ulid": {
+            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "on": {
+            "$ref": "#/$defs/SeriesSplit",
+            "default": "dev"
+          },
+          "cases": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cases"
+          },
+          "repeats": {
+            "anyOf": [
+              {
+                "maximum": 20,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Repeats"
+          },
+          "cap_usd": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cap Usd"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Experiment Id"
+          },
+          "look": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LookTarget"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "client_op_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Ulid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "series_startArguments",
+        "type": "object"
+      }
+    }
+  ]
+}

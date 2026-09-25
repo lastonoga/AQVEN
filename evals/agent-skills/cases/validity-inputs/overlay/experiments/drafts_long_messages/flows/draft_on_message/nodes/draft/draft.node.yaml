@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The gpt agent drafts a reply to the customer's message"
+agent: "gpt"
+in:
+- name: "message"
+  from: "$input.message"
+- name: "product"
+  from: "$input.product"
