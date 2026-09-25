@@ -44,6 +44,7 @@ WATCH_LOGGER: Final = logging.getLogger("aqven.server.watch")
 type ChangeKind = Literal["added", "modified", "deleted"]
 type ActorKind = Literal["human", "agent", "fs", "git", "system"]
 type ResyncReason = Literal["window_exceeded", "watcher_restarted", "git_batch"]
+type ChangeBatch = set[tuple[Change, str]]
 
 
 class SpecEventBase(ResourceModel):
@@ -92,7 +93,7 @@ class WatchChanges(Protocol):
         watch_filter: Callable[[Change, str], bool] | None = ...,
         debounce: int = ...,
         stop_event: asyncio.Event | None = ...,
-    ) -> AsyncGenerator[set[tuple[Change, str]]]: ...
+    ) -> AsyncGenerator[ChangeBatch]: ...
 
 
 AWATCH: Final = cast(WatchChanges, import_module("watchfiles").awatch)
@@ -372,14 +373,23 @@ async def refresh_guarded(hub: SpecEventHub) -> None:
         WATCH_LOGGER.exception("project watcher could not refresh the workspace; it keeps watching")
 
 
+async def next_batch(changes: AsyncIterator[ChangeBatch]) -> ChangeBatch | None:
+    return await anext(changes, None)
+
+
 async def watch_project(
     hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS, simulate: bool = True
 ) -> None:
     if simulate and hub.simulation is None:
         hub.simulation = SimulationFeed(SubprocessSimulation(root))
-    await refresh_guarded(hub)
-    async for _ in AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop):
+    changes = AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop)
+    async with asyncio.TaskGroup() as group:
+        first_batch = group.create_task(next_batch(changes), eager_start=True)
         await refresh_guarded(hub)
+    batch = first_batch.result()
+    while batch is not None:
+        await refresh_guarded(hub)
+        batch = await next_batch(changes)
 
 
 async def supervise_watcher(

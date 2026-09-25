@@ -4,11 +4,13 @@ import signal
 import subprocess
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
 import pytest
+from dbos import DBOSClient, WorkflowStatusString
 from engine_core_harness import (
     GATE_ENV,
     RELAY_TOKEN,
@@ -18,10 +20,18 @@ from engine_core_harness import (
     launched_facade,
     trace_lines,
 )
-from engine_core_plan import ref, relay_project
+from engine_core_plan import FIXTURE_ROOT, ref, relay_project
 from pydantic import JsonValue
 
-from aqven.engine import DbosEngineFacade, RunOverrides, RunRecord, RunSpec
+from aqven.engine import (
+    DbosEngineFacade,
+    EnginePaths,
+    RunOverrides,
+    RunRecord,
+    RunSpec,
+    child_workflow_id,
+    dbos_config,
+)
 from aqven.engine.blobs import FileBlobStore
 from aqven.ports.engine import EngineError, EventLogQuery, ExecutionQuery, RunListQuery
 from aqven.runtime import (
@@ -35,7 +45,7 @@ from aqven.runtime import (
     RunSummary,
     node_address,
 )
-from aqven.runtime.address import JsonObject, RunId
+from aqven.runtime.address import ExecutionAddress, JsonObject, RunId
 from aqven.runtime.replay import McpToolStub
 from aqven.spec import FlowId, McpServerId, NodeId, RunContextKey
 
@@ -44,6 +54,7 @@ RESULT_PREFIX: Final = "RESULT "
 HIGH: Final[JsonObject] = {"text": "  hello   world ", "priority": "high"}
 LOW: Final[JsonObject] = {"text": "  hello   world ", "priority": "low"}
 WAIT_SECONDS: Final = 60.0
+FAST_BRANCH: Final = node_address("fan__fast", branch_key="fast")
 
 
 def spec(flow_id: str) -> RunSpec:
@@ -360,14 +371,49 @@ def test_dataset_range_needs_only_context_referenced_inside_the_range(tmp_path: 
     assert record.status == "completed"
 
 
-def crash_and_recover(tmp_path: Path, flow_id: str) -> tuple[str, list[str]]:
+@contextmanager
+def dbos_client(state: Path) -> Generator[DBOSClient]:
+    config = dbos_config(EnginePaths(FIXTURE_ROOT, state))
+    client = DBOSClient(system_database_url=config.get("system_database_url"))
+    try:
+        yield client
+    finally:
+        client.destroy()
+
+
+def written_run_id(run_file: Path) -> str:
+    return run_file.read_text(encoding="utf-8") if run_file.exists() else ""
+
+
+def branch_succeeded(client: DBOSClient, run_id: str, branch: ExecutionAddress) -> bool:
+    statuses = client.list_workflows(
+        workflow_ids=[child_workflow_id(run_id, branch)],
+        status=WorkflowStatusString.SUCCESS.value,
+        load_input=False,
+        load_output=False,
+    )
+    return bool(statuses)
+
+
+def wait_branches_checkpointed(state: Path, run_id: str, branches: tuple[ExecutionAddress, ...]) -> None:
+    if not branches:
+        return
+    with dbos_client(state) as client:
+        wait_until(lambda: all(branch_succeeded(client, run_id, branch) for branch in branches))
+
+
+def crash_and_recover(
+    tmp_path: Path, flow_id: str, finished_branches: tuple[ExecutionAddress, ...] = ()
+) -> tuple[str, list[str]]:
     trace = tmp_path / "trace.txt"
     run_file = tmp_path / "run_id"
+    state = tmp_path / "state"
     environment = {**os.environ, TRACE_ENV: str(trace), GATE_ENV: str(tmp_path / "gate")}
-    arguments = [str(tmp_path / "state"), str(run_file), flow_id]
+    arguments = [str(state), str(run_file), flow_id]
     starter = subprocess.Popen([sys.executable, str(WORKER), "start", *arguments], env=environment)
     try:
-        wait_until(lambda: "gate_started" in trace_lines(trace))
+        wait_until(lambda: "gate_started" in trace_lines(trace) and bool(written_run_id(run_file)))
+        wait_branches_checkpointed(state, written_run_id(run_file), finished_branches)
     finally:
         os.kill(starter.pid, signal.SIGKILL)
         starter.wait(timeout=WAIT_SECONDS)
@@ -390,7 +436,7 @@ def test_sigkill_during_step_recovers_run_in_new_process(tmp_path: Path) -> None
 
 
 def test_sigkill_inside_parallel_branch_recovers_only_that_branch(tmp_path: Path) -> None:
-    report, lines = crash_and_recover(tmp_path, "gated_fan")
+    report, lines = crash_and_recover(tmp_path, "gated_fan", finished_branches=(FAST_BRANCH,))
     assert '"status": "completed"' in report and '"text": "[tick]."' in report
     assert sorted(lines) == sorted(["normalize", "shout", "gate_started", "gate_started", "gate_done", "finalize"])
     assert lines.index("gate_done") < lines.index("finalize")

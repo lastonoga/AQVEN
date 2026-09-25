@@ -10,8 +10,10 @@ from server_fakes import copy_fixture
 from sse_frames import parse_frames
 from watchfiles import Change
 
+from aqven.check import CheckReport
 from aqven.loader import project as loader_project
 from aqven.server import ProjectWorkspace, ServerOptions, SpecEventHub, server_context, spec_channel
+from aqven.server import workspace as server_workspace
 from aqven.server.app import spec_watcher
 from aqven.server.spec_channel import (
     DiagnosticsChanged,
@@ -27,6 +29,11 @@ def edit_prompt(root: Path) -> Path:
     prompt = root / "flows/intake/nodes/reply/reply.prompt.md"
     prompt.write_text(prompt.read_text(encoding="utf-8") + "\nAnd more.\n", encoding="utf-8")
     return prompt
+
+
+async def primed(hub: SpecEventHub) -> None:
+    while not hub.primed:
+        await asyncio.sleep(0.01)
 
 
 def test_hub_publishes_file_changes(tmp_path: Path) -> None:
@@ -125,11 +132,36 @@ def test_watcher_picks_up_external_edit(tmp_path: Path) -> None:
         hub = SpecEventHub(ProjectWorkspace(root))
         stop = asyncio.Event()
         watcher = asyncio.create_task(watch_project(hub, root, stop, debounce_ms=50))
-        await asyncio.sleep(0.5)
+        await asyncio.wait_for(primed(hub), 10)
         edit_prompt(root)
         hidden = root / ".aqven"
         hidden.mkdir()
         (hidden / "server.json").write_text("{}", encoding="utf-8")
+        first = await asyncio.wait_for(anext(aiter(hub.follow(0))), 10)
+        stop.set()
+        await hub.close()
+        await asyncio.wait_for(watcher, 10)
+        assert isinstance(first, FilesChanged)
+        assert [change.path for change in first.changes] == ["flows/intake/nodes/reply/reply.prompt.md"]
+
+    asyncio.run(scenario())
+
+
+def test_watcher_announces_an_edit_made_while_it_primes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = copy_fixture("standard_shop", tmp_path)
+    checked = server_workspace.check_project
+    edits: list[Path] = []
+
+    def edit_while_checking(folder: Path) -> CheckReport:
+        if not edits:
+            edits.append(edit_prompt(root))
+        return checked(folder)
+
+    async def scenario() -> None:
+        monkeypatch.setattr(server_workspace, "check_project", edit_while_checking)
+        hub = SpecEventHub(ProjectWorkspace(root))
+        stop = asyncio.Event()
+        watcher = asyncio.create_task(watch_project(hub, root, stop, debounce_ms=50, simulate=False))
         first = await asyncio.wait_for(anext(aiter(hub.follow(0))), 10)
         stop.set()
         await hub.close()
