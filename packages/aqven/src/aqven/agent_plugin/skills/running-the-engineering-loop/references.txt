@@ -1,0 +1,3 @@
+concepts/engineering-loop.md
+mcp-cli/research-loop.md
+concepts/stage-exit-criteria.md

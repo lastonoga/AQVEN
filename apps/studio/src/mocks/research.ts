@@ -1,5 +1,18 @@
 import { delay, http, HttpResponse, type JsonBodyType, type PathParams } from "msw"
-import type { ApiExperimentDetail, ApiExperimentFlow, ApiLocalFlow, ApiExperimentSummary, ApiNode, ApiPromptDetail, ApiRunSnapshot, ApiSeriesCaseRow, SeriesSplit, SeriesStatus } from "@/domain"
+import type {
+  ApiExperimentDetail,
+  ApiExperimentFlow,
+  ApiLocalFlow,
+  ApiExperimentSummary,
+  ApiNode,
+  ApiPromptDetail,
+  ApiRunSnapshot,
+  ApiSeriesCaseRow,
+  AttentionReason,
+  SeriesSplit,
+  SeriesStatus,
+} from "@/domain"
+import { ATTENTION_REASONS } from "@/domain"
 import { API_BASE } from "@/api/client"
 import { liveDatasets } from "./data/datasets"
 import { liveExperiments } from "./data/experiments"
@@ -30,6 +43,8 @@ const CONFLICT = 409
 const UNPROCESSABLE = 422
 const HUMAN = "local"
 const SETTLED: ReadonlySet<SeriesStatus> = new Set<SeriesStatus>(["done", "cancelled", "failed"])
+const LIVE: ReadonlySet<SeriesStatus> = new Set<SeriesStatus>(["running", "waiting_human"])
+const FILE_REASONS: ReadonlySet<AttentionReason> = new Set<AttentionReason>(["results_stale", "check_errors"])
 
 let states: readonly SeriesState[] = initialSeries()
 let started = 0
@@ -97,6 +112,30 @@ const replace = (next: SeriesState): SeriesState => {
   return next
 }
 
+type ActivityFields = Pick<ApiExperimentSummary, "last_activity" | "activity_source" | "running" | "attention">
+
+const touchedAt = (series: SeriesState): string => series.finishedAt ?? series.startedAt
+
+const later = (left: string | null, right: string): string => (left === null || Date.parse(right) > Date.parse(left) ? right : left)
+
+const seriesReasons = (series: readonly SeriesState[]): readonly AttentionReason[] => [
+  ...(series.some((item) => item.status === "awaiting_approval") ? (["spend_cap_pause"] as const) : []),
+  ...(series[0]?.verdict?.state === "invalid" ? (["series_invalid"] as const) : []),
+]
+
+const activityOf = (experiment: ApiExperimentDetail, series: readonly SeriesState[]): ActivityFields => {
+  const touched = series.reduce<string | null>((newest, item) => later(newest, touchedAt(item)), null)
+  const files = experiment.last_activity
+  const seriesNewer = touched !== null && (files === null || Date.parse(touched) > Date.parse(files))
+  const reasons = new Set([...seriesReasons(series), ...experiment.attention.filter((reason) => FILE_REASONS.has(reason))])
+  return {
+    last_activity: seriesNewer ? touched : files,
+    activity_source: seriesNewer ? "series" : experiment.activity_source,
+    running: series.some((item) => LIVE.has(item.status)),
+    attention: ATTENTION_REASONS.filter((reason) => reasons.has(reason)),
+  }
+}
+
 const summaryOfExperiment = (experiment: ApiExperimentDetail): ApiExperimentSummary => {
   const series = seriesOf(experiment.experiment_id)
   const latest = series[0]
@@ -114,6 +153,9 @@ const summaryOfExperiment = (experiment: ApiExperimentDetail): ApiExperimentSumm
     latest: latest === undefined ? null : { series_id: latest.id, on: latest.on, status: latest.status, verdict: latest.verdict?.state ?? null },
     series_count: series.length,
     spent_usd: spent.toFixed(4),
+    archived: experiment.archived,
+    created: experiment.created,
+    ...activityOf(experiment, series),
   }
 }
 

@@ -1,0 +1,24 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Cleans the title and picks the aspects to check for the category"
+run: "prepare"
+in:
+- name: "title"
+  type: "Text"
+  description: "Listing title as submitted"
+  maxLength: 120
+  from: "$input.title"
+- name: "category"
+  type: "Category"
+  description: "Category the seller picked"
+  from: "$input.category"
+out:
+- name: "title"
+  type: "Text"
+  description: "Title with runs of spaces collapsed"
+  maxLength: 120
+- name: "aspects"
+  type: "Aspect[]"
+  description: "Aspects a reviewer checks for this category"
+  maxItems: 3

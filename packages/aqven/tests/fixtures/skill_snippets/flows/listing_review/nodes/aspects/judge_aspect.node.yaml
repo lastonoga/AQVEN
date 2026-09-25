@@ -1,0 +1,12 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "Judges one aspect from the listing text and the photo notes"
+agent: "reader"
+in:
+- name: "aspect"
+  from: "$item"
+- name: "description"
+  from: "$input.description"
+- name: "photo_notes"
+  from: "$match_photos.out.photo_notes"

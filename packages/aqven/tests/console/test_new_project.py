@@ -32,19 +32,31 @@ MODULE: Final = PACKAGE
 TOKENS: Final = ("__package__", "__project__", "__aqven_requirement__", "__uv_sources__")
 FAKE_UV: Final = "/opt/uv/bin/uv"
 AGENT_RULES: Final = (
+    "<!-- aqven:begin ",
+    "`<package>` in this file is `demo_shop`",
     "aqven check",
     "flow_patch",
     "types.py",
     ".env",
-    "From a task to a reliable flow",
-    "failure_mode",
-    "series_start",
+    "running-the-engineering-loop",
+    "designing-experiments",
     "holdout",
     "FINDINGS.md",
-    "When to stop",
+    "EXPERIMENTS.md",
+    "uv run aqven skills sync <package>",
+    "<!-- aqven:end -->",
+    "## Owner's rules",
 )
-CLAUDE_TOOLS: Final = ("series_start", "series_get", "series_cancel", "run_events")
+AGENT_FILES: Final = (
+    ".claude/settings.json",
+    ".codex/config.toml",
+    ".agents/skills/.aqven-skills.json",
+    ".agents/skills/building-flows/SKILL.md",
+    ".claude/skills/running-series/SKILL.md",
+)
+SKILL_COPIES: Final = ".agents"
 RESEARCH_BLOCK: Final = "research:\n  spend_cap_usd: 1.00\n"
+AGENTS_LINES: Final = 80
 
 
 def run_python(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -98,12 +110,17 @@ def test_new_writes_the_standard_layout(created: Path) -> None:
         f"{MODULE}/flows/answer_question/nodes/reply/reply.inference.yaml",
         f"{MODULE}/flows/answer_question/nodes/reply/reply.prompt.md",
         f"{MODULE}/{GENERATED_TYPES}",
+        *AGENT_FILES,
     )
 
     assert [path for path in expected if not (created / path).is_file()] == []
     assert not (module / "types" / "__init__.py").exists()
     assert (module / GENERATED_TYPES).read_text(encoding="utf-8").splitlines()[0] == GENERATED_HEADER
-    written = [path for path in created.rglob("*") if path.is_file() and "__pycache__" not in path.parts]
+    written = [
+        path
+        for path in created.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and SKILL_COPIES not in path.parts
+    ]
     leftovers = [
         path for path in written if path.suffix == TEMPLATE_SUFFIX or any(token in path.read_text() for token in TOKENS)
     ]
@@ -130,9 +147,9 @@ def test_new_writes_project_settings_for_uv_git_and_agents(created: Path) -> Non
     assert defaults <= set(environment)
     assert servers["aqven"] == {"type": "stdio", "command": "uv", "args": ["run", "aqven", "mcp", MODULE]}
     claude = (created / "CLAUDE.md").read_text(encoding="utf-8")
-    assert claude.startswith("@AGENTS.md\n")
+    assert claude.splitlines()[1] == "@AGENTS.md"
     assert [rule for rule in AGENT_RULES if rule not in agents] == []
-    assert [tool for tool in CLAUDE_TOOLS if tool not in claude] == []
+    assert len(agents.splitlines()) <= AGENTS_LINES
     assert 'id: "openrouter"' in project_file and "ref:env/OPENROUTER_API_KEY" in project_file
     assert 'model: "openrouter:openai/gpt-oss-20b"' in agent_file and "mode:" not in agent_file
 
@@ -301,9 +318,13 @@ def test_templates_are_strategies(tmp_path: Path) -> None:
     code = creator.create(NewProjectRequest(target=target, template="single", sync=False))
 
     assert code == 0
-    assert sorted(path.relative_to(target).as_posix() for path in target.rglob("*") if path.is_file()) == [
-        "solo/aqven.yaml"
-    ]
+    written = {path.relative_to(target).as_posix() for path in target.rglob("*") if path.is_file()}
+    assert {path for path in written if not path.startswith((".agents/", ".claude/", ".codex/"))} == {
+        ".mcp.json",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "solo/aqven.yaml",
+    }
 
 
 def test_unknown_template_lists_the_available_ones(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

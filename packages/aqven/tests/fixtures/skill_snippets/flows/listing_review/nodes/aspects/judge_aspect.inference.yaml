@@ -1,0 +1,19 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "The verdict on one aspect of a listing"
+in:
+- name: "aspect"
+  type: "Aspect"
+  description: "The aspect to judge"
+- name: "description"
+  type: "Text"
+  description: "Listing text written by the seller"
+  maxLength: 2000
+- name: "photo_notes"
+  type: "Text"
+  description: "What the photos show, photo by photo"
+  maxLength: 600
+out:
+- name: "finding"
+  type: "Finding"
+  description: "The verdict on this aspect"

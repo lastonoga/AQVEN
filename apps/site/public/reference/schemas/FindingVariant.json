@@ -140,18 +140,6 @@
       "title": "Agents",
       "type": "object"
     },
-    "arm": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Arm"
-    },
     "changes": {
       "anyOf": [
         {

@@ -1,0 +1,32 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "Mistral in the revision step gives the setup steps that fit the customer's lamp at most 5 points less often than gpt"
+failure_mode: "reply_quality"
+subject:
+  flow: "support_case"
+  from: "polish"
+  to: "polish"
+varies:
+  what: "agent"
+  nodes:
+  - "revise"
+cases:
+  dataset: "support_case_cases"
+variants:
+- id: "gpt"
+- id: "mistral"
+  nodes:
+    revise: "mistral"
+checks:
+- id: "steps_match_lamp"
+  kind: "binary"
+  run: "@root.experiments.pairing_steps_by_agent.checks:steps_match_lamp"
+question:
+  kind: "noninferior"
+  baseline: "gpt"
+  candidate: "mistral"
+  primary: "steps_match_lamp"
+  margin: 0.05
+plan:
+  cases: 12
+  repeats: 3

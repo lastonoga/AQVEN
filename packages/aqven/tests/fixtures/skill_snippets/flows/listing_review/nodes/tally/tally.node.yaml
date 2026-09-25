@@ -1,0 +1,15 @@
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "Turns the panel votes into one decision: a strict majority wins, anything else asks for fixes"
+run: "tally"
+in:
+- name: "votes"
+  type: "Decision[]"
+  description: "Decisions of the panel members who answered"
+  maxItems: 3
+  from: "$panel.out.votes"
+out:
+- name: "decision"
+  type: "Decision"
+  description: "The decision of the panel"

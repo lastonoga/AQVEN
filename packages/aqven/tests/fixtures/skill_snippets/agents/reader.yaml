@@ -1,0 +1,23 @@
+apiVersion: "aqven/v1"
+kind: "Agent"
+description: "Reads listing photos and text: Gemini Flash-Lite through OpenRouter, Google endpoints first"
+model: "openrouter:google/gemini-2.5-flash-lite"
+fallback_models:
+- "openrouter:google/gemma-3-27b-it"
+settings:
+  max_tokens: 2000
+  provider_options:
+    provider:
+      order:
+      - "google-vertex"
+      - "google-ai-studio"
+      allow_fallbacks: true
+      require_parameters: true
+      data_collection: "deny"
+output:
+  mode: "tool"
+  on_error: "retry"
+  on_refusal: "fallback"
+  on_truncated: "retry"
+limits:
+  seconds: 90

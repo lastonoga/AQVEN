@@ -775,6 +775,25 @@ def test_other_documents_validate() -> None:
     ]
 
 
+def test_an_experiment_is_active_unless_archived() -> None:
+    fields: dict[str, JsonValue] = {
+        "subject": {"flow": "support_case"},
+        "cases": {"dataset": "write_reply"},
+        "variants": [{"id": "baseline"}],
+        "question": {"kind": "look"},
+    }
+    adapter = SPEC_MODEL_BY_KIND[SpecKind.EXPERIMENT]
+    active = adapter.validate_python(document("Experiment", **fields))
+    archived = adapter.validate_python(document("Experiment", **fields, archived=True))
+
+    assert isinstance(active, ExperimentSpec)
+    assert isinstance(archived, ExperimentSpec)
+    assert (active.archived, archived.archived) == (False, True)
+    assert "archived" not in active.model_dump(by_alias=True, exclude_defaults=True)
+    with pytest.raises(ValidationError):
+        adapter.validate_python(document("Experiment", **fields, archived="later"))
+
+
 def test_model_strings_parse_into_provider_and_name() -> None:
     openrouter = ProviderName("openrouter")
     assert parse_model("openrouter:qwen/qwen3.8-max-0902") == ModelRef(openrouter, "qwen/qwen3.8-max-0902")

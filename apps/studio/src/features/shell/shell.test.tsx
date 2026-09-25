@@ -86,7 +86,8 @@ describe("Project shell", () => {
     })
     expect(router.state.location.search).toEqual({})
     await screen.findAllByRole("table")
-    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(["judge_panel", "support_case", "Flows of experiments"])
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(["Running", "Needs you", "Changed today"])
+    expect(screen.getByText("15 experiments")).toBeTruthy()
     expect(screen.queryByRole("button", { name: "Switch flow" })).toBeNull()
   })
 

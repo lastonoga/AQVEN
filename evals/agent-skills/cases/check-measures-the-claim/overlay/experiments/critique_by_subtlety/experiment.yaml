@@ -1,0 +1,22 @@
+apiVersion: "aqven/v1"
+kind: "Experiment"
+description: "The DeepSeek critic catches more than 80% of the planted defects in finished replies, from obvious to subtle ones"
+failure_mode: "judge_misses_defect"
+subject:
+  flow: "critic_alone"
+cases:
+  dataset: "graded_defect_replies"
+variants:
+- id: "deepseek"
+checks:
+- id: "caught"
+  kind: "binary"
+  run: "@root.experiments.critique_by_subtlety.checks:caught"
+question:
+  kind: "threshold"
+  metric: "caught"
+  variant: "deepseek"
+  above: 0.8
+  margin: 0.05
+plan:
+  repeats: 3

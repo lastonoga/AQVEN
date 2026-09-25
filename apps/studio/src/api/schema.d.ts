@@ -1340,6 +1340,8 @@ export interface components {
     schemas: {
         AbsoluteCodeRef: string;
         /** @enum {string} */
+        ActivitySource: "files" | "series";
+        /** @enum {string} */
         ActorKind: "human" | "agent" | "fs" | "git" | "system";
         /** @enum {string} */
         AgentBackendKind: "claude" | "codex";
@@ -1585,6 +1587,8 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /** @enum {string} */
+        AttentionReason: "spend_cap_pause" | "series_invalid" | "results_stale" | "check_errors";
         /** BlobMeta */
         BlobMeta: {
             /** Blob Id */
@@ -3811,6 +3815,17 @@ export interface components {
             series_count: number;
             /** Spent Usd */
             spent_usd: string;
+            /** Archived */
+            archived: boolean;
+            /** Created */
+            created: string | null;
+            /** Last Activity */
+            last_activity: string | null;
+            activity_source: components["schemas"]["ActivitySource"] | null;
+            /** Running */
+            running: boolean;
+            /** Attention */
+            attention: components["schemas"]["AttentionReason"][];
             question_detail: components["schemas"]["QuestionView"];
             varies: components["schemas"]["FactorView"] | null;
             /** Slots */
@@ -3916,6 +3931,17 @@ export interface components {
             series_count: number;
             /** Spent Usd */
             spent_usd: string;
+            /** Archived */
+            archived: boolean;
+            /** Created */
+            created: string | null;
+            /** Last Activity */
+            last_activity: string | null;
+            activity_source: components["schemas"]["ActivitySource"] | null;
+            /** Running */
+            running: boolean;
+            /** Attention */
+            attention: components["schemas"]["AttentionReason"][];
         };
         /** FactorAgentView */
         FactorAgentView: {
@@ -7751,6 +7777,7 @@ export interface components {
     pathItems: never;
 }
 export type SchemaAbsoluteCodeRef = components['schemas']['AbsoluteCodeRef'];
+export type SchemaActivitySource = components['schemas']['ActivitySource'];
 export type SchemaActorKind = components['schemas']['ActorKind'];
 export type SchemaAgentBackendKind = components['schemas']['AgentBackendKind'];
 export type SchemaAgentModel = components['schemas']['AgentModel'];
@@ -7775,6 +7802,7 @@ export type SchemaAttemptCauseKind = components['schemas']['AttemptCauseKind'];
 export type SchemaAttemptFinishedEvent = components['schemas']['AttemptFinishedEvent'];
 export type SchemaAttemptOutcome = components['schemas']['AttemptOutcome'];
 export type SchemaAttemptView = components['schemas']['AttemptView'];
+export type SchemaAttentionReason = components['schemas']['AttentionReason'];
 export type SchemaBlobMeta = components['schemas']['BlobMeta'];
 export type SchemaBlobUploaded = components['schemas']['BlobUploaded'];
 export type SchemaBlobValue = components['schemas']['BlobValue'];

@@ -1,0 +1,9 @@
+apiVersion: "aqven/v1"
+kind: "Type"
+type: "record"
+description: "Fixes written for the seller"
+fields:
+- name: "message"
+  type: "Text"
+  description: "The message the seller receives"
+  maxLength: 600

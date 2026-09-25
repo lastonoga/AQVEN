@@ -20,6 +20,7 @@ from claude_agent_sdk import (
 from claude_agent_sdk.types import HookContext, PostToolUseHookInput, PreToolUseHookInput
 from pydantic import BaseModel, JsonValue, SecretStr
 
+from aqven.chat.agent_plugin import plugin_read_rules
 from aqven.chat.claude_cli import SubprocessCommandRunner
 from aqven.chat.claude_options import ClaudeChatSettings, ClaudeOptionsFactory
 from aqven.chat.env_guard import SECRET_FILE_REASON, SecretFileGuard, names_env_file, scrubbed_environment
@@ -363,19 +364,19 @@ def test_allowed_tools_reach_the_sdk_without_touching_settings_files(tmp_path: P
     launch = ClaudeOptionsFactory(settings).build(stored_session(project), allow_all)
     launch.mcp_config.remove()
 
-    assert launch.options.allowed_tools == ["Read", "Grep", "Bash(rg:*)"]
+    assert launch.options.allowed_tools == ["Read", "Grep", "Bash(rg:*)", *plugin_read_rules()]
     assert launch.options.setting_sources == []
     assert any(rule.startswith("Read(") and ".env" in rule for rule in launch.options.disallowed_tools)
 
 
-def test_allowed_tools_are_empty_unless_the_launcher_passes_them(tmp_path: Path) -> None:
+def test_allowed_tools_only_read_the_skill_plugin_unless_the_launcher_passes_more(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()
     settings = ClaudeChatSettings(mcp_token=SecretStr(MCP_TOKEN), cli_path=None, mcp_config_directory=tmp_path)
     launch = ClaudeOptionsFactory(settings).build(stored_session(project), allow_all)
     launch.mcp_config.remove()
 
-    assert launch.options.allowed_tools == []
+    assert launch.options.allowed_tools == [*plugin_read_rules()]
 
 
 def test_trust_mode_stops_asking_but_keeps_the_env_guard(tmp_path: Path) -> None:

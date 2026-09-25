@@ -1,0 +1,10 @@
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "Writes the fixes a seller has to make before a listing goes live"
+input: "FixRequest"
+output: "FixList"
+returns:
+- name: "message"
+  from: "$write.out.message"
+order:
+- "write"

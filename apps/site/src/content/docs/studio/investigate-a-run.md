@@ -87,8 +87,8 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   fault, with a changed prompt or a changed input, is a valid range of one. Studio checks live whether
   the range you picked has everything it needs. Fill in only the input fields that range actually reads;
   if you're starting in the middle of the flow, you also get a JSON field for each earlier node's output
-  the range depends on, with a shortcut to copy it straight from a previous run. Add run context (date,
-  time zone, locale, tenant) if the flow reads any of it, review the summary, and submit — a manual run
+  the range depends on, with a shortcut to copy it straight from a previous run. Add run context (`date`,
+  `time_zone`, `locale`, `tenant_id`) if the flow reads any of it, review the summary, and submit — a manual run
   always executes live, calling real models and tools.
 
 ### Example

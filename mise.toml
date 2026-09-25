@@ -43,6 +43,9 @@ run = [
   "uv run --frozen python tools/check_uv_lock.py",
   "uv run --frozen python tools/generate_reference.py --check",
   "uv run --frozen aqven check examples/lumen",
+  "uv run --frozen python tools/check_skills.py --cli",
+  "uv run --frozen python tools/bundle_skill_docs.py --check",
+  "uv run --frozen aqven check packages/aqven/tests/fixtures/skill_snippets",
   "pnpm --filter @aqven/studio check:api",
 ]
 
@@ -72,6 +75,18 @@ run = [
   "uv run --frozen python tools/set_version.py --check",
   "uv run --frozen python tools/bundle_studio.py --check",
 ]
+
+[tasks."evals:skills"]
+description = "Agent skill evals: every case in the three setups, on the owner's Claude credentials"
+run = "bash evals/agent-skills/run.sh"
+
+[tasks."evals:skills:core"]
+description = "Agent skill evals: the core cases in the three setups"
+run = "bash evals/agent-skills/run.sh --tag core"
+
+[tasks."evals:skills:triggers"]
+description = "Skill trigger test: does the right aqven skill fire first, 24 prompts, core and skills only"
+run = "bash evals/agent-skills/triggers/run.sh"
 
 [tasks.dev]
 description = "Engine and studio against the lumen example"

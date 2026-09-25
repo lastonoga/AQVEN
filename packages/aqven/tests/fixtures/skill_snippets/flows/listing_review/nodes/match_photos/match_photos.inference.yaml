@@ -1,0 +1,38 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "What the listing photos show and whether they match the listing text"
+in:
+- name: "description"
+  type: "Text"
+  description: "Listing text written by the seller"
+  maxLength: 2000
+- name: "category"
+  type: "Category"
+  description: "Category the seller picked; it picks the category guide"
+- name: "photos"
+  type: "Image[]"
+  description: "Photos at the resolution the seller uploaded"
+  maxItems: 4
+out:
+- name: "photo_notes"
+  type: "Text"
+  description: "What the photos show, photo by photo"
+  maxLength: 600
+- name: "photos_match"
+  type: "Bool"
+  description: "True when the photos show the item the text describes"
+variants:
+  category_guide:
+    on: "category"
+    cases:
+      furniture: "furniture"
+      electronics: "electronics"
+    default: "general"
+checks:
+- use: "not_empty"
+  with:
+    field: "$out.photo_notes"
+  on_fail: "retry"
+display:
+  output:
+    template: "match_photos.output.display.liquid"

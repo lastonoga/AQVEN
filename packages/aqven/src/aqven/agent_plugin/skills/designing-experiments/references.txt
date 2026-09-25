@@ -1,0 +1,9 @@
+engine/experiments.md
+reference/experiments.md
+concepts/validity-gate.md
+concepts/metrics-and-controls.md
+engine/lumen-patterns.md
+engine/call-node.md
+concepts/experiments-series-and-findings.md
+concepts/how-a-series-decides.md
+engine/custom-evaluator.md

@@ -146,6 +146,7 @@ class DiagnosticCode(StrEnum):
     W_VARIANT_DUPLICATE = "W_VARIANT_DUPLICATE"
     W_ALTERNATIVE_UNUSED = "W_ALTERNATIVE_UNUSED"
     W_MEDIA_TYPE_MISMATCH = "W_MEDIA_TYPE_MISMATCH"
+    W_AGENT_SKILLS_STALE = "W_AGENT_SKILLS_STALE"
 
 
 SEVERITY_BY_PREFIX: Final[Mapping[str, Severity]] = {"E": Severity.ERROR, "W": Severity.WARNING}
@@ -362,6 +363,11 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
         "case {case} of dataset {dataset}: media file {file} has the extension {extension}, "
         "which does not fit $media {media_type}",
         "set $media to {guessed}, or point file at a {media_type} file",
+    ),
+    DiagnosticCode.W_AGENT_SKILLS_STALE: DiagnosticText(
+        "out of sync with the installed aqven {version} in {target}: {problem}",
+        "run uv run aqven skills sync {package} in the folder of AGENTS.md: it rewrites the skill copies and the "
+        "aqven block and keeps your text outside the block, including ## Owner's rules",
     ),
 }
 

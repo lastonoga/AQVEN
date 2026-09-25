@@ -121,7 +121,6 @@ This reference is generated from the package's Pydantic models. Fields use their
 | YAML field | Type | Required | Default | Constraints |
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | `—` | — |
-| `arm` | `string \| null` | No | `None` | — |
 | `changes` | `FindingChange[] \| null` | No | `None` | — |
 | `agents` | `map<string, string>` | Yes | `—` | — |
 | `models` | `string[]` | Yes | `—` | — |

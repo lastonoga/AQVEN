@@ -1,0 +1,17 @@
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "A checklist that tells the seller what to fix"
+in:
+- name: "title"
+  type: "Text"
+  description: "Listing title"
+  maxLength: 120
+- name: "findings"
+  type: "Finding[]"
+  description: "Verdicts on the aspects of the listing; the failed ones need fixes"
+  maxItems: 3
+out:
+- name: "message"
+  type: "Text"
+  description: "One line per fix, each starting with a verb"
+  maxLength: 600

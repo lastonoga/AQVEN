@@ -29,10 +29,12 @@ from aqven.chat.codex_approvals import COMMAND_APPROVAL, DECLINED, CodexApproval
 from aqven.chat.codex_normalizer import CodexNormalizer
 from aqven.chat.codex_policy import codex_config
 from aqven.chat.codex_runtime import CodexChatRuntime
+from aqven.chat.codex_skills import register_codex_skills
 from aqven.chat.feed import ChatEmitter
+from aqven.chat.host_block import HostFacts, host_block
 from aqven.chat.journal import StoredChatSession
 from aqven.chat.pending_messages import PendingMessage, PendingMessages
-from aqven.chat.project_rules import project_rules
+from aqven.chat.project_rules import studio_instructions
 from aqven.chat.server_guard import SHELL_TOOL
 from aqven.chat.turn_settling import TurnSettler
 from aqven.ports.chat import (
@@ -257,14 +259,15 @@ class CodexSessionRunner:
             bridge = self._bridge
             if bridge is None:
                 raise RuntimeError("Codex approval bridge is not ready")
+            root = Path(self._session.project_root)
             config = codex_config(
-                Path(self._session.project_root),
+                root,
                 stored.mcp_url,
                 self._runtime.mcp_token.get_secret_value(),
                 self._session.permission_mode,
             )
             client = self._runtime.client_factory(config, self._approval_handler)
-            startup = asyncio.create_task(asyncio.to_thread(self._start_client, client))
+            startup = asyncio.create_task(asyncio.to_thread(self._start_client, client, root))
             try:
                 await asyncio.shield(startup)
             except BaseException as error:
@@ -276,9 +279,10 @@ class CodexSessionRunner:
             return client
 
     @staticmethod
-    def _start_client(client: CodexClient) -> None:
+    def _start_client(client: CodexClient, project_root: Path) -> None:
         client.start()
         client.initialize()
+        register_codex_skills(client, project_root)
 
     @staticmethod
     async def _discard_startup(startup: asyncio.Task[None], client: CodexClient) -> None:
@@ -288,11 +292,14 @@ class CodexSessionRunner:
             await asyncio.to_thread(client.close)
 
     async def _open_thread(self, client: CodexClient) -> str:
-        session = self._stored().session
-        options: JsonObject = {"cwd": session.project_root, "approvalPolicy": "on-request"}
-        rules = project_rules(Path(session.project_root))
-        if rules:
-            options["developerInstructions"] = rules
+        stored = self._stored()
+        session = stored.session
+        facts = HostFacts.of(session.project_root, stored.mcp_url)
+        options: JsonObject = {
+            "cwd": session.project_root,
+            "approvalPolicy": "on-request",
+            "developerInstructions": studio_instructions(facts.project_root, host_block("codex", facts)),
+        }
         if session.model is not None:
             options["model"] = session.model
         if session.effort is not None:
