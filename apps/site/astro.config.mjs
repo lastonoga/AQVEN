@@ -1,4 +1,8 @@
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import mermaid from "astro-mermaid";
 import { unified } from "@astrojs/markdown-remark";
@@ -7,8 +11,58 @@ import { defineConfig } from "astro/config";
 import lucode from "lucode-starlight";
 import { replaceDocsTokens } from "./docs.tokens.mjs";
 
+const SITE = "https://aqvenstudio.com";
+const SITE_DESCRIPTION =
+  "AQVEN is a Python framework and a local Studio for building reliable LLM workflows. Claude Code or Codex runs the experiments; you see the evidence and decide.";
+const SOCIAL_CARD = Object.freeze({
+  url: `${SITE}/og.png`,
+  width: "1200",
+  height: "630",
+  alt: "AQVEN Studio showing the graph of a multi-step AI workflow",
+});
+
+const SITE_ROOT = fileURLToPath(new URL(".", import.meta.url));
+const DOCS_ROOT = "src/content/docs";
+const DOCS_SOURCE_SUFFIXES = Object.freeze([".md", ".mdx", "/index.md", "/index.mdx"]);
+const PAGE_SOURCES = Object.freeze({
+  "/": ["src/pages/index.astro", "src/components/landing", "src/components/hero206.tsx"],
+  "/use-cases/": [
+    "src/pages/use-cases.astro",
+    "src/components/landing/use-cases.tsx",
+    "src/components/landing/situations.ts",
+  ],
+});
+
+const docsSources = (pathname) => {
+  const slug = pathname.replace(/^\/|\/$/g, "");
+  return DOCS_SOURCE_SUFFIXES.map((suffix) => `${DOCS_ROOT}/${slug}${suffix}`);
+};
+
+const sourcesOf = (pathname) =>
+  (PAGE_SOURCES[pathname] ?? docsSources(pathname)).filter((path) => existsSync(`${SITE_ROOT}${path}`));
+
+const lastCommitDate = (paths) => {
+  if (paths.length === 0) return undefined;
+  try {
+    const date = execFileSync("git", ["log", "-1", "--format=%cI", "--", ...paths], {
+      cwd: SITE_ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return date === "" ? undefined : date;
+  } catch {
+    return undefined;
+  }
+};
+
+const withLastmod = (item) => {
+  const lastmod = lastCommitDate(sourcesOf(new URL(item.url).pathname));
+  if (lastmod === undefined) return item;
+  return { ...item, lastmod };
+};
+
 export default defineConfig({
-  site: "https://aqvenstudio.com",
+  site: SITE,
   vite: { plugins: [tailwindcss()] },
   markdown: { processor: unified({ remarkPlugins: [replaceDocsTokens] }) },
   redirects: {
@@ -16,13 +70,23 @@ export default defineConfig({
   },
   integrations: [
     react(),
+    sitemap({ serialize: withLastmod }),
     mermaid({
       theme: "forest",
       autoTheme: true,
     }),
     starlight({
-      title: "aqven",
-      description: "Engineer AI systems, not just prompts.",
+      title: "AQVEN",
+      description: SITE_DESCRIPTION,
+      head: [
+        { tag: "meta", attrs: { property: "og:image", content: SOCIAL_CARD.url } },
+        { tag: "meta", attrs: { property: "og:image:width", content: SOCIAL_CARD.width } },
+        { tag: "meta", attrs: { property: "og:image:height", content: SOCIAL_CARD.height } },
+        { tag: "meta", attrs: { property: "og:image:alt", content: SOCIAL_CARD.alt } },
+        { tag: "meta", attrs: { name: "twitter:image", content: SOCIAL_CARD.url } },
+        { tag: "meta", attrs: { name: "twitter:image:alt", content: SOCIAL_CARD.alt } },
+      ],
+      routeMiddleware: "./src/route-data.ts",
       expressiveCode: { emitExternalStylesheet: false },
       customCss: ["./src/styles/aqven-landing.css"],
       plugins: [

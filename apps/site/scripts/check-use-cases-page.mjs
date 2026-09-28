@@ -61,14 +61,34 @@ const SITUATIONS = [
 const STEPS_PER_SITUATION = 3;
 const LINKS_PER_SITUATION = 2;
 
+const SITE = "https://aqvenstudio.com";
+
 assert.ok(
-  page.includes("<title>What AQVEN is for: use cases</title>"),
+  page.includes("<title>What AQVEN is for: find, explain, compare, confirm, build</title>"),
   "The use cases page must keep its title."
 );
 assert.ok(page.includes(">What AQVEN is for.</h1>"), "The use cases page must open with its hero heading.");
+assert.ok(
+  page.includes(`<link rel="canonical" href="${SITE}/use-cases/">`),
+  "The use cases page must declare its canonical URL."
+);
+assert.ok(
+  page.includes(`<meta property="og:image" content="${SITE}/og.png">`),
+  "The use cases page must declare its social card image."
+);
+
+const JSON_LD_BLOCK = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
+
+const jsonLdBlocks = [...raw.matchAll(JSON_LD_BLOCK)].map(([, body]) => JSON.parse(body));
+const itemLists = jsonLdBlocks.map((block) => block.mainEntity).filter((entity) => entity?.["@type"] === "ItemList");
+
+assert.equal(itemLists.length, 1, "The use cases page must describe its situations as one JSON-LD ItemList.");
+
+const listedUrls = itemLists[0].itemListElement.map((item) => item.url);
 
 for (const { id, verb, title, question, doc } of SITUATIONS) {
   assert.ok(page.includes(`id="${id}"`), `Expected a section with id="${id}".`);
+  assert.ok(listedUrls.includes(`${SITE}/use-cases/#${id}`), `Expected the JSON-LD ItemList to list #${id}.`);
   assert.ok(page.includes(`href="#${id}"`), `Expected the hero index to link to #${id}.`);
   assert.ok(page.includes(`>${title}</h2>`), `Expected the heading: ${title}`);
   assert.ok(page.includes(`>${verb}</span>`), `Expected the verb label: ${verb}`);
@@ -155,5 +175,5 @@ for (const href of internalPages) {
 }
 
 console.log(
-  `Use cases page OK (${SITUATIONS.length} situations, ${requiredMarkers.length} markers, ${counts.length} counts, ${internalPages.length} internal links).`
+  `Use cases page OK (${SITUATIONS.length} situations, ${listedUrls.length} JSON-LD list items, ${requiredMarkers.length} markers, ${counts.length} counts, ${internalPages.length} internal links).`
 );

@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ChevronDown,
   Compass,
   FileCode,
   GitCompareArrows,
@@ -8,18 +9,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "cn";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ActorTag, TimelineStep, type Actor, type TimelineEntry } from "@/components/landing/actors";
 import {
   CheckBeforeItRunsSchematic,
@@ -38,6 +30,8 @@ import {
   type SituationId,
 } from "@/components/landing/situations";
 import { REPO } from "@/components/landing/site-nav";
+import { COMPARE_PATH } from "@/components/landing/compare-path";
+import { CompareMatrix, LANDING_FEATURES, LANDING_PRODUCTS, MatrixLegend } from "@/components/landing/compare-matrix";
 
 const TRUST: readonly string[] = [
   "Alpha",
@@ -71,13 +65,6 @@ const GUARDS: readonly Guard[] = [
     body: "Dollar cost and latency for every step of every run. A call nothing can price counts as unknown, not as free.",
     visual: <CostLatencySchematic />,
   },
-];
-
-const COMPARE = [
-  { row: "Where the logic lives", tracing: "Your code, scattered", builders: "Their platform", aqven: "Files in your repo" },
-  { row: "Check before it runs", tracing: "No", builders: "No", aqven: "Yes" },
-  { row: "Your coding agent can edit it", tracing: "No", builders: "No", aqven: "Yes" },
-  { row: "Yours if they disappear", tracing: "Yes", builders: "No", aqven: "Yes" },
 ];
 
 const Section = ({ className, children }: { className?: string; children: React.ReactNode }) => (
@@ -283,32 +270,22 @@ export const ResearchLoop = () => (
 
 export const Comparison = () => (
   <Section className="bg-background-subtle">
-    <div className="mx-auto max-w-3xl text-center">
-      <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-        Not a tracing tool. Not a drag-and-drop builder.
-      </h2>
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+      <SectionHeading badge="Compared with what you use">Traces show. Evals score. AQVEN tells you what to change.</SectionHeading>
     </div>
-    <div className="mx-auto mt-12 max-w-4xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead> </TableHead>
-            <TableHead>Tracing tools</TableHead>
-            <TableHead>Visual builders</TableHead>
-            <TableHead className="font-semibold text-foreground">AQVEN</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {COMPARE.map((item) => (
-            <TableRow key={item.row}>
-              <TableCell className="whitespace-normal font-medium">{item.row}</TableCell>
-              <TableCell className="whitespace-normal text-muted-foreground">{item.tracing}</TableCell>
-              <TableCell className="whitespace-normal text-muted-foreground">{item.builders}</TableCell>
-              <TableCell className="whitespace-normal font-medium">{item.aqven}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="mx-auto mt-12 flex max-w-5xl flex-col gap-5">
+      <CompareMatrix
+        products={LANDING_PRODUCTS}
+        features={LANDING_FEATURES}
+        caption="AQVEN compared with Langfuse, LangSmith, promptfoo, DeepEval and n8n"
+      />
+      <MatrixLegend />
+      <div className="flex justify-center">
+        <a href={COMPARE_PATH} className="group inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4">
+          See the full comparison
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </a>
+      </div>
     </div>
   </Section>
 );
@@ -348,17 +325,26 @@ export const Stack = () => (
   </Section>
 );
 
-type Faq = { readonly question: string; readonly answer: string };
+export type Faq = { readonly question: string; readonly answer: string };
 
-const FAQS: readonly Faq[] = [
+export const FAQS: readonly Faq[] = [
   {
     question: "Is AQVEN open source?",
     answer:
       "No. It is source-available under the AQVEN License 1.0.0: you can read, run and change the code, and commercial redistribution is restricted.",
   },
   {
+    question: "Is AQVEN free?",
+    answer:
+      "Yes. You can use it for any purpose, including in production and in commercial products you build with it. The license only rules out competing products and selling AQVEN itself.",
+  },
+  {
     question: "Is AQVEN ready for production?",
     answer: "AQVEN is in alpha: expect changes between releases. Try it on a workflow you can afford to change.",
+  },
+  {
+    question: "Which Python version does AQVEN need?",
+    answer: "Python 3.14. uv fetches it for you when you install AQVEN.",
   },
   {
     question: "What models and providers does AQVEN support?",
@@ -368,6 +354,11 @@ const FAQS: readonly Faq[] = [
   {
     question: "Do I need an account or a cloud service?",
     answer: "Not for AQVEN: it runs on your machine, nothing hosted by us. Model calls use your own provider keys.",
+  },
+  {
+    question: "Which coding agents does AQVEN work with?",
+    answer:
+      "Claude Code and Codex, from Studio's chat or from your own terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.",
   },
   {
     question: "Can my coding agent actually edit these workflows?",
@@ -396,15 +387,19 @@ export const FAQ = () => (
         Frequently asked questions.
       </h2>
     </div>
-    <Accordion type="single" collapsible className="mx-auto mt-14 w-full max-w-2xl">
+    <div className="mx-auto mt-14 w-full max-w-2xl divide-y divide-border border-y border-border">
       {FAQS.map((faq) => (
-        <AccordionItem key={faq.question} value={faq.question}>
-          <AccordionTrigger className="text-left text-base font-medium">
+        <details key={faq.question} name="faq" className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-base font-medium [&::-webkit-details-marker]:hidden">
             {faq.question}
-          </AccordionTrigger>
-          <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
-        </AccordionItem>
+            <ChevronDown
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+          <p className="pb-4 text-muted-foreground">{faq.answer}</p>
+        </details>
       ))}
-    </Accordion>
+    </div>
   </Section>
 );

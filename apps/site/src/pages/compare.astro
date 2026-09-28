@@ -1,0 +1,94 @@
+---
+import "../styles/landing.css";
+import SeoHead from "@/components/landing/SeoHead.astro";
+import { Navbar1 } from "@/components/navbar1";
+import { latestRelease } from "@/lib/latest-release";
+import { Hero1 } from "@/components/hero1";
+import { Cta10 } from "@/components/cta10";
+import { Footer2 } from "@/components/footer2";
+import {
+  ComparisonAtGlance,
+  Sources,
+  UseTogether,
+  WhoDoesWhat,
+  compareHeroVisual,
+} from "@/components/landing/compare";
+import { COMPARE_PATH } from "@/components/landing/compare-path";
+import {
+  AUTH,
+  FOOTER_COPYRIGHT,
+  FOOTER_DESCRIPTION,
+  FOOTER_LEGAL,
+  FOOTER_LOGO,
+  FOOTER_SECTIONS,
+  LOGO,
+  MENU,
+  QUICKSTART,
+  REPO,
+} from "@/components/landing/site-nav";
+
+const TITLE = "AQVEN compared with tracing platforms, eval libraries and builders";
+const DESCRIPTION =
+  "Why AQVEN when you already have traces and evals: the questions about a multi-step LLM workflow a score doesn't answer, and who does which part of the work.";
+
+const release = await latestRelease;
+
+const siteUrl = new URL("/", Astro.site).href;
+const pageUrl = new URL(COMPARE_PATH, siteUrl).href;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": pageUrl,
+  url: pageUrl,
+  name: TITLE,
+  description: DESCRIPTION,
+  inLanguage: "en",
+  isPartOf: { "@type": "WebSite", "@id": `${siteUrl}#website`, name: "AQVEN", url: siteUrl },
+  about: { "@type": "SoftwareApplication", "@id": `${siteUrl}#software`, name: "AQVEN" },
+};
+
+const startButtons = {
+  primary: { text: "Get started", url: QUICKSTART },
+  secondary: { text: "GitHub", url: REPO },
+};
+---
+
+<!doctype html>
+<html lang="en" class="motion-safe:scroll-smooth">
+  <head>
+    <SeoHead title={TITLE} description={DESCRIPTION} path={COMPARE_PATH} jsonLd={jsonLd} />
+  </head>
+  <body>
+    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
+
+    <main>
+      <Hero1
+        badge={{ text: "Compare" }}
+        heading="You have traces and evals. Why AQVEN?"
+        description="Tracing platforms show what an app did. Eval libraries score it. AQVEN is where your coding agent changes the workflow itself, runs the experiment on it, and brings back a verdict you can act on."
+        buttons={startButtons}
+        visual={compareHeroVisual}
+      />
+
+      <ComparisonAtGlance />
+      <WhoDoesWhat />
+      <UseTogether />
+      <Sources />
+
+      <Cta10
+        heading="Start with one question."
+        description="Run a small experiment. Inspect the evidence. Decide what comes next."
+        buttons={startButtons}
+      />
+    </main>
+
+    <Footer2
+      logo={FOOTER_LOGO}
+      description={FOOTER_DESCRIPTION}
+      sections={FOOTER_SECTIONS}
+      copyright={FOOTER_COPYRIGHT}
+      legalLinks={FOOTER_LEGAL}
+    />
+  </body>
+</html>
