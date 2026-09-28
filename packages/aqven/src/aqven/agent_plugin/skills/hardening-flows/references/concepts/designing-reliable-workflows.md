@@ -9,6 +9,7 @@ More nodes, more parallel branches, and more critic loops are not automatically 
 - [When parallel and a join policy are worth the cost](#when-parallel-and-a-join-policy-are-worth-the-cost)
 - [When a loop critic earns its keep — and why it needs a real stop policy](#when-a-loop-critic-earns-its-keep--and-why-it-needs-a-real-stop-policy)
 - [A judge panel: a real verdict, not just another draft](#a-judge-panel-a-real-verdict-not-just-another-draft)
+- [A question per item of a checklist](#a-question-per-item-of-a-checklist)
 - [Measure the choice instead of arguing it](#measure-the-choice-instead-of-arguing-it)
 - [Watch out for](#watch-out-for)
 - [How this shapes what you do](#how-this-shapes-what-you-do)
@@ -128,6 +129,18 @@ a model's output, gets for free. The same requirement also pins down field order
 `rationale` is written before the `scores` it's supposedly justifying, so the verdict gets argued into
 existence rather than decided first and rationalized afterward.
 
+## A question per item of a checklist
+
+Some steps look for many things at once: 40 clauses a contract should have, 30 sound events in a recording, a
+list of defects in a product photo, a set of rules for a code change. Asking the model one yes/no question per item
+feels thorough, and it does find more of what is there. It also says yes more often to what is not there, and
+with the answers spread over many calls or long outputs it costs several times as much as one open question.
+Recall goes up and false positives go up with it.
+
+Measure precision and cost next to recall before you keep a checklist. Ask for evidence with every yes — a quote, a
+timestamp, a page and line, a region of the image — so a yes without evidence can be rejected by a check, or let
+two models answer and keep the items both of them found.
+
 ## Measure the choice instead of arguing it
 
 These judgment calls don't have to stay opinions. Each one is a question an experiment can answer on your
@@ -160,6 +173,8 @@ How a series decides covers the verdict.
 - A critic loop with nothing external to check against — no schema, no rubric, no threshold, just "does
   this look better" — which a model can't judge about its own kind of mistake any more reliably than it
   avoided making the mistake the first time.
+- A yes/no checklist judged by recall alone — it finds more, and it also flags more that isn't there, at
+  several times the cost.
 
 ## How this shapes what you do
 

@@ -19,7 +19,9 @@ reusing a flow as a step, and narrowing a dynamic value to a type.
 [how to constrain a field's values](/engine/field-constraints/) (length, range, pattern, and choice
 limits a model's answer has to obey), and
 [how to handle a shape you don't know in advance](/engine/dynamic-shape/) (for a field whose type isn't
-fixed until run time).
+fixed until run time). [How to prepare images](/engine/image-preparation/) and
+[how to prepare audio, video, documents and text](/engine/preparing-audio-video-documents-and-text/) cover what a
+model really receives from a photo, a recording, a clip, a PDF, a long document or a table.
 
 **Checks & experiments** is how you find out whether a flow works reliably, not just on the case you
 tried. [How to keep case media as files in the project](/engine/dataset-media-files/) puts the images,

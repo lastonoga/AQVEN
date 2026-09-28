@@ -49,8 +49,8 @@ changing the result.
 ### Example
 
 This is the showcase project's `drafts` node, one of two `parallel` nodes in its `support_case` flow
-(the other, `approvals`, is the `parallel` node behind how to pause for a
-person). Create it yourself with:
+(the other, `approvals`, is the `parallel` node behind [how to pause for a
+person](human-node.md)). Create it yourself with:
 
 ```bash
 aqven new my_project --template showcase
@@ -102,7 +102,7 @@ behind all three returns one field, `reply: ReplyDraft`, which is exactly what `
 
 ## See also
 
-- How to pause for a person — the showcase's other `parallel` node,
+- [How to pause for a person](human-node.md) — the showcase's other `parallel` node,
   `approvals`, joining with `all` instead of `quorum`.
 - [How to call a model](llm-node.md) — what each of `drafts`' three branches actually is.
 - Designing reliable workflows — when running branches in

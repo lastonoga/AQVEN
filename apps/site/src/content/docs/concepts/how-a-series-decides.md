@@ -97,12 +97,23 @@ confirmations. Write fresh cases and run a new held-out series of the size the l
 size is out of reach, the answer stays unclear, and a structural guard, such as a code check, a `switch` or
 a runtime check, is the fix, not more data.
 
+## Looks before the end
+
+Numbers you read before the verdict, from a running series or from a small screen of many candidates, are
+interim looks. Each look is one more chance for noise to pass as an effect, so an interim look may decide
+only what you wrote down before the start: which variants to drop. A typical drop rule removes a variant
+whose interval lies wholly below the best variant's interval, or below a trivial baseline. A claim needs
+the verdict of a finished series, and a series stopped early because a number looked good ends `invalid`
+with the reason `cancelled`. After a screen, confirm the survivors in a new experiment on fresh or held-out
+cases: see [Screen many candidates, then confirm](/engine/experiments/#screen-many-candidates-then-confirm).
+
 ## The noise floor
 
 Two identical variants still disagree, because of sampling and provider routing. An A/A experiment
 measures how much: the showcase's `panel_aa_noise` runs the judge panel twice as written, compares the
 two with a margin of 0, and expects no confirmation. The half-width of that difference is the smallest
-effect any comparison of panel variants can tell from noise on those cases.
+effect any comparison of panel variants can tell from noise on those cases. It is also why a candidate is
+compared with the current configuration inside one series, never with a number from another series.
 
 ## Judges
 
