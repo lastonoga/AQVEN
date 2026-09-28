@@ -6,10 +6,12 @@ from aqven.series.read_views import SeriesOutputsPage, SeriesOutputsRequest, Ser
 from aqven.server.mcp.catalog import Operation, ToolHints, ToolRegistration
 
 SERIES_OUTPUTS_DESCRIPTION: Final = (
-    "Bulk read of what a series produced, one row per attempt in attempt order: case, variant, repeat, split, "
-    "outcome (passed, failed, error, waiting, running), error_code, cost_usd of the attempt run, latency_ms, run_id, "
-    "the flow output, node_outputs and checks {check_id: value}. The rows come from the engine's own run records, "
-    "the same ones run_get reads. Filter by split, variant, case and outcome. Without fields each row carries the "
+    "Bulk read of what a series produced on working (dev) cases, one row per attempt in attempt order: case, "
+    "variant, repeat, split, outcome (passed, failed, error, waiting, running), error_code, cost_usd of the attempt "
+    "run, latency_ms, run_id, the flow output, node_outputs and checks {check_id: value}. The rows come from the "
+    "engine's own run records, the same ones run_get reads. Held-out attempts are never returned and split holdout "
+    "is refused with REQUEST_INVALID, so a change can't be tuned to them: read held-out cases only as totals with "
+    "series_get. Filter by split, variant, case and outcome. Without fields each row carries the "
     "whole flow output and no node outputs; fields narrows it: a JSON pointer such as /label or /candidates/0/name "
     "puts {pointer: value} in output, a node id such as triage puts that node's whole output in node_outputs, and "
     "triage/summary a pointer into it; a missing path is null. page_size up to 200; pass next_cursor as cursor. "
@@ -29,7 +31,7 @@ class SeriesReadTools:
     jobs: SeriesJobs
 
     async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
-        return await self.jobs.outputs(request)
+        return await self.jobs.outputs(request, include_holdout=False)
 
     async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
         return await self.jobs.rows(query)

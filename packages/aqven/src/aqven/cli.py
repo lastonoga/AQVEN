@@ -226,7 +226,10 @@ class ServerCommand:
 
 @dataclass(frozen=True, slots=True)
 class RunCommand:
-    help: str = "run a flow locally without a server and print run events as they appear"
+    help: str = (
+        "run a flow and print run events as they appear: through the project server when one runs on this "
+        "root, on an engine of its own otherwise"
+    )
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("flow", metavar="FLOW_ID", help="flow id")

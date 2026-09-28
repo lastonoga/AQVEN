@@ -247,10 +247,6 @@ Some rules above are discipline, not enforcement:
 - **Stale findings.** Nothing marks a finding stale when the flow changes. The hashes in the file tell
   what it measured.
 - **Promoting a variant.** No tool moves a winning value into the flow: the agent does it with `flow_patch`.
-- **Held-out outputs.** `series_outputs` and `aqven series export` return the outputs of every
-  attempt, held-out ones included: `split` is only a filter. Nothing stops an agent from reading held-out
-  outputs case by case, so the rule is discipline: read with `split: "dev"`, and use held-out outputs only
-  as aggregates in a report.
 
 ## See also
 

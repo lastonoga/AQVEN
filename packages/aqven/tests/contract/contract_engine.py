@@ -43,6 +43,7 @@ FORK_ID: Final = RunId("01999c2a-7f21-7c4d-8e5f-7a8b9c0d1e2f")
 AT: Final = datetime(2026, 9, 17, 10, 0, tzinfo=UTC)
 HASH: Final = "sha256-" + "5c" * 64
 FLOW_ID: Final = "intake"
+ANSWER_OP: Final = "01JBQ7WV3M9XYZK4T8S2D6N0PQ"
 APPROVAL: Final = node_address("review")
 FORM_SCHEMA: Final = {
     "type": "object",
@@ -118,7 +119,7 @@ def suspension_events() -> tuple[RunEvent, ...]:
 
 def completion_events() -> tuple[RunEvent, ...]:
     return (
-        resource(NodeResumed, seq=4, at=AT, run_id=RUN_ID, address=APPROVAL, attempt=1, resumed_by="api"),
+        resource(NodeResumed, seq=4, at=AT, run_id=RUN_ID, address=APPROVAL, attempt=1, resolved_by=ANSWER_OP),
         resource(
             RunFinished,
             seq=5,

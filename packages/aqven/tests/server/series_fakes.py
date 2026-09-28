@@ -39,6 +39,7 @@ from aqven.series import (
     SeriesVerdict,
     VariantRole,
 )
+from aqven.series.outputs import shown_splits
 from aqven.series.read_views import (
     FailureGroup,
     SeriesBriefResult,
@@ -187,13 +188,20 @@ def brief(view: SeriesDetailView) -> SeriesBriefView:
     )
 
 
+OUTPUT_SPLITS: Final = (
+    (VariantId("base"), SeriesSplit.DEV),
+    (VariantId("alt"), SeriesSplit.DEV),
+    (VariantId("alt"), SeriesSplit.HOLDOUT),
+)
+
+
 def output_rows() -> tuple[SeriesOutputRow, ...]:
     return tuple(
         SeriesOutputRow(
             case="question",
             variant=variant,
             repeat=1,
-            split=SeriesSplit.DEV,
+            split=split,
             outcome=AttemptOutcome.PASSED,
             error_code=None,
             cost_usd=Decimal("0.001"),
@@ -203,7 +211,7 @@ def output_rows() -> tuple[SeriesOutputRow, ...]:
             node_outputs={},
             checks={"label": 1.0},
         )
-        for index, variant in enumerate((VariantId("base"), VariantId("alt")))
+        for index, (variant, split) in enumerate(OUTPUT_SPLITS)
     )
 
 
@@ -249,7 +257,9 @@ class FakeSeriesJobs:
     plans: list[tuple[ExperimentId, LaunchRequest]] = field(default_factory=list[tuple[ExperimentId, LaunchRequest]])
     event_reads: list[int] = field(default_factory=list[int])
     queries: list[SeriesListQuery] = field(default_factory=list[SeriesListQuery])
-    output_reads: list[SeriesOutputsRequest] = field(default_factory=list[SeriesOutputsRequest])
+    output_reads: list[tuple[SeriesOutputsRequest, bool]] = field(
+        default_factory=list[tuple[SeriesOutputsRequest, bool]]
+    )
     row_queries: list[SeriesRowsQuery] = field(default_factory=list[SeriesRowsQuery])
 
     def _view(self, series_id: SeriesId) -> SeriesDetailView:
@@ -282,10 +292,15 @@ class FakeSeriesJobs:
         cases = () if request.include_cases else None
         return SeriesBriefResult(series=brief(view), cases=cases, hidden_cases=0)
 
-    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
-        self.output_reads.append(request)
+    async def outputs(self, request: SeriesOutputsRequest, *, include_holdout: bool = False) -> SeriesOutputsPage:
+        self.output_reads.append((request, include_holdout))
         self._view(request.series_id)
-        rows = tuple(row for row in output_rows() if request.variant is None or row.variant == request.variant)
+        splits = shown_splits(request, include_holdout)
+        rows = tuple(
+            row
+            for row in output_rows()
+            if row.split in splits and (request.variant is None or row.variant == request.variant)
+        )
         return SeriesOutputsPage(series_id=request.series_id, rows=rows, total=len(rows), next_cursor=None)
 
     async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:

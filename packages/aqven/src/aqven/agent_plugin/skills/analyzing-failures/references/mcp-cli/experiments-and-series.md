@@ -80,8 +80,8 @@ flow](research-loop.md) is the order to use them in, round after round.
   variants' pass rates on that case differ, for example 3 of 3 repeats against 1 of 3; with one variant
   it is always `false`. The rows grow with the number of variants and attempts, so read
   `view: "summary"` first and ask for the rows only when a variant has failures.
-- **`series_outputs` reads what the attempts produced, in bulk.** One row per attempt, in attempt order:
-  `case`, `variant`, `repeat`, `split`, `outcome` (`passed`, `failed`, `error`, `waiting` or `running`),
+- **`series_outputs` reads what the attempts on working cases produced, in bulk.** One row per attempt,
+  in attempt order: `case`, `variant`, `repeat`, `split`, `outcome` (`passed`, `failed`, `error`, `waiting` or `running`),
   `error_code`, `cost_usd`, `latency_ms`, `run_id`, `output`, `node_outputs` and `checks`
   (`{check_id: value}`). Filter by `split`, `variant`, `case` and `outcome`; `page_size` goes up to 200,
   and `next_cursor` comes back as `cursor`. Without `fields` each row carries the whole flow output. With
@@ -90,10 +90,12 @@ flow](research-loop.md) is the order to use them in, round after round.
   that isn't there is `null`. The rows come from the same run records `run_get` reads, so use this, not
   one `run_get` per attempt, and never the files under `.aqven/`. Outputs of `map` items, branches and loop
   passes aren't included: read those with `run_get_node`.
-- **`series_outputs` returns held-out attempts too.** Unlike `include_cases`, it hides nothing: `split` is
-  only a filter. Pass `split: "dev"` whenever the rows inform a change to the flow, a prompt or a check,
-  and use held-out rows only as aggregates in a report, never case by case. A change tuned to held-out
-  outputs makes the next held-out series measure the tuning, not the flow.
+- **`series_outputs` never returns held-out attempts.** Like `include_cases`, it leaves them out: a series
+  on held-out cases gives no rows, and `split: "holdout"` is refused with `REQUEST_INVALID`. Held-out cases
+  are read only as totals, through `series_get` (`view: "summary"` or the aggregates of the full view). A
+  change tuned to held-out outputs makes the next held-out series measure the tuning, not the flow. The
+  REST route and `aqven series export` leave them out too; only the owner can ask for them there
+  (`include_holdout`, `--include-holdout`), to review a finding, never to tune.
 - **`series_list` is the history, with totals.** Newest first, filtered by `experiment_id` and `status`:
   `series_id`, `experiment_id`, `flow_id`, `status`, the verdict state, `on`, `progress`, `spend_usd`, the
   times and `eta`. Its `stats` total every series of the experiment, or of the project without
@@ -198,7 +200,7 @@ It exits with 3, printing a Studio link, when the series waits for approval or p
 waits for a person. When it loses contact with the server it retries for up to 5 minutes, then exits with 5,
 naming the error; the series keeps running on the server. `--cap` sets the series' own cap, and `--json`
 prints the final state as one JSON line. `aqven series export <series_id> --format csv --fields
-/label triage` writes the same rows as `series_outputs`, one per attempt, as JSON lines or CSV.
+/label triage` writes the same rows as `series_outputs`, one per attempt on working cases, as JSON lines or CSV.
 How to run a series lists every flag and exit code.
 
 ## See also

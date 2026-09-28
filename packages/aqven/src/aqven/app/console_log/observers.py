@@ -267,8 +267,8 @@ class ObservedSeriesJobs:
     async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
         return await self.inner.brief(request)
 
-    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
-        return await self.inner.outputs(request)
+    async def outputs(self, request: SeriesOutputsRequest, *, include_holdout: bool = False) -> SeriesOutputsPage:
+        return await self.inner.outputs(request, include_holdout=include_holdout)
 
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
         return await self.inner.list(query)

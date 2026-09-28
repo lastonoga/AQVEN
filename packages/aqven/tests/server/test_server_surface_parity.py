@@ -10,8 +10,10 @@ from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings
 
 from aqven.runtime.runs import RunStartRequest
 from aqven.series import SeriesCancelRequest, SeriesGetRequest, SeriesStartRequest
+from aqven.series.outputs import HOLDOUT_TOTALS_ONLY
 from aqven.series.read_views import SeriesOutputsRequest, SeriesRowsQuery
 from aqven.server import ServerOptions, create_app
+from aqven.server.context import OPERATION_KEY, REST_ONLY_PARAMETERS_KEY
 from aqven.server.errors import ApiFailure
 from aqven.server.mcp.catalog import tool_error
 from aqven.server.mcp.run_tools import RunTools
@@ -20,7 +22,7 @@ from aqven.server.mcp.series_tools import SeriesTools
 from aqven.server.views.run_list import RunListInput
 from aqven.server.views.runs import RunStartService
 from aqven.server.workspace import ProjectWorkspace
-from aqven.spec import VariantId
+from aqven.spec import SeriesSplit, VariantId
 
 BODY = {"flow_id": "intake", "mode": "live", "input": {"text": "parity"}}
 
@@ -170,7 +172,50 @@ def test_series_outputs_and_the_series_list_answer_the_same_on_both_surfaces(
     assert rows_mcp.model_dump(mode="json") == rows_http.json()
     route_read, tool_read = shared_jobs.output_reads
     assert route_read == tool_read
-    assert route_read.fields == fields
+    assert route_read[0].fields == fields
+
+
+def splits_of(body: JsonValue) -> list[JsonValue]:
+    assert isinstance(body, dict)
+    rows = body["rows"]
+    assert isinstance(rows, list)
+    return [row["split"] for row in rows if isinstance(row, dict)]
+
+
+def test_held_out_rows_stay_out_of_both_surfaces_unless_the_owner_asks_over_rest(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
+) -> None:
+    url = f"/api/series/{SERIES_ID}/outputs"
+    reads = SeriesReadTools(shared_jobs)
+    working_http = series_client.get(url)
+    working_mcp = asyncio.run(reads.outputs(SeriesOutputsRequest(series_id=SERIES_ID)))
+    refused_http = series_client.get(url, params={"split": "holdout"})
+    review_http = series_client.get(url, params={"include_holdout": "true"})
+    held_out_http = series_client.get(url, params={"split": "holdout", "include_holdout": "true"})
+
+    with pytest.raises(ApiFailure) as refused_mcp:
+        asyncio.run(reads.outputs(SeriesOutputsRequest(series_id=SERIES_ID, split=SeriesSplit.HOLDOUT)))
+
+    assert working_mcp.model_dump(mode="json") == working_http.json()
+    assert splits_of(working_http.json()) == ["dev", "dev"]
+    assert refused_http.status_code == 422
+    assert rest_code(refused_http.json()) == mcp_code("series_outputs", refused_mcp.value) == "REQUEST_INVALID"
+    assert refused_mcp.value.message == HOLDOUT_TOTALS_ONLY
+    assert splits_of(review_http.json()) == ["dev", "dev", "holdout"]
+    assert splits_of(held_out_http.json()) == ["holdout"]
+    assert [holdout for _, holdout in shared_jobs.output_reads] == [False, False, False, True, True, False]
+
+
+def test_include_holdout_is_the_one_declared_rest_only_parameter_of_series_outputs(series_client: TestClient) -> None:
+    operation = series_client.get("/api/openapi.json").json()["paths"]["/api/series/{series_id}/outputs"]["get"]
+    rest = {parameter["name"] for parameter in operation["parameters"] if parameter["in"] == "query"}
+    mcp = set(SeriesOutputsRequest.model_json_schema()["properties"]) - {"series_id"}
+    declared = set(operation[REST_ONLY_PARAMETERS_KEY])
+
+    assert operation[OPERATION_KEY] == "series_outputs"
+    assert declared == {"include_holdout"}
+    assert rest - mcp == declared
+    assert mcp <= rest
 
 
 def test_outputs_of_an_unknown_series_are_not_found_on_both_surfaces(

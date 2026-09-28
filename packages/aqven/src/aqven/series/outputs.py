@@ -14,6 +14,7 @@ from aqven.series.model import AttemptOutcome, AttemptRecord, AttemptState, Seri
 from aqven.series.ports import RunOutputRecord, RunOutputs
 from aqven.series.presenter import attempt_outcome
 from aqven.series.read_views import SeriesOutputRow, SeriesOutputsPage, SeriesOutputsRequest
+from aqven.spec import SeriesSplit
 
 POINTER_ROOT: Final = "/"
 NODE_SEPARATOR: Final = "/"
@@ -21,6 +22,12 @@ OK_STATUS: Final = "ok"
 PARALLEL_READS: Final = 8
 STOPPED: Final = frozenset({SeriesStatus.CANCELLED, SeriesStatus.FAILED})
 ESCAPES: Final = (("~1", "/"), ("~0", "~"))
+EVERY_SPLIT: Final = frozenset(SeriesSplit)
+WORKING_SPLITS: Final = EVERY_SPLIT - {SeriesSplit.HOLDOUT}
+HOLDOUT_TOTALS_ONLY: Final = (
+    "held-out cases are never read one by one, so a change can't be tuned to them: read them only as totals, "
+    "with series_get view summary or the aggregates of the full view"
+)
 
 
 NO_OUTPUT: Final = RunOutputRecord()
@@ -130,10 +137,18 @@ class JudgedRow:
     outcome: AttemptOutcome
 
 
-def wanted(judged: JudgedRow, request: SeriesOutputsRequest) -> bool:
+def shown_splits(request: SeriesOutputsRequest, include_holdout: bool) -> frozenset[SeriesSplit]:
+    readable = EVERY_SPLIT if include_holdout else WORKING_SPLITS
+    asked = readable if request.split is None else frozenset({request.split})
+    if not asked <= readable:
+        raise invalid(HOLDOUT_TOTALS_ONLY)
+    return asked
+
+
+def wanted(judged: JudgedRow, request: SeriesOutputsRequest, splits: frozenset[SeriesSplit]) -> bool:
     row = judged.row
     checks = (
-        request.split is None or row.split is request.split,
+        row.split in splits,
         request.variant is None or row.variant_id == request.variant,
         request.case is None or row.case_name == request.case,
         request.outcome is None or judged.outcome is request.outcome,
@@ -177,11 +192,14 @@ class SeriesOutputsReader:
         attempts: Sequence[AttemptRecord],
         waiting: frozenset[RunId],
         request: SeriesOutputsRequest,
+        *,
+        include_holdout: bool = False,
     ) -> SeriesOutputsPage:
+        splits = shown_splits(request, include_holdout)
         fields = output_fields(request.fields)
         stopped = record.status in STOPPED
         judged = [JudgedRow(row=row, outcome=attempt_outcome(row, waiting, stopped)) for row in attempts]
-        matching = [item for item in judged if wanted(item, request)]
+        matching = [item for item in judged if wanted(item, request, splits)]
         remaining = after_cursor(matching, request.cursor)
         shown = remaining[: request.page_size]
         recorded = await self._recorded(shown)

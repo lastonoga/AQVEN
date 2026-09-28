@@ -130,12 +130,15 @@ To take the outputs of a series offline, export them:
 aqven series export <series_id> --format csv --fields /label triage --out rows.csv
 ```
 
-It writes one row per attempt: the case, variant, repeat, split, outcome, error code, cost, latency and
-`run_id`, then one column per `--fields` entry (a JSON pointer such as `/label` into the flow output, a node
-id such as `triage`, or `triage/summary`), and one `check:<id>` column per check. Without `--fields` the
-whole flow output goes into one `output` column as JSON. `--format jsonl` (the default) writes the same rows
-as JSON lines; `--variant`, `--outcome` and `--split` narrow them, and without `--out` they go to stdout. It
-exits with 2 when the series doesn't exist and with 5 when it loses contact with the server.
+It writes one row per attempt on working cases: the case, variant, repeat, split, outcome, error code,
+cost, latency and `run_id`, then one column per `--fields` entry (a JSON pointer such as `/label` into the
+flow output, a node id such as `triage`, or `triage/summary`), and one `check:<id>` column per check. Without
+`--fields` the whole flow output goes into one `output` column as JSON. `--format jsonl` (the default)
+writes the same rows as JSON lines; `--variant`, `--outcome` and `--split` narrow them, and without `--out`
+they go to stdout. Held-out attempts are left out, so a change can't be tuned to them: `--include-holdout`
+adds them, for the owner's review of a finding, never for tuning, and `--split holdout` needs it. It exits
+with 2 when the series doesn't exist or `--split holdout` comes without `--include-holdout`, and with 5
+when it loses contact with the server.
 
 Exit 5 means the command lost contact with the server, not that the series stopped: it runs on the
 server. Look it up in Studio or with `series_get` before you start it again, or you pay for the same

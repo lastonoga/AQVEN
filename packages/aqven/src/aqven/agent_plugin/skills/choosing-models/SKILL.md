@@ -130,8 +130,8 @@ output:
 - Agent files for many models come from a builder in `scripts/` (`building-flows`).
 - `aqven` MCP `aqven_check`, `run_start` (`mode: "live"`, `dataset_item_id`, `agent_overrides`), `run_get_node`,
   `series_get` (`view: "summary"`), `series_outputs`.
-- `uv run aqven run <flow_id> --input <file.json> --agent <node>=<agent>` starts an engine of its own: only when no
-  project server runs on this root; it takes a JSON input, not a dataset case.
+- `uv run aqven run <flow_id> --input <file.json> --agent <node>=<agent>` goes through the project server when one
+  runs on this root, and starts an engine of its own only when none does; it takes a JSON input, not a dataset case.
 
 ## References
 

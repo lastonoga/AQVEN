@@ -158,7 +158,7 @@ errors: 1, warnings: 0
 
 - [How to give an agent a tool](/engine/tool-node/) — where a tool declares its own `secrets`, `kb_token`
   included, and how its code reads a resolved value back with `ctx.secret(...)`.
-- [How to run a flow without a server](/engine/run-locally/) — the `provider_key_missing` error a run
+- [How to run a flow from the terminal](/engine/run-locally/) — the `provider_key_missing` error a run
   fails with when a provider's own secret is the one still unset.
 - [How to check a project before committing](/engine/check/) — validates the project's shape; it
   doesn't check whether any secret is actually set.

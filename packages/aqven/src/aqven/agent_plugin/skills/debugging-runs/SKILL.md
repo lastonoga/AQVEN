@@ -73,8 +73,8 @@ description: "Finds why an AQVEN run, node or series attempt failed or hangs: ru
   `run_resume`, `run_start` (`agent_overrides`), `series_start` (a `look` over named cases), `series_get`
   (`view: "summary"`), `series_outputs` (`outcome`, `variant`, `case`, `split`, `fields`, `cursor`).
 - `uv run aqven series export <series_id> --path <package> --format jsonl --outcome error [--out FILE]`.
-- `uv run aqven run <flow_id> --input <file.json> --agent <node>=<agent>` starts an engine of its own: only when no
-  project server runs on this root; it takes a JSON input, not a dataset case.
+- `uv run aqven run <flow_id> --input <file.json> --agent <node>=<agent>` goes through the project server when one
+  runs on this root, and starts an engine of its own only when none does; it takes a JSON input, not a dataset case.
 - `uv run aqven refs <kind>:<id> <package>`, `uv run aqven tree <package>`.
 
 ## References

@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final
 
-from aqven.console.run import text_line
+from aqven.console.run_watch import text_line
 from aqven.runtime import (
     AttemptCause,
     InlineValue,

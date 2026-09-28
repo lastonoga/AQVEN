@@ -220,7 +220,7 @@ Good habits: no guard threshold at n=1; a new check smoked on `dev` first; cases
 
 - `aqven` MCP `aqven_check`, `prompt_preview`, `pytest_run`, `series_start` (a `dev` smoke, see `running-series`),
   `run_get_node` (what a variant's llm node sent), `run_start` (`agent_overrides`), `series_list` (earlier series
-  of an experiment), `series_outputs` (their outputs; `split: "dev"`: held-out outputs are read only as aggregates).
+  of an experiment), `series_outputs` (their outputs on working cases; held-out cases are read only as totals).
 - `uv run aqven series export <series_id> --path <package> [--format jsonl|csv] [--fields FIELD …] [--split dev]`.
 - `uv run aqven refs experiment:<id> <package>`; `uv run aqven tree <package>` lists local flows and alternatives;
   `uv run aqven generate <package>` writes their classes into `types.py`.

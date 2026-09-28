@@ -12,8 +12,8 @@ description: "Turns AQVEN runs into agreed failure modes: first failing node, ow
   experiment whose subject range ends at that node (`designing-experiments`).
 - New check functions need no server restart: project Python reloads on the next run.
 - Test the owner's premise on data already paid for before spending more.
-- Outputs of a series are read in bulk with `series_outputs` on `split: "dev"` (or `aqven series export`), never
-  one `run_get` per attempt, never `.aqven/`; held-out outputs are never read case by case.
+- Outputs of a series are read in bulk with `series_outputs` (or `aqven series export`), never one `run_get` per
+  attempt, never `.aqven/`; both return working cases only, and held-out cases are read only as totals.
 - Web search is for literature only, never for facts about the engine.
 
 ## Procedure

@@ -191,7 +191,7 @@ aqven models check: nope is neither an agent of the project nor a provider:model
   page doesn't answer: how deep a supported, strict-capable mode actually nests correctly.
 - How to call a model — where an agent's `model`, `fallback_models`, and
   `output.mode` are set.
-- How to run a flow without a server — the `provider_key_missing` failure a real
+- How to run a flow from the terminal — the `provider_key_missing` failure a real
   run hits when a provider's own key is the one still unset.
 - How to manage secrets — the inventory of every secret a project declares and
   whether it's set; this page checks what an already-configured model can actually produce, not whether

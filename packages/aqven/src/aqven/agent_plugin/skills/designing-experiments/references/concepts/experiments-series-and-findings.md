@@ -202,7 +202,7 @@ Studio calls the two uses **Explore** and **Confirm**:
 | Studio purpose | Explore | Confirm |
 | What a series gives | numbers and a `signal`, never a finding | a verdict and a finding |
 | How often | as often as you need, one change between series | once, when the change is done and the question is fixed |
-| Case by case | failing cases are shown, to you and to an agent | `series_get` never lists them; `series_outputs` and `series export` return their rows, so an agent filters `split: "dev"` and reads held-out outputs only as totals |
+| Case by case | failing cases are shown, to you and to an agent | never shown to an agent: `series_get` doesn't list them, `series_outputs` and `series export` leave their rows out, so held-out cases are read only as totals; the owner can export them with `--include-holdout` to review a finding |
 
 Iterating on the same cases you decide on tunes the flow to those cases. Adding cases and recomputing
 until the answer looks right inflates false confirmations too. So the held-out half is read once per

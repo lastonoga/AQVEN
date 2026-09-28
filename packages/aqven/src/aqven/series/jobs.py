@@ -338,11 +338,12 @@ class SeriesService:
             series=series, cases=page.shown, hidden_cases=page.hidden, next_cursor=page.next_cursor
         )
 
-    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+    async def outputs(self, request: SeriesOutputsRequest, *, include_holdout: bool = False) -> SeriesOutputsPage:
         record = await self._reconciled(request.series_id)
         attempts = await self.services.store.attempts(record.series_id)
         waiting = await self.services.waits.open_runs()
-        return await SeriesOutputsReader(self.services.outputs).page(record, attempts, waiting, request)
+        reader = SeriesOutputsReader(self.services.outputs)
+        return await reader.page(record, attempts, waiting, request, include_holdout=include_holdout)
 
     async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
         search = SeriesListQuery(

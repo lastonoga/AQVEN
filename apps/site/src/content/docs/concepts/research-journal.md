@@ -80,7 +80,7 @@ Changes: the `escalate` node points at qwen; the experiment is archived.
 ```
 
 Held-out outputs are read only as aggregates, never case by case: `series_get` never shows held-out case
-rows, and `series_outputs` returns held-out attempts only when you leave out `split: "dev"`. So the Read
+rows, and `series_outputs` and `series export` leave held-out attempts out. So the Read
 line of a held-out entry comes from the working-case series before it. An estimate of spend belongs before a run, labelled as one. After the
 run, the journal carries what the series measured. When some calls had no price, that is a lower bound, and
 the entry says so.

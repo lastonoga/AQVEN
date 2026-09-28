@@ -257,7 +257,7 @@ class ScriptedSeries:
     async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
         unused_series()
 
-    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+    async def outputs(self, request: SeriesOutputsRequest, *, include_holdout: bool = False) -> SeriesOutputsPage:
         unused_series()
 
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
