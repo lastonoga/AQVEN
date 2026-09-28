@@ -876,10 +876,10 @@ LUMEN_PATTERNS: Final[tuple[tuple[str, str, tuple[str, ...]], ...]] = (
     ),
 )
 LUMEN_FACTOR_EXAMPLES: Final[Mapping[FactorKind, str]] = {
-    FactorKind.AGENT: "judge_panel_agents",
+    FactorKind.AGENT: "intent_escalation_agents",
     FactorKind.PROMPT: "panel_judge_prompt",
     FactorKind.USE: "panel_merge_rule",
-    FactorKind.FLOW: "panel_single_judge",
+    FactorKind.FLOW: "intent_split_long_messages",
 }
 SKIPPED_EXPERIMENT_PARTS: Final = frozenset({"__pycache__", "findings", ".aqven"})
 EXPERIMENT_NOTES: Final = "experiment.md"
@@ -941,7 +941,9 @@ def lumen_patterns_page() -> str:
         "Every file below is copied as it is from the showcase project, the project "
         "`{{CLI_COMMAND}} new my_project --template showcase` creates (`examples/lumen` in the AQVEN repository). "
         "Paths are relative to the package root. [Tested snippets](/engine/snippets/) has the same patterns in a "
-        "smaller project.",
+        "smaller project. These files show mechanisms: the showcase's design (three drafts, a judge panel, a critic "
+        "loop) is one project's choice, not a recommendation. Choose a shape from your own goal and data, and "
+        "measure it with an experiment.",
         "",
     )
     for title, intro, files in LUMEN_PATTERNS:

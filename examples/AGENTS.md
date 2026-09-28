@@ -38,8 +38,8 @@ memory, the web, compaction summaries or its source; the project from `aqven tre
   `W_AGENT_SKILLS_STALE`, offer the owner `uv run aqven skills sync <package>` in one line.
 - Read the `prompt_preview` of every changed llm node in full, and `FINDINGS.md` and `<package>/EXPERIMENTS.md`
   before you design a change and again after a compaction. Never write `experiments/*/findings/` or `FINDINGS.md`;
-  never open `.aqven/` (its databases, pickled outputs, logs) or fan hundreds of run reads to subagents: report
-  the missing tool to the owner as a gap in AQVEN.
+  never open `.aqven/` or fan run reads to subagents: read a series with `series_get` `view: "summary"` and
+  `series_outputs` (`aqven series export` in a terminal); report what these cannot give as a gap in AQVEN.
 - No comments and no docstrings in project code, and never a docstring moved into a `#` line (`E_DOCSTRING`).
 - Project Python reloads on the next run: a new step or check never needs a server restart.
 
@@ -54,8 +54,8 @@ memory, the web, compaction summaries or its source; the project from `aqven tre
 - When the owner asks to skip a stage, name its cost in one line and let him choose.
 - A scope limit he sets ("keep it simple", "only this input", "not yet") binds every later step and subagent:
   report the gaps it leaves, never fill them. A new source, download or side research waits for his yes.
-- While he is still describing a design, offer two or three options in one question and write files after the
-  answer; ask when "not needed" could mean a field or a whole experiment.
+- A design is an option, never the answer: offer the simplest and one or two others in one question, each with when
+  it fits, when not and the deciding experiment; then write; ask whether "not needed" drops a field or an experiment.
 - His plans and hypotheses go into `EXPERIMENTS.md`, his rules into Owner's rules, as he says them, not host memory.
 - A vague report ("looks cached") gets one question first: what he did, expected and saw. Explain a concept in two
   or three sentences; summaries for him are Markdown next to `EXPERIMENTS.md` unless he asks for another format.

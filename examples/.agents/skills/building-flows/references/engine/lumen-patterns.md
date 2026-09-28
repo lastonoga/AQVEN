@@ -10,12 +10,12 @@ Generated from the showcase project, file by file. A prompt variant slot, map, p
 - [A call](#a-call)
 - [A switch](#a-switch)
 - [Experiments by factor](#experiments-by-factor)
-  - [`agent`: `judge_panel_agents`](#agent-judge_panel_agents)
+  - [`agent`: `intent_escalation_agents`](#agent-intent_escalation_agents)
   - [`prompt`: `panel_judge_prompt`](#prompt-panel_judge_prompt)
   - [`use`: `panel_merge_rule`](#use-panel_merge_rule)
-  - [`flow`: `panel_single_judge`](#flow-panel_single_judge)
+  - [`flow`: `intent_split_long_messages`](#flow-intent_split_long_messages)
 
-Every file below is copied as it is from the showcase project, the project `aqven new my_project --template showcase` creates (`examples/lumen` in the AQVEN repository). Paths are relative to the package root. [Tested snippets](snippets.md) has the same patterns in a smaller project.
+Every file below is copied as it is from the showcase project, the project `aqven new my_project --template showcase` creates (`examples/lumen` in the AQVEN repository). Paths are relative to the package root. [Tested snippets](snippets.md) has the same patterns in a smaller project. These files show mechanisms: the showcase's design (three drafts, a judge panel, a critic loop) is one project's choice, not a recommendation. Choose a shape from your own goal and data, and measure it with an experiment.
 
 ## A prompt variant slot and fragments
 
@@ -419,51 +419,152 @@ out:
 | `reply_overpromise_risk` | none | — | `gpt` |
 | `reply_stage_budget` | `agent` | `gpt`, `gemini`, `mistral` | `three_families`, `mistral_only`, `gemini_only` |
 
-### `agent`: `judge_panel_agents`
+### `agent`: `intent_escalation_agents`
 
-```yaml title="experiments/judge_panel_agents/experiment.yaml"
+```yaml title="experiments/intent_escalation_agents/experiment.yaml"
 apiVersion: "aqven/v1"
 kind: "Experiment"
-description: "A DeepSeek tie-break picks the expected winner more often than the gpt tie-break, at most 30% dearer per correct pick"
-failure_mode: "panel_wrong_winner"
+description: "Qwen as the escalation agent decides the support lead's intent at most 0.1 less often than DeepSeek on the recorded triage, with no more invalid first outputs and at most 25% slower at p95"
+failure_mode: "intent_misread"
 subject:
-  flow: "judge_panel"
+  flow: "escalation"
+  from: "escalate"
+  to: "escalate"
 varies:
   what: "agent"
   nodes:
-  - "tie_break"
+  - "escalate"
 cases:
-  dataset: "judge_panel_cases"
+  dataset: "support_case_cases"
 variants:
-- id: "gpt_tie_break"
-- id: "deepseek_tie_break"
+- id: "deepseek"
+- id: "qwen"
   nodes:
-    tie_break: "deepseek"
+    escalate: "qwen"
+- id: "gpt"
+  nodes:
+    escalate: "gpt"
 checks:
-- id: "winner"
+- id: "intent"
   kind: "binary"
   use: "expected"
   with:
     fields:
-    - "winner"
+    - "intent"
 question:
-  kind: "compare"
-  baseline: "gpt_tie_break"
-  candidate: "deepseek_tie_break"
-  primary: "winner"
-  margin: 0.05
+  kind: "noninferior"
+  baseline: "deepseek"
+  candidate: "qwen"
+  primary: "intent"
+  margin: 0.1
   guardrails:
-  - metric: "cost_of_pass"
-    direction: "lower_is_better"
-    margin: 0.3
-    relative: true
+  - metric: "schema_valid_first_try"
+    margin: 0.05
   - metric: "latency_p95_ms"
     direction: "lower_is_better"
-    margin: 0.5
+    margin: 0.25
     relative: true
 plan:
-  cases: 8
+  cases: 12
   repeats: 3
+```
+
+```yaml title="experiments/intent_escalation_agents/flows/escalation/flow.yaml"
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The escalation path of the intent cascade: the product's normalization and attachment parsing, then the strong model that decides the intent when the cheap ballots split"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$escalate.out.rationale"
+- name: "intent"
+  from: "$escalate.out.intent"
+- name: "confidence"
+  from: "$escalate.out.confidence"
+order:
+- "prepare"
+- "triage"
+- "escalate"
+```
+
+```yaml title="experiments/intent_escalation_agents/flows/escalation/nodes/escalate/escalate.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The cascade's escalation step: a stronger model decides the intent from the triage alone, with no perspective set"
+inference: "ballot"
+agent: "deepseek"
+in:
+- name: "summary"
+  from: "$triage.out.summary"
+- name: "observations"
+  from: "$triage.out.observations"
+- name: "safety_risk"
+  from: "$triage.out.safety_risk"
+```
+
+```yaml title="experiments/intent_escalation_agents/flows/escalation/nodes/prepare/prepare.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "code"
+description: "The support flow's own normalization: case text, channel, category signals, marketplace intake fields and voting perspectives"
+run: "@root.flows.support_case.nodes.prepare.prepare:prepare"
+in:
+- name: "request"
+  type: "CaseRequest"
+  description: "The whole customer case"
+  from: "$input"
+out:
+- name: "message"
+  type: "Text"
+  description: "Case text with normalized whitespace"
+  maxLength: 4000
+- name: "channel"
+  type: "Channel"
+  description: "Channel the case came from"
+- name: "signals"
+  type: "SignalDef[]"
+  description: "Observation signals allowed for the product category"
+  maxItems: 20
+- name: "intake_fields"
+  type: "FieldSpec[]"
+  description: "Intake fields the marketplace requires"
+  maxItems: 10
+- name: "perspectives"
+  type: "VotePerspective[]"
+  description: "Perspectives for the independent intent ballots"
+  maxItems: 3
+```
+
+```yaml title="experiments/intent_escalation_agents/flows/escalation/nodes/triage/triage.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The support flow's triage: the summary, the category, observations against the signals and the safety risk"
+inference: "triage"
+agent: "gemini"
+in:
+- name: "message"
+  from: "$prepare.out.message"
+- name: "channel"
+  from: "$prepare.out.channel"
+- name: "customer"
+  from: "$input.customer"
+- name: "product"
+  from: "$input.product"
+- name: "signals"
+  from: "$prepare.out.signals"
+- name: "intake_fields"
+  from: "$prepare.out.intake_fields"
+- name: "photo"
+  from: "$input.photo"
+- name: "voice_note"
+  from: "$input.voice_note"
+- name: "video"
+  from: "$input.video"
+- name: "invoice"
+  from: "$input.invoice"
 ```
 
 ### `prompt`: `panel_judge_prompt`
@@ -724,147 +825,296 @@ def majority_only(verdicts: Annotated[list[JudgeVerdict], Field(max_length=3)]) 
     return PanelMergeRuleMajorityOnlyOut(consensus=consensus, level="agreed", spread=spread)
 ```
 
-### `flow`: `panel_single_judge`
+### `flow`: `intent_split_long_messages`
 
-```yaml title="experiments/panel_single_judge/experiment.yaml"
+```yaml title="experiments/intent_split_long_messages/experiment.yaml"
 apiVersion: "aqven/v1"
 kind: "Experiment"
-description: "A single DeepSeek judge answers at least 1.5 s faster at the median than the three-judge panel, picks the expected winner at most 0.1 less often and fails no more runs"
-failure_mode: "panel_wrong_winner"
+description: "Condensing a long customer message before deciding the intent beats deciding it from the whole message, at most 50% dearer per correct intent"
+failure_mode: "intent_misread"
 subject:
-  flow: "winner_pick"
+  flow: "message_intent"
 varies:
   what: "flow"
   nodes:
-  - "panel"
+  - "classify"
 cases:
-  dataset: "judge_panel_cases"
+  dataset: "long_customer_messages"
 variants:
-- id: "panel"
-- id: "single_judge"
+- id: "one_step"
+- id: "two_step"
   nodes:
-    panel: "single_judge"
+    classify: "two_step"
 checks:
-- id: "winner"
+- id: "intent"
   kind: "binary"
   use: "expected"
   with:
     fields:
-    - "winner"
+    - "intent"
 question:
   kind: "compare"
-  baseline: "panel"
-  candidate: "single_judge"
-  primary: "latency_p50_ms"
-  direction: "lower_is_better"
-  margin: 1500
+  baseline: "one_step"
+  candidate: "two_step"
+  primary: "intent"
+  margin: 0.05
   guardrails:
-  - metric: "winner"
-    margin: 0.1
-  - metric: "success_rate"
-    margin: 0.05
-  - metric: "infra_error_rate"
+  - metric: "cost_of_pass"
     direction: "lower_is_better"
-    margin: 0.02
-    relative: false
+    margin: 0.5
+    relative: true
 plan:
-  cases: 8
+  cases: 12
   repeats: 3
 ```
 
-```yaml title="experiments/panel_single_judge/flows/single_judge/flow.yaml"
+```yaml title="experiments/intent_split_long_messages/flows/message_intent/flow.yaml"
 apiVersion: "aqven/v1"
 kind: "Flow"
-description: "One judge instead of the panel: the tie-break inference scores the candidates blind, and the panel's own pick step turns its verdict into the winner"
-input: "PanelRequest"
-output: "PanelOutcome"
+description: "The intent of a case from one slot: the classify node calls the reading pattern a variant picks, one step as written"
+input: "CaseRequest"
+output: "IntentBallot"
 returns:
-- name: "winner"
-  from: "$pick.out.winner"
-- name: "verdict"
-  from: "$pick.out.verdict"
+- name: "rationale"
+  from: "$classify.out.rationale"
+- name: "intent"
+  from: "$classify.out.intent"
+- name: "confidence"
+  from: "$classify.out.confidence"
 order:
-- "judge"
-- "pick"
+- "classify"
 ```
 
-```yaml title="experiments/panel_single_judge/flows/single_judge/nodes/judge/judge.node.yaml"
-apiVersion: "aqven/v1"
-kind: "Node"
-node: "llm"
-description: "A single DeepSeek-family judge scores the drafts blind, as one panel judge does"
-inference: "tie_break"
-agent: "deepseek"
-in:
-- name: "summary"
-  from: "$input.summary"
-- name: "candidates"
-  from: "$input.candidates"
-- name: "chunks"
-  from: "$input.chunks"
-```
-
-```yaml title="experiments/panel_single_judge/flows/single_judge/nodes/pick/pick.node.yaml"
-apiVersion: "aqven/v1"
-kind: "Node"
-node: "code"
-description: "The panel's pick step: takes the winning draft from the single verdict, with no tie-break and no spread between judges"
-run: "@root.flows.judge_panel.nodes.pick.pick:pick"
-in:
-- name: "candidates"
-  type: "ReplyDraft[]"
-  description: "Reply drafts"
-  maxItems: 3
-  from: "$input.candidates"
-- name: "verdict"
-  type: "JudgeVerdict"
-  description: "The single judge's verdict"
-  from: "$judge.out"
-- name: "tie_broken"
-  type: "Bool"
-  description: "Always false: a single judge has nobody to disagree with"
-  value: false
-- name: "spread"
-  type: "Float"
-  description: "Always zero: there is no score spread with one judge"
-  minimum: 0
-  maximum: 4
-  value: 0
-out:
-- name: "winner"
-  type: "ReplyDraft"
-  description: "Winning draft"
-- name: "verdict"
-  type: "PanelVerdict"
-  description: "The single verdict in the panel's result shape"
-```
-
-```yaml title="experiments/panel_single_judge/flows/winner_pick/flow.yaml"
-apiVersion: "aqven/v1"
-kind: "Flow"
-description: "The winning reply draft from one slot: the panel node calls the judging pattern a variant picks, the project judge panel as written"
-input: "PanelRequest"
-output: "PanelOutcome"
-returns:
-- name: "winner"
-  from: "$panel.out.winner"
-- name: "verdict"
-  from: "$panel.out.verdict"
-order:
-- "panel"
-```
-
-```yaml title="experiments/panel_single_judge/flows/winner_pick/nodes/panel/panel.node.yaml"
+```yaml title="experiments/intent_split_long_messages/flows/message_intent/nodes/classify/classify.node.yaml"
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "call"
-description: "The slot of the experiment: calls a judging pattern with the case summary, the drafts and the chunks, as written the project judge panel"
-flow: "judge_panel"
+description: "The slot of the experiment: calls a reading pattern with the whole case, as written the one-step classifier"
+flow: "one_step"
+in:
+- name: "customer"
+  from: "$input.customer"
+- name: "origin"
+  from: "$input.origin"
+- name: "message"
+  from: "$input.message"
+- name: "order_id"
+  from: "$input.order_id"
+- name: "product"
+  from: "$input.product"
+- name: "tags"
+  from: "$input.tags"
+- name: "urgent"
+  from: "$input.urgent"
+- name: "photo"
+  from: "$input.photo"
+- name: "voice_note"
+  from: "$input.voice_note"
+- name: "video"
+  from: "$input.video"
+- name: "invoice"
+  from: "$input.invoice"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/one_step/flow.yaml"
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent straight from the customer's message, in one call to a cheap open model"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$classify_message.out.rationale"
+- name: "intent"
+  from: "$classify_message.out.intent"
+- name: "confidence"
+  from: "$classify_message.out.confidence"
+order:
+- "classify_message"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.inference.yaml"
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "The case intent from the customer's own message, however long it is and wherever the request sits in it"
+in:
+- name: "message"
+  type: "Text"
+  description: "Text of the customer case as the customer wrote it"
+  maxLength: 4000
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked; null when no product was identified"
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the intent, written before the choice"
+  maxLength: 300
+- name: "intent"
+  type: "CaseIntent"
+  description: "Case intent"
+- name: "confidence"
+  type: "Score"
+  description: "Confidence in the chosen intent"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "A cheap open model reads the whole message and decides the intent"
+agent: "llama"
+in:
+- name: "message"
+  from: "$input.message"
+- name: "product"
+  from: "$input.product"
+```
+
+```liquid title="experiments/intent_split_long_messages/flows/one_step/nodes/classify_message/classify_message.prompt.md"
+{% message system %}
+You decide the intent of a case to the support desk of a smart lighting brand, from the customer's own message.
+{% include "fragments/intent_rubric" %}
+{% include "fragments/untrusted_input" %}
+{% endmessage %}
+{% message user %}
+{% if product %}
+The customer picked the product "{{ product.name }}" from the {{ product.category }} category.
+{% endif %}
+Case text:
+<customer_message>
+{{ message }}
+</customer_message>
+{{ output_format }}
+{% endmessage %}
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/two_step/flow.yaml"
+apiVersion: "aqven/v1"
+kind: "Flow"
+description: "The case intent in two calls to a cheap open model: the message is condensed to what the customer needs first, then the intent is decided from that summary"
+input: "CaseRequest"
+output: "IntentBallot"
+returns:
+- name: "rationale"
+  from: "$classify_summary.out.rationale"
+- name: "intent"
+  from: "$classify_summary.out.intent"
+- name: "confidence"
+  from: "$classify_summary.out.confidence"
+order:
+- "condense_message"
+- "classify_summary"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.inference.yaml"
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "The case intent from a colleague's short summary of the customer's message"
 in:
 - name: "summary"
-  from: "$input.summary"
-- name: "candidates"
-  from: "$input.candidates"
-- name: "chunks"
-  from: "$input.chunks"
+  type: "Text"
+  description: "What the customer needs from support now, followed by the facts that bear on it"
+  maxLength: 600
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked; null when no product was identified"
+out:
+- name: "rationale"
+  type: "Text"
+  description: "Reasoning for the intent, written before the choice"
+  maxLength: 300
+- name: "intent"
+  type: "CaseIntent"
+  description: "Case intent"
+- name: "confidence"
+  type: "Score"
+  description: "Confidence in the chosen intent"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "The same cheap open model decides the intent from the condensed summary"
+agent: "llama"
+in:
+- name: "summary"
+  from: "$condense_message.out.summary"
+- name: "product"
+  from: "$input.product"
+```
+
+```liquid title="experiments/intent_split_long_messages/flows/two_step/nodes/classify_summary/classify_summary.prompt.md"
+{% message system %}
+You decide the intent of a case to the support desk of a smart lighting brand, from a colleague's summary of the customer's message.
+{% include "fragments/intent_rubric" %}
+{% include "fragments/untrusted_input" %}
+{% endmessage %}
+{% message user %}
+{% if product %}
+The customer picked the product "{{ product.name }}" from the {{ product.category }} category.
+{% endif %}
+Case summary:
+<case_summary>
+{{ summary }}
+</case_summary>
+{{ output_format }}
+{% endmessage %}
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.inference.yaml"
+apiVersion: "aqven/v1"
+kind: "Inference"
+description: "A short summary of a long customer message: what the customer needs from support now, then only the facts that bear on it"
+in:
+- name: "message"
+  type: "Text"
+  description: "Text of the customer case as the customer wrote it"
+  maxLength: 4000
+- name: "product"
+  type: "ProductRef?"
+  description: "The product the customer picked; null when no product was identified"
+out:
+- name: "summary"
+  type: "Text"
+  description: "What the customer needs from support now, followed by the facts that bear on it"
+  maxLength: 600
+checks:
+- use: "not_empty"
+  with:
+    field: "$out.summary"
+  on_fail: "retry"
+```
+
+```yaml title="experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.node.yaml"
+apiVersion: "aqven/v1"
+kind: "Node"
+node: "llm"
+description: "A cheap open model condenses a long message to the request and the facts behind it"
+agent: "llama"
+in:
+- name: "message"
+  from: "$input.message"
+- name: "product"
+  from: "$input.product"
+```
+
+```liquid title="experiments/intent_split_long_messages/flows/two_step/nodes/condense_message/condense_message.prompt.md"
+{% message system %}
+You condense a case to the support desk of a smart lighting brand for the colleague who routes it.
+Start with what the customer needs from support now. Then add only the facts that bear on it: what happened to the product or the parcel, when, and what the customer has already tried. Leave out stories, praise and side questions, and mention a settled complaint only as settled.
+Never put the customer's name, email, phone, address or any other personal data into the summary: call them "the customer".
+{% include "fragments/untrusted_input" %}
+{% endmessage %}
+{% message user %}
+{% if product %}
+The customer picked the product "{{ product.name }}" from the {{ product.category }} category.
+{% endif %}
+Case text:
+<customer_message>
+{{ message }}
+</customer_message>
+{{ output_format }}
+{% endmessage %}
 ```

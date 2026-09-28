@@ -64,9 +64,10 @@ MCP are three ways to start the same thing.
   `project_cap_source`: `override`, `project` or `default`.
 - **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset, a media
   file a case points at, a shared type or the code during a series ends it `invalid` with `inputs_changed`.
-  Other files count too: the project server watches the whole project folder and reloads the project on
-  every change, so a bulk download or an unpacked archive there slows it down while the series runs. Keep
-  raw downloads outside the project folder. See
+  The project server watches the whole project folder. Media files dropped there, even thousands at once,
+  don't re-check the project or stall the server, but spec files among them (`.yaml`, `.yml`, `.md`,
+  `.liquid`, `.py`) do re-check it. Keep raw downloads outside the project folder anyway, so unvetted files
+  stay out of the package and out of git. See
   How to keep case media as files in the project.
 - **Stop it if you must.** Queued attempts never start. Model calls already running finish and are paid
   for. The series ends `cancelled`, and no finding is written.
@@ -136,16 +137,17 @@ whole flow output goes into one `output` column as JSON. `--format jsonl` (the d
 as JSON lines; `--variant`, `--outcome` and `--split` narrow them, and without `--out` they go to stdout. It
 exits with 2 when the series doesn't exist and with 5 when it loses contact with the server.
 
-Exit 1 with `the project server did not answer` means the command lost contact with the server, not that
-the series stopped: it runs on the server. Look it up in Studio or with `series_get` before you start it
-again, or you pay for the same attempts twice.
+Exit 5 means the command lost contact with the server, not that the series stopped: it runs on the
+server. Look it up in Studio or with `series_get` before you start it again, or you pay for the same
+attempts twice.
 
 ### From an agent
 
 Over MCP, `series_start` takes `experiment_id`, `on`, and optionally `cases`, `repeats`, `cap_usd` and a
 `client_op_id`. It returns at once with the launch plan and the status. `series_get` with `wait_seconds` up
 to 50 waits for the series to settle, and `series_cancel` stops it. `series_get` with `view: "summary"`
-reads a series of any size in a few KB, and `series_outputs` pages through what its attempts produced. MCP
+reads a series of any size in a few KB, `series_outputs` pages through what its attempts produced, and
+`series_list` gives an experiment's earlier series with their totals, so a finished one isn't paid for twice. MCP
 has no plan-only call: the launch plan is information, and `series_start` starts the series. REST has
 `POST /api/experiments/{id}/launch-plan` for that. See [How to run experiments and series as an agent](../mcp-cli/experiments-and-series.md).
 

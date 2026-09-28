@@ -35,7 +35,8 @@ Repeats still pay off in two ways:
 - **Stability.** With more than one repeat, a series counts per variant the cases that passed every time,
   never, or sometimes, and reports pass^k: the chance that all k repeats of a case pass. A mean of 0.8 can
   mean "a fifth of the cases always fail", where the step needs a fix. It can also mean "every case fails a
-  fifth of the time", where a retry with a check, or a vote, helps. Stability tells the two apart.
+  fifth of the time", where a change per call may help, such as a retry with a check, several calls
+  merged, or another model: measure which. Stability tells the two apart.
 - **Noise.** Repeats narrow the part of the interval that comes from the model's own randomness, not the
   part that comes from how different the cases are. Only more cases narrow that part.
 
@@ -106,8 +107,8 @@ recommended size, but expect `inconclusive`.
 The answer to `inconclusive` for lack of cases (`below_mde`) is never to run the same held-out cases again
 until the verdict flips. Every extra look at the same data is another ticket in the lottery of false
 confirmations. Write fresh cases and run a new held-out series of the size the launch plan recommends. If that
-size is out of reach, the answer stays unclear, and a structural guard, such as a code check, a `switch` or
-a runtime check, is the fix, not more data.
+size is out of reach, the answer stays unclear. A structural guard, such as a code check, a `switch` or a
+runtime check, can bound the risk without more data; the owner decides whether it is worth its cost.
 
 ## Looks before the end
 

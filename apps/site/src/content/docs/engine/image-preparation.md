@@ -1,6 +1,6 @@
 ---
 title: How to prepare images for a flow
-description: Keep photos at their native resolution, apply the EXIF orientation, send crops as Image[], look at a contact sheet and at synthetic images before a series, and confirm in the trace what the model received.
+description: Keep photos at their native resolution, apply the EXIF orientation, choose between one image and native-resolution crops as Image[] by what the task needs, look at a contact sheet and at synthetic images before a series, and confirm in the trace what the model received.
 ---
 
 ## When you need this
@@ -36,9 +36,13 @@ crop them like photos. PDFs, recordings, video clips, long text and tables have 
 3. **Apply the orientation before anything else.** A phone often stores the pixels sideways plus a tag that says
    how to turn them. Write the turned pixels, and do the same in the production step that prepares images, so a
    crop box means the same thing in both.
-4. **Send details as crops, at native resolution.** When the model has to see a small detail, cut it out of the
-   original and pass the crops as an `Image[]` input, each one within the provider's size limit, so no crop is
-   shrunk on the way. Do not shrink the whole photo to fit it into one image.
+4. **Choose what the model gets by where the answer lives.** When the task needs only the image's general
+   content (what room this is, whether there is a scratch at all), one image, downscaled to the provider's
+   working size by your step or by the provider, is the cheap option. When it needs a small detail, cut the
+   regions out of the original and pass them as an `Image[]` input, each within the provider's size limit, so
+   no crop is shrunk on the way; more crops cost more tokens. A model whose provider keeps a larger edge is a
+   third option. When more than one fits, compare them with an [experiment](/engine/experiments/);
+   `--max-edge` in the example below shows how much the provider would shrink each image.
 5. **Place crops by something you can check, not by eye.** Compute the boxes from a detector, OCR word boxes, a
    fixed form template or a grid, or take coordinates the owner confirmed. Try a library with
    `uv run --with <package>` before you add it anywhere. Every crop has to contain the area the prompt compares

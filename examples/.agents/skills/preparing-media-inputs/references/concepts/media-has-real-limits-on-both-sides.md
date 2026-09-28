@@ -183,11 +183,14 @@ What that looks like for the modalities this page actually researched:
   same two outcomes. The provider rejects the request, or shortens the prompt without an error: OpenRouter
   compresses the middle of the prompt on endpoints whose context is 8,192 tokens or less. AQVEN does not
   compare a prompt's length with the context window, so count before the call — pages and whether they carry
-  a text layer for a PDF, characters and an estimate of tokens for text. When a document does not fit, or the
-  answer depends on every part of it, split it by its structure (sections, pages, speaker turns), run the step
-  once per chunk with a `map` node, and carry into each chunk what its text refers to,
-  such as the definitions of a contract. A scanned PDF is a stack of images: small print there is the image
-  case above.
+  a text layer for a PDF, characters and an estimate of tokens for text. When a document does not fit, the
+  options depend on where the answer lives: a model whose context window holds it; the sections the question
+  needs, selected before the call; chunks cut by structure (sections, pages, speaker turns), run once each
+  with a `map` node and merged, each carrying what its text refers to, such as the
+  definitions of a contract; or a first pass that locates the evidence, then a call on it. Per-chunk calls
+  are blind to each other, which costs most when the answer depends on every part at once. Measure the
+  options that fit with an experiment. A scanned PDF is a stack of images: small
+  print there is the image case above.
 - **Tables (rule 2):** a table reaches the model as text or as a `Document` file, so its ceiling is the
   context window too. Send the rows the question needs, not the whole file, with the header row in every
   piece. When each row is a question of its own — a transaction to classify, a sensor reading to judge — make

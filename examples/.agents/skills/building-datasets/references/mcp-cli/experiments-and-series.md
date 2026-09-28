@@ -73,14 +73,13 @@ flow is the order to use them in, round after round.
   your own words. While a series is still running, its verdict is provisional.
 - **`include_cases: true`** adds per-case rows to `series_get`, but only for `dev` cases: failing cases
   first, `case_limit` rows a page (50 by default, up to 200), and `next_cursor` for the next page passed
-  back as `cursor`. The rest, held-out cases included, are counted in `hidden_cases`. Held-out cases are
-  never shown to the agent one by one, so a change can't be tuned to them. Each row gives every variant's
-  tally and failed checks, `divergent` when the variants split on it, and each attempt its `outcome`,
-  `error` and `run_id`: open that run with `run_get` and `run_events` to find the first node that failed.
-  The rows grow with the number of variants and attempts, so read `view: "summary"` first (per variant:
-  finished, passed, failed and errored attempts, spend, latency, the primary metric and the top failure
-  groups) and ask for the rows only when a variant has failures. When your host saves an answer that is
-  too large to a file, read only the keys you need from that file.
+  back as `cursor`. The rest, held-out cases included, are counted in `hidden_cases`: `include_cases`
+  never shows a held-out case one by one, so a change can't be tuned to it. Each row gives every
+  variant's tally and failed checks, and each attempt its `outcome`, `error` and `run_id`: open that run
+  with `run_get` and `run_events` to find the first node that failed. `divergent` is `true` when the
+  variants' pass rates on that case differ, for example 3 of 3 repeats against 1 of 3; with one variant
+  it is always `false`. The rows grow with the number of variants and attempts, so read
+  `view: "summary"` first and ask for the rows only when a variant has failures.
 - **`series_outputs` reads what the attempts produced, in bulk.** One row per attempt, in attempt order:
   `case`, `variant`, `repeat`, `split`, `outcome` (`passed`, `failed`, `error`, `waiting` or `running`),
   `error_code`, `cost_usd`, `latency_ms`, `run_id`, `output`, `node_outputs` and `checks`
@@ -90,7 +89,11 @@ flow is the order to use them in, round after round.
   `triage` puts that node's whole output in `node_outputs`, and `triage/summary` a path inside it; a path
   that isn't there is `null`. The rows come from the same run records `run_get` reads, so use this, not
   one `run_get` per attempt, and never the files under `.aqven/`. Outputs of `map` items, branches and loop
-  passes aren't included.
+  passes aren't included: read those with `run_get_node`.
+- **`series_outputs` returns held-out attempts too.** Unlike `include_cases`, it hides nothing: `split` is
+  only a filter. Pass `split: "dev"` whenever the rows inform a change to the flow, a prompt or a check,
+  and use held-out rows only as aggregates in a report, never case by case. A change tuned to held-out
+  outputs makes the next held-out series measure the tuning, not the flow.
 - **`series_list` is the history, with totals.** Newest first, filtered by `experiment_id` and `status`:
   `series_id`, `experiment_id`, `flow_id`, `status`, the verdict state, `on`, `progress`, `spend_usd`, the
   times and `eta`. Its `stats` total every series of the experiment, or of the project without

@@ -5,8 +5,8 @@ description: "Prepares images, PDFs, audio, video, long text and tables for AQVE
 
 ## MUST
 
-- The model gets what production sends: originals at native quality, orientation applied, crops, segments and
-  chunks within the provider's limits. Experiments measure the production path, never a stand-in.
+- The model gets what production sends, within the provider's limits: originals at native quality, orientation
+  applied, or the crops, segments or chunks production cuts. Experiments measure the production path, not a stand-in.
 - Never pre-shrink, re-encode or pre-trim a source. Derived files are rebuilt from the sources by a script in
   the project.
 - A case you author points at its media with `file:`, a file in the project; private media stays out of git.
@@ -28,12 +28,12 @@ description: "Prepares images, PDFs, audio, video, long text and tables for AQVE
 | 1 | Inspect every source by its kind (the table below); `scripts/inspect_inputs.py` prints one row per file. HEIC photos become JPEG first (`sips -s format jpeg <file> --out <file>.jpg`) | a row per file; `$media` taken from the real format |
 | 2 | Sources at native quality go into the project, never into `/tmp`: the files of one dataset in `<package>/datasets/<dataset_id>/`, files several datasets share in `<package>/samples/`. Cases point at them with `{$media: "application/pdf", file: "<file>"}` or `file: "@root/samples/<file>"`; old `blob_id` cases become files with `uv run aqven datasets materialize <package> [<dataset_id>…]`. People in images, audio or video, customer documents, personal rows: ask the owner, then a `.gitignore` line on `datasets/<dataset_id>/` or Git LFS | derived files rebuild from the sources with one script; `aqven_check` clean |
 | 3 | Orientation before any crop. In production, bytes are read and written only in a `tool` node (`ctx.blobs`); a `code` node sees only `media_type`, `blob_id` and `size_bytes`, while `Text` and table rows are plain values it can split | every image and page render is upright on the contact sheet |
-| 4 | Provider limits. Fine image detail: several native-resolution crops in one `Image[]` input. Long audio or video: segments within the model's duration and size limits. Long text: chunks by structure, a `map` over the chunks, then a merge; never rely on silent truncation. Tables: the rows the question needs; a row is often the unit of a case. Look the numbers up in the provider's current docs every time | no image is downscaled by the provider more than twice (`--provider-edge` shows the factor); no segment or chunk is over the limit |
+| 4 | Provider limits, from the provider's current docs every time. When an input exceeds them or loses what the task needs, the options depend on where the answer lives: a downscale or trim when only general content matters; native-resolution crops as `Image[]` for small detail; segments within the duration and size limits; for long text a model whose context holds it, sections selected before the call, or chunks by structure in a `map` with a merge (never silent truncation); for tables the needed rows, or a row as the case. Offer the options that fit; when several do, compare them (`use` on the preparation node, or `flow` on a `call` slot) | no piece exceeds a limit silently (`--provider-edge` shows the factor); the chosen option and its reason written down |
 | 5 | Cut at boundaries you can check (the table below), not by eye or at fixed offsets. Every piece carries the context the prompt compares against (the definitions a clause refers to, the header row, the speaker names). Try a library with `uv run --with <package>==<version>` before asking the owner to add it | no cut splits a word, sentence, row or event, or leaves out the comparison area |
 | 6 | Synthetic input: build the property first, then check it. The base at level zero does not have it; the change is what the prompt's definition says, where it says; a graded series has even steps; edits leave no trace the model could use | the synthetic items are inspected before any run |
 | 7 | Inspect every derived and synthetic item as the table below says; accept or reject each | a decision per item is written down |
 | 8 | Native input against a text stage (OCR, speech-to-text, frame captions): decide by an experiment (`designing-experiments`). The text stage is a `tool` node (`building-flows`), and its errors are part of what you measure | the choice rests on a series |
-| 9 | An empty list of crops, segments or chunks fails the step or is flagged in the output | a run without them cannot pass as a success |
+| 9 | An empty list of crops, segments or chunks fails the step or is flagged in the output; across a series, count empty lists with `series_outputs` `{series_id, split: "dev", fields: ["<preparation node id>"]}` (top-level nodes only) | a run without them cannot pass as a success |
 | 10 | Before a run `uv run aqven prompt preview <flow>.<node>`, after it `run_get_node` of the llm node: number, kind and size of the attachments; for text, the length of the prompt as sent | it matches the production path |
 
 | Kind | Inspect (step 1) | Cut at (step 5) | Look at (step 7) | Synthetic input (step 6) |
@@ -73,14 +73,14 @@ A pitfall is a general rule; the illustration after it is one instance.
 
 | What goes wrong | Do instead |
 |---|---|
-| A detail too small after the provider's resize: a 4000 px invoice scan sent as one image came out with unreadable line items | native-resolution crops of the regions as `Image[]` |
-| A long document sent whole: from a 300-page PDF the model answered out of the first part only | chunks by section, a `map`, a merge; the length checked in step 1 |
+| A detail too small after the provider's resize: a 4000 px invoice scan sent as one image came out with unreadable line items | the regions the question needs at native resolution (crops as `Image[]`, or a model whose edge keeps them), checked with `--provider-edge` |
+| A long document sent whole: from a 300-page PDF the model answered out of the first part only | the length checked in step 1 against the context window, then one of step 4's long-text options chosen with the owner |
 | A cut left out the context the prompt compares against: a clause chunk lost the definitions it refers to | every piece carries its comparison context |
 | Pre-shrunk sources made the crop step find nothing, and the run passed with an empty crop list | never pre-shrink; an empty list fails |
 | The experiment measured a stand-in: a clean transcript where production sends noisy call audio | the experiment's flow reproduces the production path |
 | Segments cut at fixed 30 s marks split a sentence of a meeting across two segments | cut at silences or speaker turns, listed in a table |
 | A stereo call with one speaker per channel mixed down to mono, so speaker attribution failed | keep the channels, or separate the speakers first |
-| A provider sampled a clip at one frame per second and missed a half-second event | a clip around the moment |
+| A provider sampled a clip at one frame per second and missed a half-second event | a clip around the moment, or a model or setting that samples densely enough, checked on the frames sent |
 | Orientation applied nowhere: phone photos of receipts reached the model sideways | orientation first, checked on the sheet |
 | A CSV with decimal commas read as text, so every amount compared as a string | types checked in step 1 |
 | A synthetic input without its label's property: a "blurry receipt" was darker overall, the text stayed sharp, and the model that said "sharp" was right | the change is the labelled property, where the prompt looks; check it before the run |
@@ -94,7 +94,7 @@ A pitfall is a general rule; the illustration after it is one instance.
 - Bash: `sips` on macOS or Pillow for images; `ffprobe`, `ffmpeg` and `pdftoppm` where installed; the two
   scripts above.
 - `uv run aqven prompt preview <flow>.<node>`: the attachments of a call before any run.
-- `aqven` MCP `run_start` (`mode: "live"`), `run_get_node`.
+- `aqven` MCP `run_start` (`mode: "live"`), `run_get_node`, `series_outputs` (a node's output across a series).
 - `uv run aqven datasets materialize <package> [<dataset_id>…]`: old `blob_id` cases into files.
 - `file:` references in cases and case building: `building-datasets`.
 

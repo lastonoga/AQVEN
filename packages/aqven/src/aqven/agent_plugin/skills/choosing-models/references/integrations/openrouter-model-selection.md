@@ -36,7 +36,8 @@ each model can read or produce.
      | sort -t$'\t' -k2 -g
    ```
 
-   Pick at least five candidates from at least three model families, so a result does not rest on one family.
+   Pick enough candidates to span the prices and capabilities you can accept, from several model families where
+   the catalogue has them, so a result does not rest on one family.
 
    | Field of a model | What it tells you |
    | --- | --- |
@@ -95,9 +96,9 @@ each model can read or produce.
    the model's `supported_efforts`, down to `"minimal"` or `"none"` where it lists them), `max_tokens` for a
    budget instead, or `enabled: false`. Reasoning spends the answer's `max_tokens` too; see
    [when a reasoning model runs out of room](../concepts/what-happens-when-a-model-is-called.md#when-a-reasoning-model-runs-out-of-room).
-   A model whose `reasoning.mandatory` is `true` cannot switch reasoning off: give it its lowest effort. For
-   reading, extraction and classification, start with reasoning off or at its lowest effort, and measure before
-   raising it.
+   A model whose `reasoning.mandatory` is `true` cannot switch reasoning off: its lowest effort is the floor.
+   Choose the starting level from the latency and cost the flow must meet, then measure it like a model choice:
+   agents that differ only in reasoning, compared on your labelled cases.
 
    Keep these keys in the agent, not in `aqven.yaml`. When the OpenRouter provider in `aqven.yaml` declares
    `routing` (`data_collection`, `zdr`), AQVEN sends it as the `provider` object of every request, and it replaces
@@ -126,9 +127,11 @@ each model can read or produce.
    finds the model's structural limits (billed as well). Neither probe sends your node's schema, media or
    settings ([what `--live` leaves out](../engine/check-providers.md)). Whether a model reads the input kind your
    flow sends, and answers in your node's output type, is proven by one real run on a case of that kind: an
-   image, a PDF, a recording, a clip or a long document. A provider that refuses the attachment fails the step
-   with `MODEL_FEATURE_UNSUPPORTED`. Then compare the candidates on your own labelled cases with an experiment
-   that changes the agent.
+   image, a PDF, a recording, a clip or a long document. `run_start` with `agent_overrides` puts the candidate's
+   agent on the flow's node for that run only, with no edit to the flow
+   ([starting a run](../mcp-cli/runs.md)). A provider that refuses the attachment fails the step with
+   `MODEL_FEATURE_UNSUPPORTED`. One run proves one case: compare the candidates on your own labelled cases with
+   an experiment that changes the agent.
 
 ### Example
 

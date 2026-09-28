@@ -120,7 +120,7 @@ plus the 0.01 margin.
   with AQVEN, and the signature every custom one shares.
 - How to write an experiment: the other kinds of checks, and the question a
   check's metric answers.
-- How to run experiments and series as an agent: where an
+- [How to run experiments and series as an agent](../mcp-cli/experiments-and-series.md): where an
   experiment's checks are scored, attempt by attempt.
 - How to follow and read a series in Studio: the matrix where a check's pass rate
   shows up with its interval.

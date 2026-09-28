@@ -151,8 +151,8 @@ output:
 Keep `out` flat and keep the field count small. A deeply nested output object, or a large number of
 fields, makes it harder for a model to fill in every value correctly — values land at the wrong level, or
 whole nested objects get skipped. Prefer a flatter shape with a few well-named fields over one that
-mirrors an internal data model; if a result genuinely needs real nesting or many fields, that's often a
-sign it should be two inferences instead of one.
+mirrors an internal data model. If a result genuinely needs real nesting or many fields, the options are a
+smaller type, `prompted` output, or two inferences instead of one; compare them in an experiment.
 
 When a `T[]` output field can legitimately come back empty — no matches, nothing applicable — say so in
 its `description`. Left to guess, a model asked for a list tends to invent a plausible-looking item rather
