@@ -12,11 +12,14 @@ NODE_ID_SEPARATOR: Final = "__"
 ID_SEPARATOR: Final = "."
 PYTHON_SUFFIX: Final = ".py"
 VARIANTS_FOLDER: Final = "variants"
+LIQUID_SUFFIX: Final = ".liquid"
+HIDDEN_PREFIX: Final = "."
 SKIPPED_DIRECTORIES: Final = frozenset({"__pycache__", "node_modules"})
 SOURCE_SUFFIXES: Final = frozenset({".yaml", ".yml", PYTHON_SUFFIX})
 AQVEN_HEADER: Final = re.compile(rb"""^apiVersion:[ \t]*["']?aqven/""", re.MULTILINE)
 DATASET_HEADER: Final = re.compile(rb"""^kind:[ \t]*["']?Dataset["']?[ \t]*\r?$""", re.MULTILINE)
 YAML_SUFFIXES: Final = frozenset({".yaml", ".yml"})
+SPEC_SUFFIXES: Final = YAML_SUFFIXES | {TEXT_SUFFIX, LIQUID_SUFFIX, PYTHON_SUFFIX}
 
 ROLE_KINDS: Final[Mapping[str, SpecKind]] = {"node": SpecKind.NODE, "inference": SpecKind.INFERENCE}
 BUILDER_ROLES: Final[Mapping[str, SpecKind]] = {"inference": SpecKind.INFERENCE}
@@ -36,6 +39,14 @@ CODE_FUNCTION_SEPARATOR: Final = ":"
 INFERENCE_TEXT_KEY: Final = re.compile(
     r"^(prompt|partials/[a-z][a-z0-9_]{0,62}|variants/[a-z][a-z0-9_]{0,62}/[a-z][a-z0-9_]{0,62})$"
 )
+
+
+def is_spec_path(path: str) -> bool:
+    return posixpath.splitext(path)[1] in SPEC_SUFFIXES
+
+
+def skipped_part(name: str) -> bool:
+    return name.startswith(HIDDEN_PREFIX) or name in SKIPPED_DIRECTORIES
 
 
 def expected_kind(path: str) -> SpecKind | None:
@@ -149,7 +160,7 @@ def text_key(stem: str, file: str) -> str | None:
 
 
 def include_candidates(folders: Sequence[str], name: str) -> tuple[str, ...]:
-    file = name if name.endswith((TEXT_SUFFIX, ".liquid")) else f"{name}{TEXT_SUFFIX}"
+    file = name if name.endswith((TEXT_SUFFIX, LIQUID_SUFFIX)) else f"{name}{TEXT_SUFFIX}"
     bases = ("",) if file.startswith(ROOT_PATH_PREFIX) else (*folders, "")
     paths = (posixpath.normpath(posixpath.join(folder, file.removeprefix(ROOT_PATH_PREFIX))) for folder in bases)
     return tuple(dict.fromkeys(path for path in paths if not path.startswith(("..", "/"))))

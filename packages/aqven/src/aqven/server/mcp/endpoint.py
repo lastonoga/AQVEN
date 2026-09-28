@@ -22,6 +22,7 @@ from aqven.server.mcp.project_source import LoaderProjectSource, ProjectSource
 from aqven.server.mcp.pyright_tool import PyrightTool
 from aqven.server.mcp.pytest_tool import PytestTool
 from aqven.server.mcp.run_tools import RunTools
+from aqven.server.mcp.series_read_tools import SeriesReadTools
 from aqven.server.mcp.series_tools import SeriesTools
 from aqven.server.security import AccessPolicy, guard_request, reject
 from aqven.server.views.runs import RunStartService
@@ -41,7 +42,11 @@ INSTRUCTIONS: Final = (
     "and models. A person reads the first traces and agrees the failure modes; you line the traces up and group the "
     "notes. Write experiments/<id>/experiment.yaml with its question and margin before any data; it varies one "
     "factor (varies: agent, prompt, use or flow on named nodes) and each variant sets only its values. Run "
-    "aqven_check, then series_start and series_get with wait_seconds. Explore on dev as often as needed, one change "
+    "aqven_check, then series_start and series_get with wait_seconds. Read a series with series_get view=summary "
+    "first and its outputs in bulk with series_outputs (aqven series export in a terminal), never one run_get per "
+    "attempt and never the .aqven databases; series_list gives the history and the totals. To re-check a fixed agent "
+    "on the cases that failed, run_start with dataset_item_id and agent_overrides, not a series. "
+    "Explore on dev as often as needed, one change "
     "between series: it gives a signal, never a finding. Confirm once on holdout: the verdict is written to "
     "FINDINGS.md and experiments/<id>/findings. Quote verdict.text as it is; inconclusive means fresh held-out cases, "
     "not a rerun. A running series pauses at 90% of its spend cap and waits for the person to continue or stop it "
@@ -67,6 +72,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
     runs = RunTools(ports.engine, ports.starting).operations() if ports.engine is not None else ()
     patch = PatchTools(ports.patch_flow).operations() if ports.patch_flow is not None else ()
     series = SeriesTools(ports.series).operations() if ports.series is not None else ()
+    series_reads = SeriesReadTools(ports.series).operations() if ports.series is not None else ()
     return (
         *PreviewTools(source).operations(),
         *AqvenCheckTool(settings).operations(),
@@ -75,6 +81,7 @@ def build_catalog(ports: McpPorts) -> tuple[ToolRegistration, ...]:
         *runs,
         *patch,
         *series,
+        *series_reads,
     )
 
 

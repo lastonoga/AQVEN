@@ -67,6 +67,7 @@ class RunListQuery(RequestModel):
     mode: RunMode | None = None
     assignee: str | None = None
     parent_run_id: RunId | None = None
+    series_id: str | None = None
     deadline_before: AwareDatetime | None = None
     overdue: bool | None = None
     since: AwareDatetime | None = None

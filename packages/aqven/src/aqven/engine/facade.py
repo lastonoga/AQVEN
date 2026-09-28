@@ -8,6 +8,7 @@ from typing import Final, Literal, Protocol
 from dbos import DBOS, WorkflowHandleAsync, WorkflowStatus
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
+from aqven.engine.agent_overrides import with_agent_overrides
 from aqven.engine.allowed_set_view import allowed_set_views
 from aqven.engine.errors import CodeLoadError
 from aqven.engine.forking import locate_fork, new_run_id, perform_fork
@@ -53,6 +54,11 @@ UI_RUNS_PATH: Final = "/runs/"
 INPUT_PATH: Final = "input"
 CONTEXT_PATH: Final = "context"
 CONTEXT_PROBLEM: Final = "CONTEXT_KEY_MISSING"
+FORK_EDITS_UNSUPPORTED: Final = (
+    "the DBOS engine does not support a fork with edits or on the working copy; to re-check a changed agent, "
+    "start a new run from the working copy with the case input or dataset_item_id and "
+    "agent_overrides {node_id: agent_id}"
+)
 
 
 class PlanSource(Protocol):
@@ -215,6 +221,7 @@ class RunRecordView:
             order=started.order if started is not None else (),
             executions=self.fold.executions_view(),
             human_answers=self.fold.answer_statuses(answers),
+            agent_overrides=self.call.spec.agent_overrides,
             last_seq=len(self.events),
         )
 
@@ -260,6 +267,7 @@ class DbosEngineFacade:
             end_node=request.end_node,
             node_outputs=request.node_outputs,
             human_answers=request.human_answers or (),
+            agent_overrides=request.agent_overrides,
         )
         return await self.launch(plan, spec, flow_input, NO_OVERRIDES)
 
@@ -268,16 +276,17 @@ class DbosEngineFacade:
     ) -> RunStarted:
         if spec.flow_id not in plan.flows:
             raise EngineError("NOT_FOUND", f"flow {spec.flow_id} is not in the plan")
-        require_context(plan.flow(spec.flow_id), spec)
-        ir_hash = self.runtime.plans.register(plan)
+        answered = with_agent_overrides(plan, spec.flow_id, spec.agent_overrides)
+        require_context(answered.flow(spec.flow_id), spec)
+        ir_hash = self.runtime.plans.register(answered)
         run_id = RunId(str(uuid.uuid7()))
         self.runtime.services.overrides.register(run_id, overrides)
-        await self.runtime.services.prices.warm(launch_models(plan, spec))
+        await self.runtime.services.prices.warm(launch_models(answered, spec))
         await start_run_workflow(run_id, ir_hash, flow_input, spec)
         return RunStarted(
             run_id=run_id,
             status="running",
-            content_hash=flow_hash(plan, spec.flow_id),
+            content_hash=flow_hash(answered, spec.flow_id),
             spec_version_id=ir_hash,
             last_seq=0,
             ui_url=f"{UI_RUNS_PATH}{run_id}",
@@ -417,9 +426,7 @@ class DbosEngineFacade:
     async def fork(self, run_id: RunId, request: ForkRequest) -> RunForked:
         await self._status(run_id)
         if request.overrides is not None or request.at != "original":
-            raise EngineError(
-                "NOT_RUNNABLE", "the DBOS engine does not support a fork with edits or on the working copy"
-            )
+            raise EngineError("NOT_RUNNABLE", FORK_EDITS_UNSUPPORTED)
         point = await locate_fork(run_id, request.from_)
         if point is None:
             raise EngineError("NOT_FOUND", f"node {request.from_.model_dump_json()} did not execute in run {run_id}")

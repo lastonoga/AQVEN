@@ -51,7 +51,7 @@ async def test_run_list_returns_page(tmp_path: Path) -> None:
     async with mcp_client(shop_copy(tmp_path), engine=FakeEngine()) as client:
         result = await call(client, "run_list", {"status": "suspended", "limit": 5})
     page = structured(result)
-    assert page == {"items": [], "next_cursor": None, "total_estimate": 0}
+    assert page == {"items": [], "next_cursor": None, "total_estimate": 0, "hidden_experiment_runs": 0}
 
 
 @pytest.mark.asyncio

@@ -1,18 +1,23 @@
+import os
+import posixpath
 import shutil
 import tempfile
 import threading
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, Protocol
 
 from aqven.check import check_project
 from aqven.codegen import GENERATED_TYPES, generate_types
+from aqven.datasets.media_refs import referenced_media_paths
 from aqven.diagnostics import Diagnostic, DiagnosticCode, Severity
-from aqven.loader import file_hash, project_files
+from aqven.loader import file_hash, is_spec_path, project_files
 from aqven.write.paths import disk_tree, tree_hash
 
 SHADOW_PREFIX: Final = "aqven-write-"
+SHADOW_PLACERS: Final[Mapping[bool, Callable[[str, str], object]]] = {True: shutil.copyfile, False: os.symlink}
 
 ADVISORY_CODES: Final = frozenset(
     {
@@ -94,25 +99,48 @@ def _shadow_check(root: Path, changes: Mapping[str, bytes | None]) -> _Checked:
         shadow = Path(folder) / root.name
         _copy_tree(root, shadow)
         _apply(shadow, changes)
-        generate_types(shadow)
+        loaded = generate_types(shadow)
+        _pin_media(shadow, referenced_media_paths(loaded.project))
         report = check_project(shadow)
         generated = shadow / GENERATED_TYPES
         return _Checked(report.diagnostics, generated.read_bytes() if generated.is_file() else None)
 
 
 def _copy_tree(root: Path, shadow: Path) -> None:
-    for relative in project_files(root):
-        target = shadow / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(root / relative, target)
-    shadow.mkdir(parents=True, exist_ok=True)
+    files = project_files(root)
+    for folder in sorted({posixpath.dirname(relative) for relative in files}):
+        (shadow / folder).mkdir(parents=True, exist_ok=True)
+    source, target = os.fspath(root), os.fspath(shadow)
+    for relative in files:
+        SHADOW_PLACERS[is_spec_path(relative)](os.path.join(source, relative), os.path.join(target, relative))
+
+
+def _pin_media(shadow: Path, paths: frozenset[str]) -> None:
+    for relative in paths:
+        _pin(shadow / relative)
+
+
+def _pin(target: Path) -> None:
+    if not target.is_symlink():
+        return
+    source = target.readlink()
+    target.unlink()
+    with suppress(FileNotFoundError):
+        _hard_link(source, target)
+
+
+def _hard_link(source: Path, target: Path) -> None:
+    try:
+        os.link(source, target)
+    except OSError:
+        shutil.copyfile(source, target)
 
 
 def _apply(shadow: Path, changes: Mapping[str, bytes | None]) -> None:
     for relative, data in changes.items():
         target = shadow / relative
+        target.unlink(missing_ok=True)
         if data is None:
-            target.unlink(missing_ok=True)
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)

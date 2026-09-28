@@ -15,7 +15,15 @@ from aqven.server.context import ServerContext, rest_only
 from aqven.server.errors import ERROR_RESPONSES, not_found
 from aqven.server.resources import FileDetail, FileEntry, FileKind, ProjectInfo, SyncState
 from aqven.server.views.common import page_of
-from aqven.server.views.files import file_detail, file_entries, project_info
+from aqven.server.views.files import (
+    FileQuery,
+    file_detail,
+    file_entries,
+    listed_file,
+    listed_files,
+    project_info,
+    stat_path,
+)
 from aqven.server.views.research_budget import ResearchBudgetView, ResearchBudgetWrite, budget_view, write_research
 from aqven.server.workspace import WorkspaceState
 
@@ -83,19 +91,19 @@ def build_project_router(context: ServerContext) -> APIRouter:
         limit: Annotated[int, Query(ge=1, le=MAX_PAGE_LIMIT)] = DEFAULT_PAGE_LIMIT,
     ) -> Page[FileEntry]:
         state = await context.workspace.state()
-        rows = [
-            entry
-            for entry in file_entries(state)
-            if (prefix is None or entry.path.startswith(prefix))
-            and (kind is None or entry.kind == kind)
-            and (state_filter is None or entry.sync_state == state_filter)
-        ]
-        return page_of(rows, lambda entry: entry.path, cursor, limit)
+        page = page_of(listed_files(state, FileQuery(prefix, kind, state_filter)), stat_path, cursor, limit)
+        digests = await context.workspace.file_hashes(page.items)
+        entries = file_entries(state, page.items, digests)
+        return Page[FileEntry](items=entries, next_cursor=page.next_cursor, total_estimate=page.total_estimate)
 
     @router.get("/files/{path:path}", operation_id="file_get", openapi_extra=rest_only("agents read files natively"))
     async def get_file(path: str) -> FileDetail:
         state = await context.workspace.state()
-        return file_detail(state, path)
+        stat = listed_file(state, path)
+        digest = await context.workspace.file_hash(stat)
+        if digest is None:
+            raise not_found(f"file {path} is not in the project")
+        return file_detail(state, stat, digest)
 
     @router.get(
         "/raw/{path:path}",

@@ -72,9 +72,9 @@ __all__ = [
 ]
 
 TARGET_SEPARATOR: Final = ":"
-CONTEXT_SEPARATOR: Final = "="
+PAIR_SEPARATOR: Final = "="
 CURRENT_FOLDER: Final = "."
-CONTEXT_TEXTS: Final[TypeAdapter[tuple[str, ...]]] = TypeAdapter(tuple[str, ...])
+PAIR_TEXTS: Final[TypeAdapter[tuple[str, ...]]] = TypeAdapter(tuple[str, ...])
 
 
 type ServeModeName = Literal["studio", "serve"]
@@ -237,9 +237,17 @@ class RunCommand:
             "--context",
             action="append",
             default=[],
-            type=_context_text,
+            type=_pair_text,
             metavar="KEY=VALUE",
             help="run context entry; repeatable; keys: date, time_zone, locale, tenant_id",
+        )
+        parser.add_argument(
+            "--agent",
+            action="append",
+            default=[],
+            type=_pair_text,
+            metavar="NODE=AGENT",
+            help="answer an llm node of the flow with another project agent for this run only; repeatable",
         )
         parser.add_argument("--cassettes", type=Path, default=None, metavar="DIR")
         parser.add_argument(
@@ -271,7 +279,8 @@ class RunCommand:
             root=root,
             flow_id=str(arguments.flow),
             input_file=Path(str(arguments.input)),
-            context=_context_entries(arguments.context),
+            context=_pair_entries(arguments.context),
+            agents=_pair_entries(arguments.agent),
             answers_file=_optional_path(arguments.human_answers),
             cassettes=_optional_path(arguments.cassettes),
             cassette_mode=CassetteMode(str(arguments.cassette_mode)),
@@ -380,20 +389,20 @@ def run() -> NoReturn:
     sys.exit(main())
 
 
-def _context_text(text: str) -> str:
-    name, separator, _ = text.partition(CONTEXT_SEPARATOR)
+def _pair_text(text: str) -> str:
+    name, separator, _ = text.partition(PAIR_SEPARATOR)
     if not separator or not name:
-        raise argparse.ArgumentTypeError(f"expected KEY{CONTEXT_SEPARATOR}VALUE, got {text}")
+        raise argparse.ArgumentTypeError(f"expected KEY{PAIR_SEPARATOR}VALUE, got {text}")
     return text
 
 
-def _context_entries(value: object) -> tuple[tuple[str, str], ...]:
-    texts = CONTEXT_TEXTS.validate_python(value)
-    return tuple(_context_entry(text) for text in texts)
+def _pair_entries(value: object) -> tuple[tuple[str, str], ...]:
+    texts = PAIR_TEXTS.validate_python(value)
+    return tuple(_pair_entry(text) for text in texts)
 
 
-def _context_entry(text: str) -> tuple[str, str]:
-    name, _, value = text.partition(CONTEXT_SEPARATOR)
+def _pair_entry(text: str) -> tuple[str, str]:
+    name, _, value = text.partition(PAIR_SEPARATOR)
     return name, value
 
 

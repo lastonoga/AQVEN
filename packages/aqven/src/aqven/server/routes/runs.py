@@ -26,6 +26,7 @@ from aqven.runtime.runs import (
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.context import ServerContext, operation, rest_only
 from aqven.server.errors import ERROR_RESPONSES
+from aqven.server.views.run_list import RunListPage, RunListService
 from aqven.server.views.runs import run_start_service
 
 ACCEPTED: Final = 202
@@ -74,14 +75,15 @@ def build_runs_router(context: ServerContext) -> APIRouter:
     existing_run = run_guard(facade)
 
     starting = run_start_service(context)
+    listing = RunListService(facade)
 
     @router.post("/runs", status_code=201, operation_id="run_start", openapi_extra=operation("run_start"))
     async def start_run(request: RunStartRequest) -> RunStarted:
         return await starting.start(request)
 
     @router.get("/runs", operation_id="run_list", openapi_extra=operation("run_list"))
-    async def list_runs(query: Annotated[RunListQuery, Query()]) -> Page[RunSummary]:
-        return await facade.list_runs(query)
+    async def list_runs(query: Annotated[RunListQuery, Query()]) -> RunListPage[RunSummary]:
+        return await listing.page(query)
 
     @router.get("/runs/{run_id}", operation_id="run_get", openapi_extra=operation("run_get"))
     async def get_run(run_id: str) -> RunSnapshot:

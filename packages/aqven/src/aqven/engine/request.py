@@ -11,7 +11,7 @@ from aqven.runtime.options import CassetteConfig, ModelProfile, RunContext, RunO
 from aqven.runtime.overrides import NodeOutputOverride
 from aqven.runtime.replay import McpToolStub, ProviderFault
 from aqven.runtime.vocabulary import RunMode, TerminalRunStatus
-from aqven.spec import ExperimentId, FlowId, Limits, NodeId
+from aqven.spec import AgentId, ExperimentId, FlowId, Limits, NodeId
 
 RECORD_CONFIG: Final = ConfigDict(extra="forbid", frozen=True)
 LEGACY_ARM_KEY: Final = "arm_id"
@@ -61,6 +61,7 @@ class RunSpec(BaseModel):
     limits: Limits | None = None
     models: ModelProfile | None = None
     outputs: tuple[NodeOutputOverride, ...] = ()
+    agent_overrides: dict[NodeId, AgentId] = Field(default_factory=dict[NodeId, AgentId])
     series: SeriesTag | None = None
     output_deltas: bool = True
 
@@ -82,6 +83,7 @@ def run_spec_of(flow_id: FlowId, options: RunOptions) -> RunSpec:
         limits=options.limits,
         models=options.models,
         outputs=options.outputs,
+        agent_overrides=dict(options.agent_overrides),
     )
 
 

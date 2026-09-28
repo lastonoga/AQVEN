@@ -7,7 +7,10 @@ description: Read a series in order — its status, the verdict sentence and its
 
 A series has finished, or is still running, and you have to decide what to do next. The same series
 reads the same way in Studio, in `{{CLI_COMMAND}} series` and in `series_get`. Read it top to bottom: the
-status, then the verdict, then the numbers behind it, then the cases.
+status, then the verdict, then the numbers behind it, then the cases. An agent reads the summary first:
+`series_get` with `view: "summary"` gives, per variant, the counts of each outcome, the spend, the latency,
+the primary metric with its interval and the three biggest failure groups, in a few KB for any number of
+attempts.
 
 ## Steps
 
@@ -81,8 +84,10 @@ status, then the verdict, then the numbers behind it, then the cases.
   the first node that failed. Filter to the failures, or to the cases where the variants disagree
   (`divergent` in a case row). In a comparison, open the cases the candidate won and the ones it lost
   against the current configuration, with their inputs, before you report the result. An agent sees
-  working cases only: `series_get` with `include_cases: true` returns up to 50 of them, failing first, and
-  counts the rest in `hidden_cases`. Held-out cases are never shown one by one.
+  working cases only: `series_get` with `include_cases: true` returns them a page at a time, failing first,
+  50 by default, and counts the rest in `hidden_cases`. Held-out cases are never shown one by one. To read
+  the outputs themselves, page through `series_outputs`, or run `{{CLI_COMMAND}} series export <series_id>`
+  for JSON lines or CSV, rather than opening every run.
 - **Tell a failure from an infrastructure error.** A failed attempt counts: a check failed, or the model's
   output broke its type even after the retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`), or
   the provider refused the output type as too complex for the model (`OUTPUT_SCHEMA_REJECTED`), or the

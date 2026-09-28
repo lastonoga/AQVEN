@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from aqven.app.locations import ProjectState
@@ -8,7 +8,8 @@ from aqven.runtime.address import RunId
 from aqven.runtime.human import OpenWaitFilter
 from aqven.series.feed import SILENT_FEED, ResearchFeed
 from aqven.series.observed import ObservedSeriesStore
-from aqven.series.ports import FindingsSink, OpenWaits, SeriesAnalyst, SeriesStore
+from aqven.series.outputs import EventLogOutputs
+from aqven.series.ports import FindingsSink, OpenWaits, RunOutputs, SeriesAnalyst, SeriesLedger, SeriesStore
 from aqven.series.split import SplitAssigner, WorkspacePackage
 from aqven.series.store import SqliteSeriesStore
 from aqven.server.workspace import ProjectWorkspace
@@ -25,7 +26,9 @@ class SeriesServices:
     findings: FindingsSink
     waits: OpenWaits
     engine_version: str
+    ledger: SeriesLedger
     feed: ResearchFeed = SILENT_FEED
+    outputs: RunOutputs = field(default_factory=EventLogOutputs)
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,15 +49,17 @@ def build_series_services(
     engine_version: str,
     feed: ResearchFeed = SILENT_FEED,
 ) -> SeriesServices:
+    store = SqliteSeriesStore.open(ProjectState(root).database)
     return SeriesServices(
         root=root,
         workspace=workspace,
         settings=settings,
-        store=ObservedSeriesStore(SqliteSeriesStore.open(ProjectState(root).database), feed),
+        store=ObservedSeriesStore(store, feed),
         splits=SplitAssigner(WorkspacePackage(workspace)),
         analyst=analyst,
         findings=findings,
         waits=RuntimeWaits(),
         engine_version=engine_version,
+        ledger=store,
         feed=feed,
     )

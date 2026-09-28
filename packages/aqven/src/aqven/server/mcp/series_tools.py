@@ -1,7 +1,9 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Final
 
 from aqven.series.ports import SeriesJobs
+from aqven.series.read_views import SeriesBriefResult, SeriesReading, reading_of
 from aqven.series.views import (
     SeriesCancelRequest,
     SeriesGetRequest,
@@ -9,6 +11,7 @@ from aqven.series.views import (
     SeriesStarted,
     SeriesStartRequest,
     SeriesSummaryView,
+    SeriesView,
 )
 from aqven.server.mcp.catalog import Operation, ToolHints, ToolRegistration
 from aqven.write.model import WriteActor
@@ -34,7 +37,13 @@ SERIES_GET_DESCRIPTION: Final = (
     "last 5 minutes of running time: state estimating until 3 attempts finished after the first one, running "
     "with attempts_per_minute, remaining_seconds and finish_at, paused while it awaits approval or a human; "
     "eta is null once the series ends. "
-    "include_cases adds per-case rows for dev cases only. Quote the verdict text as it is."
+    "view summary answers in a few KB whatever the number of attempts: per variant finished, passed, failed, "
+    "errors and running attempts, spend, p50 and p95 latency, the primary metric with its 95% CI and the top 3 "
+    "failure groups by error code or failed check with one example message; read it first, then the full view "
+    "or series_outputs only for the variants that need it. fields keeps only the named metrics and checks in the "
+    "matrix, aggregates, thresholds, contrasts and summary metrics. "
+    "include_cases adds per-case rows for dev cases only, failing first, case_limit per page (50 by default, up "
+    "to 200); pass next_cursor as cursor for the next page. Quote the verdict text as it is."
 )
 SERIES_CANCEL_DESCRIPTION: Final = (
     "Stops a series: queued attempts never start, model calls already running finish and are paid; no finding is "
@@ -49,8 +58,13 @@ class SeriesTools:
     async def start(self, request: SeriesStartRequest) -> SeriesStarted:
         return await self.jobs.start(request, MCP_ACTOR)
 
-    async def get(self, request: SeriesGetRequest) -> SeriesGetResult:
-        return await self.jobs.get(request)
+    async def get(self, request: SeriesGetRequest) -> SeriesReading:
+        return reading_of(await self._views()[request.view](request))
+
+    def _views(
+        self,
+    ) -> Mapping[SeriesView, Callable[[SeriesGetRequest], Awaitable[SeriesGetResult | SeriesBriefResult]]]:
+        return {"full": self.jobs.get, "summary": self.jobs.brief}
 
     async def cancel(self, request: SeriesCancelRequest) -> SeriesSummaryView:
         return await self.jobs.cancel(request)
@@ -70,7 +84,7 @@ class SeriesTools:
                 name="series_get",
                 description=SERIES_GET_DESCRIPTION,
                 input_model=SeriesGetRequest,
-                output_model=SeriesGetResult,
+                output_model=SeriesReading,
                 surface="rest_and_mcp",
                 hints=ToolHints(title="Series", read_only=True, open_world=True),
                 use_case=self.get,

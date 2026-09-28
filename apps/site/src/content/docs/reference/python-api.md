@@ -20,13 +20,14 @@ The names below come from `aqven.__all__`. Import them from `aqven`. Signatures 
 - `async def aclose(self) -> 'None'`
 - `async def start_run(self, request: 'RunStartRequest') -> 'RunStarted'`
 - `async def get_run(self, run_id: 'RunId') -> 'RunSnapshot'`
-- `async def list_runs(self, *, flow_id: 'str | None' = None, status: 'RunStatus | None' = None, assignee: 'str | None' = None, deadline_before: 'datetime | None' = None, overdue: 'bool | None' = None, since: 'datetime | None' = None, until: 'datetime | None' = None, sort: 'RunSort | None' = None, cursor: 'str | None' = None, limit: 'int' = 20) -> 'Page[RunSummary]'`
+- `async def list_runs(self, *, flow_id: 'str | None' = None, status: 'RunStatus | None' = None, series_id: 'str | None' = None, assignee: 'str | None' = None, deadline_before: 'datetime | None' = None, overdue: 'bool | None' = None, since: 'datetime | None' = None, until: 'datetime | None' = None, sort: 'RunSort | None' = None, cursor: 'str | None' = None, limit: 'int' = 20) -> 'Page[RunSummary]'`
 - `async def get_execution(self, run_id: 'RunId', address: 'ExecutionAddress', *, include_payloads: 'IncludePayloads' = 'truncated') -> 'ExecutionDetail'`
 - `async def resume(self, run_id: 'RunId', request: 'ResumeRequest') -> 'ResumeResult'`
 - `async def fork(self, run_id: 'RunId', request: 'ForkRequest') -> 'RunForked'`
 - `async def cancel(self, run_id: 'RunId', reason: 'str') -> 'RunStatus'`
 - `async def series_start(self, request: 'SeriesStartRequest') -> 'SeriesStarted'`
 - `async def series_get(self, series_id: 'SeriesId', wait_seconds: 'int' = 0, include_cases: 'bool' = False) -> 'SeriesGetResult'`
+- `async def series_outputs(self, request: 'SeriesOutputsRequest') -> 'SeriesOutputsPage'`
 - `async def series_cancel(self, series_id: 'SeriesId', reason: 'str | None' = None) -> 'SeriesSummaryView'`
 - `async def upload_blob(self, data: 'bytes', media_type: 'str', name: 'str | None' = None) -> 'MediaValue'`
 - `async def download_blob(self, media: 'MediaValue') -> 'bytes'`
@@ -256,6 +257,7 @@ NewType creates simple unique types with almost zero runtime overhead.
 | `faults` | `tuple[aqven.runtime.replay.ProviderFault, ...]` | `()` |
 | `models` | `aqven.runtime.options.ModelProfile \| None` | `None` |
 | `outputs` | `tuple[aqven.runtime.overrides.NodeOutputOverride, ...]` | `()` |
+| `agent_overrides` | `collections.abc.Mapping[aqven.spec.names.NodeId, aqven.spec.names.AgentId]` | `factory` |
 
 
 ## RunResult

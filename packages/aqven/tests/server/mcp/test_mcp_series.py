@@ -29,6 +29,7 @@ async def test_series_tools_carry_the_contract_descriptions_and_hints(tmp_path: 
     assert get is not None and get.read_only_hint is True
     assert "wait_seconds" in tools["series_get"].input_schema["properties"]
     assert "series_start and series_get with wait_seconds" in INSTRUCTIONS
+    assert all(name in INSTRUCTIONS for name in ("view=summary", "series_outputs", "series_list", "agent_overrides"))
 
 
 @pytest.mark.asyncio
