@@ -27,6 +27,7 @@ from aqven.server.routes.fallback import build_fallback_router
 from aqven.server.routes.flows import build_flows_router
 from aqven.server.routes.meta import build_meta_router
 from aqven.server.routes.project import build_project_router
+from aqven.server.routes.reads import build_reads_router
 from aqven.server.routes.research import build_research_router
 from aqven.server.routes.runs import build_runs_router
 from aqven.server.routes.schemas import build_schemas_router
@@ -150,6 +151,7 @@ def core_routers(context: ServerContext) -> tuple[APIRouter, ...]:
         build_datasets_router(context),
         build_research_router(context),
         build_authoring_router(context),
+        build_reads_router(context),
     )
 
 

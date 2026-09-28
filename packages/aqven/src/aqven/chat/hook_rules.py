@@ -138,8 +138,9 @@ REST_ROUTES: Final[tuple[RestRoute, ...]] = (
     RestRoute(
         "series",
         re.compile(r"/api/series\b"),
-        "Use the aqven MCP tools series_start, series_get with wait_seconds and series_cancel, or "
-        "`uv run aqven series` in the background, instead of raw HTTP to /api/series.",
+        "Use the aqven MCP tools series_start, series_get with wait_seconds and series_cancel, series_outputs and "
+        "series_list for bulk reads, or `uv run aqven series` in the background and `uv run aqven series export` for "
+        "outputs, instead of raw HTTP to /api/series.",
     ),
     RestRoute(
         "prompt_preview",

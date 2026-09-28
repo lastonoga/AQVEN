@@ -155,7 +155,8 @@ How a series counts one attempt. Counted outcomes enter the metrics of the check
 | Exit code | When |
 | --- | --- |
 | 0 | `done` |
-| 1 | `cancelled`; `failed`; the command failed, for example the project server did not answer |
+| 1 | `cancelled`; `failed`; the command failed, for example the project server could not start |
 | 2 | the server refused the series: `INPUT_INVALID`, `NOT_FOUND`, `NOT_RUNNABLE`, `REQUEST_INVALID` |
 | 3 | `awaiting_approval` |
 | 4 | `waiting_human` |
+| 5 | the command lost contact with the project server and gave up after retrying for 300 s; a series it started keeps running on the server |

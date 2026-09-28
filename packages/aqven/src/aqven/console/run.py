@@ -38,6 +38,7 @@ from aqven.runtime import (
     RunOptions,
     ScriptedAnswer,
 )
+from aqven.spec import AgentId, NodeId
 
 EXIT_OK: Final = 0
 EXIT_FAILED: Final = 1
@@ -53,6 +54,7 @@ class FlowRunRequest:
     flow_id: str
     input_file: Path
     context: tuple[tuple[str, str], ...] = ()
+    agents: tuple[tuple[str, str], ...] = ()
     answers_file: Path | None = None
     cassettes: Path | None = None
     cassette_mode: CassetteMode = CassetteMode.REPLAY_STRICT
@@ -181,6 +183,7 @@ def run_options(request: FlowRunRequest) -> RunOptions:
         context=run_context(request.context),
         human_answers=answers,
         cassettes=cassettes,
+        agent_overrides={NodeId(node): AgentId(agent) for node, agent in request.agents},
     )
 
 

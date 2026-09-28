@@ -1,6 +1,10 @@
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Mapping, Sequence
+from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 from typing import Protocol
+
+from pydantic import JsonValue
 
 from aqven.runtime.address import RunId
 from aqven.runtime.runs import Page
@@ -13,6 +17,13 @@ from aqven.series.model import (
     SeriesChange,
     SeriesId,
     SeriesRecord,
+)
+from aqven.series.read_views import (
+    SeriesBriefResult,
+    SeriesOutputsPage,
+    SeriesOutputsRequest,
+    SeriesRowsPage,
+    SeriesRowsQuery,
 )
 from aqven.series.views import (
     LaunchRequest,
@@ -59,6 +70,37 @@ class SeriesStore(Protocol):
     ) -> tuple[AttemptRecord, ...]: ...
 
 
+@dataclass(frozen=True, slots=True)
+class RunOutputRecord:
+    output: JsonValue = None
+    nodes: Mapping[str, JsonValue] = field(default_factory=dict[str, JsonValue])
+
+
+class RunOutputs(Protocol):
+    async def outputs(self, run_id: RunId) -> RunOutputRecord: ...
+
+
+@dataclass(frozen=True, slots=True)
+class SeriesTally:
+    done: int = 0
+    spend: Decimal = Decimal(0)
+
+
+@dataclass(frozen=True, slots=True)
+class SeriesTotals:
+    spans: tuple[tuple[datetime, datetime | None], ...]
+    attempts: int
+    judge_runs: int
+    tokens: int
+    spend: Decimal
+
+
+class SeriesLedger(Protocol):
+    async def tallies(self, series_ids: Sequence[SeriesId]) -> Mapping[SeriesId, SeriesTally]: ...
+
+    async def totals(self, experiment_id: ExperimentId | None) -> SeriesTotals: ...
+
+
 class SeriesAnalyst(Protocol):
     def analyze(self, source: AnalysisInput) -> SeriesAnalysis: ...
 
@@ -78,7 +120,13 @@ class SeriesJobs(Protocol):
 
     async def get(self, request: SeriesGetRequest) -> SeriesGetResult: ...
 
+    async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult: ...
+
+    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage: ...
+
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]: ...
+
+    async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage: ...
 
     async def cases(self, series_id: SeriesId, query: SeriesCasesQuery) -> tuple[SeriesCaseRow, ...]: ...
 

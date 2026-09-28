@@ -1,7 +1,8 @@
 import hashlib
+import os
 import posixpath
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path, PurePosixPath
 from typing import Final
@@ -16,10 +17,11 @@ from aqven.loader.layout import (
     EXPERIMENT_FILES,
     EXPERIMENT_NOTES,
     FLOW_FILES,
+    LIQUID_SUFFIX,
     LOCK_FILE,
     NODE_ID_SEPARATOR,
     PROJECT_FILE,
-    SKIPPED_DIRECTORIES,
+    PYTHON_SUFFIX,
     TEXT_SUFFIX,
     YAML_SUFFIXES,
     alternatives_folder,
@@ -34,9 +36,11 @@ from aqven.loader.layout import (
     finding_experiment_folder,
     inference_texts,
     inside,
+    is_spec_path,
     local_flow_experiment_folder,
     local_flow_folder,
     prompts_folder,
+    skipped_part,
     type_id_for,
 )
 from aqven.loader.strict_yaml import Position, YamlDocument, YamlPath, read_strict_yaml
@@ -157,6 +161,7 @@ class LoadedProject:
     broken_ids: frozenset[str] = frozenset()
     aliases: Mapping[str, Mapping[YamlPath, Alias]] = field(default_factory=dict[str, Mapping[YamlPath, Alias]])
     experiments: Mapping[ExperimentId, LoadedExperiment] = field(default_factory=dict[ExperimentId, LoadedExperiment])
+    sources: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,18 +190,44 @@ def load_project(root: Path) -> LoadResult:
     collector = _Collector(root, inference_stems, AliasScope(root.name, flow_folders), experiment_folders)
     for relative in files:
         collector.add(relative)
-    return collector.result()
+    return collector.result(files)
 
 
 def project_files(root: Path) -> tuple[str, ...]:
-    files = (path for path in root.rglob("*") if path.is_file())
-    relative = (path.relative_to(root) for path in files)
-    kept = (path for path in relative if not any(_skipped(part) for part in path.parts))
-    return tuple(sorted(path.as_posix() for path in kept))
+    return tuple(sorted(_walk(root, "")))
+
+
+def _walk(folder: str | Path, prefix: str) -> Iterator[str]:
+    try:
+        with os.scandir(folder) as listing:
+            entries = [entry for entry in listing if not skipped_part(entry.name)]
+    except OSError:
+        return
+    for entry in entries:
+        relative = f"{prefix}{entry.name}"
+        if _is_folder(entry):
+            yield from _walk(entry.path, f"{relative}/")
+            continue
+        if _is_listed_file(entry):
+            yield relative
+
+
+def _is_folder(entry: os.DirEntry[str]) -> bool:
+    try:
+        return entry.is_dir(follow_symlinks=False)
+    except OSError:
+        return False
+
+
+def _is_listed_file(entry: os.DirEntry[str]) -> bool:
+    try:
+        return entry.is_file()
+    except OSError:
+        return False
 
 
 def spec_files(root: Path) -> tuple[str, ...]:
-    files = project_files(root)
+    files = tuple(path for path in project_files(root) if is_spec_path(path))
     media = dataset_media_folders(root, files)
     return tuple(path for path in files if not _in_media_folder(path, media))
 
@@ -229,10 +260,6 @@ def _yaml(path: str) -> bool:
 def _declares_dataset(location: Path) -> bool:
     data = _read_listed(location)
     return data is not None and AQVEN_HEADER.search(data) is not None and DATASET_HEADER.search(data) is not None
-
-
-def _skipped(part: str) -> bool:
-    return part.startswith(".") or part in SKIPPED_DIRECTORIES
 
 
 def _named(path: str, names: frozenset[str]) -> bool:
@@ -303,7 +330,7 @@ class _Collector:
         if reader is not None:
             reader(self, relative)
 
-    def result(self) -> LoadResult:
+    def result(self, sources: tuple[str, ...]) -> LoadResult:
         owned = self._owned_nodes()
         reserved = (parts for parts in self.flows.values() if parts.name in RESERVED_ALIASES)
         self.diagnostics.extend(reserved_flow(parts.name, parts.path) for parts in reserved)
@@ -347,6 +374,7 @@ class _Collector:
             broken_ids=frozenset(self.broken),
             aliases={path: aliases for path, aliases in self.aliases.items() if aliases},
             experiments=experiments,
+            sources=sources,
         )
         return LoadResult(project, tuple(self.diagnostics))
 
@@ -645,11 +673,10 @@ type _YamlHandler = Callable[[_Collector, _File, YamlDocument, str], None]
 type _BuilderHandler = Callable[[_Collector, _File], None]
 
 FILE_READERS: Final[Mapping[str, _FileReader]] = {
-    ".yaml": _Collector.read_yaml,
-    ".yml": _Collector.read_yaml,
+    **dict.fromkeys(YAML_SUFFIXES, _Collector.read_yaml),
     TEXT_SUFFIX: _Collector.read_text,
-    ".liquid": _Collector.read_text,
-    ".py": _Collector.read_builder,
+    LIQUID_SUFFIX: _Collector.read_text,
+    PYTHON_SUFFIX: _Collector.read_builder,
 }
 
 YAML_HANDLERS: Final[Mapping[SpecKind, _YamlHandler]] = {

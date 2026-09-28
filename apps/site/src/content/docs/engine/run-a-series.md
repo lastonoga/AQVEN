@@ -86,17 +86,37 @@ or `estimating the time left` while the first attempts finish. The exit code tel
 | Exit | Meaning |
 |---|---|
 | 0 | the series is done, whatever its verdict |
-| 1 | it was cancelled or failed, or the server didn't answer |
+| 1 | it was cancelled or failed, or the project server couldn't start |
 | 2 | the request was refused: unknown experiment, a project with errors (`NOT_RUNNABLE`) or a bad size |
 | 3 | it awaits approval, before it starts or paused near its cap; the line carries a Studio link to continue it |
 | 4 | an attempt waits for a person at a `human` node |
+| 5 | it lost contact with the project server and gave up after retrying for 300 s; the series keeps running there |
+
+A slow or briefly frozen server doesn't end the command. On a network error, or a server error without an
+API error body, it prints `lost contact with the project server (ReadTimeout), retrying in 1s` and tries
+again, waiting 1, 2, 4 … up to 15 seconds between tries. Only after 5 minutes without an answer does it
+give up with exit 5, naming the error and printing the series' Studio link.
+
+To take the outputs of a series offline, export them:
+
+```bash
+{{CLI_COMMAND}} series export <series_id> --format csv --fields /label triage --out rows.csv
+```
+
+It writes one row per attempt: the case, variant, repeat, split, outcome, error code, cost, latency and
+`run_id`, then one column per `--fields` entry (a JSON pointer such as `/label` into the flow output, a node
+id such as `triage`, or `triage/summary`), and one `check:<id>` column per check. Without `--fields` the
+whole flow output goes into one `output` column as JSON. `--format jsonl` (the default) writes the same rows
+as JSON lines; `--variant`, `--outcome` and `--split` narrow them, and without `--out` they go to stdout. It
+exits with 2 when the series doesn't exist and with 5 when it loses contact with the server.
 
 ### From an agent
 
 Over MCP, `series_start` takes `experiment_id`, `on`, and optionally `cases`, `repeats`, `cap_usd` and a
 `client_op_id`. It returns at once with the launch plan and the status. `series_get` with `wait_seconds` up
-to 50 waits for the series to settle, and `series_cancel` stops it. MCP has no plan-only call: the launch
-plan is information, and `series_start` starts the series. REST has
+to 50 waits for the series to settle, and `series_cancel` stops it. `series_get` with `view: "summary"`
+reads a series of any size in a few KB, and `series_outputs` pages through what its attempts produced. MCP
+has no plan-only call: the launch plan is information, and `series_start` starts the series. REST has
 `POST /api/experiments/{id}/launch-plan` for that. See [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/).
 
 ### Example

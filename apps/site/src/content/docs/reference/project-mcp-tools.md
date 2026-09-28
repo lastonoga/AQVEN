@@ -24,6 +24,8 @@ The project MCP operations below are discovered from the AQVEN package source. E
 | `run_start` |
 | `series_cancel` |
 | `series_get` |
+| `series_list` |
+| `series_outputs` |
 | `series_start` |
 
 Start the bridge with `uv run {{CLI_COMMAND}} mcp .`. [How to connect AQVEN as an MCP server](/mcp-cli/connect-an-agent/) explains safe usage and verification.

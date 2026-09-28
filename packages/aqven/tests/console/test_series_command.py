@@ -15,7 +15,7 @@ from pydantic import JsonValue
 from aqven.app.background import BackgroundStartFailed
 from aqven.app.runtime_file import ServerRecord, server_record
 from aqven.cli import main
-from aqven.client import AqvenClient
+from aqven.client import AqvenClient, UnexpectedResponse
 from aqven.console.series import (
     EXIT_APPROVAL,
     EXIT_HUMAN,
@@ -31,6 +31,7 @@ from aqven.console.series import (
     studio_link,
     time_left,
 )
+from aqven.console.series_wait import EXIT_UNREACHABLE, RetryPolicy, failure_reason, transient
 from aqven.series import (
     ApprovalReason,
     ExperimentOrigin,
@@ -234,18 +235,19 @@ async def test_refusals_map_to_exit_codes(error: tuple[str, int], expected: int)
 
 
 @pytest.mark.asyncio
-async def test_an_unreachable_server_exits_one() -> None:
+async def test_an_unreachable_server_exits_with_the_lost_contact_code() -> None:
     def refuse(request: httpx2.Request) -> httpx2.Response:
         raise httpx2.ConnectError("connection refused", request=request)
 
     out, err = io.StringIO(), io.StringIO()
     request = SeriesCommandRequest(root=Path("/tmp/project"), experiment_id="reply_quality")
     async with httpx2.AsyncClient(transport=httpx2.MockTransport(refuse)) as http:
-        runner = SeriesRunner(AqvenClient(BASE, http=http), lambda series: series, out, err)
+        client = AqvenClient(BASE, http=http)
+        runner = SeriesRunner(client, lambda series: series, out, err, retry=RetryPolicy(budget_seconds=0.0))
         code = await runner.run(request)
 
-    assert code == 1
-    assert "did not answer" in err.getvalue()
+    assert code == EXIT_UNREACHABLE
+    assert "did not answer for 0s: ConnectError: connection refused" in err.getvalue()
 
 
 @pytest.mark.asyncio
@@ -468,3 +470,87 @@ async def test_waiting_prints_the_estimate_and_json_carries_it() -> None:
     assert code == 0
     assert "6/16 attempts, $0.30 of $3.00, status running, ~2 min left, finishes ~10:01, 4 attempts/min" in err
     assert json.loads(line)["series"]["eta"] is None
+
+
+FAST_RETRY: Final = RetryPolicy(budget_seconds=1.0, first_pause_seconds=0.001, longest_pause_seconds=0.002)
+
+
+@dataclass(slots=True)
+class FlakyServer:
+    server: FakeServer
+    silent_polls: int
+    failure: type[httpx2.TransportError] = httpx2.ReadTimeout
+
+    def __call__(self, request: httpx2.Request) -> httpx2.Response:
+        if request.method == "GET" and self.silent_polls != 0:
+            self.silent_polls -= 1
+            raise self.failure("", request=request)
+        return self.server(request)
+
+
+async def drive_patiently(server: FlakyServer, retry: RetryPolicy) -> tuple[int, str, str]:
+    out, err = io.StringIO(), io.StringIO()
+    request = SeriesCommandRequest(root=Path("/tmp/project"), experiment_id="reply_quality")
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(server)) as http:
+        link = partial(studio_link, record())
+        runner = SeriesRunner(AqvenClient(BASE, http=http), link, out, err, zone=UTC, retry=retry)
+        code = await runner.run(request)
+    return code, out.getvalue(), err.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_the_waiter_rides_out_a_server_that_stops_answering_for_a_while() -> None:
+    states = iter(((SeriesStatus.RUNNING, 6), (SeriesStatus.DONE, 16)))
+    server = FlakyServer(FakeServer(SeriesStatus.RUNNING, states), silent_polls=3)
+
+    code, out, _ = await drive_patiently(server, FAST_RETRY)
+
+    assert code == 0
+    assert out.count("lost contact with the project server (ReadTimeout), retrying in") == 3
+    assert f"verdict signal: {VERDICT}" in out
+
+
+@pytest.mark.asyncio
+async def test_the_waiter_gives_up_after_its_budget_with_the_reason_and_the_series_link() -> None:
+    server = FlakyServer(FakeServer(SeriesStatus.RUNNING, iter(())), silent_polls=-1)
+    retry = RetryPolicy(budget_seconds=0.01, first_pause_seconds=0.004, longest_pause_seconds=0.004)
+
+    code, _, err = await drive_patiently(server, retry)
+
+    link = f"{BASE}/research/series/{SERIES}?access_token={TOKEN}"
+    assert code == EXIT_UNREACHABLE
+    assert "did not answer for 0s: ReadTimeout; " in err
+    assert f"series {SERIES} keeps running on the server: {link}" in err
+
+
+@pytest.mark.asyncio
+async def test_a_refusal_is_not_retried() -> None:
+    server = FakeServer(SeriesStatus.RUNNING, iter(()), start_error=("NOT_FOUND", 404))
+
+    code, out, err = await drive_patiently(FlakyServer(server, silent_polls=0), FAST_RETRY)
+
+    assert code == 2
+    assert "lost contact" not in out
+    assert [request.method for request in server.requests] == ["POST"]
+    assert "NOT_FOUND: NOT_FOUND happened" in err
+
+
+def test_a_failure_without_a_message_is_named_by_its_type() -> None:
+    request = httpx2.Request("GET", BASE)
+
+    assert failure_reason(httpx2.ReadTimeout("", request=request)) == "ReadTimeout"
+    assert failure_reason(httpx2.ConnectError("refused", request=request)) == "ConnectError: refused"
+
+
+def test_only_transport_failures_and_server_errors_without_an_api_body_are_retried() -> None:
+    request = httpx2.Request("GET", BASE)
+
+    assert transient(httpx2.ReadTimeout("", request=request))
+    assert transient(UnexpectedResponse(502, "bad gateway"))
+    assert not transient(UnexpectedResponse(404, "not here"))
+
+
+def test_retry_pauses_double_up_to_the_longest_pause() -> None:
+    policy = RetryPolicy(first_pause_seconds=1.0, longest_pause_seconds=15.0)
+
+    assert [policy.pause(attempt) for attempt in range(6)] == [1.0, 2.0, 4.0, 8.0, 15.0, 15.0]

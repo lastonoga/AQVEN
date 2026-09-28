@@ -11,6 +11,7 @@ from typing import Final, TypeGuard
 from pydantic import JsonValue, ValidationError
 
 from aqven.loader.layout import ROOT_PATH_PREFIX, dataset_media_folder
+from aqven.loader.project import LoadedProject
 from aqven.spec import MEDIA_FILE_KEY, MEDIA_KEY, BlobId, DatasetCase, MediaFileRef
 
 ENGINE_STATE_FOLDER: Final = ".aqven"
@@ -153,6 +154,25 @@ def case_media_parts(case: DatasetCase) -> tuple[tuple[JsonPath, JsonValue], ...
 def case_media_file_refs(case: DatasetCase) -> MediaFileRefs:
     for path, value in case_media_parts(case):
         yield from media_file_refs(value, path)
+
+
+def referenced_media_paths(project: LoadedProject | None) -> frozenset[str]:
+    if project is None:
+        return frozenset()
+    return frozenset(
+        path
+        for source in project.datasets.values()
+        for case in source.spec.cases
+        for _, value in case_media_file_refs(case)
+        if (path := _referenced_path(value, source.path)) is not None
+    )
+
+
+def _referenced_path(value: JsonValue, dataset_path: str) -> str | None:
+    try:
+        return media_file_path(parse_media_file_ref(value).file, dataset_path)
+    except MediaFileError:
+        return None
 
 
 def has_media_file_refs(case: DatasetCase) -> bool:

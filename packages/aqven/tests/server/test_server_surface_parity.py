@@ -9,14 +9,18 @@ from series_fakes import DONE_ID, SERIES_ID, FakeSeriesJobs
 from server_fakes import AUTH, SERVER_BASE, FakeEngine, MemorySettings
 
 from aqven.runtime.runs import RunStartRequest
-from aqven.series import SeriesCancelRequest, SeriesStartRequest
+from aqven.series import SeriesCancelRequest, SeriesGetRequest, SeriesStartRequest
+from aqven.series.read_views import SeriesOutputsRequest, SeriesRowsQuery
 from aqven.server import ServerOptions, create_app
 from aqven.server.errors import ApiFailure
 from aqven.server.mcp.catalog import tool_error
 from aqven.server.mcp.run_tools import RunTools
+from aqven.server.mcp.series_read_tools import SeriesReadTools
 from aqven.server.mcp.series_tools import SeriesTools
+from aqven.server.views.run_list import RunListInput
 from aqven.server.views.runs import RunStartService
 from aqven.server.workspace import ProjectWorkspace
+from aqven.spec import VariantId
 
 BODY = {"flow_id": "intake", "mode": "live", "input": {"text": "parity"}}
 
@@ -129,3 +133,71 @@ def test_series_start_answers_the_same_on_both_surfaces(series_client: TestClien
     assert over_mcp.model_dump(mode="json") == over_http.json()
     assert over_mcp.series_id == SERIES_ID
     assert [actor.kind for _, actor in shared_jobs.starts] == ["human", "agent"]
+
+
+def test_the_series_summary_and_a_metric_projection_answer_the_same_on_both_surfaces(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
+) -> None:
+    tools = SeriesTools(shared_jobs)
+    summary_http = series_client.get(f"/api/series/{DONE_ID}/summary", params={"include_cases": "true"})
+    summary_mcp = asyncio.run(tools.get(SeriesGetRequest(series_id=DONE_ID, view="summary", include_cases=True)))
+    full_http = series_client.get(f"/api/series/{DONE_ID}", params={"fields": ["success_rate"], "case_limit": 10})
+    full_mcp = asyncio.run(tools.get(SeriesGetRequest(series_id=DONE_ID, fields=("success_rate",), case_limit=10)))
+
+    assert (summary_http.status_code, full_http.status_code) == (200, 200)
+    assert summary_mcp.model_dump(mode="json") == summary_http.json()
+    assert full_mcp.model_dump(mode="json") == full_http.json()
+    summary_route, summary_tool, full_route, full_tool = shared_jobs.gets
+    assert (summary_route, full_route) == (summary_tool, full_tool)
+
+
+def test_series_outputs_and_the_series_list_answer_the_same_on_both_surfaces(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
+) -> None:
+    reads = SeriesReadTools(shared_jobs)
+    fields = ("/label", "triage")
+    outputs_http = series_client.get(
+        f"/api/series/{SERIES_ID}/outputs", params={"variant": "alt", "fields": list(fields), "page_size": 200}
+    )
+    outputs_mcp = asyncio.run(
+        reads.outputs(SeriesOutputsRequest(series_id=SERIES_ID, variant=VariantId("alt"), fields=fields, page_size=200))
+    )
+    rows_http = series_client.get("/api/series-rows", params={"status": "done", "limit": 5})
+    rows_mcp = asyncio.run(reads.rows(SeriesRowsQuery.model_validate({"status": "done", "limit": 5})))
+
+    assert (outputs_http.status_code, rows_http.status_code) == (200, 200)
+    assert outputs_mcp.model_dump(mode="json") == outputs_http.json()
+    assert rows_mcp.model_dump(mode="json") == rows_http.json()
+    route_read, tool_read = shared_jobs.output_reads
+    assert route_read == tool_read
+    assert route_read.fields == fields
+
+
+def test_outputs_of_an_unknown_series_are_not_found_on_both_surfaces(
+    series_client: TestClient, shared_jobs: FakeSeriesJobs
+) -> None:
+    unknown = "01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2f"
+    over_http = series_client.get(f"/api/series/{unknown}/outputs")
+
+    with pytest.raises(ApiFailure) as over_mcp:
+        asyncio.run(SeriesReadTools(shared_jobs).outputs(SeriesOutputsRequest.model_validate({"series_id": unknown})))
+
+    assert over_http.status_code == 404
+    assert rest_code(over_http.json()) == mcp_code("series_outputs", over_mcp.value) == "NOT_FOUND"
+
+
+def test_run_list_full_and_compact_answer_the_same_on_both_surfaces(
+    server_client: TestClient, server_engine: FakeEngine
+) -> None:
+    tools = RunTools(server_engine)
+    full_http = server_client.get("/api/runs", params={"flow_id": "intake"})
+    full_mcp = asyncio.run(tools.list_runs(RunListInput.model_validate({"flow_id": "intake"})))
+    compact_http = server_client.get("/api/run-rows", params={"series_id": "series-1"})
+    compact_mcp = asyncio.run(
+        tools.list_runs(RunListInput.model_validate({"series_id": "series-1", "view": "compact"}))
+    )
+
+    assert (full_http.status_code, compact_http.status_code) == (200, 200)
+    assert full_mcp.model_dump(mode="json") == full_http.json()
+    assert compact_mcp.model_dump(mode="json") == compact_http.json()
+    assert compact_http.json()["hidden_experiment_runs"] is None

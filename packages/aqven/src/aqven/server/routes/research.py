@@ -6,7 +6,6 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from aqven.runtime.runs import Page
 from aqven.series.model import LaunchPlan, SeriesId
-from aqven.series.protocol import MAX_WAIT_SECONDS
 from aqven.series.views import (
     ExperimentDetailView,
     ExperimentListQuery,
@@ -19,6 +18,7 @@ from aqven.series.views import (
     SeriesGetRequest,
     SeriesGetResult,
     SeriesListQuery,
+    SeriesReadQuery,
     SeriesStarted,
     SeriesStartRequest,
     SeriesSummaryView,
@@ -94,19 +94,13 @@ def build_research_router(context: ServerContext) -> APIRouter:
     async def start_series(request: SeriesStartRequest) -> SeriesStarted:
         return await series_jobs(context.series).start(request, await context.human())
 
-    @router.get("/series", operation_id="series_list", openapi_extra=rest_only(SERIES_HISTORY))
+    @router.get("/series", operation_id="series_history", openapi_extra=rest_only(SERIES_HISTORY))
     async def list_series(query: Annotated[SeriesListQuery, Query()]) -> Page[SeriesSummaryView]:
         return await series_jobs(context.series).list(query)
 
     @router.get("/series/{series_id}", operation_id="series_get", openapi_extra=operation("series_get"))
-    async def get_series(
-        series_id: str,
-        wait_seconds: Annotated[int, Query(ge=0, le=MAX_WAIT_SECONDS)] = 0,
-        include_cases: bool = False,
-    ) -> SeriesGetResult:
-        request = SeriesGetRequest(
-            series_id=SeriesId(series_id), wait_seconds=wait_seconds, include_cases=include_cases
-        )
+    async def get_series(series_id: str, query: Annotated[SeriesReadQuery, Query()]) -> SeriesGetResult:
+        request = SeriesGetRequest(series_id=SeriesId(series_id), **query.model_dump())
         return await series_jobs(context.series).get(request)
 
     @router.get("/series/{series_id}/cases", operation_id="series_cases", openapi_extra=rest_only(CASE_ROWS))

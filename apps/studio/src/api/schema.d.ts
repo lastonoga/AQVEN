@@ -1066,7 +1066,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Series */
-        get: operations["series_list"];
+        get: operations["series_history"];
         put?: never;
         /** Start Series */
         post: operations["series_start"];
@@ -1205,6 +1205,74 @@ export interface paths {
         get?: never;
         /** Put Experiment Cases */
         put: operations["experiment_cases_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/run-rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Run Rows */
+        get: operations["run_rows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series-rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Series Rows */
+        get: operations["series_rows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Series Summary */
+        get: operations["series_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/{series_id}/outputs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Series Outputs */
+        get: operations["series_outputs"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -4318,6 +4386,15 @@ export interface components {
              */
             policy: "fail";
         };
+        /** FailureGroup */
+        FailureGroup: {
+            /** Code */
+            code: string;
+            /** Count */
+            count: number;
+            /** Example */
+            example: string | null;
+        };
         /** FamiliesDistinct */
         FamiliesDistinct: {
             /**
@@ -5424,6 +5501,18 @@ export interface components {
         };
         /** @enum {string} */
         MessageOrigin: "example" | "prompt";
+        /** MetricBrief */
+        MetricBrief: {
+            /** Metric */
+            metric: string;
+            /** Value */
+            value: number | null;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            verdict: components["schemas"]["CellVerdict"];
+        };
         /** MetricCell */
         MetricCell: {
             /** Metric */
@@ -6283,15 +6372,6 @@ export interface components {
             /** Total Estimate */
             total_estimate: number | null;
         };
-        /** Page[RunSummary] */
-        Page_RunSummary_: {
-            /** Items */
-            items: components["schemas"]["RunSummary"][];
-            /** Next Cursor */
-            next_cursor: string | null;
-            /** Total Estimate */
-            total_estimate: number | null;
-        };
         /** Page[SeriesSummaryView] */
         Page_SeriesSummaryView_: {
             /** Items */
@@ -6967,6 +7047,28 @@ export interface components {
             /** Lineage Parent */
             lineage_parent: string;
         };
+        /** RunListPage[RunRow] */
+        RunListPage_RunRow_: {
+            /** Items */
+            items: components["schemas"]["RunRow"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total Estimate */
+            total_estimate: number | null;
+            /** Hidden Experiment Runs */
+            hidden_experiment_runs?: number | null;
+        };
+        /** RunListPage[RunSummary] */
+        RunListPage_RunSummary_: {
+            /** Items */
+            items: components["schemas"]["RunSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total Estimate */
+            total_estimate: number | null;
+            /** Hidden Experiment Runs */
+            hidden_experiment_runs?: number | null;
+        };
         /** @enum {string} */
         RunMode: "live" | "replay" | "experiment" | "dryrun";
         /** RunResumed */
@@ -6986,6 +7088,32 @@ export interface components {
              */
             type: "run_resumed";
             address: components["schemas"]["ExecutionAddress"];
+        };
+        /** RunRow */
+        RunRow: {
+            /** Run Id */
+            run_id: string;
+            /** Flow Id */
+            flow_id: string;
+            status: components["schemas"]["RunStatus"];
+            mode: components["schemas"]["RunMode"];
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Cost Usd */
+            cost_usd: string;
+            /** Waits */
+            waits: number;
+            /** Dataset Item Id */
+            dataset_item_id?: string | null;
+            /** Series Id */
+            series_id?: string | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
         };
         /** RunScopePreview */
         RunScopePreview: {
@@ -7071,6 +7199,10 @@ export interface components {
             executions: components["schemas"]["NodeExecution"][];
             /** Human Answers */
             human_answers: components["schemas"]["HumanAnswerStatus"][];
+            /** Agent Overrides */
+            agent_overrides?: {
+                [key: string]: string;
+            };
             /** Last Seq */
             last_seq: number;
         };
@@ -7104,6 +7236,10 @@ export interface components {
             cassette_id?: string | null;
             /** Human Answers */
             human_answers?: components["schemas"]["ScriptedAnswer"][] | null;
+            /** Agent Overrides */
+            agent_overrides?: {
+                [key: string]: string;
+            };
         };
         /** RunStarted */
         RunStarted: {
@@ -7278,6 +7414,55 @@ export interface components {
             /** Cap Usd */
             cap_usd?: number | string | null;
         };
+        /** SeriesBriefResult */
+        SeriesBriefResult: {
+            series: components["schemas"]["SeriesBriefView"];
+            /** Cases */
+            cases: components["schemas"]["SeriesCaseRow"][] | null;
+            /** Hidden Cases */
+            hidden_cases: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** SeriesBriefView */
+        SeriesBriefView: {
+            /** Series Id */
+            series_id: string;
+            origin: components["schemas"]["SeriesOrigin"];
+            /** Flow Id */
+            flow_id: string | null;
+            /** Dataset Id */
+            dataset_id: string;
+            question: components["schemas"]["QuestionKind"];
+            on: components["schemas"]["SeriesSplit"];
+            /** Cases */
+            cases: number;
+            /** Repeats */
+            repeats: number;
+            /** Variants */
+            variants: string[];
+            status: components["schemas"]["SeriesStatus"];
+            progress: components["schemas"]["SeriesProgress"];
+            spend: components["schemas"]["SeriesSpend"];
+            verdict: components["schemas"]["SeriesVerdict"] | null;
+            /** Waits */
+            waits: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            pause?: components["schemas"]["SeriesPause"] | null;
+            eta?: components["schemas"]["SeriesEta"] | null;
+            /** Variant Briefs */
+            variant_briefs: components["schemas"]["VariantBrief"][];
+            /** Error */
+            error: string | null;
+            /** Finding Path */
+            finding_path: string | null;
+        };
         /** SeriesCancelBody */
         SeriesCancelBody: {
             /** Reason */
@@ -7396,6 +7581,8 @@ export interface components {
             cases: components["schemas"]["SeriesCaseRow"][] | null;
             /** Hidden Cases */
             hidden_cases: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /** SeriesMatrix */
         SeriesMatrix: {
@@ -7410,6 +7597,45 @@ export interface components {
          */
         SeriesMetric: "success_rate" | "cost_usd" | "cost_of_pass" | "latency_p50_ms" | "latency_p95_ms" | "schema_valid_first_try" | "infra_error_rate";
         SeriesOrigin: components["schemas"]["ExperimentOrigin"] | components["schemas"]["LookOrigin"];
+        /** SeriesOutputRow */
+        SeriesOutputRow: {
+            /** Case */
+            case: string;
+            /** Variant */
+            variant: string;
+            /** Repeat */
+            repeat: number;
+            split: components["schemas"]["SeriesSplit"];
+            outcome: components["schemas"]["AttemptOutcome"];
+            /** Error Code */
+            error_code: string | null;
+            /** Cost Usd */
+            cost_usd: string;
+            /** Latency Ms */
+            latency_ms: number | null;
+            /** Run Id */
+            run_id: string;
+            output: components["schemas"]["JsonValue"];
+            /** Node Outputs */
+            node_outputs: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Checks */
+            checks: {
+                [key: string]: number | null;
+            };
+        };
+        /** SeriesOutputsPage */
+        SeriesOutputsPage: {
+            /** Series Id */
+            series_id: string;
+            /** Rows */
+            rows: components["schemas"]["SeriesOutputRow"][];
+            /** Total */
+            total: number;
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** SeriesPause */
         SeriesPause: {
             reason: components["schemas"]["ApprovalReason"];
@@ -7451,6 +7677,37 @@ export interface components {
             total: number;
             /** Spend Usd */
             spend_usd: string;
+        };
+        /** SeriesRow */
+        SeriesRow: {
+            /** Series Id */
+            series_id: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Flow Id */
+            flow_id: string | null;
+            status: components["schemas"]["SeriesStatus"];
+            verdict: components["schemas"]["VerdictState"] | null;
+            on: components["schemas"]["SeriesSplit"];
+            progress: components["schemas"]["SeriesProgress"];
+            /** Spend Usd */
+            spend_usd: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            eta: components["schemas"]["SeriesEta"] | null;
+        };
+        /** SeriesRowsPage */
+        SeriesRowsPage: {
+            /** Items */
+            items: components["schemas"]["SeriesRow"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            stats: components["schemas"]["SeriesStats"];
         };
         /** SeriesSpend */
         SeriesSpend: {
@@ -7543,6 +7800,21 @@ export interface components {
             status: components["schemas"]["SeriesStatus"];
             /** Total */
             total: number;
+        };
+        /** SeriesStats */
+        SeriesStats: {
+            /** Series */
+            series: number;
+            /** Attempts */
+            attempts: number;
+            /** Requests */
+            requests: number;
+            /** Tokens */
+            tokens: number;
+            /** Spend Usd */
+            spend_usd: string;
+            /** Wall Seconds */
+            wall_seconds: number;
         };
         /**
          * SeriesStatus
@@ -8133,6 +8405,34 @@ export interface components {
             /** Models */
             models: string[];
         };
+        /** VariantBrief */
+        VariantBrief: {
+            /** Variant Id */
+            variant_id: string;
+            role: components["schemas"]["VariantRole"];
+            /** Finished */
+            finished: number;
+            /** Passed */
+            passed: number;
+            /** Failed */
+            failed: number;
+            /** Errors */
+            errors: number;
+            /** Running */
+            running: number;
+            /** Spend Usd */
+            spend_usd: string;
+            /** Latency P50 Ms */
+            latency_p50_ms: number | null;
+            /** Latency P95 Ms */
+            latency_p95_ms: number | null;
+            /** Metrics */
+            metrics: components["schemas"]["MetricBrief"][];
+            /** Failures */
+            failures: components["schemas"]["FailureGroup"][];
+            /** Other Failures */
+            other_failures: number;
+        };
         /** VariantChange */
         VariantChange: {
             /** Node Id */
@@ -8451,6 +8751,7 @@ export type SchemaFactorSlotView = components['schemas']['FactorSlotView'];
 export type SchemaFactorValue = components['schemas']['FactorValue'];
 export type SchemaFactorView = components['schemas']['FactorView'];
 export type SchemaFailOnTimeout = components['schemas']['FailOnTimeout'];
+export type SchemaFailureGroup = components['schemas']['FailureGroup'];
 export type SchemaFamiliesDistinct = components['schemas']['FamiliesDistinct'];
 export type SchemaFamilyDisjointFromInput = components['schemas']['FamilyDisjointFromInput'];
 export type SchemaFieldBefore = components['schemas']['FieldBefore'];
@@ -8536,6 +8837,7 @@ export type SchemaMatrixRow = components['schemas']['MatrixRow'];
 export type SchemaMcpToolSource = components['schemas']['McpToolSource'];
 export type SchemaMediaValue = components['schemas']['MediaValue'];
 export type SchemaMessageOrigin = components['schemas']['MessageOrigin'];
+export type SchemaMetricBrief = components['schemas']['MetricBrief'];
 export type SchemaMetricCell = components['schemas']['MetricCell'];
 export type SchemaMetricColumn = components['schemas']['MetricColumn'];
 export type SchemaMetricDirection = components['schemas']['MetricDirection'];
@@ -8598,7 +8900,6 @@ export type SchemaPageFileEntry = components['schemas']['Page_FileEntry_'];
 export type SchemaPageFlowSummary = components['schemas']['Page_FlowSummary_'];
 export type SchemaPagePromptSummary = components['schemas']['Page_PromptSummary_'];
 export type SchemaPageRunEvent = components['schemas']['Page_RunEvent_'];
-export type SchemaPageRunSummary = components['schemas']['Page_RunSummary_'];
 export type SchemaPageSeriesSummaryView = components['schemas']['Page_SeriesSummaryView_'];
 export type SchemaPageTypeSummary = components['schemas']['Page_TypeSummary_'];
 export type SchemaPageStr = components['schemas']['Page_str_'];
@@ -8673,8 +8974,11 @@ export type SchemaRunError = components['schemas']['RunError'];
 export type SchemaRunEvent = components['schemas']['RunEvent'];
 export type SchemaRunFinished = components['schemas']['RunFinished'];
 export type SchemaRunForked = components['schemas']['RunForked'];
+export type SchemaRunListPageRunRow = components['schemas']['RunListPage_RunRow_'];
+export type SchemaRunListPageRunSummary = components['schemas']['RunListPage_RunSummary_'];
 export type SchemaRunMode = components['schemas']['RunMode'];
 export type SchemaRunResumed = components['schemas']['RunResumed'];
+export type SchemaRunRow = components['schemas']['RunRow'];
 export type SchemaRunScopePreview = components['schemas']['RunScopePreview'];
 export type SchemaRunScopeRequest = components['schemas']['RunScopeRequest'];
 export type SchemaRunSnapshot = components['schemas']['RunSnapshot'];
@@ -8693,6 +8997,8 @@ export type SchemaSecretSettingWrite = components['schemas']['SecretSettingWrite
 export type SchemaSecretSource = components['schemas']['SecretSource'];
 export type SchemaSecretStatus = components['schemas']['SecretStatus'];
 export type SchemaSeriesApproveBody = components['schemas']['SeriesApproveBody'];
+export type SchemaSeriesBriefResult = components['schemas']['SeriesBriefResult'];
+export type SchemaSeriesBriefView = components['schemas']['SeriesBriefView'];
 export type SchemaSeriesCancelBody = components['schemas']['SeriesCancelBody'];
 export type SchemaSeriesCaseRow = components['schemas']['SeriesCaseRow'];
 export type SchemaSeriesDetailView = components['schemas']['SeriesDetailView'];
@@ -8703,14 +9009,19 @@ export type SchemaSeriesGetResult = components['schemas']['SeriesGetResult'];
 export type SchemaSeriesMatrix = components['schemas']['SeriesMatrix'];
 export type SchemaSeriesMetric = components['schemas']['SeriesMetric'];
 export type SchemaSeriesOrigin = components['schemas']['SeriesOrigin'];
+export type SchemaSeriesOutputRow = components['schemas']['SeriesOutputRow'];
+export type SchemaSeriesOutputsPage = components['schemas']['SeriesOutputsPage'];
 export type SchemaSeriesPause = components['schemas']['SeriesPause'];
 export type SchemaSeriesProgress = components['schemas']['SeriesProgress'];
 export type SchemaSeriesProgressEvent = components['schemas']['SeriesProgressEvent'];
+export type SchemaSeriesRow = components['schemas']['SeriesRow'];
+export type SchemaSeriesRowsPage = components['schemas']['SeriesRowsPage'];
 export type SchemaSeriesSpend = components['schemas']['SeriesSpend'];
 export type SchemaSeriesSplit = components['schemas']['SeriesSplit'];
 export type SchemaSeriesStartRequest = components['schemas']['SeriesStartRequest'];
 export type SchemaSeriesStarted = components['schemas']['SeriesStarted'];
 export type SchemaSeriesStartedEvent = components['schemas']['SeriesStartedEvent'];
+export type SchemaSeriesStats = components['schemas']['SeriesStats'];
 export type SchemaSeriesStatus = components['schemas']['SeriesStatus'];
 export type SchemaSeriesStatusChanged = components['schemas']['SeriesStatusChanged'];
 export type SchemaSeriesStatusEvent = components['schemas']['SeriesStatusEvent'];
@@ -8773,6 +9084,7 @@ export type SchemaValueRef = components['schemas']['ValueRef'];
 export type SchemaValueSettingWrite = components['schemas']['ValueSettingWrite'];
 export type SchemaValueType = components['schemas']['ValueType'];
 export type SchemaVariantAggregates = components['schemas']['VariantAggregates'];
+export type SchemaVariantBrief = components['schemas']['VariantBrief'];
 export type SchemaVariantChange = components['schemas']['VariantChange'];
 export type SchemaVariantRef = components['schemas']['VariantRef'];
 export type SchemaVariantRole = components['schemas']['VariantRole'];
@@ -11217,6 +11529,7 @@ export interface operations {
                 mode?: components["schemas"]["RunMode"] | null;
                 assignee?: string | null;
                 parent_run_id?: string | null;
+                series_id?: string | null;
                 deadline_before?: string | null;
                 overdue?: boolean | null;
                 since?: string | null;
@@ -11237,7 +11550,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page_RunSummary_"];
+                    "application/json": components["schemas"]["RunListPage_RunSummary_"];
                 };
             };
             /** @description Bad Request */
@@ -15855,7 +16168,7 @@ export interface operations {
             };
         };
     };
-    series_list: {
+    series_history: {
         parameters: {
             query?: {
                 experiment_id?: string | null;
@@ -16072,6 +16385,9 @@ export interface operations {
             query?: {
                 wait_seconds?: number;
                 include_cases?: boolean;
+                fields?: string[] | null;
+                case_limit?: number;
+                cursor?: string | null;
             };
             header?: never;
             path: {
@@ -16830,6 +17146,447 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExperimentFileWritten"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    run_rows: {
+        parameters: {
+            query?: {
+                flow_id?: string | null;
+                status?: components["schemas"]["RunStatus"] | null;
+                mode?: components["schemas"]["RunMode"] | null;
+                assignee?: string | null;
+                parent_run_id?: string | null;
+                series_id?: string | null;
+                deadline_before?: string | null;
+                overdue?: boolean | null;
+                since?: string | null;
+                until?: string | null;
+                sort?: components["schemas"]["RunSort"];
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunListPage_RunRow_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_rows: {
+        parameters: {
+            query?: {
+                experiment_id?: string | null;
+                status?: components["schemas"]["SeriesStatus"] | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesRowsPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_summary: {
+        parameters: {
+            query?: {
+                wait_seconds?: number;
+                include_cases?: boolean;
+                fields?: string[] | null;
+                case_limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesBriefResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    series_outputs: {
+        parameters: {
+            query?: {
+                split?: components["schemas"]["SeriesSplit"] | null;
+                variant?: string | null;
+                case?: string | null;
+                outcome?: components["schemas"]["AttemptOutcome"] | null;
+                fields?: string[] | null;
+                page_size?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesOutputsPage"];
                 };
             };
             /** @description Bad Request */
