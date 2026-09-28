@@ -3,6 +3,15 @@ from dataclasses import dataclass
 from typing import Final
 
 from aqven_llm.errors import UnknownProvider
+from aqven_llm.request_options import (
+    BEDROCK_OPTIONS,
+    GOOGLE_OPTIONS,
+    MISTRAL_OPTIONS,
+    NO_REQUEST_OPTIONS,
+    REQUEST_BODY,
+    XAI_OPTIONS,
+    OptionsDelivery,
+)
 
 PROVIDER_SEPARATOR: Final = ":"
 
@@ -39,6 +48,7 @@ class ProviderEntry:
     model_class: ClassRef
     key: ProviderKey
     extra: ProviderExtra | None = None
+    request_options: OptionsDelivery = REQUEST_BODY
 
 
 OPENAI_MODELS: Final = "pydantic_ai.models.openai"
@@ -93,6 +103,7 @@ ENTRIES: Final[tuple[ProviderEntry, ...]] = (
         ClassRef("pydantic_ai.models.google", "GoogleModel"),
         key("GOOGLE_API_KEY", "GEMINI_API_KEY"),
         extra("google", "google.genai"),
+        GOOGLE_OPTIONS,
     ),
     ProviderEntry("groq", ClassRef("pydantic_ai.models.groq", "GroqModel"), key("GROQ_API_KEY"), extra("groq", "groq")),
     ProviderEntry(
@@ -100,12 +111,21 @@ ENTRIES: Final[tuple[ProviderEntry, ...]] = (
         ClassRef("pydantic_ai.models.mistral", "MistralModel"),
         key("MISTRAL_API_KEY"),
         extra("mistral", "mistralai"),
+        MISTRAL_OPTIONS,
     ),
     ProviderEntry(
-        "cohere", ClassRef("pydantic_ai.models.cohere", "CohereModel"), key("CO_API_KEY"), extra("cohere", "cohere")
+        "cohere",
+        ClassRef("pydantic_ai.models.cohere", "CohereModel"),
+        key("CO_API_KEY"),
+        extra("cohere", "cohere"),
+        NO_REQUEST_OPTIONS,
     ),
     ProviderEntry(
-        "bedrock", ClassRef("pydantic_ai.models.bedrock", "BedrockConverseModel"), NO_KEY, extra("bedrock", "boto3")
+        "bedrock",
+        ClassRef("pydantic_ai.models.bedrock", "BedrockConverseModel"),
+        NO_KEY,
+        extra("bedrock", "boto3"),
+        BEDROCK_OPTIONS,
     ),
     ProviderEntry(
         "huggingface",
@@ -113,7 +133,9 @@ ENTRIES: Final[tuple[ProviderEntry, ...]] = (
         key("HF_TOKEN"),
         extra("huggingface", "huggingface_hub"),
     ),
-    ProviderEntry("xai", ClassRef("pydantic_ai.models.xai", "XaiModel"), key("XAI_API_KEY"), extra("xai", "xai_sdk")),
+    ProviderEntry(
+        "xai", ClassRef("pydantic_ai.models.xai", "XaiModel"), key("XAI_API_KEY"), extra("xai", "xai_sdk"), XAI_OPTIONS
+    ),
 )
 
 PROVIDERS: Final[Mapping[str, ProviderEntry]] = {entry.name: entry for entry in ENTRIES}

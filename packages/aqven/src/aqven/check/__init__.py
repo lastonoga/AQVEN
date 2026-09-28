@@ -25,6 +25,7 @@ from aqven.check.names import check_names
 from aqven.check.output_modes import check_output_modes
 from aqven.check.policies import check_policies
 from aqven.check.prompts import check_prompts
+from aqven.check.provider_options import check_provider_options
 from aqven.check.providers import check_providers
 from aqven.check.refs import check_refs
 from aqven.check.registry import check_registry
@@ -56,6 +57,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_capabilities,
     check_output_modes,
     check_sampling,
+    check_provider_options,
     check_control,
     check_human,
     check_dynamic,
