@@ -11,7 +11,8 @@ every enum value and every character a string may hold adds states to that gramm
 Past the provider's limit the request is refused before the model answers (`OUTPUT_SCHEMA_REJECTED`).
 Below the limit, the model may still accept the schema and fill it wrong (`MODEL_SCHEMA_MISMATCH`). Keep
 outputs flat and bounded, and probe each model's real limits with `{{CLI_COMMAND}} models shapes --live`.
-When a schema still fails, split the step or switch the agent to `prompted` mode.
+When a schema still fails, the options are `prompted` mode, a smaller type, or the work split across fields or
+calls. Each has its own cost, so compare them on the cases that failed.
 
 ## What makes the space grow
 
@@ -29,12 +30,15 @@ readings in one answer, and each reading carries its own enum and its own string
 A closed vocabulary inside a list multiplies the same way. A list of up to 15 topic tags for a support
 ticket, each chosen from 60 values, asks for 60 branches at each of 15 positions, on top of the rest of
 the record. Some providers refuse that before the model runs, with provider text such as "too many
-states for serving" (`OUTPUT_SCHEMA_REJECTED`). Two fixes work:
+states for serving" (`OUTPUT_SCHEMA_REJECTED`). Three options avoid the refusal, and none is right by default:
 
-- `prompted` mode: the schema goes into the prompt as text and AQVEN validates the answer, so the
-  provider builds no grammar (see [Tool mode and prompted mode](#tool-mode-and-prompted-mode)).
-- A smaller type: split the list into groups of values, one field or one call per group, or ask a yes
-  or no per group.
+| Option | What changes | What it costs |
+|---|---|---|
+| `prompted` mode | the schema goes into the prompt as text and AQVEN validates the answer, so the provider builds no grammar (see [Tool mode and prompted mode](#tool-mode-and-prompted-mode)) | a broken answer is repaired by another paid call; nothing constrains the model while it writes |
+| a smaller type | only the values the consumer's decision needs, a lower `maxItems` | the values you drop are gone for every consumer |
+| the list split across fields or calls | one field or one call per group of values, or a yes or no per group | more fields or more calls; each call sees only its group, and a yes or no per group tends to raise false alarms |
+
+Offer the options that fit and measure the one you pick.
 
 `output.strict: false` does not help: the schema still goes to the provider, and the provider still
 builds it. Check the fix with one call on the case that failed before you run every variant again.
@@ -73,19 +77,26 @@ reports which modes each model supports. A small probe that passes does not prov
 The number that does is `schema_valid_first_try` in a series: the share of attempts whose first answer
 fit the schema, before any repair.
 
-For example, a panel of three models reads groups of product attributes from catalogue pages. Every
+For example, three candidate models read groups of product attributes from catalogue pages. Every
 model passes its probe in `tool` mode, because the probe's schema is small. On real pages, one model fails
 again and again on the largest group with `MODEL_SCHEMA_MISMATCH: presence: Field required`. Run the same
-experiment with the agent in `prompted` mode and compare three numbers: `schema_valid_first_try`, the share
-of attempts where the whole panel answered, and the cost. Fewer repairs can make `prompted` cheaper as well
-as more reliable, but only the series shows it for your schema.
+experiment with that agent in `prompted` mode and compare three numbers: `schema_valid_first_try`, the share
+of complete answers, and the cost. Fewer repairs can make `prompted` cheaper as well as more reliable, but only
+the series shows it for your schema.
 
-## An example: flattening an output
+## An example: three ways to shrink one output
 
 One call that returns every product on a catalogue page, each with every attribute, holds the whole
-page in one answer. A `map` over the products calls the model once per product instead, and each call
-returns only that product's attributes. The item type stays small, and the evidence string is only as long
-as a person reads:
+page in one answer: twelve products and thirty attributes are 360 readings. Three designs make it smaller, and
+each is a candidate to measure, not the fix:
+
+| Design | What the model holds per call | What it costs |
+|---|---|---|
+| the same call in `prompted` mode | all 360 readings, with no grammar | repairs are paid calls; a long answer is still easy to break |
+| attributes asked in groups, one field or one call per group | one group's readings | more calls; each call sees only its group |
+| a `map` over the products, one call per product | one product's readings | calls × products; each call loses what the page shares, such as a table header or a footnote |
+
+For the `map` design, the item type stays small, and the evidence string is only as long as a person reads:
 
 ```yaml
 apiVersion: "aqven/v1"
@@ -103,8 +114,9 @@ fields:
   maxItems: 8
 ```
 
-The model now holds 8 readings per call instead of 360. Each call is cheaper to repair, and a failure
-names one product instead of the whole page.
+The model holds 8 readings per call instead of 360. Each call is cheaper to repair and a failure names one
+product, at twelve calls per page instead of one. Put the designs side by side as a `use` factor on the node,
+or a `flow` factor on a `call` slot, and compare completeness, `schema_valid_first_try` and cost.
 
 ## How this shapes what you do
 
@@ -115,10 +127,10 @@ names one product instead of the whole page.
   billed request.
 - State the limits in the prompt text as well. A model that is never told about a 200-character cap
   breaks it. That is a gap in the prompt, not in the model.
-- When a schema that passed its probe fails on real inputs, try `prompted` first, then another model, and
-  read `schema_valid_first_try`.
-- When a large enum inside a list is refused, switch to `prompted` or split the type. `strict: false`
-  does not help. Confirm the fix with one call on the failing case.
+- When a schema that passed its probe fails on real inputs, the options are `prompted` mode, a smaller
+  schema and another model. Try one on the failing case, then compare `schema_valid_first_try` in a series.
+- When a large enum inside a list is refused, the options are `prompted`, a smaller type and a split.
+  `strict: false` does not help. Confirm the chosen option with one call on the failing case.
 - When the shape of the answer depends on the input, pick the least dynamic of the
   [five cases of dynamic shape](/concepts/five-dynamic-shape-cases/).
 

@@ -1,6 +1,6 @@
 ---
 title: How to write an experiment
-description: Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the one factor its variants change, the checks and one of four questions — with an example from the showcase project for each question kind, and three common designs — leaving inputs out, screening many candidates, measuring one stage.
+description: Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the one factor its variants change, the checks and one of four questions — with an example from the showcase project for each question kind, and four common designs — comparing flow designs, leaving inputs out, screening many candidates, measuring one stage.
 ---
 
 ## When you need this
@@ -110,7 +110,8 @@ before the data. A series then answers it: see [How to run a series](/engine/run
 
 The examples come from the showcase project, which has an experiment for every question kind and every
 kind of variant. Create it with `{{CLI_COMMAND}} new my_project --template showcase` and open its
-`experiments/` folder.
+`experiments/` folder. The examples show how each key works. The showcase's own design, with its judge
+panel, votes and critic loop, is one project's choice, not a pattern to copy.
 
 ### `look`: see the cases, no verdict
 
@@ -204,11 +205,13 @@ question:
 A guardrail is a metric the candidate must not worsen by more than its margin. `relative: true` reads the
 margin as a share of the baseline. `panel_single_judge` compares on latency instead
 (`primary: "latency_p50_ms"`, `margin: 1500`), with the winner, the success rate and the infrastructure
-error rate as guardrails. It uses the same pattern: its subject `winner_pick` is a local flow whose `panel`
+error rate as guardrails. It uses the same mechanism: its subject `winner_pick` is a local flow whose `panel`
 node calls the project's `judge_panel`, and a `flow` factor on `panel` plugs the local `single_judge` flow
-into that slot. The models and prompts that already work stay fixed, and only the way the task is split
-changes. `panel_aa_noise` measures the noise floor: both variants leave the flow as written, so the
-experiment declares no `varies`, and a `compare` with `margin: 0` shows the spread between two identical runs.
+into that slot. The models and prompts that already work stay fixed, and only the design of that part
+changes: see [Compare flow designs](#compare-flow-designs).
+
+`panel_aa_noise` measures the noise floor: both variants leave the flow as written, so the experiment
+declares no `varies`, and a `compare` with `margin: 0` shows the spread between two identical runs.
 An experiment whose variants all keep the subject is an A/A experiment: `aqven check` asks for no factor and
 does not warn that the variants repeat each other.
 
@@ -268,7 +271,27 @@ A new experiment doesn't borrow numbers from an older series either: the configu
 is one of its variants. See
 [The current best in every comparison](/concepts/validity-gate/#the-current-best-in-every-comparison).
 
-## Three designs that come up often
+## Four designs that come up often
+
+### Compare flow designs
+
+No flow design is right by default. One call on the whole input, a `map` over its parts, a `switch` by
+kind, several readings merged, a second model checking the first: each assumes something about the task
+and the data, and an experiment tells them apart. Keep the models and prompts that already work fixed, and
+give the part you want to redesign its own flow behind a `call` node, the slot:
+
+- The subject is a local flow whose only node calls the current design, or the simplest one when nothing
+  runs yet. That design is the baseline.
+- Each candidate is a local flow in `flows/` with the same input and output types, plugged into the slot
+  by a `flow` factor. A design that fits inside one container node is compared with `use` on that node
+  instead.
+- A candidate that calls the model more often also meets a variant of equal budget, one that spends as
+  much another way, such as a stronger model on the single call. Otherwise its gain may come from calling
+  more.
+- The winner is written into the project flow afterwards, and the slot leaves with the experiment.
+
+`intent_split_long_messages` above is this design with two local flows in the `classify` slot. Offer the
+candidates to the owner of the flow as options, each with when it fits, before you build any of them.
 
 ### Leave inputs out
 
@@ -322,7 +345,7 @@ its winners from the same cases.
 
 ### Measure one stage
 
-A pipeline has stages, and each has its own job: see
+A flow has parts, and each has its own job, set by what its output feeds: see
 [The stage and its metric](/concepts/metrics-and-controls/#the-stage-and-its-metric). There are two ways to
 score one stage with an engine check:
 

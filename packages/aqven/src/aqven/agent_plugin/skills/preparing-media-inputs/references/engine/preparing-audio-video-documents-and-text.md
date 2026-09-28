@@ -54,15 +54,28 @@ after its first part gives a confident answer about something else. Photos and o
    pages upright, and do the same in the production step, so a region means the same thing in both.
 4. **Fit every piece into the provider's limits.** Look the numbers up in the provider's current documentation;
    [media has real limits](../concepts/media-has-real-limits-on-both-sides.md) explains why they change.
-   - **Audio and video:** send segments within the model's duration and size limits. Trim a clip to the moment
-     that matters instead of relying on the provider's frame sampling: a provider that samples one frame per
-     second can miss a half-second event.
-   - **Long text:** split it by its structure, run the step once per chunk with a `map` node,
-     then merge the answers in a later step. Choose the map's `on_item_error` so a failed chunk cannot vanish from
-     the merged answer: `fail`, or a merge that reads `$failed`.
+   - **Audio and video:** send segments within the model's duration and size limits. When the answer sits in a
+     short moment, trim a clip around it, or choose a model or setting that samples densely enough, and check the
+     frames sent: a provider that samples one frame per second can miss a half-second event.
+   - **Long text:** never rely on silent truncation. Which option fits depends on where the answer lives, and
+     none is right by default:
+     - a model whose context window holds the whole text: one call sees every part, at the price of a long
+       prompt;
+     - the sections the question needs, selected before the call by structure or a search, when the answer
+       lives in a known part;
+     - chunks cut by structure, run once each with a `map` node and merged in a later
+       step, when each part can be answered on its own: each call is blind to the others, and the merge is a
+       step of its own. Choose the map's `on_item_error` so a failed chunk cannot vanish from the merged
+       answer: `fail`, or a merge that reads `$failed`;
+     - a first pass that locates the evidence, then a call on those parts only.
+
+     When more than one fits, compare them with an experiment, as in step 8.
    - **Tables:** send only the rows the question needs. When every row is a question of its own, such as a
-     transaction to classify or a sensor reading to judge, make the row the case and the input, not the whole file.
-   - **Small print in a PDF:** render the pages and crop them like images.
+     transaction to classify or a sensor reading to judge, the row can be the case and the input instead of the
+     whole file.
+   - **Small print in a PDF:** send the PDF as a `Document` when the model reads it natively and the print
+     survives, or render the pages and treat them as images: one page image when only general content matters,
+     crops at native resolution when small detail does. Compare the two when both fit.
 5. **Cut at boundaries you can check, never at fixed offsets.** A 30-second grid splits sentences and a
    4,000-character grid splits clauses.
 
@@ -105,6 +118,7 @@ after its first part gives a confident answer about something else. Photos and o
 
 ### Example
 
+This example is for the case where chunking is the option chosen in step 4.
 `scripts/chunk_by_heading.py` sits in the project root, next to `pyproject.toml`. It splits a long Markdown
 document at its `## ` headings into chunks under a character budget, never inside a section, and repeats the text
 before the first heading (the title and the parties) at the top of every chunk. A section longer than the budget
@@ -203,8 +217,9 @@ chunk 4: 2234 chars, ~558 tokens
 Every chunk starts at a section heading and ends with the last sentence of a section, so no clause is cut. Only
 the title and the parties travel with each chunk, though: sections 4 to 14 no longer see the definitions in
 section 1. When clauses use defined terms, carry that section into every chunk too, and confirm it on the printed
-lines. In the flow, the same splitting belongs in a `code` step whose list of chunks a `map`
-node runs over, so an experiment measures the chunks production sends.
+lines. When the flow chunks at all, the same splitting belongs in a `code` step before the
+`map` node that runs over the chunks, so an experiment measures the chunks production sends. Chunking is one of the
+long-text options of step 4; compare it with the others that fit before you build it into the flow.
 
 ## See also
 

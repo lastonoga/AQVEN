@@ -58,7 +58,9 @@ model, the prompt, the step or the logic, never a mix of them.
 A variant never names a bare model. The agent carries the model, its settings and its output mode, so
 `agent` is how you compare models.
 
-Each kind has an experiment in the showcase project.
+Each kind has an experiment in the showcase project. The examples show how each kind works. The
+showcase's own design, with its judge panel, votes and critic loop, is one project's choice, not a
+recommendation: which design fits a task is itself a question for an experiment.
 
 **`agent`: which model answers this step.** `reply_noninferior_mistral` puts `mistral` on the `revise` step
 of `support_case`:
@@ -129,26 +131,31 @@ variants:
     aggregate: "always_tie_break"
 ```
 
-**`flow`: which way of splitting the task.** This is the pattern for comparing logic. Fix what already
-works, the models and the prompts, and give the part you want to rethink its own flow behind a `call`
-node, the slot. In `panel_single_judge` the subject is `winner_pick`, a flow that lives only in
-`experiments/panel_single_judge/flows/` and whose one node, `panel`, calls the project's `judge_panel`.
-The other variant plugs in `single_judge`, a second local flow. Both flows in the slot take the same input
-and return the same output, so the same cases and checks run on both:
+**`flow`: which design of a part of the flow.** This is how two designs are compared, and no design is
+the default. Fix what already works, the models and the prompts, and give the part you want to rethink
+its own flow behind a `call` node, the slot. In `intent_split_long_messages` the subject is
+`message_intent`, a flow that lives only in `experiments/intent_split_long_messages/flows/` and whose one
+node, `classify`, calls the local flow `one_step`: one call reads the whole message. The other variant
+plugs in `two_step`, which condenses the message first and classifies the summary. Both flows in the slot
+take the same input and return the same output, so the same cases and checks run on both:
 
 ```yaml
 subject:
-  flow: "winner_pick"
+  flow: "message_intent"
 varies:
   what: "flow"
   nodes:
-  - "panel"
+  - "classify"
 variants:
-- id: "panel"
-- id: "single_judge"
+- id: "one_step"
+- id: "two_step"
   nodes:
-    panel: "single_judge"
+    classify: "two_step"
 ```
+
+The simpler design is the baseline, and the question decides whether the extra call earns its cost. The
+same mechanism compares any two designs of a part: `panel_single_judge` puts one judge in the slot where
+the showcase calls its panel.
 
 A factor can touch several nodes at once: `nodes` of `varies` may list three `llm` nodes, and a variant
 gives each of them the same or a different agent. A combination of kinds, such as a cheaper model with a
@@ -184,7 +191,7 @@ Studio calls the two uses **Explore** and **Confirm**:
 | Studio purpose | Explore | Confirm |
 | What a series gives | numbers and a `signal`, never a finding | a verdict and a finding |
 | How often | as often as you need, one change between series | once, when the change is done and the question is fixed |
-| Case by case | failing cases are shown, to you and to an agent | never shown to an agent one by one |
+| Case by case | failing cases are shown, to you and to an agent | `series_get` never lists them; `series_outputs` and `series export` return their rows, so an agent filters `split: "dev"` and reads held-out outputs only as totals |
 
 Iterating on the same cases you decide on tunes the flow to those cases. Adding cases and recomputing
 until the answer looks right inflates false confirmations too. So the held-out half is read once per

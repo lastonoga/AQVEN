@@ -9,8 +9,8 @@ A metric says the flow is right only when it compares the output with a truth th
 model: an answer you built into the input, or a label from the source. It also needs negative controls from
 the same population, cases where the right answer is "no". Two model readings that agree prove
 reproducibility, not correctness. Each check measures one claim, on the cases that claim is about. The
-main metric is the job of the stage you test: recall for a step that must find everything, precision for
-a judge.
+main metric is the job of the part you test, taken from the goal: what its output feeds, and which error
+costs more there.
 
 ## Agreement is not correctness
 
@@ -91,19 +91,21 @@ nothing to find.
 
 ## The stage and its metric
 
-A flow often grows in stages. First a layer that must find every candidate, then a judge that decides
-between them. Each stage has its own job and its own metric:
+A stage is the part of the flow an experiment tests: one step, a range of steps, or the whole flow. Its
+job comes from the goal of the flow, not from its node kind: what its output feeds, and which error costs
+more there. The same step can sit in any row below, depending on what comes after it:
 
-| Stage | Its job | Main metric | Guardrail |
+| What the output feeds | The costlier error | Main metric | Guardrail |
 |---|---|---|---|
-| a divergent layer: extractors, candidate generators | miss nothing | recall on labelled positives, completeness of answers | false alarms on controls, cost |
-| a judge or filter | keep only what is right | precision, or agreement with labels on both sides | cost, latency |
-| the whole flow | the decision the product makes | the "done" criterion of the contract | cost per case, latency |
+| a later step that can drop a wrong item but never recover a missed one | a miss | recall on labelled positives, completeness of answers | false alarms on controls, cost |
+| a person or a product decision that acts on every item it gets | a false alarm | precision, or agreement with labels on both sides | recall, cost, latency |
+| a user who waits, or a budget per case | a slow or dear answer | `latency_p95_ms`, `cost_of_pass` | the quality metric, with a non-inferiority margin |
+| the decision the product makes: the whole flow | the one the contract names | the "done" criterion of the contract | cost per case, latency |
 
-A threshold meant for the whole flow, put on the divergent layer alone, fails a layer that did its job. A
-judge measured on recall rewards a judge that lets everything through. Name the stage before you pick
-the metric. An experiment can score one stage with ordinary checks: see
-[Measure one stage](/engine/experiments/#measure-one-stage).
+A threshold meant for the whole flow, put on one part alone, can fail a part that did its job. A part
+measured on the wrong error rewards the wrong behaviour: a filter scored on recall is best when it lets
+everything through. Name the part and what its output feeds before you pick the metric. An experiment can
+score one stage with ordinary checks: see [Measure one stage](/engine/experiments/#measure-one-stage).
 
 A comparison of two ways to run a stage is read against the configuration production runs now, in the same
 series: see [The current best in every comparison](/concepts/validity-gate/#the-current-best-in-every-comparison).
@@ -168,7 +170,7 @@ same `expected` check there means "left a complaint alone".
   "contradicts the label" apart from "outside the label's scope".
 - Put negative controls from the same population next to every group of positives.
 - Write one check per claim, and give a rate on part of the cases its own experiment with `cases.tags`.
-- Pick the main metric from the job of the stage you test.
+- Pick the main metric from the job of the part you test: what its output feeds and which error costs more.
 - Compute trivial baselines before you set a threshold, for a stage metric too.
 - Compare a candidate with the configuration production runs now, in the same series.
 - Read an A/A experiment to know how much of a difference is noise.

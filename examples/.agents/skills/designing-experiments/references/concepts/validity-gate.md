@@ -32,7 +32,7 @@ answers into the experiment's `experiment.md`, and don't start the series while 
 | # | Question | Passes when |
 |---|---|---|
 | 1 | Does the experiment answer the question the owner of the flow asked? | the question is restated in their words: "this experiment answers …; metric M means …", and they said yes |
-| 2 | Which stage of the flow does it measure, and what is "good" for that stage? | the main check measures that stage's job, such as recall for a step that must find everything, precision for a judge |
+| 2 | Which part of the flow does it measure, and what is "good" for that part? | the main check measures that part's job: what its output feeds and which error costs more there (a miss, a false alarm, cost, latency) |
 | 3 | Is there exactly one factor? | `varies` names one kind (`agent`, `prompt`, `use` or `flow`) and its nodes; the compared things are variants and the measures are checks; `aqven check` reports no factor error |
 | 4 | Does anything else differ between the variants? | nothing: not the data, not the set of questions put to the model, not the preprocessing, not the population; a variant that adds or removes an input differs only by the block that renders it; a changed instruction in a prompt that reads another step's output is part of the factor and is listed |
 | 5 | Does the subject follow the production path? | the preprocessing is the production one (crops and resolution, audio segments, text chunks, OCR or transcription), the inputs are the ones production has, and the prompt asks for the measured behavior; the prompt preview of the subject matches production in everything but the factor, and for variants and local flows, which have no preview yet, a one-case smoke shows what each sent |
@@ -42,7 +42,7 @@ answers into the experiment's `experiment.md`, and don't start the series while 
 | 9 | What do trivial baselines score? | a constant answer, the majority class and "flag everything" are computed, for the metric of a stage or an intermediate output too, and the threshold is above them |
 | 10 | Is the margin within reach? | the launch plan's `mde` and `recommended` cases fit the cases you have, or the owner accepted a run below the recommendation |
 | 11 | Are the controls false by construction? | a control can't pass by a shortcut; a multi-call variant is compared with a variant of equal budget |
-| 12 | Were the new checks tried on outputs you already have? | their numbers look plausible; an exact 0.000 or an interval of zero width is treated as a bug first |
+| 12 | Were the new checks tried on outputs you already have? | run over the working-case outputs of an earlier series (`series_outputs` with `split: "dev"`, or `aqven series export`), their numbers look plausible; an exact 0.000 or an interval of zero width is treated as a bug first |
 | 13 | Do both halves come from one population, with the threshold fixed? | working and held-out cases come from the same dataset and tag filter, and nothing was added between Explore and Confirm; the threshold was set before the data and doesn't move; numbers of two experiments are compared only when both select the same cases of one dataset |
 | 14 | Are the expected outcomes written? | Purpose, Falsifier and If confirmed are in `experiment.md` before the first number |
 | 15 | Is this the same question as before? | nothing changed after a series; a change to the question, metric, factor, variants, cases, plan or checks gets a new experiment id |
@@ -52,9 +52,9 @@ answers into the experiment's `experiment.md`, and don't start the series while 
 ## One factor, variants as rows
 
 Picture an experiment as a table: variants are rows, checks are columns, and a series fills the cells.
-Only the rows get ranked. When three ways of merging votes are written as three checks on one variant,
-the table has one row and nothing to compare. Write them as three variants of a `use` factor on the merge
-step, and measure all three with the same checks.
+Only the rows get ranked. When three implementations of a step are written as three checks on one
+variant, the table has one row and nothing to compare. Write them as three variants of a `use` factor on
+that step, and measure all three with the same checks.
 
 One factor also means one cause. A variant that swaps the model and the prompt together can win for
 either reason. When the change really is a pair, such as a cheaper model with a prompt tuned for it, put
@@ -103,8 +103,9 @@ Two series of the same variant on the same cases still differ, because of sampli
 an A/A experiment measures by how much. A candidate compared with a number from an older series can look
 better or worse by that much alone. So every comparison carries the configuration production runs now as
 one of its variants, and the candidate is read against it in the same series, case by case: on which cases
-did it win, and on which did it lose. In the case rows, `divergent` marks the cases where the variants
-split. See How to read a series.
+did it win, and on which did it lose. In the case rows of `series_get` with `include_cases: true`,
+`divergent: true` marks a case where the variants' pass rates differ, such as 3 of 3 repeats against 1 of
+3; with one variant it is always false. See How to read a series.
 
 ## An intermediate output that carries enough
 

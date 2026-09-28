@@ -5,17 +5,17 @@ description: "Picks models for AQVEN agents on any provider from its data and pr
 
 ## MUST
 
-- The owner picks providers, models and the panel ("Owner's rules" in `AGENTS.md`). Change that set, or one
-  setting across many agents, only after the owner says yes.
+- The owner picks providers and models, and any judges he named ("Owner's rules" in `AGENTS.md`). Change that
+  set, or one setting across many agents, only after the owner says yes.
 - When a check contradicts what runs showed, report it to the owner as a likely engine bug, with numbers (runs
   that passed, the code the check gave). Never swap models to satisfy the check.
 - An agent file has no key for what a model can do: the provider's model data suggests, the real node proves. A
   new model gets `models check --live`, then one call on the real node with its output type and the input kind it
   will read (image, audio, video, PDF, long text). `--live` sends one small text request per output mode: it
   proves the mode, not the media, the length or the schema.
-- Set reasoning on purpose in every agent file when you write it, with the key its provider reads: off or the
-  lowest effort for reading, extraction and classification where the model allows it, the lowest where it is
-  mandatory.
+- Set reasoning on purpose in every agent file, with the key its provider reads; never leave the default
+  unrecorded. The level is a factor like the model: start where the owner's latency and cost contract points, and
+  measure it (an `agent` factor over agent files that differ only in reasoning) before calling it right.
 - Facts in an agent's `description` name their source: a probe, a series id, a provider's model page, or "from
   another project, unverified here".
 - A 429 is not fixed with `limits.rpm`: the model's rate-limit lane and the provider's `on_rate_limit` handle it.
@@ -24,23 +24,24 @@ description: "Picks models for AQVEN agents on any provider from its data and pr
 
 | # | Step | Exit criterion |
 |---|---|---|
-| 1 | Read "Owner's rules": the providers allowed, price ceiling, what is banned, any judge panel; `providers` in `aqven.yaml` shows what is declared | the frame is known |
-| 2 | Candidates from each allowed provider's own model data, not from names or memory: a direct provider's model pages and docs (its models endpoint needs the owner's key: ask him to run it); an aggregator's public catalogue (step 6); what a local or self-hosted server serves. Across model families where the allowed providers offer them. Many candidates: screen, then confirm (`designing-experiments`) | a table of 5 or more candidates, from 3 or more families where the frame has them |
+| 1 | Read "Owner's rules": the providers allowed, price ceiling, what is banned, any judges he named; `providers` in `aqven.yaml` shows what is declared | the frame is known |
+| 2 | Candidates from each allowed provider's own model data, not from names or memory: a direct provider's model pages and docs (its models endpoint needs the owner's key: ask him to run it); an aggregator's public catalogue (step 6); what a local or self-hosted server serves. Across model families where the allowed providers offer them. Many candidates: screen, then confirm (`designing-experiments`) | a table of enough candidates to span the price and capability range the frame allows, from several families where available |
 | 3 | Per candidate, whatever the provider, one column each with its source: the input kinds the flow sends (text, image, PDF, audio, video); structured output for the node's type; tool calling when the agent has `tools`, `mcp_servers` or `subagents`; context window against the longest input plus the answer; the longest answer; price per input and output token, and reasoning, image or audio prices; reasoning controls (off, efforts, mandatory); the rate limits of the owner's key; retention against the provider's `data_policy` | no empty cell; what no source states is written as unknown |
 | 4 | Name the model `<provider id>:<model name>`: the id is an entry of `providers` in `aqven.yaml` (`E_PROVIDER_UNKNOWN` otherwise), the name is the provider's own spelling. Direct: `anthropic:<model id>`, `google:<model id>`, `openai:<model id>`; `bedrock:<model or inference profile id>`; aggregator: `openrouter:<author>/<slug>`; local: `ollama:<tag>` with `base_url` on the provider; any other OpenAI-compatible server: a provider with `kind: "openai_compatible"`, `base_url` and an id outside the catalog. `anthropic`, `google`, `groq`, `mistral`, `cohere`, `bedrock`, `huggingface` and `xai` need their extra, `uv add "aqven[<name>]"` (`E_PROVIDER_EXTRA_MISSING`) | `aqven_check` clean on every model string |
-| 5 | The agent file: `description` with the source of every claim; `settings.max_tokens` above the expected output plus any reasoning; `settings.provider_options` for what only this provider takes, reasoning first, in the values its model pages list: `reasoning_effort` on OpenAI Chat Completions (`openai-chat`), `reasoning` with `effort` on OpenAI Responses (`openai`), `thinking` on `anthropic`, `reasoning` on `openrouter`, `thinking_config` on `google`, `reasoning_effort` on `xai` and on `mistral` (`none` or `high`), the model's own field on `bedrock`. `google`, `mistral` and `xai` send only the keys the provider catalog lists, `cohere` none: `W_PROVIDER_OPTIONS_IGNORED` names every key left out, and a model whose reasoning no key reaches keeps its default, so write that in `description` and measure latency. `output.mode` from `models check`; `output.on_error`, `output.on_refusal`, `output.on_truncated` | `aqven_check` clean; reasoning set, or its default recorded |
+| 5 | The agent file: `description` with the source of every claim; `settings.max_tokens` above the expected output plus any reasoning; `settings.provider_options` for what only this provider takes, reasoning first, at a starting level taken from the latency and cost contract, in the values its model pages list: `reasoning_effort` on OpenAI Chat Completions (`openai-chat`), `reasoning` with `effort` on OpenAI Responses (`openai`), `thinking` on `anthropic`, `reasoning` on `openrouter`, `thinking_config` on `google`, `reasoning_effort` on `xai` and on `mistral` (`none` or `high`), the model's own field on `bedrock`. `google`, `mistral` and `xai` send only the keys the provider catalog lists, `cohere` none: `W_PROVIDER_OPTIONS_IGNORED` names every key left out, and a model whose reasoning no key reaches keeps its default, so write that in `description` and measure latency. `output.mode` from `models check`; `output.on_error`, `output.on_refusal`, `output.on_truncated` | `aqven_check` clean; reasoning set, or its default recorded |
 | 6 | The provider is an aggregator (`openrouter` and similar): run "When the provider is an aggregator" below for every candidate on it | upstreams chosen, single-upstream candidates flagged |
 | 7 | The provider in `aqven.yaml`: `on_rate_limit` `auto` (default: the model pauses for `retry-after`, else 2 s doubling to 60 s, parallel calls halve and grow back, a call gives up after 10 attempts or 120 s), `fixed` with `retry_wait_seconds` and `retry_attempts`, or `fail` to hand over to `fallback_models` at once; `limits.concurrency` is the starting parallelism per model (8 when unset), `limits.rpm` only the provider's own limit. Every `<provider>:<model>` is a lane of its own | the strategy fits the latency contract |
 | 8 | `fallback_models` that read the same input kinds, inside "Owner's rules", on the same provider or another declared one. `settings.provider_options` belong to the agent: every fallback gets the same keys, and a provider may reject a key it does not know or leave it out (`W_PROVIDER_OPTIONS_IGNORED`), so a fallback on another provider needs keys both take, proven by its own probe. `E_OUTPUT_MODE_UNSUPPORTED` checks the output modes of every model of the agent | the fallback stays inside the frame and accepts the agent's options |
-| 9 | Does the model take the input kind and its size (image, PDF, audio, video, a long document against the context window): the engine keeps no table. Read the provider's data, then one run on a real case of that kind and size; a provider refusal comes back as `MODEL_FEATURE_UNSUPPORTED` naming the attachment | every input kind proven by a run |
-| 10 | Prove it on the real node: `uv run aqven models check <agent> --project <package> --live --provider-options '<the agent's provider_options as JSON>'` (the modes); `uv run aqven models shapes <agent> --project <package> --live` for a nested output; then `run_start` live on a real case through each agent's node, or a one-case smoke when an experiment compares agents (`running-series`). Read latency, `tokens_out` and error codes; a model three times slower than the rest goes to the owner before he finds it | every agent `ok`, the real-node run finished, latency within the contract, outliers reported |
+| 9 | Does the model take the input kind and its size (image, PDF, audio, video, a long document against the context window): the engine keeps no table. Read the provider's data, then one run on a real case of that kind and size: `run_start` `{flow_id, mode: "live", dataset_item_id, agent_overrides: {<node_id>: <candidate agent>}}` puts the candidate on the real node with no flow edit and no series; a provider refusal comes back as `MODEL_FEATURE_UNSUPPORTED` naming the attachment | every input kind proven by a run |
+| 10 | Prove it on the real node: `uv run aqven models check <agent> --project <package> --live --provider-options '<the agent's provider_options as JSON>'` (the modes); `uv run aqven models shapes <agent> --project <package> --live` for a nested output; then `run_start` with `agent_overrides` on a real case of each input kind, as at step 9. One run proves one case; the model decision is an `agent` factor (step 11). Read latency, `tokens_out` and error codes; a model three times slower than the rest goes to the owner before he finds it | every agent `ok`, the real-node run finished, latency within the contract, outliers reported |
 | 11 | Compare models on the project's labelled data with a negative control, as an `agent` factor (`designing-experiments`); synthetic data is only a sanity check | the model decision rests on real labels |
-| 12 | One change at a time. A setting rolled out to many models (reasoning, `max_tokens`, routing) waits for the owner's yes, then each model is measured before and after on the same few cases; one case of latency is noise | a before-and-after table per model |
+| 12 | One change at a time. A setting rolled out to many models (reasoning, `max_tokens`, routing) waits for the owner's yes, then each model is measured before and after on the same few cases: `run_start` with `agent_overrides` per case, or a small `dev` series read with `series_outputs` (`latency_ms`, `cost_usd` per row); one case of latency is noise | a before-and-after table per model |
 
 The CLI probes read keys from the environment and `<package>/.env`. Keys saved in Studio settings are visible only
 to the project server: when your shell has no key, do not search for it; ask the owner to run the probe.
 
-A direct provider, reasoning off through the key Anthropic reads:
+A direct provider, reasoning switched off through the key Anthropic reads (the example shows the key; the level
+is the node's own, measured):
 
 ```yaml
 description: "Sorts support tickets into queues; prompted mode and PDF input proven by run <run_id>"
@@ -55,8 +56,8 @@ output:
   on_refusal: "retry"
 ```
 
-On OpenAI Chat Completions the same agent takes `reasoning_effort` under `provider_options` instead, at the lowest
-effort its model page lists.
+On OpenAI Chat Completions the same agent takes `reasoning_effort` under `provider_options` instead, with one of
+the efforts its model page lists.
 
 ### When the provider is an aggregator
 
@@ -68,7 +69,7 @@ parameters, quantization, limits and uptime. For each candidate on it:
 | a | The catalogue. OpenRouter: `curl -s 'https://openrouter.ai/api/v1/models?input_modalities=<kind>&supported_parameters=structured_outputs'`, fields `architecture.input_modalities` (`text`, `image`, `file`, `audio`, `video`), `context_length`, `pricing`, `supported_parameters` (`structured_outputs`, `response_format`, `tools`, `reasoning`), `reasoning` (`mandatory`, `supported_efforts`, `default_enabled`) | the step 3 columns filled from it |
 | b | The upstreams: `curl -s https://openrouter.ai/api/v1/models/<author>/<slug>/endpoints`, fields `tag` (the slug `provider.order` takes), `provider_name`, `quantization`, `max_completion_tokens`, `supported_parameters`, `supports_tool_choice`, `status`, `uptime_last_30m`. A candidate with one upstream has nowhere to send a 429: flag it | single-upstream candidates flagged |
 | c | Routing in `settings.provider_options.provider`: `order`, `allow_fallbacks`, `require_parameters: true`, `quantizations`. A pinned `order` with `allow_fallbacks: false` leaves an upstream 429 nowhere to go: allow fallbacks or set `fallback_models`. `routing` on the provider in `aqven.yaml` replaces the agent's `provider` object: put `data_collection` and `zdr` into the agent's instead | an upstream order chosen |
-| d | `reasoning` per model: `effort` down to `"none"` or `"minimal"`, or `enabled: false`; a model whose catalogue `reasoning.mandatory` is true takes the lowest of its `supported_efforts` | reasoning set per model |
+| d | `reasoning` per model at the level chosen at step 5 (`effort`, down to `"none"` or `"minimal"`, or `enabled: false`); where the catalogue's `reasoning.mandatory` is true, the lowest of `supported_efforts` is the floor | reasoning set per model |
 
 ```yaml
 description: "Sorts support tickets into queues; prompted mode and PDF input proven by run <run_id>"
@@ -98,7 +99,8 @@ output:
 | Reasoning and `output.mode: tool` set without a live probe: every attempt `MODEL_FEATURE_UNSUPPORTED` | `models check --live` first |
 | The profile said `tool` works, live it gave `MODEL_NO_STRUCTURED_OUTPUT`; a big series ran without `--live` | probe live before a series |
 | Every model passed `models check --live`, then the real node failed in four ways: the schema too large, no upstream for the request's parameters, `tool_choice` unsupported, no structured output | one call on the real node, with its output type and input kind |
-| One variant failed every attempt with `MODEL_FEATURE_UNSUPPORTED` and nobody looked until the series ended | read the first snapshot per variant (`running-series`) |
+| One variant failed every attempt with `MODEL_FEATURE_UNSUPPORTED` and nobody looked until the series ended | `series_get` `view: "summary"` at the first snapshot: failure groups per variant (`running-series`) |
+| A candidate re-checked with `agent_overrides` on three cases and reported as better than the current model | one run proves one case; a comparison is an `agent` factor on labelled data (step 11) |
 | Reasoning left at each model's default: two models took 80 s per call against 5 s for the rest, and the owner noticed first | decide reasoning when the agent is written; report latency outliers from the first run |
 | A "low" reasoning effort switched reasoning on for a model that had it off, and latency and price jumped | set reasoning explicitly per model and measure |
 | A reasoning key written for one provider, copied to an agent on another: rejected, or dropped without a word | the key that provider documents, tried with `--provider-options` first |
@@ -126,7 +128,10 @@ output:
   command.
 - macOS has no GNU `timeout`: run a long probe in the background instead of wrapping it.
 - Agent files for many models come from a builder in `scripts/` (`building-flows`).
-- `aqven` MCP `aqven_check`, `run_start` (`mode: "live"`), `run_get_node`.
+- `aqven` MCP `aqven_check`, `run_start` (`mode: "live"`, `dataset_item_id`, `agent_overrides`), `run_get_node`,
+  `series_get` (`view: "summary"`), `series_outputs`.
+- `uv run aqven run <flow_id> --input <file.json> --agent <node>=<agent>` starts an engine of its own: only when no
+  project server runs on this root; it takes a JSON input, not a dataset case.
 
 ## References
 
@@ -142,3 +147,5 @@ output:
 - `references/reference/provider-catalog.md`: built-in providers, their key variables and extras. Read at step 4.
 - `references/concepts/what-happens-when-a-model-is-called.md`: outcomes and their policies, truncation on
   reasoning models. Read at step 5.
+- `references/mcp-cli/runs.md`: `run_start` with `dataset_item_id` and `agent_overrides`, the node id it takes
+  and its errors. Read at step 9.

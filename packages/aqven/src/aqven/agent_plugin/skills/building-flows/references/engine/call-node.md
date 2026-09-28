@@ -11,10 +11,10 @@ Add a call node that runs another flow as a single step, passing it typed input 
 
 ## When you need this
 
-Use a `call` node when a group of steps deserves to be its own flow — reusable from more than one
-place, or just substantial enough to keep out of the parent flow's own `nodes/` folder. A `call` node
-runs another flow from start to finish as if it were a single step: it hands over typed input, and
-whatever that flow returns becomes the node's own output.
+Use a `call` node when a group of steps is reused from more than one place, or when an experiment compares
+whole flow designs in one slot. A group of steps used in one place stays in the parent flow, so every step is
+visible in one `flow.yaml`. A `call` node runs another flow from start to finish as if it were a single step:
+it hands over typed input, and whatever that flow returns becomes the node's own output.
 
 ## Steps
 
@@ -36,7 +36,9 @@ whatever that flow returns becomes the node's own output.
 
 This is the showcase project's `panel` node, in its `support_case` flow: instead of running one more
 model itself, it hands the case summary, three reply drafts, and knowledge-base excerpts to a whole
-separate flow — a panel of judges that picks the best draft. Create it yourself with:
+separate flow — a panel of judges that picks the best draft. `judge_panel` is reused: several showcase
+experiments also run it on its own. The panel is the showcase's design choice, shown here for the `call`
+mechanism. Create it yourself with:
 
 ```bash
 aqven new my_project --template showcase

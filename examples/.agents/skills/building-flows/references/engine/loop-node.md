@@ -130,7 +130,7 @@ redraft and lists any blocking issues.
   actually are.
 - [How to run a step over a collection](map-node.md) — the other node kind whose body has its own
   reference form, `$item` and `$index` instead of `$acc`.
-- Designing reliable workflows — when a `loop` critic like
+- [Designing reliable workflows](../concepts/designing-reliable-workflows.md) — when a `loop` critic like
   `critique`/`revise` here actually earns its cost, and why it needs a real `stop` policy.
 - The engineering loop — what to do when a run's output isn't what you
   expected.

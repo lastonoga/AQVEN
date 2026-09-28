@@ -4,3 +4,4 @@ studio/investigate-a-run.md
 engine/custom-evaluator.md
 concepts/hypothesis-categories.md
 concepts/literature-scan.md
+mcp-cli/experiments-and-series.md

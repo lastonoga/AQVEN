@@ -52,7 +52,7 @@ knowing before you build assumptions on one and hit the other.
   `mode: "experiment"` for all of them. `view: "compact"` returns short rows instead of full summaries:
   `run_id`, `flow_id`, `status`, `mode`, the times, `cost_usd`, the number of open `waits`,
   `dataset_item_id`, `series_id` and `experiment_id`. For what the attempts of a series produced, call
-  `series_outputs` once rather than `run_get` per run.
+  [`series_outputs`](experiments-and-series.md) once rather than `run_get` per run.
 - **`run_get_node`** is one node's execution, addressed the same way the engine itself addresses every
   execution: `node_id` plus `branch_key`, `iteration`, and `item_index` for a node that ran inside a
   branch, a loop, or a map. Leave the three optional fields out to reach a top-level node. The result

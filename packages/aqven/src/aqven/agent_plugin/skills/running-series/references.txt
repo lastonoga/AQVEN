@@ -8,3 +8,4 @@ studio/settings.md
 integrations/model-providers.md
 reference/cli.md
 reference/findings.md
+mcp-cli/runs.md

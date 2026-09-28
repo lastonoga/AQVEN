@@ -30,9 +30,9 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | Stage | Move on when |
 |---|---|
 | 1. Contract | purpose, input, output and a measurable "done" (which check, which number) are agreed, asked in one message |
-| 2. Simplest flow | one `llm` step per real decision, `code` for the rest; `{{CLI_COMMAND}} check` is clean; `{{CLI_COMMAND}} prompt preview` is read for every `llm` node |
+| 2. Simplest flow | the fewest steps that express the contract, `code` for deterministic work, other designs listed as experiments; `{{CLI_COMMAND}} check` is clean; `{{CLI_COMMAND}} prompt preview` is read for every `llm` node |
 | 3. Cases | a dataset with `expected_output` and tags exists; `{{CLI_COMMAND}} check` is clean |
-| 4. Explore | a `look` experiment with deterministic checks ran on working cases, and every failing case is read (`include_cases: true`) |
+| 4. Explore | a `look` experiment with deterministic checks ran on working cases, and every failing output is read (`series_outputs` with `split: "dev"`) |
 | 5. Error analysis | the first traces are read and noted, by you or, if you decline, by the agent; every failure has its first failing node and a failure mode you agreed; new failing traces stop adding modes |
 | 6. Fix the spec | what the prompt never asked for is fixed in the prompt or the type, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, written before any number |
@@ -81,20 +81,21 @@ retries, so the run ended `MODEL_RETRIES_EXHAUSTED`. The engine refused the inva
 and the series counted a failure. The failure mode is "triage breaks its output contract". It is a
 prompt fix if the prompt never states the limit, and a hypothesis about the agent if it does.
 
-## Test combinations on outputs you already paid for
+## Test a design on outputs you already paid for
 
-Before you build a panel of models or a multi-stage pipeline, estimate what it can gain from outputs you
-already have:
+Before you build any design that combines outputs or adds a stage, whether you or the agent proposed it,
+estimate what it can gain from outputs you already have:
 
-- **A rule over outputs**, such as the union or a majority vote of several variants, or a merge written in
-  code: a test with `pytest_run` over outputs read with `run_get_node`.
+- **A rule over outputs**, such as a filter, a merge or any other rule in code over several variants'
+  outputs: a test with `pytest_run` over the rows of `series_outputs` (with `split: "dev"`, and `fields`
+  naming what the rule reads), or over `{{CLI_COMMAND}} series export <series_id> --format jsonl`.
 - **The ceiling of a downstream stage**: a range experiment on that stage alone, with the upstream truth in
   each case's `node_outputs`. It shows how well the stage does when everything above it is right.
 - **Its realistic value**: the same stage on the outputs the upstream stage really produced.
 
-These numbers are hypotheses. Only a variant that runs the combination confirms one: a vote estimated from
-variants that ran separately often promises more than the combined step delivers. A ceiling far below what
-you need rules the pipeline out before you pay for it.
+These numbers are hypotheses. Only a variant that runs the design confirms one: a combination estimated
+from variants that ran separately can promise more than the combined step delivers. A ceiling far below
+what you need rules that design out before you pay for it.
 
 ## From failure mode to experiment
 
@@ -122,11 +123,12 @@ factor from what the hypothesis is about:
 | how the task is split into steps | `flow` | a flow for a `call` node, local from the experiment's `flows/` or from the project |
 
 For a question about the logic, fix what already works (the models and the prompts) and give the part you
-want to rethink its own flow behind a `call` node. Each variant plugs a different flow into that slot. A
-way of combining results that you want to rank is a variant, never a check: checks are the columns every
+want to rethink its own flow behind a `call` node. Each variant plugs a different flow into that slot. An
+implementation of a step that you want to rank is a variant, never a check: checks are the columns every
 variant is measured on.
 
-The showcase project's experiments are worked examples of several rows:
+The showcase project's experiments are worked examples of several rows. They show how each setup is
+written, not a design to copy: the showcase's judges, votes and critic are that project's choices.
 
 - `reply_overpromise_risk`: a rare failure;
 - `intent_split_long_messages`: long input;
@@ -139,10 +141,11 @@ The showcase project's experiments are worked examples of several rows:
 
 ## Cases and checks
 
-- **Build cases from risk dimensions.** Pick about three dimensions aimed at the failure modes: length,
-  opening topic, channel, a rare enum value. Write about 20 combinations by hand and generate the rest
-  without duplicates. Then turn each combination into an input in a separate step. "Generate N examples"
-  in one prompt yields near-identical happy paths.
+- **Build cases from risk dimensions.** Pick the dimensions the failure modes vary along: length,
+  opening topic, channel, a rare enum value. A few dimensions and a couple of dozen combinations written
+  by hand are a starting point, not a rule; generate the rest without duplicates. Then turn each
+  combination into an input in a separate step. "Generate N examples" in one prompt yields near-identical
+  happy paths.
 - **Answer first, input second.** Build the expected record, then the input from it, and store the record
   as `expected_output`. Check that the answer can be recovered from the input, and that no second answer
   is plausible.
@@ -165,12 +168,14 @@ The showcase project's experiments are worked examples of several rows:
   ±margin", never "no risk".
 - **`inconclusive` with `below_mde`:** never rerun the same held-out cases for another answer. Write fresh
   cases and run a new held-out series of the recommended size. If that size is out of reach, the answer
-  stays unclear, and a structural guard is the fix: a code check, a `switch`, a runtime `checks:` entry.
+  stays unclear, and a structural guard can hold the risk meanwhile: a code check, a `switch`, a runtime
+  `checks:` entry.
 - **`inconclusive` with `uninformative` or `no_discordance`:** the cases are too easy or too hard to tell
   the variants apart. Write boundary cases, not more of the same.
 - **Read stability, not only the mean.** A mean of 0.8 can be "a fifth of the cases always fail", which
-  needs a fix in the step. It can also be "every case fails a fifth of the time", which a retry with a
-  check, or a vote, handles. Lowering the temperature to look stable tests another product.
+  points at the step itself. It can also be "every case fails a fifth of the time", which a change per
+  call may address: a retry with a check, several calls merged, another model. Measure which, against the
+  A/A noise. Lowering the temperature to look stable tests another product.
 - **Report spend honestly.** With `spend.unpriced_attempts` above 0, `spend.usd` is a lower bound. Before
   a held-out series, give the developer the working series' spend and the recommended size.
 
@@ -178,9 +183,9 @@ The showcase project's experiments are worked examples of several rows:
 
 | Finding | Change |
 |---|---|
-| step S breaks its output contract | first check the prompt states the limit; then another agent, more `output.retries`, or trimming in a `code` step; raise a limit only if the developer confirms it isn't a requirement |
+| step S breaks its output contract | first check the prompt states the limit; then candidates to measure: another agent, more `output.retries`, a smaller type, trimming in a `code` step; raise a limit only if the developer confirms it isn't a requirement |
 | B is not worse and cheaper | point the node's `agent:` at B |
-| the chain beats the equal-budget flow | a project flow in the slot: point the `call` node at the winning flow, moving a local flow into `flows/` of the project with `flow_patch`; a winning `prompt`, `agent` or `use` value is copied into the node the same way. No tool promotes a variant |
+| a flow design beats the current flow and the equal-budget flow | a project flow in the slot: point the `call` node at the winning flow, moving a local flow into `flows/` of the project with `flow_patch`; a winning `prompt`, `agent` or `use` value is copied into the node the same way. No tool promotes a variant |
 | a risk is real but no fix is proven | a structural guard, then a new hypothesis: "the guard keeps the risk below X" |
 | the judge passes its planted-defect test | add `validated_by: <experiment_id>` to every check that uses it |
 
@@ -227,13 +232,14 @@ Some rules above are discipline, not enforcement:
 - **Stale findings.** Nothing marks a finding stale when the flow changes. The hashes in the file tell
   what it measured.
 - **Promoting a variant.** No tool moves a winning value into the flow: the agent does it with `flow_patch`.
-- **Reading many outputs.** No tool exports the outputs of every attempt of a series at once: `run_get_node`
-  reads one node of one run. When a question needs hundreds of reads, the agent says so instead of reading
-  the engine's files.
+- **Held-out outputs.** `series_outputs` and `{{CLI_COMMAND}} series export` return the outputs of every
+  attempt, held-out ones included: `split` is only a filter. Nothing stops an agent from reading held-out
+  outputs case by case, so the rule is discipline: read with `split: "dev"`, and use held-out outputs only
+  as aggregates in a report.
 
 ## See also
 
-- [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/): the three series
+- [How to run experiments and series as an agent](/mcp-cli/experiments-and-series/): the five series
   tools and their fields.
 - [Experiments, series and findings](/concepts/experiments-series-and-findings/): working and held-out
   cases, verdicts and findings.

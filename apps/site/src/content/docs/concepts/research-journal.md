@@ -47,7 +47,7 @@ pointer to them.
 | What does not | approaches that failed, with the series that showed it |
 | How we measure | the checks, the truths, the controls, and why each one measures its claim |
 | Open questions | what is not known yet, including unverified claims and labels that need an expert |
-| Spend | spend per series and in total, against the cap |
+| Spend | spend per series (`spend.usd` of `series_get`) and in total (`stats` of `series_list`: spend with judge checks, requests, tokens and wall time), against the cap |
 
 Refuted ideas stay in the journal, marked with the date, the series that refuted them and its scope.
 Deleting them invites the next session to try them again. A refutation of one implementation is
@@ -68,19 +68,20 @@ After every series that finished, add one entry:
 - what it changes: a decision, a next experiment, `archived: true` on an answered experiment, or nothing.
 
 ```markdown
-### 2026-09-24 · panel_merge_rule · series 0199f1e2-… · holdout
+### 2026-09-24 · intent_escalation_agents · series 0199f1e2-… · holdout
 
-Question: does merging the panel by a two-judge majority alone pick the expected winner as often as the spread rule?
+Question: does Qwen as the escalation agent get the intent right at most 0.1 less often than DeepSeek, with no more invalid first outputs and at most 25% slower at p95?
 Verdict: "<verdict.text as the series wrote it>"
-Numbers: expected winner 0.88 against 0.90 (-2 points, within the 5-point margin), n = 40 support cases.
-Scope: the merge step only, with the current three judges and their prompts; another judge set needs its own series.
-Read: on dev series 0199e5c4, 8 lost and 5 won cases side by side; the losses are close contests the spread rule sent to the tie-break judge.
+Numbers: intent right 0.86 against 0.89 (-3 points, within the 10-point margin), valid first outputs 0.97 against 0.95, p95 12% faster, n = 40 support cases.
+Scope: the `escalate` node only, with the recorded triage as its input; another agent or another triage needs its own series.
+Read: on dev series 0199e5c4, 7 lost and 4 won cases side by side; the losses are messages whose defect claim the rest of the message takes back.
 Spend: $0.42 measured.
-Changes: the flow now merges by majority alone; the experiment is archived.
+Changes: the `escalate` node points at qwen; the experiment is archived.
 ```
 
-A series on held-out cases never shows its cases to an agent one by one, so the Read line of a held-out
-entry comes from the working-case series before it. An estimate of spend belongs before a run, labelled as one. After the
+Held-out outputs are read only as aggregates, never case by case: `series_get` never shows held-out case
+rows, and `series_outputs` returns held-out attempts only when you leave out `split: "dev"`. So the Read
+line of a held-out entry comes from the working-case series before it. An estimate of spend belongs before a run, labelled as one. After the
 run, the journal carries what the series measured. When some calls had no price, that is a lower bound, and
 the entry says so.
 
@@ -112,63 +113,67 @@ A summary or a table of statistics for a person is a Markdown file in the packag
 
 ## An example
 
-A journal after a few rounds on the showcase's support flow, where a panel of three judges picks the best
-draft reply and a critic stops replies that should not go out:
+A journal after a few rounds on the intent step of the showcase's support flow. It records what this
+project tried; the designs in it are examples of entries, not recommendations:
 
 ```markdown
 # Experiments
 
 ## Now
 
-Goal: the panel picks the reply a support lead would send, on real tickets. Stage: the
-panel's merge step; "good" is the expected winner at the lowest cost per correct pick.
-The critic comes later.
+Goal: the intent a support lead would assign, on real tickets, within the latency
+contract. Stage: the escalation step; "good" is the right intent, a valid first
+output, and p95 no worse than today.
 
 ## Planned
 
-- The owner's hypothesis: a cheaper third judge keeps the picks as good. Not run yet.
+- The owner's hypothesis: a cheaper triage agent keeps the intent as right. Not run yet.
 - Data policy from the owner: tickets from the last quarter only; no customer names in
   the cases.
 
 ## What held-out series settled
 
-- 2026-09-24 panel_merge_rule, series 0199f1e2: merging by a two-judge majority alone
-  picked the expected winner as often as the spread rule (confirmed, n=40 cases).
-  See FINDINGS.md. Experiment archived.
+- 2026-09-24 intent_escalation_agents, series 0199f1e2: Qwen on the escalation step
+  got the intent right within 10 points of DeepSeek, with p95 12% faster (confirmed,
+  n=40 cases). See FINDINGS.md. Experiment archived.
 
 ## What works
 
-- Signal, dev: a judge prompt that checks every claim against the chunks first picks
-  the expected winner in 0.88 of cases against 0.75 as written (n=24 cases,
-  series 0199e7a0).
+- Signal, dev: a rubric fragment that defines each intent by what separates it from
+  its neighbours gets the intent right in 0.88 of cases against 0.75 as written
+  (n=24 cases, series 0199e7a0).
 
 ## What does not
 
-- A judge asked only "which reply is best?" without the rubric (2026-09-24, series
-  0199d3b4): it preferred the longest reply, whatever it promised.
+- Condensing a long message before the decision (2026-09-22, series 0199d3b4): on long
+  messages it matched deciding from the whole message and cost 40% more per correct
+  intent. Implementation-level: one condensing prompt was tried.
 
 ## How we measure
 
-- winner: the built-in expected check on the winner a support lead picked. Truth: the
-  lead's pick, written before any run. Controls: cases with a clear winner, which every
-  sound merge must get right.
+- intent: the built-in expected check on the intent a support lead assigned by the
+  rubric. Truth: the lead's label, written before any run. Controls: cases with a clear
+  intent, which every agent must get right.
 
 ## Open questions
 
-- Close contests are few: the lead's picks on them need a second reader.
+- The escalation step only sees cases the earlier steps could not settle, and those are
+  harder than the average case: a series on those cases alone is still to run.
 
 ## Spend
 
-- $2.31 in 11 series; project cap $1.00 per series.
+- $2.31 in 11 series (series_list stats: 396 attempts, 452 requests); project cap
+  $1.00 per series.
 ```
 
 And the report that goes with it:
 
 ```text
-On real support tickets, checking every claim against the sources first makes the panel
-pick the reply a support lead chose 88% of the time, up 13 points from the current prompt
-(24 cases, working half). That is a signal, not yet confirmed on held-out cases. Next:
-confirm it on held-out cases. Spent so far: $2.31 in 11 series.
+On real support tickets, Qwen as the escalation agent gets the intent right 86% of the
+time against 89% for DeepSeek, 3 points lower and within the agreed 10-point margin,
+and answers 12% faster at p95 (40 held-out cases, confirmed). The escalation step now
+uses Qwen. Next: a series on the harder cases the escalation really sees. Spent so far:
+$2.31 in 11 series.
 ```
 
 ## How this shapes what you do

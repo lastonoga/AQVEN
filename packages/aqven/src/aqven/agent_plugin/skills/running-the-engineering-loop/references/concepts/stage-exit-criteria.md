@@ -7,7 +7,7 @@ The exit criterion of every stage between a request and a reliable flow, the fal
 - [In short](#in-short)
 - [Stages and their exits](#stages-and-their-exits)
 - [False exits](#false-exits)
-- [The stage of the flow and its metric](#the-stage-of-the-flow-and-its-metric)
+- [The part of the flow and its metric](#the-part-of-the-flow-and-its-metric)
 - [When to stop the loop](#when-to-stop-the-loop)
 - [When to stop and ask](#when-to-stop-and-ask)
 - [An example](#an-example)
@@ -20,15 +20,15 @@ Work on a flow moves through stages: contract, simplest flow, cases, a first loo
 fixing the specification, hypotheses, Explore, Confirm, applying the finding. Each stage ends on a
 criterion you can check, not on a feeling. The common false exits are a clean `aqven check`
 taken for a working flow, one run taken for proof, and a signal on working cases taken for a finding.
-Every experiment also measures one stage of the flow itself, and that stage decides the metric. The loop
-stops on one of five conditions, and it stops to ask whenever a decision belongs to a person.
+Every experiment also measures one part of the flow, and the job that part's output does downstream decides the
+metric. The loop stops on one of five conditions, and it stops to ask whenever a decision belongs to a person.
 
 ## Stages and their exits
 
 | Stage | Done when | Not done just because |
 |---|---|---|
 | Contract | purpose, the input contract (the fields and input kinds that exist at run time, with typical sizes and lengths), output, a measurable "done" (which check, which number), a budget per run and per series, and a latency are agreed; dataset columns production lacks are not inputs; the models and providers are the ones the owner chose | the request sounds clear |
-| Simplest flow | one `llm` step per real decision, `code` for the rest; `aqven check` is clean; the prompt preview of every `llm` node is read in full; one run on a real input passed, and its output reads well in the run view | `aqven check` is clean |
+| Simplest flow | the fewest steps that express the contract; `aqven check` is clean; the prompt preview of every `llm` node is read in full; one run on a real input passed, and its output reads well in the run view | `aqven check` is clean |
 | Cases | a dataset with truth and tags exists; negative controls sit next to the positives; the count per compared tag value and half is known | the dataset file loads |
 | First look | a `look` over working cases ran with cheap deterministic checks, and every failing case row was read | the series finished |
 | Error analysis | the owner was offered the first traces and wrote notes, or declined and confirmed the modes the agent wrote from them; every failure has its first failing node and a failure mode the owner agreed to; new failing traces stop adding modes | the agent grouped the failures itself |
@@ -53,24 +53,26 @@ These look like progress and aren't:
 - **A taxonomy without traces.** Failure modes named before anyone read a trace test failures the flow
   may not have.
 
-## The stage of the flow and its metric
+## The part of the flow and its metric
 
-"Stage" also means a part of the flow you are building. A flow often grows in layers: a divergent layer
-that must find every candidate, then a judge that picks among them. While you build one layer, its own
-job is the goal:
+"Stage" also means the part of the flow you are building now: one step, a few steps, or the whole flow. How
+many parts a flow has, and of which kind, is a design choice: one step on the whole input, steps in sequence,
+or readings in parallel are options to compare with an experiment, not a default shape. Whatever the shape,
+the metric of a part comes from what its output feeds and which error costs more there:
 
-| Layer being built | "Good" means | Main metric |
+| What the part's output feeds | The costly error | Main metric |
 |---|---|---|
-| divergent: extractors, candidate generators | nothing is missed | recall on labelled positives, completeness |
-| judge or filter | only right things pass | precision, agreement with labels |
-| intermediate output read by the next step | it carries what the next step needs to tell its candidates apart | in a 10-case pilot each field varies across the classes the next step must tell apart; then the next step's accuracy with it |
-| the whole flow | the contract's "done" | the contract's check and number |
+| a later step that can drop a wrong item but never recover a missed one | a miss | recall on labelled positives, completeness |
+| a person or a system that acts on every item it gets | a false alarm | precision, agreement with labels |
+| a later step that must tell cases apart | a field that carries nothing | in a 10-case pilot each field varies across the classes the next step must tell apart; then the next step's accuracy with it |
+| a caller bound by time or price | a slow or costly pass | `latency_p95_ms`, `cost_of_pass`, with quality as a guardrail |
+| the caller of the flow | missing the contract's "done" | the contract's check and number |
 
-Write the current layer and its "good" at the top of the project's
+Write the current part, what its output feeds and its "good" at the top of the project's
 research journal, and check it before every held-out series. A threshold
-for the whole flow, put on the divergent layer, fails a layer that did its job. Errors the judge will
-remove later are the next stage's problem, not this one's. Validate each layer by its own experiment, then
-assemble them.
+for the whole flow, put on one part, can fail a part that did its job: judge a part by the errors it passes
+on that nothing downstream fixes. Each part you add earns its place by its own experiment against the flow
+without it.
 
 An intermediate output, such as the facts a reader pulls from an invoice or the turns it marks in a call
 transcript, is done when the step after it can use it. A field that takes one value on more than 80% of the
@@ -130,7 +132,10 @@ The contract of a flow, written before the simplest flow, in the `experiment.md`
 - Check each stage's exit criterion before you move on, and name which one is not met yet.
 - Treat a clean check, one run, a signal and a provisional verdict as steps, never as results.
 - Write the input contract with the rest of the contract; a column only your data has is not an input.
-- Name the layer of the flow you are building and its metric before you pick a threshold.
+- Name the part of the flow you are building, what its output feeds and its metric before you pick a
+  threshold.
+- Offer a new part or another shape as an option with the experiment that would decide it, not as the next
+  step.
 - Stop on one of the five conditions, and stop to ask when a decision belongs to a person.
 
 ## See also

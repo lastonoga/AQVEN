@@ -67,7 +67,7 @@ A pitfall is a general rule; the illustration after it is one instance.
 | The split thinned a graded series: some levels landed in one half only, and a series asked for more cases than its half held ran fewer | twice the cases per level; count before the series |
 | A compared group of one: the only non-English ticket landed in `dev` | at least k cases per compared tag value in each half |
 | A new kind of case added only before the confirmation series (long multi-intent messages): `dev` and `holdout` scores diverged | one population for both; add, then explore again on `dev` |
-| A 400 MB archive unpacked into the package during a series: the server reindexed and the CLI lost contact with it | raw files in `data/raw/` outside the package; only the vetted subset in `samples/` |
+| A raw archive unpacked into the package: unvetted files sat next to the cases, and its `.md`, `.yaml` and `.py` files were checked as project files | raw files in `data/raw/` outside the package; only the vetted subset in `samples/` |
 | A background builder piped through `head` died halfway, and the rerun started from zero | a log file, and a builder that skips what it already has |
 | YAML dumped with aliases: dozens of `E_YAML_ANCHOR` | `canonical_writer()` in the builder |
 | A good pattern: the owner proposed a mapping ("error code → refund category"), the agent derived labels by that table and marked it for sign-off | do the same |

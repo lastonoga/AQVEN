@@ -58,6 +58,6 @@ the matching how-to for the field list and a worked example.
   behind one `llm` node.
 - Files as source of truth — how a node's files sit on disk,
   and how a nested body node (a `parallel` branch, a `map` or `loop` body) is named.
-- Designing reliable workflows — the judgment calls behind
+- [Designing reliable workflows](designing-reliable-workflows.md) — the judgment calls behind
   picking one of these ten kinds over another for a given step.
 - Engine — the how-to section all ten node kinds live in.
