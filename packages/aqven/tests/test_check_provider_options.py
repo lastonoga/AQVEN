@@ -1,3 +1,4 @@
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Final
 
@@ -53,7 +54,16 @@ def with_options(root: Path, *lines: str) -> None:
         ("google:gemini-2.5-flash", {"thinking_config": {"thinking_budget": 0}}, None),
         ("google:gemini-2.5-flash", {"reasoning_effort": "low", "top_k": 20}, ("reasoning_effort",)),
         ("google:gemini-2.5-flash", {"logprobs": 3}, ("logprobs",)),
-        ("mistral:mistral-small-latest", {"reasoning_effort": "none"}, None),
+        pytest.param(
+            "mistral:mistral-small-latest",
+            {"reasoning_effort": "none"},
+            None,
+            marks=pytest.mark.skipif(
+                find_spec("mistralai") is None,
+                reason="the adjustable reasoning of mistral-small comes from the mistral provider profile, "
+                "which needs the mistral extra",
+            ),
+        ),
         ("mistral:mistral-small-latest", {"reasoning_effort": "low"}, ("reasoning_effort",)),
         ("mistral:magistral-medium-latest", {"reasoning_effort": "high"}, ("reasoning_effort",)),
         ("xai:grok-4.3", {"reasoning_effort": "low", "search_parameters": {}}, ("search_parameters",)),
