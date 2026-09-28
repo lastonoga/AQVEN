@@ -46,11 +46,13 @@ return the structured output AQVEN expects, not only whether a request to them w
   kind it reads.
 - An agent with more than one model — a primary `model` plus `fallback_models` — gets one block per
   model, so you can compare what each one supports before deciding whether they actually agree.
-- Add `--provider-options '<json object>'` alongside `--live` to merge that object into every probe's
-  request body — the same place an agent's own `settings.provider_options` lands. Run the same target
+- Add `--provider-options '<json object>'` alongside `--live` to send that object with every probe the way an
+  agent's own `settings.provider_options` is sent: merged into the request body on most providers, and where
+  [each provider takes it](../integrations/model-providers.md#options-only-one-provider-takes) on `google`, `mistral`,
+  `xai` and `bedrock`; a key the provider of a probed model does not send is named on stderr. Run the same target
   with and without it to find out whether a provider-level setting changes what a model can do; see
-  [How to find a model's real structural limits](check-shapes.md) for OpenRouter's
-  `require_parameters` specifically.
+  [How to find a model's real structural limits](check-shapes.md) for OpenRouter's `require_parameters`
+  specifically.
 - `--json` prints the same report as one JSON object instead of text: one entry per target with its
   resolved mode, and a `modes` list per model carrying `profile_supports` and, with `--live`, `live`,
   `code`, and `message` for anything that failed.

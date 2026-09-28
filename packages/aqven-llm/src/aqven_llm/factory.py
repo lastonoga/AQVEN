@@ -24,6 +24,7 @@ from aqven_llm.connectors import MODEL_BUILDERS, ModelBuilder
 from aqven_llm.errors import ProviderMisconfigured, UnknownProvider
 from aqven_llm.keys import environment_key, required_key
 from aqven_llm.media import TEXT_ONLY, MediaOutput
+from aqven_llm.options_model import with_native_options
 from aqven_llm.routing import OpenRouterRouting
 from aqven_llm.support import ModuleFinder, StreamProbe, ensure_ready, model_streams, module_available
 from aqven_llm.target import ModelTarget
@@ -131,9 +132,10 @@ class ProviderModelFactory:
             raise UnknownProvider(model, self._known())
         target = self.target(model, settings=settings, api_key=api_key)
         try:
-            return self.builders[target.provider](target)
+            built = self.builders[target.provider](target)
         except UserError as error:
             raise ProviderMisconfigured(target.provider, str(error)) from error
+        return with_native_options(built, self.catalog[target.provider].request_options)
 
     def _custom_model(
         self, custom: CustomProvider, name: str, *, settings: ModelSettings | None, api_key: SecretStr | None

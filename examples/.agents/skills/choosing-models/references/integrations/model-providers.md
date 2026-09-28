@@ -169,8 +169,31 @@ first, then from a live probe and a real run. The steps are the same for every p
 
 ## Options only one provider takes
 
-`settings.provider_options` in an agent file is merged into the request body as is. It carries what only one
-provider takes, reasoning first:
+`settings.provider_options` in an agent file carries what only one provider takes, reasoning first. Each key is
+the provider's own name for a request field, and the provider's model class decides how it reaches the request:
+
+| Provider | Where the keys go |
+| --- | --- |
+| every provider of the [provider catalog](../reference/provider-catalog.md) not named below, and providers with `kind: "openai_compatible"` | every key, merged into the request body as is |
+| `bedrock` | every key, into `additionalModelRequestFields` of the Converse request: the object that carries the model's own fields |
+| `google` | only the keys of the table below, as the Gemini request fields of the same name |
+| `mistral` | only the keys of the table below |
+| `xai` | only the keys of the table below, as the xAI chat parameters of the same name |
+| `cohere` | no key: its model class takes no request option, and it cannot stream, so `aqven check` rejects its models with `E_PROVIDER_NO_STREAMING` anyway |
+
+| Provider | Key under `provider_options` | What is sent |
+| --- | --- | --- |
+| `google` | `thinking_config` | the thinking configuration: `thinking_budget`, `thinking_level`, `include_thoughts`, in the values the model page lists |
+| `google` | `safety_settings` | the safety settings, a list of `category` and `threshold` |
+| `google` | `media_resolution` | the resolution of the media inputs, for example `"MEDIA_RESOLUTION_LOW"` |
+| `google` | `cached_content` | the name of a cached content; the cache holds the instructions and tools, so they leave the request |
+| `google` | `response_logprobs`, `logprobs` | log probabilities; `logprobs` only with `response_logprobs: true` |
+| `google` | `top_k`, `presence_penalty`, `frequency_penalty`, `stop_sequences` | the generation fields of the same name |
+| `mistral` | `reasoning_effort` | `"none"` or `"high"`, on the models Pydantic AI marks as having adjustable reasoning, such as `mistral-small-latest` and `mistral-medium-latest`; `magistral` models always reason and get no effort |
+| `mistral` | `prompt_cache_key`, `presence_penalty`, `frequency_penalty`, `stop` | the fields of the same name |
+| `xai` | `reasoning_effort`, `user`, `logprobs`, `top_logprobs`, `store_messages`, `previous_response_id`, `use_encrypted_content`, `max_turns`, `agent_count`, `presence_penalty`, `frequency_penalty`, `stop` | the chat parameters of the same name |
+
+The reasoning key differs by provider:
 
 | Provider | Reasoning key under `provider_options` |
 | --- | --- |
@@ -178,8 +201,12 @@ provider takes, reasoning first:
 | `openai` (the Responses API) | `reasoning`, with `effort` |
 | `anthropic` | `thinking`: `type: "disabled"` switches it off; the forms that switch it on differ by model, see its model page |
 | `openrouter` | `reasoning`, next to `provider` for routing; see [How to choose models on OpenRouter](openrouter-model-selection.md) |
+| `google` | `thinking_config`, with `thinking_budget` or `thinking_level` |
+| `bedrock` | the model's own field: `thinking` on Anthropic models, `reasoning_effort` on OpenAI models, `reasoning_config` on Qwen models |
+| `mistral` | `reasoning_effort`: `"none"` or `"high"` |
+| `xai` | `reasoning_effort`, one of the efforts the model lists |
 
-Two agents on two providers, each with reasoning set on purpose:
+Three agents on three providers, each with reasoning set on purpose:
 
 ```yaml
 model: "openai-chat:gpt-5-mini"
@@ -198,18 +225,32 @@ settings:
       type: "disabled"
 ```
 
-- The keys reach the request on every provider of the
-  [provider catalog](../reference/provider-catalog.md) except `google`, `mistral`, `cohere`, `bedrock` and `xai`, and
-  on providers with `kind: "openai_compatible"`. On `openrouter`, `cerebras` and `zai`, a key the model sets
-  itself wins over yours: on `openrouter`, the `provider` object that `routing` in `aqven.yaml` produces
-  replaces the agent's.
-- `google`, `mistral`, `cohere`, `bedrock` and `xai` do not send them: their model classes take no extra request
-  body, so the keys are dropped without an error, and `aqven check` does not report them. Reasoning on those
-  models stays at the model's default.
-- The object belongs to the agent, not to one model: every model in `fallback_models` gets the same keys. A
-  provider may reject a key it does not know, so a fallback on another provider needs options both accept.
+```yaml
+model: "google:gemini-2.5-flash"
+settings:
+  max_tokens: 2000
+  provider_options:
+    thinking_config:
+      thinking_budget: 0
+```
+
+- A key the provider does not send is left out of the request, and `aqven check` names it: the warning
+  `W_PROVIDER_OPTIONS_IGNORED` gives the agent, the model, the keys left out and the keys that provider takes. It
+  points at `settings.provider_options` for the agent's `model` and at the entry of `fallback_models` for a
+  fallback model.
+- A key that is sent still has to be right: the provider, or its SDK, rejects an unknown field or a wrong value, and
+  the call fails with that error. On `google` the SDK refuses an unknown field inside `thinking_config` or
+  `safety_settings` before the request leaves.
+- On `openrouter`, `cerebras` and `zai`, a key the model sets itself wins over yours: on `openrouter`, the
+  `provider` object that `routing` in `aqven.yaml` produces replaces the agent's.
+- A provider with `kind: "code"` gets the object as `extra_body` in the model settings, and its factory's model
+  class decides what to do with it; `aqven check` does not judge it.
+- The object belongs to the agent, not to one model: every model in `fallback_models` gets the same keys, each the
+  way its provider takes them. A provider may reject a key it does not know, so a fallback on another provider
+  needs options both accept.
 - `aqven models check --live` does not read the agent's own `provider_options`. Pass the same object with
-  `--provider-options '<json object>'` to probe what the agent sends.
+  `--provider-options '<json object>'` to probe what the agent sends; it reaches the request the same way, and a key
+  the provider of a probed model does not send is named on stderr.
 
 ## When a provider rate-limits
 
@@ -267,8 +308,8 @@ upstream providers.
 
 Every built-in provider is a thin factory over a Pydantic AI model
 class — `GoogleModel`, `AnthropicModel`, `BedrockConverseModel`, and so on. It builds the right client,
-passes your credential and settings through, and stops there — Pydantic AI is what actually talks to
-the provider.
+passes your credential and settings through, puts `provider_options` where that model class reads them, and stops
+there — Pydantic AI is what actually talks to the provider.
 
 ## See also
 
