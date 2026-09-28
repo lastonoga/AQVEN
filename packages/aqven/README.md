@@ -1,7 +1,8 @@
 # AQVEN
 
-**Discover what your AI workflow needs to work reliably.** A Python framework and a local Studio for AI
-workflows. Your coding agent runs the experiments. You see the evidence and decide.
+**Discover what your AI workflow needs to work reliably.** AQVEN is a Python framework and a local Studio
+for building reliable LLM workflows: multi-step pipelines of models, tools and human review. Your coding
+agent runs the experiments. You see the evidence and decide.
 
 **[Documentation](https://aqvenstudio.com)** · **[Quickstart](https://aqvenstudio.com/start/quickstart/)** · **[Use cases](https://aqvenstudio.com/use-cases/)** · **[Studio](https://aqvenstudio.com/studio/)** · **[GitHub](https://github.com/lastonoga/AQVEN)**
 
@@ -10,8 +11,8 @@ workflows. Your coding agent runs the experiments. You see the evidence and deci
 AQVEN keeps an AI workflow as typed files in your repository: a flow, one file per step, prompts in
 Markdown, and declared types, agents and tools. `aqven check` validates every connection and simulates
 every flow before you spend a token. Studio, a local browser app in the same install, shows each run
-step by step. Your coding agent works on the same files through AQVEN's MCP server, and runs experiments
-whose verdicts AQVEN computes.
+step by step. Your coding agent (Claude Code, Codex or any MCP client) works on the same files through AQVEN's
+MCP server, and runs experiments whose verdicts AQVEN computes.
 
 AQVEN is in alpha: expect changes between releases.
 
@@ -69,6 +70,42 @@ For Codex, Cursor or another MCP client, see
 [Pydantic AI](https://ai.pydantic.dev/) calls the models, [DBOS](https://www.dbos.dev/) checkpoints every
 run on SQLite, the official [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) serves and
 consumes MCP, and [FastAPI](https://fastapi.tiangolo.com/) serves Studio and the API. Runs locally.
+
+## FAQ
+
+**What is AQVEN?** A Python framework and a local Studio for building reliable LLM workflows. A workflow is
+a set of typed files in your repository: a flow, one file per step, prompts in Markdown, and declared
+types, agents and tools. AQVEN checks the files before a run, runs the flow with checkpoints, and runs
+experiments on cases to tell you whether a change helped.
+
+**Is AQVEN open source?** No. It is source-available under the AQVEN License 1.0.0, which is based on the
+PolyForm Shield License 1.0.0. You may use it for any purpose, including production and commercial
+products, and the workflows you build are yours to sell. You may not use it to provide a product that
+competes with AQVEN, and you may redistribute AQVEN itself only free of charge and for a non-commercial
+purpose. See [License](#license) below.
+
+**Which Python version does it need?** Python 3.14. uv fetches it for you.
+
+**Which coding agents does it work with?** Claude Code and Codex, from Studio's chat or from your own
+terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.
+
+**Which model providers can I use?** The provider catalog has 28 entries through Pydantic AI, from OpenAI,
+Anthropic and Google to OpenRouter, Mistral, DeepSeek, Groq and Ollama.
+
+**Do I need an account or a hosted service?** No. AQVEN runs on your machine. `aqven check` needs neither a
+model key nor the network; a real run needs a key for the provider you choose.
+
+**What does `aqven check` do?** It validates every file, type reference, binding and prompt, then simulates
+a run of every flow with stand-ins for the model calls, so most wiring mistakes surface before a run costs
+a token.
+
+**Does a "confirmed" verdict guarantee quality?** No. A verdict holds for the cases, checks and versions it
+measured. It is evidence for a decision, not a guarantee about every future output.
+
+**How is AQVEN different from an eval library?** Eval libraries typically score the outputs of an app you
+already have. AQVEN also holds the workflow itself as typed files that are checked before they run, and its
+experiments write the question down before any data and give a verdict on held-out cases that is allowed
+to say "inconclusive". If you only need to score an existing app, an eval library is the lighter choice.
 
 ## License
 

@@ -1,0 +1,16 @@
+name: Idea or feature request
+description: Something AQVEN should do that it does not do today
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were trying to do, and what got in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help
+      description: The change you have in mind, if you have one.
