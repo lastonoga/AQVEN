@@ -77,9 +77,10 @@ real schemas at two levels of nesting or shallower, or not routing to it when th
 
 ## Testing a provider-specific setting
 
-`--provider-options '<json object>'` merges into the request body sent for every probe, on both this
-command and [`models check`](check-providers.md) — the same place an agent's own
-`settings.provider_options` YAML field lands. Use it to find out whether some provider-level knob actually
+`--provider-options '<json object>'` is sent with every probe, on both this command and
+[`models check`](check-providers.md), the way an agent's own `settings.provider_options` YAML field is:
+merged into the request body on most providers, and where
+each provider takes it on the others. Use it to find out whether some provider-level knob actually
 changes a model's behavior, instead of assuming it does because a provider's docs mention it.
 
 The one worth knowing about on OpenRouter specifically is `require_parameters`: by default OpenRouter can

@@ -1156,6 +1156,7 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_GENERATED_STALE,
         DiagnosticCode.W_OUTPUT_MODE_RESOLVED,
         DiagnosticCode.W_SAMPLING_IGNORED,
+        DiagnosticCode.W_PROVIDER_OPTIONS_IGNORED,
         DiagnosticCode.W_TYPES_SHADOWS_STDLIB,
         DiagnosticCode.W_SIM_NODE_UNREACHED,
         DiagnosticCode.W_PROMPT_VALUE_UNREADABLE,

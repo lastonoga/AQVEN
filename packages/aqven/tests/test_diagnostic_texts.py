@@ -25,6 +25,9 @@ VALUES: Final = {
     "module": "lumen",
     "folder": "/work/lumen/src/lumen",
     "setting": "temperature",
+    "agent": "classifier",
+    "keys": "reasoning_effort",
+    "accepted": "only thinking_config",
 }
 
 
@@ -36,6 +39,7 @@ VALUES: Final = {
         (DiagnosticCode.E_OUTPUT_MODE_UNSUPPORTED, Severity.ERROR),
         (DiagnosticCode.W_OUTPUT_MODE_RESOLVED, Severity.WARNING),
         (DiagnosticCode.W_SAMPLING_IGNORED, Severity.WARNING),
+        (DiagnosticCode.W_PROVIDER_OPTIONS_IGNORED, Severity.WARNING),
         (DiagnosticCode.W_TYPES_SHADOWS_STDLIB, Severity.WARNING),
     ],
 )
