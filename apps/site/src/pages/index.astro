@@ -32,9 +32,9 @@ import {
   REPO,
 } from "@/components/landing/site-nav";
 
-const TITLE = "AQVEN: Discover what your AI workflow needs to work reliably";
+const TITLE = "AQVEN: Python framework and Studio for reliable LLM workflows";
 const SITE_DESCRIPTION =
-  "AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, you see the evidence and decide.";
+  "AQVEN is a Python framework and a local Studio for building reliable LLM workflows. Claude Code or Codex runs the experiments; you see the evidence and decide.";
 const PYPI = "https://pypi.org/project/aqven/";
 const LICENSE = `${REPO}/blob/main/LICENSE`;
 
@@ -105,6 +105,7 @@ const jsonLd = {
       name: "AQVEN",
       description: SITE_DESCRIPTION,
       applicationCategory: "DeveloperApplication",
+      softwareRequirements: "Python 3.14",
       url: siteUrl,
       downloadUrl: PYPI,
       ...(release === null ? {} : { softwareVersion: release.version }),
@@ -146,7 +147,7 @@ const jsonLd = {
       <Hero206
         badge="For engineers building multi-step AI workflows"
         heading="Discover what your AI workflow needs to work reliably."
-        description="AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, and you see the evidence."
+        description="AQVEN is a Python framework and a local Studio for building reliable LLM workflows. Your coding agent, Claude Code or Codex, runs the experiments, and you see the evidence."
         command="uv tool install aqven"
         buttons={startButtons}
         image={heroImage}

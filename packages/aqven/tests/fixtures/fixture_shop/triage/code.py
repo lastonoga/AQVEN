@@ -26,7 +26,7 @@ class PathParams(BaseModel):
 
 
 def summary_written(state: LoopState, params: PathParams) -> StopDecision:
-    return Stop("краткое содержание готово") if state.iterations else Continue()
+    return Stop("summary is ready") if state.iterations else Continue()
 
 
 def first_summary(state: JoinState[TriageSummarizeOut], params: NoParams) -> JoinDecision[TriageSummarizeOut]:

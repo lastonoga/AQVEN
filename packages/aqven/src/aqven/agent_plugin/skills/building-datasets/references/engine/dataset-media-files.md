@@ -53,10 +53,15 @@ job then runs the same case on the same bytes.
   read, so it covers the bytes, not only the YAML. Replace `photo_01.jpg` with another photo while a
   series runs, and the series ends `invalid` with `inputs_changed`. A finding records that fingerprint,
   so it applies to the files as they were when the series ran.
+- **Keep bulk downloads outside the project folder until you have vetted them.** The project server watches
+  every file in the folder that holds `aqven.yaml` and refreshes the project on each change, so unpacking a
+  large archive there keeps the server busy, during a series too. Download and unpack a public source somewhere
+  else, for example `data/raw/` at the root of the repository, listed in `.gitignore`. Then copy only the
+  curated subset the cases use into `samples/` or the dataset's own folder.
 - **Keep private media out of git.** Files in `datasets/<dataset_id>/` are committed with the rest of the
-  project. AQVEN does not hide or encrypt them. For photos of people, scans of documents or anything
-  else you may not share, keep the files in the dataset's own folder and add that folder to the
-  `.gitignore` next to `aqven.yaml`:
+  project. AQVEN does not hide or encrypt them. For photos or recordings of people, customer documents,
+  personal records or anything else you may not share, keep the files in the dataset's own folder and add
+  that folder to the `.gitignore` next to `aqven.yaml`:
 
   ```text
   datasets/customer_photos/

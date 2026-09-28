@@ -35,6 +35,19 @@ When a schema still fails, split the step or switch the agent to `prompted` mode
 The factors multiply. A catalogue page with twelve products and up to thirty attributes each is 360
 readings in one answer, and each reading carries its own enum and its own string.
 
+A closed vocabulary inside a list multiplies the same way. A list of up to 15 topic tags for a support
+ticket, each chosen from 60 values, asks for 60 branches at each of 15 positions, on top of the rest of
+the record. Some providers refuse that before the model runs, with provider text such as "too many
+states for serving" (`OUTPUT_SCHEMA_REJECTED`). Two fixes work:
+
+- `prompted` mode: the schema goes into the prompt as text and AQVEN validates the answer, so the
+  provider builds no grammar (see [Tool mode and prompted mode](#tool-mode-and-prompted-mode)).
+- A smaller type: split the list into groups of values, one field or one call per group, or ask a yes
+  or no per group.
+
+`output.strict: false` does not help: the schema still goes to the provider, and the provider still
+builds it. Check the fix with one call on the case that failed before you run every variant again.
+
 `aqven check` already refuses an output that has no bound at all. An output list without
 `maxItems`, or an output `Text` without `maxLength` or `enum`, is `E_OUTPUT_UNBOUNDED`. A bounded schema
 can still be too big for one model. Only a real request tells you.
@@ -69,8 +82,8 @@ reports which modes each model supports. A small probe that passes does not prov
 The number that does is `schema_valid_first_try` in a series: the share of attempts whose first answer
 fit the schema, before any repair.
 
-For example, a panel of three models reads groups of product attributes from catalogue images. Every
-model passes its probe in `tool` mode, because the probe's schema is small. On real images, one model fails
+For example, a panel of three models reads groups of product attributes from catalogue pages. Every
+model passes its probe in `tool` mode, because the probe's schema is small. On real pages, one model fails
 again and again on the largest group with `MODEL_SCHEMA_MISMATCH: presence: Field required`. Run the same
 experiment with the agent in `prompted` mode and compare three numbers: `schema_valid_first_try`, the share
 of attempts where the whole panel answered, and the cost. Fewer repairs can make `prompted` cheaper as well
@@ -113,6 +126,8 @@ names one product instead of the whole page.
   breaks it. That is a gap in the prompt, not in the model.
 - When a schema that passed its probe fails on real inputs, try `prompted` first, then another model, and
   read `schema_valid_first_try`.
+- When a large enum inside a list is refused, switch to `prompted` or split the type. `strict: false`
+  does not help. Confirm the fix with one call on the failing case.
 - When the shape of the answer depends on the input, pick the least dynamic of the
   [five cases of dynamic shape](five-dynamic-shape-cases.md).
 

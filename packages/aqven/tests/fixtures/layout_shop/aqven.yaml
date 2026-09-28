@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Project"
-description: "Модуль в рекомендуемой раскладке: у каждого вида одно место"
+description: "Module in the recommended layout: every kind has one place"
 package: "layout_shop"
 providers:
 - id: "openai"

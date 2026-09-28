@@ -6,8 +6,9 @@ Engine: aqven <version>. The `aqven` MCP server of `.mcp.json` and `.codex/confi
 
 ## Load the skill before you write
 
-Skills of this engine version hold its facts. Load one before the first file of its kind; without skills, read
-`.agents/skills/<skill>/SKILL.md`. Never learn the engine from memory, the web, compaction summaries or its source.
+Skills of this engine version hold its facts. Load one before the first file of its kind and the skill of your stage
+again after a compaction; without skills, read `.agents/skills/<skill>/SKILL.md`. Learn the engine from skills, not
+memory, the web, compaction summaries or its source; the project from `aqven tree` and its files, not the transcript.
 
 | Before you | Skill |
 |---|---|
@@ -16,7 +17,7 @@ Skills of this engine version hold its facts. Load one before the first file of 
 | decide what a step does when it fails | `hardening-flows` |
 | write `types/` or an inference output | `designing-output-contracts` |
 | write `agents/`, a provider in `aqven.yaml`, or an agent factor | `choosing-models` |
-| touch photos, scans, PDFs, audio or video | `preparing-media-inputs` |
+| touch images, scans, PDFs, audio, video, long text or tables | `preparing-media-inputs` |
 | write `datasets/` | `building-datasets` |
 | write a hypothesis or a check | `analyzing-failures` |
 | write `experiment.yaml` | `designing-experiments` |
@@ -29,11 +30,16 @@ Skills of this engine version hold its facts. Load one before the first file of 
 - The path is the identity: there is no `id:` key. Prompts are Markdown files; YAML carries no comments.
 - Every shape is declared once under `types/`; `<package>/types.py` is generated, never edit it.
 - Structure goes through `flow_patch`: add, remove, rename or move a node; rename a flow or an agent; delete an
-  agent. One file goes through Edit or Write. Never `rm`, `mv`, `cp -r` or one regex over several project files;
-  the two exceptions are in `building-flows`. On `STALE_FILE`, read the file again and repeat the change.
-- `aqven check` passes after every change. Read the `prompt_preview` of every changed llm node in full.
-- Never touch `.aqven/`, `experiments/*/findings/` or `FINDINGS.md`. Read `FINDINGS.md` and
-  `<package>/EXPERIMENTS.md` before you design a change, and again after a compaction.
+  agent. One hand-written file per Edit or Write call; on `STALE_FILE`, read it again and repeat the change.
+  Generated files come from a committed builder `scripts/build_<what>.py` run with `uv run python`, which prunes
+  what it no longer writes once `aqven refs` finds no reference. Never `rm`, `mv`, `cp -r` or one regex over
+  several project files (exceptions: `building-flows`), and never generate from `/tmp`, a scratchpad or a heredoc.
+- `aqven check` passes after every change. Read its warnings; never pass `include_warnings: false`. On
+  `W_AGENT_SKILLS_STALE`, offer the owner `uv run aqven skills sync <package>` in one line.
+- Read the `prompt_preview` of every changed llm node in full, and `FINDINGS.md` and `<package>/EXPERIMENTS.md`
+  before you design a change and again after a compaction. Never write `experiments/*/findings/` or `FINDINGS.md`;
+  never open `.aqven/` (its databases, pickled outputs, logs) or fan hundreds of run reads to subagents: report
+  the missing tool to the owner as a gap in AQVEN.
 - No comments and no docstrings in project code, and never a docstring moved into a `#` line (`E_DOCSTRING`).
 - Project Python reloads on the next run: a new step or check never needs a server restart.
 
@@ -41,12 +47,18 @@ Skills of this engine version hold its facts. Load one before the first file of 
 
 - Restate an experiment's question in the owner's words and get a yes before you build it.
 - Compared things are variants of one factor, measures are checks; correctness needs ground truth and a control.
-- The models, providers and data the owner chose stay. If a check contradicts what runs show, report it as a
-  likely engine bug; change the set only after the owner agrees.
+- The owner's models, providers and data stay unless he agrees; a check that contradicts runs is an engine bug.
 - One run proves one case; a `dev` or provisional verdict proves nothing. Quote `verdict.text` as it is.
 - Before a holdout series, say in one line what claim it tests, why now and what each verdict would mean.
 - Lead a report with the result on real data and the change in points; synthetic tests only support it.
 - When the owner asks to skip a stage, name its cost in one line and let him choose.
+- A scope limit he sets ("keep it simple", "only this input", "not yet") binds every later step and subagent:
+  report the gaps it leaves, never fill them. A new source, download or side research waits for his yes.
+- While he is still describing a design, offer two or three options in one question and write files after the
+  answer; ask when "not needed" could mean a field or a whole experiment.
+- His plans and hypotheses go into `EXPERIMENTS.md`, his rules into Owner's rules, as he says them, not host memory.
+- A vague report ("looks cached") gets one question first: what he did, expected and saw. Explain a concept in two
+  or three sentences; summaries for him are Markdown next to `EXPERIMENTS.md` unless he asks for another format.
 - Working autonomously, go on through cheap in-scope steps; at the experiment count the owner allowed, stop,
   report and update `EXPERIMENTS.md`. Report what you promised and dropped; try a dependency with `uv run --with`.
 
@@ -55,23 +67,11 @@ Skills of this engine version hold its facts. Load one before the first file of 
 - Never raise `research.spend_cap_usd` in `aqven.yaml` to get past a pause; set it only to a number the owner
   names. A series paused at 90% of its cap waits for a person in Studio: report the spend and wait.
 - Never cut repeats, cases or variants to fit the cap. Never cancel over 429: the engine pauses that model.
-- Wait for a series in the background: `uv run aqven series` as a background command, or `series_get` with
-  `wait_seconds`; say so in one line. Never poll with `sleep` or raw HTTP. Do not edit the project while it runs;
-  cancel only a series the owner asked you to cancel.
-- Never start, stop, kill or restart the project server. Use the `aqven` MCP tools, not raw HTTP calls.
+- Run builders, downloads and `uv run aqven series` in the background, unpiped, never through `head`, `tail` or a
+  `sleep` poll; or wait with `series_get` and `wait_seconds`. Edit nothing during a series; cancel only on request.
+- Never start, stop, kill or restart an aqven server, this project's or another's; use the `aqven` MCP tools, not
+  raw HTTP. Report an `INTERNAL` (tool, time, arguments) or a second server on this root (PIDs, roots) as a bug.
 - Keys live in Studio settings or `<package>/.env`. If your host blocks `.env`, do not retry: use the MCP tools.
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| `uv run aqven check <package>` | static check plus a simulated run of every flow |
-| `uv run aqven prompt preview <flow>.<node> --project <package>` | the exact messages an llm node sends |
-| `uv run aqven models check <agent> --project <package> --live` | output modes each model really supports |
-| `uv run aqven models shapes <agent> --project <package> --live` | how deep and wide an output a model holds |
-| `uv run aqven tree <package>`, `uv run aqven refs <kind>:<id> <package>` | entities and who uses them |
-| `uv run aqven series <experiment> --path <package> --on dev` | start a series and wait for its verdict |
-| `uv run aqven skills sync <package>` | refresh skills and this block after an engine upgrade |
 
 <!-- aqven:end -->
 

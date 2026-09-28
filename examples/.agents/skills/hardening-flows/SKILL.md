@@ -18,13 +18,13 @@ description: "Makes an AQVEN flow fail loudly and recover on purpose: run-time c
 
 | # | Step | Exit criterion |
 |---|---|---|
-| 1 | A table per node: possible failures (provider error, 429, refusal, truncation, invalid schema, empty or wrong input, some `map` items failing, a slow `parallel` branch), how to detect each, what to do, how a person sees it | every node has all four columns |
-| 2 | Detection: `checks` in the inference with `on_fail: "retry"` (or `"fail"`, `"flag"`); built-ins `not_empty`, `unique_items`, `ids_in_allowed_set` (with `allowed_sets`); flow `requires` predicates (`families_distinct`, `family_disjoint_from_input`, `field_before`) where they fit | every llm node has at least one run-time check |
+| 1 | A table per node: possible failures (provider error, 429, refusal, truncation, invalid schema, empty or wrong input, some `map` items failing, a slow `parallel` branch; for tools an external API down or slow, a tool `wait` past its `timeout_seconds`, an approval nobody answers, an agent's tool-call loop stopped by `limits.tool_calls`; for long or split inputs a part of a document silently dropped, an empty list of pages, chunks, segments or rows), how to detect each, what to do, how a person sees it | every node has all four columns |
+| 2 | Detection: `checks` in the inference with `on_fail: "retry"` (or `"fail"`, `"flag"`); built-ins `not_empty`, `unique_items`, `ids_in_allowed_set` (with `allowed_sets`); flow `requires` predicates (`families_distinct`, `family_disjoint_from_input`, `field_before`) where they fit. A retry check never rejects a declared `cannot_tell` value: the input may not show the answer | every llm node has at least one run-time check; no check rejects `cannot_tell` |
 | 3 | Reaction to a call outcome in the agent: `output.on_error` (default `retry`), `output.on_refusal` and `output.on_truncated` (default `fail`), each `retry`, `fail` or `fallback`; `fallback` only with `fallback_models` | no `E_OUTCOME_FALLBACK` |
 | 4 | `parallel`: pick `join` from the table below; if every opinion is needed, `all`; with `quorum` the output carries how many branches answered (`$ok[*]`) | the output shows how many branches answered |
 | 5 | `map`: `on_item_error` with `use: "skip"` or `use: "default"` only together with a coverage guard after the map (the required items) and an output field for the items not read (for example `unread`) | a missing required item fails the run; a missing optional item is visible in the flow output |
-| 6 | Deterministic gates before a paid call: a `code` check of input quality and a `switch` on its verdict | the gate sits before the first llm node where possible |
-| 7 | `limits` on the flow and the agent (`requests`, `tokens`, `usd_micros`, `seconds`, `tool_calls`); an agent's `limits.seconds` cuts a hanging call long before the 600 s of stream silence the engine allows | limits are set |
+| 6 | Deterministic gates before a paid call: a check of input quality (`code` for text length or row count, `tool` for a blank page or a silent recording, since only a tool reads media bytes) and a `switch` on its verdict | the gate sits before the first llm node where possible |
+| 7 | `limits` on the flow and the agent (`requests`, `tokens`, `usd_micros`, `seconds`, `tool_calls`); an agent's `limits.seconds` cuts a hanging call long before the 600 s of stream silence the engine allows; an agent with `tools` or `mcp_servers` gets `limits.tool_calls` (past it the call fails with `budget_exceeded`); its `approval` names the tools that write, with `assignee`, `timeout_seconds` and `on_timeout` (`fail` or `escalate`; `default` is refused with `E_HUMAN_DEFAULT_INVALID`); a tool with `wait` has a `timeout_seconds` the job can meet | limits are set; every tool that writes has an approval or a stated reason |
 | 8 | A multi-call pattern is measured against a variant of equal budget: a `use` factor on the container node, or a `flow` factor on a `call` slot (`designing-experiments`) | every such construct has an experiment or a stated reason |
 | 9 | Prove the failure path: a run where one item fails (a planted bad input, or `run_start` over a node range with `start_node`, `end_node` and `node_outputs` that plant a bad upstream output) | the run view shows the item replaced or skipped, and the flow output has the "not read" field instead of a silent `completed` |
 
@@ -32,7 +32,7 @@ description: "Makes an AQVEN flow fail loudly and recover on purpose: run-time c
 
 | `join` | When the node closes | Danger |
 |---|---|---|
-| `all` | every branch succeeded; fails on the first error | one model's 429 fails the node; give its agent `fallback_models` or provider fallbacks |
+| `all` | every branch succeeded; fails on the first error | one model's 429 fails the node; give its agent `fallback_models`, or on an aggregator its upstream fallbacks |
 | `any` | the first finished branch, success or error | only the fastest model counts |
 | `first_success` | the first success; fails when all fail | the opinion of one model, not of a panel |
 | `quorum` with `min_ok` and `on_error` (`skip` or `fail`) | as soon as `min_ok` branches succeeded | a race, not a wait: with `min_ok: 2` of three, the slowest model never takes part |
@@ -55,6 +55,10 @@ join:
 | `quorum` taken for "wait for two of three": it closes on the first answers, so the slowest model never counts | `all` with fallbacks, or report how many answered |
 | `join: all` over several providers: one provider's 429 fails the node on every case | fallbacks on each agent (`choosing-models`) |
 | Compliance or safety work the owner did not ask for (PII masking added to an internal code-review flow) | follow "Owner's rules" |
+| A yes/no question per item of a long checklist (40 contract clauses, 30 sound events in a recording) raised recall and false positives together, at several times the cost | measure precision and cost next to recall; require evidence for each yes (a quote, a timestamp, a page and line, a region), or vote across models |
+| A retry check rejected honest "cannot tell" answers (a required field the input did not show), so they counted as model failures | checks accept `cannot_tell`; a required field the input may not show is a contract bug (`designing-output-contracts`) |
+| A speech-to-text tool caught its provider's timeout on a long call and returned an empty transcript, which the next step read as "the customer asked for nothing" | the tool raises and the step fails; an empty transcript, chunk or segment list is a guard violation, not an answer |
+| An agent with a search tool and no `limits.tool_calls` kept calling it on a table of 5,000 rows until the run's budget ran out | `limits.tool_calls` on every agent with tools; send the model only the rows the question needs |
 
 ## Tools and commands
 
@@ -74,5 +78,7 @@ join:
 - `references/engine/field-constraints.md`: `maxItems`, `maxLength`, `pattern` and their run-time effect. Read
   with step 2.
 - `references/reference/flows.md`, `references/reference/agents.md`: `limits`, `requires`, `output`,
-  `fallback_models`. Read at steps 3 and 7.
+  `fallback_models`, `approval`. Read at steps 3 and 7.
+- `references/engine/tool-node.md`: a tool's `wait`, `timeout_seconds` and `idempotency_key`, and a tool node
+  against an agent's own `tools`. Read at steps 1 and 7 for a step that calls a tool.
 - `references/studio/investigate-a-run.md`: how a replaced or skipped item looks in the run view. Read at step 9.

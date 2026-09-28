@@ -138,6 +138,13 @@ reason. And if what you need is a rename to a type or a tool rather than a node,
 outside what `flow_patch` covers today — make the change by hand and check it, the same as any other
 direct edit.
 
+Files that come from a table rather than from judgment — one agent file per candidate model, a dataset built
+from a folder of source files, an enum with one prompt fragment per value — are neither. They come from a
+builder script committed in `scripts/` at the project root and run with `uv run python`: rerunning it is the
+edit, and a hand edit to its output is lost on the next run. The builder removes a file it no longer writes only
+after `aqven refs` finds nothing that references it. [Tested snippets](../engine/snippets.md) has one,
+with a canonical YAML writer to copy.
+
 ## See also
 
 - [How to edit a flow's structure as an agent](../mcp-cli/edit-a-flow.md) — every `flow_patch` operation,

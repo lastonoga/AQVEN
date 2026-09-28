@@ -186,7 +186,7 @@ def test_schemas_keep_constraints_and_descriptions_without_titles(standard: Comp
     assert isinstance(clean, CompiledCodeNode)
     assert clean.input_schema == {
         "additionalProperties": False,
-        "properties": {"text": {"description": "Текст заметки", "maxLength": 200, "type": "string"}},
+        "properties": {"text": {"description": "Note text", "maxLength": 200, "type": "string"}},
         "required": ["text"],
         "type": "object",
     }

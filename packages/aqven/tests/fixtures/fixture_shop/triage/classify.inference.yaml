@@ -1,30 +1,30 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Выбор очереди по теме и тексту обращения"
+description: "Choose a queue from the ticket subject and text"
 in:
 - name: "ticket"
   type: "TriageTicket"
-  description: "Обращение"
+  description: "Ticket"
 out:
 - name: "rationale"
   type: "Text"
-  description: "Обоснование выбора"
+  description: "Rationale for the choice"
   maxLength: 300
 - name: "category"
   type: "TriageCategory"
-  description: "Очередь"
+  description: "Queue"
 examples:
 - name: "late_parcel"
   in:
     ticket:
-      subject: "Где посылка"
-      body: "Заказ не пришёл вовремя"
+      subject: "Where is my parcel"
+      body: "The order did not arrive on time"
       customer:
-        name: "Анна"
+        name: "Anna"
         email: null
       photo: null
   out:
-    rationale: "Покупатель спрашивает о сроках доставки"
+    rationale: "The customer asks about delivery times"
     category: "delivery"
 checks:
 - use: "not_empty"

@@ -142,7 +142,7 @@ describe("ExperimentScreen: what we test", () => {
     await renderRoute("/research/experiments/reply_noninferior_mistral")
     fireEvent.click(await within(await section("Graph of support_case")).findByText("triage"))
     const sidebar = await screen.findByRole("dialog", { name: "triage" })
-    expect(await within(sidebar).findByText(/^Разбирает текст обращения и все вложения/)).toBeTruthy()
+    expect(await within(sidebar).findByText(/^Analyzes the request text and all attachments/)).toBeTruthy()
   })
 
   it("stacks the subject graph first, then one graph per flow of the experiment with the variants that call it", async () => {

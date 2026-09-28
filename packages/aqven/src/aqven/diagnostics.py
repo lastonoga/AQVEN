@@ -134,6 +134,7 @@ class DiagnosticCode(StrEnum):
     W_GENERATED_STALE = "W_GENERATED_STALE"
     W_OUTPUT_MODE_RESOLVED = "W_OUTPUT_MODE_RESOLVED"
     W_SAMPLING_IGNORED = "W_SAMPLING_IGNORED"
+    W_PROVIDER_OPTIONS_IGNORED = "W_PROVIDER_OPTIONS_IGNORED"
     W_TYPES_SHADOWS_STDLIB = "W_TYPES_SHADOWS_STDLIB"
     W_SIM_NODE_UNREACHED = "W_SIM_NODE_UNREACHED"
     W_PROMPT_VALUE_UNREADABLE = "W_PROMPT_VALUE_UNREADABLE"
@@ -224,6 +225,12 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
         "{setting} is ignored by {model} (reasoning model); remove it",
         "Pydantic AI drops sampling settings from every request to a model that reasons by default: "
         "steer the answer in the prompt, or pick a model without reasoning to keep {setting}",
+    ),
+    DiagnosticCode.W_PROVIDER_OPTIONS_IGNORED: DiagnosticText(
+        "agent {agent}: model {model} does not send settings.provider_options {keys}: "
+        "provider {provider} takes {accepted}",
+        "keep only the keys {provider} takes, or give the agent a model whose provider takes them; "
+        "the provider catalog lists the keys every provider takes",
     ),
     DiagnosticCode.E_SIM_NODE_FAILED: DiagnosticText(
         "simulated run of flow {flow} (pass {pass}): node {address} failed: {code}: {message}",

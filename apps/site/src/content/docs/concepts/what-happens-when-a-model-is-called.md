@@ -120,6 +120,17 @@ the node streams its output, the text of the dropped attempt is marked as discar
 after a repair retry. The tokens and cost the provider reported for the dropped attempt still count
 toward the node's usage.
 
+## When a reasoning model runs out of room
+
+A model that reasons writes reasoning tokens before its answer. They are billed as output and, on most
+providers, count against the request's `max_tokens`, so a call can end `truncated` with a short or empty
+answer: the reasoning used the budget. The node's usage shows it, with output tokens close to `max_tokens` and
+little visible text. There are two fixes. Cap the reasoning (a lower effort, or a reasoning budget) or switch it
+off where the model allows it, with the reasoning key its provider reads in the agent's `settings.provider_options`
+([How to connect a model provider](/integrations/model-providers/#options-only-one-provider-takes) lists the key per
+provider). Or raise `settings.max_tokens` above the answer plus the reasoning you allow. For reading, extraction
+and classification, try the first: it also cuts the cost and the latency of every call.
+
 ## What gets redacted, and when
 
 When an attempt fails for any reason, the raw model output that gets captured into the failure's error

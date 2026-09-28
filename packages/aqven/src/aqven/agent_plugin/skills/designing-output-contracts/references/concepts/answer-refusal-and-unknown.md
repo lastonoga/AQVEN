@@ -9,6 +9,9 @@ Every field a prompt asks about is required, "cannot tell" is its own value, and
 - [Required fields](#required-fields)
 - [Refusal is a call outcome, "cannot tell" is a value](#refusal-is-a-call-outcome-cannot-tell-is-a-value)
 - [Ask about the thing, not about the ability](#ask-about-the-thing-not-about-the-ability)
+- [Only what the input shows](#only-what-the-input-shows)
+- [Enums cover real inputs](#enums-cover-real-inputs)
+- [Fields for an intermediate step](#fields-for-an-intermediate-step)
 - [An example](#an-example)
   - [A completeness check](#a-completeness-check)
 - [How this shapes what you do](#how-this-shapes-what-you-do)
@@ -20,7 +23,8 @@ An answer about one thing has at least three states: the thing is there, it is n
 cannot tell. A refusal and a question nobody asked are two more. Model them as values, not as missing
 fields. Every field the prompt asks about is required in the output type, and "cannot tell" is a value of
 its own. Downstream, a missing answer reads as unknown, never as no. Otherwise a flow that saw nothing
-looks the same as a flow that saw everything was fine.
+looks the same as a flow that saw everything was fine. Ask only for what the input can show, and let an
+enum cover what real inputs contain.
 
 ## The states of an answer
 
@@ -72,6 +76,60 @@ A question like "can you read this page?" gets "yes" on almost anything, includi
 photo of a desk. Ask about the content: "does this contract have a termination clause?", "does this
 message ask for a refund?". Then `cannot_tell` has a clear meaning: the input does not show enough to
 answer that question.
+
+## Only what the input shows
+
+A field belongs in the output only if the input the model receives can decide it. An invoice PDF shows
+the amount due, not whether it was paid. A call transcript shows the words that were said, not what the
+caller meant beyond them. A video clip shows what happens in the frame, not what happens just outside
+it. A product photo shows the colour, not the weight. Asked for such a field, the model guesses, and the
+guess looks like any other answer.
+
+For each field, name the part of the input that decides it. If only history, the account or the subject
+itself can tell, give the step that information as another input (the payment record, the account's
+earlier tickets), or take the field out of the output.
+
+## Enums cover real inputs
+
+An enum that describes the input has to cover what real inputs contain, not what the folder or the spec
+is called. An "invoices" folder holds receipts, credit notes and the odd order confirmation. "English
+calls" include bilingual ones. A bug-report queue gets feature requests. Two values keep such an enum
+honest:
+
+- `other` (or `outside_scope`) for an input that falls outside the listed values;
+- `cannot_tell` for an input that does not show enough to choose.
+
+Size the enum to the decision its consumer makes. A router that sends tickets to eight queues needs
+about eight intents, not sixty, and only values the input can show. Draft the list short and agree on it
+before you write the files. A large enum inside a list can also be too big for the provider to build;
+see [How big an output schema can get](schema-state-space.md).
+
+A field the input may not show stays required and has `cannot_tell` among its values. A runtime check
+on the inference that retries (`on_fail: retry`, see [the inference reference](../reference/inference.md))
+must accept `cannot_tell` as well. A check that rejects it sends the model back until it guesses, and
+every honest answer counts as a failure.
+
+## Fields for an intermediate step
+
+When one step's output feeds another step, design it from the next step's mistakes, not from the fewest
+fields. List the pairs of answers the next step confuses, and give the intermediate record the fields
+that separate them:
+
+| The next step confuses | The intermediate record needs |
+|---|---|
+| a refund request and a billing error | whether money was already charged |
+| the total and the subtotal of an invoice | the printed label next to each amount |
+| who agreed to what in a meeting | where the speaker changes |
+| what caused what in a video clip | the order of events |
+
+"The fewest fields" applies to final outputs. An intermediate record that is too coarse folds the detail
+that decides the next step into a generic word, and the next step cannot get it back.
+
+Before a series, run a new intermediate record on about 10 varied cases and count the values of each
+field. A field that takes one value on more than 80% of the cases tells the next step almost nothing. A
+field the model keeps failing to fill (`MODEL_SCHEMA_MISMATCH` on that field) usually lacks a value that
+real inputs need. When a coarse record hurts the next step, the lesson is about that record, not about
+intermediate steps in general.
 
 ## An example
 
@@ -147,6 +205,12 @@ difference, because a skipped clause looks exactly like a contract that does not
 ## How this shapes what you do
 
 - Write every field the prompt asks about as required, and give "cannot tell" its own value.
+- For every field, name the part of the input that decides it. Otherwise give the step another input, or
+  drop the field.
+- Size an enum to its consumer's decision. An enum that describes the input gets `other` and
+  `cannot_tell`, and a retry check accepts `cannot_tell`.
+- Design an intermediate record from the pairs the next step confuses, and try it on about 10 cases
+  before a series.
 - Ask the model about the content of the input, not about its own ability.
 - In `code` steps, checks and flow outputs, keep unknown apart from no. Show how many answers were
   unknown.

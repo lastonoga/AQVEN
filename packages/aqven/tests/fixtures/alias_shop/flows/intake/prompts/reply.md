@@ -1,1 +1,1 @@
-Ответь на заметку одной фразой.
+Reply to the note in one sentence.

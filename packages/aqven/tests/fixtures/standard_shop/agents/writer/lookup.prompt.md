@@ -1,4 +1,4 @@
 {% include "fragments/tone" %}
-Найди заметки, похожие на вопрос.
+Find notes similar to the question.
 <question>{{ question }}</question>
 {{ output_format }}

@@ -77,6 +77,16 @@ that answer, and what happens if you change the input or the prompt and rerun ju
   formatted/raw switch above the panel's body — same mechanism as the node
   inspector — flips every section between a readable view and the raw
   JSON.
+- **Output and `Expected vs actual`.** Below the stage timeline, the `Output` panel shows what the run
+  returned. When the run came from a dataset case that has an `expected_output`, an `Expected vs actual`
+  table under it lines the two up field by field, by name: each row says `match`, `differs` or `missing`,
+  a side with no value shows `absent`, and a line such as `3 of 5 expected fields match` sums it up.
+  Fields that are only in the actual output are counted as not checked. This table is a plain comparison,
+  not the verdict of any check. When the output and the expected value have different shapes (other
+  field names, a list against a record), it shows `missing` and `absent` for answers a check accepts. The
+  verdict of an experiment is each attempt's outcome and failed checks in the series' **Cases** (see
+  How to follow and read a series in Studio), and what a check compares is written in
+  its code.
 - **Turn a run into a case with `To cases`.** Once you've found a wrong answer, lock it in: `To cases`
   opens "Draft a case from this run". The engine turns the run's input, its context and the outputs of its
   top-level nodes into a dataset case of this flow, and **Hand the case to the chat** sends the draft to

@@ -1,5 +1,6 @@
 concepts/case-construction.md
 reference/datasets.md
+engine/snippets.md
 engine/experiments.md
 engine/dataset-media-files.md
 studio/cases.md

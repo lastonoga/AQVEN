@@ -3,4 +3,4 @@ kind: "Dataset"
 cases:
 - name: "short"
   inputs:
-    text: "Лампа мигает"
+    text: "The lamp is blinking"

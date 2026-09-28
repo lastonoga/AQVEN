@@ -13,7 +13,7 @@ import { replaceDocsTokens } from "./docs.tokens.mjs";
 
 const SITE = "https://aqvenstudio.com";
 const SITE_DESCRIPTION =
-  "AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, you see the evidence and decide.";
+  "AQVEN is a Python framework and a local Studio for building reliable LLM workflows. Claude Code or Codex runs the experiments; you see the evidence and decide.";
 const SOCIAL_CARD = Object.freeze({
   url: `${SITE}/og.png`,
   width: "1200",
@@ -150,6 +150,7 @@ export default defineConfig({
                 { slug: "engine/dynamic-shape" },
                 { slug: "engine/display-templates" },
                 { slug: "engine/image-preparation" },
+                { slug: "engine/preparing-audio-video-documents-and-text" },
               ],
             },
             {

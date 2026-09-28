@@ -1,5 +1,5 @@
 apiVersion: "aqven/v1"
 kind: "McpServer"
-description: "Служба заметок"
+description: "Notes service"
 transport: "streamable_http"
 url: "https://desk.example/mcp"

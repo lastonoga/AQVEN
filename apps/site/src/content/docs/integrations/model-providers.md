@@ -1,6 +1,6 @@
 ---
 title: How to connect a model provider
-description: Declare a provider in aqven.yaml, point an agent's model field at it, and set the one credential the provider needs.
+description: Declare a provider in aqven.yaml, name a model on it, set the credential it needs, find and verify candidate models on any provider, and pass the request options only that provider takes.
 ---
 
 ## When you need this
@@ -90,6 +90,157 @@ and set a credential. Leaving `api_key` out, as above, falls back to the catalog
 that provider — `GOOGLE_API_KEY` for `google`. Set `api_key: "ref:env/GEMINI_API_KEY"` explicitly if you
 already have the credential under that name instead.
 
+## Naming a model on each kind of provider
+
+An agent's `model` is always `<provider id>:<model name>`. The provider id is the `id` of an entry in
+`providers:`; a model on a provider the project does not declare fails `aqven check` with `E_PROVIDER_UNKNOWN`.
+The model name is the provider's own spelling, passed through as is, and it may contain `/`, `.` and `:`.
+
+| Kind of provider | `model` | Where the model name comes from |
+| --- | --- | --- |
+| A model maker's own API: `openai`, `anthropic`, `google`, `mistral`, `cohere`, `xai`, `deepseek`, … | `anthropic:claude-haiku-4-5` | the provider's model pages, or its models endpoint called with your key |
+| A cloud platform: `bedrock` | `bedrock:<model ID or inference profile ID>` | the models enabled for your AWS account in its region |
+| An inference host: `groq`, `together`, `fireworks`, `cerebras`, `nebius`, … | `groq:<model ID>` | the host's model list |
+| An aggregator or a gateway: `openrouter`, `vercel` | `openrouter:google/gemini-2.5-flash-lite` | its catalogue, where one model can be served by several upstream providers |
+| A local or self-hosted server: `ollama`, `vllm`, `litellm` | `ollama:<model tag>` | the models the server serves; set `base_url` on the provider (`ollama` and `vllm` also read `OLLAMA_BASE_URL` and `VLLM_BASE_URL`) |
+| Any other server with an OpenAI-compatible API | `local:<model name>` | the server's own list; declare the provider as below |
+
+A server the catalog does not name gets `kind: "openai_compatible"` and its `base_url`. Its `id` must not be a
+catalog name: `aqven check` reports `E_PROVIDER_ID_RESERVED` for `vllm` or `ollama` declared this way.
+
+```yaml
+providers:
+- id: "local"
+  kind: "openai_compatible"
+  base_url: "http://127.0.0.1:8000/v1"
+  api_key: "ref:env/LOCAL_API_KEY"
+  data_policy:
+    allows_pii: true
+    allows_sensitive: true
+    retention: "zero"
+```
+
+## Finding and verifying candidate models
+
+AQVEN keeps no table of what each model can read, produce or cost. The answer comes from the provider's own data
+first, then from a live probe and a real run. The steps are the same for every provider.
+
+1. **Start from the providers you may use.** A provider belongs on the list only when its `data_policy` fits
+   your data. Several providers widen the choice across model families; one provider limits it to its own
+   line-up.
+2. **List candidates from each provider's own data**, not from a model's name or from memory:
+   - a model maker's API or an inference host: its model pages and docs, and its models endpoint, which needs
+     your key;
+   - an aggregator: its public catalogue, which lists many families with their prices and parameters in one
+     place; [How to choose models on OpenRouter](/integrations/openrouter-model-selection/) shows which fields to
+     read and how to pick the upstream providers of a model;
+   - a local server: the models it serves.
+
+   Pick several candidates, from more than one model family where your providers offer them.
+3. **Check each candidate against what your flow needs**, and note where each answer came from:
+
+   | Check | Why it matters |
+   | --- | --- |
+   | input kinds: text, image, PDF, audio, video | a model that cannot read an attachment fails the step with `MODEL_FEATURE_UNSUPPORTED` |
+   | structured output: a JSON schema or tool calls | an `llm` node's output is typed, and `output.mode` depends on what the model supports |
+   | tool calling | an agent with `tools`, `mcp_servers` or `subagents` needs it |
+   | context window and the longest answer | the longest input plus the answer must fit; `settings.max_tokens` covers the answer and any reasoning |
+   | price per input and output token, and reasoning, image or audio prices | the cost of every call in a series |
+   | reasoning: whether it can be switched off, which efforts it takes | latency, price, and answers cut off at `max_tokens` |
+   | rate limits of your key or tier | `limits`, `on_rate_limit` and `fallback_models`, below |
+   | data retention and use for training | the provider's `data_policy` |
+
+4. **Prove it.** `{{CLI_COMMAND}} models check <agent> --live` shows which output modes work against the real
+   provider ([How to check your model providers are configured](/engine/check-providers/)), and
+   `{{CLI_COMMAND}} models shapes <agent> --live` finds the limits of a nested output. Neither sends your media or
+   your node's schema, so one real run of the node on a case of each input kind it reads is the proof. Then
+   compare the candidates on your own labelled cases with an experiment that changes the agent.
+
+## Options only one provider takes
+
+`settings.provider_options` in an agent file carries what only one provider takes, reasoning first. Each key is
+the provider's own name for a request field, and the provider's model class decides how it reaches the request:
+
+| Provider | Where the keys go |
+| --- | --- |
+| every provider of the [provider catalog](/reference/provider-catalog/) not named below, and providers with `kind: "openai_compatible"` | every key, merged into the request body as is |
+| `bedrock` | every key, into `additionalModelRequestFields` of the Converse request: the object that carries the model's own fields |
+| `google` | only the keys of the table below, as the Gemini request fields of the same name |
+| `mistral` | only the keys of the table below |
+| `xai` | only the keys of the table below, as the xAI chat parameters of the same name |
+| `cohere` | no key: its model class takes no request option, and it cannot stream, so `aqven check` rejects its models with `E_PROVIDER_NO_STREAMING` anyway |
+
+| Provider | Key under `provider_options` | What is sent |
+| --- | --- | --- |
+| `google` | `thinking_config` | the thinking configuration: `thinking_budget`, `thinking_level`, `include_thoughts`, in the values the model page lists |
+| `google` | `safety_settings` | the safety settings, a list of `category` and `threshold` |
+| `google` | `media_resolution` | the resolution of the media inputs, for example `"MEDIA_RESOLUTION_LOW"` |
+| `google` | `cached_content` | the name of a cached content; the cache holds the instructions and tools, so they leave the request |
+| `google` | `response_logprobs`, `logprobs` | log probabilities; `logprobs` only with `response_logprobs: true` |
+| `google` | `top_k`, `presence_penalty`, `frequency_penalty`, `stop_sequences` | the generation fields of the same name |
+| `mistral` | `reasoning_effort` | `"none"` or `"high"`, on the models Pydantic AI marks as having adjustable reasoning, such as `mistral-small-latest` and `mistral-medium-latest`; `magistral` models always reason and get no effort |
+| `mistral` | `prompt_cache_key`, `presence_penalty`, `frequency_penalty`, `stop` | the fields of the same name |
+| `xai` | `reasoning_effort`, `user`, `logprobs`, `top_logprobs`, `store_messages`, `previous_response_id`, `use_encrypted_content`, `max_turns`, `agent_count`, `presence_penalty`, `frequency_penalty`, `stop` | the chat parameters of the same name |
+
+The reasoning key differs by provider:
+
+| Provider | Reasoning key under `provider_options` |
+| --- | --- |
+| `openai-chat`, and other providers that speak OpenAI Chat Completions | `reasoning_effort`, one of the efforts the model lists |
+| `openai` (the Responses API) | `reasoning`, with `effort` |
+| `anthropic` | `thinking`: `type: "disabled"` switches it off; the forms that switch it on differ by model, see its model page |
+| `openrouter` | `reasoning`, next to `provider` for routing; see [How to choose models on OpenRouter](/integrations/openrouter-model-selection/) |
+| `google` | `thinking_config`, with `thinking_budget` or `thinking_level` |
+| `bedrock` | the model's own field: `thinking` on Anthropic models, `reasoning_effort` on OpenAI models, `reasoning_config` on Qwen models |
+| `mistral` | `reasoning_effort`: `"none"` or `"high"` |
+| `xai` | `reasoning_effort`, one of the efforts the model lists |
+
+Three agents on three providers, each with reasoning set on purpose:
+
+```yaml
+model: "openai-chat:gpt-5-mini"
+settings:
+  max_tokens: 2000
+  provider_options:
+    reasoning_effort: "minimal"
+```
+
+```yaml
+model: "anthropic:claude-haiku-4-5"
+settings:
+  max_tokens: 2000
+  provider_options:
+    thinking:
+      type: "disabled"
+```
+
+```yaml
+model: "google:gemini-2.5-flash"
+settings:
+  max_tokens: 2000
+  provider_options:
+    thinking_config:
+      thinking_budget: 0
+```
+
+- A key the provider does not send is left out of the request, and `aqven check` names it: the warning
+  `W_PROVIDER_OPTIONS_IGNORED` gives the agent, the model, the keys left out and the keys that provider takes. It
+  points at `settings.provider_options` for the agent's `model` and at the entry of `fallback_models` for a
+  fallback model.
+- A key that is sent still has to be right: the provider, or its SDK, rejects an unknown field or a wrong value, and
+  the call fails with that error. On `google` the SDK refuses an unknown field inside `thinking_config` or
+  `safety_settings` before the request leaves.
+- On `openrouter`, `cerebras` and `zai`, a key the model sets itself wins over yours: on `openrouter`, the
+  `provider` object that `routing` in `aqven.yaml` produces replaces the agent's.
+- A provider with `kind: "code"` gets the object as `extra_body` in the model settings, and its factory's model
+  class decides what to do with it; `aqven check` does not judge it.
+- The object belongs to the agent, not to one model: every model in `fallback_models` gets the same keys, each the
+  way its provider takes them. A provider may reject a key it does not know, so a fallback on another provider
+  needs options both accept.
+- `{{CLI_COMMAND}} models check --live` does not read the agent's own `provider_options`. Pass the same object with
+  `--provider-options '<json object>'` to probe what the agent sends; it reaches the request the same way, and a key
+  the provider of a probed model does not send is named on stderr.
+
 ## When a provider rate-limits
 
 Two keys on the provider entry keep calls under the provider's limit before it answers `429`.
@@ -105,9 +256,10 @@ What happens after a `429` is `on_rate_limit`:
 | `fixed` | The model pauses `retry_wait_seconds` (10 by default) before each retry, `retry_attempts` times (5 by default). Parallel calls stay as they are. |
 | `fail` | No retry: the call fails with `provider_error` at once, so an agent's `fallback_models` take over without waiting. |
 
-Other models keep running during a pause, other models of the same provider included. That matters on
-OpenRouter: a model can be rate-limited upstream by the provider serving it, and that limit is per model and
-shared with everyone else calling it, so your own `rpm` never sees it coming. `retry_wait_seconds` and
+Other models keep running during a pause, other models of the same provider included: every
+`<provider>:<model>` is a lane of its own. That matters most on an aggregator such as OpenRouter: a model can be
+rate-limited upstream by the provider serving it, and that limit is per model and shared with everyone else
+calling it, so your own `rpm` never sees it coming. `retry_wait_seconds` and
 `retry_attempts` are read only with `fixed`; with another value `aqven check` rejects them.
 
 ```yaml
@@ -135,12 +287,18 @@ providers:
 In a series, an attempt that still ends with a rate limit after these retries goes to the end of the queue
 once more instead of counting as an infrastructure error; a second rate limit counts as usual.
 
+A model that only one provider serves is the fragile case: when that provider rate-limits or goes down, there is
+no other provider of the same model to try, so give its agent `fallback_models` with another model, on the same
+provider or on another one. On an aggregator,
+[How to choose models on OpenRouter](/integrations/openrouter-model-selection/) shows how to count a model's
+upstream providers.
+
 ## Under the hood
 
 Every built-in provider is a thin factory over a [Pydantic AI](/concepts/what-this-is-built-on/) model
 class — `GoogleModel`, `AnthropicModel`, `BedrockConverseModel`, and so on. It builds the right client,
-passes your credential and settings through, and stops there — Pydantic AI is what actually talks to
-the provider.
+passes your credential and settings through, puts `provider_options` where that model class reads them, and stops
+there — Pydantic AI is what actually talks to the provider.
 
 ## See also
 
@@ -150,5 +308,7 @@ the provider.
   and what it adds on top of every model call.
 - [How to check your model providers are configured](/engine/check-providers/) — whether a configured
   model actually works, with `--live` for a real request.
+- [How to choose models on OpenRouter](/integrations/openrouter-model-selection/) — the aggregator case: the
+  catalogue, the upstream providers of a model, routing and reasoning on OpenRouter.
 - [How to manage secrets](/engine/secrets/) — the full report of every secret the project declares,
   across providers, tools, and MCP servers.

@@ -8,21 +8,21 @@
       "inputs": {
         "customer": {
           "customer_id": "cus_7k2m9p4q1x8z",
-          "display_name": "Анна Смирнова",
+          "display_name": "Anna Smith",
           "email": "anna.smirnova@example.com",
           "tier": "plus",
-          "locale": "ru-RU"
+          "locale": "en-GB"
         },
         "origin": {
           "kind": "marketplace",
           "marketplace": "amazon",
           "order_ref": "113-4829175-6630201"
         },
-        "message": "Здравствуйте! Лента Lumen Flow 5 м пришла в помятой коробке. После подключения она мигает у контроллера, а контроллер через полчаса становится тёплым. Подскажите, как правильно подключить контроллер: может, я что-то сделала не так? Или ленту повредили при доставке? Фото контроллера и счёт прикладываю, заказ оформлен 03.09.2027.",
+        "message": "The Flow strip flickers near the controller and the controller overheats. The customer attached a short video and a photo of the packaging. The request is a warranty defect with a safety signal. The resolution is a replacement controller shipped to the customer. The support lead reviews the reply before it is sent.",
         "order_id": "LUM-20260903",
         "product": {
           "sku": "SKU-LS5M01",
-          "name": "Lumen Flow Strip 5 м",
+          "name": "Lumen Flow Strip 5 m",
           "category": "light_strip",
           "lamp_kind": "smart_wifi"
         },
@@ -59,16 +59,16 @@
       "inputs": {
         "customer": {
           "customer_id": "cus_3n8b5v2c6x1a",
-          "display_name": "Дмитрий Орлов",
+          "display_name": "David Orr",
           "email": null,
           "tier": "standard",
-          "locale": "ru-RU"
+          "locale": "en-GB"
         },
         "origin": {
           "kind": "storefront",
           "page": "support"
         },
-        "message": "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит.",
+        "message": "After a router change, the Lumen Glow E27 smart bulb disappeared from the app and shows as offline, although it still lights up.",
         "order_id": null,
         "product": {
           "sku": "SKU-GL27E1",
@@ -87,16 +87,16 @@
       },
       "node_outputs": {
         "prepare": {
-          "message": "Умная лампа Lumen Glow E27 после замены роутера пропала из приложения и показывает статус «не в сети», хотя сама светит.",
+          "message": "After a router change, the Lumen Glow E27 smart bulb disappeared from the app and shows as offline, although it still lights up.",
           "channel": "storefront",
           "signals": [
-            { "key": "no_power", "label": "Не включается" },
-            { "key": "flicker", "label": "Мерцает" },
-            { "key": "overheating", "label": "Перегревается" },
-            { "key": "burning_smell", "label": "Пахнет гарью" },
-            { "key": "app_offline", "label": "Не отвечает в приложении" },
-            { "key": "package_damaged", "label": "Повреждена упаковка" },
-            { "key": "usage_question", "label": "Вопрос по использованию" }
+            { "key": "no_power", "label": "Does not turn on" },
+            { "key": "flicker", "label": "Flickers" },
+            { "key": "overheating", "label": "Overheats" },
+            { "key": "burning_smell", "label": "Smells of burning" },
+            { "key": "app_offline", "label": "Not responding in the app" },
+            { "key": "package_damaged", "label": "Packaging is damaged" },
+            { "key": "usage_question", "label": "Usage question" }
           ],
           "intake_fields": [],
           "perspectives": ["words", "evidence", "risk"]
@@ -115,17 +115,17 @@
       "inputs": {
         "customer": {
           "customer_id": "cus_9d4f6h1j3k5m",
-          "display_name": "Ольга Кузнецова",
+          "display_name": "Olivia Carter",
           "email": "olga.kuznetsova@example.com",
           "tier": "business",
-          "locale": "ru-RU"
+          "locale": "en-GB"
         },
         "origin": {
           "kind": "marketplace",
           "marketplace": "ozon",
           "order_ref": "CASE-3"
         },
-        "message": "Торшер Lumen Arc Floor пришёл в смятой коробке с треснувшим плафоном; покупатель приложил фото упаковки.",
+        "message": "The Lumen Arc Floor lamp arrived in a crushed box with a cracked shade; the customer attached a photo of the packaging.",
         "order_id": null,
         "product": {
           "sku": "SKU-ARCF01",

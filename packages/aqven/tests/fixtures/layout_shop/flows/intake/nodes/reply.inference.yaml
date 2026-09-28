@@ -1,16 +1,16 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Короткий ответ на заметку"
+description: "Short reply to a note"
 in:
 - name: "text"
   type: "Text"
-  description: "Заметка"
+  description: "Note"
   maxLength: 200
 out:
 - name: "text"
   type: "Text"
-  description: "Ответ"
+  description: "Reply"
   maxLength: 200
 - name: "mood"
   type: "Mood"
-  description: "Тон ответа"
+  description: "Reply tone"

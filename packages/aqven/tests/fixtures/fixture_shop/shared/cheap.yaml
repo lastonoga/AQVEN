@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Дешёвая открытая модель"
+description: "Cheap open model"
 model: "together:meta-llama/Llama-3.3-70B-Instruct-Turbo"
 output:
   strict: false

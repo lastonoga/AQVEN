@@ -22,11 +22,11 @@ describe("StructuredValue", () => {
   })
 
   it("shows nested objects and arrays as flat path and value rows", () => {
-    const value = { channel: "amazon", signals: [{ key: "flicker", label: "Мерцает" }] }
+    const value = { channel: "amazon", signals: [{ key: "flicker", label: "Flickers" }] }
     expect(flattenValue(value)).toEqual([
       { path: "channel", value: "amazon" },
       { path: "signals[0].key", value: "flicker" },
-      { path: "signals[0].label", value: "Мерцает" },
+      { path: "signals[0].label", value: "Flickers" },
     ])
     render(<StructuredValue value={value} compact />)
     const list = screen.getByRole("list")
@@ -39,7 +39,7 @@ describe("StructuredValue", () => {
   })
 
   it("shows a long value in full without expanding or scrolling", () => {
-    const message = "Лента мигает. ".repeat(100)
+    const message = "The strip flickers. ".repeat(100)
     render(<StructuredValue value={{ message }} compact />)
     const row = screen.getByRole("listitem")
     expect(row.querySelector(".aqven-flat-value-data")?.textContent).toBe(message)

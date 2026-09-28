@@ -322,10 +322,10 @@ def lumen_csv(media: dict[str, str], *, email: str = "null", blank_optional: boo
     row = {
         "name": "csv_media_case",
         "customer.customer_id": "cus_7k2m9p4q1x8z",
-        "customer.display_name": "Анна Смирнова",
+        "customer.display_name": "Zoë Brontë",
         "customer.email": email,
         "customer.tier": "plus",
-        "customer.locale": "ru-RU",
+        "customer.locale": "en-GB",
         "origin.kind": "marketplace",
         "origin.marketplace": "amazon",
         "origin.order_ref": "113-4829175-6630201",
@@ -374,7 +374,7 @@ def test_local_blob_urls_preview_and_import_all_media_without_network(
     }
     content = lumen_csv(
         {field: f"http://127.0.0.1:5200/api/blobs/{blob_id}" for field, blob_id in blob_ids.items()},
-        email="anna.smirnova@example.com",
+        email="zoe.bronte@example.com",
     )
     with lumen_client(tmp_path, server_options, server_engine, server_settings) as client:
         preview = client.post(

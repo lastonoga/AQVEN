@@ -103,8 +103,8 @@ def test_changed_inference_makes_generated_types_stale_until_generate(shop: Path
     replace(
         shop,
         REPLY_INFERENCE,
-        '  description: "Ответ"\n  maxLength: 200\n',
-        '  description: "Ответ"\n  maxLength: 150\n',
+        '  description: "Reply"\n  maxLength: 200\n',
+        '  description: "Reply"\n  maxLength: 150\n',
     )
 
     stale = check_project(shop)

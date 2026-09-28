@@ -12,7 +12,7 @@ describe("slugOf", () => {
   })
 
   it("gives nothing for text without latin letters", () => {
-    expect(slugOf("дешёвый агент")).toBe("")
+    expect(slugOf("🚀 ✨")).toBe("")
   })
 
   it("keeps an id within 63 characters", () => {

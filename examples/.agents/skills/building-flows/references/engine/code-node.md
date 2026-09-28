@@ -34,6 +34,10 @@ service or do anything asynchronous, that's a `tool` node instead — a `code` n
   record type for you from the node's `out` list, so you import it rather than define it. Run
   `aqven generate` (or `aqven check`, which does this too) any time you change
   `in` or `out` to regenerate that type.
+- A generated record is a Pydantic model; a generated enum is a type alias,
+  `type Category = Literal["furniture", "electronics", "clothing"]`. To list an enum's values in code, read them
+  from the alias's value: `typing.get_args(Category.__value__)`. `typing.get_args(Category)` returns an empty
+  tuple, so a filter built from it silently matches nothing; assert the tuple is not empty.
 - Edit the function while `aqven dev` is running and just run the flow again: the server notices
   that the project's Python files changed and imports them afresh for the next run — the step, the modules
   it imports, and the generated types. There's no server to restart.

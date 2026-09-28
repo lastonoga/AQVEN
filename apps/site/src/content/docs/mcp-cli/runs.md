@@ -72,9 +72,11 @@ knowing before you build assumptions on one and hit the other.
   depending which surface you're calling. Separately, that address value itself always needs all four
   fields present — `node_id`, `branch_key`, `iteration`, `item_index` — even when three of them are
   `null` for a top-level node; unlike `run_get_node`'s flat arguments, none of the three has a default, so
-  leaving one out fails validation before the call does anything. A fork always runs with the definition
-  the source run used: `overrides`, or `at: "working"`, fail with `NOT_RUNNABLE`. To try a changed agent
-  on the same case, use `run_start` with `agent_overrides` instead.
+  leaving one out fails validation before the call does anything. A fork replays the original run as it
+  was: a fork with `overrides`, or with `at` set to anything but `original`, returns `NOT_RUNNABLE`. To
+  check a change to a prompt or an agent, edit the project file and start a new run on the same case with
+  `run_start` and `dataset_item_id` (`<dataset_id>/<case_name>`); to try another agent on that case without
+  editing files, add `agent_overrides` (`{node_id: agent_id}`); to try another input, pass it as `input`.
 - **`run_cancel`** takes a `run_id` and a free-text `reason`. Like `run_resume`, its `run_id` travels in
   the request body over MCP; the REST route for the same operation puts it in the URL path instead and
   takes just `reason` in the body.

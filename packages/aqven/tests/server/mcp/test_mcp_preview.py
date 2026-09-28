@@ -25,7 +25,7 @@ async def test_prompt_preview_forces_a_variant_and_takes_an_input(tmp_path: Path
     arguments: dict[str, object] = {
         "flow_id": "intake",
         "node_id": "reply",
-        "input": {"text": "Помялась коробка", "mood": "calm"},
+        "input": {"text": "The box got crushed", "mood": "calm"},
         "variants": {"tone": "warm"},
     }
     async with mcp_client(shop_copy(tmp_path)) as client:
@@ -35,8 +35,8 @@ async def test_prompt_preview_forces_a_variant_and_takes_an_input(tmp_path: Path
     assert isinstance(messages, list)
     last = messages[-1]
     assert isinstance(last, dict)
-    assert "Добавь тепла." in str(last["text"])
-    assert "Помялась коробка" in str(last["text"])
+    assert "Add warmth." in str(last["text"])
+    assert "The box got crushed" in str(last["text"])
 
 
 @pytest.mark.asyncio

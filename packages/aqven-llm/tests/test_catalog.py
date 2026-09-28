@@ -9,6 +9,7 @@ from aqven_llm import (
     MODEL_BUILDERS,
     PROVIDERS,
     ClassRef,
+    NativeOptionsModel,
     ProviderModelFactory,
     ProviderOptions,
     Readiness,
@@ -37,6 +38,10 @@ def model_class(ref: ClassRef) -> type:
 
 def model_string(name: str) -> str:
     return f"{name}:{MODEL_NAMES.get(name, DEFAULT_MODEL_NAME)}"
+
+
+def provider_model(model: Model) -> Model:
+    return model.wrapped if isinstance(model, NativeOptionsModel) else model
 
 
 def test_every_streaming_provider_has_a_builder() -> None:
@@ -93,4 +98,5 @@ def test_catalog_model_class_matches_the_pydantic_ai_registry(name: str, monkeyp
     )
 
     assert type(registry) is declared
-    assert isinstance(built, declared)
+    assert isinstance(provider_model(built), declared)
+    assert isinstance(built, NativeOptionsModel) is PROVIDERS[name].request_options.rewrites

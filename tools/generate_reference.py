@@ -405,14 +405,17 @@ def provider_catalog_page() -> str:
         "",
         "These providers come from `{{LLM_PYTHON_MODULE}}.catalog.PROVIDERS`. The key column names the default environment variable; project `api_key` may point to another environment variable. A provider's presence in the catalog does not guarantee that a particular model supports every modality or output mode. Use `{{CLI_COMMAND}} models check --project .` and `--live` when a real request is needed.",
         "",
-        "| Provider prefix | Pydantic AI model class | Default key variable | Required | Extra |",
-        "| --- | --- | --- | --- | --- |",
+        "The `provider_options` column says which keys of an agent's `settings.provider_options` reach the request of that provider; `{{CLI_COMMAND}} check` warns with `W_PROVIDER_OPTIONS_IGNORED` about every other key.",
+        "",
+        "| Provider prefix | Pydantic AI model class | Default key variable | Required | Extra | `provider_options` |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for name, entry in PROVIDERS.items():
         key = entry.key.primary or "—"
         extra = entry.extra.name if entry.extra is not None else "—"
+        options = entry.request_options.describe()
         lines.append(
-            f"| `{name}` | `{entry.model_class.qualified}` | `{key}` | {'Yes' if entry.key.required else 'No'} | `{extra}` |"
+            f"| `{name}` | `{entry.model_class.qualified}` | `{key}` | {'Yes' if entry.key.required else 'No'} | `{extra}` | {options} |"
         )
     lines.extend(
         (

@@ -1,6 +1,6 @@
 # How to write an experiment
 
-Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the one factor its variants change, the checks and one of four questions — with an example from the showcase project for each question kind.
+Write experiments/<id>/experiment.yaml — a falsifiable description, the subject, the cases by tags, the one factor its variants change, the checks and one of four questions — with an example from the showcase project for each question kind, and three common designs — leaving inputs out, screening many candidates, measuring one stage.
 
 ## Contents
 
@@ -11,6 +11,11 @@ Write experiments/<id>/experiment.yaml — a falsifiable description, the subjec
   - [`threshold`: is a rate or a cost above or below a line](#threshold-is-a-rate-or-a-cost-above-or-below-a-line)
   - [`compare`: is the candidate better by more than the margin](#compare-is-the-candidate-better-by-more-than-the-margin)
   - [`noninferior`: is the candidate not worse by more than the margin](#noninferior-is-the-candidate-not-worse-by-more-than-the-margin)
+- [Change nothing after a series](#change-nothing-after-a-series)
+- [Three designs that come up often](#three-designs-that-come-up-often)
+  - [Leave inputs out](#leave-inputs-out)
+  - [Screen many candidates, then confirm](#screen-many-candidates-then-confirm)
+  - [Measure one stage](#measure-one-stage)
 - [What `aqven check` catches](#what-aqven-check-catches)
   - [Example](#example)
 - [See also](#see-also)
@@ -33,7 +38,9 @@ before the data. A series then answers it: see How to run a series.
   `experiment.yaml` holds the question. `experiment.md` beside it is for people: the purpose, why these
   cases, how to read the result. Three folders hold what the variants plug in: `nodes/` for alternative
   nodes, `prompts/` for alternative prompt texts, and `flows/` for flows that only this experiment runs. A
-  Python module for your own checks can sit here too. The server writes `findings/`, never you.
+  Python module for your own checks can sit here too. The server writes `findings/`, never you. Write the
+  files one at a time, or start with **New experiment** in Studio's Research, which writes `experiment.yaml`
+  and the prompt files for you.
 
   ```text
   experiments/<experiment_id>/
@@ -53,13 +60,19 @@ before the data. A series then answers it: see How to run a series.
 - **`archived: true` sets an experiment aside.** It's optional and `false` by default. Studio's Research
   list folds an archived experiment into **Archived** at the end, and its page still opens.
   `aqven check` and series treat it like any other experiment, so it still has to pass the check.
+  It is the one edit allowed once the experiment has a series: see
+  [Change nothing after a series](#change-nothing-after-a-series).
 - **`subject` is what runs.**
   - `flow: <flow_id>` names the flow. A local flow in `flows/<flow_id>/` of this experiment is found first,
     then a project flow. A local flow is written like any flow, as `flow.yaml` with its nodes or as a Python
     `flow.py` whose `build()` returns it. It stays out of the project's flow list, and its id can't be the id
     of a project flow.
-  - Add `from` and `to` to narrow the run to a range of top-level nodes. The nodes above the range take
-    their outputs from each case's `node_outputs`, and the subject's output is the output of `to`.
+  - A `code` step of a local flow, or an alternative `code` node, gets its generated classes under a name
+    with the experiment's prefix: `<Experiment><Flow><Node>In` and `Out` for a local flow's step,
+    `<Experiment><Node>In` and `Out` for an alternative. Write `experiment.yaml` first, run
+    `aqven generate .` in the project, and import the names from the generated `types.py`.
+  - Add `from` and `to`, always both, to narrow the run to a range of top-level nodes. The nodes above the
+    range take their outputs from each case's `node_outputs`, and the subject's output is the output of `to`.
 - **`cases` selects them by tags.** Set `dataset: <dataset_id>`, and optionally `tags: {<dimension>:
   <value>}`. A case is selected when it has every listed tag with that value. A project flow needs a
   dataset of that flow. A local flow can run a dataset bound to no flow, or a flow dataset with the same
@@ -77,7 +90,7 @@ before the data. A series then answers it: see How to run a series.
   | `flow` | `call` nodes | a flow id: a local flow from `flows/` first, else a project flow |
 
   A `prompt` value replaces only the prompt text of that node: its inputs, output schema and inference
-  checks stay. A `use` alternative takes the slot's id, so bindings like `$gather.out.present` keep working
+  checks stay. A `use` alternative takes the slot's id, so bindings like `$aggregate.out.level` keep working
   when it has the same outputs; its own child nodes are looked up among the alternatives first, then in
   the subject, and subject nodes nothing reaches any more are dropped. A `flow` value keeps the slot's
   input bindings and must have the same input and output types as the flow the slot calls now.
@@ -257,6 +270,90 @@ question:
 take this step? `intent_escalation_agents` asks the same of a local flow narrowed to one node, with three
 variants of an `agent` factor and a latency guardrail.
 
+## Change nothing after a series
+
+A series records a hash of `experiment.yaml` together with the flows, the dataset, the cases and the code
+it ran. Once an experiment has a series, a change to its question, metric, factor, variants, cases, plan or
+checks is a different question. Write it as a new experiment with a new id, and let its `experiment.md`
+name the old id and its series ids. Edited in place, the old series and the new file disagree, and nobody
+can tell which question a number answered.
+
+The one edit allowed afterwards is `archived: true`. It changes `experiment.yaml`, so Studio can mark the
+experiment with "files changed after the last series". For an archived experiment, that note is expected.
+
+A new experiment doesn't borrow numbers from an older series either: the configuration production runs now
+is one of its variants. See
+[The current best in every comparison](../concepts/validity-gate.md#the-current-best-in-every-comparison).
+
+## Three designs that come up often
+
+### Leave inputs out
+
+To learn which inputs a step needs, keep one dataset with every candidate input and let the variants
+differ only in which fields reach the model. Examples: a support ticket with or without the account
+history, an invoice image with or without its OCR text, a video clip with or without its transcript. With
+k candidate inputs, run all of them and each one left out (k+1 variants), plus the current best if it
+differs.
+
+A `prompt` variant can't do this. A prompt that leaves a declared input out fails `E_PROMPT_INPUT_UNUSED`,
+and `Image`, `Audio`, `Video` and `Document` inputs are attached to the call whatever the prompt text says.
+Put a `code` step in front of the `llm` node instead, and make it the slot of a `use` factor. As written,
+it passes every field on. Each alternative blanks the fields its variant leaves out: an optional field
+(`Text?`, `Image?`) set to null, or a list left empty. The prompt renders each optional field inside
+`{% if %}`, so a blanked field leaves no trace in what the model reads:
+
+```yaml
+varies:
+  what: "use"
+  nodes:
+  - "pick_inputs"
+variants:
+- id: "with_history"
+- id: "without_history"
+  nodes:
+    pick_inputs: "without_history"
+```
+
+```liquid
+{% if history %}
+<history>
+{{ history }}
+</history>
+{% endif %}
+```
+
+The alternative `nodes/without_history/without_history.node.yaml` has the `in` and `out` of `pick_inputs`,
+and its function returns `history=None`. Variants of an experiment have no prompt preview yet: run a
+one-case smoke and open the `llm` node of each attempt's run to compare what each variant sent. See
+How to preview a prompt.
+
+### Screen many candidates, then confirm
+
+Ten candidate models or prompts, each run on enough cases for a verdict, cost five times a comparison of
+two. Screen first: a small series on the working cases, with a drop rule written in `experiment.md` before
+it starts. A typical rule drops a variant whose interval lies wholly below the best variant's interval, or
+below the trivial baseline. A `look` gives every variant's value and 95% interval without a verdict. Then
+write a new experiment with the survivors and the current best, sized by its own launch plan. The numbers
+of the screen only decide which variants to drop. They never support a claim, because the screen picked
+its winners from the same cases.
+
+### Measure one stage
+
+A pipeline has stages, and each has its own job: see
+[The stage and its metric](../concepts/metrics-and-controls.md#the-stage-and-its-metric). There are two ways to
+score one stage with an engine check:
+
+- **A range subject.** Set `from` and `to` so that the range ends at the stage's top-level node. The
+  subject's output is then that node's output, and every check scores it: `expected` compares the fields
+  the case's `expected_output` gives for that node. Nodes above the range take their outputs from the case's
+  `node_outputs`, so an upstream stage can be held fixed.
+- **A check on the whole flow.** A `run:` check reads the output of any top-level node of the attempt from
+  `context.metadata["node_outputs"]`. Nodes inside a container aren't there. See
+  [How to write a custom evaluator](custom-evaluator.md).
+
+A stage metric needs its trivial baselines too: see
+[Trivial baselines](../concepts/metrics-and-controls.md#trivial-baselines).
+
 ## What `aqven check` catches
 
 | Code | What is wrong |
@@ -303,6 +400,8 @@ never cost a token.
 ## See also
 
 - How to run a series: the next step, from Studio, the terminal or an agent.
+- [The validity gate](../concepts/validity-gate.md): the questions an experiment has to pass before its first
+  series.
 - [How to write a custom evaluator](custom-evaluator.md): the `run:` check and what its `value` and
   `context` hold in an experiment.
 - [Experiments, series and findings](../concepts/experiments-series-and-findings.md): why the question comes

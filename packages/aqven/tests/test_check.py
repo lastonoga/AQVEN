@@ -70,8 +70,8 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
     ),
     "inference_without_out": Mutation(
         INFERENCE,
-        'out:\n- name: "rationale"\n  type: "Text"\n  description: "Обоснование выбора"\n  maxLength: 300\n'
-        '- name: "category"\n  type: "TriageCategory"\n  description: "Очередь"\n',
+        'out:\n- name: "rationale"\n  type: "Text"\n  description: "Rationale for the choice"\n  maxLength: 300\n'
+        '- name: "category"\n  type: "TriageCategory"\n  description: "Queue"\n',
         "",
         DiagnosticCode.E_TEXT_OUTPUT,
     ),
@@ -127,15 +127,15 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
         INFERENCE, "examples:\n", 'prompt: "./prompts/classify.md"\nexamples:\n', DiagnosticCode.E_PROMPT_MISSING
     ),
     "prompt_path_syntax": Mutation(
-        INFERENCE, "examples:\n", 'prompt: "Ответь покупателю"\nexamples:\n', DiagnosticCode.E_SPEC_INVALID
+        INFERENCE, "examples:\n", 'prompt: "Reply to the customer"\nexamples:\n', DiagnosticCode.E_SPEC_INVALID
     ),
     "variable_undeclared": Mutation(
         PROMPT, "{{ ticket.body }}", "{{ ticket.text }}", DiagnosticCode.E_PROMPT_VARIABLE_UNDECLARED
     ),
     "input_unused": Mutation(
         PROMPT,
-        "Тема: {{ ticket.subject }}\nТекст: {{ ticket.body }}\n"
-        "{% if ticket.photo %}К обращению приложено фото товара.{% endif %}\n",
+        "Subject: {{ ticket.subject }}\nBody: {{ ticket.body }}\n"
+        "{% if ticket.photo %}The customer attached a product photo.{% endif %}\n",
         "",
         DiagnosticCode.E_PROMPT_INPUT_UNUSED,
     ),
@@ -146,7 +146,7 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
         DiagnosticCode.E_PROMPT_OUTPUT_FORMAT,
     ),
     "media_rendered": Mutation(
-        PROMPT, "фото товара.", "фото {{ ticket.photo }}.", DiagnosticCode.E_PROMPT_MEDIA_RENDERED
+        PROMPT, "product photo.", "photo {{ ticket.photo }}.", DiagnosticCode.E_PROMPT_MEDIA_RENDERED
     ),
     "unbalanced_message": Mutation(
         PROMPT,
@@ -165,7 +165,7 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
         PROMPT, "{{ ticket.body }}", "{{ ticket.body | upcase }}", DiagnosticCode.E_PROMPT_FILTER_FORBIDDEN
     ),
     "fragment_with_variable": Mutation(
-        "shared/tone.md", "по делу.", "по делу, {{ ticket }}.", DiagnosticCode.E_PROMPT_VARIABLE_UNDECLARED
+        "shared/tone.md", "to the point.", "to the point, {{ ticket }}.", DiagnosticCode.E_PROMPT_VARIABLE_UNDECLARED
     ),
     "code_unresolved": Mutation(SUMMARIZE, "code:summarize", "code:summary", DiagnosticCode.E_CODE_REF_UNRESOLVED),
     "code_parameter_drift": Mutation(
@@ -219,7 +219,7 @@ MUTATIONS: Final[Mapping[str, Mutation]] = {
     "docstring": Mutation(
         CODE,
         "def summarize(ticket: TriageTicket, category: TriageCategory) -> TriageSummarizeOut:\n",
-        'def summarize(ticket: TriageTicket, category: TriageCategory) -> TriageSummarizeOut:\n    """Кратко."""\n',
+        'def summarize(ticket: TriageTicket, category: TriageCategory) -> TriageSummarizeOut:\n    """Summarize."""\n',
         DiagnosticCode.E_DOCSTRING,
     ),
     "determinism_is_not_a_key": Mutation(
@@ -285,8 +285,8 @@ def test_value_type_hint_requires_dynamic_output(shop: Path) -> None:
     replace(
         shop,
         INFERENCE,
-        '  description: "Обоснование выбора"\n  maxLength: 300\n',
-        '  description: "Обоснование выбора"\n  maxLength: 300\n  value_type: "TriageTicket"\n',
+        '  description: "Rationale for the choice"\n  maxLength: 300\n',
+        '  description: "Rationale for the choice"\n  maxLength: 300\n  value_type: "TriageTicket"\n',
     )
 
     assert diagnostics_of(check_project(shop), DiagnosticCode.E_DYNAMIC_VALUE_TYPE) == [
@@ -298,8 +298,8 @@ def test_value_type_hint_must_reference_a_registry_type(shop: Path) -> None:
     replace(
         shop,
         INFERENCE,
-        '  description: "Обоснование выбора"\n  maxLength: 300\n',
-        '  description: "Обоснование выбора"\n  maxLength: 300\n  value_type: "UnknownRecord"\n',
+        '  description: "Rationale for the choice"\n  maxLength: 300\n',
+        '  description: "Rationale for the choice"\n  maxLength: 300\n  value_type: "UnknownRecord"\n',
     )
 
     assert diagnostics_of(check_project(shop), DiagnosticCode.E_TYPE_UNKNOWN) == [(INFERENCE, ("out", 0, "value_type"))]
@@ -309,8 +309,8 @@ def test_value_type_hint_requires_record_or_union(shop: Path) -> None:
     replace(
         shop,
         INFERENCE,
-        '- name: "rationale"\n  type: "Text"\n  description: "Обоснование выбора"\n  maxLength: 300\n',
-        '- name: "rationale"\n  type: "Dynamic"\n  description: "Обоснование выбора"\n'
+        '- name: "rationale"\n  type: "Text"\n  description: "Rationale for the choice"\n  maxLength: 300\n',
+        '- name: "rationale"\n  type: "Dynamic"\n  description: "Rationale for the choice"\n'
         '  value_type: "TriageCategory"\n  limits:\n    max_fields: 3\n    max_depth: 1\n'
         "    max_text_length: 300\n    max_items: 3\n",
     )
@@ -472,7 +472,7 @@ def test_nested_message_is_reported_when_template_parses(shop: Path) -> None:
         shop,
         PROMPT,
         "{% message user %}",
-        "{% message user %}{% if ticket.photo %}{% message assistant %}Фото{% endmessage %}{% endif %}",
+        "{% message user %}{% if ticket.photo %}{% message assistant %}Photo{% endmessage %}{% endif %}",
     )
 
     assert DiagnosticCode.E_PROMPT_MESSAGE_NESTED in found(check_project(shop))
@@ -482,8 +482,8 @@ PARTIAL_INCLUDE: Final = '{% include "classify.partials/customer" %}'
 
 
 def test_partial_reads_inputs_and_is_checked(shop: Path) -> None:
-    write(shop, PARTIAL, "Покупатель: {{ ticket.customer.name }}\n")
-    replace(shop, PROMPT, "Тема:", f"{PARTIAL_INCLUDE}\nТема:")
+    write(shop, PARTIAL, "Customer: {{ ticket.customer.name }}\n")
+    replace(shop, PROMPT, "Subject:", f"{PARTIAL_INCLUDE}\nSubject:")
     assert check_project(shop).diagnostics == ()
 
     replace(shop, PARTIAL, "customer.name", "customer.phone")
@@ -495,7 +495,7 @@ def test_partial_reads_inputs_and_is_checked(shop: Path) -> None:
 
 HINT_INPUT: Final = """- name: "hint"
   type: "TriageCategory?"
-  description: "Подсказка очереди от витрины"
+  description: "Queue hint from the storefront"
 out:
 """
 
@@ -510,9 +510,9 @@ examples:
 """
 
 TONE_FILES: Final[Mapping[str, str]] = {
-    "money": "Пиши про оплату точно, без обещаний возврата.\n",
-    "parcel": "Пиши про доставку, называя тему {{ ticket.subject }}.\n",
-    "neutral": "Пиши нейтрально.\n",
+    "money": "Write about billing precisely, without promising a refund.\n",
+    "parcel": "Write about delivery and mention the subject {{ ticket.subject }}.\n",
+    "neutral": "Write neutrally.\n",
 }
 
 
@@ -611,7 +611,7 @@ def test_variant_problem_is_reported(
 
 def test_unreferenced_variant_file_is_orphan(shop: Path) -> None:
     with_variants(shop)
-    write(shop, f"{TONES}/cheerful.md", "Пиши бодро.\n")
+    write(shop, f"{TONES}/cheerful.md", "Write cheerfully.\n")
 
     report = check_project(shop)
 
@@ -645,8 +645,8 @@ def test_variants_need_prompt_file(shop: Path) -> None:
 
 
 def test_unreachable_file_with_the_inference_prefix_is_orphan(shop: Path) -> None:
-    write(shop, f"{STEM}.partials/unused.md", "Никем не включённая часть.\n")
-    write(shop, "triage/notes.md", "Заметка рядом, но без префикса инференса.\n")
+    write(shop, f"{STEM}.partials/unused.md", "A part that nothing includes.\n")
+    write(shop, "triage/notes.md", "A note next to it, without the inference prefix.\n")
 
     report = check_project(shop)
 
@@ -660,7 +660,7 @@ def test_inference_without_prompt_file_or_code_prompt(shop: Path) -> None:
 
 
 def test_code_prompt_leaves_partials_orphan(shop: Path) -> None:
-    write(shop, PARTIAL, "Покупатель.\n")
+    write(shop, PARTIAL, "Customer.\n")
     (shop / PROMPT).unlink()
     replace(shop, INFERENCE, "examples:\n", 'prompt: "fixture_shop.triage.code:classify_prompt"\nexamples:\n')
 
@@ -722,7 +722,7 @@ def test_explicit_path_to_the_adjacent_prompt_is_not_shadowing(shop: Path) -> No
 LOOP_NODE: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "loop"
-description: "Повтор краткого содержания"
+description: "Summary repeat"
 body:
 - "draft"
 init:
@@ -739,7 +739,7 @@ select:
 out:
 - name: "summary"
   type: "Text"
-  description: "Итог"
+  description: "Result"
   maxLength: 200
   from: "$iter.draft.out.summary"
 """
@@ -747,21 +747,21 @@ out:
 LOOP_BODY: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Черновик краткого содержания"
+description: "Summary draft"
 run: "fixture_shop.triage.code:summarize"
 in:
 - name: "ticket"
   type: "TriageTicket"
-  description: "Обращение"
+  description: "Ticket"
   from: "$input"
 - name: "category"
   type: "TriageCategory"
-  description: "Очередь"
+  description: "Queue"
   value: "billing"
 out:
 - name: "summary"
   type: "Text"
-  description: "Краткое содержание"
+  description: "Summary"
   maxLength: 200
 """
 LOOP_FILE: Final = "triage/polish.yaml"
@@ -863,7 +863,7 @@ def test_loop_problem_is_reported(
 PARALLEL_NODE: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "parallel"
-description: "Два черновика краткого содержания"
+description: "Two summary drafts"
 body:
   billing: "billing"
   delivery: "delivery"
@@ -872,13 +872,13 @@ join:
 out:
 - name: "summaries"
   type: "Text[]"
-  description: "Краткие содержания"
+  description: "Summaries"
   maxItems: 2
   maxLength: 200
   from: "$ok[*].summary"
 - name: "billing"
   type: "Text?"
-  description: "Черновик очереди оплаты"
+  description: "Billing queue draft"
   maxLength: 200
   from: "$branch.billing.summary"
 """
@@ -992,13 +992,13 @@ from fixture_shop.triage.code import TriageCategory, TriageTicket
 
 
 class Quick(Inference):
-    ticket: TriageTicket = In(description="Обращение")
-    rationale: str = Out(description="Обоснование выбора", max_length=300)
-    category: TriageCategory = Out(description="Очередь")
+    ticket: TriageTicket = In(description="Ticket")
+    rationale: str = Out(description="Rationale for the choice", max_length=300)
+    category: TriageCategory = Out(description="Queue")
 
 
 def build() -> InferenceSpec:
-    return inference_spec(Quick, description="Быстрая сортировка")
+    return inference_spec(Quick, description="Quick triage")
 """
 
 QUICK_FLOW: Final = """from aqven.spec import Flow, flow, llm
@@ -1014,9 +1014,9 @@ class TriageReview(BaseModel):
 
 
 def build() -> Flow:
-    quick = llm("quick", inference="quick", agent="writer", bind={"ticket": "$input"}, description="Выбор очереди")
+    quick = llm("quick", inference="quick", agent="writer", bind={"ticket": "$input"}, description="Choose a queue")
     return flow(
-        description="Быстрая сортировка",
+        description="Quick triage",
         input=TriageTicket,
         output=TriageReview,
         returns={"category": "$quick.out.category"},
@@ -1027,7 +1027,7 @@ def build() -> Flow:
 
 def test_python_builders_materialize_inference_and_flow(shop: Path) -> None:
     write(shop, "shared/quick.inference.py", QUICK_INFERENCE)
-    write(shop, "shared/quick.prompt.md", "Выбери очередь обращения.\n")
+    write(shop, "shared/quick.prompt.md", "Choose the ticket queue.\n")
     write(shop, "quick/flow.py", QUICK_FLOW)
 
     report = check_project(shop)
@@ -1053,7 +1053,7 @@ def test_check_restores_imports_and_search_path(shop: Path) -> None:
 
 RECORD_TOOL: Final = """apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Запись очереди обращения в хелпдеск"
+description: "Record the ticket queue in the helpdesk"
 run: "fixture_shop.triage.helpdesk:record_category"
 effect: "write"
 idempotency_key:
@@ -1064,22 +1064,22 @@ secrets:
 in:
 - name: "subject"
   type: "Text"
-  description: "Тема обращения"
+  description: "Ticket subject"
   maxLength: 200
 - name: "category"
   type: "TriageCategory"
-  description: "Очередь"
+  description: "Queue"
 out:
 - name: "receipt"
   type: "Text"
-  description: "Квитанция хелпдеска"
+  description: "Helpdesk receipt"
   maxLength: 64
 """
 
 RECORD_NODE: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "tool"
-description: "Запись очереди в хелпдеск"
+description: "Record the queue in the helpdesk"
 tool: "record_category"
 in:
 - name: "subject"
@@ -1090,7 +1090,7 @@ in:
 
 HELPDESK: Final = """apiVersion: "aqven/v1"
 kind: "McpServer"
-description: "Хелпдеск магазина"
+description: "Shop helpdesk"
 transport: "streamable_http"
 url: "https://helpdesk.shop.example/mcp"
 headers:
@@ -1100,7 +1100,7 @@ headers:
 
 FIND_TICKETS: Final = """apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Поиск прошлых обращений"
+description: "Search past tickets"
 mcp:
   server: "helpdesk"
   tool: "search_tickets"
@@ -1109,7 +1109,7 @@ effect: "read"
 
 RESEARCHER: Final = """apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Исследует историю обращений"
+description: "Researches ticket history"
 model: "openai:gpt-5.4-mini"
 mcp_servers:
 - "helpdesk"
@@ -1120,7 +1120,7 @@ AGENT_TOOLS: Final = """tools:
 - "find_tickets"
 subagents:
 - name: "research"
-  description: "Исследует историю обращений"
+  description: "Researches ticket history"
   agent: "researcher"
   inference: "classify"
 approval:
@@ -1161,7 +1161,7 @@ def with_registry(root: Path) -> None:
     write(root, "shared/helpdesk.yaml", HELPDESK)
     write(root, "shared/find_tickets.yaml", FIND_TICKETS)
     write(root, "shared/researcher.yaml", RESEARCHER)
-    write(root, "shared/writer.md", "Сначала проверь заказ, потом отвечай.\n")
+    write(root, "shared/writer.md", "Check the order first, then reply.\n")
     append(root, WRITER, AGENT_TOOLS)
     order(root, "record")
     generate_types(root)
@@ -1199,7 +1199,7 @@ def test_agent_instructions_path_is_relative_to_agent_or_module_root(shop: Path,
         (WRITER, '- "find_tickets"', '- "find_orders"', DiagnosticCode.E_TOOL_UNKNOWN),
         (WRITER, "./writer.md", "./notes.md", DiagnosticCode.E_PROMPT_MISSING),
         (WRITER, "./writer.md", "./writer.txt", DiagnosticCode.E_SPEC_INVALID),
-        ("shared/writer.md", "потом отвечай", "потом {{ ticket }}", DiagnosticCode.E_PROMPT_VARIABLE_UNDECLARED),
+        ("shared/writer.md", "then reply", "then {{ ticket }}", DiagnosticCode.E_PROMPT_VARIABLE_UNDECLARED),
         ("shared/researcher.yaml", '- "helpdesk"', '- "crm"', DiagnosticCode.E_MCP_SERVER_UNKNOWN),
         ("shared/find_tickets.yaml", 'server: "helpdesk"', 'server: "crm"', DiagnosticCode.E_MCP_SERVER_UNKNOWN),
         (RECORD_FILE, 'idempotency_key:\n- "subject"\n', "", DiagnosticCode.E_TOOL_IDEMPOTENCY),
@@ -1268,16 +1268,16 @@ cases:
 - name: "late_parcel"
   inputs:
     ticket:
-      subject: "Где посылка"
-      body: "Заказ не пришёл вовремя"
+      subject: "Where is my parcel"
+      body: "The order did not arrive on time"
       customer:
-        name: "Анна"
+        name: "Anna"
         email: null
       photo: null
   metadata:
     split: "train"
   expected_output:
-    rationale: "Покупатель спрашивает о доставке"
+    rationale: "The customer asks about delivery"
     category: "delivery"
 """
 
@@ -1298,12 +1298,12 @@ def test_dataset_id_is_the_file_name_and_name_is_not_a_key(shop: Path) -> None:
 FORM_FILE: Final = "triage/form.py"
 FORM_CODE: Final = """from aqven.spec import FieldSpec
 
-CATEGORY_FIELD = FieldSpec(name="category", type="TriageCategory", description="Очередь")
-CUSTOMER_FIELD = FieldSpec(name="customer", type="Customer?", description="Покупатель")
+CATEGORY_FIELD = FieldSpec(name="category", type="TriageCategory", description="Queue")
+CUSTOMER_FIELD = FieldSpec(name="customer", type="Customer?", description="Customer")
 
 
 def ticket_fields() -> list[FieldSpec]:
-    subject = FieldSpec(name="subject", type="Text", description="Тема", maxLength=200)
+    subject = FieldSpec(name="subject", type="Text", description="Subject", maxLength=200)
     return [subject, CATEGORY_FIELD, CUSTOMER_FIELD]
 """
 
@@ -1320,8 +1320,8 @@ def test_field_spec_in_code_names_registry_types(shop: Path) -> None:
         ('type="TriageCategory"', 'type="TriageQueue"', DiagnosticCode.E_TYPE_UNKNOWN, 3),
         ('type="Customer?"', 'type="TriageTicket?"', DiagnosticCode.E_SPEC_INVALID, 4),
         (
-            'description="Очередь")',
-            'description="Очередь", enum=["billing"])',
+            'description="Queue")',
+            'description="Queue", enum=["billing"])',
             DiagnosticCode.E_TYPE_CONSTRAINT_MISMATCH,
             3,
         ),
@@ -1377,19 +1377,19 @@ def test_changed_step_or_tool_makes_generated_types_stale_until_generate(
 PANEL_REQUEST: Final = """apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Вход панели судей"
+description: "Judge panel input"
 fields:
 - name: "ticket"
   type: "TriageTicket"
-  description: "Обращение"
+  description: "Ticket"
 - name: "category"
   type: "TriageCategory"
-  description: "Очередь от классификатора"
+  description: "Queue from the classifier"
 """
 
 PANEL_FLOW: Final = """apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Панель судей очереди"
+description: "Queue judge panel"
 input: "PanelRequest"
 output: "TriageReview"
 returns:
@@ -1416,7 +1416,7 @@ requires:
 PANEL_JUDGE: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Судья очереди"
+description: "Queue judge"
 inference: "classify"
 agent: "writer"
 in:
@@ -1427,7 +1427,7 @@ in:
 PANEL_CALL: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "call"
-description: "Панель судей"
+description: "Judge panel"
 flow: "panel"
 in:
 - name: "ticket"
@@ -1544,33 +1544,33 @@ def test_flow_calling_itself_is_reported(shop: Path) -> None:
 BATCH_TYPE: Final = """apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Пачка обращений"
+description: "Ticket batch"
 fields:
 - name: "tickets"
   type: "TriageTicket[]"
-  description: "Обращения пачки"
+  description: "Tickets in the batch"
   maxItems: 20
 """
 
 BATCH_RESULT_TYPE: Final = """apiVersion: "aqven/v1"
 kind: "Type"
 type: "record"
-description: "Итог пачки"
+description: "Batch result"
 fields:
 - name: "summaries"
   type: "Text[]"
-  description: "Краткие содержания по порядку"
+  description: "Summaries in order"
   maxItems: 20
   maxLength: 200
 - name: "failures"
   type: "MapItemError[]"
-  description: "Упавшие обращения"
+  description: "Failed tickets"
   maxItems: 20
 """
 
 BATCH_FLOW: Final = """apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Краткие содержания пачки обращений"
+description: "Summaries of a ticket batch"
 input: "TriageBatch"
 output: "TriageBatchResult"
 returns:
@@ -1585,7 +1585,7 @@ order:
 BATCH_MAP: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "map"
-description: "Краткое содержание каждого обращения"
+description: "Summary of each ticket"
 over: "$input.tickets"
 body: "summarize"
 concurrency: 4
@@ -1594,13 +1594,13 @@ on_item_error:
 out:
 - name: "summaries"
   type: "Text[]"
-  description: "Краткие содержания"
+  description: "Summaries"
   maxItems: 20
   maxLength: 200
   from: "$ok[*].summary"
 - name: "failures"
   type: "MapItemError[]"
-  description: "Упавшие обращения"
+  description: "Failed tickets"
   maxItems: 20
   from: "$failed"
 """
@@ -1720,23 +1720,23 @@ class TemplateMutation:
 
 TEMPLATE_MUTATIONS: Final[Mapping[str, TemplateMutation]] = {
     "condition_on_text": TemplateMutation(PHOTO_CONDITION, "{% if ticket.subject %}", "R-T3"),
-    "string_compare_on_text": TemplateMutation(PHOTO_CONDITION, '{% if ticket.subject == "срочно" %}', "R-T3"),
+    "string_compare_on_text": TemplateMutation(PHOTO_CONDITION, '{% if ticket.subject == "urgent" %}', "R-T3"),
     "greater_than": TemplateMutation(PHOTO_CONDITION, "{% if ticket.subject.size > 3 %}", "R-T3"),
-    "contains": TemplateMutation(PHOTO_CONDITION, '{% if ticket.subject contains "заказ" %}', "R-T3"),
+    "contains": TemplateMutation(PHOTO_CONDITION, '{% if ticket.subject contains "order" %}', "R-T3"),
     "constant_condition": TemplateMutation(PHOTO_CONDITION, "{% if true %}", "R-T3"),
     "elsif_on_text": TemplateMutation(
-        "{% if ticket.photo %}К обращению приложено фото товара.",
-        "{% if ticket.photo %}К обращению приложено фото товара.{% elsif ticket.body %}Фото нет.",
+        "{% if ticket.photo %}The customer attached a product photo.",
+        "{% if ticket.photo %}The customer attached a product photo.{% elsif ticket.body %}No photo.",
         "R-T3",
     ),
     "for_over_record": TemplateMutation(
-        "{% if ticket.photo %}К обращению приложено фото товара.{% endif %}",
-        "{% for item in ticket.customer %}{{ item }}{% endfor %}{% if ticket.photo %}Фото.{% endif %}",
+        "{% if ticket.photo %}The customer attached a product photo.{% endif %}",
+        "{% for item in ticket.customer %}{{ item }}{% endfor %}{% if ticket.photo %}Photo.{% endif %}",
         "R-T5",
     ),
     "for_over_range": TemplateMutation(
-        "{% if ticket.photo %}К обращению приложено фото товара.{% endif %}",
-        "{% for item in (1..3) %}{{ item }}{% endfor %}{% if ticket.photo %}Фото.{% endif %}",
+        "{% if ticket.photo %}The customer attached a product photo.{% endif %}",
+        "{% for item in (1..3) %}{{ item }}{% endfor %}{% if ticket.photo %}Photo.{% endif %}",
         "R-T5",
     ),
 }
@@ -1767,7 +1767,7 @@ def test_allowed_conditions_pass(shop: Path) -> None:
 
 TAGS_INPUT: Final = """- name: "tags"
   type: "Text[]"
-  description: "Метки обращения"
+  description: "Ticket tags"
   maxItems: 3
   maxLength: 20
 out:
@@ -1775,14 +1775,14 @@ out:
 
 TAGS_BINDING: Final = """- name: "tags"
   value:
-  - "срочно"
+  - "urgent"
 """
 
 
 def with_tags(root: Path, loop: str, input_decl: str = TAGS_INPUT, binding: str = TAGS_BINDING) -> None:
     replace(root, INFERENCE, "\nout:\n", f"\n{input_decl}")
     replace(root, INFERENCE, '- run: "fixture_shop.triage.classify:rationale_is_short"\n  on_fail: "flag"\n', "")
-    replace(root, INFERENCE, "      photo: null\n  out:", '      photo: null\n    tags:\n    - "срочно"\n  out:')
+    replace(root, INFERENCE, "      photo: null\n  out:", '      photo: null\n    tags:\n    - "urgent"\n  out:')
     append(root, CLASSIFY, binding)
     replace(root, PROMPT, "{{ ticket.body }}", "{{ ticket.body }}\n" + loop)
     generate_types(root)
@@ -1806,7 +1806,7 @@ def test_literal_binding_is_checked_against_inference_input(shop: Path) -> None:
     with_tags(
         shop,
         "{% for tag in tags %}{{ tag }}{% endfor %}",
-        binding=TAGS_BINDING.replace('"срочно"', '"' + "я" * 30 + '"'),
+        binding=TAGS_BINDING.replace('"urgent"', '"' + "x" * 30 + '"'),
     )
 
     assert diagnostics_of(check_project(shop), DiagnosticCode.E_BINDING_TYPE) == [(CLASSIFY, ("in", 1, "value"))]
@@ -1815,11 +1815,11 @@ def test_literal_binding_is_checked_against_inference_input(shop: Path) -> None:
 def test_condition_on_enum_value_outside_enum_is_reported(shop: Path) -> None:
     with_tags(
         shop,
-        '{% if tags == "returns" %}Возврат.{% endif %}',
+        '{% if tags == "returns" %}Refund.{% endif %}',
         TAGS_INPUT.replace('"Text[]"', '"TriageCategory"').replace("  maxItems: 3\n  maxLength: 20\n", ""),
-        TAGS_BINDING.replace('  value:\n  - "срочно"\n', '  value: "billing"\n'),
+        TAGS_BINDING.replace('  value:\n  - "urgent"\n', '  value: "billing"\n'),
     )
-    replace(shop, INFERENCE, '    tags:\n    - "срочно"\n', '    tags: "billing"\n')
+    replace(shop, INFERENCE, '    tags:\n    - "urgent"\n', '    tags: "billing"\n')
 
     (problem,) = check_project(shop).diagnostics
 

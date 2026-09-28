@@ -34,12 +34,13 @@ the [quickstart](https://aqvenstudio.com/start/quickstart/).
 
 The plugin has no hooks, no MCP server and no scripts that run on their own. Its skills tell Claude to run
 the AQVEN command line in your project (`uv run aqven check`, `uv run aqven run` and so on) and to use the
-AQVEN MCP server that your project already declares. One skill, `choosing-models`, suggests reading
-OpenRouter's public model catalogue with `curl` (`GET https://openrouter.ai/api/v1/models`); that request
-needs no key and sends nothing from your project. `preparing-media-inputs` includes a small Python script,
-`scripts/contact_sheet.py`, that builds a contact sheet from local images when Claude runs it with `uv run`;
-uv fetches its one declared dependency, Pillow 12.3.0, into a throwaway environment. The same skill may
-suggest trying an image library pinned to an exact version with `uv run --with <package>==<version>`.
+AQVEN MCP server that your project already declares. One skill, `choosing-models`, reads a model provider's
+own model pages and, for an aggregator, its public catalogue with `curl` (for OpenRouter,
+`GET https://openrouter.ai/api/v1/models`); that request needs no key and sends nothing from your project.
+`preparing-media-inputs` includes a small Python script, `scripts/contact_sheet.py`, that builds a contact sheet
+from local images when Claude runs it with `uv run`; uv fetches its one declared dependency, Pillow 12.3.0, into
+a throwaway environment. The same skill may suggest trying an image library pinned to an exact version with
+`uv run --with <package>==<version>`.
 
 The plugin reads no credentials. Model keys stay in your project's `.env`, which the AQVEN engine, not the
 plugin, uses when you start a run.

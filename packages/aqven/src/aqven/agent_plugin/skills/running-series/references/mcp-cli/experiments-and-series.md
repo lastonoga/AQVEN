@@ -1,6 +1,6 @@
 # How to run experiments and series as an agent
 
-Write an experiment file, start a series with series_start, wait for its verdict with series_get, and stop one with series_cancel.
+Write an experiment file, start a series with series_start, wait for its verdict with series_get, read its outputs with series_outputs, and stop one with series_cancel.
 
 ## Contents
 
@@ -17,14 +17,16 @@ You're connected to a project over MCP and need a number you can act on: whether
 enough, whether a change or another agent is better, whether a cheaper agent is not worse. The question
 lives in an experiment file, `experiments/<experiment_id>/experiment.yaml`. A **series** runs that
 experiment live: every selected case, for every variant, `repeats` times. Every attempt is an ordinary
-run with its own trace, and every attempt calls the models and costs money. Three tools cover it:
-`series_start`, `series_get` and `series_cancel`. How an agent takes a task to a reliable
+run with its own trace, and every attempt calls the models and costs money. Five tools cover it:
+`series_start`, `series_get` and `series_cancel` run and follow a series, and `series_outputs` and
+`series_list` read what series produced. How an agent takes a task to a reliable
 flow is the order to use them in, round after round.
 
 ## Steps
 
-- **Write the experiment first, then run `aqven_check`.** There is no tool that creates an experiment:
-  it is a file, and you write it like any other (How to write an experiment).
+- **Write the experiment first, then run `aqven_check`.** There is no MCP tool that creates an experiment:
+  it is a file, and you write it like any other, one file at a time, or a person starts it with **New
+  experiment** in Studio (How to write an experiment).
   Give it a `failure_mode` and a falsifiable `description`, and one factor in `varies`: the variants set
   only its values. `aqven_check` validates the subject and its range, the factor and every variant's
   values (agents, prompt files, alternative nodes, flows), each variant assembled and compiled like a flow,
@@ -59,14 +61,41 @@ flow is the order to use them in, round after round.
   the time left on to the user as an estimate. `spend.unpriced_attempts` counts the attempts that ran on
   a model without a known price: when it is above 0, `spend.usd` is a lower bound, so say so. A series
   is `failed` only when every attempt hit an infrastructure error, and then `error` names the first one.
+- **Read the summary first.** `series_get` with `view: "summary"` answers in a few KB however many
+  attempts ran: per variant the finished, passed, failed, errored and running attempts, the spend, p50 and
+  p95 latency, the primary metric with its 95% interval, and the top 3 failure groups by error code or
+  failed check (`check:<id>`), each with one example message. The full view grows with the number of
+  variants: 23 variants take about 64 KB in full and about 18 KB as a summary. `fields` keeps only the
+  named metrics and checks in either view; a name the series doesn't have fails with `INPUT_INVALID` and
+  the list of names it has.
 - **Quote `verdict.text` as it is once the status is `done`.** The server writes that sentence from
   the interval and the margin declared in the file. Repeat it; don't round the numbers or put them in
   your own words. While a series is still running, its verdict is provisional.
 - **`include_cases: true`** adds per-case rows to `series_get`, but only for `dev` cases: failing cases
-  first, at most 50, and the rest counted in `hidden_cases`. Held-out cases are never shown to the agent
-  one by one, so a change can't be tuned to them. Each row gives every variant's tally and failed checks,
-  and each attempt its `outcome`, `error` and `run_id`: open that run with `run_get` and `run_events` to
-  find the first node that failed.
+  first, `case_limit` rows a page (50 by default, up to 200), and `next_cursor` for the next page passed
+  back as `cursor`. The rest, held-out cases included, are counted in `hidden_cases`. Held-out cases are
+  never shown to the agent one by one, so a change can't be tuned to them. Each row gives every variant's
+  tally and failed checks, `divergent` when the variants split on it, and each attempt its `outcome`,
+  `error` and `run_id`: open that run with `run_get` and `run_events` to find the first node that failed.
+  The rows grow with the number of variants and attempts, so read `view: "summary"` first (per variant:
+  finished, passed, failed and errored attempts, spend, latency, the primary metric and the top failure
+  groups) and ask for the rows only when a variant has failures. When your host saves an answer that is
+  too large to a file, read only the keys you need from that file.
+- **`series_outputs` reads what the attempts produced, in bulk.** One row per attempt, in attempt order:
+  `case`, `variant`, `repeat`, `split`, `outcome` (`passed`, `failed`, `error`, `waiting` or `running`),
+  `error_code`, `cost_usd`, `latency_ms`, `run_id`, `output`, `node_outputs` and `checks`
+  (`{check_id: value}`). Filter by `split`, `variant`, `case` and `outcome`; `page_size` goes up to 200,
+  and `next_cursor` comes back as `cursor`. Without `fields` each row carries the whole flow output. With
+  `fields`, a JSON pointer such as `/label` puts `{"/label": value}` in `output`, a node id such as
+  `triage` puts that node's whole output in `node_outputs`, and `triage/summary` a path inside it; a path
+  that isn't there is `null`. The rows come from the same run records `run_get` reads, so use this, not
+  one `run_get` per attempt, and never the files under `.aqven/`. Outputs of `map` items, branches and loop
+  passes aren't included.
+- **`series_list` is the history, with totals.** Newest first, filtered by `experiment_id` and `status`:
+  `series_id`, `experiment_id`, `flow_id`, `status`, the verdict state, `on`, `progress`, `spend_usd`, the
+  times and `eta`. Its `stats` total every series of the experiment, or of the project without
+  `experiment_id`: `series`, finished `attempts`, `requests` (attempt runs plus judge check runs, not
+  single model calls), `tokens`, `spend_usd` and `wall_seconds` in which at least one series was open.
 - **A failure counts, an infrastructure error doesn't.** An attempt whose model broke its output type
   even after its retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`, invalid JSON) is a counted
   failure, like a provider refusing the output type as too complex (`OUTPUT_SCHEMA_REJECTED`), a failed
@@ -81,9 +110,12 @@ flow is the order to use them in, round after round.
 
 ### `dev` to search, `holdout` to decide
 
-The server splits every dataset in half by a hash of the case `name`, the same way in every clone of the
-project. Iterate on `dev` as often as you need: a series on `dev` gives at most a `signal`, never a
-finding. Run `holdout` once, when the change is done and the question is fixed. A series on `holdout`
+The server splits every dataset in half by a hash of the package name, the dataset id and the case `name`,
+the same way in every clone of the project. A second dataset built from the same inputs, under another id,
+splits them anew, so an input you explored on in one dataset can land in the held-out half of the other:
+see The same population in both halves.
+Iterate on `dev` as often as you need: a series on `dev` gives at most a `signal`, never a finding. Run
+`holdout` once, when the change is done and the question is fixed. A series on `holdout`
 whose verdict is anything but `invalid` writes `experiments/<experiment_id>/findings/<series_id>.yaml`
 once and regenerates `FINDINGS.md` at the module root. Both are generated files, so don't edit them;
 `aqven check` reports an edited finding as `E_FINDING_TAMPERED` and a stale `FINDINGS.md` as
@@ -114,8 +146,8 @@ working (`dev`) cases, repeated twice, look at the launch plan `series_start` wo
 same question with `POST /api/experiments/reply_overpromise_risk/launch-plan` and the body
 `{"on": "dev", "cases": 2, "repeats": 2}`. The response below is real, trimmed, from AQVEN's example
 project `lumen` with no series history and no provider key, on a machine without network. The showcase
-template is the same project under your package name, and the salt of the split is the package name, so
-your count of working cases can differ by one or two:
+template is the same project under your package name, and the split hashes the package name with the
+dataset id and the case name, so your count of working cases can differ by one or two:
 
 ```json
 {
@@ -160,8 +192,11 @@ It starts the project server if it isn't running, then waits and prints the prog
 verdict.
 It exits with 0 when the series is done, whatever the verdict, and with 1 when it was cancelled or failed.
 It exits with 3, printing a Studio link, when the series waits for approval or paused near its cap, and with 4 when an attempt
-waits for a person. `--cap` sets the series' own cap, and `--json` prints the final state as one JSON
-line. [How to run a series](../engine/run-a-series.md) lists every flag and exit code.
+waits for a person. When it loses contact with the server it retries for up to 5 minutes, then exits with 5,
+naming the error; the series keeps running on the server. `--cap` sets the series' own cap, and `--json`
+prints the final state as one JSON line. `aqven series export <series_id> --format csv --fields
+/label triage` writes the same rows as `series_outputs`, one per attempt, as JSON lines or CSV.
+[How to run a series](../engine/run-a-series.md) lists every flag and exit code.
 
 ## See also
 

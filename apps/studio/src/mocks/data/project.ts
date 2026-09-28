@@ -94,7 +94,7 @@ export const liveFlowDetails: Readonly<Record<string, ApiFlowDetail>> = {
       "status": "failed",
       "started_at": "2026-09-17T23:08:34.527000Z"
     },
-    "description": "Обращение покупателя Lumen: разбор вложений, намерение голосованием с каскадом, анкета с ремонтом, решение, ответ по базе знаний с панелью судей и полировкой, медиа ответа и согласование людьми",
+    "description": "A Lumen customer request: attachment analysis, intent by cascading vote, an intake form with repair, a decision, a reply from the knowledge base with a judge panel and polishing, reply media and human approval",
     "files": [
       {
         "path": "flows/support_case/flow.yaml",
@@ -365,7 +365,7 @@ export const liveFlowDetails: Readonly<Record<string, ApiFlowDetail>> = {
     "context": [],
     "content_hash": "sha256-b683d1c10d685b049bc1122003aacba90522719427a6ce3943d6d27762ce7aff",
     "last_run": null,
-    "description": "Панель судей трёх семейств, отличных от авторов: вердикты, согласие, тай-брейк моделью OpenAI, победитель",
+    "description": "A panel of judges from three model families other than the authors': verdicts, agreement, an OpenAI tie-break model, the winner",
     "files": [
       {
         "path": "flows/judge_panel/flow.yaml",
@@ -791,13 +791,13 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
       "apiVersion": "aqven/v1",
       "kind": "Type",
       "type": "record",
-      "description": "Согласование ответа руководителем поддержки",
+      "description": "Support lead's approval of the reply",
       "pii": "none",
       "fields": [
         {
           "name": "decision",
           "type": "ApprovalDecision",
-          "description": "Решение по ответу",
+          "description": "Decision on the reply",
           "maxLength": null,
           "maxItems": null,
           "minimum": null,
@@ -808,7 +808,7 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
         {
           "name": "edited_text",
           "type": "Text?",
-          "description": "Исправленный текст при правке; иначе null",
+          "description": "Edited text when revised; otherwise null",
           "maxLength": 1500,
           "maxItems": null,
           "minimum": null,
@@ -819,7 +819,7 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
         {
           "name": "note",
           "type": "Text?",
-          "description": "Заметка руководителя; null, если заметки нет",
+          "description": "The lead's note; null if there is none",
           "maxLength": 400,
           "maxItems": null,
           "minimum": null,
@@ -880,13 +880,13 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
       "apiVersion": "aqven/v1",
       "kind": "Type",
       "type": "record",
-      "description": "Согласование медиа ответа бренд-редактором",
+      "description": "Brand editor's approval of the reply media",
       "pii": "none",
       "fields": [
         {
           "name": "use_image",
           "type": "Bool",
-          "description": "Приложить картинку-инструкцию",
+          "description": "Attach an instruction image",
           "maxLength": null,
           "maxItems": null,
           "minimum": null,
@@ -897,7 +897,7 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
         {
           "name": "use_voice",
           "type": "Bool",
-          "description": "Приложить голосовую версию ответа",
+          "description": "Attach a voice version of the reply",
           "maxLength": null,
           "maxItems": null,
           "minimum": null,
@@ -908,7 +908,7 @@ export const liveTypeDetails: Readonly<Record<string, ApiTypeDetail>> = {
         {
           "name": "use_clip",
           "type": "Bool",
-          "description": "Приложить короткий ролик",
+          "description": "Attach a short clip",
           "maxLength": null,
           "maxItems": null,
           "minimum": null,

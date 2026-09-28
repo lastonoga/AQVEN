@@ -1,6 +1,6 @@
 # How to choose models on OpenRouter
 
-Pick candidates from OpenRouter's public catalogue by what they read, what they cost and which parameters they take, read a model's endpoints, route it with provider_options, handle rate limits per model, and prove the choice with a live probe.
+The aggregator case of choosing a model, on OpenRouter. Pick candidates from its public catalogue by what they read, what they cost and which parameters they take, read a model's upstream endpoints, route it with provider_options, handle rate limits per model, and prove the choice with a live probe.
 
 ## Contents
 
@@ -12,20 +12,26 @@ Pick candidates from OpenRouter's public catalogue by what they read, what they 
 
 ## When you need this
 
-Read this before you add or change an agent whose `model` starts with `openrouter:`, before an experiment that
-compares agents, and when a step fails with `MODEL_FEATURE_UNSUPPORTED`, runs into `429` or is slow. The answer to
-"can this model do it" comes from OpenRouter's catalogue and from a live probe, not from a model's name or from
-memory: AQVEN keeps no table of what each model can read or produce.
+This is the aggregator page. How to find and verify candidates on any provider, direct or not, is in
+[How to connect a model provider](model-providers.md#finding-and-verifying-candidate-models); this page
+adds what only an aggregator has, with OpenRouter as the example: one catalogue across many model families, several
+upstream providers behind one model, and the routing between them.
+
+Read it before you add or change an agent whose `model` starts with `openrouter:`, and when such an agent fails
+with `MODEL_FEATURE_UNSUPPORTED`, runs into `429` or is slow. The answer to "can this model do it" comes from
+OpenRouter's catalogue and from a live probe, not from a model's name or from memory: AQVEN keeps no table of what
+each model can read or produce.
 
 ## Steps
 
 1. **List candidates from the catalogue.** `GET https://openrouter.ai/api/v1/models` is public: no key needed. It
    takes filters as query parameters, among them `input_modalities`, `output_modalities` and
-   `supported_parameters` (comma-separated). This lists the models that read images and return structured output,
-   cheapest input first, with prices in USD per million tokens:
+   `supported_parameters` (comma-separated). Filter by the input kinds your flow sends: `text`, `image`, `file`
+   (PDFs), `audio` or `video`. This lists the models that read audio and return structured output, cheapest input
+   first, with prices in USD per million tokens:
 
    ```bash
-   curl -s -o models.json 'https://openrouter.ai/api/v1/models?input_modalities=image&supported_parameters=structured_outputs'
+   curl -s -o models.json 'https://openrouter.ai/api/v1/models?input_modalities=audio&supported_parameters=structured_outputs'
    jq -r '.data[] | [.id, (.pricing.prompt | tonumber * 1000000), (.pricing.completion | tonumber * 1000000), .context_length] | @tsv' models.json \
      | sort -t$'\t' -k2 -g
    ```
@@ -42,6 +48,7 @@ memory: AQVEN keeps no table of what each model can read or produce.
    | `context_length` | the context window in tokens |
    | `top_provider.max_completion_tokens` | the longest answer of the main provider |
    | `supported_parameters` | request parameters some provider of the model accepts: `structured_outputs`, `response_format`, `tools`, `reasoning`, `max_tokens`, `seed`, … |
+   | `reasoning` | on models that reason: `mandatory` (reasoning cannot be switched off), `supported_efforts`, `default_effort`, `default_enabled`, `supports_max_tokens` |
 
 2. **Read the endpoints of each candidate.** `GET https://openrouter.ai/api/v1/models/<author>/<slug>/endpoints`
    lists every provider that serves the model. The same model can differ between them, so choose the providers
@@ -60,8 +67,12 @@ memory: AQVEN keeps no table of what each model can read or produce.
    | `context_length`, `max_prompt_tokens`, `max_completion_tokens` | the limits of this endpoint |
    | `pricing` | the prices of this endpoint |
    | `supported_parameters` | what this endpoint accepts; structured output or tools may be missing on one provider only |
+   | `supports_tool_choice` | whether this endpoint lets the request force a tool call |
    | `status`, `uptime_last_5m`, `uptime_last_30m`, `uptime_last_1d` | whether it is up |
    | `latency_last_30m`, `throughput_last_30m` | how fast it has been lately |
+
+   Count the endpoints. A model that one provider serves has nowhere to go when that provider answers `429` or
+   goes down: mark it in your list of candidates, and give its agent `fallback_models`.
 
 3. **Route the model in the agent file.** Everything under `settings.provider_options` goes into the request body
    as is, so OpenRouter's `provider` object goes there:
@@ -79,6 +90,14 @@ memory: AQVEN keeps no table of what each model can read or produce.
 
    A pinned `order` with `allow_fallbacks: false` leaves a rate-limited provider no way out: keep fallbacks on, or
    give the agent `fallback_models`.
+
+   Set reasoning on purpose in the same place, per model. OpenRouter's `reasoning` object takes `effort` (one of
+   the model's `supported_efforts`, down to `"minimal"` or `"none"` where it lists them), `max_tokens` for a
+   budget instead, or `enabled: false`. Reasoning spends the answer's `max_tokens` too; see
+   [when a reasoning model runs out of room](../concepts/what-happens-when-a-model-is-called.md#when-a-reasoning-model-runs-out-of-room).
+   A model whose `reasoning.mandatory` is `true` cannot switch reasoning off: give it its lowest effort. For
+   reading, extraction and classification, start with reasoning off or at its lowest effort, and measure before
+   raising it.
 
    Keep these keys in the agent, not in `aqven.yaml`. When the OpenRouter provider in `aqven.yaml` declares
    `routing` (`data_collection`, `zdr`), AQVEN sends it as the `provider` object of every request, and it replaces
@@ -104,9 +123,12 @@ memory: AQVEN keeps no table of what each model can read or produce.
    ```
 
    For an output with nested objects or long lists, `uv run aqven models shapes reader --project . --live`
-   finds the model's structural limits (billed as well). Whether a model reads images is proven by one real run on
-   a case with an image: a provider that refuses images fails the step with `MODEL_FEATURE_UNSUPPORTED`. Then
-   compare the candidates on your own labelled cases with an experiment that changes the agent.
+   finds the model's structural limits (billed as well). Neither probe sends your node's schema, media or
+   settings ([what `--live` leaves out](../engine/check-providers.md)). Whether a model reads the input kind your
+   flow sends, and answers in your node's output type, is proven by one real run on a case of that kind: an
+   image, a PDF, a recording, a clip or a long document. A provider that refuses the attachment fails the step
+   with `MODEL_FEATURE_UNSUPPORTED`. Then compare the candidates on your own labelled cases with an experiment
+   that changes the agent.
 
 ### Example
 
@@ -153,11 +175,13 @@ What this is built on.
 
 ## See also
 
-- [How to connect a model provider](model-providers.md) — declaring a provider, credentials, rate-limit
-  strategies per model.
+- [How to connect a model provider](model-providers.md) — declaring a provider, naming a model on any
+  provider, finding and verifying candidates, options per provider, rate-limit strategies per model.
 - [How to check your model providers are configured](../engine/check-providers.md) — everything `models check` reports.
 - [How to find a model's real structural limits](../engine/check-shapes.md) — `models shapes` in detail.
 - How to prepare images for a flow — what an image model receives.
+- How to prepare audio, video, documents and text for a flow —
+  what a model receives from every other input kind.
 - OpenRouter's own reference: [list models](https://openrouter.ai/docs/api/api-reference/models/get-models),
   [list a model's endpoints](https://openrouter.ai/docs/api/api-reference/endpoints/list-endpoints),
   [provider routing](https://openrouter.ai/docs/guides/routing/provider-selection),

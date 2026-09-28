@@ -1,6 +1,6 @@
 ---
 title: Correctness needs ground truth and a control
-description: Agreement is not correctness, a check measures one claim, a rate belongs to its own cases, and the main metric is the job of the stage you test. How to pick checks and controls that can tell a working flow from one that only looks consistent.
+description: Agreement is not correctness, a proxy is not a label, a check measures one claim, a rate belongs to its own cases, and the main metric is the job of the stage you test. How to pick checks and controls that can tell a working flow from one that only looks consistent.
 ---
 
 ## In short
@@ -29,12 +29,28 @@ Agreement is useful for one question only: how noisy a step is. For "is it right
 
 Compare models on real labels. Synthetic cases can show that a model can't do the task at all. They
 can't show which model is better on production inputs: a model that reads clean generated invoices can fall
-apart on real scans.
+apart on real scans, and one that handles clean synthetic transcripts can fail on real phone calls.
 
 A synthetic case must actually have the property it is labelled with. A "blurry receipt" must be blurry
 where the text is, not just darker overall; a "long message" must bury the key fact, not just repeat the
-greeting. Look at a sample of the built inputs before a series, or the series measures the label, not
-the property.
+greeting; a "noisy call" must be hard to hear while someone speaks, not only in the pauses. Look at, listen
+to or read a sample of the built inputs before a series, or the series measures the label, not the property.
+
+## Proxy truth
+
+Sometimes the label you have is about a different property than the one you measure. A ticket's resolution
+code says "refund issued", and the experiment asks whether the model found the refund request in the
+message. Truth for one property inferred from a label of another is a proxy, and it needs three things:
+
+- **Name it a proxy.** The experiment's notes say so, and the mapping from the label to the truth sits in a
+  table marked for sign-off by the owner of the data. See
+  [Cases that can answer the question](/concepts/case-construction/) for how such a table is kept.
+- **Split the error metric.** A model answer can contradict the label, or it can be about something the
+  label never covered: a message that asks for a refund and a replacement, labelled only with the refund. The
+  first is an error. The second is outside the label's scope, and counting it as a false positive punishes a
+  correct answer. Score the two as separate checks.
+- **Beat the constant.** A proxy often has one value on most cases. See
+  [Trivial baselines](#trivial-baselines).
 
 ## Negative controls
 
@@ -43,14 +59,15 @@ It catches three things:
 
 - **A check that fires on everything.** A detector that flags every message scores full recall. Only
   messages that don't ask show that it flags them too.
-- **A model that answers from context.** A model that reports a defect on every clean product photo it is
-  asked about reads the question, not the image.
+- **A model that answers from context.** A model that finds a cancellation request in every call
+  transcript it is asked about, or a defect on every clean product photo, reads the question, not the input.
 - **A `refuted` that means nothing.** Without controls, "the risk didn't show" can't be told from "the
   cases never provoke it".
 
 A control must be false by construction and must not leak. A decoy that the model can recognise by some
-other feature, such as a different camera or a watermark, tests that feature. A multi-call variant needs a
-control of equal budget, a variant that calls the model as often, or its gain may come from calling more.
+other feature, such as a different document template, sender address, camera or watermark, tests that
+feature. A multi-call variant needs a control of equal budget, a variant that calls the model as often, or
+its gain may come from calling more.
 
 ## One check, one claim
 
@@ -85,7 +102,11 @@ between them. Each stage has its own job and its own metric:
 
 A threshold meant for the whole flow, put on the divergent layer alone, fails a layer that did its job. A
 judge measured on recall rewards a judge that lets everything through. Name the stage before you pick
-the metric.
+the metric. An experiment can score one stage with ordinary checks: see
+[Measure one stage](/engine/experiments/#measure-one-stage).
+
+A comparison of two ways to run a stage is read against the configuration production runs now, in the same
+series: see [The current best in every comparison](/concepts/validity-gate/#the-current-best-in-every-comparison).
 
 ## Trivial baselines
 
@@ -93,6 +114,10 @@ Before you set a threshold, compute what a trivial answer scores: always the sam
 majority class, "flag everything". A threshold below that bar confirms a flow that is no better than a
 constant. On a support queue where most tickets need a person, "escalate every ticket" can outscore every
 model tested when the threshold was set without looking.
+
+The same holds for the metric of one stage and for truth derived from another label. A derived truth that
+has the same value on most cases makes a constant answer look good: the metric tells models apart only
+when the best constant answer scores well below 1.
 
 A trivial baseline can be a variant of its own: an alternative `code` node that returns the constant
 answer, compared with a `use` factor on the step. Then the table shows it as a row next to the models. Lumen's
@@ -139,10 +164,13 @@ same `expected` check there means "left a complaint alone".
 ## How this shapes what you do
 
 - Measure correctness only against a truth: an answer you built into the input, or labels from the source.
+- Call truth inferred from another property's label a proxy, get its table signed off, and score
+  "contradicts the label" apart from "outside the label's scope".
 - Put negative controls from the same population next to every group of positives.
 - Write one check per claim, and give a rate on part of the cases its own experiment with `cases.tags`.
 - Pick the main metric from the job of the stage you test.
-- Compute trivial baselines before you set a threshold.
+- Compute trivial baselines before you set a threshold, for a stage metric too.
+- Compare a candidate with the configuration production runs now, in the same series.
 - Read an A/A experiment to know how much of a difference is noise.
 
 ## See also
