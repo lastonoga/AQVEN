@@ -32,7 +32,7 @@ description: "Makes an AQVEN flow fail loudly and recover on purpose: run-time c
 
 | `join` | When the node closes | Danger |
 |---|---|---|
-| `all` | every branch succeeded; fails on the first error | one model's 429 fails the node; give its agent `fallback_models` or provider fallbacks |
+| `all` | every branch succeeded; fails on the first error | one model's 429 fails the node; give its agent `fallback_models`, or on an aggregator its upstream fallbacks |
 | `any` | the first finished branch, success or error | only the fastest model counts |
 | `first_success` | the first success; fails when all fail | the opinion of one model, not of a panel |
 | `quorum` with `min_ok` and `on_error` (`skip` or `fail`) | as soon as `min_ok` branches succeeded | a race, not a wait: with `min_ok: 2` of three, the slowest model never takes part |
