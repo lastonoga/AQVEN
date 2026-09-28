@@ -504,7 +504,7 @@ describe("RunsScreen", () => {
         type_id: "SignalKey",
         source: "$in.signals[*].key",
         labels_from: "$in.signals[*].label",
-        members: [{ value: "flicker", label: "Мерцает" }, { value: "app_offline", label: "Не отвечает в приложении" }],
+        members: [{ value: "flicker", label: "Flickers" }, { value: "app_offline", label: "Not responding in the app" }],
       }],
       prompt: {
         level: 2,

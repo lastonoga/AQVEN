@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Поиск похожих заметок"
+description: "Search for similar notes"
 mcp:
   server: "desk"
   tool: "search_notes"

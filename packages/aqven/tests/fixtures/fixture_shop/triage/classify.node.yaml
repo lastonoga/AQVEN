@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Выбор очереди по теме и тексту"
+description: "Choose a queue from the subject and text"
 agent: "writer"
 in:
 - name: "ticket"

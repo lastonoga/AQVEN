@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Повторный ответ инференсом узла reply другим агентом"
+description: "Second reply with the inference of the reply node by another agent"
 inference: "reply"
 agent: "critic"
 in:

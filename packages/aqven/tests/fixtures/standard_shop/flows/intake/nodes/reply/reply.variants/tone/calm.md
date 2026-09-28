@@ -1,1 +1,1 @@
-Держи ровный тон.
+Keep an even tone.

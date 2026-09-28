@@ -1,10 +1,10 @@
 {% message system cache %}
-Ты сортируешь обращения покупателей по очередям.
+You sort customer tickets into queues.
 {% include "shared/tone" %}
 {{ output_format }}
 {% endmessage %}
 {% message user %}
-Тема: {{ ticket.subject }}
-Текст: {{ ticket.body }}
-{% if ticket.photo %}К обращению приложено фото товара.{% endif %}
+Subject: {{ ticket.subject }}
+Body: {{ ticket.body }}
+{% if ticket.photo %}The customer attached a product photo.{% endif %}
 {% endmessage %}

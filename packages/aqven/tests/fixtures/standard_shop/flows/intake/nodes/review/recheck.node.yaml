@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "loop"
-description: "Переписывает ответ и сжимает его, пока уверенность не дойдёт до порога"
+description: "Rewrites the reply and trims it until confidence reaches the threshold"
 body:
 - "redo"
 - "trim"
@@ -16,6 +16,6 @@ select:
 out:
 - name: "text"
   type: "Text"
-  description: "Сжатый ответ последней итерации"
+  description: "Trimmed reply from the last iteration"
   maxLength: 200
   from: "$iter.trim.out.text"

@@ -40,14 +40,18 @@ from aqven.testing import copy_project
 
 FIXTURE: Final = Path(__file__).parent / "fixtures" / "fixture_shop"
 TYPE_ADAPTER: Final = TypeAdapter[TypeSpec](TypeSpec)
-HEADER: Final[Mapping[str, JsonValue]] = {"apiVersion": "aqven/v1", "kind": "Type", "description": "тип"}
+HEADER: Final[Mapping[str, JsonValue]] = {"apiVersion": "aqven/v1", "kind": "Type", "description": "type"}
 INFERENCE_ADAPTER: Final = TypeAdapter(InferenceSpec)
-INFERENCE_HEADER: Final[Mapping[str, JsonValue]] = {"apiVersion": "aqven/v1", "kind": "Inference", "description": "и"}
+INFERENCE_HEADER: Final[Mapping[str, JsonValue]] = {
+    "apiVersion": "aqven/v1",
+    "kind": "Inference",
+    "description": "inference",
+}
 TOOL_ADAPTER: Final = TypeAdapter(ToolSpec)
 TOOL_HEADER: Final[Mapping[str, JsonValue]] = {
     "apiVersion": "aqven/v1",
     "kind": "Tool",
-    "description": "т",
+    "description": "tool",
     "effect": "read",
 }
 STEP_ADAPTER: Final = TypeAdapter(CodeNodeSpec)
@@ -55,16 +59,19 @@ STEP_HEADER: Final[Mapping[str, JsonValue]] = {
     "apiVersion": "aqven/v1",
     "kind": "Node",
     "node": "code",
-    "description": "у",
+    "description": "node",
 }
 
 
 def field(name: str, type_ref: str, **constraints: JsonValue) -> dict[str, JsonValue]:
-    return {"name": name, "type": type_ref, "description": "поле", **constraints}
+    return {"name": name, "type": type_ref, "description": "field", **constraints}
 
 
 DOCUMENTS: Final[Mapping[str, dict[str, JsonValue]]] = {
-    "Tier": {"type": "enum", "values": [{"value": "basic", "description": "б"}, {"value": "pro", "description": "п"}]},
+    "Tier": {
+        "type": "enum",
+        "values": [{"value": "basic", "description": "basic"}, {"value": "pro", "description": "pro"}],
+    },
     "OrderId": {"type": "id", "pattern": "^LUM-[0-9]{8}$", "maxLength": 12},
     "Slug": {"type": "id"},
     "Score": {"type": "value", "base": "Float", "minimum": 0, "maximum": 1},
@@ -99,14 +106,14 @@ DOCUMENTS: Final[Mapping[str, dict[str, JsonValue]]] = {
         "type": "union",
         "discriminator": "kind",
         "variants": [
-            {"name": "store_front", "description": "витрина", "fields": [field("page", "Text", maxLength=200)]},
-            {"name": "market", "description": "площадка", "fields": [field("account", "Account")]},
+            {"name": "store_front", "description": "storefront", "fields": [field("page", "Text", maxLength=200)]},
+            {"name": "market", "description": "marketplace", "fields": [field("account", "Account")]},
         ],
     },
     "Single": {
         "type": "union",
         "discriminator": "kind",
-        "variants": [{"name": "only", "description": "единственный"}],
+        "variants": [{"name": "only", "description": "the only variant"}],
     },
     "Broken": {"type": "record", "fields": [field("ghost", "Ghost")]},
 }
@@ -482,8 +489,8 @@ def test_pytest_plugin_generates_types_before_conftest_imports(tmp_path: Path) -
 
 
 SAMPLES: Final[Mapping[str, JsonValue]] = {
-    "Origin": {"kind": "store_front", "page": "главная"},
-    "Address": {"line": "Тверская, 1", "title": "Дом"},
+    "Origin": {"kind": "store_front", "page": "home"},
+    "Address": {"line": "221B Baker Street", "title": "Home"},
     "OrderId": "LUM-20260917",
 }
 

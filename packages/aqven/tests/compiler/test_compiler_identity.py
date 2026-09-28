@@ -48,16 +48,18 @@ def move_tool_code(root: Path) -> None:
 
 
 MUTATIONS: Final[dict[str, Callable[[Path], None]]] = {
-    "node_spec": edit("flows/intake/nodes/clean/clean.node.yaml", "Сжатие пробелов в заметке", "Сжатие пробелов"),
-    "flow_spec": edit("flows/intake/flow.yaml", "Приём заметки", "Приём одной заметки"),
-    "inference_spec": edit("flows/intake/nodes/reply/reply.inference.yaml", '"Ответ"', '"Ответ покупателю"'),
-    "agent_spec": edit("agents/writer/writer.yaml", "Ищет похожие заметки", "Ищет заметки"),
-    "tool_spec": edit("tools/stamp.yaml", "Штамп прогона на заметке", "Штамп прогона"),
-    "prompt": edit("flows/intake/nodes/reply/reply.prompt.md", "одной фразой", "коротко"),
-    "variant": edit("flows/intake/nodes/reply/reply.variants/tone/warm.md", "Добавь тепла.", "Добавь много тепла."),
-    "fragment": edit("fragments/tone.md", "спокойно и коротко", "спокойно"),
-    "instructions": edit("agents/writer/writer.instructions.md", "одной короткой фразой", "коротко"),
-    "subagent_prompt": edit("agents/writer/lookup.prompt.md", "похожие на вопрос", "близкие к вопросу"),
+    "node_spec": edit(
+        "flows/intake/nodes/clean/clean.node.yaml", "Collapse whitespace in the note", "Collapse whitespace"
+    ),
+    "flow_spec": edit("flows/intake/flow.yaml", "Note intake", "Intake of a single note"),
+    "inference_spec": edit("flows/intake/nodes/reply/reply.inference.yaml", '"Reply"', '"Reply to the customer"'),
+    "agent_spec": edit("agents/writer/writer.yaml", "Searches for similar notes", "Searches for notes"),
+    "tool_spec": edit("tools/stamp.yaml", "Run stamp on a note", "Run stamp"),
+    "prompt": edit("flows/intake/nodes/reply/reply.prompt.md", "in one sentence", "briefly"),
+    "variant": edit("flows/intake/nodes/reply/reply.variants/tone/warm.md", "Add warmth.", "Add a lot of warmth."),
+    "fragment": edit("fragments/tone.md", "calmly and briefly", "calmly"),
+    "instructions": edit("agents/writer/writer.instructions.md", "in one short sentence", "briefly"),
+    "subagent_prompt": edit("agents/writer/lookup.prompt.md", "similar to the question", "close to the question"),
     "code_path": move_tool_code,
 }
 
@@ -88,7 +90,7 @@ def test_any_change_of_the_tree_changes_both_hashes(tmp_path: Path, baseline: Ha
 
 def test_project_description_changes_only_the_project_hash(tmp_path: Path, baseline: Hashes) -> None:
     root = copy_project(FIXTURE, tmp_path)
-    replace_text(root, "aqven.yaml", "Модуль в стандартной раскладке", "Модуль")
+    replace_text(root, "aqven.yaml", "Module in the standard layout", "Module")
 
     changed = hashes(compiled(root))
 

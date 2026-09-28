@@ -1,70 +1,67 @@
-# Конвенции документации `apps/site`
+# Documentation conventions for `apps/site`
 
-Публичная документация продукта — не проектная документация из `docs/` (там свои
-[CONVENTIONS.md](../../docs/CONVENTIONS.md) для внутренних решений). Эти конвенции — для страниц,
-которые читает инженер, подключающий AQVEN к своей работе, и LLM-агент, читающий их фрагментами.
-Структурное решение — [2026-09-21-aqven-docs-ia-design.md](../../docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md).
+This is the public product documentation, not the design documentation in `docs/` (which has its own
+[CONVENTIONS.md](../../docs/CONVENTIONS.md) for internal decisions). These conventions are for pages read by an
+engineer bringing AQVEN into their work and by an LLM agent reading them in fragments. The structural decision
+is [2026-09-21-aqven-docs-ia-design.md](../../docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md).
 
-Сам этот файл, дизайн-документ и план реализации — внутренние инженерные артефакты, пишутся
-по-русски, как весь остальной `docs/`. **Опубликованные страницы `apps/site/src/content/docs/` —
-всегда на английском.** Ниже — почему и как именно.
+**Published pages in `apps/site/src/content/docs/` are always in English.** Below is why and how.
 
-## Язык опубликованной страницы
+## Language of a published page
 
-- Простой английский. Короткие предложения, обычные слова, без вложенных придаточных ради
-  придаточных. Читатель — инженер, для которого английский не обязательно родной; сложная
-  лексика и длинные конструкции — не признак экспертности, а барьер.
-- Идентификаторы, имена команд/тулов, поля схем, код — как в коде, без перевода.
-- Никаких комментариев в примерах кода — имена объясняют сами себя (закон проекта, действует и здесь).
-- Факт — один раз, в одном месте. Остальные страницы ссылаются, а не повторяют.
+- Plain English. Short sentences, ordinary words, no nested clauses for their own sake. The reader is an
+  engineer for whom English is not necessarily a first language; complex vocabulary and long constructions
+  are a barrier, not a sign of expertise.
+- Identifiers, command and tool names, schema fields and code stay exactly as in the code, untranslated.
+- No comments in code examples: names explain themselves (a project rule that applies here too).
+- A fact appears once, in one place. Other pages link to it instead of repeating it.
 
-## Пишем для персоны, а не для себя
+## Write for the persona, not for yourself
 
-Читатель не был в этом разговоре, не читал ADR, не видел `docs/research/site-ia-feature-inventory.md`
-и не знает наших внутренних имён классов. Он — инженер (AI/backend/staff/technical founder) из
-`docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md` §1: уже пишет код, вызывает модели, ловит
-непредсказуемое поведение AI-пайплайна в проде и не может объяснить коллегам, почему что-то сломалось.
+The reader was not in this conversation, has not read the ADRs, has not seen
+`docs/research/site-ia-feature-inventory.md` and does not know our internal class names. They are the engineer
+(AI, backend, staff or technical founder) from `docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md` §1:
+they already write code, call models, run into unpredictable behavior of an AI pipeline in production, and
+cannot explain to colleagues why something broke.
 
-Практические следствия:
+In practice:
 
-- **Никаких ссылок на ADR, ADR-номера, `docs/adr/*`, `docs/research/*` или `file:line` в тексте
-  опубликованной страницы.** Эти ссылки — рабочий инструмент автора: ими проверяют факт перед тем,
-  как его написать. Автор проверил — цитата исчезает, остаётся только сам факт простыми словами.
-- **Внутренние имена классов/модулей не попадают в прозу** (`OutcomeGateModel`, `WrapperModel`,
-  `CassetteModel` и т.п.) — только поведение, которое это даёт читателю: «каждый вызов модели either
-  succeeds, is refused, or gets cut off — and AQVEN tells you which», а не «проходит через цепочку
-  из пяти обёрток».
-- **Словарь — персоны, не наш.** Пиши в терминах «trace», «reproduce», «root cause», «regression»,
-  «reliable», «workflow» — тех же, что в Core pains/Desired gains персоны — а не в терминах внутренней
-  реализации AQVEN.
-- Строка «под капотом» — исключение: это единственное место, где называется реальная сторонняя
-  библиотека (Pydantic AI, DBOS и т.п.), потому что это тоже часть словаря персоны — «на чём это
-  построено» инженер спрашивает своими словами, и ответ должен называть вещи прямо.
+- **No links to ADRs, ADR numbers, `docs/adr/*`, `docs/research/*` or `file:line` in the text of a published
+  page.** Those links are the author's working tool: they check a fact before writing it. Once the author has
+  checked, the citation disappears and only the fact remains, in plain words.
+- **Internal class and module names stay out of the prose** (`OutcomeGateModel`, `WrapperModel`,
+  `CassetteModel` and so on). Describe only the behavior they give the reader: "every model call either
+  succeeds, is refused, or gets cut off, and AQVEN tells you which", not "passes through a chain of five
+  wrappers".
+- **The vocabulary is the persona's, not ours.** Write in terms like "trace", "reproduce", "root cause",
+  "regression", "reliable" and "workflow", the same ones as in the persona's core pains and desired gains, not
+  in terms of AQVEN's internal implementation.
+- The "under the hood" line is the exception: it is the only place that names a real third-party library
+  (Pydantic AI, DBOS and so on), because that is part of the persona's vocabulary too. An engineer asks "what is
+  this built on" in their own words, and the answer should name things directly.
 
-## Самодостаточность страницы
+## A page stands on its own
 
-Страница — единица ретривала для LLM-агента, не глава книги. Она не опирается на то, что «было
-сказано выше» на соседней странице. Если факт нужен для понимания — либо короткая цитата с ссылкой,
-либо ссылка первой строкой раздела, но не «as discussed earlier».
+A page is a retrieval unit for an LLM agent, not a chapter of a book. It does not rely on what "was said above"
+on a neighboring page. If a fact is needed to understand the page, give either a short quote with a link, or a
+link in the first line of the section, but never "as discussed earlier".
 
-## Правда о том, что реально работает
+## The truth about what actually works
 
-Страница описывает то, что подтверждено кодом `packages/aqven/`, а не design-intent из `docs/adr/`.
-Если функциональность спроектирована, но не реализована (пример: экспорт трасс в Langfuse,
-scipy/statsmodels-статистика гейтов, CLI-заглушки `fmt`/`plan`/`build`/`optimize`) — страница
-не пишется вообще, а не пишется «как будет работать». Автор проверяет факт по
-`docs/research/site-ia-feature-inventory.md` **перед** тем, как писать, а не после — сама ссылка
-на инвентаризацию на опубликованную страницу не попадает (см. «Пишем для персоны» выше).
+A page describes what the code in `packages/aqven/` confirms, not the design intent in `docs/adr/`. If a feature
+is designed but not implemented (for example trace export to Langfuse, or placeholder CLI commands), the page is
+not written at all, rather than written as "how it will work". The author checks the fact against
+`docs/research/site-ia-feature-inventory.md` **before** writing, not after; the link to the inventory itself
+never appears on a published page (see "Write for the persona" above).
 
-## Шаблон заголовков по типу страницы (Diátaxis)
+## Heading template by page type (Diátaxis)
 
-Сами заголовки — на английском, это уже часть опубликованной страницы.
+The headings themselves are in English: they are part of the published page.
 
-Starlight рендерит `<h1>` сам, из `title` фронтматтера — страница не пишет `# <Title>` в теле,
-иначе заголовок дублируется на странице (проверено на реальной сборке). Тело начинается сразу с
-первого `##`.
+Starlight renders the `<h1>` itself from the frontmatter `title`. A page does not write `# <Title>` in its body,
+or the heading appears twice (checked on a real build). The body starts with the first `##`.
 
-### Tutorial (H1 = действие, например «Quickstart», это `title` фронтматтера, не строка в теле)
+### Tutorial (H1 is an action, for example "Quickstart"; it is the frontmatter `title`, not a line in the body)
 
 ```
 ## What you'll have at the end
@@ -75,65 +72,63 @@ Starlight рендерит `<h1>` сам, из `title` фронтматтера 
 ## What's next
 ```
 
-Шаги — линейная последовательность, без ветвлений «if your case is A». Один путь от начала до
-результата. Если внутри шага есть проверка «получилось ли» — `### Check` внутри этого шага.
+The steps are a linear sequence, with no "if your case is A" branches: one path from start to result. If a step
+contains a "did it work" check, it is a `### Check` inside that step.
 
-### How-to (H1 = задача в форме вопроса, например «How to connect an external MCP server», — `title`
-фронтматтера в формате «How to <task>», не строка в теле)
+### How-to (H1 is a task, for example "How to connect an external MCP server"; the frontmatter `title` has the
+form "How to <task>", not a line in the body)
 
 ```
 ## When you need this
 ## Steps
 ### Example
-## Under the hood            (только если за этим стоит конкретная сторонняя библиотека — см. ниже)
+## Under the hood            (only when a specific third-party library is behind it; see below)
 ## See also
 ```
 
-`## When you need this` — 1–3 предложения, не абзац предыстории. `### Example` — runnable-фрагмент,
-по умолчанию построен на showcase-флоу (`aqven new` → `support_case`), а не на придуманных данных.
+`## When you need this` is 1 to 3 sentences, not a paragraph of background. `### Example` is a runnable fragment,
+by default built on the showcase flow (`aqven new`, then `support_case`), not on made-up data.
 
-### Explanation / Concept (H1 = утверждение или вопрос, например «What happens when you call a model»,
-— `title` фронтматтера, не строка в теле)
+### Explanation or concept (H1 is a statement or a question, for example "What happens when you call a model";
+the frontmatter `title`, not a line in the body)
 
 ```
 ## In short
-## <Содержательные разделы по сути, английские заголовки>
+## <Sections about the substance, with English headings>
 ## How this shapes what you do
 ## See also
 ```
 
-`## In short` — 2–3 предложения с ответом сразу, до раскрытия деталей: агент, забравший только этот
-блок при ретривале, должен получить рабочий ответ. `## How this shapes what you do` обязателен —
-концепция не висит сама по себе, а объясняет, на что это влияет в how-to.
+`## In short` is 2 to 3 sentences that answer right away, before the details: an agent that retrieves only this
+block should get a working answer. `## How this shapes what you do` is required: a concept does not hang on its
+own, it explains what it changes in the how-tos.
 
 ### Reference
 
-Не шаблонизируется вручную — генерируется `tools/generate_reference.py` из кода (уже на английском,
-как весь остальной вывод генератора). Конвенции этого документа к сгенерированным страницам не
-применяются, кроме заголовка `## Under the hood`, если генератор его проставляет для страницы
-провайдера/узла.
+Not written by hand: `tools/generate_reference.py` generates it from the code (already in English, like the rest
+of the generator's output). The conventions in this document do not apply to generated pages, except for the
+`## Under the hood` heading when the generator adds it to a provider or node page.
 
-## Правило «Under the hood»
+## The "Under the hood" rule
 
-Подраздел `## Under the hood` живёт только на странице, где AQVEN реально оборачивает конкретную
-стороннюю библиотеку (Pydantic AI, DBOS, `mcp` SDK, FastAPI, python-liquid, провайдеры моделей).
-Две строки простым языком: что берём как есть, что AQVEN добавляет сверху. Полная таблица — не
-здесь, а на якорной странице «What this is built on» (Concepts) — подраздел ссылается на неё,
-не повторяет.
+An `## Under the hood` subsection lives only on a page where AQVEN really wraps a specific third-party library
+(Pydantic AI, DBOS, the `mcp` SDK, FastAPI, python-liquid, model providers). Two lines in plain language: what we
+take as is, and what AQVEN adds on top. The full table is not here but on the anchor page "What this is built on"
+(Concepts); the subsection links to it instead of repeating it.
 
-## Правило плотности примеров
+## Example density
 
-- Tutorial — сам является примером, отдельного правила не нужно.
-- How-to — минимум один runnable-фрагмент на страницу. Источник по умолчанию — showcase-флоу;
-  если задача showcase не покрывает, отдельный минимальный сниппет, но тоже рабочий, не псевдокод.
-- Concept — минимум один пример на страницу, иллюстрирующий факт, но не структура страницы
-  (объяснение остаётся объяснением, пример его подтверждает, а не заменяет).
-- Reference — примеры не добавляются вручную; если генератор их не даёт, страница отсылает
-  к соответствующему how-to.
+- A tutorial is an example itself; no separate rule is needed.
+- A how-to has at least one runnable fragment per page. The default source is the showcase flow; if the task is
+  not covered by the showcase, a separate minimal snippet that also runs, not pseudocode.
+- A concept page has at least one example that illustrates a fact, but the example is not the structure of the
+  page: the explanation stays an explanation, and the example confirms it rather than replacing it.
+- Reference pages get no hand-written examples; if the generator does not provide one, the page points to the
+  relevant how-to.
 
 ## `llms.txt`
 
-`llms.txt`/`llms-full.txt` генерируются `scripts/generate_llms.mjs` из фактического дерева страниц —
-конвенции этого файла не меняют. Порядок страниц в `llms.txt` следует порядку в
-[2026-09-21-aqven-docs-ia-design.md §4](../../docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md):
-Начало → выбранная читателем поверхность → Концепции для решаемой задачи.
+`scripts/generate_llms.mjs` generates `llms.txt` and `llms-full.txt` from the actual tree of pages; the
+conventions in this file do not change them. The order of pages in `llms.txt` follows
+[2026-09-21-aqven-docs-ia-design.md §4](../../docs/superpowers/specs/2026-09-21-aqven-docs-ia-design.md): start,
+then the surface the reader chose, then the concepts for the task at hand.

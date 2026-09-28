@@ -1,16 +1,16 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Итог аудита функцией воркфлоу intake"
+description: "Audit result from a function of the intake workflow"
 run: "@intake.steps:finish"
 in:
 - name: "text"
   type: "Text"
-  description: "Текст заметки"
+  description: "Note text"
   maxLength: 200
   from: "$input.text"
 out:
 - name: "text"
   type: "Text"
-  description: "Итоговый текст"
+  description: "Final text"
   maxLength: 200

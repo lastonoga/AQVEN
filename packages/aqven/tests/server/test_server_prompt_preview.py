@@ -17,13 +17,13 @@ def test_preview_without_a_body_uses_sample_values(server_client: TestClient) ->
 
 
 def test_preview_uses_the_given_input_and_forces_a_variant(server_client: TestClient) -> None:
-    request = {"input": {"text": "Помялась коробка", "mood": "calm"}, "variants": {"tone": "warm"}}
+    request = {"input": {"text": "The box got crushed", "mood": "calm"}, "variants": {"tone": "warm"}}
     body = server_client.post(PREVIEW, json=request).json()
     assert body["input_source"] == "request"
-    assert "Добавь тепла." in body["messages"][-1]["text"]
-    assert "Помялась коробка" in body["messages"][-1]["text"]
+    assert "Add warmth." in body["messages"][-1]["text"]
+    assert "The box got crushed" in body["messages"][-1]["text"]
     assert body["variants"] == [
-        {"slot": "tone", "case": "warm", "selector": "$in.mood", "forced": True, "text": "Добавь тепла.\n"}
+        {"slot": "tone", "case": "warm", "selector": "$in.mood", "forced": True, "text": "Add warmth.\n"}
     ]
 
 

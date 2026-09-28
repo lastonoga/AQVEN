@@ -1,16 +1,16 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Сжатие пробелов в заметке"
+description: "Collapse whitespace in the note"
 run: "clean"
 in:
 - name: "text"
   type: "Text"
-  description: "Текст заметки"
+  description: "Note text"
   maxLength: 200
   from: "$input.text"
 out:
 - name: "text"
   type: "Text"
-  description: "Текст без лишних пробелов"
+  description: "Text without extra whitespace"
   maxLength: 200

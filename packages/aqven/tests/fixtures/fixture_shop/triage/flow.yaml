@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Сортировка обращения по очередям"
+description: "Sort a ticket into queues"
 input: "TriageTicket"
 output: "TriageResult"
 returns:

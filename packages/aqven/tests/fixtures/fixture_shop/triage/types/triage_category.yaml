@@ -1,9 +1,9 @@
 apiVersion: "aqven/v1"
 kind: "Type"
 type: "enum"
-description: "Очередь обращения"
+description: "Ticket queue"
 values:
 - value: "billing"
-  description: "Оплата и возвраты"
+  description: "Billing and refunds"
 - value: "delivery"
-  description: "Доставка"
+  description: "Delivery"

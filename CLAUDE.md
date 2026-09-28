@@ -1,89 +1,98 @@
-# Инструкции для агента в этом репозитории
+# Instructions for agents in this repository
 
-Проект **AQVEN** — платформа надёжных AI-воркфлоу. Реализации пока нет: есть проектная документация
-в [docs/](docs/), написанная на проверенных фактах (метаданные PyPI JSON и `npm view`, исходники
-установленных пакетов, `.d.ts` студии, официальные доки, запуск кода). Код начинается со спайка фазы 0.
+**AQVEN** is a platform for reliable AI workflows. The engine, Studio and the documentation site live in this
+repository. The design documentation lives in [docs/](docs/) and is written from verified facts: PyPI JSON
+metadata and `npm view`, the sources of installed packages, Studio's `.d.ts` files, official docs, and running
+the code.
 
-## Читать перед любой задачей
+## Read before any task
 
-1. [docs/DECISIONS.md](docs/DECISIONS.md) — сквозные решения: ось версий, что берём готовым,
-   что пишем сами, опровержения исходной спеки. **Это закон.** Противоречащий код — ошибка кода.
-2. [docs/CONVENTIONS.md](docs/CONVENTIONS.md) — правила документации и стиля примеров.
-3. Документ комплекта по теме задачи — карта в [docs/README.md](docs/README.md).
-4. [docs/99-open-questions.md](docs/99-open-questions.md) — если задача упирается в открытый
-   вопрос, не решай его молча: он либо закрыт решением владельца, либо остаётся открытым.
+1. [docs/DECISIONS.md](docs/DECISIONS.md): cross-cutting decisions, the version axis, what we take ready-made,
+   what we write ourselves, and where we depart from the original spec. **This is the law.** Code that
+   contradicts it is a bug in the code.
+2. [docs/CONVENTIONS.md](docs/CONVENTIONS.md): rules for documentation and for the style of examples.
+3. The document on the topic of the task; the map is in [docs/README.md](docs/README.md).
+4. [docs/99-open-questions.md](docs/99-open-questions.md): if a task runs into an open question, do not
+   settle it silently. It is either closed by the owner's decision or it stays open.
 
-## Файловая модель определений
+## File model of definitions
 
-Определения воркфлоу — файлы в репозитории проекта, база — перестраиваемый индекс, история — git
-([ADR-0017](docs/adr/0017-files-as-source-of-truth.md), детали — [docs/files-first/](docs/files-first/)).
+Workflow definitions are files in the project repository, the database is a rebuildable index, and history
+is git ([ADR-0017](docs/adr/0017-files-as-source-of-truth.md), details in [docs/files-first/](docs/files-first/)).
 
-- Где лежит: `flows/<flow_id>/flow.yaml`, узел — `nodes/<node_id>.yaml`, промт — никогда не строкой в YAML:
-  файл `<node_id>.prompt.md` или `prompts/<key>.md`, на уровне 3 — функция `module:function` в `.py`
-  ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §4). Идентичность — путь в ФС, поля `id` внутри файла нет.
-- **Правим напрямую** Read/Edit/Write: текст промта, точечная правка одного узла, массовые замены.
-- **Правим только операцией `flow_patch`**: структурные и кросс-файловые изменения и переименования
-  (они дописывают журнал `renames` в `aqven.yaml`, его читают резолверы lineage).
-- Оптимистичная блокировка — CAS по sha256 байтов файла (`expects[{path, file_hash}]` + `client_op_id`). Получил
-  `STALE_FILE` — перечитай файл и переиграй намерение, перезаписывать силой запрещено.
-- Черновик промта — в `.aqven/drafts/`, он в `.gitignore`: промт коммитится явно, отдельным решением.
-- Служебные пути `.aqven/lock`, `.aqven/txn/` руками не трогаем — это транзакция записи.
-- **`aqven check` обязателен перед коммитом.** Закоммитить невалидное дерево можно, релизнуть нельзя;
-  инвариант держат хук `flow_check` на `PostToolUse` и CI, а не база.
+- Where things live: `flows/<flow_id>/flow.yaml`, a node in `nodes/<node_id>.yaml`. A prompt is never a string
+  in YAML: it is a `<node_id>.prompt.md` or `prompts/<key>.md` file, and at level 3 a `module:function` in a
+  `.py` file ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §4). Identity is the file path; there is no
+  `id` field inside a file.
+- **Edit directly** with Read/Edit/Write: prompt text, a targeted change to one node, bulk replacements.
+- **Edit only through the `flow_patch` operation**: structural and cross-file changes and renames (they append
+  to the `renames` log in `aqven.yaml`, which the lineage resolvers read).
+- Optimistic locking is a CAS on the sha256 of the file bytes (`expects[{path, file_hash}]` plus
+  `client_op_id`). On `STALE_FILE`, reread the file and replay the intent; overwriting by force is forbidden.
+- A prompt draft lives in `.aqven/drafts/`, which is in `.gitignore`: a prompt is committed explicitly, as a
+  separate decision.
+- Do not touch the service paths `.aqven/lock` and `.aqven/txn/` by hand: they are the write transaction.
+- **`aqven check` is required before a commit.** An invalid tree can be committed but not released; the
+  invariant is held by the `flow_check` hook on `PostToolUse` and by CI, not by the database.
 
-## Жёсткие правила
+## Hard rules
 
-- **Не изобретать велосипед.** Есть живая поддерживаемая библиотека — берём её. Своё пишем только
-  там, где документация прямо говорит «готового нет»: IR, компилятор, исполнители узлов с
-  гарантиями, реестры, MCP-контракт, доменная политика гейтов поверх scipy и statsmodels, IR-мутатор.
-- **Проверять библиотеки перед использованием.** Версия, лицензия, свежесть релиза, зависимости
-  (`Requires-Dist` и extras, peer у npm) — через PyPI JSON, исходники установленного пакета, `npm view` для студии,
-  официальные доки и запуск кода, а не по памяти. Итог — в [docs/98-version-audit.md](docs/98-version-audit.md).
-- **Ось версий не трогать.** Движок: CPython 3.14 (`>=3.14,<3.15`), `pydantic-ai-slim` и `pydantic-evals` 2.43.0,
-  `pydantic` 2.13.5, `dbos` 2.31.1, `httpx2` 2.13.0, `fastapi` 0.141.1 без extras, `mcp` 2.2.0; инструменты —
-  uv 0.12.15, ruff 0.16.7, pyright 1.1.414; пины `==`, один `uv.lock`. `typescript@6.0.3` — только `apps/studio`.
-  Полная ось и причины — в [ADR-0025](docs/adr/0025-python-engine.md) §1–§2.
-- **Никаких комментариев в коде.** Имена объясняют сами себя, пояснения — в документации. `E_DOCSTRING`
-  ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §8) запрещает docstring у функций шагов и `Signature`
-  builder-а **проекта на aqven** — движка это не касается. Единственное исключение по всему репозиторию —
-  публичная поверхность пакетов `aqven` и `aqven-llm`: там docstring обязателен и служит источником
-  API-референса сайта документации ([ADR-0031](docs/adr/0031-public-api-docstrings.md)). После правки публичной
-  поверхности (новое поле датакласса, сигнатура, docstring) перегенерируй референс: `uv run python
-  tools/generate_reference.py`, иначе CI (`reference:check` в `Pages`) упадёт на устаревшем
-  `apps/site/src/content/docs/reference/python-api.md`. `mise run install` включает git hook
-  `.githooks/pre-push`, который проверяет это перед каждым push; `mise run check` — тот же чек локально.
-- **Плоский код.** Ранние возвраты, guard clauses, таблицы обработчиков и Strategy вместо
-  вложенных if/else и лестниц switch.
-- **SOLID и именованные паттерны.** Применил паттерн — назови его в описании изменения.
-- **Строгая типизация.** Движок — pyright strict: без `Any`, без `cast` кроме границ ввода-вывода,
-  `typing.NewType` для идентификаторов, исчерпываемость через `typing.assert_never`. `apps/studio` — строгий
-  TypeScript: без `any`, без `as` кроме границ ввода-вывода, branded types, исчерпываемость через `assertNever`.
-- **Импорты `openai`, `anthropic`, `google.genai`, `pydantic_ai.providers`, `pydantic_ai.models.{openai,anthropic,google}`
-  — только в модуле `aqven_llm`** (дистрибутив `aqven-llm`); остальной код получает `Model` из его фабрики.
-- **HTTP-клиент нашего кода — только `httpx2`.** `httpx` и `requests` не импортируем, транзитивно они допустимы.
-  Оба запрета держит ruff TID251, транзитивных потребителей `httpx` и `requests` — проверка `uv.lock` в CI
-  ([ADR-0025](docs/adr/0025-python-engine.md) §5–§6).
+- **Do not reinvent the wheel.** If a live, maintained library exists, use it. Write our own code only where
+  the documentation says plainly that nothing ready-made exists: the IR, the compiler, node executors with
+  guarantees, registries, the MCP contract, the domain gate policy on top of scipy and statsmodels, the IR
+  mutator.
+- **Check libraries before using them.** Version, license, release freshness and dependencies
+  (`Requires-Dist` and extras, npm peers) come from PyPI JSON, the sources of the installed package,
+  `npm view` for Studio, official docs and running the code, not from memory. Record the result in
+  [docs/98-version-audit.md](docs/98-version-audit.md).
+- **Do not touch the version axis.** Engine: CPython 3.14 (`>=3.14,<3.15`), `pydantic-ai-slim` and
+  `pydantic-evals` 2.43.0, `pydantic` 2.13.5, `dbos` 2.31.1, `httpx2` 2.13.0, `fastapi` 0.141.1 without extras,
+  `mcp` 2.2.0; tools: uv 0.12.15, ruff 0.16.7, pyright 1.1.414; pins are `==`, one `uv.lock`. `typescript@6.0.3`
+  is for `apps/studio` only. The full axis and the reasons are in
+  [ADR-0025](docs/adr/0025-python-engine.md) §1–§2.
+- **No comments in code.** Names explain themselves; explanations belong in the documentation. `E_DOCSTRING`
+  ([ADR-0026](docs/adr/0026-yaml-spec-and-code-refs.md) §8) forbids docstrings on step functions and on the
+  builder's `Signature` **in a project built on aqven**; it does not apply to the engine. The only exception in
+  the whole repository is the public surface of the `aqven` and `aqven-llm` packages: there a docstring is
+  required and is the source of the API reference on the documentation site
+  ([ADR-0031](docs/adr/0031-public-api-docstrings.md)). After changing the public surface (a new dataclass
+  field, a signature, a docstring), regenerate the reference with `uv run python tools/generate_reference.py`,
+  or CI (`reference:check` in `Pages`) fails on a stale `apps/site/src/content/docs/reference/python-api.md`.
+  `mise run install` enables the `.githooks/pre-push` git hook, which checks this before every push;
+  `mise run check` runs the same check locally.
+- **Flat code.** Early returns, guard clauses, handler tables and Strategy instead of nested if/else and
+  switch ladders.
+- **SOLID and named patterns.** If you apply a pattern, name it in the description of the change.
+- **Strict typing.** The engine is pyright strict: no `Any`, no `cast` except at I/O boundaries,
+  `typing.NewType` for identifiers, exhaustiveness through `typing.assert_never`. `apps/studio` is strict
+  TypeScript: no `any`, no `as` except at I/O boundaries, branded types, exhaustiveness through `assertNever`.
+- **Imports of `openai`, `anthropic`, `google.genai`, `pydantic_ai.providers` and
+  `pydantic_ai.models.{openai,anthropic,google}` belong only in the `aqven_llm` module** (the `aqven-llm`
+  distribution); the rest of the code gets a `Model` from its factory.
+- **The HTTP client of our code is `httpx2` only.** We do not import `httpx` or `requests`; they are allowed
+  transitively. Ruff TID251 enforces both bans, and a `uv.lock` check in CI covers the transitive consumers of
+  `httpx` and `requests` ([ADR-0025](docs/adr/0025-python-engine.md) §5–§6).
 
-## Источники истины при расхождениях
+## Sources of truth when documents disagree
 
-| Тема | Источник |
+| Topic | Source |
 |---|---|
-| Версии, границы «берём/пишем» | docs/DECISIONS.md |
-| Имена MCP-тулов | docs/14-mcp-contract.md |
-| Таблицы и колонки БД | docs/16-data-model.md |
-| Раскладка монорепо, корни workspace, CI | docs/adr/0036-single-root-monorepo.md — пока docs/20-repo-and-tooling.md не переписан |
-| Упаковка Studio в дистрибутив, установка одной командой | docs/adr/0037-studio-inside-the-wheel.md |
-| Состав пакетов монорепо | docs/adr/0025-python-engine.md §2, §6 — пока docs/20-repo-and-tooling.md не переписан |
-| Порты и адаптеры | docs/adr/0025-python-engine.md и docs/02-architecture.md; при расхождении прав ADR, пока 02 не вычищен |
-| Раскладка определений на диске, запись, CAS, история | docs/adr/0026-yaml-spec-and-code-refs.md §2, §4, §9 и docs/files-first/; при расхождении прав ADR-0026, пока files-first не вычищен |
-| Формат файлов описания: виды, ключи, промты, шаг `code` | docs/adr/0026-yaml-spec-and-code-refs.md |
-| API студии: маршруты, события, запись, коды ошибок | docs/23-studio-api.md |
-| Коды правил компилятора | docs/07-compiler.md |
+| Versions, the take/write boundary | docs/DECISIONS.md |
+| MCP tool names | docs/14-mcp-contract.md |
+| Database tables and columns | docs/16-data-model.md |
+| Monorepo layout, workspace roots, CI | docs/adr/0036-single-root-monorepo.md, until docs/20-repo-and-tooling.md is rewritten |
+| Packaging Studio into the distribution, one-command install | docs/adr/0037-studio-inside-the-wheel.md |
+| Packages in the monorepo | docs/adr/0025-python-engine.md §2, §6, until docs/20-repo-and-tooling.md is rewritten |
+| Ports and adapters | docs/adr/0025-python-engine.md and docs/02-architecture.md; when they disagree the ADR wins until 02 is cleaned up |
+| Definitions on disk, writes, CAS, history | docs/adr/0026-yaml-spec-and-code-refs.md §2, §4, §9 and docs/files-first/; when they disagree ADR-0026 wins until files-first is cleaned up |
+| Definition file format: kinds, keys, prompts, the `code` step | docs/adr/0026-yaml-spec-and-code-refs.md |
+| Studio API: routes, events, writes, error codes | docs/23-studio-api.md |
+| Compiler rule codes | docs/07-compiler.md |
 
-## Чего не делать
+## Do not
 
-- Не менять [docs/00-source-spec.ru.md](docs/00-source-spec.ru.md) — это исходная постановка
-  заказчика, она неизменна. Расхождения с ней фиксируются в DECISIONS и ADR.
-- Не удалять [docs/research/](docs/research/) — там доказательная база решений с пометками
-  `UNVERIFIED:` там, где подтверждения не нашлось.
-- Не принимать архитектурное решение без ADR в [docs/adr/](docs/adr/).
+- Do not change [docs/00-source-spec.ru.md](docs/00-source-spec.ru.md): it is the customer's original brief
+  and it does not change. Departures from it are recorded in DECISIONS and in ADRs.
+- Do not delete [docs/research/](docs/research/): it is the evidence behind the decisions, marked
+  `UNVERIFIED:` where no confirmation was found.
+- Do not make an architectural decision without an ADR in [docs/adr/](docs/adr/).

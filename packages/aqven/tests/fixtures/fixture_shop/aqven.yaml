@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Project"
-description: "Магазин для тестов загрузчика и проверки"
+description: "Shop for loader and check tests"
 package: "fixture_shop"
 providers:
 - id: "openai"
