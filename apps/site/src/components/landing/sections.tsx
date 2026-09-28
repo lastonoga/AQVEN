@@ -12,14 +12,6 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ActorTag, TimelineStep, type Actor, type TimelineEntry } from "@/components/landing/actors";
 import {
   CheckBeforeItRunsSchematic,
@@ -38,6 +30,7 @@ import {
   type SituationId,
 } from "@/components/landing/situations";
 import { REPO } from "@/components/landing/site-nav";
+import { COMPARE_PATH } from "@/components/landing/compare-path";
 
 const TRUST: readonly string[] = [
   "Alpha",
@@ -73,11 +66,27 @@ const GUARDS: readonly Guard[] = [
   },
 ];
 
-const COMPARE = [
-  { row: "Where the logic lives", tracing: "Your code, scattered", builders: "Their platform", aqven: "Files in your repo" },
-  { row: "Check before it runs", tracing: "No", builders: "No", aqven: "Yes" },
-  { row: "Your coding agent can edit it", tracing: "No", builders: "No", aqven: "Yes" },
-  { row: "Yours if they disappear", tracing: "Yes", builders: "No", aqven: "Yes" },
+type Alternative = { readonly kind: string; readonly examples: string; readonly them: string; readonly aqven: string };
+
+const ALTERNATIVES: readonly Alternative[] = [
+  {
+    kind: "Tracing platforms",
+    examples: "Langfuse, LangSmith, Arize Phoenix",
+    them: "Show what an app you already run did, call by call.",
+    aqven: "In AQVEN your coding agent changes the workflow itself and runs the experiment on it.",
+  },
+  {
+    kind: "Eval libraries",
+    examples: "promptfoo, DeepEval, Ragas",
+    them: "Score the cases you wrote, in a report or in CI.",
+    aqven: "In AQVEN a change is confirmed on held-out cases, and the verdict can say inconclusive.",
+  },
+  {
+    kind: "Visual builders",
+    examples: "n8n, Dify",
+    them: "Keep the workflow in their platform, assembled in an editor.",
+    aqven: "In AQVEN it is typed files in your repo, checked before a run costs a token.",
+  },
 ];
 
 const Section = ({ className, children }: { className?: string; children: React.ReactNode }) => (
@@ -283,32 +292,26 @@ export const ResearchLoop = () => (
 
 export const Comparison = () => (
   <Section className="bg-background-subtle">
-    <div className="mx-auto max-w-3xl text-center">
-      <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-        Not a tracing tool. Not a drag-and-drop builder.
-      </h2>
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+      <SectionHeading badge="Compared with what you use">Traces show what happened. Evals score it. AQVEN finds what to change.</SectionHeading>
     </div>
-    <div className="mx-auto mt-12 max-w-4xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead> </TableHead>
-            <TableHead>Tracing tools</TableHead>
-            <TableHead>Visual builders</TableHead>
-            <TableHead className="font-semibold text-foreground">AQVEN</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {COMPARE.map((item) => (
-            <TableRow key={item.row}>
-              <TableCell className="whitespace-normal font-medium">{item.row}</TableCell>
-              <TableCell className="whitespace-normal text-muted-foreground">{item.tracing}</TableCell>
-              <TableCell className="whitespace-normal text-muted-foreground">{item.builders}</TableCell>
-              <TableCell className="whitespace-normal font-medium">{item.aqven}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <ul className="mx-auto mt-12 grid max-w-6xl gap-4 lg:grid-cols-3">
+      {ALTERNATIVES.map((item) => (
+        <li key={item.kind} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium tracking-tight">{item.kind}</span>
+            <span className="text-xs text-muted-foreground">{item.examples}</span>
+          </div>
+          <p className="text-sm text-muted-foreground">{item.them}</p>
+          <p className="text-sm font-medium">{item.aqven}</p>
+        </li>
+      ))}
+    </ul>
+    <div className="mt-8 flex justify-center">
+      <a href={COMPARE_PATH} className="group inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4">
+        How AQVEN compares, question by question
+        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      </a>
     </div>
   </Section>
 );
@@ -366,6 +369,10 @@ export const FAQS: readonly Faq[] = [
     answer: "AQVEN is in alpha: expect changes between releases. Try it on a workflow you can afford to change.",
   },
   {
+    question: "Which Python version does AQVEN need?",
+    answer: "Python 3.14. uv fetches it for you when you install AQVEN.",
+  },
+  {
     question: "What models and providers does AQVEN support?",
     answer:
       "OpenAI, Anthropic, Google Gemini, OpenRouter, Mistral, DeepSeek and more. Swap a model per agent without touching the rest.",
@@ -373,6 +380,11 @@ export const FAQS: readonly Faq[] = [
   {
     question: "Do I need an account or a cloud service?",
     answer: "Not for AQVEN: it runs on your machine, nothing hosted by us. Model calls use your own provider keys.",
+  },
+  {
+    question: "Which coding agents does AQVEN work with?",
+    answer:
+      "Claude Code and Codex, from Studio's chat or from your own terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.",
   },
   {
     question: "Can my coding agent actually edit these workflows?",

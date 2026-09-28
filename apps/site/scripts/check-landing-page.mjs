@@ -34,7 +34,8 @@ const requiredMarkers = [
   "billing, technical, refund, other.",
   "See where an answer went wrong.",
   "See what each step costs.",
-  "Not a tracing tool. Not a drag-and-drop builder.",
+  "Traces show what happened. Evals score it. AQVEN finds what to change.",
+  "How AQVEN compares, question by question",
   "Keep your models. Keep your code.",
   "collect_orders.node.yaml",
   "def collect_orders(queue_id: QueueId)",
@@ -192,6 +193,8 @@ assert.ok(
   page.includes('href="/start/"'),
   "The landing page must route visitors to the documentation."
 );
+
+assert.ok(page.includes('href="/compare/"'), "The landing page must link to the comparison page.");
 
 const counts = [{ label: "use case cards", needle: 'href="/use-cases/#', expected: 5 }];
 
