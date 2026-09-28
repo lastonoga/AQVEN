@@ -203,6 +203,26 @@ def test_provider_options_reach_the_probed_model(shop: Path) -> None:
     assert all(sent == options for sent in seen)
 
 
+def test_provider_options_a_provider_does_not_send_are_named(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    options: JsonObject = {"reasoning_effort": "low", "thinking_config": {"thinking_budget": 0}}
+
+    check_models(request(shop, "google:gemini-2.5-flash", live=False, provider_options=options), None, StringIO())
+
+    (line,) = capsys.readouterr().err.splitlines()
+    assert line.startswith(
+        "aqven models check: --provider-options reasoning_effort is not sent to google:gemini-2.5-flash: "
+        "provider google takes only thinking_config, "
+    )
+
+
+def test_provider_options_every_provider_sends_stay_quiet(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    options: JsonObject = {"provider": {"require_parameters": True}}
+
+    check_models(request(shop, GPT_OSS, live=False, provider_options=options), None, StringIO())
+
+    assert capsys.readouterr().err == ""
+
+
 def test_provider_options_must_be_valid_json(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["models", "check", "cheap", "--project", str(shop), "--provider-options", "not json"]) == 1
 

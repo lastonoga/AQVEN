@@ -5,7 +5,6 @@ from typing import Final
 
 import httpx2
 from openai import AsyncOpenAI
-from pydantic import TypeAdapter
 from pydantic_ai.models import Model
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 from pydantic_ai.profiles import ModelProfile
@@ -41,8 +40,6 @@ SINGLE_ATTEMPT: Final = 1
 BEDROCK_SERVICE: Final = "bedrock-runtime"
 BEDROCK_RETRIES: Final = {"total_max_attempts": SINGLE_ATTEMPT, "mode": "standard"}
 XAI_CHANNEL_OPTIONS: Final = [("grpc.enable_retries", 0)]
-
-EXTRA_BODY: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[str, object])
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,18 +114,9 @@ def zai_model(target: ModelTarget, provider: OpenAIClientProvider) -> Model:
     return ZaiModel(target.name, provider=provider, settings=settings)
 
 
-def extra_body_of(settings: ModelSettings | None) -> dict[str, object]:
-    if settings is None:
-        return {}
-    return EXTRA_BODY.validate_python(settings.get("extra_body") or {})
-
-
 def openrouter_settings(target: ModelTarget) -> ModelSettings | None:
     routed = merge_model_settings(target.settings, None if target.routing is None else target.routing.settings())
-    if not target.media.requested:
-        return routed
-    extra_body = {**extra_body_of(routed), **target.media.extra_body()}
-    return merge_model_settings(routed, ModelSettings(extra_body=extra_body))
+    return target.media.settings(routed)
 
 
 def openrouter_profile(target: ModelTarget) -> ModelProfile | None:
@@ -139,7 +127,11 @@ def openrouter_profile(target: ModelTarget) -> ModelProfile | None:
 
 def openrouter_model(target: ModelTarget, provider: OpenAIClientProvider) -> Model:
     return OpenRouterMediaModel(
-        target.name, provider=provider, profile=openrouter_profile(target), settings=openrouter_settings(target)
+        target.name,
+        provider=provider,
+        profile=openrouter_profile(target),
+        settings=openrouter_settings(target),
+        media=target.media,
     )
 
 

@@ -13,6 +13,7 @@ from pydantic_ai import ModelSettings
 from pydantic_ai.models import Model
 
 from aqven.check.output_modes import MODE_PREFERENCE, AgentModes, ModelModes, agent_modes
+from aqven.check.provider_options import IgnoredOptions, ignored_options
 from aqven.console.command import EXIT_FAILED, EXIT_OK, PATH_HELP, Command, OutputFormat
 from aqven.console.project_env import open_project, project_env_file
 from aqven.engine.assembly.models import explain_empty_key
@@ -40,6 +41,10 @@ INDENT: Final = "  "
 MODE_WIDTH: Final = 10
 PROFILE_WIDTH: Final = 13
 AXIS_WIDTH: Final = 18
+PROVIDER_OPTIONS_HELP: Final = (
+    "JSON sent the way an agent's settings.provider_options is, e.g. OpenRouter's "
+    '\'{"provider": {"require_parameters": true}}\''
+)
 LIVE_ERRORS: Final = (MissingProviderKey, ProviderMisconfigured, ProviderUnavailable, UnknownProvider)
 
 type LiveResult = Literal["ok", "failed", "not_run"]
@@ -127,6 +132,22 @@ def parse_provider_options(raw: str | None) -> JsonObject | None:
 
 def model_settings_of(provider_options: JsonObject | None) -> ModelSettings | None:
     return None if provider_options is None else ModelSettings(extra_body=provider_options)
+
+
+def unsent_text(model: str, ignored: IgnoredOptions) -> str:
+    keys = ", ".join(ignored.keys)
+    return f"--provider-options {keys} is not sent to {model}: provider {ignored.provider} takes {ignored.accepted}"
+
+
+def unsent_options(targets: Sequence[CheckTarget], options: JsonObject | None) -> tuple[str, ...]:
+    models = dict.fromkeys(model.model for target in targets for model in target.modes.models)
+    found = ((model, ignored_options(model, options or {})) for model in models)
+    return tuple(unsent_text(model, ignored) for model, ignored in found if ignored is not None)
+
+
+def warn_unsent(program: str, targets: Sequence[CheckTarget], options: JsonObject | None) -> None:
+    for line in unsent_options(targets, options):
+        print(f"{program}: {line}", file=sys.stderr)
 
 
 def live_error_text(error: Exception, root: Path) -> str:
@@ -243,6 +264,7 @@ def check_models(request: ModelsCheckRequest, build: ModelBuilder | None = None,
         return EXIT_FAILED
     try:
         targets = check_targets(loaded.project, request.target)
+        warn_unsent(PROGRAM, targets, request.provider_options)
         settings = model_settings_of(request.provider_options)
         probes = asyncio.run(probe_targets(targets, _builder(loaded.project, request, build), settings))
     except (TargetNotFound, *LIVE_ERRORS) as error:
@@ -265,7 +287,7 @@ class ModelsCheckCommand:
         parser.add_argument(
             "--provider-options",
             default=None,
-            help='JSON merged into the request body, e.g. OpenRouter\'s \'{"provider": {"require_parameters": true}}\'',
+            help=PROVIDER_OPTIONS_HELP,
         )
         parser.add_argument("--json", action="store_true", help="print the report as JSON")
 
@@ -389,6 +411,7 @@ def shapes_models(request: ModelsShapesRequest, build: ModelBuilder | None = Non
         return EXIT_FAILED
     try:
         targets = check_targets(loaded.project, request.target)
+        warn_unsent(SHAPES_PROGRAM, targets, request.provider_options)
         live_build = project_models(loaded.project).build if build is None else build
         settings = model_settings_of(request.provider_options)
         reports = asyncio.run(probe_shape_targets(targets, live_build, settings))
@@ -415,7 +438,7 @@ class ModelsShapesCommand:
         parser.add_argument(
             "--provider-options",
             default=None,
-            help='JSON merged into the request body, e.g. OpenRouter\'s \'{"provider": {"require_parameters": true}}\'',
+            help=PROVIDER_OPTIONS_HELP,
         )
         parser.add_argument("--json", action="store_true", help="print the report as JSON")
 

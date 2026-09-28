@@ -41,6 +41,7 @@ from aqven_llm.factory import (
 )
 from aqven_llm.keys import ProviderKeys, ProviderKeyStore, environment_key, provider_key_env
 from aqven_llm.media import AudioOutput, MediaOutput, OpenRouterMediaModel
+from aqven_llm.options_model import NativeOptionsModel
 from aqven_llm.pricing import (
     PRICE_SOURCE_FACTORIES,
     PRICE_SOURCE_GROUP,
@@ -54,19 +55,38 @@ from aqven_llm.pricing import (
     entry_point_price_source,
     installed_price_sources,
 )
+from aqven_llm.request_options import (
+    BEDROCK_OPTIONS,
+    GOOGLE_OPTIONS,
+    MISTRAL_OPTIONS,
+    NO_REQUEST_OPTIONS,
+    REQUEST_BODY,
+    XAI_OPTIONS,
+    OptionsDelivery,
+    OptionsRequest,
+    OptionsSplit,
+    RequestOptions,
+    native_settings,
+)
 from aqven_llm.routing import PRIVATE_ROUTING, OpenRouterRouting
 from aqven_llm.support import ProviderSupport, Readiness, entry_support, model_streams, provider_support
 from aqven_llm.target import ModelTarget
 
 __all__ = [
+    "BEDROCK_OPTIONS",
     "ENTRY_POINT_GROUP",
+    "GOOGLE_OPTIONS",
+    "MISTRAL_OPTIONS",
     "MODEL_BUILDERS",
+    "NO_REQUEST_OPTIONS",
     "OPENAI_COMPATIBLE",
     "OPENAI_COMPATIBLE_KIND",
     "PRICE_SOURCE_FACTORIES",
     "PRICE_SOURCE_GROUP",
     "PRIVATE_ROUTING",
     "PROVIDERS",
+    "REQUEST_BODY",
+    "XAI_OPTIONS",
     "AudioOutput",
     "ClassRef",
     "CustomProvider",
@@ -79,10 +99,14 @@ __all__ = [
     "ModelBuilder",
     "ModelOverride",
     "ModelTarget",
+    "NativeOptionsModel",
     "OpenAICompatibleFactory",
     "OpenRouterMediaModel",
     "OpenRouterPrices",
     "OpenRouterRouting",
+    "OptionsDelivery",
+    "OptionsRequest",
+    "OptionsSplit",
     "PriceLookup",
     "PriceSource",
     "PriceSourceFactory",
@@ -104,6 +128,7 @@ __all__ = [
     "ProviderSupport",
     "ProviderUnavailable",
     "Readiness",
+    "RequestOptions",
     "TokenPrice",
     "UnknownProvider",
     "build_price_lookup",
@@ -119,6 +144,7 @@ __all__ = [
     "installed_price_sources",
     "installed_providers",
     "model_streams",
+    "native_settings",
     "provider_key_env",
     "provider_support",
     "qualified_name",

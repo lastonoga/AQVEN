@@ -239,6 +239,7 @@ The project server answers a refused MCP tool call or REST request with one of t
 | `W_GENERATED_STALE` | `warning` | — | — | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | — | output.mode auto resolves to {mode} for model {model} ({source}) | set output.mode: {mode} to pin it |
 | `W_SAMPLING_IGNORED` | `warning` | — | {setting} is ignored by {model} (reasoning model); remove it | Pydantic AI drops sampling settings from every request to a model that reasons by default: steer the answer in the prompt, or pick a model without reasoning to keep {setting} |
+| `W_PROVIDER_OPTIONS_IGNORED` | `warning` | — | agent {agent}: model {model} does not send settings.provider_options {keys}: provider {provider} takes {accepted} | keep only the keys {provider} takes, or give the agent a model whose provider takes them; the provider catalog lists the keys every provider takes |
 | `W_TYPES_SHADOWS_STDLIB` | `warning` | — | generated {module}/types.py shadows the standard library module types while {folder} is on sys.path | remove {folder} from sys.path and PYTHONPATH; import the models as {module}.types |
 | `W_SIM_NODE_UNREACHED` | `warning` | — | node {node} does not run in any simulated pass of flow {flow} | no simulated input reaches it: check the switch cases and the conditions above it, or remove the node |
 | `W_PROMPT_VALUE_UNREADABLE` | `warning` | — | — | — |
