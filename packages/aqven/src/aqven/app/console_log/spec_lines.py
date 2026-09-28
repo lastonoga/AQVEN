@@ -4,7 +4,7 @@ from typing import Final
 
 from aqven.app.console_log.events import ConsoleEvent, Tone
 from aqven.app.console_log.text import joined, plural
-from aqven.server.spec_channel import DiagnosticsChanged, FilesChanged, SpecEvent, SpecResync
+from aqven.server.spec_channel import DiagnosticsChanged, FilesChanged, ResyncReason, SpecEvent, SpecResync
 
 type SpecLine = Callable[[SpecEvent], ConsoleEvent | None]
 
@@ -17,6 +17,11 @@ STATUS_TEXT: Final[Mapping[str, str]] = {
     "unreadable": "unreadable",
 }
 BROKEN_STATUSES: Final = frozenset({"invalid", "unreadable"})
+RESYNC_TEXT: Final[Mapping[ResyncReason, str]] = {
+    "git_batch": "more than 200 files changed at once, clients reload the project",
+    "window_exceeded": "a client fell behind the change feed and reloads the project",
+    "watcher_restarted": "the file watcher restarted, clients reload the project",
+}
 
 
 def files_line(event: SpecEvent) -> ConsoleEvent | None:
@@ -84,7 +89,7 @@ def resync_line(event: SpecEvent) -> ConsoleEvent | None:
         kind="spec_resync",
         glyph=SPEC_GLYPH,
         tone="muted",
-        text=f"project reindexed ({event.reason.replace('_', ' ')})",
+        text=RESYNC_TEXT[event.reason],
         fields={"reason": event.reason, "tree_hash": event.tree_hash},
     )
 

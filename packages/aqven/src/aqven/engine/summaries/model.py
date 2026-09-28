@@ -159,6 +159,7 @@ class SummarySelection:
     base_status: RunStatus | None = None
     mode: RunMode | None = None
     parent_run_id: RunId | None = None
+    series_id: str | None = None
     since_us: int | None = None
     until_us: int | None = None
     only: tuple[RunId, ...] | None = None

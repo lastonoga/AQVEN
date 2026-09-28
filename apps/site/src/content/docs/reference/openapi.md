@@ -77,7 +77,7 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/experiments/{experiment_id}/flows/{flow_id}` | `experiment_flow` |
 | `POST` | `/api/experiments/{experiment_id}/launch-plan` | `series_launch_plan` |
 | `POST` | `/api/series` | `series_start` |
-| `GET` | `/api/series` | `series_list` |
+| `GET` | `/api/series` | `series_history` |
 | `GET` | `/api/series/{series_id}` | `series_get` |
 | `GET` | `/api/series/{series_id}/cases` | `series_cases` |
 | `GET` | `/api/series/{series_id}/events` | `series_events` |
@@ -86,6 +86,10 @@ This index is generated from `apps/studio/src/api/openapi.json`. The running pro
 | `GET` | `/api/research/authoring` | `research_authoring` |
 | `POST` | `/api/research/authoring/count` | `research_case_count` |
 | `PUT` | `/api/experiments/{experiment_id}/cases` | `experiment_cases_put` |
+| `GET` | `/api/run-rows` | `run_rows` |
+| `GET` | `/api/series-rows` | `series_rows` |
+| `GET` | `/api/series/{series_id}/summary` | `series_summary` |
+| `GET` | `/api/series/{series_id}/outputs` | `series_outputs` |
 | `GET` | `/api/chat/status` | `chat_login_status` |
 | `GET` | `/api/chat/models` | `chat_model_list` |
 | `GET` | `/api/chat/backend` | `chat_backend_get` |

@@ -20,9 +20,9 @@ own file tools instead.
   just be a second, MCP-shaped way to read information your agent's file tools already read directly and
   more flexibly — list a directory, grep across every node for a field, open one file. AQVEN's MCP server
   says as much in its own instructions to a connecting agent: flow definitions are files in the project,
-  read them with your own Read, Grep, and Glob. The 16 MCP tools this project exposes are for the things
+  read them with your own Read, Grep, and Glob. The 18 MCP tools this project exposes are for the things
   file tools can't do — running a check, starting a run or a series, applying a structural edit
-  atomically — not for reading files a second way.
+  atomically, reading what runs and series produced — not for reading files a second way.
 - **Read `FINDINGS.md` before you propose a change.** It sits at the module root, next to `aqven.yaml`,
   and it is what the project already knows: every finding of a series on held-out cases, grouped by
   failure mode, with the cases, repeats and models it holds for. Studio's chat agent gets it with

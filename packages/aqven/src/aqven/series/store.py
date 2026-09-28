@@ -1,9 +1,11 @@
 import asyncio
+import json
 import sqlite3
+from collections import Counter
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Final, Self
@@ -18,6 +20,7 @@ from aqven.series.model import (
     SeriesRecord,
     SeriesStatus,
 )
+from aqven.series.ports import SeriesTally, SeriesTotals
 from aqven.series.views import SeriesListQuery
 from aqven.spec import ExperimentId, VariantId
 
@@ -168,6 +171,32 @@ JOIN {SERIES_TABLE} AS series USING (series_id)
 WHERE series.experiment_id = ? AND attempts.variant_id = ? AND attempts.state = 'finished'
 ORDER BY attempts.finished_at DESC
 LIMIT ?
+"""
+
+TALLY_ROWS: Final = f"""
+SELECT series_id, cost_usd, check_cost_usd FROM {ATTEMPTS_TABLE}
+WHERE state = 'finished' AND series_id IN (SELECT value FROM json_each(?))
+"""
+EXPERIMENT_FILTER: Final = "(? IS NULL OR series.experiment_id = ?)"
+SPAN_ROWS: Final = f"SELECT created_at, finished_at FROM {SERIES_TABLE} AS series WHERE {EXPERIMENT_FILTER}"
+ATTEMPT_TOTALS: Final = f"""
+SELECT
+    COUNT(*),
+    COALESCE(SUM(
+        (SELECT COUNT(*) FROM json_each(attempts.record, '$.checks') AS checks
+         WHERE json_extract(checks.value, '$.judge_run_id') IS NOT NULL)
+    ), 0),
+    COALESCE(SUM(
+        COALESCE(json_extract(attempts.record, '$.tokens_in'), 0)
+        + COALESCE(json_extract(attempts.record, '$.tokens_out'), 0)
+    ), 0)
+FROM {ATTEMPTS_TABLE} AS attempts JOIN {SERIES_TABLE} AS series USING (series_id)
+WHERE attempts.state = 'finished' AND {EXPERIMENT_FILTER}
+"""
+ATTEMPT_COSTS: Final = f"""
+SELECT attempts.cost_usd, attempts.check_cost_usd
+FROM {ATTEMPTS_TABLE} AS attempts JOIN {SERIES_TABLE} AS series USING (series_id)
+WHERE attempts.state = 'finished' AND {EXPERIMENT_FILTER}
 """
 
 type SqlParam = str | float | int | None
@@ -339,6 +368,19 @@ def decimal_sum(rows: Sequence[tuple[str, str]]) -> Decimal:
     return sum((Decimal(cost) + Decimal(checks) for cost, checks in rows), ZERO)
 
 
+def moment(stamp_value: float | None) -> datetime | None:
+    return None if stamp_value is None else datetime.fromtimestamp(stamp_value, UTC)
+
+
+def folded_tallies(rows: Sequence[tuple[str, str, str]]) -> dict[SeriesId, SeriesTally]:
+    counts = Counter(SeriesId(series_id) for series_id, _, _ in rows)
+    spends: dict[SeriesId, Decimal] = {}
+    for series_id, cost, checks in rows:
+        key = SeriesId(series_id)
+        spends[key] = spends.get(key, ZERO) + Decimal(cost) + Decimal(checks)
+    return {series_id: SeriesTally(done=count, spend=spends[series_id]) for series_id, count in counts.items()}
+
+
 @dataclass(frozen=True, slots=True)
 class SqliteSeriesStore:
     path: Path
@@ -396,6 +438,12 @@ class SqliteSeriesStore:
         self, experiment_id: ExperimentId, variant_id: VariantId, limit: int
     ) -> tuple[AttemptRecord, ...]:
         return await asyncio.to_thread(self._history, experiment_id, variant_id, limit)
+
+    async def tallies(self, series_ids: Sequence[SeriesId]) -> Mapping[SeriesId, SeriesTally]:
+        return await asyncio.to_thread(self._tallies, tuple(series_ids))
+
+    async def totals(self, experiment_id: ExperimentId | None) -> SeriesTotals:
+        return await asyncio.to_thread(self._totals, experiment_id)
 
     @contextmanager
     def _connection(self) -> Generator[sqlite3.Connection]:
@@ -462,3 +510,22 @@ class SqliteSeriesStore:
         with self._connection() as connection:
             rows: list[tuple[str]] = connection.execute(HISTORY, (experiment_id, variant_id, limit)).fetchall()
         return tuple(AttemptRecord.model_validate_json(row[0]) for row in rows)
+
+    def _tallies(self, series_ids: tuple[SeriesId, ...]) -> Mapping[SeriesId, SeriesTally]:
+        with self._connection() as connection:
+            rows: list[tuple[str, str, str]] = connection.execute(TALLY_ROWS, (json.dumps(series_ids),)).fetchall()
+        return folded_tallies(rows)
+
+    def _totals(self, experiment_id: ExperimentId | None) -> SeriesTotals:
+        params = (experiment_id, experiment_id)
+        with self._connection() as connection:
+            spans: list[tuple[float, float | None]] = connection.execute(SPAN_ROWS, params).fetchall()
+            counted: tuple[int, int, int] = connection.execute(ATTEMPT_TOTALS, params).fetchone()
+            costs: list[tuple[str, str]] = connection.execute(ATTEMPT_COSTS, params).fetchall()
+        return SeriesTotals(
+            spans=tuple((datetime.fromtimestamp(start, UTC), moment(end)) for start, end in spans),
+            attempts=counted[0],
+            judge_runs=counted[1],
+            tokens=counted[2],
+            spend=decimal_sum(costs),
+        )

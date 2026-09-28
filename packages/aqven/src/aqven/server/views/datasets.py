@@ -157,6 +157,7 @@ def case_run_request(request: RunStartRequest, case: DatasetCase, context: RunCo
         node_outputs=case.node_outputs or {},
         cassette_id=request.cassette_id,
         human_answers=request.human_answers,
+        agent_overrides=request.agent_overrides,
     )
 
 

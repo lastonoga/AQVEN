@@ -65,9 +65,18 @@ def test_start_broken_project_is_not_runnable(
 
 def test_list_runs_with_node_counts(server_client: TestClient, server_engine: FakeEngine) -> None:
     body = server_client.get("/api/runs", params={"flow_id": "intake", "status": "completed", "limit": 5}).json()
+    page, counting = server_engine.list_queries[-2:]
     assert body["items"][0]["node_counts"]["ok"] == 2
-    assert server_engine.list_queries[-1].status == "completed"
-    assert server_engine.list_queries[-1].limit == 5
+    assert (page.status, page.limit, page.mode) == ("completed", 5, None)
+    assert (counting.status, counting.limit, counting.mode) == ("completed", 1, "experiment")
+    assert body["hidden_experiment_runs"] == len(server_engine.runs)
+
+
+def test_listing_one_series_counts_nothing_as_hidden(server_client: TestClient, server_engine: FakeEngine) -> None:
+    body = server_client.get("/api/runs", params={"series_id": "series-1"}).json()
+
+    assert server_engine.list_queries[-1].series_id == "series-1"
+    assert body["hidden_experiment_runs"] is None
 
 
 def test_list_runs_rejects_unknown_filter(server_client: TestClient) -> None:

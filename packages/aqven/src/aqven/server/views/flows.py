@@ -110,7 +110,9 @@ def flow_detail(state: WorkspaceState, flow_id: str, last_run: RunBrief | None) 
     return FlowDetail(
         **summary.model_dump(),
         description=None if source is None else source.spec.description,
-        files=tuple(FileRef(path=stat.path, file_hash=stat.file_hash) for stat in files),
+        files=tuple(
+            FileRef(path=stat.path, file_hash=digest) for stat in files if (digest := stat.file_hash) is not None
+        ),
         tree_hash=state.snapshot.tree_hash,
         order=() if source is None else tuple(source.spec.order),
         diagnostics=diagnostics_within(state, flow.folder),

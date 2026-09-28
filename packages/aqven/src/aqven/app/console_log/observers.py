@@ -34,6 +34,13 @@ from aqven.runtime.runs import (
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.series.model import LaunchPlan, SeriesId
 from aqven.series.ports import SeriesJobs
+from aqven.series.read_views import (
+    SeriesBriefResult,
+    SeriesOutputsPage,
+    SeriesOutputsRequest,
+    SeriesRowsPage,
+    SeriesRowsQuery,
+)
 from aqven.series.views import (
     LaunchRequest,
     SeriesCancelRequest,
@@ -257,8 +264,17 @@ class ObservedSeriesJobs:
     async def get(self, request: SeriesGetRequest) -> SeriesGetResult:
         return await self.inner.get(request)
 
+    async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
+        return await self.inner.brief(request)
+
+    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+        return await self.inner.outputs(request)
+
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
         return await self.inner.list(query)
+
+    async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
+        return await self.inner.rows(query)
 
     async def cases(self, series_id: SeriesId, query: SeriesCasesQuery) -> tuple[SeriesCaseRow, ...]:
         return await self.inner.cases(series_id, query)

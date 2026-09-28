@@ -32,6 +32,7 @@ class RunStartRequest(RequestModel):
     node_outputs: dict[NodeId, JsonValue] = Field(default_factory=dict[NodeId, JsonValue])
     cassette_id: str | None = None
     human_answers: tuple[ScriptedAnswer, ...] | None = None
+    agent_overrides: dict[NodeId, AgentId] = Field(default_factory=dict[NodeId, AgentId])
 
     @model_validator(mode="after")
     def exactly_one_input_source(self) -> Self:
@@ -130,6 +131,7 @@ class RunSnapshot(RunSummary):
     order: tuple[str, ...]
     executions: tuple[NodeExecution, ...]
     human_answers: tuple[HumanAnswerStatus, ...]
+    agent_overrides: dict[NodeId, AgentId] = Field(default_factory=dict[NodeId, AgentId])
     last_seq: Annotated[int, Field(ge=0)]
 
 

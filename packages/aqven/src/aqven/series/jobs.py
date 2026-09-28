@@ -15,6 +15,7 @@ from aqven.engine.runtime import RUNTIME_SLOT, EngineRuntime, active_runtime
 from aqven.ir import IrHash, IrLookupError
 from aqven.runtime.address import RunId
 from aqven.runtime.runs import Page
+from aqven.series.briefs import BriefSource, CasePage, case_page, projected_detail, wanted_metrics
 from aqven.series.eta import series_eta
 from aqven.series.events import SeriesEventLog
 from aqven.series.ids import new_series_id
@@ -38,8 +39,11 @@ from aqven.series.model import (
     SeriesStatus,
     SeriesVerdict,
 )
+from aqven.series.outputs import SeriesOutputsReader
+from aqven.series.overview import series_row, series_stats
 from aqven.series.planner import PlannedSeries, PlanningState, SeriesPlanner, plan_request
 from aqven.series.plans import PlanRegistrar
+from aqven.series.ports import SeriesTally
 from aqven.series.presenter import (
     ACTIVE_STATUSES,
     UNKNOWN_MODEL,
@@ -54,6 +58,14 @@ from aqven.series.presenter import (
     waiting_attempts,
 )
 from aqven.series.protocol import APPROVAL_TOPIC, CAP_GROWTH, UNSTARTED_GRACE_SECONDS, WAIT_POLL_SECONDS
+from aqven.series.read_views import (
+    SeriesBriefResult,
+    SeriesOutputsPage,
+    SeriesOutputsRequest,
+    SeriesRow,
+    SeriesRowsPage,
+    SeriesRowsQuery,
+)
 from aqven.series.services import SeriesServices
 from aqven.series.settings import InvalidSpendCap, ProjectCap, project_spend_cap, research_of
 from aqven.series.stats.wording import cancelled_text
@@ -63,6 +75,7 @@ from aqven.series.views import (
     SeriesCancelRequest,
     SeriesCaseRow,
     SeriesCasesQuery,
+    SeriesDetailView,
     SeriesEvent,
     SeriesFinishedEvent,
     SeriesGetRequest,
@@ -74,10 +87,11 @@ from aqven.series.views import (
 )
 from aqven.series.workflow import ApprovalMessage, run_series
 from aqven.server.errors import ApiFailure
-from aqven.spec import AgentId, ExperimentId, LookQuestion, SeriesSplit, VerdictReason, VerdictState
+from aqven.spec import AgentId, ExperimentId, LookQuestion, VerdictReason, VerdictState
 from aqven.write.model import WriteActor
 
-SHOWN_CASES: Final = 50
+NO_CASES: Final = CasePage(shown=None, hidden=0, next_cursor=None)
+EMPTY_TALLY: Final = SeriesTally()
 FAILED_WORKFLOW_STATUSES: Final = frozenset({"ERROR", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"})
 CANCELLED_WORKFLOW_STATUS: Final = "CANCELLED"
 UNSTARTED_MESSAGE: Final = "the series workflow was not started"
@@ -222,6 +236,14 @@ def series_record(series_id: SeriesId, planned: PlannedSeries, launch: LaunchPla
     )
 
 
+@dataclass(frozen=True, slots=True)
+class SeriesRead:
+    record: SeriesRecord
+    attempts: tuple[AttemptRecord, ...]
+    waiting: frozenset[RunId]
+    detail: SeriesDetailView
+
+
 def launch_inputs(planned: PlannedSeries) -> LaunchInputs:
     draft = planned.draft
     experiment = draft.experiment
@@ -238,12 +260,6 @@ def launch_inputs(planned: PlannedSeries) -> LaunchInputs:
         cases_sha256=planned.snapshot.cases_sha256,
         warnings=planned.choice.warnings,
     )
-
-
-def dev_rows(rows: Sequence[SeriesCaseRow]) -> tuple[SeriesCaseRow, ...]:
-    visible = [row for row in rows if row.split is SeriesSplit.DEV]
-    ordered = sorted(visible, key=lambda row: not row.failing)
-    return tuple(ordered[:SHOWN_CASES])
 
 
 def wanted_row(row: SeriesCaseRow, query: SeriesCasesQuery) -> bool:
@@ -308,17 +324,49 @@ class SeriesService:
         return await self._started(current)
 
     async def get(self, request: SeriesGetRequest) -> SeriesGetResult:
-        record = await self._waited(await self._reconciled(request.series_id), request.wait_seconds)
-        waiting = await self.services.waits.open_runs()
+        read = await self._read(request)
+        detail = projected_detail(read.detail, wanted_metrics(read.detail, request.fields))
+        page = await self._case_page(read, request)
+        return SeriesGetResult(series=detail, cases=page.shown, hidden_cases=page.hidden, next_cursor=page.next_cursor)
+
+    async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
+        read = await self._read(request)
+        wanted = wanted_metrics(read.detail, request.fields)
+        series = BriefSource(read.record, read.attempts, read.waiting, read.detail).brief(wanted)
+        page = await self._case_page(read, request)
+        return SeriesBriefResult(
+            series=series, cases=page.shown, hidden_cases=page.hidden, next_cursor=page.next_cursor
+        )
+
+    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+        record = await self._reconciled(request.series_id)
         attempts = await self.services.store.attempts(record.series_id)
-        facts = await self._facts(record, attempts, waiting)
-        analysis = await self._analysis(record, attempts)
-        detail = detail_view(record, facts, analysis, self._models(record))
-        if not request.include_cases:
-            return SeriesGetResult(series=detail, cases=None, hidden_cases=0)
-        rows = await self._rows(record, attempts, waiting)
-        shown = dev_rows(rows)
-        return SeriesGetResult(series=detail, cases=shown, hidden_cases=len(rows) - len(shown))
+        waiting = await self.services.waits.open_runs()
+        return await SeriesOutputsReader(self.services.outputs).page(record, attempts, waiting, request)
+
+    async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
+        search = SeriesListQuery(
+            experiment_id=query.experiment_id, status=query.status, cursor=query.cursor, limit=query.limit
+        )
+        try:
+            records = await self.services.store.search(search, query.limit + 1)
+        except InvalidCursor as error:
+            raise ApiFailure("REQUEST_INVALID", str(error)) from error
+        page = records[: query.limit]
+        current = [await self._current(record) for record in page]
+        tallies = await self.services.ledger.tallies([record.series_id for record in current])
+        waiting = await self.services.waits.open_runs()
+        rows = [
+            await self._overview_row(record, tallies.get(record.series_id, EMPTY_TALLY), waiting) for record in current
+        ]
+        items = tuple(row for row in rows if query.status is None or row.status is query.status)
+        totals = await self.services.ledger.totals(query.experiment_id)
+        more = len(records) > query.limit and bool(page)
+        return SeriesRowsPage(
+            items=items,
+            next_cursor=series_cursor(page[-1]) if more else None,
+            stats=series_stats(totals, utc_now()),
+        )
 
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
         try:
@@ -505,6 +553,34 @@ class SeriesService:
     ) -> tuple[SeriesCaseRow, ...]:
         cases = await self.services.store.cases(record.series_id)
         return CaseBoard(record=record, attempts=attempts, waiting=waiting).rows(cases)
+
+    async def _read(self, request: SeriesGetRequest) -> SeriesRead:
+        record = await self._waited(await self._reconciled(request.series_id), request.wait_seconds)
+        waiting = await self.services.waits.open_runs()
+        attempts = await self.services.store.attempts(record.series_id)
+        facts = await self._facts(record, attempts, waiting)
+        analysis = await self._analysis(record, attempts)
+        detail = detail_view(record, facts, analysis, self._models(record))
+        return SeriesRead(record=record, attempts=attempts, waiting=waiting, detail=detail)
+
+    async def _case_page(self, read: SeriesRead, request: SeriesGetRequest) -> CasePage:
+        if not request.include_cases:
+            return NO_CASES
+        rows = await self._rows(read.record, read.attempts, read.waiting)
+        return case_page(rows, request.cursor, request.case_limit)
+
+    async def _current(self, record: SeriesRecord) -> SeriesRecord:
+        if record.status not in ACTIVE_STATUSES:
+            return record
+        return await self._reconciled(record.series_id)
+
+    async def _overview_row(self, record: SeriesRecord, tally: SeriesTally, waiting: frozenset[RunId]) -> SeriesRow:
+        if record.status not in ACTIVE_STATUSES:
+            return series_row(record, record.status, tally, None)
+        attempts = await self.services.store.attempts(record.series_id)
+        waits = await self._waits(record, attempts, waiting)
+        eta = series_eta(record, attempts, waits, utc_now())
+        return series_row(record, shown_status(record, waits), tally, eta)
 
     def _models(self, record: SeriesRecord) -> AgentModels:
         runtime = optional_runtime()

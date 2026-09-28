@@ -55,6 +55,7 @@ def selection_of(
         base_status=base_status_of(query.status),
         mode=query.mode,
         parent_run_id=query.parent_run_id,
+        series_id=query.series_id,
         since_us=epoch_bound(query.since),
         until_us=epoch_bound(query.until),
         only=order if plan is not None and plan.restricts else None,

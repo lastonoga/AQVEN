@@ -12,9 +12,9 @@ RUNNER_TOOLS: Final = frozenset({"aqven_check", "pyright_check", "pytest_run"})
 RUN_TOOLS: Final = frozenset(
     {"run_start", "run_get", "run_list", "run_get_node", "run_events", "run_resume", "run_fork", "run_cancel"}
 )
-SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel"})
+SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel", "series_outputs", "series_list"})
 SURFACE: Final = PROJECT_TOOLS | RUNNER_TOOLS | RUN_TOOLS | SERIES_TOOLS | {"flow_patch"}
-FULL_SURFACE_SIZE: Final = 16
+FULL_SURFACE_SIZE: Final = 18
 
 
 async def unused_patch(request: FlowPatchRequest, actor: WriteActor) -> WriteResult:

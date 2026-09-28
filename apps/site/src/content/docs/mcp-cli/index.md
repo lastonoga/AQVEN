@@ -1,6 +1,6 @@
 ---
 title: MCP & CLI
-description: Connect a coding agent to AQVEN over MCP, and drive a project with its 16 tools.
+description: Connect a coding agent to AQVEN over MCP, and drive a project with its 18 tools.
 ---
 
 This is the agent-driven way into the same project the [Engine](/engine/) and [Studio](/studio/) pages

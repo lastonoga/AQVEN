@@ -6,15 +6,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
+from aqven.loader import skipped_part
+
 PYTHON_SUFFIX: Final = ".py"
-SKIPPED_DIRECTORIES: Final = frozenset({"__pycache__", ".aqven", ".venv", ".git", "node_modules"})
 
 type CodeStamp = tuple[int, int, int]
 
 
 def python_files(root: Path) -> Iterator[Path]:
     for folder, directories, files in os.walk(root):
-        directories[:] = [name for name in directories if name not in SKIPPED_DIRECTORIES]
+        directories[:] = [name for name in directories if not skipped_part(name)]
         yield from (Path(folder, name) for name in files if name.endswith(PYTHON_SUFFIX))
 
 

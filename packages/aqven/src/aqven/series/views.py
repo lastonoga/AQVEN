@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Annotated, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import AwareDatetime, Field, model_validator
 
@@ -51,6 +51,10 @@ type NodeFileRole = Literal["node", "code", "inference", "prompt"]
 type ActivitySource = Literal["files", "series"]
 type AttentionReason = Literal["spend_cap_pause", "series_invalid", "results_stale", "check_errors"]
 type EtaState = Literal["estimating", "running", "paused"]
+type SeriesView = Literal["full", "summary"]
+
+MAX_METRIC_FIELDS: Final = 50
+DEFAULT_CASE_PAGE: Final = 50
 
 
 class LaunchRequest(RequestModel):
@@ -356,16 +360,24 @@ class SeriesCaseRow(ResourceModel):
     attempts: tuple[AttemptView, ...]
 
 
-class SeriesGetRequest(RequestModel):
-    series_id: SeriesId
+class SeriesReadQuery(RequestModel):
     wait_seconds: int = Field(default=0, ge=0, le=MAX_WAIT_SECONDS)
     include_cases: bool = False
+    fields: tuple[str, ...] | None = Field(default=None, min_length=1, max_length=MAX_METRIC_FIELDS)
+    case_limit: int = Field(default=DEFAULT_CASE_PAGE, ge=1, le=MAX_PAGE_LIMIT)
+    cursor: str | None = None
+
+
+class SeriesGetRequest(SeriesReadQuery):
+    series_id: SeriesId
+    view: SeriesView = "full"
 
 
 class SeriesGetResult(ResourceModel):
     series: SeriesDetailView
     cases: tuple[SeriesCaseRow, ...] | None
     hidden_cases: int
+    next_cursor: str | None = None
 
 
 class SeriesCancelRequest(RequestModel):

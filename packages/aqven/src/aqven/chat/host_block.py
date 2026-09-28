@@ -68,7 +68,8 @@ def codex_lines(facts: HostFacts) -> tuple[str, ...]:
     return (
         f"- Provider keys live in Studio settings or {facts.package}/.env. This chat cannot read .env or "
         ".aqven/server.json and its shell does not see those keys: start and read series with the aqven MCP tools "
-        "series_start, series_get and series_cancel, which run inside the server and use them.",
+        "series_start, series_get, series_outputs, series_list and series_cancel, which run inside the server and use "
+        "them.",
         "- Nothing wakes you when a series ends: follow it with series_get and wait_seconds: 50 until it settles, "
         "and never poll with sleep.",
         f"- AQVEN skills are listed as {PLUGIN_NAME}:<skill>: before you write a file of a kind a skill covers, "

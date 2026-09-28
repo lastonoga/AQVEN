@@ -1,4 +1,5 @@
 from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import Final
 
@@ -89,8 +90,41 @@ def invalid_paths(state: WorkspaceState) -> frozenset[str]:
     return frozenset() if project is None else project.invalid_paths
 
 
+@dataclass(frozen=True, slots=True)
+class FileQuery:
+    prefix: str | None = None
+    kind: FileKind | None = None
+    sync: SyncState | None = None
+
+    def matches(self, stat: FileStat, declared: Mapping[str, FileKind], invalid: frozenset[str]) -> bool:
+        if self.prefix is not None and not stat.path.startswith(self.prefix):
+            return False
+        if self.kind is not None and file_kind(stat.path, declared) != self.kind:
+            return False
+        return self.sync is None or sync_state(stat.path, invalid) == self.sync
+
+
+def stat_path(stat: FileStat) -> str:
+    return stat.path
+
+
+def listed_files(state: WorkspaceState, query: FileQuery) -> tuple[FileStat, ...]:
+    declared = declared_kinds(state.report.project)
+    invalid = invalid_paths(state)
+    stats = sorted(state.snapshot.files.values(), key=stat_path)
+    return tuple(stat for stat in stats if query.matches(stat, declared, invalid))
+
+
+def listed_file(state: WorkspaceState, path: str) -> FileStat:
+    stat = state.snapshot.get(path)
+    if stat is None:
+        raise not_found(f"file {path} is not in the project")
+    return stat
+
+
 def file_entry(
     stat: FileStat,
+    digest: str,
     declared: Mapping[str, FileKind],
     invalid: frozenset[str],
     problems: Mapping[str, tuple[Diagnostic, ...]],
@@ -98,7 +132,7 @@ def file_entry(
     return FileEntry(
         path=stat.path,
         kind=file_kind(stat.path, declared),
-        file_hash=stat.file_hash,
+        file_hash=digest,
         size_bytes=stat.size_bytes,
         mtime_ns=stat.mtime_ns,
         parse_status=parse_status(stat.path, invalid),
@@ -108,26 +142,25 @@ def file_entry(
     )
 
 
-def file_entries(state: WorkspaceState) -> tuple[FileEntry, ...]:
+def file_entries(state: WorkspaceState, stats: Iterable[FileStat], digests: Mapping[str, str]) -> tuple[FileEntry, ...]:
     declared = declared_kinds(state.report.project)
     invalid = invalid_paths(state)
     problems = diagnostics_by_file(state)
-    stats = sorted(state.snapshot.files.values(), key=lambda stat: stat.path)
-    return tuple(file_entry(stat, declared, invalid, problems) for stat in stats)
+    hashed = ((stat, digests.get(stat.path)) for stat in stats)
+    return tuple(file_entry(stat, digest, declared, invalid, problems) for stat, digest in hashed if digest is not None)
 
 
-def file_detail(state: WorkspaceState, path: str) -> FileDetail:
-    stat = state.snapshot.get(path)
-    if stat is None:
-        raise not_found(f"file {path} is not in the project")
+def file_detail(state: WorkspaceState, stat: FileStat, digest: str) -> FileDetail:
     problems = diagnostics_by_file(state)
-    entry = file_entry(stat, declared_kinds(state.report.project), invalid_paths(state), problems)
-    return FileDetail(**entry.model_dump(), problems=problems.get(path, ()))
+    entry = file_entry(stat, digest, declared_kinds(state.report.project), invalid_paths(state), problems)
+    return FileDetail(**entry.model_dump(), problems=problems.get(stat.path, ()))
 
 
 def file_ref(state: WorkspaceState, path: str) -> FileRef | None:
     stat = state.snapshot.get(path)
-    return None if stat is None else FileRef(path=path, file_hash=stat.file_hash)
+    if stat is None or stat.file_hash is None:
+        return None
+    return FileRef(path=path, file_hash=stat.file_hash)
 
 
 def project_info(state: WorkspaceState, engine_version: str, spec_seq: int, mcp_url: str | None) -> ProjectInfo:

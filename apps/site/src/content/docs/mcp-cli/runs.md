@@ -22,15 +22,31 @@ knowing before you build assumptions on one and hit the other.
   media the case points at by `file` is read from the project and stored as blobs before the run starts,
   so the run's input and trace carry a `blob_id`; see
   [how to keep case media as files in the project](/engine/dataset-media-files/).
+- **`agent_overrides` re-checks a fixed agent without a series.** Pass `{"<node id>": "<agent id>"}` to
+  `run_start` and those `llm` nodes answer with another agent of the project, for this run only. After you
+  fix an agent, run it on the few cases that failed, one `run_start` with `dataset_item_id` per case: no
+  series, no experiment variant. The key is the node id `run_get` shows (`review__recheck__redo`), or its
+  file name (`redo`) when only one node in the flow has it. `run_get` returns the map in
+  `agent_overrides`, and the run's `content_hash` differs from the flow as written. An unknown or
+  ambiguous node, a node that isn't `llm`, or an unknown agent fails with `INPUT_INVALID` before the run
+  starts, with one problem per node at `agent_overrides.<node_id>`. Nodes of a flow reached through a
+  `call` node aren't covered.
 - **`run_get`** is the full snapshot: `status`, `mode`, cost and token totals, `node_counts` (how many
   nodes are pending, running, ok, failed, skipped, suspended, cancelled), the full `executions` list, and
   `error` if the run failed. If it's paused on a person, `waits` lists what's waiting and for whom — that's
   what [responding to a review](/studio/respond-to-a-review/) resolves, the same information
   [investigating a run](/studio/investigate-a-run/) shows in its header.
-- **`run_list`** pages through runs filtered by `flow_id`, `status`, `mode`, `assignee`, `parent_run_id`,
-  and a `since`/`until` window, with `next_cursor` for the next page. For everything waiting on a person,
-  filter `status: "suspended"`; for your own queue, add `assignee: "me"` (the local user),
-  `overdue: true`, and sort by `deadline_at`.
+- **`run_list`** pages through runs filtered by `flow_id`, `status`, `mode`, `series_id`, `assignee`,
+  `parent_run_id`, and a `since`/`until` window, with `next_cursor` for the next page. For everything
+  waiting on a person, filter `status: "suspended"`; for your own queue, add `assignee: "me"` (the local
+  user), `overdue: true`, and sort by `deadline_at`.
+- **Without `mode` or `series_id`, `run_list` leaves out the attempt runs of series**
+  (`mode: experiment`), the way Studio's run list does. `hidden_experiment_runs` in the response counts the ones
+  it left out that match your other filters. Pass `series_id` for the attempt runs of one series, or
+  `mode: "experiment"` for all of them. `view: "compact"` returns short rows instead of full summaries:
+  `run_id`, `flow_id`, `status`, `mode`, the times, `cost_usd`, the number of open `waits`,
+  `dataset_item_id`, `series_id` and `experiment_id`. For what the attempts of a series produced, call
+  [`series_outputs`](/mcp-cli/experiments-and-series/) once rather than `run_get` per run.
 - **`run_get_node`** is one node's execution, addressed the same way the engine itself addresses every
   execution: `node_id` plus `branch_key`, `iteration`, and `item_index` for a node that ran inside a
   branch, a loop, or a map. Leave the three optional fields out to reach a top-level node. The result
@@ -56,7 +72,9 @@ knowing before you build assumptions on one and hit the other.
   depending which surface you're calling. Separately, that address value itself always needs all four
   fields present — `node_id`, `branch_key`, `iteration`, `item_index` — even when three of them are
   `null` for a top-level node; unlike `run_get_node`'s flat arguments, none of the three has a default, so
-  leaving one out fails validation before the call does anything.
+  leaving one out fails validation before the call does anything. A fork always runs with the definition
+  the source run used: `overrides`, or `at: "working"`, fail with `NOT_RUNNABLE`. To try a changed agent
+  on the same case, use `run_start` with `agent_overrides` instead.
 - **`run_cancel`** takes a `run_id` and a free-text `reason`. Like `run_resume`, its `run_id` travels in
   the request body over MCP; the REST route for the same operation puts it in the URL path instead and
   takes just `reason` in the body.

@@ -433,6 +433,15 @@ def test_spec_lines_name_the_file_and_the_flow_health() -> None:
     assert rendered_event(spec_line(health)) == f"{CLOCK} ✎ flow looker · does not compile · 2 errors · 1 warning\n"
 
 
+def test_a_resync_says_why_clients_reload_and_claims_no_reindex() -> None:
+    burst = spec_event({"type": "resync", "reason": "git_batch"})
+
+    line = rendered_event(spec_line(burst))
+
+    assert line == f"{CLOCK} ✎ more than 200 files changed at once, clients reload the project\n"
+    assert "reindexed" not in line
+
+
 def test_foreign_records_carry_their_source_and_ours_do_not() -> None:
     ours = at_fixed_time(logging.LogRecord("aqven.engine.llm", logging.WARNING, __file__, 41, "CODE: text", (), None))
     theirs = at_fixed_time(logging.LogRecord("dbos", logging.WARNING, __file__, 805, "Workflow w lost", (), None))

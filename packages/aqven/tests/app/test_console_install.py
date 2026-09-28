@@ -29,6 +29,13 @@ from aqven.cli import EXIT_USAGE, build_parser, main
 from aqven.runtime.events import RunEvent
 from aqven.runtime.runs import Page, RunStarted, RunStartRequest
 from aqven.series.model import LaunchPlan, SeriesId, SeriesStatus
+from aqven.series.read_views import (
+    SeriesBriefResult,
+    SeriesOutputsPage,
+    SeriesOutputsRequest,
+    SeriesRowsPage,
+    SeriesRowsQuery,
+)
 from aqven.series.views import (
     LaunchRequest,
     SeriesCancelRequest,
@@ -247,7 +254,16 @@ class ScriptedSeries:
     async def get(self, request: SeriesGetRequest) -> SeriesGetResult:
         unused_series()
 
+    async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
+        unused_series()
+
+    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+        unused_series()
+
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
+        unused_series()
+
+    async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
         unused_series()
 
     async def cases(self, series_id: SeriesId, query: SeriesCasesQuery) -> tuple[SeriesCaseRow, ...]:

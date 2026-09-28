@@ -8,10 +8,11 @@ from datetime import tzinfo
 from decimal import Decimal, InvalidOperation
 from functools import partial
 from pathlib import Path
-from typing import Final, Protocol, TextIO
+from typing import Final, TextIO
 from urllib.parse import urlencode
 
 import httpx2
+from pydantic import TypeAdapter
 
 from aqven.app.access import ACCESS_TOKEN_PARAMETER
 from aqven.app.background import BackgroundServer, BackgroundStartFailed
@@ -19,9 +20,18 @@ from aqven.app.runtime_file import ServerRecord
 from aqven.client import ApiErrorResponse, AqvenClient, UnexpectedResponse, new_client_op_id
 from aqven.console.command import EXIT_FAILED, EXIT_OK, EXIT_USAGE, PATH_HELP, PROGRAM, OutputFormat
 from aqven.console.project_env import open_project
+from aqven.console.series_export import (
+    EXPORT_ACTION,
+    ExportFormat,
+    SeriesExportRequest,
+    ServerSource,
+    run_series_export,
+)
+from aqven.console.series_wait import EXIT_UNREACHABLE, PatientCalls, RetryPolicy, ServerUnreachable, failure_reason
 from aqven.series.model import (
     SETTLED_STATUSES,
     ApprovalReason,
+    AttemptOutcome,
     LaunchPlan,
     MatrixRow,
     MetricCell,
@@ -66,6 +76,8 @@ CLOCK_FORMAT: Final = "%H:%M"
 RATE_FORMAT: Final = ".3g"
 ESTIMATING_TEXT: Final = "estimating the time left"
 PAUSED_TEXT: Final = "paused, no time estimate"
+START_UNKNOWN: Final = "the series may have started on the server: look in Studio before running the command again"
+FIELD_TEXTS: Final[TypeAdapter[tuple[str, ...] | None]] = TypeAdapter(tuple[str, ...] | None)
 
 
 def positive_int(text: str) -> int:
@@ -114,10 +126,6 @@ class SeriesCommandRequest:
             cap_usd=self.cap_usd,
             client_op_id=new_client_op_id(),
         )
-
-
-class ServerSource(Protocol):
-    async def ensure(self, root: Path) -> ServerRecord: ...
 
 
 def studio_link(record: ServerRecord, series_id: SeriesId) -> str:
@@ -314,37 +322,54 @@ class SeriesRunner:
     out: TextIO
     err: TextIO
     zone: tzinfo | None = None
+    retry: RetryPolicy = RetryPolicy()
 
     async def run(self, request: SeriesCommandRequest) -> int:
         try:
             return await self._run(request)
         except ApiErrorResponse as failure:
             return self._refused(failure)
+        except ServerUnreachable as failure:
+            print(f"{PROGRAM} {COMMAND}: {failure}", file=self.err)
+            return EXIT_UNREACHABLE
         except (httpx2.TransportError, UnexpectedResponse) as failure:
-            print(f"{PROGRAM} {COMMAND}: the project server did not answer: {failure}", file=self.err)
-            return EXIT_FAILED
+            print(f"{PROGRAM} {COMMAND}: the project server did not answer: {failure_reason(failure)}", file=self.err)
+            return EXIT_UNREACHABLE
 
     async def _run(self, request: SeriesCommandRequest) -> int:
-        started = await self.client.series_start(request.start_request())
+        calls = PatientCalls(self.retry, partial(self._say, request))
+        start = request.start_request()
+        started = await calls.call(lambda: self.client.series_start(start), START_UNKNOWN)
         for line in started_lines(started):
             self._say(request, line)
-        settled = await self._settled(request, started.series_id)
-        final = await self._final(request, settled)
+        settled = await self._settled(request, started.series_id, calls)
+        final = await self._final(request, settled, calls)
         self._publish(request, final)
         self._report(request, final.series)
         return STATUS_EXITS.get(settled.series.status, EXIT_FAILED)
 
-    async def _settled(self, request: SeriesCommandRequest, series_id: SeriesId) -> SeriesGetResult:
-        result = await self.client.series_get(series_id, MAX_WAIT_SECONDS)
+    async def _settled(
+        self, request: SeriesCommandRequest, series_id: SeriesId, calls: PatientCalls
+    ) -> SeriesGetResult:
+        running = self._still_running(series_id)
+        result = await calls.call(lambda: self.client.series_get(series_id, MAX_WAIT_SECONDS), running)
         while result.series.status not in SETTLED_STATUSES:
             self._say(request, progress_line(result.series, self.zone))
-            result = await self.client.series_get(series_id, MAX_WAIT_SECONDS)
+            result = await calls.call(lambda: self.client.series_get(series_id, MAX_WAIT_SECONDS), running)
         return result
 
-    async def _final(self, request: SeriesCommandRequest, settled: SeriesGetResult) -> SeriesGetResult:
+    async def _final(
+        self, request: SeriesCommandRequest, settled: SeriesGetResult, calls: PatientCalls
+    ) -> SeriesGetResult:
         if not request.as_json:
             return settled
-        return await self.client.series_get(settled.series.series_id, include_cases=True)
+        series_id = settled.series.series_id
+        return await calls.call(
+            lambda: self.client.series_get(series_id, include_cases=True), self._still_running(series_id)
+        )
+
+    def _still_running(self, series_id: SeriesId) -> str:
+        return f"series {series_id} keeps running on the server: {self.link(series_id)}"
 
     def _publish(self, request: SeriesCommandRequest, final: SeriesGetResult) -> None:
         if request.as_json:
@@ -386,12 +411,50 @@ async def run_series_command(
         return await runner.run(request)
 
 
+def export_request(root: Path, arguments: argparse.Namespace) -> SeriesExportRequest:
+    return SeriesExportRequest(
+        root=root,
+        series_id=str(arguments.series),
+        format=ExportFormat(str(arguments.format)),
+        fields=_optional_texts(arguments.fields),
+        variant=_optional_text(arguments.variant),
+        outcome=None if arguments.outcome is None else AttemptOutcome(str(arguments.outcome)),
+        split=None if arguments.split is None else SeriesSplit(str(arguments.split)),
+        out=None if arguments.out is None else Path(str(arguments.out)),
+    )
+
+
+def configure_export(parser: argparse.ArgumentParser) -> None:
+    export = parser.add_argument_group(
+        "export", f"{PROGRAM} {COMMAND} {EXPORT_ACTION} SERIES_ID writes one row per attempt"
+    )
+    export.add_argument(
+        "--format", choices=[item.value for item in ExportFormat], default=ExportFormat.JSONL.value, help="row format"
+    )
+    export.add_argument(
+        "--fields",
+        action="extend",
+        nargs="+",
+        default=None,
+        metavar="FIELD",
+        help="JSON pointers into the flow output such as /label, node ids such as triage, or triage/summary",
+    )
+    export.add_argument("--variant", default=None, help="only this variant")
+    export.add_argument("--outcome", choices=[item.value for item in AttemptOutcome], default=None)
+    export.add_argument("--split", choices=[split.value for split in SeriesSplit], default=None)
+    export.add_argument("--out", default=None, metavar="FILE", help="file to write, stdout by default")
+
+
 @dataclass(frozen=True, slots=True)
 class SeriesCommand:
-    help: str = "run a series of an experiment on the project server and wait for its verdict"
+    help: str = (
+        "run a series of an experiment on the project server and wait for its verdict; "
+        "export SERIES_ID writes its per-attempt outputs as jsonl or csv"
+    )
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("experiment", metavar="EXPERIMENT_ID", help="experiment id")
+        parser.add_argument("experiment", metavar="EXPERIMENT_ID", help=f"experiment id, or {EXPORT_ACTION}")
+        parser.add_argument("series", nargs="?", default=None, metavar="SERIES_ID", help=f"series to {EXPORT_ACTION}")
         parser.add_argument(
             "--on",
             choices=[split.value for split in SeriesSplit],
@@ -403,10 +466,16 @@ class SeriesCommand:
         parser.add_argument("--cap", type=positive_usd, default=None, metavar="USD", help="spend cap of this series")
         parser.add_argument("--json", action="store_true", help="print the last series state as one JSON line")
         parser.add_argument("--path", default=".", help=PATH_HELP)
+        configure_export(parser)
 
     def execute(self, arguments: argparse.Namespace) -> int:
         root = open_project(Path(str(arguments.path)), OutputFormat.TEXT)
         if root is None:
+            return EXIT_USAGE
+        if str(arguments.experiment) == EXPORT_ACTION:
+            return self._export(root, arguments)
+        if arguments.series is not None:
+            print(f"{PROGRAM} {COMMAND}: SERIES_ID goes only after {EXPORT_ACTION}", file=sys.stderr)
             return EXIT_USAGE
         request = SeriesCommandRequest(
             root=root,
@@ -419,6 +488,23 @@ class SeriesCommand:
         )
         return asyncio.run(run_series_command(request))
 
+    def _export(self, root: Path, arguments: argparse.Namespace) -> int:
+        if arguments.series is None:
+            print(
+                f"{PROGRAM} {COMMAND} {EXPORT_ACTION}: name the series, for example the series_id of series_get",
+                file=sys.stderr,
+            )
+            return EXIT_USAGE
+        return asyncio.run(run_series_export(export_request(root, arguments)))
+
 
 def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) else None
+
+
+def _optional_text(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _optional_texts(value: object) -> tuple[str, ...] | None:
+    return FIELD_TEXTS.validate_python(value) or None

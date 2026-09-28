@@ -292,3 +292,12 @@ async def test_list_runs_filters_suspended_runs_by_assignee(client: AqvenClient,
 
     params = sent[-1].url.params
     assert (params["status"], params["assignee"], page.items[0].waits) == ("suspended", "support_lead", WAITS)
+
+
+async def test_list_runs_narrows_to_the_attempt_runs_of_one_series(
+    client: AqvenClient, sent: list[httpx2.Request]
+) -> None:
+    await client.list_runs(series_id="series-1")
+
+    params = sent[-1].url.params
+    assert (params["series_id"], "mode" in params) == ("series-1", False)

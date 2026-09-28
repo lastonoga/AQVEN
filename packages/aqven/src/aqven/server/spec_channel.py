@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
@@ -13,7 +14,7 @@ from pydantic import AwareDatetime, Field, JsonValue
 from watchfiles import Change, DefaultFilter
 
 from aqven.diagnostics import Diagnostic
-from aqven.loader import LoadedFlow, within
+from aqven.loader import LoadedFlow, skipped_part, within
 from aqven.runtime.address import ClientOpId, ResourceModel
 from aqven.series.feed import ResearchNotice
 from aqven.server.research_events import (
@@ -31,7 +32,7 @@ from aqven.server.resources import CompileStatus, ProblemCounts
 from aqven.server.simulation import SimulationRun, SubprocessSimulation
 from aqven.server.views.common import diagnostics_within, problem_counts
 from aqven.server.views.flows import compile_status
-from aqven.server.workspace import EMPTY_SNAPSHOT, ProjectWorkspace, TreeSnapshot, WorkspaceState, utc_now
+from aqven.server.workspace import EMPTY_SNAPSHOT, FileStat, ProjectWorkspace, TreeSnapshot, WorkspaceState, utc_now
 
 DEFAULT_WINDOW: Final = 1000
 GIT_BATCH_LIMIT: Final = 200
@@ -39,12 +40,16 @@ DEFAULT_DEBOUNCE_MS: Final = 250
 WATCHER_ID: Final = "watchfiles"
 WATCHER_RESTART_SECONDS: Final = 1.0
 SIMULATION_DEBOUNCE_SECONDS: Final = 3.0
+BURST_PATHS: Final = GIT_BATCH_LIMIT
+BURST_QUIET_SECONDS: Final = 1.0
+BURST_LONGEST_SECONDS: Final = 5.0
 WATCH_LOGGER: Final = logging.getLogger("aqven.server.watch")
 
 type ChangeKind = Literal["added", "modified", "deleted"]
 type ActorKind = Literal["human", "agent", "fs", "git", "system"]
 type ResyncReason = Literal["window_exceeded", "watcher_restarted", "git_batch"]
 type ChangeBatch = set[tuple[Change, str]]
+type BatchQueue = asyncio.Queue[ChangeBatch | None]
 
 
 class SpecEventBase(ResourceModel):
@@ -118,24 +123,32 @@ class FlowHealth:
     problems: ProblemCounts
 
 
-def file_changes(before: TreeSnapshot, after: TreeSnapshot) -> tuple[FileChange, ...]:
+def changed_paths(before: TreeSnapshot, after: TreeSnapshot) -> tuple[str, ...]:
     paths = sorted({*before.files, *after.files})
-    return tuple(change for path in paths if (change := _change(path, before, after)) is not None)
+    return tuple(path for path in paths if _fingerprint(before.get(path)) != _fingerprint(after.get(path)))
 
 
-def _change(path: str, before: TreeSnapshot, after: TreeSnapshot) -> FileChange | None:
+def file_changes(before: TreeSnapshot, after: TreeSnapshot) -> tuple[FileChange, ...]:
+    return tuple(file_change(path, before, after) for path in changed_paths(before, after))
+
+
+def file_change(path: str, before: TreeSnapshot, after: TreeSnapshot) -> FileChange:
     old = before.get(path)
     new = after.get(path)
-    old_hash = None if old is None else old.file_hash
-    new_hash = None if new is None else new.file_hash
-    if old_hash == new_hash:
-        return None
     return FileChange(
-        path=path, change=_change_kind(old_hash, new_hash), file_hash_before=old_hash, file_hash_after=new_hash
+        path=path, change=_change_kind(old, new), file_hash_before=_content(old), file_hash_after=_content(new)
     )
 
 
-def _change_kind(before: str | None, after: str | None) -> ChangeKind:
+def _fingerprint(stat: FileStat | None) -> str | None:
+    return None if stat is None else stat.fingerprint
+
+
+def _content(stat: FileStat | None) -> str | None:
+    return None if stat is None else stat.file_hash
+
+
+def _change_kind(before: FileStat | None, after: FileStat | None) -> ChangeKind:
     if before is None:
         return "added"
     return "deleted" if after is None else "modified"
@@ -165,10 +178,10 @@ class SimulationFeed:
     delay_seconds: float = SIMULATION_DEBOUNCE_SECONDS
     task: asyncio.Task[None] | None = None
 
-    def schedule(self, hub: SpecEventHub, tree_hash: str) -> None:
+    def schedule(self, hub: SpecEventHub, spec_key: str) -> None:
         previous = self.task
         self.cancel()
-        self.task = asyncio.create_task(self._publish(hub, tree_hash, previous))
+        self.task = asyncio.create_task(self._publish(hub, spec_key, previous))
 
     def cancel(self) -> bool:
         task = self.task
@@ -177,7 +190,7 @@ class SimulationFeed:
         task.cancel()
         return True
 
-    async def _publish(self, hub: SpecEventHub, tree_hash: str, previous: asyncio.Task[None] | None) -> None:
+    async def _publish(self, hub: SpecEventHub, spec_key: str, previous: asyncio.Task[None] | None) -> None:
         await asyncio.sleep(self.delay_seconds)
         if previous is not None:
             await asyncio.wait((previous,))
@@ -185,7 +198,7 @@ class SimulationFeed:
             diagnostics = await self.run()
         except Exception:
             return
-        await hub.apply_simulation(tree_hash, diagnostics)
+        await hub.apply_simulation(spec_key, diagnostics)
 
 
 @dataclass(slots=True)
@@ -197,48 +210,55 @@ class SpecEventHub:
     seq: int = 0
     events: deque[SpecEvent] = field(default_factory=deque[SpecEvent])
     snapshot: TreeSnapshot = EMPTY_SNAPSHOT
+    spec_key: str = ""
     health: Mapping[str, FlowHealth] = field(default_factory=dict[str, FlowHealth])
     simulated: tuple[Diagnostic, ...] = ()
     closed: bool = False
     primed: bool = False
+    simulation_paused: bool = False
     _changed: asyncio.Condition | None = None
 
     async def prime(self) -> None:
         state = await self.workspace.state()
         self.snapshot = state.snapshot
+        self.spec_key = state.spec_key
         self.health = flow_health(state)
         self.primed = True
-        self._simulate(state.snapshot.tree_hash)
+        self._simulate(state.spec_key)
 
     async def refresh(self) -> tuple[SpecEvent, ...]:
         if not self.primed:
             await self.prime()
             return ()
-        held = self._hold_simulation()
-        state = await self.workspace.state()
-        changes = file_changes(self.snapshot, state.snapshot)
-        if held and not changes:
-            self._simulate(state.snapshot.tree_hash)
-        if not changes:
+        state = await self.workspace.state(self._pause_simulation)
+        paths = changed_paths(self.snapshot, state.snapshot)
+        reindexed = state.spec_key != self.spec_key
+        if not reindexed:
+            self._resume_simulation()
+        if not paths:
             return ()
-        self.simulated = ()
-        health = flow_health(state)
-        builders = tuple(self._builders(state, changes, health))
+        if reindexed:
+            self._reset_simulation()
+        health = flow_health(state) if reindexed else self.health
+        builders = tuple(self._builders(state, paths, health))
         self.snapshot = state.snapshot
+        self.spec_key = state.spec_key
         self.health = health
         published = await self._publish(builders)
-        self._simulate(state.snapshot.tree_hash)
+        if reindexed:
+            self._simulate(state.spec_key)
         return published
 
-    async def apply_simulation(self, tree_hash: str, diagnostics: Sequence[Diagnostic]) -> tuple[SpecEvent, ...]:
-        if tree_hash != self.snapshot.tree_hash:
+    async def apply_simulation(self, spec_key: str, diagnostics: Sequence[Diagnostic]) -> tuple[SpecEvent, ...]:
+        if spec_key != self.spec_key:
             return ()
         self.simulated = tuple(diagnostics)
         state = await self.workspace.state()
         health = flow_health(state, self.simulated)
         changed = tuple(flow_id for flow_id, current in sorted(health.items()) if self.health.get(flow_id) != current)
         self.health = health
-        builders = tuple(_diagnostics_builder(self.clock, tree_hash, flow_id, health[flow_id]) for flow_id in changed)
+        tree = self.snapshot.tree_hash
+        builders = tuple(_diagnostics_builder(self.clock, tree, flow_id, health[flow_id]) for flow_id in changed)
         return await self._publish(builders)
 
     async def announce(self, notice: ResearchNotice) -> tuple[SpecEvent, ...]:
@@ -250,13 +270,25 @@ class SpecEventHub:
             self.simulation.cancel()
         await self._notify()
 
-    def _hold_simulation(self) -> bool:
-        return self.simulation is not None and self.simulation.cancel()
+    def _pause_simulation(self) -> None:
+        self.simulation_paused = self.simulation is not None and self.simulation.cancel()
 
-    def _simulate(self, tree_hash: str) -> None:
+    def _resume_simulation(self) -> None:
+        paused = self.simulation_paused
+        self.simulation_paused = False
+        if paused:
+            self._simulate(self.spec_key)
+
+    def _reset_simulation(self) -> None:
+        self.simulated = ()
+        self.simulation_paused = False
+        if self.simulation is not None:
+            self.simulation.cancel()
+
+    def _simulate(self, spec_key: str) -> None:
         if self.simulation is None or self.closed:
             return
-        self.simulation.schedule(self, tree_hash)
+        self.simulation.schedule(self, spec_key)
 
     async def follow(self, after_seq: int) -> AsyncIterator[SpecEvent]:
         cursor = after_seq
@@ -281,13 +313,14 @@ class SpecEventHub:
     def _builders(
         self,
         state: WorkspaceState,
-        changes: tuple[FileChange, ...],
+        paths: tuple[str, ...],
         health: Mapping[str, FlowHealth],
     ) -> Iterator[Callable[[int], SpecEvent]]:
         tree = state.snapshot.tree_hash
-        if len(changes) > GIT_BATCH_LIMIT:
+        if len(paths) > GIT_BATCH_LIMIT:
             yield lambda seq: SpecResync(seq=seq, at=self.clock(), tree_hash=tree, reason="git_batch")
             return
+        changes = tuple(file_change(path, self.snapshot, state.snapshot) for path in paths)
         yield lambda seq: FilesChanged(
             seq=seq,
             at=self.clock(),
@@ -298,7 +331,7 @@ class SpecEventHub:
             ops=None,
             summary=change_summary(changes),
         )
-        for touch in experiment_touches(self.snapshot, state.snapshot, [change.path for change in changes]):
+        for touch in experiment_touches(self.snapshot, state.snapshot, paths):
             yield _experiment_builder(self.clock, tree, touch)
         for flow_id, current in sorted(health.items()):
             if self.health.get(flow_id) != current:
@@ -357,11 +390,11 @@ class ProjectChangeFilter(DefaultFilter):
     def __init__(self, root: Path) -> None:
         super().__init__()
         self.root = root.resolve()
+        self.prefix = f"{self.root}{os.sep}"
 
     def __call__(self, change: Change, path: str) -> bool:
-        candidate = Path(path)
-        relative = candidate.relative_to(self.root) if candidate.is_relative_to(self.root) else candidate
-        if any(part.startswith(".") for part in relative.parts):
+        relative = path.removeprefix(self.prefix)
+        if any(skipped_part(part) for part in relative.split(os.sep) if part):
             return False
         return super().__call__(change, path)
 
@@ -373,23 +406,63 @@ async def refresh_guarded(hub: SpecEventHub) -> None:
         WATCH_LOGGER.exception("project watcher could not refresh the workspace; it keeps watching")
 
 
-async def next_batch(changes: AsyncIterator[ChangeBatch]) -> ChangeBatch | None:
-    return await anext(changes, None)
+@dataclass(frozen=True, slots=True)
+class BurstPolicy:
+    paths: int = BURST_PATHS
+    quiet_seconds: float = BURST_QUIET_SECONDS
+    longest_seconds: float = BURST_LONGEST_SECONDS
+
+
+DEFAULT_BURST: Final = BurstPolicy()
+
+
+async def pump(changes: AsyncIterator[ChangeBatch], batches: BatchQueue) -> None:
+    try:
+        async for batch in changes:
+            batches.put_nowait(batch)
+    finally:
+        batches.put_nowait(None)
+
+
+async def settle(batches: BatchQueue, first: ChangeBatch, policy: BurstPolicy) -> bool:
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + policy.longest_seconds
+    paths = len(first)
+    while paths >= policy.paths and (left := deadline - loop.time()) > 0:
+        try:
+            batch = await asyncio.wait_for(batches.get(), min(policy.quiet_seconds, left))
+        except TimeoutError:
+            return False
+        if batch is None:
+            return True
+        paths += len(batch)
+    return False
+
+
+async def consume(hub: SpecEventHub, batches: BatchQueue, policy: BurstPolicy) -> None:
+    while (batch := await batches.get()) is not None:
+        ended = await settle(batches, batch, policy)
+        await refresh_guarded(hub)
+        if ended:
+            return
 
 
 async def watch_project(
-    hub: SpecEventHub, root: Path, stop: asyncio.Event, debounce_ms: int = DEFAULT_DEBOUNCE_MS, simulate: bool = True
+    hub: SpecEventHub,
+    root: Path,
+    stop: asyncio.Event,
+    debounce_ms: int = DEFAULT_DEBOUNCE_MS,
+    simulate: bool = True,
+    burst: BurstPolicy = DEFAULT_BURST,
 ) -> None:
     if simulate and hub.simulation is None:
         hub.simulation = SimulationFeed(SubprocessSimulation(root))
     changes = AWATCH(root, watch_filter=ProjectChangeFilter(root), debounce=debounce_ms, stop_event=stop)
+    batches: BatchQueue = asyncio.Queue()
     async with asyncio.TaskGroup() as group:
-        first_batch = group.create_task(next_batch(changes), eager_start=True)
+        group.create_task(pump(changes, batches), eager_start=True)
         await refresh_guarded(hub)
-    batch = first_batch.result()
-    while batch is not None:
-        await refresh_guarded(hub)
-        batch = await next_batch(changes)
+        await consume(hub, batches, burst)
 
 
 async def supervise_watcher(

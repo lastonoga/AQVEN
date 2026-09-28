@@ -70,10 +70,14 @@ def wait_plan(query: RunListQuery, now: datetime) -> WaitPlan | None:
     return WaitPlan(wanted=wait_filter(query, now), restricts=restricts)
 
 
-def mode_matches(mode: RunMode, wanted: RunMode | None) -> bool:
-    if wanted is None:
+def hides_experiments(query: RunListQuery) -> bool:
+    return query.mode is None and query.series_id is None
+
+
+def mode_matches(mode: RunMode, query: RunListQuery) -> bool:
+    if hides_experiments(query):
         return mode != HIDDEN_MODE
-    return mode == wanted
+    return query.mode is None or mode == query.mode
 
 
 def matches(row: RunSummary, query: RunListQuery) -> bool:
@@ -81,7 +85,8 @@ def matches(row: RunSummary, query: RunListQuery) -> bool:
     checks = (
         query.flow_id is None or row.flow_id == query.flow_id,
         query.status is None or row.status == query.status,
-        mode_matches(row.mode, query.mode),
+        mode_matches(row.mode, query),
+        query.series_id is None or row.series_id == query.series_id,
         query.parent_run_id is None or (lineage is not None and lineage.parent_run_id == query.parent_run_id),
         query.since is None or row.started_at >= query.since,
         query.until is None or row.started_at <= query.until,
