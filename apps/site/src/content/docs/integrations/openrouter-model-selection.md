@@ -19,8 +19,8 @@ memory: AQVEN keeps no table of what each model can read or produce.
    first, with prices in USD per million tokens:
 
    ```bash
-   curl -s 'https://openrouter.ai/api/v1/models?input_modalities=audio&supported_parameters=structured_outputs' \
-     | jq -r '.data[] | [.id, (.pricing.prompt | tonumber * 1000000), (.pricing.completion | tonumber * 1000000), .context_length] | @tsv' \
+   curl -s -o models.json 'https://openrouter.ai/api/v1/models?input_modalities=audio&supported_parameters=structured_outputs'
+   jq -r '.data[] | [.id, (.pricing.prompt | tonumber * 1000000), (.pricing.completion | tonumber * 1000000), .context_length] | @tsv' models.json \
      | sort -t$'\t' -k2 -g
    ```
 
@@ -43,8 +43,8 @@ memory: AQVEN keeps no table of what each model can read or produce.
    here, not from the model entry:
 
    ```bash
-   curl -s https://openrouter.ai/api/v1/models/google/gemini-2.5-flash-lite/endpoints \
-     | jq -r '.data.endpoints[] | [.tag, .provider_name, .quantization, .max_completion_tokens, .uptime_last_30m] | @tsv'
+   curl -s -o endpoints.json https://openrouter.ai/api/v1/models/google/gemini-2.5-flash-lite/endpoints
+   jq -r '.data.endpoints[] | [.tag, .provider_name, .quantization, .max_completion_tokens, .uptime_last_30m] | @tsv' endpoints.json
    ```
 
    | Field of an endpoint | What it tells you |

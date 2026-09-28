@@ -7,10 +7,13 @@ import { Hero1 } from "@/components/hero1";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
 import {
-  SituationSections,
+  ComparisonAtGlance,
+  Sources,
+  UseTogether,
   WhoDoesWhat,
-  useCasesIndexVisual,
-} from "@/components/landing/use-cases";
+  compareHeroVisual,
+} from "@/components/landing/compare";
+import { COMPARE_PATH } from "@/components/landing/compare-path";
 import {
   AUTH,
   FOOTER_COPYRIGHT,
@@ -23,16 +26,15 @@ import {
   QUICKSTART,
   REPO,
 } from "@/components/landing/site-nav";
-import { SITUATIONS, USE_CASES_PATH, situationHref } from "@/components/landing/situations";
 
-const TITLE = "What AQVEN is for: find, explain, compare, confirm, build";
+const TITLE = "AQVEN compared with tracing platforms, eval libraries and builders";
 const DESCRIPTION =
-  "Find, explain, compare, confirm, build: five situations from building multi-step AI workflows, and what you and your coding agent do about each in AQVEN.";
+  "Why AQVEN when you already have traces and evals: the questions about a multi-step LLM workflow a score doesn't answer, and who does which part of the work.";
 
 const release = await latestRelease;
 
 const siteUrl = new URL("/", Astro.site).href;
-const pageUrl = new URL(USE_CASES_PATH, siteUrl).href;
+const pageUrl = new URL(COMPARE_PATH, siteUrl).href;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -43,50 +45,41 @@ const jsonLd = {
   description: DESCRIPTION,
   inLanguage: "en",
   isPartOf: { "@type": "WebSite", "@id": `${siteUrl}#website`, name: "AQVEN", url: siteUrl },
-  mainEntity: {
-    "@type": "ItemList",
-    name: "What AQVEN is for",
-    numberOfItems: SITUATIONS.length,
-    itemListElement: SITUATIONS.map((situation, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: situation.title,
-      url: new URL(situationHref(situation.id), siteUrl).href,
-    })),
-  },
+  about: { "@type": "SoftwareApplication", "@id": `${siteUrl}#software`, name: "AQVEN" },
+};
+
+const startButtons = {
+  primary: { text: "Get started", url: QUICKSTART },
+  secondary: { text: "GitHub", url: REPO },
 };
 ---
 
 <!doctype html>
 <html lang="en" class="motion-safe:scroll-smooth">
   <head>
-    <SeoHead title={TITLE} description={DESCRIPTION} path={USE_CASES_PATH} jsonLd={jsonLd} />
+    <SeoHead title={TITLE} description={DESCRIPTION} path={COMPARE_PATH} jsonLd={jsonLd} />
   </head>
   <body>
     <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
 
     <main>
       <Hero1
-        badge={{ text: "Use cases" }}
-        heading="What AQVEN is for."
-        description="Five situations from building multi-step AI workflows, and what you and your coding agent do about each in AQVEN."
-        buttons={{
-          primary: { text: "Get started", url: QUICKSTART },
-          secondary: { text: "GitHub", url: REPO },
-        }}
-        visual={useCasesIndexVisual}
+        badge={{ text: "Compare" }}
+        heading="You have traces and evals. Why AQVEN?"
+        description="Tracing platforms show what an app did. Eval libraries score it. AQVEN is where your coding agent changes the workflow itself, runs the experiment on it, and brings back a verdict you can act on."
+        buttons={startButtons}
+        visual={compareHeroVisual}
       />
 
+      <ComparisonAtGlance />
       <WhoDoesWhat />
-      <SituationSections />
+      <UseTogether />
+      <Sources />
 
       <Cta10
         heading="Start with one question."
         description="Run a small experiment. Inspect the evidence. Decide what comes next."
-        buttons={{
-          primary: { text: "Get started", url: QUICKSTART },
-          secondary: { text: "GitHub", url: REPO },
-        }}
+        buttons={startButtons}
       />
     </main>
 

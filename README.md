@@ -4,7 +4,7 @@
 
 ### Discover what your AI workflow needs to work reliably.
 
-A Python framework and a local Studio for AI workflows.<br>
+AQVEN is a Python framework and a local Studio for building reliable LLM workflows: multi-step pipelines of models, tools and human review.<br>
 Your coding agent runs the experiments. You see the evidence and decide.
 
 [![PyPI](https://img.shields.io/pypi/v/aqven)](https://pypi.org/project/aqven/)
@@ -25,8 +25,8 @@ Your coding agent runs the experiments. You see the evidence and decide.
 AQVEN keeps an AI workflow as typed files in your repository: a flow, one file per step, prompts in
 Markdown, and declared types, agents and tools. `aqven check` validates every connection and simulates
 every flow before you spend a token. Studio, a local browser app in the same install, shows each run
-step by step. Your coding agent works on the same files through AQVEN's MCP server, and runs experiments
-whose verdicts AQVEN computes.
+step by step. Your coding agent (Claude Code, Codex or any MCP client) works on the same files through AQVEN's
+MCP server, and runs experiments whose verdicts AQVEN computes.
 
 > [!NOTE]
 > AQVEN is in alpha: expect changes between releases. It is source-available, not open source. See
@@ -42,6 +42,7 @@ whose verdicts AQVEN computes.
 - [What's inside](#whats-inside)
 - [When AQVEN is not the right tool](#when-aqven-is-not-the-right-tool)
 - [Built on](#built-on)
+- [FAQ](#faq)
 - [Support and feedback](#support-and-feedback)
 - [License](#license)
 
@@ -99,6 +100,8 @@ uv run aqven dev my_project
 
 For Codex, Cursor or another MCP client, see
 [How to set up a coding agent outside Studio](https://aqvenstudio.com/mcp-cli/set-up-an-agent-outside-studio/).
+`aqven new` already puts AQVEN's skills into the project; to have them in Claude Code everywhere, install
+them as a plugin: `/plugin marketplace add lastonoga/AQVEN`, then `/plugin install aqven@aqven`.
 
 ## Start by hand
 
@@ -254,6 +257,9 @@ guarantee about every future output.
 | Yours if the vendor disappears | Yes | No | Yes |
 | Adds to the app you already have | Yes | No | No: the workflow moves into AQVEN files |
 
+Tracing tools means products such as Langfuse, LangSmith and Arize Phoenix. Visual builders means products
+such as n8n, Dify and Flowise.
+
 ## Built on
 
 [Pydantic AI](https://ai.pydantic.dev/) calls the models, [DBOS](https://www.dbos.dev/) checkpoints
@@ -261,6 +267,42 @@ every run on SQLite, the official [MCP Python SDK](https://github.com/modelconte
 serves and consumes MCP, [FastAPI](https://fastapi.tiangolo.com/) serves Studio and the API, and
 [python-liquid](https://jg-rp.github.io/liquid/) renders prompt templates.
 → [What this is built on](https://aqvenstudio.com/concepts/what-this-is-built-on/)
+
+## FAQ
+
+**What is AQVEN?** A Python framework and a local Studio for building reliable LLM workflows. A workflow is
+a set of typed files in your repository: a flow, one file per step, prompts in Markdown, and declared
+types, agents and tools. AQVEN checks the files before a run, runs the flow with checkpoints, and runs
+experiments on cases to tell you whether a change helped.
+
+**Is AQVEN open source?** No. It is source-available under the AQVEN License 1.0.0, which is based on the
+PolyForm Shield License 1.0.0. You may use it for any purpose, including production and commercial
+products, and the workflows you build are yours to sell. You may not use it to provide a product that
+competes with AQVEN, and you may redistribute AQVEN itself only free of charge and for a non-commercial
+purpose. See [License](#license).
+
+**Which Python version does it need?** Python 3.14. uv fetches it for you.
+
+**Which coding agents does it work with?** Claude Code and Codex, from Studio's chat or from your own
+terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.
+
+**Which model providers can I use?** The provider catalog has 28 entries through Pydantic AI, from OpenAI,
+Anthropic and Google to OpenRouter, Mistral, DeepSeek, Groq and Ollama.
+
+**Do I need an account or a hosted service?** No. AQVEN runs on your machine. `aqven check` needs neither a
+model key nor the network; a real run needs a key for the provider you choose.
+
+**What does `aqven check` do?** It validates every file, type reference, binding and prompt, then simulates
+a run of every flow with stand-ins for the model calls, so most wiring mistakes surface before a run costs
+a token.
+
+**Does a "confirmed" verdict guarantee quality?** No. A verdict holds for the cases, checks and versions it
+measured. It is evidence for a decision, not a guarantee about every future output.
+
+**How is AQVEN different from an eval library?** Eval libraries typically score the outputs of an app you
+already have. AQVEN also holds the workflow itself as typed files that are checked before they run, and its
+experiments write the question down before any data and give a verdict on held-out cases that is allowed
+to say "inconclusive". If you only need to score an existing app, an eval library is the lighter choice.
 
 ## Support and feedback
 
