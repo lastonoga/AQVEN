@@ -33,7 +33,7 @@ Then report FINDINGS.md, the decisions you made and the risks that are left.
 | 2. Simplest flow | one `llm` step per real decision, `code` for the rest; `{{CLI_COMMAND}} check` is clean; `{{CLI_COMMAND}} prompt preview` is read for every `llm` node |
 | 3. Cases | a dataset with `expected_output` and tags exists; `{{CLI_COMMAND}} check` is clean |
 | 4. Explore | a `look` experiment with deterministic checks ran on working cases, and every failing case is read (`include_cases: true`) |
-| 5. Error analysis | you have read and noted the first traces; every failure has its first failing node and a failure mode you agreed; new failing traces stop adding modes |
+| 5. Error analysis | the first traces are read and noted, by you or, if you decline, by the agent; every failure has its first failing node and a failure mode you agreed; new failing traces stop adding modes |
 | 6. Fix the spec | what the prompt never asked for is fixed in the prompt or the type, then stage 4 again |
 | 7. Hypotheses | one experiment per remaining failure mode, written before any number |
 | 8. Explore | series on working cases, one change between series, until the change is done and the question is fixed |
@@ -50,11 +50,13 @@ Studio.
   error and its `run_id`; `run_get` and `run_events` show the first node that failed. Fix the first
   failure upstream, because later ones often cascade from it. In a multi-step flow, count failures by the
   last node that succeeded and the first that failed, and start with the biggest count.
-- **You read the first traces, not the agent.** After the first look, the agent hands you the failing
+- **The agent offers you the first traces.** After the first look, the agent offers you the failing
   runs first, then a few passing ones: about 30 traces in total, or all of them if there are fewer. Each
   comes with its `run_id` and where to open it in Studio. You write one short note per trace about the
   first thing that went wrong, or "fine". The agent prepares and you judge: it may attach the first
-  failing node of each failure, but what went wrong is your note.
+  failing node of each failure, but what went wrong is your note. If you decline, the agent records that
+  in the look experiment's `experiment.md`, reads the traces itself and writes the notes, and you confirm
+  the failure modes it draws from them.
 - **The agent groups your notes into failure modes**: an id, a one-line definition, a count, and two or
   three `run_id`s. It shows you the list, and writes it under "Failure modes" in the look experiment's
   `experiment.md` only after you agree. The id becomes the `failure_mode` of every experiment that tests
@@ -69,12 +71,30 @@ Studio.
   a hypothesis.
 - **Rank the modes by count, then by harm.** Never start from a generic list ("hallucination",
   "toxicity") before you have read traces.
+- **Audit the labels before you blame the models.** When every variant fails the same cases, open each
+  input next to its label: a call whose labelled intent the caller never states fails every model. Count
+  the labels you would dispute and hand them to whoever owns the truth before any new experiment.
 
 A real one: in a series over the showcase's support cases, `gemini-2.5-flash-lite` on the `triage` step
 broke the 200-character limit of an observation three times in a row. That was its first answer and both
 retries, so the run ended `MODEL_RETRIES_EXHAUSTED`. The engine refused the invalid output, as designed,
 and the series counted a failure. The failure mode is "triage breaks its output contract". It is a
 prompt fix if the prompt never states the limit, and a hypothesis about the agent if it does.
+
+## Test combinations on outputs you already paid for
+
+Before you build a panel of models or a multi-stage pipeline, estimate what it can gain from outputs you
+already have:
+
+- **A rule over outputs**, such as the union or a majority vote of several variants, or a merge written in
+  code: a test with `pytest_run` over outputs read with `run_get_node`.
+- **The ceiling of a downstream stage**: a range experiment on that stage alone, with the upstream truth in
+  each case's `node_outputs`. It shows how well the stage does when everything above it is right.
+- **Its realistic value**: the same stage on the outputs the upstream stage really produced.
+
+These numbers are hypotheses. Only a variant that runs the combination confirms one: a vote estimated from
+variants that ran separately often promises more than the combined step delivers. A ceiling far below what
+you need rules the pipeline out before you pay for it.
 
 ## From failure mode to experiment
 
@@ -128,8 +148,9 @@ The showcase project's experiments are worked examples of several rows:
   is plausible.
 - **Tag every case with its dimensions, and add negative controls**: cases where the failure must not
   happen. Without them, a `refuted` means nothing, and a check that fires on everything goes unnoticed.
-- **Mind the split.** The server splits cases 50/50 between working and held-out by a hash of `name`, so
-  write twice as many as a held-out series needs. Never rename a case.
+- **Mind the split.** The server splits cases 50/50 between working and held-out by a hash of the
+  package, the dataset id and the case `name`, so write twice as many as a held-out series needs. Never
+  rename a case or move it to another dataset.
 - **Use the cheapest check that works.** A series metric first, then a built-in `use:`, then your own
   `run:` function, and a judge only when nothing else can check it. Keep checks binary. A judge counts as
   evidence only with `validated_by`.
@@ -206,6 +227,9 @@ Some rules above are discipline, not enforcement:
 - **Stale findings.** Nothing marks a finding stale when the flow changes. The hashes in the file tell
   what it measured.
 - **Promoting a variant.** No tool moves a winning value into the flow: the agent does it with `flow_patch`.
+- **Reading many outputs.** No tool exports the outputs of every attempt of a series at once: `run_get_node`
+  reads one node of one run. When a question needs hundreds of reads, the agent says so instead of reading
+  the engine's files.
 
 ## See also
 

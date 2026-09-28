@@ -188,3 +188,47 @@ def test_innocent_words_pass_the_owner_domain_guard(tmp_path: Path) -> None:
         "Facebook, prefaced, lookup and ladders are fine."
     )
     assert owner_domain_found(tmp_path, sentence) == []
+
+
+def test_words_of_other_domains_are_reported(tmp_path: Path) -> None:
+    sentence = (
+        "Medical diagnosis and diagnoses for a patient: skincare, clinical notes, symptoms, diseases, dermatology."
+    )
+    assert owner_domain_found(tmp_path, sentence) == [
+        "building-flows/SKILL.md:11: owner-project word 'dermatology', 'Medical', 'diagnosis', 'skincare', 'patient', "
+        "'clinical', 'symptoms', 'diseases'"
+    ]
+
+
+def test_more_words_of_other_domains_are_reported(tmp_path: Path) -> None:
+    sentence = "No lesion, rash, acne, rosacea, anamnesis, doctor, clinic or healthcare examples."
+    assert owner_domain_found(tmp_path, sentence) == [
+        "building-flows/SKILL.md:11: owner-project word 'clinic', 'lesion', 'rash', 'acne', 'rosacea', 'anamnesis', "
+        "'doctor', 'healthcare'"
+    ]
+
+
+def test_a_word_that_two_patterns_match_is_reported_once(tmp_path: Path) -> None:
+    assert owner_domain_found(tmp_path, "Dermatology and skin.") == [
+        "building-flows/SKILL.md:11: owner-project word 'skin', 'Dermatology'"
+    ]
+
+
+def test_words_that_only_contain_a_guarded_word_pass(tmp_path: Path) -> None:
+    sentence = (
+        "Diagnostic codes and diagnostics, clinically tested, a biomedical term, crashes, a patiently waiting agent."
+    )
+    assert owner_domain_found(tmp_path, sentence) == []
+
+
+def test_project_templates_are_guarded(tmp_path: Path) -> None:
+    root = plugin(tmp_path, {"building-flows": skill_text("building-flows")})
+    templates = root / "project"
+    (templates / "dot-claude").mkdir(parents=True)
+    (templates / "AGENTS.md.tmpl").write_text("# Rules\n\nCompare two arms of one patient flow.\n", encoding="utf-8")
+    (templates / "dot-claude" / "settings.json.tmpl").write_text('{"skincare": true}\n', encoding="utf-8")
+    assert problems(load_tree(root, tmp_path / "absent.py")) == [
+        "project/AGENTS.md.tmpl:3: forbidden 'arms'",
+        "project/AGENTS.md.tmpl:3: owner-project word 'patient'",
+        "project/dot-claude/settings.json.tmpl:1: owner-project word 'skincare'",
+    ]

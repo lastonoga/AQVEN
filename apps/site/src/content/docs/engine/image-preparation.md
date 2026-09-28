@@ -11,8 +11,8 @@ side or cropped to the wrong place gives a confident answer about the wrong pict
 
 The same rules hold for scanned documents: a PDF can go as a `Document` when the provider reads it natively,
 and when the model needs a small detail, such as the line items of an invoice, render the pages to images and
-crop them like photos. For audio and video the idea is the same with time instead of pixels: keep the original
-file, cut segments at boundaries you can check, and render video frames onto a contact sheet before a series.
+crop them like photos. PDFs, recordings, video clips, long text and tables have their own page:
+[How to prepare audio, video, documents and text for a flow](/engine/preparing-audio-video-documents-and-text/).
 
 ## What AQVEN does with an image
 
@@ -205,6 +205,8 @@ uses.
 
 ## See also
 
+- [How to prepare audio, video, documents and text for a flow](/engine/preparing-audio-video-documents-and-text/) —
+  the same preparation for every input that is not an image.
 - [Media has real limits on both sides of a model call](/concepts/media-has-real-limits-on-both-sides/) — what each
   provider does with a large image, video or audio file.
 - [How to write a prompt](/engine/prompts/) — how an attached image is referred to in the prompt text.

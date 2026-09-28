@@ -139,8 +139,8 @@ shape the next section describes generically.
 
 ## How this shapes what you do
 
-Three rules generalize past every example above; the tactics below are how they play out for image,
-video and audio specifically, not the rules themselves.
+Three rules generalize past every example above; the tactics below are how they play out for images,
+video, audio, documents and tables specifically, not the rules themselves.
 
 1. **Before you wire any modality into a call, find its real current ceiling** for that specific
    provider and model, in the direction you're using it — input or output — rather than assuming a
@@ -179,6 +179,19 @@ What that looks like for the modalities this page actually researched:
 - **Video and audio input (rule 2):** trim to the moment that matters rather than relying on a
   provider's sampling to find it. A model sampling three hours of video at low resolution to answer a
   question about ten seconds of it is both slower and less accurate than a `tool` node that clips first.
+- **Documents and long text (rule 2):** the ceiling is the model's context window, and crossing it has the
+  same two outcomes. The provider rejects the request, or shortens the prompt without an error: OpenRouter
+  compresses the middle of the prompt on endpoints whose context is 8,192 tokens or less. AQVEN does not
+  compare a prompt's length with the context window, so count before the call — pages and whether they carry
+  a text layer for a PDF, characters and an estimate of tokens for text. When a document does not fit, or the
+  answer depends on every part of it, split it by its structure (sections, pages, speaker turns), run the step
+  once per chunk with a `map` node, and carry into each chunk what its text refers to,
+  such as the definitions of a contract. A scanned PDF is a stack of images: small print there is the image
+  case above.
+- **Tables (rule 2):** a table reaches the model as text or as a `Document` file, so its ceiling is the
+  context window too. Send the rows the question needs, not the whole file, with the header row in every
+  piece. When each row is a question of its own — a transaction to classify, a sensor reading to judge — make
+  the row the case, so a wrong answer points at one row.
 - **Video generation past a duration cap (rule 3):** if a case genuinely needs a five-minute video from
   a model capped at fifteen or thirty seconds per call, the flow becomes several nodes, and which node
   kind ties them together depends on how the segments relate to each other. A later segment that depends
@@ -208,6 +221,8 @@ What that looks like for the modalities this page actually researched:
 - Field constraints — what AQVEN's type system does enforce on other field kinds
 - The `llm` node — where a media field reaches a model, and where image generation
   is just another `out` field
+- [How to prepare audio, video, documents and text for a flow](../engine/preparing-audio-video-documents-and-text.md)
+  — inspecting, cutting and chunking every input that is not an image, step by step
 - How to give an agent a tool — where a resize, trim, tile or transcode step
   actually belongs, `ToolContext.blobs` included, and where generation past what `llm` supports directly
   lives, `wait` included
