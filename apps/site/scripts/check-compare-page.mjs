@@ -10,23 +10,23 @@ const SITE = "https://aqvenstudio.com";
 
 const requiredMarkers = [
   "You have traces and evals. Why AQVEN?",
-  "The questions a score doesn",
-  "With a tracing platform",
-  "With an eval library",
-  "With AQVEN",
-  "What am I missing?",
-  "Why did this fail?",
-  "What should I change?",
-  "Can I trust this change?",
-  "Will the next session know what this one learned?",
-  "How do I keep it readable as it grows?",
+  "What each tool gives you.",
+  "Langfuse",
+  "LangSmith",
+  "Arize Phoenix",
+  "promptfoo",
+  "DeepEval",
+  "n8n",
+  "LangGraph",
+  "Tells you whether a difference is real",
+  "Confirms a change on held-out cases",
+  "Checked against each product",
   "Your agent does the work. You decide. AQVEN runs and records it.",
-  "If you build with a visual builder or a framework.",
   "Use them together.",
   "When AQVEN is not the right tool",
   "checked on 28 September 2026",
   `<link rel="canonical" href="${SITE}/compare/">`,
-];
+]
 
 const lowerPage = page.toLowerCase();
 

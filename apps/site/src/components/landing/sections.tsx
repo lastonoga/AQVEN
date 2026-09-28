@@ -31,6 +31,7 @@ import {
 } from "@/components/landing/situations";
 import { REPO } from "@/components/landing/site-nav";
 import { COMPARE_PATH } from "@/components/landing/compare-path";
+import { CompareMatrix, LANDING_FEATURES, LANDING_PRODUCTS, MatrixLegend } from "@/components/landing/compare-matrix";
 
 const TRUST: readonly string[] = [
   "Alpha",
@@ -63,29 +64,6 @@ const GUARDS: readonly Guard[] = [
     heading: "See what each step costs.",
     body: "Dollar cost and latency for every step of every run. A call nothing can price counts as unknown, not as free.",
     visual: <CostLatencySchematic />,
-  },
-];
-
-type Alternative = { readonly kind: string; readonly examples: string; readonly them: string; readonly aqven: string };
-
-const ALTERNATIVES: readonly Alternative[] = [
-  {
-    kind: "Tracing platforms",
-    examples: "Langfuse, LangSmith, Arize Phoenix",
-    them: "Show what an app you already run did, call by call.",
-    aqven: "In AQVEN your coding agent changes the workflow itself and runs the experiment on it.",
-  },
-  {
-    kind: "Eval libraries",
-    examples: "promptfoo, DeepEval, Ragas",
-    them: "Score the cases you wrote, in a report or in CI.",
-    aqven: "In AQVEN a change is confirmed on held-out cases, and the verdict can say inconclusive.",
-  },
-  {
-    kind: "Visual builders",
-    examples: "n8n, Dify",
-    them: "Keep the workflow in their platform, assembled in an editor.",
-    aqven: "In AQVEN it is typed files in your repo, checked before a run costs a token.",
   },
 ];
 
@@ -293,25 +271,21 @@ export const ResearchLoop = () => (
 export const Comparison = () => (
   <Section className="bg-background-subtle">
     <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-      <SectionHeading badge="Compared with what you use">Traces show what happened. Evals score it. AQVEN finds what to change.</SectionHeading>
+      <SectionHeading badge="Compared with what you use">Traces show. Evals score. AQVEN tells you what to change.</SectionHeading>
     </div>
-    <ul className="mx-auto mt-12 grid max-w-6xl gap-4 lg:grid-cols-3">
-      {ALTERNATIVES.map((item) => (
-        <li key={item.kind} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium tracking-tight">{item.kind}</span>
-            <span className="text-xs text-muted-foreground">{item.examples}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{item.them}</p>
-          <p className="text-sm font-medium">{item.aqven}</p>
-        </li>
-      ))}
-    </ul>
-    <div className="mt-8 flex justify-center">
-      <a href={COMPARE_PATH} className="group inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4">
-        How AQVEN compares, question by question
-        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-      </a>
+    <div className="mx-auto mt-12 flex max-w-5xl flex-col gap-5">
+      <CompareMatrix
+        products={LANDING_PRODUCTS}
+        features={LANDING_FEATURES}
+        caption="AQVEN compared with Langfuse, LangSmith, promptfoo, DeepEval and n8n"
+      />
+      <MatrixLegend />
+      <div className="flex justify-center">
+        <a href={COMPARE_PATH} className="group inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4">
+          See the full comparison
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </a>
+      </div>
     </div>
   </Section>
 );
