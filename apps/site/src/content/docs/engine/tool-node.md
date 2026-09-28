@@ -7,8 +7,10 @@ description: Add a tool node that runs a piece of code you wrote, with a typed c
 
 Use a `tool` node whenever a step needs to reach outside the flow itself: call an internal API, hit a
 paid service, write to an external system, or start a job that takes longer than one request and wait
-for it to finish. A `code` node's function is always synchronous plain Python; the moment a step needs
-`async`, a network call, or a wait, it's a `tool` node instead.
+for it to finish. The same goes for any work on the bytes of a media field: OCR of a scan, speech-to-text
+of a call, splitting a PDF into pages, cutting a clip, generating audio or video. A `code` node's function
+is always synchronous plain Python; the moment a step needs `async`, a network call, a wait or media
+bytes, it's a `tool` node instead.
 
 ## Steps
 
@@ -166,6 +168,38 @@ defines this small helper once and reuses it everywhere a tool returns media. Th
 `ctx.blobs.get(media)`, reads an existing field's real bytes back out — that's the one a resize, trim or
 tile step calls first, before doing anything to the content itself.
 
+## A tool node or an agent's tools
+
+A `tool` node runs every time the flow reaches it, with the inputs its bindings give it, and its typed output
+feeds the next node: pick it when the step always happens. Put a tool in an agent's own `tools` list, or a whole
+server in its `mcp_servers`, only when the model has to decide whether to call it, how often and with what
+arguments — looking up an order it found in a ticket, searching a knowledge base until it has an answer.
+
+An agent that calls tools needs two more things in its file. `limits.tool_calls` caps how many tools the model
+may call in one step; past the cap the step fails with `budget_exceeded` instead of looping. `approval` names
+the tools a person must approve before they run — every tool that writes or pays — with an `assignee`, a
+`timeout_seconds` and an `on_timeout` of `fail` or `escalate`. `default` is refused here: silence never approves
+a tool call. The showcase's `resolver` agent does both:
+
+```yaml
+tools:
+- "lookup_order"
+- "issue_store_credit"
+- "find_tickets"
+approval:
+  tools:
+  - "issue_store_credit"
+  assignee: "support_lead"
+  timeout_seconds: 3600
+  on_timeout:
+    policy: "fail"
+limits:
+  requests: 12
+  tool_calls: 10
+  tokens: 60000
+  usd_micros: 80000
+```
+
 ## Under the hood
 
 An `mcp`-sourced tool runs through [Pydantic AI](/concepts/what-this-is-built-on/)'s own tool-calling
@@ -187,3 +221,5 @@ touches that path at all; it's a plain function call.
 - [Node specifications](/reference/nodes/) — every field on `ToolNodeSpec`, generated from the code.
 - [Tool specification](/reference/tools/) — every field on `ToolSpec`, including `wait` and
   `idempotency_key`.
+- [Agent specification](/reference/agents/) — every field on `AgentSpec`, including `tools`, `mcp_servers`,
+  `approval` and `limits`.

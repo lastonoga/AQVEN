@@ -86,6 +86,7 @@ export default defineConfig({
                 { slug: "engine/dynamic-shape" },
                 { slug: "engine/display-templates" },
                 { slug: "engine/image-preparation" },
+                { slug: "engine/preparing-audio-video-documents-and-text" },
               ],
             },
             {

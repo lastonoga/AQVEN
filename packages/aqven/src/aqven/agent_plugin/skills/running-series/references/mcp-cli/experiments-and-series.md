@@ -23,8 +23,9 @@ flow is the order to use them in, round after round.
 
 ## Steps
 
-- **Write the experiment first, then run `aqven_check`.** There is no tool that creates an experiment:
-  it is a file, and you write it like any other (How to write an experiment).
+- **Write the experiment first, then run `aqven_check`.** There is no MCP tool that creates an experiment:
+  it is a file, and you write it like any other, one file at a time, or a person starts it with **New
+  experiment** in Studio (How to write an experiment).
   Give it a `failure_mode` and a falsifiable `description`, and one factor in `varies`: the variants set
   only its values. `aqven_check` validates the subject and its range, the factor and every variant's
   values (agents, prompt files, alternative nodes, flows), each variant assembled and compiled like a flow,
@@ -65,8 +66,12 @@ flow is the order to use them in, round after round.
 - **`include_cases: true`** adds per-case rows to `series_get`, but only for `dev` cases: failing cases
   first, at most 50, and the rest counted in `hidden_cases`. Held-out cases are never shown to the agent
   one by one, so a change can't be tuned to them. Each row gives every variant's tally and failed checks,
-  and each attempt its `outcome`, `error` and `run_id`: open that run with `run_get` and `run_events` to
-  find the first node that failed.
+  `divergent` when the variants split on it, and each attempt its `outcome`, `error` and `run_id`: open
+  that run with `run_get` and `run_events` to find the first node that failed. The rows grow with the
+  number of variants and attempts, so call `series_get` without `include_cases` first, read `aggregates`
+  (per variant: finished `attempts`, `infra_errors`, spend and metrics), and ask for the rows only when a
+  variant has failures. When your host saves an answer that is too large to a file, read only the keys you
+  need from that file.
 - **A failure counts, an infrastructure error doesn't.** An attempt whose model broke its output type
   even after its retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`, invalid JSON) is a counted
   failure, like a provider refusing the output type as too complex (`OUTPUT_SCHEMA_REJECTED`), a failed
@@ -81,9 +86,12 @@ flow is the order to use them in, round after round.
 
 ### `dev` to search, `holdout` to decide
 
-The server splits every dataset in half by a hash of the case `name`, the same way in every clone of the
-project. Iterate on `dev` as often as you need: a series on `dev` gives at most a `signal`, never a
-finding. Run `holdout` once, when the change is done and the question is fixed. A series on `holdout`
+The server splits every dataset in half by a hash of the package name, the dataset id and the case `name`,
+the same way in every clone of the project. A second dataset built from the same inputs, under another id,
+splits them anew, so an input you explored on in one dataset can land in the held-out half of the other:
+see The same population in both halves.
+Iterate on `dev` as often as you need: a series on `dev` gives at most a `signal`, never a finding. Run
+`holdout` once, when the change is done and the question is fixed. A series on `holdout`
 whose verdict is anything but `invalid` writes `experiments/<experiment_id>/findings/<series_id>.yaml`
 once and regenerates `FINDINGS.md` at the module root. Both are generated files, so don't edit them;
 `aqven check` reports an edited finding as `E_FINDING_TAMPERED` and a stale `FINDINGS.md` as
@@ -114,8 +122,8 @@ working (`dev`) cases, repeated twice, look at the launch plan `series_start` wo
 same question with `POST /api/experiments/reply_overpromise_risk/launch-plan` and the body
 `{"on": "dev", "cases": 2, "repeats": 2}`. The response below is real, trimmed, from AQVEN's example
 project `lumen` with no series history and no provider key, on a machine without network. The showcase
-template is the same project under your package name, and the salt of the split is the package name, so
-your count of working cases can differ by one or two:
+template is the same project under your package name, and the split hashes the package name with the
+dataset id and the case name, so your count of working cases can differ by one or two:
 
 ```json
 {

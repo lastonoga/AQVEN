@@ -16,6 +16,7 @@ Copy-ready project files for the common tasks — a flow, llm, code, map, parall
 - [A parallel with a join](#a-parallel-with-a-join)
 - [A switch and a call](#a-switch-and-a-call)
 - [A dataset with tags](#a-dataset-with-tags)
+  - [A canonical YAML writer for scripts](#a-canonical-yaml-writer-for-scripts)
 - [Experiments: one factor each](#experiments-one-factor-each)
 - [Reference paths](#reference-paths)
 - [Liquid in a prompt](#liquid-in-a-prompt)
@@ -419,7 +420,9 @@ The node binds inputs; the inference next to it declares their types, the output
 and the display. The photos are an `Image[]` input: every image goes to the model as its own attachment at the
 resolution you stored. `category` picks the text of the slot `category_guide`: `furniture.md` or
 `electronics.md` for those values, `general.md` for any other. The prompt renders the slot with
-`{{ variants.category_guide }}` and pulls a shared paragraph in with `{% include %}`.
+`{{ variants.category_guide }}` and pulls a shared paragraph in with `{% include %}`. An `Audio`, `Video` or
+`Document` input, or a list of one, binds the same way as `Image[]`. A media field reaches the model only as a
+top-level input of the inference: one inside a record is never attached.
 
 ```yaml title="flows/listing_review/nodes/match_photos/match_photos.node.yaml"
 apiVersion: "aqven/v1"
@@ -876,10 +879,15 @@ cases:
     decision: "fix"
 ```
 
+### A canonical YAML writer for scripts
+
 A dataset that comes from a table or a folder of files is built by a script in the project root, next to
 `pyproject.toml`, so it can be rebuilt with one command. This script wrote the file above, byte for byte. It uses
 `ruamel.yaml`, which every AQVEN project already has, and writes canonical YAML: block style, double-quoted
-strings, `null` for an empty optional input, no anchors.
+strings, `null` for an empty optional input, no anchors. Copy its writer — `styled`, `represent_null`,
+`CanonicalRepresenter`, `canonical_writer` and the protocols they use — into any script that writes project files
+(types, one agent per candidate model, datasets), and commit that script next to this one in `scripts/`, so the
+files are rebuilt, not edited by hand.
 
 ```python title="scripts/build_listing_cases.py"
 import sys

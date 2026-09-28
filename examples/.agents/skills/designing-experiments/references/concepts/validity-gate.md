@@ -1,6 +1,6 @@
 # The validity gate
 
-The questions an experiment has to pass before its first series — one factor, compared things as variants, ground truth and a negative control, the same population in both halves, synthetic cases that have their property, a reachable margin — and which of them the engine checks for you.
+The questions an experiment has to pass before its first series — one factor, compared things as variants, ground truth and a negative control, the same population in both halves, synthetic cases that have their property, the current best in the comparison, a reachable margin — and which of them the engine checks for you.
 
 ## Contents
 
@@ -10,6 +10,8 @@ The questions an experiment has to pass before its first series — one factor, 
 - [Ground truth and a negative control](#ground-truth-and-a-negative-control)
 - [The same population in both halves](#the-same-population-in-both-halves)
 - [A synthetic case that has its property](#a-synthetic-case-that-has-its-property)
+- [The current best in every comparison](#the-current-best-in-every-comparison)
+- [An intermediate output that carries enough](#an-intermediate-output-that-carries-enough)
 - [What the engine checks, and what it leaves to you](#what-the-engine-checks-and-what-it-leaves-to-you)
 - [An example](#an-example)
 - [How this shapes what you do](#how-this-shapes-what-you-do)
@@ -32,18 +34,20 @@ answers into the experiment's `experiment.md`, and don't start the series while 
 | 1 | Does the experiment answer the question the owner of the flow asked? | the question is restated in their words: "this experiment answers …; metric M means …", and they said yes |
 | 2 | Which stage of the flow does it measure, and what is "good" for that stage? | the main check measures that stage's job, such as recall for a step that must find everything, precision for a judge |
 | 3 | Is there exactly one factor? | `varies` names one kind (`agent`, `prompt`, `use` or `flow`) and its nodes; the compared things are variants and the measures are checks; `aqven check` reports no factor error |
-| 4 | Does anything else differ between the variants? | nothing: not the data, not the set of questions put to the model, not the preprocessing, not the population |
-| 5 | Does the subject follow the production path? | preprocessing, resolution, crops and the prompt are the production ones; the prompt preview of the subject matches production in everything but the factor |
-| 6 | What is the truth, and where is the negative control? | truth known by construction, such as a planted defect, or labels from the source; negative controls from the same population as the positives |
-| 7 | Does a synthetic case have the property it is labelled with? | it shows what the prompt defines, where the definition says; a person looked at every synthetic case |
+| 4 | Does anything else differ between the variants? | nothing: not the data, not the set of questions put to the model, not the preprocessing, not the population; a variant that adds or removes an input differs only by the block that renders it; a changed instruction in a prompt that reads another step's output is part of the factor and is listed |
+| 5 | Does the subject follow the production path? | the preprocessing is the production one (crops and resolution, audio segments, text chunks, OCR or transcription), the inputs are the ones production has, and the prompt asks for the measured behavior; the prompt preview of the subject matches production in everything but the factor, and for variants and local flows, which have no preview yet, a one-case smoke shows what each sent |
+| 6 | What is the truth, and where is the negative control? | truth known by construction, such as a planted defect, or labels from the source; negative controls from the same population as the positives; truth derived from a label of another property is named as a proxy, marked for sign-off, and scored with a split error metric |
+| 7 | Does a synthetic case have the property it is labelled with? | it shows what the prompt defines, where the definition says; a person looked at, listened to or read every synthetic case |
 | 8 | Is there one check per claim? | the property a claim is about comes from the case's tag; the unit of the metric is the unit of the claim; a missing field reads as unknown, not as absent |
-| 9 | What do trivial baselines score? | a constant answer, the majority class and "flag everything" are computed, and the threshold is above them |
+| 9 | What do trivial baselines score? | a constant answer, the majority class and "flag everything" are computed, for the metric of a stage or an intermediate output too, and the threshold is above them |
 | 10 | Is the margin within reach? | the launch plan's `mde` and `recommended` cases fit the cases you have, or the owner accepted a run below the recommendation |
 | 11 | Are the controls false by construction? | a control can't pass by a shortcut; a multi-call variant is compared with a variant of equal budget |
 | 12 | Were the new checks tried on outputs you already have? | their numbers look plausible; an exact 0.000 or an interval of zero width is treated as a bug first |
-| 13 | Do both halves come from one population, with the threshold fixed? | working and held-out cases come from the same dataset and tag filter, and nothing was added between Explore and Confirm; the threshold was set before the data and doesn't move |
+| 13 | Do both halves come from one population, with the threshold fixed? | working and held-out cases come from the same dataset and tag filter, and nothing was added between Explore and Confirm; the threshold was set before the data and doesn't move; numbers of two experiments are compared only when both select the same cases of one dataset |
 | 14 | Are the expected outcomes written? | Purpose, Falsifier and If confirmed are in `experiment.md` before the first number |
-| 15 | Is this the same question as before? | a changed question, metric or factor gets a new experiment id |
+| 15 | Is this the same question as before? | nothing changed after a series; a change to the question, metric, factor, variants, cases, plan or checks gets a new experiment id |
+| 16 | Is the current best in the comparison? | the configuration production runs now is a variant of the same series; no number comes from another series |
+| 17 | Does an intermediate output carry what the next step needs? | in a pilot on about 10 varied cases, each of its fields varies across the classes the next step has to tell apart |
 
 ## One factor, variants as rows
 
@@ -71,20 +75,45 @@ alarms on the controls, is an experiment of its own that selects those cases wit
 
 ## The same population in both halves
 
-The server splits one dataset into working and held-out halves by a hash of the case name, so both halves
-share a population, as long as nobody changes the dataset in between. Adding harder cases only before the
-held-out series makes the two halves measure different things. The held-out half then scores several
-points below the working half, and the gap says nothing about the flow. Add new kinds of cases, explore on them, and
-only then confirm.
+The server splits one dataset into working and held-out halves by a hash of the package name, the dataset
+id and the case name, so both halves share a population, as long as nobody changes the dataset in between.
+Adding harder cases only before the held-out series makes the two halves measure different things. The
+held-out half then scores several points below the working half, and the gap says nothing about the flow.
+Add new kinds of cases, explore on them, and only then confirm.
+
+The dataset id is part of the hash. A second dataset built from the same inputs, under another id, splits
+them anew: an input that sat in the working half of the first can land in the held-out half of the second.
+An input you have already explored on is spent for confirmation in every dataset that holds it. So compare
+the numbers of two experiments only when both select the same cases of one dataset, and build a derived
+dataset only when you have to.
 
 ## A synthetic case that has its property
 
 A synthetic case is valid only if it really has the property it is labelled with, in the form the prompt
 defines. A "blurry receipt" made by darkening the whole image is still sharp where the text is, and a
 model that answers "the text is readable" is right. A "contract with a missing clause" whose clause was only
-renamed still has the clause. Before you blame the model, look at the unchanged original, the place of the
-change, what it is judged against, and any seams the edit left. See
+renamed still has the clause. A "noisy call" whose noise was added only in the pauses is as clear as the
+original wherever someone speaks. Before you blame the model, look at, listen to or read the unchanged
+original, the place of the change, what it is judged against, and any seams the edit left. See
 Cases that can answer the question.
+
+## The current best in every comparison
+
+Two series of the same variant on the same cases still differ, because of sampling and provider routing;
+an A/A experiment measures by how much. A candidate compared with a number from an older series can look
+better or worse by that much alone. So every comparison carries the configuration production runs now as
+one of its variants, and the candidate is read against it in the same series, case by case: on which cases
+did it win, and on which did it lose. In the case rows, `divergent` marks the cases where the variants
+split. See How to read a series.
+
+## An intermediate output that carries enough
+
+When the step under test reads the output of an earlier step, that output has to carry what separates the
+answers the later step confuses. A call summary without speaker turns can't say who agreed to what. An
+invoice reading that gives amounts without the printed label next to them can't tell a total from a
+subtotal. Before a series, run the earlier step on about 10 varied cases and look at each field: a field
+with the same value on more than 8 of them carries almost nothing for the next step. See
+Answer, refusal and unknown for how to design those fields.
 
 ## What the engine checks, and what it leaves to you
 
@@ -142,6 +171,8 @@ stops bad support replies, as it reads when written before the first series:
     margin of 0.05 fixed.
 14. Purpose, Falsifier and If confirmed written below.
 15. New question, new id: critique_recall_by_agent.
+16. Current best: deepseek, the critic production runs now, is a variant of this series.
+17. No intermediate output: the critic reads the reply itself.
 ```
 
 ## How this shapes what you do
@@ -150,9 +181,10 @@ stops bad support replies, as it reads when written before the first series:
   first series.
 - Write every answer into the Validity section of `experiment.md`. A "no" stops the series.
 - Restate the question to the owner of the flow and get a yes. It is the cheapest line of the gate.
-- Once the gate passes, don't change the question, the metric or the factor under the same id.
-- Once the question is answered, set `archived: true` in `experiment.yaml`. The experiment moves to
-  Archived in Studio and keeps working as before.
+- Once the experiment has a series, change nothing in it: a new question, metric, factor, variant list,
+  case selection, plan or check gets a new id, and its `experiment.md` names the old id and its series.
+- Once the question is answered, set `archived: true` in `experiment.yaml`, the one edit allowed after a
+  series. The experiment moves to Archived in Studio and keeps working as before.
 
 ## See also
 

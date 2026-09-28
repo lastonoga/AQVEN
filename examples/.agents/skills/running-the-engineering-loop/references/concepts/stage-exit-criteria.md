@@ -27,11 +27,11 @@ stops on one of five conditions, and it stops to ask whenever a decision belongs
 
 | Stage | Done when | Not done just because |
 |---|---|---|
-| Contract | purpose, input, output, a measurable "done" (which check, which number), a budget per run and per series, and a latency are agreed; the models and providers are the ones the owner chose | the request sounds clear |
+| Contract | purpose, the input contract (the fields and input kinds that exist at run time, with typical sizes and lengths), output, a measurable "done" (which check, which number), a budget per run and per series, and a latency are agreed; dataset columns production lacks are not inputs; the models and providers are the ones the owner chose | the request sounds clear |
 | Simplest flow | one `llm` step per real decision, `code` for the rest; `aqven check` is clean; the prompt preview of every `llm` node is read in full; one run on a real input passed, and its output reads well in the run view | `aqven check` is clean |
 | Cases | a dataset with truth and tags exists; negative controls sit next to the positives; the count per compared tag value and half is known | the dataset file loads |
 | First look | a `look` over working cases ran with cheap deterministic checks, and every failing case row was read | the series finished |
-| Error analysis | the owner read the first traces and wrote notes; every failure has its first failing node and a failure mode the owner agreed to; new failing traces stop adding modes | the agent grouped the failures itself |
+| Error analysis | the owner was offered the first traces and wrote notes, or declined and confirmed the modes the agent wrote from them; every failure has its first failing node and a failure mode the owner agreed to; new failing traces stop adding modes | the agent grouped the failures itself |
 | Fix the specification | the failures the prompt never asked about are fixed in the prompt or the type, and the first look ran again | the prompt was edited |
 | Hypotheses | each remaining failure mode has an experiment written before any number, and it passed the validity gate | `experiment.yaml` passes `aqven check` |
 | Explore | series on working cases, one change between series, until the change is done and the question is frozen | a signal looks good |
@@ -63,12 +63,19 @@ job is the goal:
 |---|---|---|
 | divergent: extractors, candidate generators | nothing is missed | recall on labelled positives, completeness |
 | judge or filter | only right things pass | precision, agreement with labels |
+| intermediate output read by the next step | it carries what the next step needs to tell its candidates apart | in a 10-case pilot each field varies across the classes the next step must tell apart; then the next step's accuracy with it |
 | the whole flow | the contract's "done" | the contract's check and number |
 
 Write the current layer and its "good" at the top of the project's
 research journal, and check it before every held-out series. A threshold
 for the whole flow, put on the divergent layer, fails a layer that did its job. Errors the judge will
-remove later are the next stage's problem, not this one's.
+remove later are the next stage's problem, not this one's. Validate each layer by its own experiment, then
+assemble them.
+
+An intermediate output, such as the facts a reader pulls from an invoice or the turns it marks in a call
+transcript, is done when the step after it can use it. A field that takes one value on more than 80% of the
+pilot cases carries nothing, and a field the next step needs to separate two confusable answers must be
+there.
 
 ## When to stop the loop
 
@@ -88,7 +95,9 @@ Stop and report when one of these holds:
 
 Stop before any of those, and ask the owner of the flow, when:
 
-- traces wait for their notes: the first ones, or failures that fit no known mode;
+- traces wait for their notes: the first ones, offered to the owner, or failures that fit no known mode;
+- a step would go past a scope limit the owner set ("keep it simple", "only this input", "not yet"), or it
+  needs a new data source, a bulk download or research nobody asked for;
 - a series waits for approval of its spend;
 - variants trade quality against cost, and the choice is a product decision;
 - "done" turned out to be unmeasurable or contradictory;
@@ -106,7 +115,8 @@ The contract of a flow, written before the simplest flow, in the `experiment.md`
 ## Contract
 
 - Purpose: flag customer messages that ask for a refund, for the refunds queue.
-- Input: the message text and the order id, if any.
+- Input: the message text and the order id, if any; both reach the flow in production.
+  The customer's order history does not, so it is not an input.
 - Output: asks_refund (yes or no) and the sentence that asks, if any.
 - Done: flag_matches_label above 0.90 on messages that ask, and above 0.95 on messages
   that don't, confirmed on held-out cases.
@@ -119,6 +129,7 @@ The contract of a flow, written before the simplest flow, in the `experiment.md`
 
 - Check each stage's exit criterion before you move on, and name which one is not met yet.
 - Treat a clean check, one run, a signal and a provisional verdict as steps, never as results.
+- Write the input contract with the rest of the contract; a column only your data has is not an input.
 - Name the layer of the flow you are building and its metric before you pick a threshold.
 - Stop on one of the five conditions, and stop to ask when a decision belongs to a person.
 

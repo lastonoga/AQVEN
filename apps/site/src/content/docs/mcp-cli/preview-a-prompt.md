@@ -36,6 +36,10 @@ same prompt the engine would send, with no network call and no tokens spent.
     with `NOT_FOUND`, naming the node and its actual kind.
   - **An unknown variant slot.** Pass a slot name in `variants` that the inference doesn't declare, and
     the call fails with `INPUT_INVALID`, naming the slots that do exist.
+- `prompt_preview` reads the nodes of the project's own flows. An experiment's variants and its local flows have
+  no preview yet. Run the experiment on one case instead,
+  `{{CLI_COMMAND}} series <experiment_id> --cases 1 --repeats 1`, and open the `llm` node of each attempt's run
+  with `run_get_node` to see what each variant sent.
 
 ### Example
 
