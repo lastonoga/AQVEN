@@ -143,6 +143,11 @@ providers:
 In a series, an attempt that still ends with a rate limit after these retries goes to the end of the queue
 once more instead of counting as an infrastructure error; a second rate limit counts as usual.
 
+A model that only one upstream provider serves is the fragile case: when that provider rate-limits or goes down,
+there is no other provider of the same model to try, so give its agent `fallback_models` with another model.
+[How to choose models on OpenRouter](openrouter-model-selection.md) shows how to count a model's
+providers.
+
 ## Under the hood
 
 Every built-in provider is a thin factory over a Pydantic AI model

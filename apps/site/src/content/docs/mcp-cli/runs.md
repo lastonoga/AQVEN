@@ -30,7 +30,8 @@ knowing before you build assumptions on one and hit the other.
 - **`run_list`** pages through runs filtered by `flow_id`, `status`, `mode`, `assignee`, `parent_run_id`,
   and a `since`/`until` window, with `next_cursor` for the next page. For everything waiting on a person,
   filter `status: "suspended"`; for your own queue, add `assignee: "me"` (the local user),
-  `overdue: true`, and sort by `deadline_at`.
+  `overdue: true`, and sort by `deadline_at`. The attempts of a series run in `experiment` mode, and
+  `run_list` leaves them out unless you pass `mode: "experiment"`.
 - **`run_get_node`** is one node's execution, addressed the same way the engine itself addresses every
   execution: `node_id` plus `branch_key`, `iteration`, and `item_index` for a node that ran inside a
   branch, a loop, or a map. Leave the three optional fields out to reach a top-level node. The result
@@ -56,7 +57,11 @@ knowing before you build assumptions on one and hit the other.
   depending which surface you're calling. Separately, that address value itself always needs all four
   fields present — `node_id`, `branch_key`, `iteration`, `item_index` — even when three of them are
   `null` for a top-level node; unlike `run_get_node`'s flat arguments, none of the three has a default, so
-  leaving one out fails validation before the call does anything.
+  leaving one out fails validation before the call does anything. A fork replays the original run as it
+  was: a fork with `overrides`, or with `at` set to anything but `original`, returns `NOT_RUNNABLE`. To
+  check a change to a prompt or an agent, edit the project file and start a new run on the same case with
+  `run_start` and `dataset_item_id` (`<dataset_id>/<case_name>`); to try another input, pass it as
+  `input`.
 - **`run_cancel`** takes a `run_id` and a free-text `reason`. Like `run_resume`, its `run_id` travels in
   the request body over MCP; the REST route for the same operation puts it in the URL path instead and
   takes just `reason` in the body.

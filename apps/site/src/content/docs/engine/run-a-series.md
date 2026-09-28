@@ -12,6 +12,13 @@ MCP are three ways to start the same thing.
 
 ## Steps
 
+- **Smoke it first.** Before a series of the planned size, run the same experiment on one working case
+  once (`--cases 1 --repeats 1`). For a new output type, use about ten varied cases instead: `--cases 10`
+  takes the first ten working cases in file order, so make sure those differ. Follow the smoke to its end.
+  Collect every distinct error of every variant, fix them together, and run the smoke once more. An
+  infrastructure error, or a variant three times slower than the others, stops the launch until it is
+  fixed or the variant is dropped. The smoke is also the first call of each agent on the step's real input
+  and output type, which [a provider check](/engine/check-providers/) doesn't make.
 - **Pick the purpose.** Explore runs on the working cases (`dev`). Use it while you change the flow: it
   gives numbers and a `signal`, never a finding. Confirm runs on the held-out cases (`holdout`), once, when
   the change is done and the question is fixed. It gives a verdict and writes a finding.
@@ -47,7 +54,10 @@ MCP are three ways to start the same thing.
   Settings shows when an override is active and removes it. The launch plan says which one won in
   `project_cap_source`: `override`, `project` or `default`.
 - **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset, a media
-  file a case points at, or the code during a series ends it `invalid` with `inputs_changed`. See
+  file a case points at, a shared type or the code during a series ends it `invalid` with `inputs_changed`.
+  Other files count too: the project server watches the whole project folder and reloads the project on
+  every change, so a bulk download or an unpacked archive there slows it down while the series runs. Keep
+  raw downloads outside the project folder. See
   [How to keep case media as files in the project](/engine/dataset-media-files/).
 - **Stop it if you must.** Queued attempts never start. Model calls already running finish and are paid
   for. The series ends `cancelled`, and no finding is written.
@@ -79,9 +89,16 @@ selection bar. That starts a look: see [How to work with cases in Studio](/studi
 | `--path PATH` | the module folder with `aqven.yaml`, or a path inside it; the current folder by default |
 
 The command starts the project server when it isn't running, prints the attempts and the cap, and a line
-when the size is below the recommendation, then waits and prints the progress and the verdict. Each progress line
-ends with the time left, the finish time and the speed, such as `~5 min left, finishes ~18:42, 12 attempts/min`,
-or `estimating the time left` while the first attempts finish. The exit code tells a script what happened:
+when the size is below the recommendation, then waits and prints the progress and the verdict. The first
+line, `series <series_id> started on dev: …`, comes within seconds. Each progress line reads
+`<done>/<total> attempts, $<spent> of $<cap>, status <status>` and ends with the time left, the finish time
+and the speed, such as `~5 min left, finishes ~18:42, 12 attempts/min`, or `estimating the time left` while
+the first attempts finish.
+
+Run it unpiped. In a script, or from an agent, run it in the background with its output going to a file, and
+read the first line once. `| tail` shows nothing until the command ends, and `| head` stops the command
+after its first lines, while the series goes on running on the server. The exit code tells a script what
+happened:
 
 | Exit | Meaning |
 |---|---|
@@ -90,6 +107,10 @@ or `estimating the time left` while the first attempts finish. The exit code tel
 | 2 | the request was refused: unknown experiment, a project with errors (`NOT_RUNNABLE`) or a bad size |
 | 3 | it awaits approval, before it starts or paused near its cap; the line carries a Studio link to continue it |
 | 4 | an attempt waits for a person at a `human` node |
+
+Exit 1 with `the project server did not answer` means the command lost contact with the server, not that
+the series stopped: it runs on the server. Look it up in Studio or with `series_get` before you start it
+again, or you pay for the same attempts twice.
 
 ### From an agent
 
