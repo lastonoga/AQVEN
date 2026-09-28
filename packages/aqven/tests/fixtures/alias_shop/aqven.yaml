@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Project"
-description: "Модуль для проверки коротких ссылок на код и файлы промтов"
+description: "Module for checking short references to code and prompt files"
 package: "alias_shop"
 providers:
 - id: "openai"

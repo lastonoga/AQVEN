@@ -83,7 +83,7 @@ def test_second_sync_changes_nothing_and_status_is_clean(workspace: Path, capsys
 def test_sync_replaces_only_the_block_and_keeps_the_owner_text(workspace: Path) -> None:
     old = (
         "Notes above the block.\n<!-- aqven:begin 0.0.1 -->\nold engine rules\n<!-- aqven:end -->\n\n"
-        f"{OWNER_HEADING}\n\n- Answer in Russian.\n"
+        f"{OWNER_HEADING}\n\n- Answer in German.\n"
     )
     (workspace / "AGENTS.md").write_text(old, encoding="utf-8")
 
@@ -92,7 +92,7 @@ def test_sync_replaces_only_the_block_and_keeps_the_owner_text(workspace: Path) 
     agents = (workspace / "AGENTS.md").read_text(encoding="utf-8")
     assert agents.startswith(f"Notes above the block.\n{BLOCK_START}\n")
     assert "old engine rules" not in agents
-    assert agents.endswith(f"<!-- aqven:end -->\n\n{OWNER_HEADING}\n\n- Answer in Russian.\n")
+    assert agents.endswith(f"<!-- aqven:end -->\n\n{OWNER_HEADING}\n\n- Answer in German.\n")
     assert agents.count(OWNER_HEADING) == 1
 
 

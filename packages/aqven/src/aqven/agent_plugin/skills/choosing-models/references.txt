@@ -1,5 +1,5 @@
-integrations/openrouter-model-selection.md
 integrations/model-providers.md
+integrations/openrouter-model-selection.md
 engine/check-providers.md
 engine/check-shapes.md
 reference/agents.md

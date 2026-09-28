@@ -1,1 +1,1 @@
-Пиши спокойно и коротко.
+Write calmly and briefly.

@@ -71,11 +71,11 @@ class Triage(BaseModel):
     observations: list[Observation]
 
 
-CHUNKS: Final = [Chunk(chunk_id="kb_0000000001", text="Контроллер ленты перезагружается кнопкой питания.")]
-INPUTS: Final = ReplyIn(locale="ru-RU", chunks=CHUNKS)
+CHUNKS: Final = [Chunk(chunk_id="kb_0000000001", text="The strip controller restarts with the power button.")]
+INPUTS: Final = ReplyIn(locale="en-GB", chunks=CHUNKS)
 
 
-def reply(text: str, quote: str = "перезагружается кнопкой", chunk_id: str = "kb_0000000001") -> ReplyOut:
+def reply(text: str, quote: str = "restarts with the power button", chunk_id: str = "kb_0000000001") -> ReplyOut:
     return ReplyOut(reply=Reply(text=text, citations=[Citation(chunk_id=chunk_id, quote=quote)]))
 
 
@@ -173,45 +173,33 @@ REPLY_TEXT: Final = "$out.reply.text"
     [
         (
             evaluators.max_words,
-            reply("Нажмите кнопку питания"),
+            reply("Press the button"),
             evaluators.MaxWordsParams(field=REPLY_TEXT, max=3),
             True,
         ),
         (
             evaluators.max_words,
-            reply("Нажмите и удерживайте кнопку"),
+            reply("Press and hold the button"),
             evaluators.MaxWordsParams(field=REPLY_TEXT, max=3),
             False,
         ),
         (evaluators.not_empty, reply("  "), evaluators.FieldParams(field=REPLY_TEXT), False),
-        (
-            evaluators.language,
-            reply("Перезагрузите контроллер ленты"),
-            evaluators.LanguageParams(field=REPLY_TEXT, locale="$in.locale"),
-            True,
-        ),
-        (
-            evaluators.language,
-            reply("Please restart the strip controller"),
-            evaluators.LanguageParams(field=REPLY_TEXT, locale="$in.locale"),
-            False,
-        ),
-        (evaluators.no_pii, reply("Пишите на anna@example.com"), evaluators.NoPiiParams(fields=[REPLY_TEXT]), False),
+        (evaluators.no_pii, reply("Write to anna@example.com"), evaluators.NoPiiParams(fields=[REPLY_TEXT]), False),
         (
             evaluators.no_pii,
-            reply("Пишите на anna@example.com"),
+            reply("Write to anna@example.com"),
             evaluators.NoPiiParams(fields=[REPLY_TEXT], detectors=[PiiDetector.PHONE]),
             True,
         ),
         (
             evaluators.regex,
-            reply("Заказ LUM-20260917"),
+            reply("Order LUM-20260917"),
             evaluators.RegexParams(field=REPLY_TEXT, pattern=r"LUM-\d{8}"),
             True,
         ),
         (
             evaluators.citations_in_sources,
-            reply("Нажмите кнопку"),
+            reply("Press the button"),
             evaluators.CitationsInSourcesParams(
                 citations="$out.reply.citations", sources="$in.chunks", id="chunk_id", quote="quote", text="text"
             ),
@@ -219,7 +207,7 @@ REPLY_TEXT: Final = "$out.reply.text"
         ),
         (
             evaluators.citations_in_sources,
-            reply("Нажмите кнопку", quote="сбросьте настройки"),
+            reply("Press the button", quote="reset the settings"),
             evaluators.CitationsInSourcesParams(
                 citations="$out.reply.citations", sources="$in.chunks", id="chunk_id", quote="quote", text="text"
             ),
@@ -227,7 +215,7 @@ REPLY_TEXT: Final = "$out.reply.text"
         ),
         (
             evaluators.ids_in_allowed_set,
-            reply("Нажмите кнопку", chunk_id="kb_9999999999"),
+            reply("Press the button", chunk_id="kb_9999999999"),
             evaluators.IdsInAllowedSetParams(
                 field="$out.reply.citations[*].chunk_id", allowed="$in.chunks[*].chunk_id"
             ),
@@ -246,9 +234,22 @@ def test_evaluator_builtins_read_value_and_inputs(
     assert (result.reason is None) is passed
 
 
+@pytest.mark.parametrize(
+    ("locale", "passed"), [("en-GB", True), ("uk-UA", False)], ids=["same_alphabet", "other_alphabet"]
+)
+def test_language_compares_the_text_alphabet_with_the_input_locale(locale: str, passed: bool) -> None:
+    params = evaluators.LanguageParams(field=REPLY_TEXT, locale="$in.locale")
+    inputs = ReplyIn(locale=locale, chunks=CHUNKS)
+
+    result = evaluators.language(reply("Please restart the strip controller"), context_of(inputs), params)
+
+    assert result.passed is passed
+    assert (result.reason is None) is passed
+
+
 def test_unique_items_and_metrics() -> None:
     triage = Triage(
-        summary="Мерцает", tone="calm", observations=[Observation(key="flicker"), Observation(key="flicker")]
+        summary="Flickers", tone="calm", observations=[Observation(key="flicker"), Observation(key="flicker")]
     )
     params = evaluators.UniqueItemsParams(field="$out.observations", key="key")
 
@@ -264,7 +265,7 @@ def test_params_models_reject_unknown_keys() -> None:
         evaluators.MaxWordsParams.model_validate({"field": REPLY_TEXT, "max": 220, "min": 1})
 
 
-CALM_TRIAGE: Final = Triage(summary="Мерцает", tone="calm", observations=[Observation(key="flicker")])
+CALM_TRIAGE: Final = Triage(summary="Flickers", tone="calm", observations=[Observation(key="flicker")])
 
 
 def expecting(expected: object) -> EvalContext[BaseModel, object]:
@@ -274,9 +275,9 @@ def expecting(expected: object) -> EvalContext[BaseModel, object]:
 @pytest.mark.parametrize(
     ("expected", "fields", "passed", "reason"),
     [
-        ({"summary": "Мерцает", "tone": "calm"}, None, True, None),
-        ({"summary": "Мерцает", "tone": "urgent"}, None, False, "fields differ from expected_output: tone"),
-        ({"summary": "Гаснет", "tone": "calm"}, ["tone"], True, None),
+        ({"summary": "Flickers", "tone": "calm"}, None, True, None),
+        ({"summary": "Flickers", "tone": "urgent"}, None, False, "fields differ from expected_output: tone"),
+        ({"summary": "Goes dark", "tone": "calm"}, ["tone"], True, None),
         ({"tone": "calm"}, ["tone", "summary"], False, "expected_output lacks the fields summary"),
         ({"tone": "calm", "summary": None}, ["tone", "summary"], False, "fields differ from expected_output: summary"),
         ({"observations": [{"key": "flicker"}]}, None, True, None),
@@ -315,7 +316,7 @@ def test_missing_expected_output_counts_as_a_failed_attempt() -> None:
 
 
 def test_expected_reads_a_model_as_the_expected_output() -> None:
-    same = Triage(summary="Мерцает", tone="calm", observations=[Observation(key="flicker")])
+    same = Triage(summary="Flickers", tone="calm", observations=[Observation(key="flicker")])
 
     verdict = evaluators.expected(CALM_TRIAGE, expecting(same), evaluators.ExpectedParams())
 

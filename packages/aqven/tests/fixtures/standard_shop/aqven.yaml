@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Project"
-description: "Модуль в стандартной раскладке: папки агентов и узлов верхнего уровня"
+description: "Module in the standard layout: top-level agent and node folders"
 package: "standard_shop"
 providers:
 - id: "openai"

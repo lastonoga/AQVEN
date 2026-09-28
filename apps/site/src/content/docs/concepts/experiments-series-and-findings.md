@@ -175,8 +175,8 @@ no values reads **as written**.
 
 ## Working and held-out cases
 
-The server splits every dataset in two halves by a hash of each case's `name`. The hash is salted with the
-package name, so every clone of the project gets the same split, and nobody picks which case goes where.
+The server splits every dataset in two halves by a hash of the package name, the dataset id and each case's
+`name`. Every clone of the project gets the same split, and nobody picks which case goes where.
 Studio calls the two uses **Explore** and **Confirm**:
 
 | | Working cases (`dev`) | Held-out cases (`holdout`) |
@@ -191,11 +191,13 @@ until the answer looks right inflates false confirmations too. So the held-out h
 question. A finding counts every finished held-out series of its experiment on the same cases. When there
 is more than one, `FINDINGS.md` says how many of them confirmed.
 
-Two consequences for writing cases:
+Three consequences for writing cases:
 
 - Write about twice as many cases as a held-out series needs, because half of them land on the working
   side.
 - Never rename a case. A renamed case is a new case and may switch sides.
+- The same input in another dataset is hashed with that dataset's id, so it may land on the other side.
+  An input seen on the working side of any dataset is spent for held-out use in all of them.
 
 A series asked for N cases takes the first N cases of its half, in file order.
 

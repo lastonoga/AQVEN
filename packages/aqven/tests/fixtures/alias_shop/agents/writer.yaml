@@ -1,5 +1,5 @@
 apiVersion: "aqven/v1"
 kind: "Agent"
-description: "Пишет ответ на заметку"
+description: "Writes a reply to a note"
 model: "openai:gpt-5.4-mini"
 instructions: "@root/prompts/writer.md"

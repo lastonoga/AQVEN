@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "human"
-description: "Оператор подтверждает очередь доставки"
+description: "An operator confirms the delivery queue"
 form: "TriageReview"
 assignee: "support_operator"
 timeout_seconds: 3600
@@ -12,5 +12,5 @@ on_timeout:
 in:
 - name: "ticket"
   type: "TriageTicket"
-  description: "Обращение"
+  description: "Ticket"
   from: "$input"

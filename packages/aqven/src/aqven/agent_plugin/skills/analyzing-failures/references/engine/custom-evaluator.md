@@ -41,10 +41,16 @@ The same evaluator reference works in two places. An inference's `checks:` in
 - **What `value` and `context` hold depends on where the check runs.** On an inference, `value` is the
   inference's `out` record and `context.inputs` its `in` record. In an experiment, `value` is the output
   of the experiment's subject and `context.inputs` is the flow input. For a range of nodes (`from`/`to`),
-  that means the `out` of the `to` node, and the flow input may be partial. The outputs of the other
-  top-level nodes are in `context.metadata["node_outputs"]`, and `context.expected_output` is the case's
-  `expected_output`. `aqven check` compares your function's type hints with the subject's types and warns
-  with `W_CHECK_CONTEXT_MISMATCH` when they don't fit.
+  that means the `out` of the `to` node, and the flow input may be partial. `context.expected_output` is
+  the case's `expected_output`. `aqven check` compares your function's type hints with the subject's types
+  and warns with `W_CHECK_CONTEXT_MISMATCH` when they don't fit.
+- **An experiment check also sees the other steps.** `context.metadata["node_outputs"]` maps each top-level
+  node of the attempt that succeeded to its output, together with the case's `node_outputs` for the nodes
+  above a range. Nodes inside a container such as `map`, `loop` or `parallel` aren't in it. So a check can
+  score an intermediate step, such as the extraction a later decision reads, in the same series as the
+  final output. `context.metadata` also carries the case's `case` name, its `tags` and `split`, the
+  `variant` and the `repeat`. For the other way to score one step, see
+  Measure one stage.
 - Return a `Verdict`: `passed: bool`, plus optionally `score: float | None` and `reason: str | None`
   naming what failed. A binary check only needs `passed`. A continuous or ordinal check must return a
   `score`: an evaluator that returns none makes that attempt's check an error, not a failure.

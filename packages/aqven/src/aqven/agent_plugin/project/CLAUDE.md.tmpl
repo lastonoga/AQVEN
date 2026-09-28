@@ -1,5 +1,8 @@
 <!-- aqven:begin <version> -->
 @AGENTS.md
 
-In Studio the aqven skills come as plugin `aqven`; elsewhere they are in `.claude/skills/`.
+For Claude:
+- In Studio the aqven skills come as plugin `aqven`; elsewhere they are in `.claude/skills/`.
+- After a compaction, invoke the skill of your current stage with the Skill tool; re-reading the journal is not enough.
+- Run long commands with Bash `run_in_background: true`, unpiped: the command's end wakes you with a new turn.
 <!-- aqven:end -->

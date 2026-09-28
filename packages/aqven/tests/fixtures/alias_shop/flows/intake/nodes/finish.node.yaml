@@ -1,16 +1,16 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Итог приёма"
+description: "Intake result"
 run: "@flow.steps:finish"
 in:
 - name: "text"
   type: "Text"
-  description: "Ответ"
+  description: "Reply"
   maxLength: 200
   from: "$reply.out.text"
 out:
 - name: "text"
   type: "Text"
-  description: "Итоговый текст"
+  description: "Final text"
   maxLength: 200

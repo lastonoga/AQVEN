@@ -4,6 +4,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Final, Literal
 
+from openai import AsyncOpenAI
 from openai.types.chat import chat_completion_chunk
 from pydantic import BaseModel, ConfigDict
 from pydantic_ai.messages import (
@@ -15,8 +16,14 @@ from pydantic_ai.messages import (
     SpeechPart,
     SpeechPartDelta,
 )
+from pydantic_ai.models import ModelRequestParameters
 from pydantic_ai.models.openai import OpenAIStreamedResponse
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterStreamedResponse
+from pydantic_ai.profiles import ModelProfile
+from pydantic_ai.providers import Provider
+from pydantic_ai.settings import ModelSettings, merge_model_settings
+
+from aqven_llm.request_options import EXTRA_BODY, OPTIONS_OBJECT
 
 type AudioFormat = Literal["wav", "mp3", "flac", "opus", "pcm16"]
 
@@ -58,6 +65,12 @@ class MediaOutput:
     @property
     def requested(self) -> bool:
         return self.image or self.audio is not None
+
+    def settings(self, settings: ModelSettings | None) -> ModelSettings | None:
+        if not self.requested:
+            return settings
+        body = OPTIONS_OBJECT.validate_python((settings or {}).get(EXTRA_BODY) or {})
+        return merge_model_settings(settings, ModelSettings(extra_body={**body, **self.extra_body()}))
 
 
 TEXT_ONLY: Final = MediaOutput()
@@ -151,6 +164,26 @@ class OpenRouterMediaStreamedResponse(OpenRouterStreamedResponse):
 
 
 class OpenRouterMediaModel(OpenRouterModel):
+    def __init__(
+        self,
+        model_name: str,
+        *,
+        provider: Provider[AsyncOpenAI],
+        profile: ModelProfile | None = None,
+        settings: ModelSettings | None = None,
+        media: MediaOutput = TEXT_ONLY,
+    ) -> None:
+        super().__init__(model_name, provider=provider, profile=profile, settings=settings)
+        self.media = media
+
+    def prepare_request(
+        self,
+        model_settings: ModelSettings | None,
+        model_request_parameters: ModelRequestParameters,
+    ) -> tuple[ModelSettings | None, ModelRequestParameters]:
+        merged = merge_model_settings(self.settings, model_settings)
+        return super().prepare_request(self.media.settings(merged), model_request_parameters)
+
     @property
     def _streamed_response_cls(self) -> type[OpenRouterStreamedResponse]:
         return OpenRouterMediaStreamedResponse

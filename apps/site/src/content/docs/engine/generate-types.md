@@ -65,10 +65,10 @@ Add a field to `types/records/money.yaml`:
 ```yaml
 - name: "currency"
   type: "CurrencyCode"
-  description: "Валюта суммы"
+  description: "Currency of the amount"
 - name: "note"
   type: "Text?"
-  description: "Комментарий к сумме"
+  description: "A note on the amount"
   maxLength: 50
 ```
 

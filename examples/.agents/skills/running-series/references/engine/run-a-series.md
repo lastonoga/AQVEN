@@ -21,6 +21,13 @@ MCP are three ways to start the same thing.
 
 ## Steps
 
+- **Smoke it first.** Before a series of the planned size, run the same experiment on one working case
+  once (`--cases 1 --repeats 1`). For a new output type, use about ten varied cases instead: `--cases 10`
+  takes the first ten working cases in file order, so make sure those differ. Follow the smoke to its end.
+  Collect every distinct error of every variant, fix them together, and run the smoke once more. An
+  infrastructure error, or a variant three times slower than the others, stops the launch until it is
+  fixed or the variant is dropped. The smoke is also the first call of each agent on the step's real input
+  and output type, which a provider check doesn't make.
 - **Pick the purpose.** Explore runs on the working cases (`dev`). Use it while you change the flow: it
   gives numbers and a `signal`, never a finding. Confirm runs on the held-out cases (`holdout`), once, when
   the change is done and the question is fixed. It gives a verdict and writes a finding.
@@ -56,7 +63,10 @@ MCP are three ways to start the same thing.
   Settings shows when an override is active and removes it. The launch plan says which one won in
   `project_cap_source`: `override`, `project` or `default`.
 - **Don't edit the subject while it runs.** A change to the flow, the experiment, the dataset, a media
-  file a case points at, or the code during a series ends it `invalid` with `inputs_changed`. See
+  file a case points at, a shared type or the code during a series ends it `invalid` with `inputs_changed`.
+  Other files count too: the project server watches the whole project folder and reloads the project on
+  every change, so a bulk download or an unpacked archive there slows it down while the series runs. Keep
+  raw downloads outside the project folder. See
   How to keep case media as files in the project.
 - **Stop it if you must.** Queued attempts never start. Model calls already running finish and are paid
   for. The series ends `cancelled`, and no finding is written.
@@ -88,24 +98,55 @@ aqven series reply_overpromise_risk --on dev --cases 2 --repeats 2
 | `--path PATH` | the module folder with `aqven.yaml`, or a path inside it; the current folder by default |
 
 The command starts the project server when it isn't running, prints the attempts and the cap, and a line
-when the size is below the recommendation, then waits and prints the progress and the verdict. Each progress line
-ends with the time left, the finish time and the speed, such as `~5 min left, finishes ~18:42, 12 attempts/min`,
-or `estimating the time left` while the first attempts finish. The exit code tells a script what happened:
+when the size is below the recommendation, then waits and prints the progress and the verdict. The first
+line, `series <series_id> started on dev: …`, comes within seconds. Each progress line reads
+`<done>/<total> attempts, $<spent> of $<cap>, status <status>` and ends with the time left, the finish time
+and the speed, such as `~5 min left, finishes ~18:42, 12 attempts/min`, or `estimating the time left` while
+the first attempts finish.
+
+Run it unpiped. In a script, or from an agent, run it in the background with its output going to a file, and
+read the first line once. `| tail` shows nothing until the command ends, and `| head` stops the command
+after its first lines, while the series goes on running on the server. The exit code tells a script what
+happened:
 
 | Exit | Meaning |
 |---|---|
 | 0 | the series is done, whatever its verdict |
-| 1 | it was cancelled or failed, or the server didn't answer |
+| 1 | it was cancelled or failed, or the project server couldn't start |
 | 2 | the request was refused: unknown experiment, a project with errors (`NOT_RUNNABLE`) or a bad size |
 | 3 | it awaits approval, before it starts or paused near its cap; the line carries a Studio link to continue it |
 | 4 | an attempt waits for a person at a `human` node |
+| 5 | it lost contact with the project server and gave up after retrying for 300 s; the series keeps running there |
+
+A slow or briefly frozen server doesn't end the command. On a network error, or a server error without an
+API error body, it prints `lost contact with the project server (ReadTimeout), retrying in 1s` and tries
+again, waiting 1, 2, 4 … up to 15 seconds between tries. Only after 5 minutes without an answer does it
+give up with exit 5, naming the error and printing the series' Studio link.
+
+To take the outputs of a series offline, export them:
+
+```bash
+aqven series export <series_id> --format csv --fields /label triage --out rows.csv
+```
+
+It writes one row per attempt: the case, variant, repeat, split, outcome, error code, cost, latency and
+`run_id`, then one column per `--fields` entry (a JSON pointer such as `/label` into the flow output, a node
+id such as `triage`, or `triage/summary`), and one `check:<id>` column per check. Without `--fields` the
+whole flow output goes into one `output` column as JSON. `--format jsonl` (the default) writes the same rows
+as JSON lines; `--variant`, `--outcome` and `--split` narrow them, and without `--out` they go to stdout. It
+exits with 2 when the series doesn't exist and with 5 when it loses contact with the server.
+
+Exit 1 with `the project server did not answer` means the command lost contact with the server, not that
+the series stopped: it runs on the server. Look it up in Studio or with `series_get` before you start it
+again, or you pay for the same attempts twice.
 
 ### From an agent
 
 Over MCP, `series_start` takes `experiment_id`, `on`, and optionally `cases`, `repeats`, `cap_usd` and a
 `client_op_id`. It returns at once with the launch plan and the status. `series_get` with `wait_seconds` up
-to 50 waits for the series to settle, and `series_cancel` stops it. MCP has no plan-only call: the launch
-plan is information, and `series_start` starts the series. REST has
+to 50 waits for the series to settle, and `series_cancel` stops it. `series_get` with `view: "summary"`
+reads a series of any size in a few KB, and `series_outputs` pages through what its attempts produced. MCP
+has no plan-only call: the launch plan is information, and `series_start` starts the series. REST has
 `POST /api/experiments/{id}/launch-plan` for that. See [How to run experiments and series as an agent](../mcp-cli/experiments-and-series.md).
 
 ### Example

@@ -1,1 +1,1 @@
-Пиши спокойно и по делу.
+Write calmly and to the point.

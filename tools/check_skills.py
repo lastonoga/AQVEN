@@ -15,6 +15,7 @@ from front_matter import Document, FrontMatterError, split_document
 REPO_ROOT: Final = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT: Final = REPO_ROOT / "packages" / "aqven" / "src" / "aqven" / "agent_plugin"
 SKILLS_FOLDER: Final = "skills"
+TEMPLATES_FOLDER: Final = "project"
 SKILL_FILE: Final = "SKILL.md"
 MANIFEST: Final = "references.txt"
 REFERENCE_CITATION: Final = re.compile(r"\breferences/(?P<page>[a-z0-9-]+(?:/[a-z0-9-]+)*\.md)")
@@ -29,7 +30,7 @@ MAX_BODY_LINES: Final = 250
 MAX_MUST_LINES: Final = 15
 MUST_HEADING: Final = "## MUST"
 SECTION_HEADING: Final = re.compile(r"^#{1,2} ")
-TEXT_SUFFIXES: Final = frozenset({".md", ".txt", ".py", ".yaml", ".yml", ".json", ".toml", ".sh"})
+TEXT_SUFFIXES: Final = frozenset({".md", ".txt", ".py", ".yaml", ".yml", ".json", ".toml", ".sh", ".tmpl"})
 FORBIDDEN: Final = (
     re.compile(r"\barms?\b", re.IGNORECASE),
     re.compile(r"arms/"),
@@ -63,6 +64,22 @@ OWNER_DOMAIN: Final = tuple(
         r"\bwrinkl\w*",
         r"\bdose[ _-]ladders?\b",
         r"\bSCIN\b",
+        r"\bmedical\b",
+        r"\bdiagnos[ie]s\b",
+        r"\bskincare\b",
+        r"\bpatients?\b",
+        r"\bclinic(?:al)?\b",
+        r"\bsymptoms?\b",
+        r"\bdiseases?\b",
+        r"\bdermatology\b",
+        r"\bskin\b",
+        r"\blesions?\b",
+        r"\brash(?:es)?\b",
+        r"\bacne\b",
+        r"\brosacea\b",
+        r"\banamnes[ie]s\b",
+        r"\bdoctors?\b",
+        r"\bhealthcare\b",
     )
 )
 ALWAYS_ON_BUDGET: Final = 1300
@@ -90,9 +107,17 @@ class SkillTree:
     root: Path
     skills: tuple[Skill, ...]
     declared_names: tuple[str, ...] | None
+    templates: Path
+
+
+@dataclass(frozen=True, slots=True)
+class Scope:
+    folder: Path
+    base: Path
 
 
 type Check = Callable[[SkillTree], list[str]]
+type ScopeOf = Callable[[SkillTree], Scope]
 
 
 def read_skill(folder: Path) -> Skill:
@@ -132,7 +157,8 @@ def declared_skill_names(module: Path) -> tuple[str, ...] | None:
 def load_tree(plugin_root: Path, names_module: Path) -> SkillTree:
     root = plugin_root / SKILLS_FOLDER
     folders = sorted(path for path in root.iterdir() if path.is_dir() and not path.name.startswith((".", "_")))
-    return SkillTree(root, tuple(read_skill(folder) for folder in folders), declared_skill_names(names_module))
+    skills = tuple(read_skill(folder) for folder in folders)
+    return SkillTree(root, skills, declared_skill_names(names_module), plugin_root / TEMPLATES_FOLDER)
 
 
 def parsed(tree: SkillTree) -> Iterator[tuple[Skill, Document]]:
@@ -211,23 +237,43 @@ def text_files(root: Path) -> Iterator[Path]:
     return (path for path in sorted(root.rglob("*")) if path.is_file() and path.suffix in TEXT_SUFFIXES)
 
 
-def matches_in(path: Path, root: Path, patterns: Sequence[re.Pattern[str]], label: str) -> Iterator[str]:
-    relative = path.relative_to(root).as_posix()
+def words_in(line: str, patterns: Sequence[re.Pattern[str]]) -> tuple[str, ...]:
+    spans = {
+        match.span(): match.group(0).strip() for pattern in patterns if (match := pattern.search(line)) is not None
+    }
+    return tuple(spans.values())
+
+
+def matches_in(path: Path, base: Path, patterns: Sequence[re.Pattern[str]], label: str) -> Iterator[str]:
+    relative = path.relative_to(base).as_posix()
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        found = [match.group(0).strip() for pattern in patterns if (match := pattern.search(line)) is not None]
+        found = words_in(line, patterns)
         if found:
             yield f"{relative}:{number}: {label} {', '.join(repr(word) for word in found)}"
 
 
-def word_guard(patterns: Sequence[re.Pattern[str]], label: str) -> Check:
+def skill_files(tree: SkillTree) -> Scope:
+    return Scope(tree.root, tree.root)
+
+
+def template_files(tree: SkillTree) -> Scope:
+    return Scope(tree.templates, tree.templates.parent)
+
+
+def word_guard(patterns: Sequence[re.Pattern[str]], label: str, scope_of: ScopeOf = skill_files) -> Check:
     def guard(tree: SkillTree) -> list[str]:
-        return [problem for path in text_files(tree.root) for problem in matches_in(path, tree.root, patterns, label)]
+        scope = scope_of(tree)
+        return [
+            problem for path in text_files(scope.folder) for problem in matches_in(path, scope.base, patterns, label)
+        ]
 
     return guard
 
 
 forbidden_words: Final = word_guard(FORBIDDEN, "forbidden")
 owner_domain_words: Final = word_guard(OWNER_DOMAIN, "owner-project word")
+forbidden_template_words: Final = word_guard(FORBIDDEN, "forbidden", template_files)
+owner_domain_template_words: Final = word_guard(OWNER_DOMAIN, "owner-project word", template_files)
 
 
 def manifest_pages(folder: Path) -> set[str]:
@@ -258,6 +304,8 @@ FILE_CHECKS: Final[tuple[Check, ...]] = (
     body_shape,
     forbidden_words,
     owner_domain_words,
+    forbidden_template_words,
+    owner_domain_template_words,
     reference_citations,
 )
 
@@ -319,7 +367,9 @@ def problems(tree: SkillTree) -> list[str]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="check the aqven skills: front matter, size, words, references")
+    parser = argparse.ArgumentParser(
+        description="check the aqven skills and project templates: shape, words, citations"
+    )
     parser.add_argument("--cli", action="store_true", help="also run plugin validate --strict and plugin details")
     parser.add_argument("--budget", type=int, default=ALWAYS_ON_BUDGET, help="Always-on token budget with --cli")
     arguments = parser.parse_args(argv)

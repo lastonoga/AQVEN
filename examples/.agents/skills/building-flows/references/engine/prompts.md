@@ -11,6 +11,8 @@ Write a prompt as plain text, a Liquid template, or a Python function — AQVEN 
   - [Fragments](#fragments)
   - [Variant slots](#variant-slots)
   - [Example](#example-1)
+- [A closed list of labels](#a-closed-list-of-labels)
+- [A step that reads another model's output](#a-step-that-reads-another-models-output)
 - [Under the hood](#under-the-hood)
 - [See also](#see-also)
 
@@ -108,7 +110,7 @@ Store policies:
 
 (excerpted from support_case's real `resolve.prompt.md`; full file in the showcase project, translated
 to English for this page). The file also branches with `{% case %}`/`{% when %}` the same way `{% if %}`
-does — once per symptom, once per customer tier — and pulls in shared fragment text with
+does — once per fault kind, once per customer tier — and pulls in shared fragment text with
 `{% include %}`, real Liquid, not a custom mini-language. Nothing is appended automatically once a file
 reaches this level: `{{ output_format }}` only appears because the author placed it, at the very end of
 the message.
@@ -177,8 +179,12 @@ function builds its text in Python instead.
 - AQVEN looks for the file next to the file that includes it, then in the inference's folder, then from the
   project root. A name that starts with `@root/` is read from the project root only. `fragments/` at the project
   root is the usual place, not a rule.
-- A fragment is Liquid too. Its `{{ }}` read the inputs of the inference that includes it, and the checks count
-  them as the prompt's own.
+- A fragment found outside the inference's folder is shared, and shared text is static: a `{{ }}` in it is
+  `E_PROMPT_VARIABLE_UNDECLARED`, and an input that only the fragment prints counts as unused
+  (`E_PROMPT_INPUT_UNUSED`). Print the input in the prompt itself. Text that reads inputs and is worth keeping in
+  its own file goes into a partial next to the inference, `<stem>.partials/<name>.md`, included as
+  `{% include "<stem>.partials/<name>" %}`: its `{{ }}` read the inference's inputs, and the checks count them as
+  the prompt's own.
 - An include is a Liquid tag, so a prompt that includes a fragment is a template: it has to place
   `{{ output_format }}` itself, exactly once.
 - `aqven check` reports `E_FRAGMENT_MISSING` for a name it cannot find, and `E_SOURCE_CONFLICT` when the
@@ -265,6 +271,33 @@ Advice for this lamp kind:
 The fragments are `fragments/brand_voice.md`, `fragments/citation_rules.md` and `fragments/untrusted_input.md` at
 the project root; other prompts of the showcase include the same files. More tested files with a slot and a
 fragment are on [Tested snippets](snippets.md).
+
+## A closed list of labels
+
+When an output is one value of an enum — a ticket intent, a document type, a sound event in a recording, a defect
+kind in a product photo — the model sees only the bare values. The `description` of each value in the enum's type
+file reaches neither the prompt nor the output schema: `prompt_preview` shows the output limits as
+`one of "refund", "billing_error", …` and nothing more. A name is not a definition, and two close names get mixed
+up.
+
+- Define every value in the prompt by the evidence that shows it in the input this node reads: the words or facts
+  in a ticket, the printed label next to an amount on an invoice, the sound in a recording, what is visible in a
+  frame.
+- Say what separates each value from the values it is most often confused with: a refund request asks for money
+  back, a billing error says the money was charged wrongly.
+- Keep one table of values and definitions. A script in `scripts/` generates the enum type, one fragment per value
+  and any check that lists the values from that table, so the three never drift apart. One fragment per value lets
+  an experiment change one definition at a time.
+
+## A step that reads another model's output
+
+A step often gets two versions of the same thing: the raw input and what an earlier model made of it — the OCR
+text beside the scan, a transcript beside the recording, extracted fields beside the contract, a list of events
+beside the video. Say in the prompt which one decides. The earlier reading is evidence that may be wrong: the model
+checks it against the raw input and follows the raw input where they disagree. A prompt that tells the model to
+trust the earlier reading passes every upstream mistake on, and a prompt that ignores it wastes the call that made
+it. When an experiment adds or removes the earlier reading, any change to these instructions is part of what the
+experiment changes: list it with the variant.
 
 ## Under the hood
 

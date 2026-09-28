@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "switch"
-description: "Оплата уходит сразу, доставку подтверждает оператор"
+description: "Billing goes straight through, an operator confirms delivery"
 on: "$classify.out.category"
 cases:
   billing:
@@ -13,4 +13,4 @@ cases:
 out:
 - name: "category"
   type: "TriageCategory"
-  description: "Итоговая очередь"
+  description: "Final queue"

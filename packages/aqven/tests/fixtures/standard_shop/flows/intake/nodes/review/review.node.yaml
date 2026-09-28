@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "switch"
-description: "Спокойный ответ принимает, тёплый переписывает"
+description: "Accepts a calm reply, rewrites a warm one"
 on: "$reply.out.mood"
 cases:
   calm:
@@ -16,5 +16,5 @@ cases:
 out:
 - name: "text"
   type: "Text"
-  description: "Принятый ответ"
+  description: "Accepted reply"
   maxLength: 200

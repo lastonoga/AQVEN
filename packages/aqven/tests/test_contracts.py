@@ -109,15 +109,15 @@ def _union_types(union: object) -> frozenset[str]:
 
 def _agent(agent_id: str, tools: tuple[ToolId, ...] = ()) -> CompiledAgent:
     model = AgentModel(model=ModelString("openrouter:openai/gpt-oss-20b"), provider=ProviderName("openrouter"))
-    return CompiledAgent(agent_id=AgentId(agent_id), description="агент", models=(model,), tools=tools)
+    return CompiledAgent(agent_id=AgentId(agent_id), description="agent", models=(model,), tools=tools)
 
 
 def _inference(inference_id: str, checks: tuple[CompiledCheck, ...] = ()) -> CompiledInference:
     return CompiledInference(
         inference_id=InferenceId(inference_id),
-        description="инференс",
-        input_fields=(FieldIr(name="text", type="Text", description="текст"),),
-        output_fields=(FieldIr(name="label", type="Text", description="метка"),),
+        description="inference",
+        input_fields=(FieldIr(name="text", type="Text", description="text"),),
+        output_fields=(FieldIr(name="label", type="Text", description="label"),),
         input_schema=SCHEMA,
         output_schema=SCHEMA,
         prompt=TemplatePrompt(level=2, template="{{ text }}"),
@@ -129,16 +129,16 @@ def _nodes() -> tuple[CompiledNode, ...]:
     return (
         CompiledCodeNode(
             node_id=NodeId("prepare"),
-            description="подготовка",
+            description="preparation",
             run=CodeRef("shop.flows.intake.nodes.prepare.prepare:prepare"),
             inputs=(RefBinding(name="text", ref="$input.text"),),
             input_schema=SCHEMA,
             output_schema=SCHEMA,
-            output_fields=(FieldIr(name="items", type="Text[]", description="элементы"),),
+            output_fields=(FieldIr(name="items", type="Text[]", description="items"),),
         ),
         CompiledMapNode(
             node_id=NodeId("vote"),
-            description="голоса",
+            description="votes",
             over="$prepare.out.items",
             body=NodeId("vote__ballot"),
             concurrency=3,
@@ -149,7 +149,7 @@ def _nodes() -> tuple[CompiledNode, ...]:
         CompiledLlmNode(
             node_id=NodeId("vote__ballot"),
             parent=NodeId("vote"),
-            description="голос",
+            description="vote",
             agent=AgentId("writer"),
             inference=InferenceId("ballot"),
             output_mode="tool",
@@ -159,7 +159,7 @@ def _nodes() -> tuple[CompiledNode, ...]:
         ),
         CompiledSwitchNode(
             node_id=NodeId("route"),
-            description="маршрут",
+            description="route",
             on="$prepare.out.items",
             cases={
                 "search": CompiledSwitchCase(node=NodeId("route__search")),
@@ -171,14 +171,14 @@ def _nodes() -> tuple[CompiledNode, ...]:
         CompiledToolNode(
             node_id=NodeId("route__search"),
             parent=NodeId("route"),
-            description="поиск",
+            description="search",
             tool=ToolId("search_kb"),
             input_schema=SCHEMA,
             output_schema=SCHEMA,
         ),
         CompiledParallelNode(
             node_id=NodeId("drafts"),
-            description="черновики",
+            description="drafts",
             branches={"gpt": NodeId("drafts__gpt")},
             join=BuiltinPolicy(use="quorum", params={"min_ok": 1, "on_error": "skip"}),
             outputs=(RefBinding(name="candidates", ref="$ok[*].label"),),
@@ -187,7 +187,7 @@ def _nodes() -> tuple[CompiledNode, ...]:
         CompiledLlmNode(
             node_id=NodeId("drafts__gpt"),
             parent=NodeId("drafts"),
-            description="черновик",
+            description="draft",
             agent=AgentId("critic"),
             inference=InferenceId("ballot"),
             output_mode="prompted",
@@ -196,7 +196,7 @@ def _nodes() -> tuple[CompiledNode, ...]:
         ),
         CompiledLoopNode(
             node_id=NodeId("polish"),
-            description="правка",
+            description="edit",
             body=(NodeId("polish__fix"),),
             init={NodeId("polish__fix"): (RefBinding(name="text", ref="$drafts.out.candidates"),)},
             max_iter=3,
@@ -208,15 +208,15 @@ def _nodes() -> tuple[CompiledNode, ...]:
         CompiledCodeNode(
             node_id=NodeId("polish__fix"),
             parent=NodeId("polish"),
-            description="исправление",
+            description="fix",
             run=CodeRef("shop.flows.intake.nodes.polish.fix:fix"),
             input_schema=SCHEMA,
             output_schema=SCHEMA,
-            output_fields=(FieldIr(name="items", type="Text[]", description="элементы"),),
+            output_fields=(FieldIr(name="items", type="Text[]", description="items"),),
         ),
         CompiledCallNode(
             node_id=NodeId("panel"),
-            description="панель",
+            description="panel",
             flow=FlowId("judge"),
             inputs=(RefBinding(name="candidates", ref="$drafts.out.candidates"),),
             input_schema=SCHEMA,
@@ -224,14 +224,14 @@ def _nodes() -> tuple[CompiledNode, ...]:
         ),
         CompiledNarrowNode(
             node_id=NodeId("to_record"),
-            description="сужение",
+            description="narrowing",
             source="$panel.out",
             to=TypeId("CaseRecord"),
             output_schema=SCHEMA,
         ),
         CompiledHumanNode(
             node_id=NodeId("approve"),
-            description="согласование",
+            description="approval",
             form=TypeId("ReplyApproval"),
             assignee="support_lead",
             timeout_seconds=3600,
@@ -245,7 +245,7 @@ def _nodes() -> tuple[CompiledNode, ...]:
 def _flow(flow_id: str, nodes: tuple[CompiledNode, ...], order: tuple[str, ...]) -> CompiledFlow:
     return CompiledFlow(
         flow_id=FlowId(flow_id),
-        description="воркфлоу",
+        description="workflow",
         input_type="CaseRequest",
         output_type="CaseOutcome",
         input_schema=SCHEMA,
@@ -259,7 +259,7 @@ def _flow(flow_id: str, nodes: tuple[CompiledNode, ...], order: tuple[str, ...])
 def _project(ballot_template: str = "{{ text }}") -> CompiledProject:
     judge_node = CompiledLlmNode(
         node_id=NodeId("pick"),
-        description="выбор",
+        description="choice",
         agent=AgentId("critic"),
         inference=InferenceId("pick"),
         output_mode="tool",
@@ -276,7 +276,7 @@ def _project(ballot_template: str = "{{ text }}") -> CompiledProject:
     )
     return CompiledProject(
         package="shop",
-        description="проект",
+        description="project",
         agents={
             AgentId("writer"): _agent("writer", (ToolId("lookup"),)),
             AgentId("critic"): _agent("critic"),
@@ -290,20 +290,20 @@ def _project(ballot_template: str = "{{ text }}") -> CompiledProject:
         tools={
             ToolId("search_kb"): CompiledTool(
                 tool_id=ToolId("search_kb"),
-                description="поиск",
+                description="search",
                 source=CodeToolSource(run=CodeRef("shop.tools.functions:search_kb")),
                 effect=Effect.READ,
             ),
             ToolId("lookup"): CompiledTool(
                 tool_id=ToolId("lookup"),
-                description="справочник",
+                description="reference",
                 source=McpToolSource(server=McpServerId("desk"), tool="lookup"),
                 effect=Effect.READ,
             ),
         },
         mcp_servers={
             McpServerId("desk"): CompiledMcpServer(
-                server_id=McpServerId("desk"), description="сервер", url="http://127.0.0.1:9/mcp"
+                server_id=McpServerId("desk"), description="server", url="http://127.0.0.1:9/mcp"
             )
         },
         flows={
@@ -359,7 +359,7 @@ def test_flow_closure_keeps_only_reachable_entities() -> None:
 
 def test_flow_hash_ignores_unreachable_and_descriptive_changes() -> None:
     project = _project()
-    renamed = project.model_copy(update={"description": "другое описание", "agents": dict(project.agents)})
+    renamed = project.model_copy(update={"description": "another description", "agents": dict(project.agents)})
     unrelated = project.model_copy(
         update={"agents": {**project.agents, AgentId("unused"): _agent("unused", (ToolId("search_kb"),))}}
     )
@@ -373,7 +373,7 @@ def test_flow_hash_ignores_unreachable_and_descriptive_changes() -> None:
 def test_node_hashes_split_body_and_behavior() -> None:
     project = _project()
     node = project.flow(FlowId("intake")).node(NodeId("vote__ballot"))
-    described = node.model_copy(update={"description": "новое описание"})
+    described = node.model_copy(update={"description": "new description"})
 
     assert node_body_hash(described) != node_body_hash(node)
     assert node_behavior_hash(project, described) == node_behavior_hash(project, node)

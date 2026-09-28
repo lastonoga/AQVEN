@@ -91,12 +91,12 @@ def test_sample_document_honours_enums_bounds_and_arrays() -> None:
 
 
 def test_prompt_shows_fragments_variants_and_the_given_input(shop: CompiledProject) -> None:
-    preview = preview_of(shop, "intake", "reply", document={"text": "Коробка мятая", "mood": "calm"})
+    preview = preview_of(shop, "intake", "reply", document={"text": "The box is dented", "mood": "calm"})
     text = last_message(preview)
     assert preview.input_source == "request"
-    assert "Пиши спокойно и коротко." in text
-    assert "Держи ровный тон." in text
-    assert "<note>Коробка мятая</note>" in text
+    assert "Write calmly and briefly." in text
+    assert "Keep an even tone." in text
+    assert "<note>The box is dented</note>" in text
     assert "Output fields:" in text
 
 
@@ -104,14 +104,14 @@ def test_variant_case_is_forced_without_touching_the_input(shop: CompiledProject
     preview = preview_of(shop, "intake", "reply", variants={"tone": "warm"})
     [variant] = preview.variants
     assert (variant.slot, variant.case, variant.forced, variant.selector) == ("tone", "warm", True, "$in.mood")
-    assert "Добавь тепла." in last_message(preview)
+    assert "Add warmth." in last_message(preview)
     assert preview.input["mood"] == "warm"
 
 
 def test_instructions_carry_agent_text_and_output_limits(shop: CompiledProject) -> None:
     preview = preview_of(shop, "intake", "reply")
     instructions = preview.instructions or ""
-    assert "Ты отвечаешь на заметки покупателей" in instructions
+    assert "You reply to customer notes" in instructions
     assert "Output limits" in instructions
     assert "- text: at most 200 characters" in instructions
     assert '- mood: one of "calm", "warm"' in instructions
@@ -175,14 +175,14 @@ def test_tools_and_subagents_of_the_agent_are_listed(shop: CompiledProject) -> N
 
 def test_system_message_goes_to_instructions_and_examples_come_first(triage: CompiledProject) -> None:
     preview = preview_of(triage, "triage", "classify")
-    assert "Ты сортируешь обращения покупателей" in (preview.instructions or "")
+    assert "You sort customer tickets" in (preview.instructions or "")
     assert [(item.role, item.origin) for item in preview.messages] == [
         ("user", "example"),
         ("assistant", "example"),
         ("user", "prompt"),
     ]
-    assert "Где посылка" in preview.messages[0].text
-    assert "Тема: <subject>" in last_message(preview)
+    assert "Where is my parcel" in preview.messages[0].text
+    assert "Subject: <subject>" in last_message(preview)
 
 
 def test_unknown_flow_node_and_kind_are_reported(shop: CompiledProject) -> None:
@@ -226,7 +226,7 @@ def test_cli_prints_the_preview_and_accepts_input_and_variants(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     document = tmp_path / "input.json"
-    document.write_text(json.dumps({"text": "Помялась коробка", "mood": "calm"}), encoding="utf-8")
+    document.write_text(json.dumps({"text": "The box got crushed", "mood": "calm"}), encoding="utf-8")
     arguments = [
         "prompt",
         "preview",
@@ -240,8 +240,8 @@ def test_cli_prints_the_preview_and_accepts_input_and_variants(
     ]
     assert main(arguments) == 0
     printed = capsys.readouterr().out
-    assert "Помялась коробка" in printed
-    assert "Добавь тепла." in printed
+    assert "The box got crushed" in printed
+    assert "Add warmth." in printed
     assert "- tone: warm (from $in.mood, forced)" in printed
 
 

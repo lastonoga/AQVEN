@@ -1,5 +1,5 @@
 {% include "fragments/tone" %}
 {{ variants.tone }}
-Ответь на заметку одной фразой.
+Reply to the note in one sentence.
 <note>{{ text }}</note>
 {{ output_format }}

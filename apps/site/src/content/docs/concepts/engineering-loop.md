@@ -57,15 +57,22 @@ said mattered". It's what tells you the fix is safe to ship.
 ## The loop runs in rounds
 
 One incident is one pass through the loop. Building a flow that holds takes several passes, and a coding
-agent can run them for you. You give it the task and what "done" means in numbers. The agent builds the
-simplest flow, runs a look over the cases, and traces every failure to its first failing node. Then you
-read the first traces and note the first thing that went wrong in each; the agent groups your notes into
-failure modes and writes them down once you agree. It fixes what the prompt never asked for, and turns
+agent can run them for you. You give it the task, what "done" means in numbers, and what the flow gets as
+input when it runs in production. A field that only your data has, such as a customer's account tier next
+to a ticket the flow receives as bare text, is never an input, however well it predicts the answer. The
+agent builds the simplest flow, runs a look over the cases, and traces every failure to its first failing
+node. Then it offers you the first traces: you note the first thing that went wrong in each, or leave the
+reading to the agent. It groups the notes into failure modes and writes them down once you agree. It fixes what the prompt never asked for, and turns
 each remaining failure mode into an experiment. It explores on working cases, confirms once on held-out
 cases, and applies the finding. Then it starts the next round on fresh cases, maps new failures to the
 known modes itself, and brings you only the ones that fit none. It stops when every "done" criterion is
 confirmed, or the budget is spent, and reports `FINDINGS.md` and the risks left. [How an agent takes a
 task to a reliable flow](/mcp-cli/research-loop/) is that loop, stage by stage.
+
+A long session gets compacted into a summary along the way, and a summary can carry rules that were never
+true. After a compaction the agent loads the instructions for the stage it is in again, re-reads the
+[research journal](/concepts/research-journal/), and takes the project's structure from its files and
+`{{CLI_COMMAND}} tree`, never from what it remembers of the conversation.
 
 ## How this shapes what you do
 

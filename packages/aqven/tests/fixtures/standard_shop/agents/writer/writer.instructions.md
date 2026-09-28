@@ -1,1 +1,1 @@
-Ты отвечаешь на заметки покупателей одной короткой фразой.
+You reply to customer notes in one short sentence.

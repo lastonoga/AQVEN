@@ -17,9 +17,9 @@ how-to that covers it in full.
   Agent, Inference, and the llm node.
 - **`code`** — runs a plain Python function you wrote. [How to write a step in Python](../engine/code-node.md).
 - **`tool`** — gives an agent a tool that reaches outside the flow: an internal API, a paid service, a
-  long-running job. How to give an agent a tool.
+  long-running job. [How to give an agent a tool](../engine/tool-node.md).
 - **`human`** — pauses the run and waits for a person to submit a typed answer.
-  How to pause for a person.
+  [How to pause for a person](../engine/human-node.md).
 - **`parallel`** — branches into several nodes run against the same input at once.
   [How to branch into parallel steps](../engine/parallel-node.md).
 - **`map`** — runs one body node once per item in a collection.
@@ -27,7 +27,7 @@ how-to that covers it in full.
 - **`switch`** — routes by a value: a different case, a different node, or both, for every possible
   value of an enum or a union. How to route by a value.
 - **`loop`** — repeats a step with a limit, one body pass after another, until a policy or a cap stops
-  it. How to repeat a step with a limit.
+  it. [How to repeat a step with a limit](../engine/loop-node.md).
 - **`call`** — reuses a flow as a step, running it start to finish as if it were one node.
   [How to reuse a flow as a step](../engine/call-node.md).
 - **`narrow`** — narrows a dynamic value to a type, turning an open-ended value into ordinary typed

@@ -1,25 +1,25 @@
 apiVersion: "aqven/v1"
 kind: "Inference"
-description: "Короткий ответ на заметку в заданном тоне"
+description: "Short reply to a note in the given tone"
 in:
 - name: "text"
   type: "Text"
-  description: "Заметка"
+  description: "Note"
   maxLength: 200
 - name: "mood"
   type: "Mood"
-  description: "Тон ответа"
+  description: "Reply tone"
 out:
 - name: "text"
   type: "Text"
-  description: "Ответ"
+  description: "Reply"
   maxLength: 200
 - name: "mood"
   type: "Mood"
-  description: "Тон, которым получился ответ"
+  description: "Tone the reply came out in"
 - name: "score"
   type: "Score"
-  description: "Уверенность в ответе"
+  description: "Confidence in the reply"
 variants:
   tone:
     on: "mood"

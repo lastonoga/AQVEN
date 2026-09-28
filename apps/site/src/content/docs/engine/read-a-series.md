@@ -31,6 +31,14 @@ attempts.
   after the first one and 30 seconds passed, and `paused` while the series awaits approval or a person;
   time spent paused doesn't count. A finished, cancelled or failed series has no `eta`.
 
+- **Read the first snapshot early, per variant first.** A series runs one attempt first, then several at
+  once. Once the first attempts finish, look at each variant's totals: finished attempts, infrastructure
+  errors and latency (`aggregates` in `series_get`, the matrix in Studio). The snapshot is clean only when
+  every variant has at least one finished attempt: a variant with none may hang at its provider or fail on
+  every call. Open the case rows (`include_cases: true`) only for the variants with failures, because the
+  rows of many variants make a very large answer. An infrastructure error, or a variant several times
+  slower than the others, is worth fixing before the series goes on.
+
 - **Read the verdict first, and quote it.** The server writes one sentence from the interval and the
   margin in the file. Repeat it as it is: don't round the numbers or retell them. The sentence follows
   these templates:
@@ -73,11 +81,13 @@ attempts.
   need a fix in the step. Cases that fail sometimes point to a retry with a check, or a vote.
 - **Read the failing cases, not the average.** The case rows give each variant's tally, the failed checks
   and the spend. Each attempt shows its outcome, its error and a link to its run, where the trace names
-  the first node that failed. Filter to the failures, or to the cases where the variants disagree. An
-  agent sees working cases only: `series_get` with `include_cases: true` returns them a page at a time,
-  failing first, 50 by default, and counts the rest in `hidden_cases`. Held-out cases are never shown one by
-  one. To read the outputs themselves, page through `series_outputs`, or run
-  `{{CLI_COMMAND}} series export <series_id>` for JSON lines or CSV, rather than opening every run.
+  the first node that failed. Filter to the failures, or to the cases where the variants disagree
+  (`divergent` in a case row). In a comparison, open the cases the candidate won and the ones it lost
+  against the current configuration, with their inputs, before you report the result. An agent sees
+  working cases only: `series_get` with `include_cases: true` returns them a page at a time, failing first,
+  50 by default, and counts the rest in `hidden_cases`. Held-out cases are never shown one by one. To read
+  the outputs themselves, page through `series_outputs`, or run `{{CLI_COMMAND}} series export <series_id>`
+  for JSON lines or CSV, rather than opening every run.
 - **Tell a failure from an infrastructure error.** A failed attempt counts: a check failed, or the model's
   output broke its type even after the retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`), or
   the provider refused the output type as too complex for the model (`OUTPUT_SCHEMA_REJECTED`), or the

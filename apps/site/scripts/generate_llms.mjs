@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { docsTokens } from "../docs.tokens.mjs";
 import { SITUATIONS, USE_CASES_PATH, situationHref } from "../src/components/landing/situations.ts";
+import { COMPARE_PATH } from "../src/components/landing/compare-path.ts";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const docsRoot = join(siteRoot, "src/content/docs");
@@ -12,7 +13,7 @@ const indexPath = join(publicRoot, "llms.txt");
 const fullPath = join(publicRoot, "llms-full.txt");
 const baseUrl = "https://aqvenstudio.com";
 const siteDescription =
-  "AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, you see the evidence and decide.";
+  "AQVEN is a Python framework and a local Studio for building reliable LLM workflows. Claude Code or Codex runs the experiments; you see the evidence and decide.";
 const builtOnNote = "AQVEN uses Pydantic AI for model-facing agents and DBOS for durable execution.";
 const linksNote = "The documentation links below point to Markdown copies of each page.";
 const check = process.argv.includes("--check");
@@ -91,6 +92,11 @@ const purposeItems = [
     "Use cases",
     `${baseUrl}${USE_CASES_PATH}`,
     "Find, explain, compare, confirm and build in detail, each with links to the docs.",
+  ),
+  listItem(
+    "Compare",
+    `${baseUrl}${COMPARE_PATH}`,
+    "Why AQVEN when you already have traces and evals: the questions a score doesn't answer, who does which part, and when another tool fits better.",
   ),
 ];
 const optionalItems = [
