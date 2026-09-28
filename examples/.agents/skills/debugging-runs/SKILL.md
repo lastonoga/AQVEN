@@ -29,12 +29,12 @@ description: "Finds why an AQVEN run, node or series attempt failed or hangs: ru
 
 | Code or sign | Cause | Fix |
 |---|---|---|
-| `truncated`, `finish_reason: length` | the output did not fit `max_tokens`; on a reasoning model the hidden reasoning used the budget (the attempt's `tokens_out` near `max_tokens` while the visible answer is short) | a reasoning model: cap or switch off `reasoning` in `settings.provider_options` (`choosing-models`); otherwise the agent's `settings.max_tokens` and output limits in the prompt |
+| `truncated`, `finish_reason: length` | the output did not fit `max_tokens`; on a reasoning model the hidden reasoning used the budget (the attempt's `tokens_out` near `max_tokens` while the visible answer is short) | a reasoning model: cap or switch off reasoning with the key its provider reads in `settings.provider_options` (`choosing-models`); otherwise the agent's `settings.max_tokens` and output limits in the prompt |
 | `OUTPUT_SCHEMA_REJECTED` | the schema is too big for the model; "too many states" is often a large enum times `maxItems` | `output.mode: prompted` or a smaller type, not `output.strict: false` (`designing-output-contracts`) |
 | `MODEL_SCHEMA_MISMATCH` although the probe passed | `tool` mode does not hold the real schema | `prompted` first, then another model |
 | `MODEL_NO_STRUCTURED_OUTPUT` | the output mode does not work live | `models check --live`, pin `output.mode` |
 | `MODEL_FEATURE_UNSUPPORTED` | the provider refused a feature: an attachment kind (images, audio, video, documents; the message names it), tools, structured output | `choosing-models`; the owner's model changes only with a yes |
-| `provider_error` with HTTP 429 | the upstream limited the model; its lane paused (console line `<provider:model> rate-limited — pausing Ns, parallel 8→4` from logger `aqven.models.lanes`); a series attempt runs once more at the end | provider fallbacks, `fallback_models`, `on_rate_limit`; never `rpm` |
+| `provider_error` with HTTP 429 | the provider, or an aggregator's upstream, limited the model; its lane paused (console line `<provider:model> rate-limited — pausing Ns, parallel 8→4` from logger `aqven.models.lanes`); a series attempt runs once more at the end | `fallback_models`, an aggregator's upstream fallbacks, `on_rate_limit`; never `rpm` |
 | another call error | `output.on_error` retries by default | read the retries in the node's events |
 | `CODE_NOT_FOUND` after a code edit | a reference or a generated name | `uv run aqven refs`, `uv run aqven tree`; no restart needed |
 | `NOT_RUNNABLE` at a series start | a case or variant cannot run | `problems[]` names the case and the variant |

@@ -42,7 +42,7 @@ to the project server: if your shell has no key, ask the owner to run the probe 
 | An intermediate record too coarse to carry what the next step needed (one value per field, the distinguishing detail folded into a generic word); accuracy fell and a general negative lesson was drawn | fields from the downstream confusion pairs; a pilot that shows spread; the lesson covers that schema only |
 | `output.strict: false` tried against `OUTPUT_SCHEMA_REJECTED` | `output.mode: prompted` or a smaller type (step 3) |
 | A nested output failed on a small model at the first smoke | flat by default; `models shapes --live` before nesting |
-| The same model retried after `OUTPUT_SCHEMA_REJECTED`; OpenRouter upstream routing made the rejection come and go | smaller schema; pin the provider order (`choosing-models`) |
+| The same model retried after `OUTPUT_SCHEMA_REJECTED`; the rejection came and went because the calls reached different backends (an aggregator's upstream routing, a gateway's pool) | smaller schema; on an aggregator, pin the upstream order (`choosing-models`) |
 | `tool` mode passed the small probe, then the real schema failed with `MODEL_SCHEMA_MISMATCH` on required fields | try `prompted` mode; compare `schema_valid_first_try`, the share of complete answers and the cost in a series |
 | Missing fields read downstream as "no": a model skipped part of the asked questions and the output looked clean | required fields, "unknown" downstream, an "answered every asked field" check |
 | Two empty answers scored as agreement 0.0 | keep it unknown: a nullable field (`None`) in the `code` step; a check cannot return unknown (it must return a `Verdict`, and a scored check without `score` is an error), so measure agreement only on cases where it is defined, selected with `cases.tags` |
@@ -59,7 +59,7 @@ to the project server: if your shell has no key, ask the owner to run the probe 
 
 ## References
 
-- `references/concepts/schema-state-space.md`: how the state space grows, how providers and OpenRouter fail on it,
+- `references/concepts/schema-state-space.md`: how the state space grows, how providers fail on it, aggregators included,
   a large enum in a list, `tool` against `prompted`. Read at step 3.
 - `references/concepts/answer-refusal-and-unknown.md`: only what the input shows, enums that cover real inputs,
   fields for an intermediate step, required fields, refusal as a state, unknown against no, the completeness
