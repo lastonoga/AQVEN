@@ -29,7 +29,6 @@ const requiredMarkers = [
   "MODEL_RETRIES_EXHAUSTED",
   "Built for inspection, not blind trust.",
   "127.0.0.1:5180/flows/support_case/canvas",
-  "/images/studio/hero-canvas.png",
   "E_REF_MISSING",
   "It checks the wiring, not whether the answers are right.",
   "billing, technical, refund, other.",
@@ -49,6 +48,62 @@ const requiredMarkers = [
 
 for (const marker of requiredMarkers) {
   assert.ok(page.includes(marker), `Expected the landing page to contain: ${marker}`);
+}
+
+const SITE = "https://aqvenstudio.com";
+
+const headMarkers = [
+  `<link rel="canonical" href="${SITE}/">`,
+  `<meta property="og:image" content="${SITE}/og.png">`,
+  '<meta name="twitter:card" content="summary_large_image">',
+  '<source type="image/avif"',
+  '<source type="image/webp"',
+  'fetchpriority="high"',
+];
+
+const lowerPage = page.toLowerCase();
+
+for (const marker of headMarkers) {
+  assert.ok(lowerPage.includes(marker.toLowerCase()), `Expected the landing page to contain: ${marker}`);
+}
+
+const JSON_LD_BLOCK = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
+
+const collectTypes = (value) => {
+  if (Array.isArray(value)) return value.flatMap(collectTypes);
+  if (value === null || typeof value !== "object") return [];
+  const own = typeof value["@type"] === "string" ? [value["@type"]] : [];
+  return [...own, ...Object.values(value).flatMap(collectTypes)];
+};
+
+const jsonLdBlocks = [...page.matchAll(JSON_LD_BLOCK)].map(([, body]) => JSON.parse(body));
+const jsonLdTypes = new Set(jsonLdBlocks.flatMap(collectTypes));
+
+for (const type of ["Organization", "WebSite", "SoftwareApplication", "SoftwareSourceCode", "FAQPage"]) {
+  assert.ok(jsonLdTypes.has(type), `Expected the landing page JSON-LD to describe a ${type}.`);
+}
+
+const faqQuestions = jsonLdBlocks
+  .flatMap((block) => block["@graph"] ?? [])
+  .filter((node) => node["@type"] === "FAQPage")
+  .flatMap((node) => node.mainEntity.map((question) => question.name));
+
+const HTML_ENTITIES = [
+  { pattern: /&#x27;|&#39;/g, replacement: "'" },
+  { pattern: /&quot;/g, replacement: '"' },
+  { pattern: /&amp;/g, replacement: "&" },
+];
+
+const visibleText = HTML_ENTITIES.reduce(
+  (text, { pattern, replacement }) => text.replace(pattern, replacement),
+  page.replace(JSON_LD_BLOCK, "")
+);
+
+for (const question of faqQuestions) {
+  assert.ok(
+    visibleText.includes(question),
+    `The FAQPage JSON-LD asks "${question}", which the visible FAQ does not show.`
+  );
 }
 
 const forbiddenMarkers = [
@@ -149,4 +204,6 @@ for (const { label, needle, expected } of counts) {
   );
 }
 
-console.log(`Landing page OK (${requiredMarkers.length} markers, ${counts.length} counts).`);
+console.log(
+  `Landing page OK (${requiredMarkers.length + headMarkers.length} markers, ${jsonLdTypes.size} JSON-LD types, ${faqQuestions.length} FAQ questions, ${counts.length} counts).`
+);

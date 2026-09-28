@@ -4,11 +4,19 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+interface HeroImageSource {
+  readonly type: `image/${string}`;
+  readonly srcSet: string;
+}
+
 interface HeroImage {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
+  readonly sources: readonly HeroImageSource[];
+  readonly src: string;
+  readonly srcSet: string;
+  readonly sizes: string;
+  readonly alt: string;
+  readonly width: number;
+  readonly height: number;
 }
 
 interface HeroLink {
@@ -57,15 +65,23 @@ const BrowserMockup = ({ className, url, image }: { className?: string; url: str
       </div>
     </div>
     <div className="relative w-full before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-16 before:bg-linear-to-b before:from-black/6 before:to-transparent md:before:h-20">
-      <img
-        src={image.src}
-        alt={image.alt}
-        width={image.width}
-        height={image.height}
-        loading="eager"
-        fetchPriority="high"
-        className="block h-auto w-full"
-      />
+      <picture className="block">
+        {image.sources.map((source) => (
+          <source key={source.type} type={source.type} srcSet={source.srcSet} sizes={image.sizes} />
+        ))}
+        <img
+          src={image.src}
+          srcSet={image.srcSet}
+          sizes={image.sizes}
+          alt={image.alt}
+          width={image.width}
+          height={image.height}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="block h-auto w-full"
+        />
+      </picture>
     </div>
   </div>
 );
@@ -120,3 +136,4 @@ const Hero206 = ({ className, badge, heading, description, command, buttons, ima
 );
 
 export { Hero206 };
+export type { HeroImage, HeroImageSource };

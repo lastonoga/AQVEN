@@ -1,6 +1,6 @@
 ---
 title: Start
-description: Build AI workflows you can trust — understand, reproduce, and fix them before a bad result reaches a customer.
+description: Start here to see how AQVEN, a Python framework and a local Studio for AI workflows, lets your coding agent run the experiments while you see the evidence and decide.
 ---
 
 AQVEN is a platform for building multi-step AI workflows as typed, checkable files — flows made of

@@ -1,5 +1,6 @@
 ---
 import "../styles/landing.css";
+import SeoHead from "@/components/landing/SeoHead.astro";
 import { Navbar1 } from "@/components/navbar1";
 import { latestRelease } from "@/lib/latest-release";
 import { Hero1 } from "@/components/hero1";
@@ -22,30 +23,44 @@ import {
   QUICKSTART,
   REPO,
 } from "@/components/landing/site-nav";
+import { SITUATIONS, USE_CASES_PATH, situationHref } from "@/components/landing/situations";
+
+const TITLE = "What AQVEN is for: find, explain, compare, confirm, build";
+const DESCRIPTION =
+  "Find, explain, compare, confirm, build: five situations from building multi-step AI workflows, and what you and your coding agent do about each in AQVEN.";
 
 const release = await latestRelease;
+
+const siteUrl = new URL("/", Astro.site).href;
+const pageUrl = new URL(USE_CASES_PATH, siteUrl).href;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": pageUrl,
+  url: pageUrl,
+  name: TITLE,
+  description: DESCRIPTION,
+  inLanguage: "en",
+  isPartOf: { "@type": "WebSite", "@id": `${siteUrl}#website`, name: "AQVEN", url: siteUrl },
+  mainEntity: {
+    "@type": "ItemList",
+    name: "What AQVEN is for",
+    numberOfItems: SITUATIONS.length,
+    itemListElement: SITUATIONS.map((situation, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: situation.title,
+      url: new URL(situationHref(situation.id), siteUrl).href,
+    })),
+  },
+};
 ---
 
 <!doctype html>
 <html lang="en" class="motion-safe:scroll-smooth">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>What AQVEN is for: use cases</title>
-    <meta
-      name="description"
-      content="Find, explain, compare, confirm and build: five things you do in AQVEN when you build multi-step AI workflows with your coding agent."
-    />
-    <link rel="icon" href="/favicon.svg" />
-    <script is:inline>
-      if (
-        localStorage.getItem("starlight-theme") === "dark" ||
-        (!localStorage.getItem("starlight-theme") &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      ) {
-        document.documentElement.classList.add("dark");
-      }
-    </script>
+    <SeoHead title={TITLE} description={DESCRIPTION} path={USE_CASES_PATH} jsonLd={jsonLd} />
   </head>
   <body>
     <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />

@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ChevronDown,
   Compass,
   FileCode,
   GitCompareArrows,
@@ -8,7 +9,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "cn";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -348,13 +348,18 @@ export const Stack = () => (
   </Section>
 );
 
-type Faq = { readonly question: string; readonly answer: string };
+export type Faq = { readonly question: string; readonly answer: string };
 
-const FAQS: readonly Faq[] = [
+export const FAQS: readonly Faq[] = [
   {
     question: "Is AQVEN open source?",
     answer:
       "No. It is source-available under the AQVEN License 1.0.0: you can read, run and change the code, and commercial redistribution is restricted.",
+  },
+  {
+    question: "Is AQVEN free?",
+    answer:
+      "Yes. You can use it for any purpose, including in production and in commercial products you build with it. The license only rules out competing products and selling AQVEN itself.",
   },
   {
     question: "Is AQVEN ready for production?",
@@ -396,15 +401,19 @@ export const FAQ = () => (
         Frequently asked questions.
       </h2>
     </div>
-    <Accordion type="single" collapsible className="mx-auto mt-14 w-full max-w-2xl">
+    <div className="mx-auto mt-14 w-full max-w-2xl divide-y divide-border border-y border-border">
       {FAQS.map((faq) => (
-        <AccordionItem key={faq.question} value={faq.question}>
-          <AccordionTrigger className="text-left text-base font-medium">
+        <details key={faq.question} name="faq" className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-base font-medium [&::-webkit-details-marker]:hidden">
             {faq.question}
-          </AccordionTrigger>
-          <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
-        </AccordionItem>
+            <ChevronDown
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+          <p className="pb-4 text-muted-foreground">{faq.answer}</p>
+        </details>
       ))}
-    </Accordion>
+    </div>
   </Section>
 );

@@ -1,13 +1,17 @@
 ---
 import "../styles/landing.css";
+import { getImage } from "astro:assets";
+import heroCanvas from "@/assets/hero-canvas.png";
+import SeoHead from "@/components/landing/SeoHead.astro";
 import { Navbar1 } from "@/components/navbar1";
 import { latestRelease } from "@/lib/latest-release";
-import { Hero206 } from "@/components/hero206";
+import { Hero206, type HeroImage, type HeroImageSource } from "@/components/hero206";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
 import {
   Comparison,
   FAQ,
+  FAQS,
   ResearchLoop,
   Situations,
   Stack,
@@ -28,34 +32,112 @@ import {
   REPO,
 } from "@/components/landing/site-nav";
 
+const TITLE = "AQVEN: Discover what your AI workflow needs to work reliably";
+const SITE_DESCRIPTION =
+  "AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, you see the evidence and decide.";
+const PYPI = "https://pypi.org/project/aqven/";
+const LICENSE = `${REPO}/blob/main/LICENSE`;
+
+const HERO_ALT = "AQVEN Studio showing the graph of a multi-step support workflow";
+const HERO_WIDTHS: readonly number[] = [800, 1280, 1920, 2844];
+const HERO_SIZES =
+  "(min-width: 1536px) 1488px, (min-width: 1280px) 1232px, (min-width: 1024px) 976px, (min-width: 768px) 720px, (min-width: 640px) 592px, calc(100vw - 48px)";
+const HERO_SOURCE_FORMATS = ["avif", "webp"] as const;
+const HERO_FALLBACK_FORMAT = "png";
+
+type HeroFormat = (typeof HERO_SOURCE_FORMATS)[number] | typeof HERO_FALLBACK_FORMAT;
+
+const heroVariant = (format: HeroFormat) => getImage({ src: heroCanvas, format, widths: [...HERO_WIDTHS] });
+
+const heroSource = async (format: (typeof HERO_SOURCE_FORMATS)[number]): Promise<HeroImageSource> => ({
+  type: `image/${format}`,
+  srcSet: (await heroVariant(format)).srcSet.attribute,
+});
+
+const [heroSources, heroFallback, release] = await Promise.all([
+  Promise.all(HERO_SOURCE_FORMATS.map(heroSource)),
+  heroVariant(HERO_FALLBACK_FORMAT),
+  latestRelease,
+]);
+
+const heroImage: HeroImage = {
+  sources: heroSources,
+  src: heroFallback.src,
+  srcSet: heroFallback.srcSet.attribute,
+  sizes: HERO_SIZES,
+  alt: HERO_ALT,
+  width: heroCanvas.width,
+  height: heroCanvas.height,
+};
+
 const startButtons = {
   primary: { text: "Get started", url: QUICKSTART },
   secondary: { text: "GitHub", url: REPO },
 };
 
-const release = await latestRelease;
+const siteUrl = new URL("/", Astro.site).href;
+const organizationId = `${siteUrl}#organization`;
+const softwareId = `${siteUrl}#software`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: "AQVEN",
+      url: siteUrl,
+      logo: new URL("/logo.png", siteUrl).href,
+      sameAs: [REPO, PYPI],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}#website`,
+      name: "AQVEN",
+      url: siteUrl,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en",
+      publisher: { "@id": organizationId },
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": softwareId,
+      name: "AQVEN",
+      description: SITE_DESCRIPTION,
+      applicationCategory: "DeveloperApplication",
+      url: siteUrl,
+      downloadUrl: PYPI,
+      ...(release === null ? {} : { softwareVersion: release.version }),
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      license: LICENSE,
+      publisher: { "@id": organizationId },
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": `${siteUrl}#source`,
+      name: "AQVEN",
+      codeRepository: REPO,
+      programmingLanguage: "Python",
+      license: LICENSE,
+      targetProduct: { "@id": softwareId },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${siteUrl}#faq`,
+      mainEntity: FAQS.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    },
+  ],
+};
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AQVEN: Discover what your AI workflow needs to work reliably</title>
-    <meta
-      name="description"
-      content="A Python framework and a local Studio for multi-step AI workflows. Your coding agent builds, runs and experiments on the workflow. You inspect the evidence and decide what to change."
-    />
-    <link rel="icon" href="/favicon.svg" />
-    <script is:inline>
-      if (
-        localStorage.getItem("starlight-theme") === "dark" ||
-        (!localStorage.getItem("starlight-theme") &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      ) {
-        document.documentElement.classList.add("dark");
-      }
-    </script>
+    <SeoHead title={TITLE} description={SITE_DESCRIPTION} path="/" jsonLd={jsonLd} />
   </head>
   <body>
     <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
@@ -67,12 +149,7 @@ const release = await latestRelease;
         description="AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, and you see the evidence."
         command="uv tool install aqven"
         buttons={startButtons}
-        image={{
-          src: "/images/studio/hero-canvas.png",
-          alt: "AQVEN Studio showing the graph of a multi-step support workflow",
-          width: 2844,
-          height: 1764,
-        }}
+        image={heroImage}
         mockupUrl="127.0.0.1:5180/flows/support_case/canvas"
       />
 
@@ -83,7 +160,7 @@ const release = await latestRelease;
       <Comparison />
       <Stack />
       <Providers />
-      <FAQ client:visible />
+      <FAQ />
 
       <Cta10
         heading="Start with one question."
