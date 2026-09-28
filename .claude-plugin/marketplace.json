@@ -1,0 +1,18 @@
+{
+  "name": "aqven",
+  "owner": {
+    "name": "Kirill Burkhanov"
+  },
+  "metadata": {
+    "description": "Agent skills for building, hardening, testing and debugging typed LLM workflows with AQVEN"
+  },
+  "plugins": [
+    {
+      "name": "aqven",
+      "source": "./packages/aqven/src/aqven/agent_plugin",
+      "description": "12 skills for building, hardening, testing and debugging typed LLM workflows with AQVEN: flows, experiments, datasets, output contracts and failure analysis",
+      "homepage": "https://aqvenstudio.com",
+      "repository": "https://github.com/lastonoga/AQVEN"
+    }
+  ]
+}

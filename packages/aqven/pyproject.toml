@@ -1,18 +1,29 @@
 [project]
 name = "aqven"
 version = "0.0.4"
-description = "Engineering layer for reliable AI workflows: files as the source of truth, a compiler, a checkpointed runtime and a local Studio."
+description = "Python framework and local Studio for reliable LLM workflows: typed files in your repo, checked before they run, tested with experiments and evals, with an MCP server for coding agents."
 readme = "README.md"
 license = "LicenseRef-AQVEN-1.0.0"
 license-files = ["LICENSE"]
 authors = [{ name = "Kirill Burkhanov" }]
-keywords = ["ai", "llm", "workflow", "agents", "evaluation", "pydantic-ai"]
+keywords = [
+    "ai", "llm", "workflow", "workflows", "agents", "agentic-workflows", "workflow-engine",
+    "evaluation", "evals", "llm-evaluation", "llm-testing", "prompt-management",
+    "mcp", "claude-code", "coding-agents", "pydantic-ai", "dbos",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Framework :: Pydantic",
+    "Framework :: Pydantic :: 2",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
     "Typing :: Typed",
 ]
 requires-python = ">=3.14,<3.15"
@@ -48,6 +59,7 @@ Homepage = "https://aqvenstudio.com"
 Documentation = "https://aqvenstudio.com"
 Repository = "https://github.com/lastonoga/AQVEN"
 Issues = "https://github.com/lastonoga/AQVEN/issues"
+Changelog = "https://github.com/lastonoga/AQVEN/releases"
 
 [project.optional-dependencies]
 anthropic = ["aqven-llm[anthropic]==0.0.4"]

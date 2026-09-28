@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use AQVEN in your work, please cite it as below."
+type: software
+title: "AQVEN"
+abstract: "AQVEN is a Python framework and a local Studio for building reliable LLM workflows: typed files in your repository, checked before they run, tested with experiments and evals, with an MCP server for coding agents."
+authors:
+  - family-names: "Burkhanov"
+    given-names: "Kirill"
+version: "0.0.4"
+date-released: "2026-09-28"
+repository-code: "https://github.com/lastonoga/AQVEN"
+url: "https://aqvenstudio.com"
+license-url: "https://github.com/lastonoga/AQVEN/blob/main/LICENSE"
+keywords:
+  - llm
+  - workflows
+  - evaluation
+  - experiments
+  - mcp
