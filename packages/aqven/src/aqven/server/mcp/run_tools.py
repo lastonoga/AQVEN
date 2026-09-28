@@ -3,7 +3,7 @@ from typing import Annotated, Final
 
 from pydantic import Field
 
-from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineFacade, EventLogQuery, RunListQuery
+from aqven.ports.engine import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, EngineFacade, EventLogQuery
 from aqven.runtime.address import ExecutionAddress, RequestModel, RunId, node_address
 from aqven.runtime.events import RunEvent
 from aqven.runtime.executions import ExecutionDetail
@@ -23,10 +23,21 @@ from aqven.runtime.runs import (
 )
 from aqven.runtime.vocabulary import IncludePayloads
 from aqven.server.mcp.catalog import Operation, ToolHints, ToolRegistration
+from aqven.server.views.run_list import RunListInput, RunListPage, RunListService, RunRow
 from aqven.server.views.runs import RunStartService
 
 RUN_EVENTS_PAGE: Final = Page[RunEvent]
-RUN_SUMMARY_PAGE: Final = Page[RunSummary]
+RUN_LISTING: Final = RunListPage[RunSummary | RunRow]
+RUN_LIST_DESCRIPTION: Final = (
+    "Page of runs filtered by flow_id, status, mode, series_id, assignee, parent_run_id and the time window "
+    "since and until; for what is waiting for a human use status=suspended, and for the inbox add "
+    "assignee=me (the local user), overdue=true, deadline_before and sort=deadline_at. "
+    "Without mode and series_id the page leaves out series attempt runs (mode experiment) and "
+    "hidden_experiment_runs counts the ones that match the other filters; series_id lists the attempt runs of one "
+    "series, mode=experiment all of them. view compact gives short rows: run_id, flow_id, status, mode, times, "
+    "cost_usd, the number of open waits, dataset_item_id, series_id and experiment_id; for the outputs of a series "
+    "use series_outputs, not a run_get per run. Cursor: next_cursor."
+)
 
 
 class RunGetInput(RequestModel):
@@ -85,8 +96,8 @@ class RunTools:
     async def get(self, request: RunGetInput) -> RunSnapshot:
         return await self.engine.get_run(request.run_id)
 
-    async def list_runs(self, request: RunListQuery) -> Page[RunSummary]:
-        return await self.engine.list_runs(request)
+    async def list_runs(self, request: RunListInput) -> RunListPage[RunSummary | RunRow]:
+        return await RunListService(self.engine).listing(request)
 
     async def get_node(self, request: RunGetNodeInput) -> ExecutionDetail:
         address = node_address(
@@ -127,6 +138,12 @@ class RunTools:
                     "A dataset case keeps its media as files: {$media, file} with file relative to "
                     'datasets/<dataset_id>/ or "@root/<path>" from the project root; with dataset_item_id '
                     "each file is read and stored as a blob before the run, so the run sees a blob_id. "
+                    "agent_overrides {llm node id: agent id} answers those nodes of the flow with another project "
+                    "agent for this run only, a run option and not an experiment variant: the cheap re-check of a "
+                    "fixed agent on the cases that failed, one run_start per case; the node id is the one run_get "
+                    "shows or its file name when only one node has it; run_get shows agent_overrides; an unknown "
+                    "or ambiguous node, a node that is not llm or an unknown agent is INPUT_INVALID with "
+                    "problems[] at agent_overrides.<node_id>. "
                     "Then call run_get and run_events."
                 ),
                 input_model=RunStartRequest,
@@ -146,14 +163,9 @@ class RunTools:
             ),
             Operation(
                 name="run_list",
-                description=(
-                    "Page of runs filtered by flow_id, status, mode, assignee, parent_run_id and the time window "
-                    "since and until; for what is waiting for a human use status=suspended, and for the inbox add "
-                    "assignee=me (the local user), overdue=true, deadline_before and sort=deadline_at. "
-                    "Cursor: next_cursor."
-                ),
-                input_model=RunListQuery,
-                output_model=RUN_SUMMARY_PAGE,
+                description=RUN_LIST_DESCRIPTION,
+                input_model=RunListInput,
+                output_model=RUN_LISTING,
                 surface="rest_and_mcp",
                 hints=ToolHints(title="Runs", read_only=True, idempotent=True),
                 use_case=self.list_runs,
@@ -199,8 +211,9 @@ class RunTools:
                 name="run_fork",
                 description=(
                     "New run from run run_id starting at node address (execution address): nodes before it are taken "
-                    "from the source run, it and later nodes run again. A node waiting for a human answer asks "
-                    "again."
+                    "from the source run, it and later nodes run again with the definition the source run used. "
+                    "A node waiting for a human answer asks again. overrides and at: working are NOT_RUNNABLE; "
+                    "to re-check a changed agent use run_start with dataset_item_id or input and agent_overrides."
                 ),
                 input_model=RunForkInput,
                 output_model=RunForked,

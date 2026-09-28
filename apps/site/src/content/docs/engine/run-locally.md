@@ -24,6 +24,12 @@ out of several, and what each of `run`'s exit codes means.
   of those out and `run` refuses to start the flow at all, naming what's missing rather than guessing a
   default — the engine invents nothing. Extra keys beyond what a flow needs are accepted and simply
   unused.
+- `--agent NODE=AGENT` is repeatable and answers an `llm` node of the flow with another agent of the
+  project, for this run only: the quick way to re-check a fixed agent on one case without a series. `NODE`
+  is the node id, or its file name when only one node in the flow has it; `AGENT` is an agent id from
+  `agents/`. An unknown node, a node that isn't `llm`, or an unknown agent stops the run before it starts
+  and names what exists. The same option is `RunOptions.agent_overrides` in Python and `agent_overrides` in
+  `run_start`.
 - `--format text` (the default) prints one line per event, the style [quickstart](/start/quickstart/)
   shows. `--format json` prints the same events as newline-delimited JSON instead — one compact object
   per line, in order, each carrying a `seq`, a timestamp, and a `type` that names the rest of its

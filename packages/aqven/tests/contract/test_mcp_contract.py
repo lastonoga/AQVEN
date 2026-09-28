@@ -19,8 +19,8 @@ TIMEOUT: Final = 60.0
 EXPECTED_TOOLS: Final = frozenset(
     {"aqven_check", "prompt_preview", "flow_patch", "run_start", "pyright_check", "pytest_run"}
 )
-SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel"})
-PROJECT_SERVER_TOOLS: Final = 16
+SERIES_TOOLS: Final = frozenset({"series_start", "series_get", "series_cancel", "series_outputs", "series_list"})
+PROJECT_SERVER_TOOLS: Final = 18
 
 
 def structured(result: CallToolResult) -> dict[str, JsonValue]:

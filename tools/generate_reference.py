@@ -25,6 +25,7 @@ import aqven
 from aqven.cli import COMMANDS
 from aqven.console.command import EXIT_FAILED, EXIT_OK, EXIT_USAGE
 from aqven.console.series import STATUS_EXITS, USAGE_CODES
+from aqven.console.series_wait import EXIT_UNREACHABLE, RETRY_BUDGET_SECONDS
 from aqven.diagnostics import DIAGNOSTIC_TEXTS, RULE_BY_CODE, SEVERITY_BY_CODE, DiagnosticCode
 from aqven.engine.control.outcomes import ControlErrorCode
 from aqven.engine.llm.errors import LlmFailureCode
@@ -730,12 +731,16 @@ def outcome_codes(outcome: OutcomeClass) -> str:
 
 
 def exit_rows() -> Iterator[tuple[str, str]]:
-    exits = sorted({*STATUS_EXITS.values(), EXIT_OK, EXIT_FAILED, EXIT_USAGE})
+    exits = sorted({*STATUS_EXITS.values(), EXIT_OK, EXIT_FAILED, EXIT_USAGE, EXIT_UNREACHABLE})
     for value in exits:
         statuses = [ticked(status.value) for status, code in STATUS_EXITS.items() if code == value]
         extra = {
-            EXIT_FAILED: ["the command failed, for example the project server did not answer"],
+            EXIT_FAILED: ["the command failed, for example the project server could not start"],
             EXIT_USAGE: [f"the server refused the series: {', '.join(ticked(code) for code in sorted(USAGE_CODES))}"],
+            EXIT_UNREACHABLE: [
+                "the command lost contact with the project server and gave up after retrying for "
+                f"{RETRY_BUDGET_SECONDS:g} s; a series it started keeps running on the server"
+            ],
         }.get(value, [])
         yield str(value), "; ".join((*statuses, *extra))
 

@@ -1,5 +1,6 @@
 import datetime as dt
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -16,7 +17,7 @@ from aqven.runtime.overrides import NodeOutputOverride
 from aqven.runtime.replay import McpToolStub, ProviderFault
 from aqven.runtime.steps import BlobStore
 from aqven.runtime.vocabulary import RunMode, RunStatus
-from aqven.spec import MODEL_PATTERN, Limits, Locale, Modality, TenantId, TimeZone
+from aqven.spec import MODEL_PATTERN, AgentId, Limits, Locale, Modality, NodeId, TenantId, TimeZone
 
 
 class CassetteMode(StrEnum):
@@ -100,6 +101,7 @@ class RunOptions:
     faults: tuple[ProviderFault, ...] = ()
     models: ModelProfile | None = None
     outputs: tuple[NodeOutputOverride, ...] = ()
+    agent_overrides: Mapping[NodeId, AgentId] = field(default_factory=dict[NodeId, AgentId])
 
 
 class RunResult[O: BaseModel](BaseModel):

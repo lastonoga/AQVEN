@@ -108,6 +108,8 @@ CREATE INDEX IF NOT EXISTS {SUMMARIES_TABLE}_by_flow
     ON {SUMMARIES_TABLE} (flow_id, created_at DESC, run_id DESC) WHERE admission = 'listed';
 CREATE INDEX IF NOT EXISTS {SUMMARIES_TABLE}_open
     ON {SUMMARIES_TABLE} (run_id) WHERE admission = 'pending' OR (admission = 'listed' AND settled = 0);
+CREATE INDEX IF NOT EXISTS {SUMMARIES_TABLE}_by_series
+    ON {SUMMARIES_TABLE} (series_id, created_at DESC, run_id DESC) WHERE admission = 'listed';
 """
 
 ADMIT: Final = f"""
@@ -337,10 +339,16 @@ def _flow_rule(selection: SummarySelection) -> SqlCondition | None:
     return None if selection.flow_id is None else ("s.flow_id = ?", (selection.flow_id,))
 
 
-def _mode_rule(selection: SummarySelection) -> SqlCondition:
-    if selection.mode is None:
-        return "s.mode != ?", (HIDDEN_MODE,)
-    return "s.mode = ?", (selection.mode,)
+def _mode_rule(selection: SummarySelection) -> SqlCondition | None:
+    if selection.mode is not None:
+        return "s.mode = ?", (selection.mode,)
+    if selection.series_id is not None:
+        return None
+    return "s.mode != ?", (HIDDEN_MODE,)
+
+
+def _series_rule(selection: SummarySelection) -> SqlCondition | None:
+    return None if selection.series_id is None else ("s.series_id = ?", (selection.series_id,))
 
 
 def _parent_rule(selection: SummarySelection) -> SqlCondition | None:
@@ -370,6 +378,7 @@ def _excluded_rule(selection: SummarySelection) -> SqlCondition | None:
 SELECTION_RULES: Final[tuple[SelectionRule, ...]] = (
     _flow_rule,
     _mode_rule,
+    _series_rule,
     _parent_rule,
     _since_rule,
     _until_rule,

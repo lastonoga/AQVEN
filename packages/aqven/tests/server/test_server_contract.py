@@ -123,12 +123,16 @@ RESEARCH_OPERATIONS: Final = {
     ("/api/experiments/{experiment_id}", "get"): ("experiment_get", None),
     ("/api/experiments/{experiment_id}/launch-plan", "post"): ("series_launch_plan", None),
     ("/api/series", "post"): ("series_start", "series_start"),
-    ("/api/series", "get"): ("series_list", None),
+    ("/api/series", "get"): ("series_history", None),
     ("/api/series/{series_id}", "get"): ("series_get", "series_get"),
     ("/api/series/{series_id}/cases", "get"): ("series_cases", None),
     ("/api/series/{series_id}/events", "get"): ("series_events", None),
     ("/api/series/{series_id}/approve", "post"): ("series_approve", None),
     ("/api/series/{series_id}/cancel", "post"): ("series_cancel", "series_cancel"),
+    ("/api/series/{series_id}/summary", "get"): ("series_summary", "series_get"),
+    ("/api/series/{series_id}/outputs", "get"): ("series_outputs", "series_outputs"),
+    ("/api/series-rows", "get"): ("series_rows", "series_list"),
+    ("/api/run-rows", "get"): ("run_rows", "run_list"),
     ("/api/datasets/{dataset_id}/cases/from-run", "post"): ("case_from_run", None),
 }
 

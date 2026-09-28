@@ -10,6 +10,7 @@ from aqven.series import (
     TERMINAL_STATUSES,
     AttemptFinishedEvent,
     AttemptId,
+    AttemptOutcome,
     ExperimentOrigin,
     LaunchPlan,
     LaunchRequest,
@@ -36,6 +37,20 @@ from aqven.series import (
     SeriesStatusEvent,
     SeriesSummaryView,
     SeriesVerdict,
+    VariantRole,
+)
+from aqven.series.read_views import (
+    FailureGroup,
+    SeriesBriefResult,
+    SeriesBriefView,
+    SeriesOutputRow,
+    SeriesOutputsPage,
+    SeriesOutputsRequest,
+    SeriesRow,
+    SeriesRowsPage,
+    SeriesRowsQuery,
+    SeriesStats,
+    VariantBrief,
 )
 from aqven.server.errors import ApiFailure
 from aqven.spec import DatasetId, ExperimentId, FlowId, SeriesSplit, VariantId, VerdictState
@@ -148,6 +163,69 @@ def series_events(series_id: SeriesId) -> tuple[SeriesEvent, ...]:
     )
 
 
+def brief(view: SeriesDetailView) -> SeriesBriefView:
+    variants = tuple(
+        VariantBrief(
+            variant_id=variant,
+            role=VariantRole.OTHER,
+            finished=2,
+            passed=1,
+            failed=1,
+            errors=0,
+            running=0,
+            spend_usd=Decimal("0.002"),
+            latency_p50_ms=900,
+            latency_p95_ms=1400,
+            metrics=(),
+            failures=(FailureGroup(code="check:label", count=1, example="expected acne, got absent"),),
+            other_failures=0,
+        )
+        for variant in view.variants
+    )
+    return SeriesBriefView(
+        **summary(view).model_dump(), variant_briefs=variants, error=view.error, finding_path=view.finding_path
+    )
+
+
+def output_rows() -> tuple[SeriesOutputRow, ...]:
+    return tuple(
+        SeriesOutputRow(
+            case="question",
+            variant=variant,
+            repeat=1,
+            split=SeriesSplit.DEV,
+            outcome=AttemptOutcome.PASSED,
+            error_code=None,
+            cost_usd=Decimal("0.001"),
+            latency_ms=800,
+            run_id=RunId(f"689d28f5-41a5-5e36-9978-fb028ec88b{index:02d}"),
+            output={"label": "billing"},
+            node_outputs={},
+            checks={"label": 1.0},
+        )
+        for index, variant in enumerate((VariantId("base"), VariantId("alt")))
+    )
+
+
+STATS: Final = SeriesStats(series=2, attempts=20, requests=24, tokens=4800, spend_usd=Decimal("0.14"), wall_seconds=95)
+
+
+def series_row(view: SeriesDetailView) -> SeriesRow:
+    return SeriesRow(
+        series_id=view.series_id,
+        experiment_id=KNOWN_EXPERIMENT,
+        flow_id=view.flow_id,
+        status=view.status,
+        verdict=None if view.verdict is None else view.verdict.state,
+        on=view.on,
+        progress=view.progress,
+        spend_usd=view.spend.usd,
+        started_at=view.started_at,
+        finished_at=view.finished_at,
+        eta=view.eta,
+    )
+
+
 def missing(series_id: str) -> ApiFailure:
     return ApiFailure("NOT_FOUND", f"series {series_id} was not found")
 
@@ -171,6 +249,8 @@ class FakeSeriesJobs:
     plans: list[tuple[ExperimentId, LaunchRequest]] = field(default_factory=list[tuple[ExperimentId, LaunchRequest]])
     event_reads: list[int] = field(default_factory=list[int])
     queries: list[SeriesListQuery] = field(default_factory=list[SeriesListQuery])
+    output_reads: list[SeriesOutputsRequest] = field(default_factory=list[SeriesOutputsRequest])
+    row_queries: list[SeriesRowsQuery] = field(default_factory=list[SeriesRowsQuery])
 
     def _view(self, series_id: SeriesId) -> SeriesDetailView:
         view = self.views.get(series_id)
@@ -195,6 +275,25 @@ class FakeSeriesJobs:
         view = self._view(request.series_id)
         cases = () if request.include_cases else None
         return SeriesGetResult(series=view, cases=cases, hidden_cases=0)
+
+    async def brief(self, request: SeriesGetRequest) -> SeriesBriefResult:
+        self.gets.append(request)
+        view = self._view(request.series_id)
+        cases = () if request.include_cases else None
+        return SeriesBriefResult(series=brief(view), cases=cases, hidden_cases=0)
+
+    async def outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+        self.output_reads.append(request)
+        self._view(request.series_id)
+        rows = tuple(row for row in output_rows() if request.variant is None or row.variant == request.variant)
+        return SeriesOutputsPage(series_id=request.series_id, rows=rows, total=len(rows), next_cursor=None)
+
+    async def rows(self, query: SeriesRowsQuery) -> SeriesRowsPage:
+        self.row_queries.append(query)
+        rows = tuple(
+            series_row(view) for view in self.views.values() if query.status is None or view.status is query.status
+        )
+        return SeriesRowsPage(items=rows[: query.limit], next_cursor=None, stats=STATS)
 
     async def list(self, query: SeriesListQuery) -> Page[SeriesSummaryView]:
         self.queries.append(query)

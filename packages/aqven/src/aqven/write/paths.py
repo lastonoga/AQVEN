@@ -8,6 +8,7 @@ from typing import Annotated, Final
 from pydantic import AfterValidator, Field
 
 from aqven.loader import file_hash, project_files
+from aqven.loader.digests import FILE_DIGESTS
 
 AQVEN_FOLDER: Final = ".aqven"
 LOCK_PATH: Final = f"{AQVEN_FOLDER}/lock"
@@ -61,7 +62,7 @@ def tree_hash(entries: Mapping[str, str]) -> str:
 
 
 def disk_tree(root: Path) -> dict[str, str]:
-    return {path: file_hash((root / path).read_bytes()) for path in project_files(root)}
+    return {path: FILE_DIGESTS.file_hash(root / path) for path in project_files(root)}
 
 
 def fsync_directory(folder: Path) -> None:

@@ -33,6 +33,7 @@ from aqven.runtime import (
     RunSummary,
 )
 from aqven.series.model import SeriesId
+from aqven.series.read_views import SeriesOutputsPage, SeriesOutputsRequest
 from aqven.series.views import (
     SeriesCancelRequest,
     SeriesGetResult,
@@ -50,7 +51,7 @@ BLOB_HASH_PREFIX: Final[str] = "sha256-"
 MEDIA_KEY: Final[str] = "$media"
 SERIES_READ_MARGIN_SECONDS: Final[float] = 10.0
 
-type QueryValue = str | int
+type QueryValue = str | int | tuple[str, ...]
 type Query = Mapping[str, QueryValue]
 
 
@@ -64,6 +65,19 @@ def address_query(address: ExecutionAddress) -> dict[str, QueryValue]:
         "branch_key": address.branch_key,
         "iteration": address.iteration,
         "item_index": address.item_index,
+    }
+    return {name: value for name, value in fields.items() if value is not None}
+
+
+def outputs_query(request: SeriesOutputsRequest) -> dict[str, QueryValue]:
+    fields: dict[str, QueryValue | None] = {
+        "split": None if request.split is None else request.split.value,
+        "variant": request.variant,
+        "case": request.case,
+        "outcome": None if request.outcome is None else request.outcome.value,
+        "fields": request.fields,
+        "page_size": request.page_size,
+        "cursor": request.cursor,
     }
     return {name: value for name, value in fields.items() if value is not None}
 
@@ -106,6 +120,7 @@ class AqvenClient:
         *,
         flow_id: str | None = None,
         status: RunStatus | None = None,
+        series_id: str | None = None,
         assignee: str | None = None,
         deadline_before: datetime | None = None,
         overdue: bool | None = None,
@@ -118,6 +133,7 @@ class AqvenClient:
         filters: dict[str, QueryValue | None] = {
             "flow_id": flow_id,
             "status": status,
+            "series_id": series_id,
             "assignee": assignee,
             "deadline_before": _moment(deadline_before),
             "overdue": None if overdue is None else str(overdue).lower(),
@@ -163,6 +179,10 @@ class AqvenClient:
             connect=base.connect, read=wait_seconds + SERIES_READ_MARGIN_SECONDS, write=base.write, pool=base.pool
         )
         return await self._call(SeriesGetResult, "GET", self._url("series", series_id), query=query, timeout=timeout)
+
+    async def series_outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+        url = self._url("series", request.series_id, "outputs")
+        return await self._call(SeriesOutputsPage, "GET", url, query=outputs_query(request))
 
     async def series_cancel(self, series_id: SeriesId, reason: str | None = None) -> SeriesSummaryView:
         body = request_body(SeriesCancelRequest(series_id=series_id, reason=reason))
