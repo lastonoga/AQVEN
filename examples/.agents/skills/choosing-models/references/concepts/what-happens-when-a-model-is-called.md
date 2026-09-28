@@ -136,10 +136,10 @@ A model that reasons writes reasoning tokens before its answer. They are billed 
 providers, count against the request's `max_tokens`, so a call can end `truncated` with a short or empty
 answer: the reasoning used the budget. The node's usage shows it, with output tokens close to `max_tokens` and
 little visible text. There are two fixes. Cap the reasoning (a lower effort, or a reasoning budget) or switch it
-off where the model allows it, in the agent's `settings.provider_options`; for OpenRouter that is the `reasoning`
-object described in [How to choose models on OpenRouter](../integrations/openrouter-model-selection.md). Or raise
-`settings.max_tokens` above the answer plus the reasoning you allow. For reading, extraction and classification,
-try the first: it also cuts the cost and the latency of every call.
+off where the model allows it, with the reasoning key its provider reads in the agent's `settings.provider_options`
+([How to connect a model provider](../integrations/model-providers.md#options-only-one-provider-takes) lists the key per
+provider). Or raise `settings.max_tokens` above the answer plus the reasoning you allow. For reading, extraction
+and classification, try the first: it also cuts the cost and the latency of every call.
 
 ## What gets redacted, and when
 

@@ -36,7 +36,7 @@ description: "Runs and reads AQVEN series without making the owner the monitor: 
 | 9 | A series started over MCP or in Studio has no background command: follow it with `series_get` and `wait_seconds: 50`, never `sleep` | the same discipline |
 | 10 | Stuck: two snapshots in a row without growth of `progress.done` while `running`, and no lane pause line (`… rate-limited — pausing …, parallel 8→4`) in the console → the attempts per variant (`run_list`, `run_get_node`): an attempt hanging at the provider with no error; the engine cuts it only after 600 s of stream silence (`MODEL_STREAM_STALLED`) or at the agent's `limits.seconds` | the hanging variant named to the owner |
 | 11 | `done`: quote `verdict.text` as it is; the conclusion rests on case rows, not only on aggregates (`divergent: true` marks the cases the variants split on); open 5 to 10 lost and won cases with their inputs before the report (`reporting-results`); a failed attempt counts against every binary check; `spend.usd` is a lower bound when `spend.unpriced_attempts` > 0 | the conclusion rests on rows |
-| 12 | `invalid` with `infra_errors`: fix the cause (provider fallbacks, `join`, `on_rate_limit`) and run again with the same threshold | the threshold never moved |
+| 12 | `invalid` with `infra_errors`: fix the cause (`fallback_models`, an aggregator's upstream fallbacks, `join`, `on_rate_limit`) and run again with the same threshold | the threshold never moved |
 | 13 | Journal and report with `reporting-results`; go on with the work | the owner never has to ping |
 
 `include_cases` returns `dev` rows only, failing first, at most 50, the rest counted in `hidden_cases`;
@@ -70,7 +70,7 @@ infrastructure error and stays out of the metrics.
 | Repeats, cases or variants cut, or one series split in two, to stay under the approval line; a comparison postponed over spend | the design stays; report and wait |
 | The cap key guessed, or looked up on the web | `research.spend_cap_usd`, only the owner's number |
 | A variant hangs at one provider and the delay is blamed on `rpm` | step 10 |
-| A holdout series ends `invalid` on 429: provider fallbacks are off and a parallel panel needs every branch (`join: all`) | provider fallbacks, `fallback_models`, `join: quorum` where a missing branch is acceptable |
+| A holdout series ends `invalid` on 429: a model has nowhere else to go and a parallel panel needs every branch (`join: all`) | `fallback_models`, an aggregator's upstream fallbacks, `join: quorum` where a missing branch is acceptable |
 | A shared type or check edited while a series runs makes it `invalid` with `inputs_changed` | no edits while it runs |
 | An archive unpacked into the package during a series: the server reindexed and the CLI lost contact | raw downloads stay outside the package (`building-datasets`); `series_get` before any restart |
 

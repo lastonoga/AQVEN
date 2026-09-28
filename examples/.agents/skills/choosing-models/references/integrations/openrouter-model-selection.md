@@ -1,6 +1,6 @@
 # How to choose models on OpenRouter
 
-Pick candidates from OpenRouter's public catalogue by what they read, what they cost and which parameters they take, read a model's endpoints, route it with provider_options, handle rate limits per model, and prove the choice with a live probe.
+The aggregator case of choosing a model, on OpenRouter. Pick candidates from its public catalogue by what they read, what they cost and which parameters they take, read a model's upstream endpoints, route it with provider_options, handle rate limits per model, and prove the choice with a live probe.
 
 ## Contents
 
@@ -12,10 +12,15 @@ Pick candidates from OpenRouter's public catalogue by what they read, what they 
 
 ## When you need this
 
-Read this before you add or change an agent whose `model` starts with `openrouter:`, before an experiment that
-compares agents, and when a step fails with `MODEL_FEATURE_UNSUPPORTED`, runs into `429` or is slow. The answer to
-"can this model do it" comes from OpenRouter's catalogue and from a live probe, not from a model's name or from
-memory: AQVEN keeps no table of what each model can read or produce.
+This is the aggregator page. How to find and verify candidates on any provider, direct or not, is in
+[How to connect a model provider](model-providers.md#finding-and-verifying-candidate-models); this page
+adds what only an aggregator has, with OpenRouter as the example: one catalogue across many model families, several
+upstream providers behind one model, and the routing between them.
+
+Read it before you add or change an agent whose `model` starts with `openrouter:`, and when such an agent fails
+with `MODEL_FEATURE_UNSUPPORTED`, runs into `429` or is slow. The answer to "can this model do it" comes from
+OpenRouter's catalogue and from a live probe, not from a model's name or from memory: AQVEN keeps no table of what
+each model can read or produce.
 
 ## Steps
 
@@ -170,8 +175,8 @@ What this is built on.
 
 ## See also
 
-- [How to connect a model provider](model-providers.md) — declaring a provider, credentials, rate-limit
-  strategies per model.
+- [How to connect a model provider](model-providers.md) — declaring a provider, naming a model on any
+  provider, finding and verifying candidates, options per provider, rate-limit strategies per model.
 - [How to check your model providers are configured](../engine/check-providers.md) — everything `models check` reports.
 - [How to find a model's real structural limits](../engine/check-shapes.md) — `models shapes` in detail.
 - How to prepare images for a flow — what an image model receives.
