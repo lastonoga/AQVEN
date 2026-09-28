@@ -421,6 +421,7 @@ def export_request(root: Path, arguments: argparse.Namespace) -> SeriesExportReq
         outcome=None if arguments.outcome is None else AttemptOutcome(str(arguments.outcome)),
         split=None if arguments.split is None else SeriesSplit(str(arguments.split)),
         out=None if arguments.out is None else Path(str(arguments.out)),
+        include_holdout=bool(arguments.include_holdout),
     )
 
 
@@ -443,6 +444,11 @@ def configure_export(parser: argparse.ArgumentParser) -> None:
     export.add_argument("--outcome", choices=[item.value for item in AttemptOutcome], default=None)
     export.add_argument("--split", choices=[split.value for split in SeriesSplit], default=None)
     export.add_argument("--out", default=None, metavar="FILE", help="file to write, stdout by default")
+    export.add_argument(
+        "--include-holdout",
+        action="store_true",
+        help="also the held-out attempts, left out by default: for the owner's review, never for tuning",
+    )
 
 
 @dataclass(frozen=True, slots=True)

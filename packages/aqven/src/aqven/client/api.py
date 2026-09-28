@@ -69,7 +69,7 @@ def address_query(address: ExecutionAddress) -> dict[str, QueryValue]:
     return {name: value for name, value in fields.items() if value is not None}
 
 
-def outputs_query(request: SeriesOutputsRequest) -> dict[str, QueryValue]:
+def outputs_query(request: SeriesOutputsRequest, include_holdout: bool) -> dict[str, QueryValue]:
     fields: dict[str, QueryValue | None] = {
         "split": None if request.split is None else request.split.value,
         "variant": request.variant,
@@ -78,6 +78,7 @@ def outputs_query(request: SeriesOutputsRequest) -> dict[str, QueryValue]:
         "fields": request.fields,
         "page_size": request.page_size,
         "cursor": request.cursor,
+        "include_holdout": "true" if include_holdout else None,
     }
     return {name: value for name, value in fields.items() if value is not None}
 
@@ -180,9 +181,11 @@ class AqvenClient:
         )
         return await self._call(SeriesGetResult, "GET", self._url("series", series_id), query=query, timeout=timeout)
 
-    async def series_outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
+    async def series_outputs(
+        self, request: SeriesOutputsRequest, *, include_holdout: bool = False
+    ) -> SeriesOutputsPage:
         url = self._url("series", request.series_id, "outputs")
-        return await self._call(SeriesOutputsPage, "GET", url, query=outputs_query(request))
+        return await self._call(SeriesOutputsPage, "GET", url, query=outputs_query(request, include_holdout))
 
     async def series_cancel(self, series_id: SeriesId, reason: str | None = None) -> SeriesSummaryView:
         body = request_body(SeriesCancelRequest(series_id=series_id, reason=reason))

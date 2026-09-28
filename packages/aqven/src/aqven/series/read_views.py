@@ -79,7 +79,7 @@ def reading_of(result: SeriesGetResult | SeriesBriefResult) -> SeriesReading:
     )
 
 
-class SeriesOutputsQuery(RequestModel):
+class SeriesOutputsFilter(RequestModel):
     split: SeriesSplit | None = None
     variant: VariantId | None = None
     case: str | None = None
@@ -89,8 +89,15 @@ class SeriesOutputsQuery(RequestModel):
     cursor: str | None = None
 
 
-class SeriesOutputsRequest(SeriesOutputsQuery):
+class SeriesOutputsRequest(SeriesOutputsFilter):
     series_id: SeriesId
+
+
+class SeriesOutputsQuery(SeriesOutputsFilter):
+    include_holdout: bool = False
+
+    def request(self, series_id: SeriesId) -> SeriesOutputsRequest:
+        return SeriesOutputsRequest(series_id=series_id, **self.model_dump(exclude={"include_holdout"}))
 
 
 class SeriesOutputRow(ResourceModel):

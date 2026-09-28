@@ -34,6 +34,6 @@ agent. [How to read a series](/engine/read-a-series/) says what the verdict mean
 **CLI tooling** is everything you run from a terminal instead of Studio. The [`check`
 command](/engine/check/) validates the whole tree before any of it reaches a teammate or a release. The
 rest cover generating types and editor schemas, inspecting how a project's pieces connect, running a
-flow locally without a server, managing secrets, and checking your model providers are configured.
+flow from the terminal, managing secrets, and checking your model providers are configured.
 `{{CLI_COMMAND}} series` runs a series from the terminal and waits for its verdict: see
 [How to run a series](/engine/run-a-series/#from-the-terminal).

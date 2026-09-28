@@ -58,6 +58,7 @@ class SeriesExportRequest:
     outcome: AttemptOutcome | None = None
     split: SeriesSplit | None = None
     out: Path | None = None
+    include_holdout: bool = False
 
     def outputs_request(self) -> SeriesOutputsRequest:
         return SeriesOutputsRequest(
@@ -141,7 +142,9 @@ WRITERS: Final[Mapping[ExportFormat, RowWriter]] = {
 
 
 class OutputsSource(Protocol):
-    async def series_outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage: ...
+    async def series_outputs(
+        self, request: SeriesOutputsRequest, *, include_holdout: bool = False
+    ) -> SeriesOutputsPage: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,15 +152,22 @@ class PatientOutputs:
     source: OutputsSource
     calls: PatientCalls
 
-    async def series_outputs(self, request: SeriesOutputsRequest) -> SeriesOutputsPage:
-        return await self.calls.call(lambda: self.source.series_outputs(request), NOTHING_WRITTEN)
+    async def series_outputs(
+        self, request: SeriesOutputsRequest, *, include_holdout: bool = False
+    ) -> SeriesOutputsPage:
+        return await self.calls.call(
+            lambda: self.source.series_outputs(request, include_holdout=include_holdout), NOTHING_WRITTEN
+        )
 
 
-async def output_pages(source: OutputsSource, request: SeriesOutputsRequest) -> AsyncIterator[SeriesOutputsPage]:
-    page = await source.series_outputs(request)
+async def output_pages(
+    source: OutputsSource, request: SeriesOutputsRequest, include_holdout: bool
+) -> AsyncIterator[SeriesOutputsPage]:
+    page = await source.series_outputs(request, include_holdout=include_holdout)
     yield page
     while page.next_cursor is not None:
-        page = await source.series_outputs(request.model_copy(update={"cursor": page.next_cursor}))
+        following = request.model_copy(update={"cursor": page.next_cursor})
+        page = await source.series_outputs(following, include_holdout=include_holdout)
         yield page
 
 
@@ -193,7 +203,7 @@ class SeriesExporter:
 
     async def _rows(self, request: SeriesExportRequest) -> list[SeriesOutputRow]:
         patient = PatientOutputs(self.source, PatientCalls(self.retry, self._notice))
-        pages = output_pages(patient, request.outputs_request())
+        pages = output_pages(patient, request.outputs_request(), request.include_holdout)
         return [row async for page in pages for row in page.rows]
 
     def _notice(self, line: str) -> None:

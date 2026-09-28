@@ -11294,6 +11294,16 @@
               ],
               "title": "Cursor"
             }
+          },
+          {
+            "name": "include_holdout",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Holdout"
+            }
           }
         ],
         "responses": {
@@ -11398,7 +11408,10 @@
             "description": "Internal Server Error"
           }
         },
-        "x-aqven-operation": "series_outputs"
+        "x-aqven-operation": "series_outputs",
+        "x-aqven-rest-only-parameters": {
+          "include_holdout": "the owner's review of held-out outputs, never for tuning"
+        }
       }
     },
     "/api/chat/status": {
@@ -19902,6 +19915,7 @@
           "W_GENERATED_STALE",
           "W_OUTPUT_MODE_RESOLVED",
           "W_SAMPLING_IGNORED",
+          "W_PROVIDER_OPTIONS_IGNORED",
           "W_TYPES_SHADOWS_STDLIB",
           "W_SIM_NODE_UNREACHED",
           "W_PROMPT_VALUE_UNREADABLE",

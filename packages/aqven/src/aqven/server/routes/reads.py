@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Final
 
 from fastapi import APIRouter, Query
 
@@ -8,15 +8,19 @@ from aqven.series.read_views import (
     SeriesBriefResult,
     SeriesOutputsPage,
     SeriesOutputsQuery,
-    SeriesOutputsRequest,
     SeriesRowsPage,
     SeriesRowsQuery,
 )
 from aqven.series.views import SeriesGetRequest, SeriesReadQuery
-from aqven.server.context import ServerContext, operation
+from aqven.server.context import ServerContext, operation, rest_only_parameters
 from aqven.server.errors import ERROR_RESPONSES
 from aqven.server.views.research import series_jobs
 from aqven.server.views.run_list import RunListPage, RunListService, RunRow
+
+OUTPUTS_OPERATION: Final = {
+    **operation("series_outputs"),
+    **rest_only_parameters({"include_holdout": "the owner's review of held-out outputs, never for tuning"}),
+}
 
 
 def build_reads_router(context: ServerContext) -> APIRouter:
@@ -36,9 +40,9 @@ def build_reads_router(context: ServerContext) -> APIRouter:
         request = SeriesGetRequest(series_id=SeriesId(series_id), view="summary", **query.model_dump())
         return await series_jobs(context.series).brief(request)
 
-    @router.get("/series/{series_id}/outputs", operation_id="series_outputs", openapi_extra=operation("series_outputs"))
+    @router.get("/series/{series_id}/outputs", operation_id="series_outputs", openapi_extra=OUTPUTS_OPERATION)
     async def list_series_outputs(series_id: str, query: Annotated[SeriesOutputsQuery, Query()]) -> SeriesOutputsPage:
-        request = SeriesOutputsRequest(series_id=SeriesId(series_id), **query.model_dump())
-        return await series_jobs(context.series).outputs(request)
+        request = query.request(SeriesId(series_id))
+        return await series_jobs(context.series).outputs(request, include_holdout=query.include_holdout)
 
     return router

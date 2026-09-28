@@ -10,6 +10,7 @@ from aqven.series.read_views import SeriesOutputsPage, SeriesReading, SeriesRows
 from aqven.server.mcp.series_read_tools import SERIES_LIST_DESCRIPTION, SERIES_OUTPUTS_DESCRIPTION
 from aqven.server.mcp.series_tools import SERIES_GET_DESCRIPTION
 from aqven.server.views.run_list import RunListPage, RunRow
+from aqven.spec import SeriesSplit
 
 COMPACT_KEYS: Final = frozenset(RunRow.model_fields)
 
@@ -27,6 +28,8 @@ async def test_read_tools_are_listed_read_only_with_output_schemas(tmp_path: Pat
         assert annotations is not None and annotations.read_only_hint is True
         assert tools[name].output_schema is not None
     assert {"fields", "outcome", "page_size", "cursor"} <= set(tools["series_outputs"].input_schema["properties"])
+    assert "include_holdout" not in tools["series_outputs"].input_schema["properties"]
+    assert "Held-out attempts are never returned" in SERIES_OUTPUTS_DESCRIPTION
     assert {"view", "fields", "case_limit", "cursor"} <= set(tools["series_get"].input_schema["properties"])
     assert "view summary" in SERIES_GET_DESCRIPTION
 
@@ -64,7 +67,8 @@ async def test_series_outputs_passes_filters_and_pages(tmp_path: Path) -> None:
         missing = await call(client, "series_outputs", {"series_id": "01999f2e-4b1c-7a3d-9e21-5c7d8f0a1b2f"})
 
     page = SeriesOutputsPage.model_validate(structured(result))
-    request, unknown = jobs.output_reads
+    (request, holdout), (unknown, _) = jobs.output_reads
+    assert holdout is False
     assert [row.variant for row in page.rows] == ["alt"]
     assert (request.variant, request.outcome, request.fields, request.page_size) == (
         "alt",
@@ -75,6 +79,25 @@ async def test_series_outputs_passes_filters_and_pages(tmp_path: Path) -> None:
     assert too_big.is_error is True
     assert missing.is_error is True and structured(missing)["code"] == "NOT_FOUND"
     assert unknown.series_id != SERIES_ID
+
+
+@pytest.mark.asyncio
+async def test_series_outputs_never_returns_held_out_rows_and_refuses_the_holdout_split(tmp_path: Path) -> None:
+    jobs = FakeSeriesJobs()
+    async with mcp_client(shop_copy(tmp_path), series=jobs) as client:
+        every = await call(client, "series_outputs", {"series_id": SERIES_ID})
+        refused = await call(client, "series_outputs", {"series_id": SERIES_ID, "split": "holdout"})
+        smuggled = await call(client, "series_outputs", {"series_id": SERIES_ID, "include_holdout": True})
+
+    page = SeriesOutputsPage.model_validate(structured(every))
+    refusal = structured(refused)
+    message = refusal["message"]
+    assert {row.split for row in page.rows} == {SeriesSplit.DEV}
+    assert page.total == len(page.rows) == 2
+    assert refused.is_error is True and refusal["code"] == "REQUEST_INVALID"
+    assert isinstance(message, str) and "only as totals" in message and "series_get" in message
+    assert SeriesOutputsPage.model_validate(structured(smuggled)).rows == page.rows
+    assert [holdout for _, holdout in jobs.output_reads] == [False, False, False]
 
 
 @pytest.mark.asyncio

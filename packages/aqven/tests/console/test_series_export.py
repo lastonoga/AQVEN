@@ -19,6 +19,7 @@ from aqven.console.series_export import ExportFormat, SeriesExportRequest, run_s
 from aqven.console.series_wait import EXIT_UNREACHABLE, RetryPolicy
 from aqven.runtime.address import RunId
 from aqven.series.model import AttemptOutcome, SeriesId
+from aqven.series.outputs import HOLDOUT_TOTALS_ONLY
 from aqven.series.read_views import SeriesOutputRow, SeriesOutputsPage
 from aqven.spec import SeriesSplit, VariantId
 
@@ -155,6 +156,38 @@ async def test_csv_without_fields_keeps_the_whole_output_in_one_column(tmp_path:
 
 
 @pytest.mark.asyncio
+async def test_the_export_asks_for_held_out_rows_only_with_include_holdout(tmp_path: Path) -> None:
+    server = OutputsServer(rows=3)
+    working = SeriesExportRequest(root=tmp_path, series_id=SERIES)
+    review = SeriesExportRequest(root=tmp_path, series_id=SERIES, include_holdout=True)
+
+    working_code, _, _ = await exported(server, working)
+    review_code, _, _ = await exported(server, review)
+
+    flags = [request.url.params.get("include_holdout") for request in server.requests]
+    assert (working_code, review_code) == (0, 0)
+    assert flags == [None, None, "true", "true"]
+
+
+@pytest.mark.asyncio
+async def test_a_held_out_split_without_include_holdout_is_a_usage_error(tmp_path: Path) -> None:
+    def refuse(request: httpx2.Request) -> httpx2.Response:
+        body: dict[str, JsonValue] = {
+            "ok": False,
+            "op": "series_outputs",
+            "code": "REQUEST_INVALID",
+            "message": HOLDOUT_TOTALS_ONLY,
+        }
+        return httpx2.Response(422, json=body)
+
+    request = SeriesExportRequest(root=tmp_path, series_id=SERIES, split=SeriesSplit.HOLDOUT)
+    code, out, err = await exported(OutputsServer(), request, httpx2.MockTransport(refuse))
+
+    assert (code, out) == (2, "")
+    assert f"REQUEST_INVALID: {HOLDOUT_TOTALS_ONLY}" in err
+
+
+@pytest.mark.asyncio
 async def test_a_refused_export_names_the_code_and_exits_two(tmp_path: Path) -> None:
     code, out, err = await exported(OutputsServer(status=404), SeriesExportRequest(root=tmp_path, series_id=SERIES))
 
@@ -239,6 +272,15 @@ def test_the_export_arguments_become_an_export_request(tmp_path: Path) -> None:
         split=SeriesSplit.DEV,
         out=Path("rows.csv"),
     )
+    assert request.include_holdout is False
+
+
+def test_include_holdout_reaches_the_export_request(tmp_path: Path) -> None:
+    arguments = build_parser().parse_args(["series", "export", SERIES, "--split", "holdout", "--include-holdout"])
+
+    request = export_request(tmp_path, arguments)
+
+    assert (request.split, request.include_holdout) == (SeriesSplit.HOLDOUT, True)
 
 
 def test_export_without_a_series_and_a_stray_series_id_are_usage_errors(tmp_path: Path) -> None:

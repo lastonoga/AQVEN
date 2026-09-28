@@ -97,9 +97,10 @@ attempts.
   report the result. `series_get` with `include_cases: true` returns working cases only, a page at a time,
   failing first, 50 by default, and counts the rest in `hidden_cases`. To read the outputs themselves, page
   through `series_outputs`, or run `aqven series export <series_id>` for JSON lines or CSV,
-  rather than opening every run. Both return held-out attempts too, so filter them to working cases
-  (`split: "dev"`, `--split dev`) whenever the rows inform a change, and use held-out outputs only as
-  aggregates in a report.
+  rather than opening every run. Both return working cases only: held-out attempts are left out, and
+  asking for the `holdout` split is refused, so a change can't be tuned to them. Read held-out cases as
+  totals, from the summary and the aggregates. To review the outputs behind a finding yourself, add
+  `--include-holdout` to the export; it is for your review, never for an agent tuning the flow.
 - **Tell a failure from an infrastructure error.** A failed attempt counts: a check failed, or the model's
   output broke its type even after the retries (`MODEL_RETRIES_EXHAUSTED`, `MODEL_SCHEMA_MISMATCH`), or
   the provider refused the output type as too complex for the model (`OUTPUT_SCHEMA_REJECTED`), or the

@@ -1,6 +1,6 @@
 ---
-title: How to run a flow without a server
-description: Every run flag beyond the quickstart basics — context, targeting a flow, JSON events, cassette replay, human answers — and what each exit code means.
+title: How to run a flow from the terminal
+description: Every run flag beyond the quickstart basics — context, targeting a flow, JSON events, cassette replay, human answers — where the run goes when the project server is up, and what each exit code means.
 ---
 
 ## When you need this
@@ -8,7 +8,8 @@ description: Every run flag beyond the quickstart basics — context, targeting 
 [Quickstart](/start/quickstart/) already creates a project and calls `{{CLI_COMMAND}} run` once with
 `--input` and `--context`. This page is the deeper reference: every other flag `run` accepts, what a
 flow actually requires from `--context` and where that requirement comes from, how to target one flow
-out of several, and what each of `run`'s exit codes means.
+out of several, where the run goes when the project server is up, and what each of `run`'s exit codes
+means.
 
 ## Steps
 
@@ -18,6 +19,16 @@ out of several, and what each of `run`'s exit codes means.
   no_such_flow is not in the project`.
 - `--root` points `run` straight at a project without `cd`-ing into it first. Left out, `run` searches
   upward from the current directory for `aqven.yaml`, the same rule every other command follows.
+- When the project server runs on this root (Studio, `{{CLI_COMMAND}} serve`, or the MCP bridge
+  `{{CLI_COMMAND}} mcp` started it), `run` starts the run through that server and says so on stderr
+  (`aqven run: through the project server http://127.0.0.1:5180`). The run appears in Studio and in
+  `run_list` like any other, and the events, their format and the exit codes are the same as below. Only
+  when no server answers for the root does `run` start an engine of its own in the terminal; a
+  `.aqven/server.json` left behind by a server that has stopped is ignored. A second engine on a root
+  the server already runs breaks the server's series, which is why `run` never starts one next to it.
+  `--max-parallel` and `--data-dir` apply to that engine of its own only; the server keeps its own
+  settings. A refusal from the server, such as an unknown agent in `--agent`, prints as
+  `aqven run: CODE: message` with one line per problem.
 - `--context KEY=VALUE` is repeatable and only accepts four keys: `date`, `time_zone`, `locale`,
   `tenant_id` — one shared shape across every flow. A given flow only needs the ones its nodes actually
   bind; `tree` prints exactly which on the flow's own row, as `run context: date, tenant_id`. Leave one
@@ -47,13 +58,17 @@ out of several, and what each of `run`'s exit codes means.
   anything already recorded. `record_new` replays whatever's already there and records only what
   isn't, so a rerun doesn't spend tokens on calls it's already captured. A `replay_strict` run against a
   directory that actually has the matching recordings never touches the network or needs an API key at
-  all — the cassette lookup happens before the code path that would ask for one.
+  all — the cassette lookup happens before the code path that would ask for one. Cassettes replay on an
+  engine of its own, so while the project server runs on the root, `run --cassettes` refuses to start and
+  exits `2`: stop the server first, or run without `--cassettes`.
 - `--data-dir` points at the same local data directory `dev`, `studio`, and `serve` use — the default is
   one shared location per machine. You only need to pass it if you deliberately keep more than one.
 - Exit codes: `0` when the run completes, `1` when it fails — a bad `--input` file, a `--context` value
-  the run's shape doesn't accept, a project that won't load, or the flow itself failing partway through
-  all land here. `2` is a plain command-line mistake: a missing required flag or a malformed value,
-  caught before anything runs. `3` means the run suspended waiting on a human answer it wasn't given.
+  the run's shape doesn't accept, a project that won't load, the flow itself failing partway through, or
+  the project server refusing the run or going away while `run` follows it (the run goes on there) all
+  land here. `2` is a plain command-line mistake: a missing required flag or a malformed value, caught
+  before anything runs, or `--cassettes` while the project server runs. `3` means the run suspended
+  waiting on a human answer it wasn't given.
 - `run` always starts a brand-new run — there's no flag that resumes an existing run id, and running the
   same command again is a fresh attempt, not a retry of the last one. A run that suspends doesn't die
   when the CLI process exits: it stays open and gets answered through the project server or its MCP
@@ -71,7 +86,9 @@ cd my_project/my_project
 ```
 
 Save the same `case.json` as [quickstart's run step](/start/quickstart/) into this folder before trying
-the commands below.
+the commands below. The outputs below come from a terminal with no project server running for the
+project; with one running, the run goes through it, one more stderr line says so, and the events are the
+same.
 
 Leave out `--context` entirely and `run` tells you exactly what `support_case` needs, before it does
 anything else:

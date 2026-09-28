@@ -27,7 +27,7 @@ The names below come from `aqven.__all__`. Import them from `aqven`. Signatures 
 - `async def cancel(self, run_id: 'RunId', reason: 'str') -> 'RunStatus'`
 - `async def series_start(self, request: 'SeriesStartRequest') -> 'SeriesStarted'`
 - `async def series_get(self, series_id: 'SeriesId', wait_seconds: 'int' = 0, include_cases: 'bool' = False) -> 'SeriesGetResult'`
-- `async def series_outputs(self, request: 'SeriesOutputsRequest') -> 'SeriesOutputsPage'`
+- `async def series_outputs(self, request: 'SeriesOutputsRequest', *, include_holdout: 'bool' = False) -> 'SeriesOutputsPage'`
 - `async def series_cancel(self, series_id: 'SeriesId', reason: 'str | None' = None) -> 'SeriesSummaryView'`
 - `async def upload_blob(self, data: 'bytes', media_type: 'str', name: 'str | None' = None) -> 'MediaValue'`
 - `async def download_blob(self, media: 'MediaValue') -> 'bytes'`

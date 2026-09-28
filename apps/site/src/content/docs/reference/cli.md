@@ -18,7 +18,7 @@ The command names and help text below come from `aqven.cli.COMMANDS`. Use `uv ru
 | `{{CLI_COMMAND}} fmt` | format YAML canonically | Pending |
 | `{{CLI_COMMAND}} plan` | semantic diff against a release and gate status | Pending |
 | `{{CLI_COMMAND}} build` | build the module wheel with IR | Pending |
-| `{{CLI_COMMAND}} run` | run a flow locally without a server and print run events as they appear | Available |
+| `{{CLI_COMMAND}} run` | run a flow and print run events as they appear: through the project server when one runs on this root, on an engine of its own otherwise | Available |
 | `{{CLI_COMMAND}} dev` | start the project server, watch project files and open Studio in the browser | Available |
 | `{{CLI_COMMAND}} studio` | alias of dev: start the project server, watch project files and open Studio in the browser | Available |
 | `{{CLI_COMMAND}} serve` | project server without a browser: Studio API, engine and MCP | Available |

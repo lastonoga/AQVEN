@@ -19,6 +19,7 @@ ENGINE_DISTRIBUTION: Final = "aqven"
 UNKNOWN_VERSION: Final = "0.0.0+unknown"
 OPERATION_KEY: Final = "x-aqven-operation"
 REST_ONLY_KEY: Final = "x-aqven-rest-only"
+REST_ONLY_PARAMETERS_KEY: Final = "x-aqven-rest-only-parameters"
 HUMAN_KIND: Final = "human"
 
 
@@ -35,6 +36,10 @@ def operation(name: str) -> dict[str, object]:
 
 def rest_only(reason: str) -> dict[str, object]:
     return {REST_ONLY_KEY: reason}
+
+
+def rest_only_parameters(reasons: Mapping[str, str]) -> dict[str, object]:
+    return {REST_ONLY_PARAMETERS_KEY: dict(reasons)}
 
 
 @dataclass(frozen=True, slots=True)
