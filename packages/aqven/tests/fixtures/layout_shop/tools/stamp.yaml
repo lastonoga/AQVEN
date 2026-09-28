@@ -1,15 +1,15 @@
 apiVersion: "aqven/v1"
 kind: "Tool"
-description: "Штамп прогона на заметке"
+description: "Run stamp on a note"
 run: "@here.functions:stamp"
 effect: "read"
 in:
 - name: "text"
   type: "Text"
-  description: "Текст заметки"
+  description: "Note text"
   maxLength: 200
 out:
 - name: "text"
   type: "Text"
-  description: "Текст со штампом"
+  description: "Stamped text"
   maxLength: 200

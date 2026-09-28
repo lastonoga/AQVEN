@@ -34,7 +34,7 @@ def sources(frame: ScopeFrame) -> RefSources:
 
     return RefSources(
         flow_input={"text": "x", "items": [1, 2]},
-        run_context={"locale": "ru-RU"},
+        run_context={"locale": "de-DE"},
         frame=frame,
         node_output=read,
     )
@@ -47,7 +47,7 @@ def test_refs_walk_fields_lists_and_frames() -> None:
     assert evaluate_ref("$item.id", sources(frame)) == 7
     assert evaluate_ref("$index", sources(frame)) == 0
     assert evaluate_ref("$branch.left.text", sources(frame)) == "L"
-    assert evaluate_ref("$run.context.locale", sources(frame)) == "ru-RU"
+    assert evaluate_ref("$run.context.locale", sources(frame)) == "de-DE"
     with pytest.raises(RefUnresolved):
         evaluate_ref("$case", sources(frame))
     with pytest.raises(RefUnresolved):

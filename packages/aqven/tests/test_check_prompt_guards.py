@@ -98,9 +98,9 @@ CUSTOMER_FIELD: Final = """- name: "customer_id"
   description: "Identifier of the customer"
 """
 
-CUSTOMER_RENDERED: Final = "Тема: {{ ticket.subject }}"
-CUSTOMER_ID_RENDERED: Final = "Тема: {{ ticket.subject }}\nПокупатель: {{ ticket.customer.customer_id }}"
-RECORD_RENDERED: Final = "Тема: {{ ticket.subject }}\nПокупатель:\n{{ ticket.customer }}"
+CUSTOMER_RENDERED: Final = "Subject: {{ ticket.subject }}"
+CUSTOMER_ID_RENDERED: Final = "Subject: {{ ticket.subject }}\nCustomer: {{ ticket.customer.customer_id }}"
+RECORD_RENDERED: Final = "Subject: {{ ticket.subject }}\nCustomer:\n{{ ticket.customer }}"
 
 
 def replace(root: Path, relative: str, old: str, new: str) -> None:
@@ -140,7 +140,7 @@ def with_credit_tool(root: Path) -> None:
     write(root, CREDIT_CODE, CREDIT_FUNCTION)
     append(root, CUSTOMER, CUSTOMER_FIELD)
     replace(
-        root, INFERENCE, '        name: "Анна"\n', '        name: "Анна"\n        customer_id: "cus_7k2m9p4q1x8z"\n'
+        root, INFERENCE, '        name: "Anna"\n', '        name: "Anna"\n        customer_id: "cus_7k2m9p4q1x8z"\n'
     )
     replace(root, WRITER, "settings:", 'tools:\n- "credit"\nsettings:')
     generate_types(root)
@@ -210,7 +210,7 @@ def test_value_whose_fields_are_all_media_is_reported_as_unreadable(shop: Path) 
     write(shop, ATTACHMENTS, ATTACHMENTS_TYPE)
     append(shop, TICKET, '- name: "attachments"\n  type: "Attachments?"\n  description: "Attached files"\n')
     replace(shop, INFERENCE, "      photo: null\n", "      photo: null\n      attachments: null\n")
-    replace(shop, PROMPT, CUSTOMER_RENDERED, "Тема: {{ ticket.subject }}\nФайлы: {{ ticket.attachments }}")
+    replace(shop, PROMPT, CUSTOMER_RENDERED, "Subject: {{ ticket.subject }}\nFiles: {{ ticket.attachments }}")
     generate_types(shop)
 
     report = check_project(shop)
@@ -234,8 +234,8 @@ def test_media_input_is_not_reported_as_unused(shop: Path) -> None:
     replace(
         shop,
         INFERENCE,
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n',
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n'
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n',
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n'
         '- name: "scan"\n  type: "Image?"\n  description: "Scan of the receipt"\n',
     )
     replace(shop, INFERENCE, "      photo: null\n", "      photo: null\n    scan: null\n")
@@ -256,8 +256,8 @@ def test_input_used_only_by_a_check_path_is_not_reported_as_unused(shop: Path) -
     replace(
         shop,
         INFERENCE,
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n',
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n'
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n',
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n'
         '- name: "note"\n  type: "Text"\n  description: "Operator note"\n  maxLength: 200\n',
     )
     replace(shop, INFERENCE, "      photo: null\n", '      photo: null\n    note: "none"\n')
@@ -285,8 +285,8 @@ def test_unused_input_still_names_the_missing_placeholder(shop: Path) -> None:
     replace(
         shop,
         INFERENCE,
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n',
-        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Обращение"\n'
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n',
+        '- name: "ticket"\n  type: "TriageTicket"\n  description: "Ticket"\n'
         '- name: "note"\n  type: "Text"\n  description: "Operator note"\n  maxLength: 200\n',
     )
     replace(shop, INFERENCE, "      photo: null\n", '      photo: null\n    note: "none"\n')
@@ -306,7 +306,7 @@ def test_unused_input_still_names_the_missing_placeholder(shop: Path) -> None:
 
 
 def test_variable_that_is_neither_an_input_nor_a_variant_slot_is_reported(shop: Path) -> None:
-    replace(shop, PROMPT, CUSTOMER_RENDERED, "Тема: {{ ticket.subject }}\nОтдел: {{ queue.name }}")
+    replace(shop, PROMPT, CUSTOMER_RENDERED, "Subject: {{ ticket.subject }}\nDepartment: {{ queue.name }}")
 
     report = check_project(shop)
 

@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Аудит приёма заметки"
+description: "Note intake audit"
 input: "Note"
 output: "Note"
 returns:

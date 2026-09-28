@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Ответ на заметку"
+description: "Reply to a note"
 agent: "writer"
 in:
 - name: "text"

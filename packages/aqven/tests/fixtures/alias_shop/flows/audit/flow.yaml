@@ -1,6 +1,6 @@
 apiVersion: "aqven/v1"
 kind: "Flow"
-description: "Аудит заметки шагом другого воркфлоу"
+description: "Note audit through a step of another workflow"
 input: "Note"
 output: "Note"
 returns:

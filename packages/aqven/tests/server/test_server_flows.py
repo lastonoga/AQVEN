@@ -82,7 +82,7 @@ def test_node_detail(server_client: TestClient) -> None:
     assert reply["agent_spec"]["kind"] == "Agent"
     assert reply["agent_runtime"]["models"] is None
     assert reply["agent_runtime"]["output"] is None
-    assert reply["agent_runtime"]["instructions"] == "Ты отвечаешь на заметки покупателей одной короткой фразой.\n"
+    assert reply["agent_runtime"]["instructions"] == "You reply to customer notes in one short sentence.\n"
     assert "file" not in reply["agent_runtime"]
     assert reply["agent_path"].endswith("writer.yaml")
     assert reply["display_sources"] == {}

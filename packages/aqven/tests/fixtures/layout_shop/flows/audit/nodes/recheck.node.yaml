@@ -1,7 +1,7 @@
 apiVersion: "aqven/v1"
 kind: "Node"
 node: "llm"
-description: "Перепроверка инференсом узла reply из воркфлоу intake"
+description: "Recheck with the inference of the reply node from the intake workflow"
 inference: "reply"
 agent: "critic"
 in:

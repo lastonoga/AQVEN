@@ -127,15 +127,15 @@ class Order(BaseModel):
 
 class Totals(BaseModel):
     model_config = MIRROR
-    total: Money = Field(description="Итог в евро")
-    lines: Annotated[int, Field(ge=0, le=500)] = Field(description="Число строк")
+    total: Money = Field(description="Total in euros")
+    lines: Annotated[int, Field(ge=0, le=500)] = Field(description="Line count")
 
 
 class Resolve(Inference):
-    order: Order = In(description="Заказ покупателя")
-    tags: list[str] = In(description="Метки обращения", max_items=5, max_length=40)
-    reasoning: str = Out(description="Обоснование решения", max_length=600)
-    decision: Decision = Out(description="Решение")
+    order: Order = In(description="Customer order")
+    tags: list[str] = In(description="Ticket tags", max_items=5, max_length=40)
+    reasoning: str = Out(description="Reasoning behind the decision", max_length=600)
+    decision: Decision = Out(description="Decision")
 
 
 class Undescribed(Inference):
@@ -154,8 +154,8 @@ class OrderStatusReply(BaseModel):
 
 
 def normalize_totals(
-    order: Annotated[Order, Field(description="Разобранный заказ")],
-    currency: Annotated[CurrencyCode, Field(description="Целевая валюта")],
+    order: Annotated[Order, Field(description="Parsed order")],
+    currency: Annotated[CurrencyCode, Field(description="Target currency")],
 ) -> Totals:
     return Totals(total=order.total, lines=0 if currency == "eur" else 1)
 
@@ -165,19 +165,19 @@ def normalize_silent(order: Order) -> Totals:
 
 
 def node_document(node: str, **body: JsonValue) -> dict[str, JsonValue]:
-    return {"apiVersion": API_VERSION, "kind": "Node", "node": node, "description": "Узел примера", **body}
+    return {"apiVersion": API_VERSION, "kind": "Node", "node": node, "description": "Example node", **body}
 
 
 def type_document(kind: str, **body: JsonValue) -> dict[str, JsonValue]:
-    return {"apiVersion": API_VERSION, "kind": "Type", "type": kind, "description": "Тип примера", **body}
+    return {"apiVersion": API_VERSION, "kind": "Type", "type": kind, "description": "Example type", **body}
 
 
 def document(kind: str, **body: JsonValue) -> dict[str, JsonValue]:
-    return {"apiVersion": API_VERSION, "kind": kind, "description": f"{kind} примера", **body}
+    return {"apiVersion": API_VERSION, "kind": kind, "description": f"Example {kind}", **body}
 
 
 def field(name: str, type_ref: str, **extra: JsonValue) -> JsonValue:
-    return {"name": name, "type": type_ref, "description": f"Поле {name}", **extra}
+    return {"name": name, "type": type_ref, "description": f"Field {name}", **extra}
 
 
 def binding(name: str, source: str) -> JsonValue:
@@ -550,7 +550,7 @@ def test_inference_prompt_is_a_markdown_path_or_code_reference() -> None:
         assert isinstance(spec, InferenceSpec)
         assert (spec.prompt_code, spec.prompt_path) == expected
     for prompt in (
-        "Ответь покупателю",
+        "Reply to the customer",
         "prompt.txt",
         "/abs/prompt.md",
         "@team/prompt.md",
@@ -590,8 +590,8 @@ class ReplyIn(BaseModel):
 
 
 def test_eval_context_and_verdict() -> None:
-    context = EvalContext[ReplyIn, ReplyIn](inputs=ReplyIn(summary="Мерцает лента"), attempt=2)
-    assert (context.inputs.summary, context.expected_output, dict(context.metadata)) == ("Мерцает лента", None, {})
+    context = EvalContext[ReplyIn, ReplyIn](inputs=ReplyIn(summary="The strip flickers"), attempt=2)
+    assert (context.inputs.summary, context.expected_output, dict(context.metadata)) == ("The strip flickers", None, {})
     assert Verdict(passed=False, reason="remove the promise").model_dump() == {
         "passed": False,
         "score": None,
@@ -616,7 +616,7 @@ def test_agent_carries_model_configuration() -> None:
             subagents=[
                 {
                     "name": "research",
-                    "description": "Исследует политику",
+                    "description": "Researches the policy",
                     "agent": "researcher",
                     "inference": "research",
                 }
@@ -645,7 +645,7 @@ def test_agent_carries_model_configuration() -> None:
     [
         ({"model": "gpt-5.4-mini"}, ("string_pattern_mismatch", ("model",))),
         ({"model": "Google:gemini-3.8-flash"}, ("string_pattern_mismatch", ("model",))),
-        ({"model": "openai:gpt", "instructions": "Отвечай вежливо"}, ("string_pattern_mismatch", ("instructions",))),
+        ({"model": "openai:gpt", "instructions": "Reply politely"}, ("string_pattern_mismatch", ("instructions",))),
         ({"model": "openai:gpt", "output": {"mode": "text"}}, ("enum", ("output", "mode"))),
         ({"model": "openai:gpt", "output": {"retries": 9}}, ("less_than_equal", ("output", "retries"))),
     ],
@@ -856,7 +856,7 @@ def test_types_validate_and_keep_field_order() -> None:
 def build_models() -> Mapping[str, object]:
     specs = {
         "CurrencyCode": type_document(
-            "enum", values=[{"value": "eur", "description": "Евро"}, {"value": "usd", "description": "Доллар"}]
+            "enum", values=[{"value": "eur", "description": "Euro"}, {"value": "usd", "description": "US dollar"}]
         ),
         "OrderId": type_document("id", pattern=r"^LUM-[0-9]{8}$"),
         "Money": type_document(
@@ -867,8 +867,8 @@ def build_models() -> Mapping[str, object]:
             "union",
             discriminator="kind",
             variants=[
-                {"name": "refund", "description": "Возврат", "fields": [field("amount", "Money")]},
-                {"name": "reject", "description": "Отказ", "fields": [field("reason", "Text", maxLength=400)]},
+                {"name": "refund", "description": "Refund", "fields": [field("amount", "Money")]},
+                {"name": "reject", "description": "Rejection", "fields": [field("reason", "Text", maxLength=400)]},
             ],
         ),
         "Order": type_document(
@@ -904,14 +904,15 @@ def dynamic_registry() -> dict[TypeId, TypeSpec]:
     specs = {
         "OrderId": type_document("id", pattern=r"^LUM-[0-9]{8}$", maxLength=12),
         "Symptom": type_document(
-            "enum", values=[{"value": "flicker", "description": "Мерцает"}, {"value": "no_power", "description": "Нет"}]
+            "enum",
+            values=[{"value": "flicker", "description": "Flickers"}, {"value": "no_power", "description": "No power"}],
         ),
         "Score": type_document("value", base="Float", minimum=0, maximum=1),
         "Address": type_document("record", fields=[field("line", "Text", maxLength=200)]),
         "Channel": type_document(
             "union",
             discriminator="kind",
-            variants=[{"name": "store", "description": "Витрина"}, {"name": "market", "description": "Площадка"}],
+            variants=[{"name": "store", "description": "Storefront"}, {"name": "market", "description": "Marketplace"}],
         ),
         "Evidence": type_document("record", fields=[field("photo", "Image?")]),
     }
@@ -936,8 +937,8 @@ def test_dynamic_record_expands_registry_types_with_their_constraints() -> None:
         "order_id": "LUM-20260917",
         "symptoms": ["flicker"],
         "score": 0.5,
-        "address": {"line": "Тверская, 1"},
-        "note": "срочно",
+        "address": {"line": "221B Baker Street"},
+        "note": "urgent",
     }
     assert dynamic.model_validate(valid).model_dump(mode="json") == valid
     for key, broken in (("order_id", "LUM-1"), ("symptoms", ["burning"]), ("score", 2)):
@@ -1002,7 +1003,7 @@ def test_type_model_failures_are_recorded() -> None:
 
 def test_normalized_schema_keeps_user_property_names() -> None:
     class Titled(BaseModel):
-        title: str = Field(description="Заголовок")
+        title: str = Field(description="Title")
         description: str
         default: int = 3
 
@@ -1014,14 +1015,12 @@ def test_normalized_schema_keeps_user_property_names() -> None:
 
 
 def test_field_spec_and_media_values() -> None:
-    spec = FieldSpec.model_validate(
-        {"name": "serial", "type": "Text", "description": "Серийный номер", "maxLength": 40}
-    )
+    spec = FieldSpec.model_validate({"name": "serial", "type": "Text", "description": "Serial number", "maxLength": 40})
     assert spec.max_length == 40
     with pytest.raises(ValidationError):
-        FieldSpec.model_validate({"name": "photo", "type": "Image", "description": "Фото"})
+        FieldSpec.model_validate({"name": "photo", "type": "Image", "description": "Photo"})
     with pytest.raises(ValidationError):
-        FieldSpec.model_validate({"name": "address", "type": "Record", "description": "Адрес"})
+        FieldSpec.model_validate({"name": "address", "type": "Record", "description": "Address"})
     blob = "sha256-" + "a" * 64
     image = Image.model_validate({"$media": "image/png", "blob_id": blob, "size_bytes": 10, "name": None})
     assert image.model_dump(mode="json") == {"$media": "image/png", "blob_id": blob, "size_bytes": 10, "name": None}
@@ -1033,14 +1032,14 @@ def test_field_spec_and_media_values() -> None:
 
 
 def test_field_spec_takes_registry_types_and_their_constraints_from_the_registry() -> None:
-    order = FieldSpec.model_validate({"name": "order_id", "type": "OrderId?", "description": "Заказ"})
-    tags = FieldSpec.model_validate({"name": "tags", "type": "Tag[]", "description": "Метки", "maxItems": 3})
+    order = FieldSpec.model_validate({"name": "order_id", "type": "OrderId?", "description": "Order"})
+    tags = FieldSpec.model_validate({"name": "tags", "type": "Tag[]", "description": "Tags", "maxItems": 3})
 
     assert (order.type, tags.max_items) == ("OrderId?", 3)
     with pytest.raises(ValidationError, match="pattern"):
-        FieldSpec.model_validate({"name": "order_id", "type": "OrderId", "description": "З", "pattern": "^LUM-"})
+        FieldSpec.model_validate({"name": "order_id", "type": "OrderId", "description": "O", "pattern": "^LUM-"})
     with pytest.raises(ValidationError, match="enum"):
-        FieldSpec.model_validate({"name": "symptom", "type": "Symptom", "description": "С", "enum": ["flicker"]})
+        FieldSpec.model_validate({"name": "symptom", "type": "Symptom", "description": "S", "enum": ["flicker"]})
 
 
 def test_editor_schemas_cover_every_kind(tmp_path: Path) -> None:
@@ -1058,37 +1057,37 @@ def test_editor_schemas_cover_every_kind(tmp_path: Path) -> None:
 
 
 def test_builder_inference_matches_yaml_form() -> None:
-    built = inference_spec(Resolve, description="Решение по заказу")
+    built = inference_spec(Resolve, description="Decision on the order")
     expected = INFERENCE_ADAPTER.validate_python(
         document(
             "Inference",
-            description="Решение по заказу",
+            description="Decision on the order",
             **{
                 "in": [
-                    field("order", "Order", description="Заказ покупателя"),
-                    field("tags", "Text[]", description="Метки обращения", maxLength=40, maxItems=5),
+                    field("order", "Order", description="Customer order"),
+                    field("tags", "Text[]", description="Ticket tags", maxLength=40, maxItems=5),
                 ],
                 "out": [
-                    field("reasoning", "Text", description="Обоснование решения", maxLength=600),
-                    field("decision", "Decision", description="Решение"),
+                    field("reasoning", "Text", description="Reasoning behind the decision", maxLength=600),
+                    field("decision", "Decision", description="Decision"),
                 ],
             },
         )
     )
     assert built == expected
-    coded = inference_spec(Resolve, description="Решение по заказу", prompt="lumen.code.prompting:resolve_prompt")
+    coded = inference_spec(Resolve, description="Decision on the order", prompt="lumen.code.prompting:resolve_prompt")
     assert coded.prompt == "lumen.code.prompting:resolve_prompt"
 
 
 def test_builder_llm_and_tool_nodes_only_bind() -> None:
-    node = llm("resolve", inference="resolve", agent="writer", bind={"order": "$input"}, description="Решение")
+    node = llm("resolve", inference="resolve", agent="writer", bind={"order": "$input"}, description="Decision")
     assert node.node_id == NodeId("resolve")
     assert node.spec == NODE_ADAPTER.validate_python(
         node_document(
-            "llm", description="Решение", inference="resolve", agent="writer", **{"in": [binding("order", "$input")]}
+            "llm", description="Decision", inference="resolve", agent="writer", **{"in": [binding("order", "$input")]}
         )
     )
-    tool_node = tool("lookup", tool="lookup_order", bind={"order_id": "$input.order_id"}, description="Поиск заказа")
+    tool_node = tool("lookup", tool="lookup_order", bind={"order_id": "$input.order_id"}, description="Order lookup")
     assert [(item.name, item.from_) for item in tool_node.spec.in_] == [("order_id", "$input.order_id")]
 
 
@@ -1097,7 +1096,7 @@ def test_builder_translates_python_types() -> None:
         "normalize",
         normalize_totals,
         bind={"order": "$extract.out.order", "currency": "$input.currency"},
-        description="Пересчёт",
+        description="Recalculation",
     )
     assert node.spec.run.endswith(":normalize_totals")
     assert [(item.name, item.type, item.enum) for item in node.spec.in_] == [
@@ -1120,9 +1119,9 @@ def test_builder_errors() -> None:
 
 
 def test_builder_flow() -> None:
-    resolve = llm("resolve", inference="resolve", agent="writer", bind={"order": "$input"}, description="Решение")
+    resolve = llm("resolve", inference="resolve", agent="writer", bind={"order": "$input"}, description="Decision")
     built = flow(
-        description="Статус заказа",
+        description="Order status",
         input=OrderStatusRequest,
         output=OrderStatusReply,
         returns={"decision": "$resolve.out.decision", "reasoning": "$resolve.out.reasoning"},

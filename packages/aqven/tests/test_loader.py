@@ -49,8 +49,8 @@ WRITER: Final = "shared/writer.yaml"
 VALID_YAML: Final = 'apiVersion: "aqven/v1"\nkind: "Type"\nfields:\n- name: "subject"\n  maxLength: 200\n'
 
 STRICT_VIOLATIONS: Final[Mapping[str, tuple[str, DiagnosticCode]]] = {
-    "comment": ('a: "x" # пояснение\n', DiagnosticCode.E_YAML_COMMENT),
-    "comment_line": ('# шапка\na: "x"\n', DiagnosticCode.E_YAML_COMMENT),
+    "comment": ('a: "x" # explanation\n', DiagnosticCode.E_YAML_COMMENT),
+    "comment_line": ('# header\na: "x"\n', DiagnosticCode.E_YAML_COMMENT),
     "anchor": ("a: &base 1\nb: 2\n", DiagnosticCode.E_YAML_ANCHOR),
     "alias": ("a: &base 1\nb: *base\n", DiagnosticCode.E_YAML_ANCHOR),
     "tag": ("a: !!str 1\n", DiagnosticCode.E_YAML_TAG),
@@ -116,12 +116,12 @@ INCLUDES: Final[Mapping[str, tuple[tuple[str, ...], str, tuple[str, ...]]]] = {
 NOTE_NODE: Final = """apiVersion: "aqven/v1"
 kind: "Node"
 node: "code"
-description: "Заметка аудита"
+description: "Audit note"
 run: "fixture_shop.triage.code:summarize"
 out:
 - name: "summary"
   type: "Text"
-  description: "Заметка"
+  description: "Note"
   maxLength: 200
 """
 
@@ -189,14 +189,14 @@ def test_strict_yaml_rejects_forbidden_constructs(case: str) -> None:
 
 
 def test_strict_yaml_reports_comment_line() -> None:
-    _, problems = read_strict_yaml('a: "x"\nb: "y" # хвост\n', "aqven.yaml")
+    _, problems = read_strict_yaml('a: "x"\nb: "y" # trailing\n', "aqven.yaml")
 
     (problem,) = problems
     assert (problem.code, problem.line) == (DiagnosticCode.E_YAML_COMMENT, 2)
 
 
 def test_hash_inside_quoted_string_is_not_a_comment() -> None:
-    document, problems = read_strict_yaml('a: "цвет #ffffff"\n', "aqven.yaml")
+    document, problems = read_strict_yaml('a: "color #ffffff"\n', "aqven.yaml")
 
     assert problems == ()
     assert document is not None
@@ -278,11 +278,15 @@ def test_node_uses_the_inference_next_to_it_without_a_key() -> None:
 
 
 def test_each_node_takes_the_inference_and_texts_of_its_own_prefix(shop: Path) -> None:
-    node = (shop / CLASSIFY).read_text(encoding="utf-8").replace("Выбор очереди по теме и тексту", "Повторный выбор")
+    node = (
+        (shop / CLASSIFY)
+        .read_text(encoding="utf-8")
+        .replace("Choose a queue from the subject and text", "Repeat choice")
+    )
     write(shop, "triage/recheck.node.yaml", node)
     write(shop, "triage/recheck.inference.yaml", (shop / INFERENCE).read_text(encoding="utf-8"))
     write(shop, "triage/recheck.prompt.md", (shop / PROMPT).read_text(encoding="utf-8"))
-    write(shop, "triage/recheck.variants/tone/calm.md", "Пиши спокойно.\n")
+    write(shop, "triage/recheck.variants/tone/calm.md", "Write calmly.\n")
 
     project = load_project(shop).project
 
@@ -326,7 +330,7 @@ def test_project_root_outside_any_project_raises(tmp_path: Path) -> None:
 
 
 def test_unknown_key_carries_file_path_and_line(shop: Path) -> None:
-    replace(shop, CLASSIFY, 'agent: "writer"\n', 'instructions: "Классифицируй"\nagent: "writer"\n')
+    replace(shop, CLASSIFY, 'agent: "writer"\n', 'instructions: "Classify"\nagent: "writer"\n')
 
     result = load_project(shop)
 
@@ -405,7 +409,7 @@ def test_project_kind_outside_the_root_file_is_misplaced(shop: Path) -> None:
 
 
 def test_yaml_without_aqven_header_is_ignored(shop: Path) -> None:
-    write(shop, "triage/notes.yaml", "title: x  # не описание aqven\nitems: [1, 2]\n")
+    write(shop, "triage/notes.yaml", "title: x  # not an aqven description\nitems: [1, 2]\n")
     write(shop, "shared/other.yml", 'apiVersion: "apps/v1"\nkind: "Deployment"\n')
 
     assert load_project(shop).diagnostics == ()

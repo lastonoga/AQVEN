@@ -1,1 +1,1 @@
-Отвечай коротко и по делу.
+Keep replies short and to the point.

@@ -42,7 +42,7 @@ TEMPLATE: Final = (
     "{% for policy in policies %}- {{ policy.title }}\n{% endfor %}"
 )
 DOCUMENT: Final[JsonObject] = {
-    "customer": {"customer_id": "cus_7k2m9p4q1x8z", "tier": "plus", "name": "Анна"},
+    "customer": {"customer_id": "cus_7k2m9p4q1x8z", "tier": "plus", "name": "Zoë"},
     "intake_extra": INTAKE,
     "policies": [{"title": "Warranty credit", "limit": 20}, {"title": "Return window", "limit": 30}],
 }
@@ -146,7 +146,7 @@ def test_template_renders_records_dynamic_values_and_lists_as_readable_fields() 
         "Customer record:\n"
         "customer_id: cus_7k2m9p4q1x8z\n"
         "tier: plus\n"
-        "name: Анна\n"
+        "name: Zoë\n"
         f"Intake:\n{READABLE_INTAKE}\n"
         "Policies:\n"
         "- title: Warranty credit\n"

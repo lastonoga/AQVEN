@@ -1,4 +1,4 @@
 {% include "fragments/tone" %}
-Перепиши ответ спокойнее.
+Rewrite the reply more calmly.
 <reply>{{ text }}</reply>
 {{ output_format }}
