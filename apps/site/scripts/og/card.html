@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AQVEN social card</title>
+<style>
+@font-face {
+  font-family: "Geist Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "Geist Mono Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
+}
+:root {
+  --background: oklch(0.185 0 0);
+  --foreground: oklch(0.97 0 0);
+  --muted: oklch(0.28 0 0);
+  --muted-foreground: oklch(0.71 0 0);
+  --border: oklch(0.31 0 0);
+  --grid: oklch(0.26 0 0);
+  --mark: #a58bff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1200px; height: 630px; overflow: hidden; }
+body {
+  position: relative;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Geist Variable", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(ellipse 70% 90% at 72% 60%, black 20%, transparent 75%);
+  opacity: 0.55;
+}
+.copy {
+  position: absolute;
+  left: 72px;
+  top: 64px;
+  bottom: 64px;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+.wordmark svg { width: 44px; height: 44px; display: block; }
+h1 {
+  margin-top: auto;
+  font-size: 54px;
+  line-height: 1.06;
+  font-weight: 620;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+.line {
+  margin-top: 28px;
+  font-size: 21px;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.frame {
+  position: absolute;
+  left: 612px;
+  top: 104px;
+  width: 880px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fafafa;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 0 6px rgba(255, 255, 255, 0.03);
+}
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 40px;
+  padding: 0 18px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.dots { display: flex; gap: 8px; }
+.dots span { width: 11px; height: 11px; border-radius: 50%; }
+.dots span:nth-child(1) { background: #ef4444; }
+.dots span:nth-child(2) { background: #eab308; }
+.dots span:nth-child(3) { background: #22c55e; }
+.url {
+  flex: 1;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--background);
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.shot { overflow: hidden; }
+.shot img {
+  display: block;
+  width: calc(100% * 2880 / 2844);
+  margin: calc(-100% * 18 / 2844) 0 0 calc(-100% * 18 / 2844);
+}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<section class="copy">
+  <div class="wordmark">
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="#111113"/>
+      <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" stroke="#2e2e33"/>
+      <path d="M9 23 16 8l7 15M11.8 18h8.4" fill="none" stroke="#a58bff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    AQVEN
+  </div>
+  <h1>Discover what your AI workflow needs to work reliably.</h1>
+  <p class="line">Python framework · local Studio · your coding agent</p>
+</section>
+<div class="frame">
+  <div class="chrome">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="url">127.0.0.1:5180/flows/support_case/canvas</div>
+  </div>
+  <div class="shot">
+    <img src="../../public/images/studio/canvas.png" alt="AQVEN Studio showing the graph of a multi-step AI workflow">
+  </div>
+</div>
+</body>
+</html>
