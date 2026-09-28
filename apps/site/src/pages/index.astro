@@ -2,7 +2,7 @@
 import "../styles/landing.css";
 import { Navbar1 } from "@/components/navbar1";
 import { latestRelease } from "@/lib/latest-release";
-import { Hero1 } from "@/components/hero1";
+import { Hero206 } from "@/components/hero206";
 import { Cta10 } from "@/components/cta10";
 import { Footer2 } from "@/components/footer2";
 import {
@@ -15,7 +15,6 @@ import {
   TrustStrip,
 } from "@/components/landing/sections";
 import { Providers } from "@/components/landing/provider-logos";
-import { heroCanvasVisual } from "@/components/landing/schematics";
 import {
   AUTH,
   FOOTER_COPYRIGHT,
@@ -62,13 +61,19 @@ const release = await latestRelease;
     <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
 
     <main>
-      <Hero1
-        badge={{ text: "For engineers building multi-step AI workflows" }}
+      <Hero206
+        badge="For engineers building multi-step AI workflows"
         heading="Discover what your AI workflow needs to work reliably."
         description="AQVEN is a Python framework and a local Studio for AI workflows. Your coding agent runs the experiments, and you see the evidence."
         command="uv tool install aqven"
         buttons={startButtons}
-        visual={heroCanvasVisual}
+        image={{
+          src: "/images/studio/hero-canvas.png",
+          alt: "AQVEN Studio showing the graph of a multi-step support workflow",
+          width: 2844,
+          height: 1764,
+        }}
+        mockupUrl="127.0.0.1:5180/flows/support_case/canvas"
       />
 
       <TrustStrip />

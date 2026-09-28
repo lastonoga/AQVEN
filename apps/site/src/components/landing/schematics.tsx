@@ -1,31 +1,8 @@
-import { CircleAlert, CircleCheck, RotateCw } from "lucide-react";
+import { CircleAlert, CircleCheck } from "lucide-react";
 import { cn } from "cn";
 
-const NodeChip = ({
-  label,
-  kind,
-  loop,
-  transparent,
-}: {
-  label: string;
-  kind: string;
-  loop?: boolean;
-  transparent?: boolean;
-}) => (
-  <div
-    className={cn(
-      "relative flex shrink-0 flex-col items-center gap-1 rounded-md border border-border px-3 py-2 text-center",
-      transparent ? "bg-transparent" : "bg-card shadow-xs",
-    )}
-  >
-    {loop && (
-      <span
-        className="absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full border border-border bg-background-subtle"
-        title="loops until it succeeds"
-      >
-        <RotateCw className="size-2.5 text-muted-foreground" aria-hidden="true" />
-      </span>
-    )}
+const NodeChip = ({ label, kind }: { label: string; kind: string }) => (
+  <div className="relative flex shrink-0 flex-col items-center gap-1 rounded-md border border-border bg-card px-3 py-2 text-center shadow-xs">
     <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{kind}</span>
     <span className="font-mono text-xs font-medium text-foreground">{label}</span>
   </div>
@@ -319,42 +296,3 @@ export const CostLatencySchematic = () => (
     ))}
   </div>
 );
-
-const ForkConnector = () => (
-  <svg viewBox="0 0 100 34" className="h-8 w-24 shrink-0 overflow-visible" aria-hidden="true">
-    <path d="M50 0 L50 10" className="fill-none stroke-2 stroke-border" />
-    <path d="M14 10 L86 10" className="fill-none stroke-2 stroke-border" />
-    <path d="M14 10 L14 26" className="fill-none stroke-2 stroke-border" />
-    <path d="M86 10 L86 26" className="fill-none stroke-2 stroke-border" />
-    <path d="M10 22 L14 27 L18 22" className="fill-none stroke-2 stroke-border" />
-    <path d="M82 22 L86 27 L90 22" className="fill-none stroke-2 stroke-border" />
-  </svg>
-);
-
-export const HeroCanvasSchematic = () => (
-  <div className="relative w-full overflow-hidden rounded-md border border-border">
-    <span
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:20px_20px]"
-    />
-    <div className="relative flex flex-col items-center gap-1 px-6 py-8">
-      <div className="flex flex-col items-center gap-3 sm:flex-row">
-        <NodeChip label="collect_orders" kind="code" transparent />
-        <Connector />
-        <NodeChip label="classify_intent" kind="llm" transparent />
-      </div>
-      <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">parallel</span>
-      <ForkConnector />
-      <div className="flex items-center gap-6">
-        <NodeChip label="notify_customer" kind="tool" transparent />
-        <NodeChip label="retry_failed" kind="loop" loop transparent />
-      </div>
-      <div className="mt-5 flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1">
-        <CircleCheck className="size-3.5 text-success" aria-hidden="true" />
-        <span className="font-mono text-xs text-success">aqven check: 0 errors</span>
-      </div>
-    </div>
-  </div>
-);
-
-export const heroCanvasVisual = <HeroCanvasSchematic />;
