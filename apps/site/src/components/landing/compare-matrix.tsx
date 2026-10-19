@@ -16,6 +16,7 @@ type Feature = { readonly id: FeatureId; readonly label: string; readonly cells:
 const YES: Cell = { mark: "yes" };
 const NO: Cell = { mark: "no" };
 const partly = (note: string): Cell => ({ mark: "partly", note });
+const noWith = (note: string): Cell => ({ mark: "no", note });
 
 const PRODUCTS: Readonly<Record<ProductId, Product>> = {
   aqven: { id: "aqven", name: "AQVEN" },
@@ -52,8 +53,8 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
       langsmith: YES,
       phoenix: YES,
       promptfoo: YES,
-      deepeval: YES,
-      n8n: partly("metrics on paid plans"),
+      deepeval: { mark: "yes", note: "local datasets and CI, free" },
+      n8n: partly("evaluations even on free Community; parallelism plan-bound"),
       langgraph: partly("via LangSmith"),
     },
   },
@@ -65,8 +66,8 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
       langfuse: NO,
       langsmith: NO,
       phoenix: NO,
-      promptfoo: NO,
-      deepeval: partly("Confident AI, paid"),
+      promptfoo: partly("per-arm Wilson CI on repeats; no paired test"),
+      deepeval: noWith("point scores and deltas only"),
       n8n: NO,
       langgraph: NO,
     },
@@ -79,7 +80,7 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
       langfuse: NO,
       langsmith: NO,
       phoenix: NO,
-      promptfoo: NO,
+      promptfoo: partly("held-out only via optimizer --validation-split"),
       deepeval: NO,
       n8n: NO,
       langgraph: NO,
@@ -94,7 +95,7 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
       langsmith: NO,
       phoenix: NO,
       promptfoo: NO,
-      deepeval: NO,
+      deepeval: { mark: "yes", note: "pytest files run in CI" },
       n8n: partly("export; git on paid plans"),
       langgraph: YES,
     },
@@ -122,7 +123,7 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
       langsmith: YES,
       phoenix: YES,
       promptfoo: partly("Enterprise"),
-      deepeval: YES,
+      deepeval: partly("Confident AI, free tier limited; paid from $200/mo"),
       n8n: YES,
       langgraph: partly("paid"),
     },
@@ -133,7 +134,7 @@ const FEATURES: Readonly<Record<FeatureId, Feature>> = {
     cells: {
       aqven: YES,
       langfuse: YES,
-      langsmith: NO,
+      langsmith: noWith("self-hosting on Enterprise only"),
       phoenix: YES,
       promptfoo: YES,
       deepeval: YES,
@@ -215,7 +216,7 @@ export const MatrixLegend = () => (
     <span className="inline-flex items-center gap-1.5">
       <X className="size-4 text-muted-foreground/60" aria-hidden="true" /> No, or not documented
     </span>
-    <span>Checked against each product&rsquo;s documentation on 28 September 2026.</span>
+    <span>Checked against each product&rsquo;s documentation on 19 October 2026.</span>
   </p>
 );
 
