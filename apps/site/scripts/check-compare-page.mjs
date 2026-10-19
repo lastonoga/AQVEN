@@ -24,7 +24,7 @@ const requiredMarkers = [
   "Your agent does the work. You decide. AQVEN runs and records it.",
   "Use them together.",
   "When AQVEN is not the right tool",
-  "checked on 28 September 2026",
+  "checked on 19 October 2026",
   `<link rel="canonical" href="${SITE}/compare/">`,
 ]
 
