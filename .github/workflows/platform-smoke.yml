@@ -1,0 +1,98 @@
+# Platform smoke: does the install path work outside Linux?
+#
+# The main CI (ci.yml) runs only on ubuntu-latest, so the Windows and macOS
+# install path of a user who runs `uv tool install` from a built wheel is
+# otherwise untested. This job mirrors the `package` job's wheel build on each
+# OS, then installs the wheel as a tool and runs the offline `aqven check` on
+# the bundled examples project — exactly what the ubuntu CI does, minus the
+# test suite. Smoke only: keep it fast, do not add pytest or model calls here.
+#
+# Blocking on purpose (no continue-on-error): a red Windows or macOS run is a
+# real signal, not noise. The very first run of this workflow is the real test
+# of these steps on Windows and macOS — treat its failures as "this workflow
+# needs fixing" until the run is green twice, and only downgrade to
+# non-blocking if a runner-infrastructure flake is proven.
+name: Platform smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Monday 03:17 UTC.
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    defaults:
+      # One shell everywhere: the built-in Windows default (pwsh) differs in
+      # quoting from bash, so pin bash on all three OSes.
+      run:
+        shell: bash
+    env:
+      # Downloads happen only via the explicit `uv python install` step below
+      # (manual = never implicit). Deterministic across all three runners:
+      # macOS/Windows images happened to carry 3.14 in PATH, ubuntu did not.
+      UV_PYTHON_DOWNLOADS: manual
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      # Same pinned toolchain versions as ci.yml so a smoke failure is about
+      # the platform, not about a newer uv.
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          version: "0.12.15"
+          enable-cache: true
+
+      - name: install the Python the wheels require
+        run: uv python install 3.14
+
+      - uses: pnpm/action-setup@v6.1.0
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Build the wheel the same way the `package` job in ci.yml does:
+      # Studio first, then bundled into the package, then `uv build`.
+      - run: pnpm install --frozen-lockfile
+      - name: build Studio
+        run: pnpm --filter @aqven/studio build
+      - name: copy Studio into the aqven package
+        run: python tools/bundle_studio.py
+      - name: build wheels
+        run: |
+          uv build --package aqven-llm --out-dir dist
+          uv build --package aqven --out-dir dist
+
+      # The point of this workflow: install like an end user would, from the
+      # built wheel into its own tool environment, not from the workspace.
+      # `uv tool install` takes exactly one package, so the aqven-llm wheel is
+      # passed via --with as a file:// URL (this also proves the pair installs
+      # without depending on what happens to be on PyPI). Validated on macOS
+      # with uv 0.12.17; the Windows leg is first-run-tested by CI itself.
+      - name: uv tool install from the built wheel
+        run: |
+          shopt -s nullglob
+          wheels=(dist/aqven-*.whl dist/aqven_llm-*.whl)
+          ((${#wheels[@]} == 2)) || { echo "expected exactly two wheels in dist/, found: ${#wheels[@]}" >&2; ls dist/ >&2; exit 1; }
+          uv tool install --python 3.14 "${wheels[0]}" --with "file://$GITHUB_WORKSPACE/${wheels[1]}"
+
+      # Note: the aqven CLI has no `--version` flag, so the smoke check is
+      # "the entry point runs", not "it prints a version".
+      - name: aqven --help
+        run: aqven --help
+
+      # Offline by contract (README: "aqven check needs neither a key nor the
+      # network"); no model keys are configured here on purpose.
+      - name: aqven check examples/lumen
+        run: aqven check examples/lumen
