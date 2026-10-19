@@ -73,6 +73,19 @@ registers AQVEN's MCP server, and Claude Code hooks that run `aqven check` as th
 A real run needs a model key: copy `my_project/.env.example` to `my_project/.env` and set
 `OPENROUTER_API_KEY` in it. `aqven check` needs neither a key nor the network.
 
+## Tested platforms
+
+| Platform | Status |
+| --- | --- |
+| Linux | The full CI suite runs on `ubuntu-latest` on every change. |
+| macOS | Primary development platform. The install path and the offline `aqven check` are smoke-tested from a built wheel by the Platform smoke workflow; the full test suite is not yet run on macOS in CI. |
+| Windows | The install path is not yet proven: the Platform smoke workflow builds and installs the wheel on a Windows runner and runs `aqven check`, but nothing beyond that is tested there. If it breaks for you, [open an issue](https://github.com/lastonoga/AQVEN/issues) — help making AQVEN a proven Windows citizen is welcome. |
+
+**Python version policy.** AQVEN requires `>=3.14,<3.15`: the engine runs on exactly one minor
+version, so step code behaves the same everywhere. uv fetches 3.14 for you. Python 3.15 was
+released in October 2026; support is planned, and it will land in a release when the engine, its
+dependencies and CI are green on it — we are not promising a date.
+
 ## Start with your coding agent
 
 Start Claude Code in the project and approve the `aqven` server when it asks:
@@ -247,7 +260,8 @@ guarantee about every future output.
 - **You only want to trace an app you already have.** AQVEN runs workflows written in its own files. A
   tracing tool fits better.
 - **You need a hosted service for a team.** AQVEN runs locally, on your machine.
-- **You can't run Python 3.14.** The engine requires exactly 3.14, and your step code runs on it.
+- **You can't run Python 3.14.** The engine requires exactly 3.14, and your step code runs on it
+  (see [Tested platforms](#tested-platforms) for the version policy).
 - **You need an OSI-approved open-source license.** AQVEN is source-available.
 
 | | Tracing tools | Visual builders | AQVEN |
