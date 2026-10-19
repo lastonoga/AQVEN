@@ -38,9 +38,9 @@ jobs:
       run:
         shell: bash
     env:
-      # uv fetches the managed CPython 3.14 the wheel requires (allowed values:
-      # auto/true/manual/never/false; "auto" would already do this in CI, this
-      # just makes the intent explicit).
+      # Downloads happen only via the explicit `uv python install` step below
+      # (manual = never implicit). Deterministic across all three runners:
+      # macOS/Windows images happened to carry 3.14 in PATH, ubuntu did not.
       UV_PYTHON_DOWNLOADS: manual
     steps:
       - uses: actions/checkout@v7.0.1
@@ -51,6 +51,9 @@ jobs:
         with:
           version: "0.12.15"
           enable-cache: true
+
+      - name: install the Python the wheels require
+        run: uv python install 3.14
 
       - uses: pnpm/action-setup@v6.1.0
 
