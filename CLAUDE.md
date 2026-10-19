@@ -1,11 +1,18 @@
 # Instructions for agents in this repository
 
 **AQVEN** is a platform for reliable AI workflows. The engine, Studio and the documentation site live in this
-repository. The design documentation lives in [docs/](docs/) and is written from verified facts: PyPI JSON
+repository. The design documentation lives in `docs/` and is written from verified facts: PyPI JSON
 metadata and `npm view`, the sources of installed packages, Studio's `.d.ts` files, official docs, and running
-the code.
+the code. `docs/` is gitignored and deliberately not published — see the note below.
 
 ## Read before any task
+
+> **A note on the `docs/` links in this file.** The internal design documentation (`docs/`: DECISIONS.md, the
+> ADRs, the roadmap, the source specs) stays local to the maintainers' checkout and is not in the public
+> repository, so these links resolve only there. They are still the law for anyone working in that checkout.
+> For outside readers and contributors the authority is the published documentation at
+> [aqvenstudio.com](https://aqvenstudio.com) and [CONTRIBUTING.md](CONTRIBUTING.md). `ADR-NNNN` mentioned in
+> commit messages and in code refers to that internal history, not to files in this repository.
 
 1. [docs/DECISIONS.md](docs/DECISIONS.md): cross-cutting decisions, the version axis, what we take ready-made,
    what we write ourselves, and where we depart from the original spec. **This is the law.** Code that
