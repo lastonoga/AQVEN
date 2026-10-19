@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { docsTokens } from "../docs.tokens.mjs";
 import { SITUATIONS, USE_CASES_PATH, situationHref } from "../src/components/landing/situations.ts";
 import { COMPARE_PATH } from "../src/components/landing/compare-path.ts";
+import { ROADMAP_PATH } from "../src/components/landing/roadmap-path.ts";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const docsRoot = join(siteRoot, "src/content/docs");
@@ -97,6 +98,11 @@ const purposeItems = [
     "Compare",
     `${baseUrl}${COMPARE_PATH}`,
     "Why AQVEN when you already have traces and evals: the questions a score doesn't answer, who does which part, and when another tool fits better.",
+  ),
+  listItem(
+    "Roadmap",
+    `${baseUrl}${ROADMAP_PATH}`,
+    "Where the work is going: what is in motion now, what comes next, what is later, and how alpha feedback changes the order.",
   ),
 ];
 const optionalItems = [
