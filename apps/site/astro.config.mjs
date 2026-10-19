@@ -31,6 +31,11 @@ const PAGE_SOURCES = Object.freeze({
     "src/components/landing/use-cases.tsx",
     "src/components/landing/situations.ts",
   ],
+  "/roadmap/": [
+    "src/pages/roadmap.astro",
+    "src/components/landing/roadmap.tsx",
+    "src/components/landing/roadmap-path.ts",
+  ],
 });
 
 const docsSources = (pathname) => {

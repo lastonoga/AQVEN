@@ -1,0 +1,89 @@
+---
+import "../styles/landing.css";
+import SeoHead from "@/components/landing/SeoHead.astro";
+import { Navbar1 } from "@/components/navbar1";
+import { latestRelease } from "@/lib/latest-release";
+import { Hero1 } from "@/components/hero1";
+import { Cta10 } from "@/components/cta10";
+import { Footer2 } from "@/components/footer2";
+import { RoadmapFeedback, RoadmapHorizons, roadmapHeroVisual } from "@/components/landing/roadmap";
+import { ROADMAP_PATH } from "@/components/landing/roadmap-path";
+import {
+  AUTH,
+  FOOTER_COPYRIGHT,
+  FOOTER_DESCRIPTION,
+  FOOTER_LEGAL,
+  FOOTER_LOGO,
+  FOOTER_SECTIONS,
+  LOGO,
+  MENU,
+  QUICKSTART,
+  REPO,
+} from "@/components/landing/site-nav";
+
+const TITLE = "AQVEN roadmap: what we are working on now, next and later";
+const DESCRIPTION =
+  "Where AQVEN is headed and what it optimizes for: reliability evidence before token spend. Three plain lists without dates, shaped by alpha feedback.";
+
+const release = await latestRelease;
+
+const siteUrl = new URL("/", Astro.site).href;
+const pageUrl = new URL(ROADMAP_PATH, siteUrl).href;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": pageUrl,
+  url: pageUrl,
+  name: TITLE,
+  description: DESCRIPTION,
+  inLanguage: "en",
+  isPartOf: { "@type": "WebSite", "@id": `${siteUrl}#website`, name: "AQVEN", url: siteUrl },
+  about: { "@type": "SoftwareApplication", "@id": `${siteUrl}#software`, name: "AQVEN" },
+};
+
+const startButtons = {
+  primary: { text: "Get started", url: QUICKSTART },
+  secondary: { text: "GitHub", url: REPO },
+};
+---
+
+<!doctype html>
+<html lang="en" class="motion-safe:scroll-smooth">
+  <head>
+    <SeoHead title={TITLE} description={DESCRIPTION} path={ROADMAP_PATH} jsonLd={jsonLd} />
+  </head>
+  <body>
+    <Navbar1 client:load logo={LOGO} menu={MENU} auth={AUTH} release={release} />
+
+    <main>
+      <Hero1
+        badge={{ text: "Roadmap" }}
+        heading="Reliability evidence before token spend."
+        description="That is what AQVEN optimizes for, and the roadmap follows it: work that makes the evidence stronger and the spend deliberate. Three plain lists, no dates."
+        buttons={startButtons}
+        visual={roadmapHeroVisual}
+      />
+
+      <RoadmapHorizons />
+      <RoadmapFeedback />
+
+      <Cta10
+        heading="Alpha means the order changes."
+        description="AQVEN is source-available alpha. Run aqven check and a series on your project, and tell us what you find on GitHub Discussions."
+        buttons={{
+          primary: { text: "Get started", url: QUICKSTART },
+          secondary: { text: "GitHub Discussions", url: `${REPO}/discussions` },
+        }}
+      />
+    </main>
+
+    <Footer2
+      logo={FOOTER_LOGO}
+      description={FOOTER_DESCRIPTION}
+      sections={FOOTER_SECTIONS}
+      copyright={FOOTER_COPYRIGHT}
+      legalLinks={FOOTER_LEGAL}
+    />
+  </body>
+</html>

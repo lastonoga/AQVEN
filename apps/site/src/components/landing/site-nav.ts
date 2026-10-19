@@ -1,5 +1,6 @@
 import { USE_CASES_PATH } from "@/components/landing/situations";
 import { COMPARE_PATH } from "@/components/landing/compare-path";
+import { ROADMAP_PATH } from "@/components/landing/roadmap-path";
 
 export const REPO = "https://github.com/lastonoga/AQVEN";
 export const DOCS = "/start/";
@@ -10,6 +11,7 @@ export const LOGO = { url: "/", title: "aqven" };
 export const MENU = [
   { title: "Use cases", url: USE_CASES_PATH },
   { title: "Compare", url: COMPARE_PATH },
+  { title: "Roadmap", url: ROADMAP_PATH },
   { title: "Documentation", url: DOCS },
   { title: "Engine", url: "/engine/" },
   { title: "Studio", url: "/studio/" },
@@ -31,6 +33,7 @@ export const FOOTER_SECTIONS = [
       { name: "Overview", href: DOCS },
       { name: "Use cases", href: USE_CASES_PATH },
       { name: "Compare", href: COMPARE_PATH },
+      { name: "Roadmap", href: ROADMAP_PATH },
       { name: "Engine", href: "/engine/" },
       { name: "Studio", href: "/studio/" },
       { name: "Concepts", href: "/concepts/" },
