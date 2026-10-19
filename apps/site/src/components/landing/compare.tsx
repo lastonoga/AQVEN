@@ -41,7 +41,7 @@ const NOT_FOR: readonly string[] = [
 ];
 
 const SOURCES: readonly Source[] = [
-  { label: "Langfuse: experiments", href: "https://langfuse.com/docs/evaluation/experiments/overview" },
+  { label: "Langfuse: experiments", href: "https://langfuse.com/docs/evaluation/experiments/datasets" },
   { label: "Langfuse: self-hosting", href: "https://langfuse.com/self-hosting" },
   { label: "LangSmith: comparing experiments", href: "https://docs.langchain.com/langsmith/compare-experiment-results" },
   { label: "LangSmith: repetitions", href: "https://docs.langchain.com/langsmith/repetition" },
@@ -168,7 +168,7 @@ export const Sources = () => (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <h2 className="text-xl font-semibold tracking-tight">Sources</h2>
       <p className="text-sm text-muted-foreground">
-        What this page says about other products comes from their documentation, checked on 28 September 2026. Products
+        What this page says about other products comes from their documentation, checked on 19 October 2026. Products
         change; if something here is out of date, open an issue on GitHub.
       </p>
       <ul className="grid gap-2 text-sm sm:grid-cols-2">
