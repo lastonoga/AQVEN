@@ -14,8 +14,8 @@ could not be attributed to a specific commit, that is said out loud.
 
 ## [Unreleased]
 
-Work on `main` after the `v0.0.4` tag (`v0.0.4..HEAD`, 16 non-merge commits, 2026-09-28/29).
-Not on PyPI yet.
+Work on `main` after the `v0.0.4` tag (`v0.0.4..HEAD`: 23 commits, 16 of them non-merge,
+2026-09-28/29). Not on PyPI yet.
 
 ### Added
 
@@ -37,7 +37,7 @@ Not on PyPI yet.
 ## [0.0.4] - 2026-09-28
 
 Tag `v0.0.4` (2026-09-28) → PyPI `aqven` / `aqven-llm` 0.0.4 (uploaded 2026-09-28).
-Range `v0.0.3..v0.0.4`: 11 commits, 146 files changed.
+Range `v0.0.3..v0.0.4`: 11 commits (8 non-merge), 146 files changed (+10,533 / −639).
 
 ### Added
 
@@ -62,8 +62,9 @@ Range `v0.0.3..v0.0.4`: 11 commits, 146 files changed.
 ## [0.0.3] - 2026-09-25
 
 Tag `v0.0.3` (2026-09-25) → PyPI `aqven` / `aqven-llm` 0.0.3 (uploaded 2026-09-25).
-Range `v0.0.2..v0.0.3`: 126 commits — the largest release so far, and the one that added
-the Research layer.
+Range `v0.0.2..v0.0.3`: 126 commits — 77 non-merge plus 49 squash/branch merges — and 2,043
+files changed (+183,755 / −32,858). The largest release so far, and the one that added the
+Research layer.
 
 ### Added
 
@@ -80,7 +81,7 @@ the Research layer.
 - Dev console: one pretty console with run/step lines, noise filters, verbosity flags and a JSONL log; sampling settings on reasoning models now warn (`918a0b4`)
 - Hang diagnostics: SIGUSR1 stack dumps and an event-loop stall watchdog in `aqven dev` / `aqven serve` (`a592aec`)
 - Server status checks and a Studio health indicator (`5fb0583`)
-- Docs site: 32 new pages in this range, including dataset media files (`130512d`), rate limits and the probe attempt (`c25ef12`) and the experiments / research-loop section (`388052b`); landing page leads with five use cases plus a `/use-cases/` page (`eff240f`); README rewritten following patterns of top open-source AI projects (`2f5233c`)
+- Docs site: 32 new pages in this range, including dataset media files (`130512d`), rate limits and the probe attempt (`c25ef12`) and the experiments / research-loop section (`388052b`); landing page leads with five use cases plus a `/use-cases/` page (`eff240f`); README rewritten following patterns of top open-source AI projects (`2f5233c`); the landing navbar shows the latest release and its date (`4985242`)
 
 ### Changed
 
@@ -113,7 +114,8 @@ the Research layer.
 ## [0.0.2] - 2026-09-23
 
 Tag `v0.0.2` (2026-09-23) → PyPI `aqven` / `aqven-llm` 0.0.2 (uploaded 2026-09-23).
-Range `v0.0.1..v0.0.2`: 20 commits — a polish-and-hardening release, no new subsystems.
+Range `v0.0.1..v0.0.2`: 20 commits (15 non-merge) — a polish-and-hardening release, no new
+subsystems.
 
 ### Added
 
