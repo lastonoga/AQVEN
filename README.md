@@ -71,7 +71,8 @@ models. It also prepares the project for a coding agent: `AGENTS.md`, `CLAUDE.md
 registers AQVEN's MCP server, and Claude Code hooks that run `aqven check` as the agent works.
 
 A real run needs a model key: copy `my_project/.env.example` to `my_project/.env` and set
-`OPENROUTER_API_KEY` in it. `aqven check` needs neither a key nor the network.
+`OPENROUTER_API_KEY` in it. A run spends against whichever key it finds, in `.env` or exported in
+your shell, so a real run is never free. `aqven check` needs neither a key nor the network.
 
 ## Tested platforms
 
