@@ -1,6 +1,6 @@
 [project]
 name = "aqven"
-version = "0.0.5"
+version = "0.0.6"
 description = "Python framework and local Studio for reliable LLM workflows: typed files in your repo, checked before they run, tested with experiments and evals, with an MCP server for coding agents."
 readme = "README.md"
 license = "LicenseRef-AQVEN-1.0.0"
@@ -28,7 +28,7 @@ classifiers = [
 ]
 requires-python = ">=3.14,<3.15"
 dependencies = [
-    "aqven-llm==0.0.5",
+    "aqven-llm==0.0.6",
     "pydantic==2.13.5",
     "ruamel.yaml==0.19.1",
     "python-liquid==2.3.1",
@@ -62,14 +62,14 @@ Issues = "https://github.com/lastonoga/AQVEN/issues"
 Changelog = "https://github.com/lastonoga/AQVEN/releases"
 
 [project.optional-dependencies]
-anthropic = ["aqven-llm[anthropic]==0.0.5"]
-bedrock = ["aqven-llm[bedrock]==0.0.5"]
-cohere = ["aqven-llm[cohere]==0.0.5"]
-google = ["aqven-llm[google]==0.0.5"]
-groq = ["aqven-llm[groq]==0.0.5"]
-huggingface = ["aqven-llm[huggingface]==0.0.5"]
-mistral = ["aqven-llm[mistral]==0.0.5"]
-xai = ["aqven-llm[xai]==0.0.5"]
+anthropic = ["aqven-llm[anthropic]==0.0.6"]
+bedrock = ["aqven-llm[bedrock]==0.0.6"]
+cohere = ["aqven-llm[cohere]==0.0.6"]
+google = ["aqven-llm[google]==0.0.6"]
+groq = ["aqven-llm[groq]==0.0.6"]
+huggingface = ["aqven-llm[huggingface]==0.0.6"]
+mistral = ["aqven-llm[mistral]==0.0.6"]
+xai = ["aqven-llm[xai]==0.0.6"]
 
 [project.scripts]
 aqven = "aqven.cli:run"
