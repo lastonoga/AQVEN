@@ -40,7 +40,7 @@ def rule_targets() -> tuple[ManagedBlock, ...]:
     return (ManagedBlock(AGENTS_FILE), ManagedBlock(CLAUDE_FILE))
 
 
-def mcp_targets() -> tuple[McpServer, ...]:
+def mcp_targets() -> tuple[AgentTarget, ...]:
     return (
         McpServer(),
         McpServer(config=OPENCODE_CONFIG, template=OPENCODE_TEMPLATE, servers_key=OPENCODE_SERVERS_KEY),
