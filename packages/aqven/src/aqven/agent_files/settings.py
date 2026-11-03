@@ -19,6 +19,9 @@ MCP_CONFIG: Final = PurePosixPath(".mcp.json")
 MCP_TEMPLATE: Final = "dot-mcp.json"
 CODEX_CONFIG: Final = PurePosixPath(".codex", "config.toml")
 CODEX_TEMPLATE: Final = "dot-codex/config.toml"
+OPENCODE_CONFIG: Final = PurePosixPath("opencode.json")
+OPENCODE_TEMPLATE: Final = "opencode.json"
+OPENCODE_SERVERS_KEY: Final = "mcp"
 HOOKS_KEY: Final = "hooks"
 HANDLERS_KEY: Final = "hooks"
 COMMAND_KEY: Final = "command"
@@ -143,16 +146,20 @@ class ClaudeSettings:
 
 @dataclass(frozen=True, slots=True)
 class McpServer:
+    config: PurePosixPath = MCP_CONFIG
+    template: str = MCP_TEMPLATE
+    servers_key: str = SERVERS_KEY
+
     def wanted(self, place: AgentPlace) -> JsonValue:
-        return as_object(template_object(place, MCP_TEMPLATE).get(SERVERS_KEY)).get(SERVER_NAME)
+        return as_object(template_object(place, self.template).get(self.servers_key)).get(SERVER_NAME)
 
     def problem(self, place: AgentPlace) -> str | None:
-        current = JsonFile.read(place.path(MCP_CONFIG))
+        current = JsonFile.read(place.path(self.config))
         if not current.exists:
             return "is missing"
         if current.data is None:
             return NOT_AN_OBJECT
-        server = as_object(current.data.get(SERVERS_KEY)).get(SERVER_NAME)
+        server = as_object(current.data.get(self.servers_key)).get(SERVER_NAME)
         if server is None:
             return f"has no {SERVER_NAME} server"
         wanted = self.wanted(place)
@@ -160,22 +167,22 @@ class McpServer:
 
     def drift(self, place: AgentPlace) -> tuple[Drift, ...]:
         problem = self.problem(place)
-        return () if problem is None else (Drift(MCP_CONFIG.as_posix(), problem),)
+        return () if problem is None else (Drift(self.config.as_posix(), problem),)
 
     def sync(self, place: AgentPlace) -> tuple[Change, ...]:
         problem = self.problem(place)
         if problem is None:
             return ()
-        path = place.path(MCP_CONFIG)
+        path = place.path(self.config)
         current = JsonFile.read(path)
         if not current.exists:
-            write_text(path, place.template(MCP_TEMPLATE))
-            return (Change(Action.WROTE, MCP_CONFIG.as_posix(), "new file"),)
-        if current.data is None or SERVER_NAME in as_object(current.data.get(SERVERS_KEY)):
-            return (Change(Action.KEPT, MCP_CONFIG.as_posix(), problem),)
-        servers = {**as_object(current.data.get(SERVERS_KEY)), SERVER_NAME: self.wanted(place)}
-        write_text(path, json_text({**current.data, SERVERS_KEY: servers}))
-        return (Change(Action.WROTE, MCP_CONFIG.as_posix(), f"added the {SERVER_NAME} server"),)
+            write_text(path, place.template(self.template))
+            return (Change(Action.WROTE, self.config.as_posix(), "new file"),)
+        if current.data is None or SERVER_NAME in as_object(current.data.get(self.servers_key)):
+            return (Change(Action.KEPT, self.config.as_posix(), problem),)
+        servers = {**as_object(current.data.get(self.servers_key)), SERVER_NAME: self.wanted(place)}
+        write_text(path, json_text({**current.data, self.servers_key: servers}))
+        return (Change(Action.WROTE, self.config.as_posix(), f"added the {SERVER_NAME} server"),)
 
 
 class CodexDocument(BaseModel):

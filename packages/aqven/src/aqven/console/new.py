@@ -53,7 +53,7 @@ ENV_EXAMPLE: Final = ".env.example"
 LIMITS_KEY: Final = "limits"
 AGENT_FILES_LINE: Final = (
     "wrote AGENTS.md, CLAUDE.md, the aqven skills in .agents/skills and .claude/skills, the Claude Code hooks and "
-    "the aqven MCP server for Claude Code and Codex"
+    "the aqven MCP server for Claude Code, OpenCode and Codex"
 )
 
 

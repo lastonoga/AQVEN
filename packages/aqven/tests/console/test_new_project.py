@@ -50,6 +50,7 @@ AGENT_RULES: Final = (
 AGENT_FILES: Final = (
     ".claude/settings.json",
     ".codex/config.toml",
+    "opencode.json",
     ".agents/skills/.aqven-skills.json",
     ".agents/skills/building-flows/SKILL.md",
     ".claude/skills/running-series/SKILL.md",
@@ -323,6 +324,7 @@ def test_templates_are_strategies(tmp_path: Path) -> None:
         ".mcp.json",
         "AGENTS.md",
         "CLAUDE.md",
+        "opencode.json",
         "solo/aqven.yaml",
     }
 

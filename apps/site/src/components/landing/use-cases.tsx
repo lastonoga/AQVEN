@@ -214,7 +214,7 @@ const STORIES: Readonly<Record<SituationId, Story>> = {
       {
         actors: ["Agent"],
         title: "Your agent edits the same files.",
-        body: "Claude Code, Codex or Cursor connect over MCP. Structural changes go through flow_patch: every file lands, or none does.",
+        body: "Claude Code, OpenCode, Codex or Cursor connect over MCP. Structural changes go through flow_patch: every file lands, or none does.",
       },
     ],
     limit: "A passing check means the structure holds together, not that the logic is right.",

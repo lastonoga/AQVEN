@@ -21,6 +21,8 @@ JSON_OBJECT: Final[TypeAdapter[dict[str, JsonValue]]] = TypeAdapter(dict[str, Js
 SKILLS: Final = skill_names(skill_files(agent_plugin_root() / "skills"))
 USER_HOOK: Final = {"type": "command", "command": "echo mine"}
 AQVEN_SERVER: Final = {"type": "stdio", "command": "uv", "args": ["run", "aqven", "mcp", PACKAGE]}
+OPENCODE_SERVER: Final = {"type": "local", "command": ["uv", "run", "aqven", "mcp", PACKAGE], "enabled": True}
+OPENCODE_SCHEMA: Final = "https://opencode.ai/config.json"
 OLD_HOOK: Final = {"type": "command", "command": 'python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/aqven_check.py"'}
 
 
@@ -46,6 +48,7 @@ def test_sync_writes_every_agent_file(workspace: Path) -> None:
     manifest = read_json(workspace / ".agents" / "skills" / ".aqven-skills.json")
     settings = SettingsWire.read(workspace / ".claude" / "settings.json")
     servers = read_json(workspace / ".mcp.json")["mcpServers"]
+    opencode = read_json(workspace / "opencode.json")
     codex = tomllib.loads((workspace / ".codex" / "config.toml").read_text(encoding="utf-8"))
     agents = (workspace / "AGENTS.md").read_text(encoding="utf-8")
     claude = (workspace / "CLAUDE.md").read_text(encoding="utf-8")
@@ -65,6 +68,8 @@ def test_sync_writes_every_agent_file(workspace: Path) -> None:
     assert set(settings.commands("PreToolUse")) == {HOOK_COMMAND}
     assert settings.commands("SessionStart") == [HOOK_COMMAND.replace("reminders", "compaction")]
     assert servers == {"aqven": AQVEN_SERVER}
+    assert opencode["$schema"] == OPENCODE_SCHEMA
+    assert opencode["mcp"] == {"aqven": OPENCODE_SERVER}
     assert codex["mcp_servers"]["aqven"] == {"command": "uv", "args": ["run", "aqven", "mcp", PACKAGE]}
 
 
@@ -123,6 +128,10 @@ def test_sync_merges_settings_and_servers_it_does_not_own(workspace: Path) -> No
     (claude / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
     other = {"type": "stdio", "command": "npx", "args": ["github-mcp"]}
     (workspace / ".mcp.json").write_text(json.dumps({"mcpServers": {"github": other}}), encoding="utf-8")
+    remote = {"type": "remote", "url": "https://mcp.github.com"}
+    (workspace / "opencode.json").write_text(
+        json.dumps({"model": "openai/gpt-5", "mcp": {"github": remote}}), encoding="utf-8"
+    )
     (workspace / ".codex").mkdir()
     (workspace / ".codex" / "config.toml").write_text('model = "gpt-5"', encoding="utf-8")
 
@@ -130,6 +139,7 @@ def test_sync_merges_settings_and_servers_it_does_not_own(workspace: Path) -> No
 
     merged = SettingsWire.read(claude / "settings.json")
     raw = read_json(claude / "settings.json")
+    opencode = read_json(workspace / "opencode.json")
     codex = tomllib.loads((workspace / ".codex" / "config.toml").read_text(encoding="utf-8"))
     assert raw["permissions"] == {"allow": ["Bash(ls *)"]}
     assert merged.approved_servers == ["github", "aqven"]
@@ -138,6 +148,8 @@ def test_sync_merges_settings_and_servers_it_does_not_own(workspace: Path) -> No
     assert not [command for command in merged.commands("PreToolUse") if "aqven_check.py" in command]
     assert not (claude / "hooks").exists()
     assert read_json(workspace / ".mcp.json")["mcpServers"] == {"github": other, "aqven": AQVEN_SERVER}
+    assert opencode["model"] == "openai/gpt-5"
+    assert opencode["mcp"] == {"github": remote, "aqven": OPENCODE_SERVER}
     assert codex["model"] == "gpt-5" and codex["mcp_servers"]["aqven"]["command"] == "uv"
 
 
@@ -152,6 +164,33 @@ def test_sync_keeps_an_aqven_server_the_owner_changed(workspace: Path, capsys: p
     assert read_json(workspace / ".mcp.json") == changed
     assert "kept .mcp.json: has another aqven server than" in output
     assert "1 kept as they are, fix them by hand" in output
+    assert status == 1
+
+
+def test_sync_keeps_an_opencode_server_the_owner_changed(workspace: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    changed = {"mcp": {"aqven": {**OPENCODE_SERVER, "cwd": "elsewhere"}}}
+    (workspace / "opencode.json").write_text(json.dumps(changed), encoding="utf-8")
+
+    assert sync(workspace) == 0
+    output = capsys.readouterr().out
+    status = main(["skills", "status", str(workspace / PACKAGE)])
+
+    assert read_json(workspace / "opencode.json") == changed
+    assert "kept opencode.json: has another aqven server than" in output
+    assert "1 kept as they are, fix them by hand" in output
+    assert status == 1
+
+
+def test_sync_keeps_an_opencode_config_it_cannot_parse(workspace: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    commented = '{\n  // a comment OpenCode allows and JSON does not\n  "mcp": {}\n}\n'
+    (workspace / "opencode.json").write_text(commented, encoding="utf-8")
+
+    assert sync(workspace) == 0
+    output = capsys.readouterr().out
+    status = main(["skills", "status", str(workspace / PACKAGE)])
+
+    assert (workspace / "opencode.json").read_text(encoding="utf-8") == commented
+    assert "kept opencode.json: is not a JSON object: fix it by hand, then sync again" in output
     assert status == 1
 
 

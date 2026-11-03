@@ -207,5 +207,5 @@ routed, drafted, judged reply.
 - [From a bad answer to a verified fix](/start/engineering-loop-walkthrough/) picks up from here: the
   same project, opened in Studio, to see the graph, find why a run went wrong, and verify a fix.
 - [How to set up a coding agent outside Studio](/mcp-cli/set-up-an-agent-outside-studio/) hands the same
-  project to Claude Code, Codex, or another agent instead: start the agent in the outer `my_project`
+  project to Claude Code, OpenCode, Codex, or another agent instead: start the agent in the outer `my_project`
   folder, connect AQVEN's MCP server, and paste one setup prompt.
