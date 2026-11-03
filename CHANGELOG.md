@@ -12,27 +12,34 @@ formats can still change, and `aqven` / `aqven-llm` are released as a matched pa
 Every entry below cites the commit(s) or tag range it was reconstructed from. Where a change
 could not be attributed to a specific commit, that is said out loud.
 
-## [Unreleased]
+## [0.0.5] - 2026-11-03
 
-Work on `main` after the `v0.0.4` tag (`v0.0.4..HEAD`: 23 commits, 16 of them non-merge,
-2026-09-28/29). Not on PyPI yet.
+Work on `main` after the `v0.0.4` tag (`v0.0.4..v0.0.5`: 37 commits, 25 of them non-merge,
+2026-09-28 — 2026-10-29). The earlier draft of this section counted 23 commits; the nine
+landed afterwards are cited below.
 
 ### Added
 
 - MCP tools for bulk and compact reads of series and runs, per-agent overrides, and cheap drops of large files (`a8ae481`)
 - Skills rewritten to be pattern-neutral and to read series through the new tools (`de574df`), provider-neutral model choice (`6ee117c`), generic across domains and modalities (`65bab6a`)
-- Landing site: comparison page organised by the user's questions (`b91a00e`), check-and-cross comparison with named products (`2c14a3c`), centered hero with the Studio graph in a browser frame (`1177b61`), search and AI-search basics (`11f45bb`)
+- Landing site: comparison page organised by the user's questions (`b91a00e`), check-and-cross comparison with named products (`2c14a3c`), centered hero with the Studio graph in a browser frame (`1177b61`), search and AI-search basics (`11f45bb`), roadmap page at `/roadmap/` with nav, footer, `llms.txt` and a content guard (`84229f9`)
 - Repository/community packaging: Claude Code marketplace file, FAQ and definitional sentence (`02e0b88`), pull request template (`fd94f69`), plugin directory validation hook (`dfa1f86`)
+- CI: Windows and macOS platform smoke workflow, plus the tested-platforms doc (`e89d328`)
+- This changelog and the release notes for v0.0.0–v0.0.4 (`e3b9118`)
 
 ### Changed
 
 - Repository is English-only (`6afe902`)
-- README shows a current Studio screenshot of the `support_case` flow (`097b31b`)
+- README shows a current Studio screenshot of the `support_case` flow (`097b31b`), and says that a run spends against any key it finds, not only `.env` (`3c1ed80`)
+- Comparison cells refreshed against the promptfoo, DeepEval, LangSmith and n8n documentation of 19.10.2026 (`7916c1c`)
+- Commit citations remapped to the rewritten history (`07c904e`); internal design docs that are not published now say so (`de534c2`); packaging commit counts corrected and one entry refiled (`6a25d53`)
 
 ### Fixed
 
 - `provider_options` now reach google, mistral, xai and bedrock; `aqven check` warns on the providers that cannot take them (`8b15c71`)
 - Held-out dataset rows stay hidden from agents, and `aqven run` goes through a running server (`4e356a3`)
+- The platform smoke workflow installs CPython 3.14 explicitly instead of relying on the runner image (`e8f43a6`)
+- Tests: the mistral-small reasoning case declares the mistral extra its profile needs (`ff9b569`)
 
 ## [0.0.4] - 2026-09-28
 
@@ -190,7 +197,7 @@ Reconstructed from the discarded history reachable only through the tag:
 
 ## Links
 
-[Unreleased]: https://github.com/lastonoga/AQVEN/compare/v0.0.4...HEAD
+[0.0.5]: https://github.com/lastonoga/AQVEN/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/lastonoga/AQVEN/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/lastonoga/AQVEN/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/lastonoga/AQVEN/compare/v0.0.1...v0.0.2

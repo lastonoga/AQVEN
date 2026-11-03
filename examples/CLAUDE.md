@@ -1,4 +1,4 @@
-<!-- aqven:begin 0.0.4 -->
+<!-- aqven:begin 0.0.5 -->
 @AGENTS.md
 
 For Claude:
