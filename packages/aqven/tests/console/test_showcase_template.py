@@ -75,6 +75,7 @@ def test_showcase_project_has_the_example_layout(created: Path) -> None:
         ".claude/skills/building-flows/SKILL.md",
         ".agents/skills/.aqven-skills.json",
         ".codex/config.toml",
+        "opencode.json",
         "pyproject.toml",
         "tests/conftest.py",
         "tests/support.py",

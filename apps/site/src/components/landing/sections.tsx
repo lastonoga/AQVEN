@@ -358,7 +358,7 @@ export const FAQS: readonly Faq[] = [
   {
     question: "Which coding agents does AQVEN work with?",
     answer:
-      "Claude Code and Codex, from Studio's chat or from your own terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.",
+      "Claude Code and Codex in Studio's chat. In your own terminal: Claude Code, OpenCode and Codex from the files `aqven new` writes into the project, and any other MCP client, such as Cursor, through AQVEN's MCP server.",
   },
   {
     question: "Can my coding agent actually edit these workflows?",

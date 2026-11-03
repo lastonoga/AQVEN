@@ -12,6 +12,29 @@ formats can still change, and `aqven` / `aqven-llm` are released as a matched pa
 Every entry below cites the commit(s) or tag range it was reconstructed from. Where a change
 could not be attributed to a specific commit, that is said out loud.
 
+## [0.0.6] - 2026-11-03
+
+One change, the third agent client: `v0.0.5..v0.0.6` is one feature commit plus this release.
+
+### Added
+
+- OpenCode: `aqven new` and `aqven skills sync` now write `opencode.json` with the `aqven` MCP
+  server under its `mcp` key, and `aqven skills status` reports it. OpenCode reads no `.mcp.json`,
+  so before this a generated project gave it no server at all. `AGENTS.md`, `CLAUDE.md` and the
+  skills in `.agents/skills/` reach OpenCode natively from the project root (`161f025`)
+- The JSON MCP writer is one parameterized strategy shared by `.mcp.json` (`mcpServers`) and
+  `opencode.json` (`mcp`): foreign keys and other servers survive a sync, an owner-edited `aqven`
+  server is kept and reported, and a file JSON cannot parse (JSONC with comments) is left alone
+  (`161f025`)
+- Agent setup page: an OpenCode column in the "what your agent picks up" table, a registration
+  section with the `cwd` rule for a session started above the project root, and the
+  `opencode debug config` check (`161f025`)
+
+### Changed
+
+- FAQ in both READMEs and on the landing page: Studio's chat still runs Claude Code or Codex, and
+  OpenCode is named among the agents you can use in your own terminal (`161f025`)
+
 ## [0.0.5] - 2026-11-03
 
 Work on `main` after the `v0.0.4` tag (`v0.0.4..v0.0.5`: 37 commits, 25 of them non-merge,
@@ -197,6 +220,7 @@ Reconstructed from the discarded history reachable only through the tag:
 
 ## Links
 
+[0.0.6]: https://github.com/lastonoga/AQVEN/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/lastonoga/AQVEN/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/lastonoga/AQVEN/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/lastonoga/AQVEN/compare/v0.0.2...v0.0.3

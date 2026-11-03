@@ -1,6 +1,6 @@
 ---
 title: How to set up a coding agent outside Studio
-description: Register AQVEN's MCP server and paste one setup prompt into Claude Code, Codex, or any MCP client you start yourself, so it reads the project's rules and connects the way Studio's chat does.
+description: Register AQVEN's MCP server and paste one setup prompt into Claude Code, OpenCode, Codex, or any MCP client you start yourself, so it reads the project's rules and connects the way Studio's chat does.
 ---
 
 ## When you need this
@@ -15,14 +15,15 @@ prompt, and the agent sets itself up the same way Studio's chat is set up.
 
 ## What your agent picks up without help
 
-| | Claude Code | Codex | Any other MCP client |
-|---|---|---|---|
-| Project rules | `CLAUDE.md`, which pulls in `AGENTS.md` | `AGENTS.md` only, not `CLAUDE.md` | depends on the client |
-| `aqven` MCP server | from `.mcp.json`, once you approve it | not from `.mcp.json` — register it in step 1 | register it in step 1 |
-| Check after every edit | hooks in `.claude/settings.json` run `{{CLI_COMMAND}} check` | none — the prompt asks for it | none — the prompt asks for it |
+| | Claude Code | OpenCode | Codex | Any other MCP client |
+|---|---|---|---|---|
+| Project rules | `CLAUDE.md`, which pulls in `AGENTS.md` | `AGENTS.md`, plus the skills in `.agents/skills/` | `AGENTS.md` only, not `CLAUDE.md` | depends on the client |
+| `aqven` MCP server | from `.mcp.json`, once you approve it | from `opencode.json` when the session starts | not from `.mcp.json` — register it in step 1 | register it in step 1 |
+| Check after every edit | hooks in `.claude/settings.json` run `{{CLI_COMMAND}} check` | none — the prompt asks for it | none — the prompt asks for it | none — the prompt asks for it |
 
-`{{CLI_COMMAND}} new` writes `AGENTS.md`, `CLAUDE.md`, `.mcp.json` and `.claude/` into every project it
-creates. A project set up any other way may be missing them, and then the prompt below has less to read.
+`{{CLI_COMMAND}} new` writes `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `opencode.json`, `.codex/config.toml` and
+`.claude/` into every project it creates. A project set up any other way may be missing them, and then the
+prompt below has less to read.
 
 ## Before you start
 
@@ -38,12 +39,33 @@ project root it needs `<package>` as its argument.
 
 ## 1. Register the MCP server before the session starts
 
-Claude Code and Codex both load MCP servers only when a session starts. Register the server first, or the
-agent can do nothing but ask you to restart.
+Claude Code, OpenCode and Codex all load MCP servers only when a session starts. Register the server first,
+or the agent can do nothing but ask you to restart.
 
 **Claude Code.** Nothing to register: `.mcp.json` at the project root already declares `aqven`. Start
 `claude` in the project root and approve the `aqven` server when Claude Code asks. `/mcp` shows whether it
 connected.
+
+**OpenCode.** Nothing to register either: `opencode.json` at the project root already declares `aqven` under
+its `mcp` key, and OpenCode picks up `AGENTS.md` and the skills in `.agents/skills/` by itself. Start the
+session in the project root, the folder with `pyproject.toml`: OpenCode looks for `opencode.json` from the
+session's folder upward, never downward. A session that starts above the project needs the same entry in the
+`opencode.json` of the folder it starts in, with `cwd` pointing at the project root:
+
+```json
+{
+  "mcp": {
+    "aqven": {
+      "type": "local",
+      "command": ["uv", "run", "{{CLI_COMMAND}}", "mcp", "<package>"],
+      "cwd": "/absolute/path/to/project",
+      "enabled": true
+    }
+  }
+}
+```
+
+`opencode debug config` lists the config files OpenCode merged and what it took from each.
 
 **Codex.** Add the server to the project's own `.codex/config.toml`. Codex reads a project config only in a
 folder you've marked as trusted.
@@ -88,6 +110,7 @@ This folder is an AQVEN project. Before any task, set yourself up the way AQVEN 
    - If you have them, call aqven_check and go to step 4.
    - If you don't, the server is not connected. Do what applies to you, then stop:
      - Claude Code: .mcp.json already declares the server. Ask me to approve it with /mcp and restart the session.
+     - OpenCode: opencode.json already declares the server. Ask me to restart the session in this folder.
      - Codex: write this to .codex/config.toml in this folder, then ask me to restart the session:
          [mcp_servers.aqven]
          command = "uv"

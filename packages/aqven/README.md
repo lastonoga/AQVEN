@@ -11,7 +11,7 @@ agent runs the experiments. You see the evidence and decide.
 AQVEN keeps an AI workflow as typed files in your repository: a flow, one file per step, prompts in
 Markdown, and declared types, agents and tools. `aqven check` validates every connection and simulates
 every flow before you spend a token. Studio, a local browser app in the same install, shows each run
-step by step. Your coding agent (Claude Code, Codex or any MCP client) works on the same files through AQVEN's
+step by step. Your coding agent (Claude Code, OpenCode, Codex or any MCP client) works on the same files through AQVEN's
 MCP server, and runs experiments whose verdicts AQVEN computes.
 
 AQVEN is in alpha: expect changes between releases.
@@ -51,7 +51,7 @@ Start Claude Code in the project, approve the `aqven` server, and hand it a task
 explores on working cases and confirms once on held-out cases; you read the first traces and make the
 decisions. Open Studio next to it with `uv run aqven dev my_project`.
 
-For Codex, Cursor or another MCP client, see
+For OpenCode, Codex, Cursor or another MCP client, see
 [How to set up a coding agent outside Studio](https://aqvenstudio.com/mcp-cli/set-up-an-agent-outside-studio/).
 
 ## Commands
@@ -86,8 +86,9 @@ purpose. See [License](#license) below.
 
 **Which Python version does it need?** Python 3.14. uv fetches it for you.
 
-**Which coding agents does it work with?** Claude Code and Codex, from Studio's chat or from your own
-terminal, and any other MCP client, such as Cursor, through AQVEN's MCP server.
+**Which coding agents does it work with?** Claude Code and Codex in Studio's chat. In your own
+terminal: Claude Code, OpenCode and Codex from the files `aqven new` writes into the project, and any
+other MCP client, such as Cursor, through AQVEN's MCP server.
 
 **Which model providers can I use?** The provider catalog has 28 entries through Pydantic AI, from OpenAI,
 Anthropic and Google to OpenRouter, Mistral, DeepSeek, Groq and Ollama.

@@ -33,7 +33,7 @@ def sync_summary(place: AgentPlace, changes: tuple[Change, ...]) -> str:
 class SkillsSyncCommand:
     help: str = (
         "copy the aqven skills into .agents/skills and .claude/skills, write the aqven block of AGENTS.md and "
-        "CLAUDE.md, the Claude Code hooks and the aqven MCP server of .mcp.json and .codex/config.toml"
+        "CLAUDE.md, the Claude Code hooks and the aqven MCP server of .mcp.json, opencode.json and .codex/config.toml"
     )
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
@@ -92,7 +92,7 @@ SKILLS_ACTIONS: Final[Mapping[str, Command]] = {
 
 @dataclass(frozen=True, slots=True)
 class SkillsCommand:
-    help: str = "the aqven skills and agent rules of a project for Claude Code and Codex outside Studio"
+    help: str = "the aqven skills and agent rules of a project for Claude Code, OpenCode and Codex outside Studio"
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         actions = parser.add_subparsers(dest=ACTION_DESTINATION, required=True, metavar="ACTION")

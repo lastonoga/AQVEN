@@ -6,7 +6,7 @@ abstract: "AQVEN is a Python framework and a local Studio for building reliable 
 authors:
   - family-names: "Burkhanov"
     given-names: "Kirill"
-version: "0.0.5"
+version: "0.0.6"
 date-released: "2026-11-03"
 repository-code: "https://github.com/lastonoga/AQVEN"
 url: "https://aqvenstudio.com"

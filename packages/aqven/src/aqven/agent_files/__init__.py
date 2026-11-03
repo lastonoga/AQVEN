@@ -10,7 +10,14 @@ from aqven.agent_files.place import (
     agent_plugin_root,
     installed_version,
 )
-from aqven.agent_files.settings import ClaudeSettings, CodexMcpServer, McpServer
+from aqven.agent_files.settings import (
+    OPENCODE_CONFIG,
+    OPENCODE_SERVERS_KEY,
+    OPENCODE_TEMPLATE,
+    ClaudeSettings,
+    CodexMcpServer,
+    McpServer,
+)
 from aqven.agent_files.skills import (
     COPIES_FOLDER,
     LINKS_FOLDER,
@@ -33,8 +40,16 @@ def rule_targets() -> tuple[ManagedBlock, ...]:
     return (ManagedBlock(AGENTS_FILE), ManagedBlock(CLAUDE_FILE))
 
 
+def mcp_targets() -> tuple[McpServer, ...]:
+    return (
+        McpServer(),
+        McpServer(config=OPENCODE_CONFIG, template=OPENCODE_TEMPLATE, servers_key=OPENCODE_SERVERS_KEY),
+        CodexMcpServer(),
+    )
+
+
 def all_targets(place: AgentPlace) -> tuple[AgentTarget, ...]:
-    return (*skill_targets(place), *rule_targets(), ClaudeSettings(), McpServer(), CodexMcpServer())
+    return (*skill_targets(place), *rule_targets(), ClaudeSettings(), *mcp_targets())
 
 
 def sync_agent_files(root: Path, workspace: Path | None = None) -> tuple[Change, ...]:
@@ -63,6 +78,7 @@ __all__ = [
     "agent_plugin_root",
     "all_targets",
     "installed_version",
+    "mcp_targets",
     "read_manifest",
     "rule_targets",
     "skill_targets",

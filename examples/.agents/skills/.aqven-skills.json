@@ -1,5 +1,5 @@
 {
-  "aqven": "0.0.5",
+  "aqven": "0.0.6",
   "files": {
     "analyzing-failures/SKILL.md": "sha256-b09f88e17dbcdfdc29387850a20b1fc0b672d870e95651e089671d037638c3b4",
     "analyzing-failures/references/concepts/finding-the-node-that-went-wrong.md": "sha256-588eb66f7b016f819ed797b8f7b3e6234aa1e98e4761301a333d07a9b0fa47e1",
@@ -113,7 +113,7 @@
     "running-series/references/integrations/model-providers.md": "sha256-9dd9be192ec2c88287906184415acb4bb9d3d5ab1e4855369d151dbeb2089c6c",
     "running-series/references/mcp-cli/experiments-and-series.md": "sha256-509631d3e9fff958c5b073deb8361f2c91a75071eb79acaff66710f2f22c2f2f",
     "running-series/references/mcp-cli/runs.md": "sha256-6220e6e315a0dc8871a162359a41a355658c5afe37b5beb49e62575dcf85fa5a",
-    "running-series/references/reference/cli.md": "sha256-f0257d0fdf7fbdabdf68237fd57e8d7d883ef4d47cacb6aff718b923465d20ac",
+    "running-series/references/reference/cli.md": "sha256-3716a3748c2349d61af26cdfc9988c1ca9787407e38f54c627aaaa567b9d495a",
     "running-series/references/reference/findings.md": "sha256-a93afeafc566b1802c6076fb1ff51b7fa02b4a9b18837c92e39f0c0cbcbe8b00",
     "running-series/references/reference/project.md": "sha256-3a08a9cc179f9edd8a71485e52514fb847f2011ecf3d450b4c6fc112ab0031b4",
     "running-series/references/reference/status-and-verdicts.md": "sha256-f25f6dba566592f0e7cd5c470402a831be3de0b5de514354056efc138263963c",
