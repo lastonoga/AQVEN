@@ -12,6 +12,23 @@ formats can still change, and `aqven` / `aqven-llm` are released as a matched pa
 Every entry below cites the commit(s) or tag range it was reconstructed from. Where a change
 could not be attributed to a specific commit, that is said out loud.
 
+## [0.0.7] - 2026-11-04
+
+Studio only: `v0.0.6..v0.0.7` is one feature commit plus this release.
+
+### Changed
+
+- The flow canvas layout is computed by ELK (`elkjs`, layered algorithm) instead of the
+  hand-rolled snake layout: one left-to-right direction with no wrapped reversed rows, a step
+  sits next to its consumers instead of joining a column of sources at the far left, and
+  map/loop/parallel containers are laid out hierarchically (`9f9cd88`)
+- Edge routing moves to ELK as well: every edge gets its own fixed-side ports and an
+  orthogonal route that does not cross another node's body; the colored port dots, per-source
+  edge colors, arrow heads and the moving direction dot are kept (`9f9cd88`)
+- A loop's dashed back edge keeps a hand-computed detour through the loop's reserved bottom and
+  widened left channel, so it no longer hugs the first child; ELK cycle breaking proved
+  nondeterministic for nested loops, so cycles stay out of the laid-out graph (`9f9cd88`)
+
 ## [0.0.6] - 2026-11-03
 
 One change, the third agent client: `v0.0.5..v0.0.6` is one feature commit plus this release.
