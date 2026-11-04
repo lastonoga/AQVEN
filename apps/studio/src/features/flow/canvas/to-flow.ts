@@ -1,6 +1,6 @@
 import { MarkerType, type Edge, type FitViewOptions, type Node } from "@xyflow/react"
 import type { NodeKind } from "@/domain"
-import type { CanvasContainer, CanvasEdge, CanvasNode, CanvasSize, CanvasStep, EdgeVariant } from "../layout"
+import type { CanvasContainer, CanvasEdge, CanvasNode, CanvasSize, CanvasStep } from "../layout"
 import { DEFAULT_FLOW_COLOR } from "./edge-colors"
 import type { FlowEdgeRenderData } from "./edge-style"
 import type { NodeDots } from "./handles"
@@ -14,7 +14,6 @@ export type StepData = {
   readonly outputs: number
   readonly problems: number
   readonly size: CanvasSize
-  readonly reversed: boolean
   readonly ports: NodeDots
 }
 
@@ -24,7 +23,6 @@ export type ContainerData = {
   readonly members: number
   readonly problems: number
   readonly size: CanvasSize
-  readonly reversed: boolean
   readonly ports: NodeDots
 }
 
@@ -43,8 +41,7 @@ const FIT_PADDING: Readonly<Record<FitSpace, NonNullable<FitViewOptions["padding
 const FIT_MAX_ZOOM = 1
 const EMPTY_PORTS: NodePorts = { in: [], out: [], bottom: [] }
 
-const edgeData = (variant: EdgeVariant, color: string): FlowEdgeRenderData =>
-  variant === "back" ? { variant: "back", label: null, detourY: null, color } : { variant: "flow", label: null, color }
+const edgeData = (edge: CanvasEdge, color: string): FlowEdgeRenderData => ({ variant: edge.variant, label: null, points: edge.points, color })
 
 const dotsOf = (ports: NodePorts, colors: ReadonlyMap<string, string>): NodeDots => {
   const colored = (side: readonly Port[]) => side.map((port) => ({ id: port.id, offset: port.offset, color: colors.get(port.edgeId) ?? DEFAULT_FLOW_COLOR }))
@@ -72,7 +69,6 @@ const stepNode = (node: CanvasStep, ports: NodeDots): StepFlowNode => ({
     outputs: node.outputs,
     problems: node.problems,
     size: node.size,
-    reversed: node.reversed,
     ports,
   },
 })
@@ -89,7 +85,6 @@ const containerNode = (node: CanvasContainer, ports: NodeDots): ContainerFlowNod
     members: node.members,
     problems: node.problems,
     size: node.size,
-    reversed: node.reversed,
     ports,
   },
 })
@@ -117,7 +112,7 @@ export const toFlowEdges = (edges: readonly CanvasEdge[], colors: ReadonlyMap<st
       selectable: false,
       focusable: false,
       markerEnd: { type: MarkerType.ArrowClosed, color, width: MARKER_SIZE, height: MARKER_SIZE },
-      data: edgeData(edge.variant, color),
+      data: edgeData(edge, color),
     }
   })
 

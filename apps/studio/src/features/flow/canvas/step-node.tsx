@@ -64,7 +64,7 @@ export function StepNode({ id, data }: NodeProps<StepFlowNode>) {
           {t("outputs", { count: data.outputs })}
         </Text>
       </div>
-      <NodeHandles specs={nodeHandleSpecs(data.ports, data.reversed)} />
+      <NodeHandles specs={nodeHandleSpecs(data.ports)} />
     </Surface>
   )
 }

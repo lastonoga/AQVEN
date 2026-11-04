@@ -1,41 +1,38 @@
-import { Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
-import { edgeGeometry, labelTransform, uPath, type EdgeEndpoints } from "./edge-paths"
+import { labelTransform, pointsGeometry, pointsPath } from "./edge-paths"
 
-const ends = (sourceX: number, sourceY: number, targetX: number, targetY: number): EdgeEndpoints => ({
-  sourceX,
-  sourceY,
-  sourcePosition: Position.Right,
-  targetX,
-  targetY,
-  targetPosition: Position.Left,
+describe("pointsPath", () => {
+  it("draws a straight line between two points", () => {
+    expect(pointsPath([{ x: 10, y: 20 }, { x: 110, y: 20 }])).toBe("M 10 20 L 110 20")
+  })
+
+  it("rounds an orthogonal corner", () => {
+    expect(pointsPath([{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 50 }], 12)).toBe("M 0 0 L 88 0 Q 100 0 100 12 L 100 50")
+  })
+
+  it("shrinks the corner radius when a segment is short", () => {
+    expect(pointsPath([{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 10 }], 12)).toBe("M 0 0 L 95 0 Q 100 0 100 5 L 100 10")
+  })
+
+  it("keeps a zero-length bend as a plain line to it", () => {
+    expect(pointsPath([{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 50, y: 0 }])).toBe("M 0 0 L 0 0 L 50 0")
+  })
+
+  it("returns only the move command for a single point and nothing for none", () => {
+    expect(pointsPath([{ x: 5, y: 6 }])).toBe("M 5 6")
+    expect(pointsPath([])).toBe("")
+  })
 })
 
-describe("uPath", () => {
-  it("draws the critic loop back edge as a leftward U", () => {
-    expect(uPath(2900, 506, 2068, 466, 880, 16)).toBe("M 2900 506 L 2900 864 A 16 16 0 0 1 2884 880 L 2084 880 A 16 16 0 0 1 2068 864 L 2068 466")
+describe("pointsGeometry", () => {
+  it("places flow labels above the middle of the path", () => {
+    const geometry = pointsGeometry([{ x: 0, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 40 }], "flow")
+    expect(geometry.label).toEqual({ x: 200, y: 62, align: "above" })
   })
 
-  it("flips the arc sweep for a rightward U", () => {
-    expect(uPath(100, 0, 300, 10, 200, 10)).toBe("M 100 0 L 100 190 A 10 10 0 0 0 110 200 L 290 200 A 10 10 0 0 0 300 190 L 300 10")
-  })
-})
-
-describe("edgeGeometry", () => {
-  it("places branch labels above the target line after the source", () => {
-    const geometry = edgeGeometry(ends(3250, 460, 3490, 240), { variant: "flow", label: "approved" })
-    expect(geometry.label).toEqual({ x: 3290, y: 229, align: "above" })
-    expect(geometry.path).toBe("M3250 460L3270 460L 3356,460Q 3370,460 3370,446L 3370,254Q 3370,240 3384,240L3470 240L3490 240")
-  })
-
-  it("centres back edge labels on the detour line", () => {
-    const geometry = edgeGeometry(ends(2900, 506, 2068, 460), { variant: "back", label: "back", detourY: 880 })
-    expect(geometry.label).toEqual({ x: 2484, y: 880, align: "center" })
-  })
-
-  it("falls back to a detour below both endpoints", () => {
-    const geometry = edgeGeometry(ends(0, 100, 50, 60), { variant: "back", label: null, detourY: null })
-    expect(geometry.label.y).toBe(148)
+  it("centres back labels on the middle of the path", () => {
+    const geometry = pointsGeometry([{ x: 300, y: 90 }, { x: 300, y: 140 }, { x: 60, y: 140 }, { x: 60, y: 46 }], "back")
+    expect(geometry.label).toEqual({ x: 180, y: 140, align: "center" })
   })
 })
 

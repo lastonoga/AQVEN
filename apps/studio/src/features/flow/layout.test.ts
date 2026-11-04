@@ -1,64 +1,66 @@
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
 import type { ApiNode } from "@/domain"
 import { liveNodes } from "@/mocks/data/nodes"
 import { liveFlowDetails } from "@/mocks/data/project"
-import { absoluteBox, buildGraph, type Box, type CanvasNode } from "./layout"
+import { absoluteBox, buildGraph, type Box, type CanvasGraph } from "./layout"
 
 const nodesOf = (flowId: string): readonly ApiNode[] => liveNodes[flowId] ?? []
 const orderOf = (flowId: string): readonly string[] => liveFlowDetails[flowId]?.order ?? []
 
-const graphOf = (flowId: string) => buildGraph(nodesOf(flowId), orderOf(flowId))
+const graphOf = (flowId: string): Promise<CanvasGraph> => buildGraph(nodesOf(flowId), orderOf(flowId))
 
-const rowsOf = (nodes: readonly CanvasNode[]): readonly (readonly CanvasNode[])[] => {
-  const top = [...nodes].filter((node) => node.parent === null).sort((left, right) => left.box.y - right.box.y)
-  const rows: CanvasNode[][] = []
-  let bottom = -1
-  top.forEach((node) => {
-    const current = rows.at(-1)
-    if (current === undefined || node.box.y >= bottom) {
-      rows.push([node])
-      bottom = node.box.y + node.box.height
-      return
-    }
-    current.push(node)
-    bottom = Math.max(bottom, node.box.y + node.box.height)
-  })
-  return rows.map((row, index) =>
-    [...row].sort((left, right) => (index % 2 === 0 ? left.box.x - right.box.x : right.box.x - left.box.x)),
-  )
-}
+const step = (id: string, downstream: readonly string[]): ApiNode => ({
+  node_id: id,
+  local_id: id,
+  parent: null,
+  kind: "code",
+  path: "",
+  file_hash: "",
+  agent: null,
+  inference: null,
+  prompt_level: null,
+  code_ref: null,
+  problems_count: 0,
+  upstream: [],
+  downstream: [...downstream],
+})
 
-const readingOrder = (nodes: readonly CanvasNode[]): readonly string[] => rowsOf(nodes).flatMap((row) => row.map((node) => node.id))
+const ZERO_BOX: Box = { x: 0, y: 0, width: 0, height: 0 }
 
-const positionOf = (nodes: readonly CanvasNode[], id: string): number => readingOrder(nodes).indexOf(id)
+const boxOf = (graph: CanvasGraph, id: string): Box => absoluteBox(graph.nodes, id) ?? ZERO_BOX
 
 const inside = (child: Box, parent: Box): boolean =>
   child.x >= 0 && child.y >= 0 && child.x + child.width <= parent.width && child.y + child.height <= parent.height
 
 describe("buildGraph", () => {
-  const graph = graphOf("support_case")
-
-  it("places every top level node once and reads from the flow entry to its exit", () => {
-    const reading = readingOrder(graph.nodes)
-    expect(graph.nodes.filter((node) => node.parent === null)).toHaveLength(18)
-    expect(reading).toHaveLength(18)
-    expect(reading.at(0)).toBe("prepare")
-    expect(reading.at(-1)).toBe("finalize")
+  let graph: CanvasGraph
+  beforeAll(async () => {
+    graph = await graphOf("support_case")
   })
 
-  it("orders every dependency forwards", () => {
+  it("places every top level node once", () => {
+    expect(graph.nodes.filter((node) => node.parent === null)).toHaveLength(18)
+  })
+
+  it("runs every dependency strictly left to right, never backwards", () => {
     const backwards = graph.edges
       .filter((edge) => edge.variant === "flow")
-      .filter((edge) => positionOf(graph.nodes, edge.source) >= positionOf(graph.nodes, edge.target))
-      .filter((edge) => positionOf(graph.nodes, edge.source) >= 0)
+      .filter((edge) => boxOf(graph, edge.source).x + boxOf(graph, edge.source).width > boxOf(graph, edge.target).x + 1)
     expect(backwards).toEqual([])
   })
 
-  it("breaks a tie between two independent nodes with the declared flow order", () => {
-    const vote = graph.nodes.find((node) => node.id === "vote")?.box
-    const searchKb = graph.nodes.find((node) => node.id === "search_kb")?.box
-    expect(vote?.x).toBeLessThan((searchKb?.x ?? 0) + 8)
-    expect(vote?.y).toBeLessThan(searchKb?.y ?? 0)
+  it("reads from the flow entry at the far left to its exit at the far right", () => {
+    const roots = graph.nodes.filter((node) => node.parent === null)
+    const leftmost = Math.min(...roots.map((node) => boxOf(graph, node.id).x))
+    const rightmost = Math.max(...roots.map((node) => boxOf(graph, node.id).x))
+    expect(boxOf(graph, "prepare").x).toBe(leftmost)
+    expect(boxOf(graph, "finalize").x).toBe(rightmost)
+  })
+
+  it("pulls a node with many late consumers well past its producer's next column", () => {
+    const triage = boxOf(graph, "triage")
+    const searchKb = boxOf(graph, "search_kb")
+    expect(searchKb.x).toBeGreaterThan(triage.x + 2 * triage.width)
   })
 
   it("nests every child inside its container", () => {
@@ -73,7 +75,7 @@ describe("buildGraph", () => {
 
   it("renders a node with children as a container and the rest as steps", () => {
     const containers = graph.nodes.filter((node) => node.role === "container")
-    expect(containers.map((node) => node.id)).toEqual(["vote", "intent", "record", "route", "drafts", "polish", "approvals"])
+    expect(containers.map((node) => node.id).sort()).toEqual(["approvals", "drafts", "intent", "polish", "record", "route", "vote"])
     expect(containers.find((node) => node.id === "drafts")?.members).toBe(3)
     expect(graph.nodes.filter((node) => node.role === "step")).toHaveLength(23)
   })
@@ -94,9 +96,15 @@ describe("buildGraph", () => {
 
   it("synthesises the loop back edges that the dependency graph never reports", () => {
     const back = graph.edges.filter((edge) => edge.variant === "back")
-    expect(back.map((edge) => `${edge.source}→${edge.target}`)).toEqual(["record__validate→record__extract", "polish__critique→polish__revise"])
-    const critique = nodesOf("support_case").find((node) => node.node_id === "polish__critique")
-    expect(critique?.downstream).not.toContain("polish__revise")
+    expect(back.map((edge) => `${edge.source}→${edge.target}`).sort()).toEqual(["polish__critique→polish__revise", "record__validate→record__extract"])
+  })
+
+  it("leaves a wide channel between a loop's back edge and its first child", () => {
+    const back = graph.edges.find((edge) => edge.id === "record__validate⟲record__extract")
+    const first = graph.nodes.find((node) => node.id === "record__extract")
+    if (back === undefined || first === undefined) throw new Error("record loop not laid out")
+    const channelX = back.points[2]?.x ?? 0
+    expect(channelX).toBeLessThanOrEqual(boxOf(graph, first.id).x - 15)
   })
 
   it("never draws an edge onto itself and never repeats one", () => {
@@ -104,13 +112,8 @@ describe("buildGraph", () => {
     expect(new Set(graph.edges.map((edge) => edge.id)).size).toBe(graph.edges.length)
   })
 
-  it("wraps the long pipeline into a readable extent instead of one endless row", () => {
-    expect(graph.extent.width).toBeLessThan(1600)
-    expect(graph.extent.height).toBeGreaterThan(graph.extent.width / 3)
-  })
-
-  it("is deterministic", () => {
-    expect(graphOf("support_case")).toEqual(graph)
+  it("is deterministic", async () => {
+    expect(await graphOf("support_case")).toEqual(graph)
   })
 
   it("reports the absolute position of a nested node", () => {
@@ -120,93 +123,106 @@ describe("buildGraph", () => {
     expect(absolute?.x).toBe((drafts?.x ?? 0) + (child?.x ?? 0))
     expect(absolute?.y).toBe((drafts?.y ?? 0) + (child?.y ?? 0))
   })
+
+  it("routes every edge along at least two laid out points that end on the endpoints' borders", () => {
+    graph.edges.forEach((edge) => {
+      const source = boxOf(graph, edge.source)
+      const target = boxOf(graph, edge.target)
+      const first = edge.points.at(0)
+      const last = edge.points.at(-1)
+      expect(first === undefined || last === undefined ? null : { first, last }).not.toBeNull()
+      if (first === undefined || last === undefined) return
+      const onBorder = (point: { x: number; y: number }, box: Box): boolean =>
+        point.x >= box.x - 1 && point.x <= box.x + box.width + 1 && point.y >= box.y - 1 && point.y <= box.y + box.height + 1
+      expect(onBorder(first, source)).toBe(true)
+      expect(onBorder(last, target)).toBe(true)
+    })
+  })
+
+  it("never crosses the body of a node that is not an endpoint of the edge", () => {
+    const ancestorsOf = (id: string): ReadonlySet<string> => {
+      const seen = new Set<string>()
+      let current = graph.nodes.find((node) => node.id === id)?.parent ?? null
+      while (current !== null) {
+        seen.add(current)
+        current = graph.nodes.find((node) => node.id === current)?.parent ?? null
+      }
+      return seen
+    }
+    const EPS = 1
+    const crosses = (a: { x: number; y: number }, b: { x: number; y: number }, box: Box): boolean => {
+      const left = box.x + EPS
+      const right = box.x + box.width - EPS
+      const top = box.y + EPS
+      const bottom = box.y + box.height - EPS
+      if (Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) < 0.01) return false
+      if (Math.abs(a.x - b.x) < 0.01) {
+        if (a.x <= left || a.x >= right) return false
+        return Math.max(Math.min(a.y, b.y), top) < Math.min(Math.max(a.y, b.y), bottom)
+      }
+      if (Math.abs(a.y - b.y) < 0.01) {
+        if (a.y <= top || a.y >= bottom) return false
+        return Math.max(Math.min(a.x, b.x), left) < Math.min(Math.max(a.x, b.x), right)
+      }
+      return true
+    }
+    graph.edges.forEach((edge) => {
+      const excluded = new Set([edge.source, edge.target, ...ancestorsOf(edge.source), ...ancestorsOf(edge.target)])
+      graph.nodes
+        .filter((node) => !excluded.has(node.id))
+        .forEach((node) => {
+          const box = boxOf(graph, node.id)
+          edge.points.slice(0, -1).forEach((point, index) => {
+            const next = edge.points[index + 1]
+            if (next !== undefined && crosses(point, next, box)) {
+              throw new Error(`${edge.id} crosses ${node.id} between ${JSON.stringify(point)} and ${JSON.stringify(next)}`)
+            }
+          })
+        })
+    })
+  })
 })
 
-describe("buildGraph wraps a row without stranding its cross-row edges", () => {
-  const step = (id: string, downstream: readonly string[]): ApiNode => ({
-    node_id: id,
-    local_id: id,
-    parent: null,
-    kind: "code",
-    path: "",
-    file_hash: "",
-    agent: null,
-    inference: null,
-    prompt_level: null,
-    code_ref: null,
-    problems_count: 0,
-    upstream: [],
-    downstream: [...downstream],
-  })
-
+describe("buildGraph pulls a late consumer's source next to it", () => {
   const nodes: readonly ApiNode[] = [
-    step("n1", ["n2"]),
-    step("n2", ["n3"]),
-    step("n3", ["n4", "n6"]),
-    step("n4", ["n5", "n6"]),
-    step("n5", ["n6"]),
-    step("n6", ["n7"]),
-    step("n7", []),
+    step("a", ["b"]),
+    step("b", ["c"]),
+    step("c", ["d"]),
+    step("d", []),
+    step("src", ["d"]),
   ]
-  const graph = buildGraph(nodes, ["n1", "n2", "n3", "n4", "n5", "n6", "n7"])
-  const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
 
-  it("actually wraps this fixture into two rows", () => {
-    expect(boxOf("n5").y).not.toBe(boxOf("n6").y)
-  })
-
-  it("aligns a cross-row edge's endpoints instead of spanning the whole canvas", () => {
-    const gap = Math.abs(boxOf("n5").x - boxOf("n6").x)
-    expect(gap).toBeLessThan(300)
-  })
-
-  it("reverses only the wrapped row, keeping every dependency forward in reading order", () => {
-    const reversed = new Set(graph.nodes.filter((node) => node.reversed).map((node) => node.id))
-    expect(reversed).toEqual(new Set(["n6", "n7"]))
-    expect(readingOrder(graph.nodes)).toEqual(["n1", "n2", "n3", "n4", "n5", "n6", "n7"])
+  it("does not strand a source at the far left when its only consumer is deep in the flow", async () => {
+    const graph = await buildGraph(nodes, ["a", "b", "c", "src", "d"])
+    expect(boxOf(graph, "src").x).toBeGreaterThan(boxOf(graph, "a").x)
+    expect(boxOf(graph, "src").x + boxOf(graph, "src").width).toBeLessThanOrEqual(boxOf(graph, "d").x + 1)
   })
 })
 
 describe("buildGraph reorders a rank to reduce edge crossings", () => {
-  const step = (id: string, downstream: readonly string[]): ApiNode => ({
-    node_id: id,
-    local_id: id,
-    parent: null,
-    kind: "code",
-    path: "",
-    file_hash: "",
-    agent: null,
-    inference: null,
-    prompt_level: null,
-    code_ref: null,
-    problems_count: 0,
-    upstream: [],
-    downstream: [...downstream],
-  })
-
-  it("swaps a crossed pair to match their predecessors' order", () => {
+  it("swaps a crossed pair to match their predecessors' order", async () => {
     const nodes: readonly ApiNode[] = [step("a1", ["b2"]), step("a2", ["b1"]), step("b1", []), step("b2", [])]
-    const graph = buildGraph(nodes, ["a1", "a2", "b1", "b2"])
-    const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
-
-    expect(boxOf("b2").y).toBeLessThan(boxOf("b1").y)
+    const graph = await buildGraph(nodes, ["a1", "a2", "b1", "b2"])
+    expect(boxOf(graph, "b2").y).toBeLessThan(boxOf(graph, "b1").y)
   })
 
-  it("leaves an untied rank in its declared order", () => {
+  it("leaves an untied rank in its declared order", async () => {
     const nodes: readonly ApiNode[] = [step("a1", ["b1", "b2"]), step("b1", []), step("b2", [])]
-    const graph = buildGraph(nodes, ["a1", "b1", "b2"])
-    const boxOf = (id: string): Box => graph.nodes.find((node) => node.id === id)?.box ?? { x: 0, y: 0, width: 0, height: 0 }
-
-    expect(boxOf("b1").y).toBeLessThan(boxOf("b2").y)
+    const graph = await buildGraph(nodes, ["a1", "b1", "b2"])
+    expect(boxOf(graph, "b1").y).toBeLessThan(boxOf(graph, "b2").y)
   })
 })
 
 describe("buildGraph on judge_panel", () => {
-  const graph = graphOf("judge_panel")
+  let graph: CanvasGraph
+  beforeAll(async () => {
+    graph = await graphOf("judge_panel")
+  })
 
   it("lays out a flow whose container children have no dependencies at all", () => {
-    expect(readingOrder(graph.nodes)).toEqual(["judges", "aggregate", "decide", "pick"])
-    expect(graph.extent.height).toBe(334)
+    expect(boxOf(graph, "judges").x).toBeLessThan(boxOf(graph, "aggregate").x)
+    expect(boxOf(graph, "aggregate").x).toBeLessThan(boxOf(graph, "decide").x)
+    expect(boxOf(graph, "decide").x).toBeLessThan(boxOf(graph, "pick").x)
     expect(graph.nodes.filter((node) => node.parent === "judges")).toHaveLength(3)
   })
 

@@ -15,7 +15,6 @@ import { ContainerNode } from "./container-node"
 import { edgeColors } from "./edge-colors"
 import { FlowEdge } from "./flow-edge"
 import { Legend } from "./legend"
-import { nodePorts } from "./ports"
 import { HoveredNodeContext, SelectedNodeContext } from "./selection"
 import { StepNode } from "./step-node"
 import { fitViewOptions, toFlowEdges, toFlowNodes, type CanvasFlowNode, type FitSpace } from "./to-flow"
@@ -71,7 +70,7 @@ export function GraphCanvas({ graph, selected, legend, onSelect, onToggleLegend,
       <HoveredNodeContext value={hovered}>
         <ReactFlow
           aria-label={t("aria")}
-          nodes={dimNodes(toFlowNodes(graph.nodes, nodePorts(graph), colors), dimmed)}
+          nodes={dimNodes(toFlowNodes(graph.nodes, graph.ports, colors), dimmed)}
           edges={toFlowEdges(graph.edges, colors)}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}

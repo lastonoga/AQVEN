@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import type { CanvasEdge } from "../layout"
 import { colorOf, colorsBySource, DEFAULT_FLOW_COLOR, edgeColors, FLOW_PALETTE } from "./edge-colors"
 
-const flow = (source: string, target: string): CanvasEdge => ({ id: `${source}→${target}`, source, target, variant: "flow" })
-const back = (source: string, target: string): CanvasEdge => ({ id: `${source}⟲${target}`, source, target, variant: "back" })
+const flow = (source: string, target: string): CanvasEdge => ({ id: `${source}→${target}`, source, target, variant: "flow", points: [] })
+const back = (source: string, target: string): CanvasEdge => ({ id: `${source}⟲${target}`, source, target, variant: "back", points: [] })
 
 describe("colorsBySource", () => {
   it("gives every source its own color in first-appearance order", () => {

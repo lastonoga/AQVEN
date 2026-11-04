@@ -2,7 +2,7 @@ import type { Box } from "../layout"
 
 export type Point = { readonly x: number; readonly y: number }
 
-export const MIN_ZOOM = 0.16
+export const MIN_ZOOM = 0.05
 export const MAX_ZOOM = 1.6
 export const ZOOM_DURATION_MS = 150
 export const FOCUS_DURATION_MS = 300

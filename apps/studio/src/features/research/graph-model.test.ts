@@ -80,7 +80,7 @@ const experiment = (fields: Partial<Experiment>): Experiment => ({
 
 const markLabel = (mark: StepMark): string => (mark.kind === "swap" ? `swap: ${mark.agents}` : `${mark.what}: ${mark.values.join(" · ")}`)
 
-const metaOf = (graph: ReturnType<typeof buildGraph>, id: string): string | null => {
+const metaOf = (graph: Awaited<ReturnType<typeof buildGraph>>, id: string): string | null => {
   const found = graph.nodes.find((item) => item.id === id)
   return found?.role === "step" ? found.meta : null
 }
@@ -110,13 +110,13 @@ describe("agent swaps", () => {
     expect(nodeAgents([variant("gpt", "gpt")], "triage", { agent: "gemini", model: null })).toEqual([{ variant: "gpt", agent: "gemini", model: null, overridden: false }])
   })
 
-  it("marks the swapped step on the graph and dims the rest of the flow", () => {
+  it("marks the swapped step on the graph and dims the rest of the flow", async () => {
     const [view] = graphViews(experiment({}), [FLOW])
     if (view === undefined) throw new Error("no view")
     expect([...view.marks]).toEqual([["polish__revise", { kind: "swap", agents: "gpt → mistral" }]])
     expect([...view.dimmed]).toEqual(["triage", "send"])
     expect(view.role).toBe("subject")
-    expect(metaOf(markSteps(buildGraph(FLOW.nodes, FLOW.order), view.marks, markLabel), "polish__revise")).toBe("swap: gpt → mistral")
+    expect(metaOf(markSteps(await buildGraph(FLOW.nodes, FLOW.order), view.marks, markLabel), "polish__revise")).toBe("swap: gpt → mistral")
   })
 
   it("marks a factor node with the values the variants give it when the agents stay", () => {
@@ -147,8 +147,8 @@ describe("agent swaps", () => {
 })
 
 describe("steps on the canvas", () => {
-  it("counts the declared input and output fields of a step and keeps the edge count without a schema", () => {
-    const graph = withFieldCounts(buildGraph(FLOW.nodes, FLOW.order), FLOW.schemas)
+  it("counts the declared input and output fields of a step and keeps the edge count without a schema", async () => {
+    const graph = withFieldCounts(await buildGraph(FLOW.nodes, FLOW.order), FLOW.schemas)
     const counts = graph.nodes.flatMap((item) => (item.role === "step" ? [[item.id, item.inputs, item.outputs]] : []))
     expect(counts).toEqual([
       ["triage", 2, 1],

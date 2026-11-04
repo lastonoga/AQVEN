@@ -42,7 +42,7 @@ export function ContainerNode({ id, data }: NodeProps<ContainerFlowNode>) {
         </Text>
         <ProblemDot problems={data.problems} />
       </Toolbar>
-      <NodeHandles specs={nodeHandleSpecs(data.ports, data.reversed)} />
+      <NodeHandles specs={nodeHandleSpecs(data.ports)} />
     </Surface>
   )
 }

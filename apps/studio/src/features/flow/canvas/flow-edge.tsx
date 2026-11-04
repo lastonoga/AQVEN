@@ -1,7 +1,7 @@
 import { use } from "react"
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react"
 import { Tag } from "@/components/studio"
-import { edgeGeometry, labelTransform, type LabelPlacement } from "./edge-paths"
+import { labelTransform, pointsGeometry, type LabelPlacement } from "./edge-paths"
 import type { EdgeVariant } from "../layout"
 import { edgeStyle, LABEL_TONE } from "./edge-style"
 import { HoveredNodeContext, SelectedNodeContext } from "./selection"
@@ -42,11 +42,11 @@ const dotTiming = (edgeId: string): DotTiming => {
   }
 }
 
-export function FlowEdge({ id, source, target, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, data, markerEnd }: EdgeProps<CanvasFlowEdge>) {
+export function FlowEdge({ id, source, target, data, markerEnd }: EdgeProps<CanvasFlowEdge>) {
   const selected = use(SelectedNodeContext)
   const hovered = use(HoveredNodeContext)
   if (data === undefined) return null
-  const geometry = edgeGeometry({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }, data)
+  const geometry = pointsGeometry(data.points, data.variant)
   const traced = hovered ?? selected
   const related = traced === null || traced === source || traced === target
   const timing = dotTiming(id)

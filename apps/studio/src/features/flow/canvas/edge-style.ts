@@ -1,15 +1,12 @@
 import type { CSSProperties } from "react"
 import type { Tone } from "@/components/studio"
-import type { EdgeVariant } from "../layout"
-
-type EdgeFields = {
-  readonly flow: { readonly detourY?: never }
-  readonly back: { readonly detourY: number | null }
-}
+import type { EdgeVariant, Point } from "../layout"
 
 export type FlowEdgeData<K extends EdgeVariant = EdgeVariant> = {
-  [P in K]: { readonly variant: P; readonly label: string | null } & EdgeFields[P]
-}[K]
+  readonly variant: K
+  readonly label: string | null
+  readonly points: readonly Point[]
+}
 
 export type FlowEdgeRenderData<K extends EdgeVariant = EdgeVariant> = FlowEdgeData<K> & { readonly color: string }
 

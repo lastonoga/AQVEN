@@ -27,13 +27,17 @@ const spreadStyle = (offset: number, color: string): CSSProperties => ({
   transform: "translate(0, -50%)",
 })
 
-const alongXStyle = (color: string): CSSProperties => ({ ...dotStyle(color), transform: "translate(-50%, 0)" })
+const alongXStyle = (offset: number, color: string): CSSProperties => ({
+  ...dotStyle(color),
+  left: `${(offset * 100).toFixed(2)}%`,
+  transform: "translate(-50%, 0)",
+})
 
 const specsOf = (dots: readonly PortDot[], type: HandleType, position: Position): readonly HandleSpec[] =>
   dots.map((dot) => ({ id: dot.id, type, position, style: spreadStyle(dot.offset, dot.color) }))
 
-export const nodeHandleSpecs = (dots: NodeDots, reversed: boolean): readonly HandleSpec[] => [
-  ...specsOf(dots.in, "target", reversed ? Position.Right : Position.Left),
-  ...specsOf(dots.out, "source", reversed ? Position.Left : Position.Right),
-  ...dots.bottom.map((dot): HandleSpec => ({ id: dot.id, type: "source", position: Position.Bottom, style: alongXStyle(dot.color) })),
+export const nodeHandleSpecs = (dots: NodeDots): readonly HandleSpec[] => [
+  ...specsOf(dots.in, "target", Position.Left),
+  ...specsOf(dots.out, "source", Position.Right),
+  ...dots.bottom.map((dot): HandleSpec => ({ id: dot.id, type: "source", position: Position.Bottom, style: alongXStyle(dot.offset, dot.color) })),
 ]

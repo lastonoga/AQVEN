@@ -3,7 +3,7 @@ import { cn } from "cn"
 import { useTranslations } from "use-intl"
 import type { ExperimentDetail, ExperimentQuestion } from "@/domain"
 import { Empty, SIDE_PANEL_WIDTH, Surface, Text } from "@/components/studio"
-import { buildGraph, GraphCanvas, withFieldCounts } from "@/features/flow"
+import { GraphCanvas, useGraph, withFieldCounts } from "@/features/flow"
 import { joinMeta } from "@/lib/format"
 import { markSteps, type GraphView, type StepMark } from "./graph-model"
 import { ResearchSection } from "./layout"
@@ -64,7 +64,7 @@ function GraphTitle({ view, question }: { readonly view: GraphView; readonly que
 function GraphBlock({ view, question, selected, highlighted, legend, onSelect, onToggleLegend }: GraphBlockProps) {
   const t = useTranslations("research.experiment.canvas")
   const label = useMarkLabel()
-  const graph = withFieldCounts(markSteps(buildGraph(view.source.nodes, view.source.order), view.marks, label), view.source.schemas)
+  const laid = useGraph(view.source.nodes, view.source.order)
   return (
     <section
       id={graphAnchor(view.source.key)}
@@ -74,17 +74,19 @@ function GraphBlock({ view, question, selected, highlighted, legend, onSelect, o
     >
       <GraphTitle view={view} question={question} />
       <Surface variant="panel" className={cn("relative h-80 overflow-hidden", highlighted && "ring-2 ring-ring")}>
-        <GraphCanvas
-          graph={graph}
-          selected={selected}
-          legend={legend}
-          dimmed={view.dimmed}
-          pageScroll
-          fitSpace="tight"
-          focusInset={SIDE_PANEL_WIDTH}
-          onSelect={onSelect}
-          onToggleLegend={onToggleLegend}
-        />
+        {laid === null ? null : (
+          <GraphCanvas
+            graph={withFieldCounts(markSteps(laid, view.marks, label), view.source.schemas)}
+            selected={selected}
+            legend={legend}
+            dimmed={view.dimmed}
+            pageScroll
+            fitSpace="tight"
+            focusInset={SIDE_PANEL_WIDTH}
+            onSelect={onSelect}
+            onToggleLegend={onToggleLegend}
+          />
+        )}
       </Surface>
     </section>
   )

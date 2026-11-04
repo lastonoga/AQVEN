@@ -1,7 +1,9 @@
+import ELK, { type ElkExtendedEdge, type ElkNode, type ElkPort } from "elkjs/lib/elk.bundled.js"
 import type { ApiNode, NodeKind } from "@/domain"
 import { nodeSubtitle } from "./node-facts"
 
 export type Box = { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+export type Point = { readonly x: number; readonly y: number }
 export type CanvasSize = "md" | "sm"
 export type EdgeVariant = "flow" | "back"
 
@@ -13,7 +15,6 @@ type CanvasCommon = {
   readonly kind: NodeKind
   readonly name: string
   readonly problems: number
-  readonly reversed: boolean
 }
 
 export type CanvasStep = CanvasCommon & {
@@ -35,19 +36,22 @@ export type CanvasEdge = {
   readonly source: string
   readonly target: string
   readonly variant: EdgeVariant
+  readonly points: readonly Point[]
 }
+
+export type Port = { readonly id: string; readonly offset: number; readonly edgeId: string }
+export type NodePorts = { readonly in: readonly Port[]; readonly out: readonly Port[]; readonly bottom: readonly Port[] }
 
 export type CanvasGraph = {
   readonly nodes: readonly CanvasNode[]
   readonly edges: readonly CanvasEdge[]
+  readonly ports: ReadonlyMap<string, NodePorts>
   readonly extent: Box
 }
 
 type Size = { readonly width: number; readonly height: number }
-type Sized = Size & { readonly id: string }
 type Pair = { readonly source: string; readonly target: string }
-type Column = { readonly members: readonly Sized[] } & Size
-type Level = { readonly nodes: readonly CanvasNode[]; readonly edges: readonly CanvasEdge[] } & Size
+type RoutedEdge = Pair & { readonly id: string; readonly variant: EdgeVariant; readonly level: string | null }
 
 const STEP_SIZE: Readonly<Record<CanvasSize, Size>> = {
   md: { width: 240, height: 92 },
@@ -55,15 +59,39 @@ const STEP_SIZE: Readonly<Record<CanvasSize, Size>> = {
 }
 
 const CONTAINER_HEADER = 36
-
 const CONTAINER_PADDING = 14
-const LOOP_FOOT = 34
-const RANK_GAP = 64
-const STACK_GAP = 16
-const ROW_GAP = 96
-const MAX_ROW_WIDTH = 1520
+const LOOP_SIDE = 34
+const LOOP_FOOT = 40
+const RANK_GAP = 72
+const STACK_GAP = 24
+const COMPONENT_GAP = 48
+
+const OUT_PREFIX = "out-"
+const IN_PREFIX = "in-"
+const BOTTOM_PORT = "bottom"
+
+const ROOT_OPTIONS: Readonly<Record<string, string>> = {
+  "elk.algorithm": "layered",
+  "elk.direction": "RIGHT",
+  "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+  "elk.edgeRouting": "ORTHOGONAL",
+  "elk.spacing.nodeNode": String(STACK_GAP),
+  "elk.layered.spacing.nodeNodeBetweenLayers": String(RANK_GAP),
+  "elk.spacing.componentSpacing": String(COMPONENT_GAP),
+  "elk.spacing.edgeNode": "14",
+  "elk.layered.spacing.edgeNodeBetweenLayers": "24",
+  "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
+}
+
+const FIXED_SIDE_PORTS: Readonly<Record<string, string>> = { "elk.portConstraints": "FIXED_SIDE" }
+
+const elk = new ELK()
+
+type ElkInput = ElkNode & { readonly children: ElkNode[] }
 
 const sizeAt = (depth: number): CanvasSize => (depth === 0 ? "md" : "sm")
+
+const footOf = (kind: NodeKind): number => (kind === "loop" ? LOOP_FOOT : CONTAINER_PADDING)
 
 const childrenOf = (nodes: readonly ApiNode[], parent: string | null): readonly ApiNode[] =>
   nodes.filter((node) => node.parent === parent)
@@ -112,7 +140,7 @@ const successors = (pairs: readonly Pair[]): ReadonlyMap<string, readonly string
 
 const reachableBeyond = (adjacency: ReadonlyMap<string, readonly string[]>, from: string, skip: string): ReadonlySet<string> => {
   const seen = new Set<string>()
-  const stack = [...(adjacency.get(from) ?? []).filter((next) => next !== skip)]
+  const stack = [...(adjacency.get(from) ?? [])].filter((next) => next !== skip)
   while (stack.length > 0) {
     const next = stack.pop()
     if (next === undefined || seen.has(next)) continue
@@ -146,171 +174,190 @@ const ranksOf = (ids: readonly string[], pairs: readonly Pair[]): ReadonlyMap<st
   return ranks
 }
 
-const predecessorsOf = (pairs: readonly Pair[]): ReadonlyMap<string, readonly string[]> => {
-  const map = new Map<string, string[]>()
-  pairs.forEach((pair) => {
-    map.set(pair.target, [...(map.get(pair.target) ?? []), pair.source])
-  })
-  return map
-}
-
-const barycenterOf = (id: string, predecessors: ReadonlyMap<string, readonly string[]>, position: ReadonlyMap<string, number>): number | null => {
-  const known = (predecessors.get(id) ?? []).flatMap((parent) => {
-    const at = position.get(parent)
-    return at === undefined ? [] : [at]
-  })
-  return known.length === 0 ? null : known.reduce((total, at) => total + at, 0) / known.length
-}
-
-const orderedByBarycenter = (ranked: readonly (readonly Sized[])[], pairs: readonly Pair[]): readonly (readonly Sized[])[] => {
-  const predecessors = predecessorsOf(pairs)
-  const position = new Map<string, number>()
-  return ranked.map((members) => {
-    const ordered = members
-      .map((member, index) => ({ member, index }))
-      .sort((left, right) => {
-        const leftKey = barycenterOf(left.member.id, predecessors, position) ?? left.index
-        const rightKey = barycenterOf(right.member.id, predecessors, position) ?? right.index
-        return leftKey - rightKey || left.index - right.index
-      })
-      .map(({ member }) => member)
-    ordered.forEach((member, index) => position.set(member.id, index))
-    return ordered
-  })
-}
-
-const columnsOf = (sized: readonly Sized[], pairs: readonly Pair[]): readonly Column[] => {
-  const ranks = ranksOf(
-    sized.map((node) => node.id),
-    pairs,
-  )
-  const byRank = new Map<number, Sized[]>()
-  sized.forEach((node) => {
-    const rank = ranks.get(node.id) ?? 0
-    byRank.set(rank, [...(byRank.get(rank) ?? []), node])
-  })
-  const ascending = [...byRank.keys()].sort((left, right) => left - right).map((rank) => byRank.get(rank) ?? [])
-  return orderedByBarycenter(ascending, pairs).map((members) => ({
-    members,
-    width: members.reduce((widest, node) => Math.max(widest, node.width), 0),
-    height: members.reduce((total, node) => total + node.height, 0) + STACK_GAP * (members.length - 1),
-  }))
-}
-
-const wrapRows = (columns: readonly Column[]): readonly (readonly Column[])[] =>
-  columns.reduce<(readonly Column[])[]>((rows, column) => {
-    const current = rows.at(-1)
-    if (current === undefined) return [[column]]
-    const used = current.reduce((total, member) => total + member.width + RANK_GAP, 0)
-    if (used + column.width > MAX_ROW_WIDTH) return [...rows, [column]]
-    return [...rows.slice(0, -1), [...current, column]]
-  }, [])
-
-const rowWidth = (row: readonly Column[]): number =>
-  row.reduce((total, column) => total + column.width, 0) + RANK_GAP * Math.max(row.length - 1, 0)
-
-const placeColumns = (
-  sized: readonly Sized[],
-  pairs: readonly Pair[],
-): { readonly boxes: ReadonlyMap<string, Box>; readonly reversed: ReadonlySet<string> } & Size => {
-  const rows = wrapRows(columnsOf(sized, pairs))
-  const canvasWidth = rows.reduce((widest, row) => Math.max(widest, rowWidth(row)), 0)
-  const boxes = new Map<string, Box>()
-  const reversed = new Set<string>()
-  let top = 0
-  rows.forEach((row, rowIndex) => {
-    const rowHeight = row.reduce((tallest, column) => Math.max(tallest, column.height), 0)
-    const flip = rowIndex % 2 === 1
-    let left = 0
-    row.forEach((column) => {
-      const columnLeft = flip ? canvasWidth - left - column.width : left
-      let memberTop = top + (rowHeight - column.height) / 2
-      column.members.forEach((member) => {
-        boxes.set(member.id, { x: columnLeft + (column.width - member.width) / 2, y: memberTop, width: member.width, height: member.height })
-        if (flip) reversed.add(member.id)
-        memberTop += member.height + STACK_GAP
-      })
-      left += column.width + RANK_GAP
-    })
-    top += rowHeight + ROW_GAP
-  })
-  return { boxes, reversed, width: canvasWidth, height: Math.max(top - ROW_GAP, 0) }
-}
-
-const backEdges = (kind: NodeKind | null, sized: readonly Sized[], pairs: readonly Pair[]): readonly CanvasEdge[] => {
-  if (kind !== "loop" || sized.length < 2) return []
-  const ranks = ranksOf(
-    sized.map((node) => node.id),
-    pairs,
-  )
-  const ordered = [...sized].sort((left, right) => (ranks.get(left.id) ?? 0) - (ranks.get(right.id) ?? 0))
-  const first = ordered.at(0)
-  const last = ordered.at(-1)
-  if (first === undefined || last === undefined || (ranks.get(last.id) ?? 0) === 0) return []
-  return [{ id: `${last.id}⟲${first.id}`, source: last.id, target: first.id, variant: "back" }]
-}
-
-const shift = (nodes: readonly CanvasNode[], parent: string, dx: number, dy: number): readonly CanvasNode[] =>
-  nodes.map((node) => (node.parent === parent ? { ...node, box: { ...node.box, x: node.box.x + dx, y: node.box.y + dy } } : node))
-
-const footOf = (kind: NodeKind): number => (kind === "loop" ? LOOP_FOOT : CONTAINER_PADDING)
-
-const buildLevel = (
+const collectLevelPairs = (
   nodes: readonly ApiNode[],
   byId: ReadonlyMap<string, ApiNode>,
   members: readonly ApiNode[],
   level: string | null,
-  levelKind: NodeKind | null,
-  depth: number,
-): Level => {
-  const inner = members.map((member) => ({
-    member,
-    level: buildLevel(nodes, byId, childrenOf(nodes, member.node_id), member.node_id, member.kind, depth + 1),
-  }))
-  const sized: readonly Sized[] = inner.map(({ member, level: child }) =>
-    child.nodes.length === 0
+  acc: Map<string | null, readonly Pair[]>,
+): void => {
+  acc.set(level, reducePairs(levelPairs(byId, members, level)))
+  members.forEach((member) => {
+    collectLevelPairs(nodes, byId, childrenOf(nodes, member.node_id), member.node_id, acc)
+  })
+}
+
+const loopBackEdges = (nodes: readonly ApiNode[], pairsByLevel: ReadonlyMap<string | null, readonly Pair[]>): readonly RoutedEdge[] =>
+  nodes.flatMap((node) => {
+    if (node.kind !== "loop") return []
+    const kids = childrenOf(nodes, node.node_id)
+    if (kids.length < 2) return []
+    const pairs = pairsByLevel.get(node.node_id) ?? []
+    const ranks = ranksOf(
+      kids.map((kid) => kid.node_id),
+      pairs,
+    )
+    const ordered = [...kids].sort((left, right) => (ranks.get(left.node_id) ?? 0) - (ranks.get(right.node_id) ?? 0))
+    const first = ordered.at(0)
+    const last = ordered.at(-1)
+    if (first === undefined || last === undefined || (ranks.get(last.node_id) ?? 0) === 0) return []
+    return [{ id: `${last.node_id}⟲${first.node_id}`, source: last.node_id, target: first.node_id, variant: "back" as const, level: node.node_id }]
+  })
+
+const portsOfNode = (id: string, edges: readonly RoutedEdge[]): readonly ElkPort[] =>
+  edges.flatMap((edge): readonly ElkPort[] => {
+    if (edge.source === id && edge.variant === "back") {
+      return [{ id: BOTTOM_PORT, layoutOptions: { "elk.port.side": "SOUTH" } }]
+    }
+    if (edge.source === id) return [{ id: `${OUT_PREFIX}${edge.id}`, layoutOptions: { "elk.port.side": "EAST" } }]
+    if (edge.target === id) return [{ id: `${IN_PREFIX}${edge.id}`, layoutOptions: { "elk.port.side": "WEST" } }]
+    return []
+  })
+
+const leftPaddingOf = (kind: NodeKind): number => (kind === "loop" ? LOOP_SIDE : CONTAINER_PADDING)
+
+const containerPadding = (kind: NodeKind): string =>
+  `[top=${String(CONTAINER_HEADER)},left=${String(leftPaddingOf(kind))},bottom=${String(footOf(kind))},right=${String(CONTAINER_PADDING)}]`
+
+const elkChild = (nodes: readonly ApiNode[], member: ApiNode, edges: readonly RoutedEdge[], depth: number): ElkNode => {
+  const children = childrenOf(nodes, member.node_id)
+  const ports = portsOfNode(member.node_id, edges)
+  const own = edges.filter((edge) => edge.variant === "flow" && edge.level === member.node_id)
+  const base: ElkNode =
+    children.length === 0
       ? { id: member.node_id, ...STEP_SIZE[sizeAt(depth)] }
       : {
           id: member.node_id,
-          width: child.width + CONTAINER_PADDING * 2,
-          height: child.height + CONTAINER_HEADER + footOf(member.kind),
-        },
-  )
-  const pairs = reducePairs(levelPairs(byId, members, level))
-  const placed = placeColumns(sized, pairs)
-  const own = inner.flatMap(({ member, level: child }): readonly CanvasNode[] => {
-    const box = placed.boxes.get(member.node_id) ?? { x: 0, y: 0, width: 0, height: 0 }
-    const common = {
-      id: member.node_id,
-      parent: level,
-      box,
-      size: sizeAt(depth),
-      kind: member.kind,
-      name: member.local_id,
-      problems: member.problems_count,
-      reversed: placed.reversed.has(member.node_id),
-    }
-    if (child.nodes.length === 0) {
-      return [{ ...common, role: "step", meta: nodeSubtitle(member) ?? "", inputs: member.upstream.length, outputs: member.downstream.length }]
-    }
-    return [
-      { ...common, role: "container", members: child.nodes.filter((node) => node.parent === member.node_id).length },
-      ...shift(child.nodes, member.node_id, CONTAINER_PADDING, CONTAINER_HEADER),
-    ]
-  })
-  const flow = pairs.map((pair) => ({ id: `${pair.source}→${pair.target}`, source: pair.source, target: pair.target, variant: "flow" as const }))
-  return {
-    nodes: own,
-    edges: [...flow, ...backEdges(levelKind, sized, pairs), ...inner.flatMap(({ level: child }) => child.edges)],
-    width: placed.width,
-    height: placed.height,
-  }
+          layoutOptions: { "elk.padding": containerPadding(member.kind) },
+          children: children.map((child) => elkChild(nodes, child, edges, depth + 1)),
+          ...(own.length === 0 ? {} : { edges: own.map(elkEdge) }),
+        }
+  if (ports.length === 0) return base
+  return { ...base, layoutOptions: { ...base.layoutOptions, ...FIXED_SIDE_PORTS }, ports: [...ports] }
 }
 
-export const buildGraph = (nodes: readonly ApiNode[], order: readonly string[]): CanvasGraph => {
+const elkEdge = (edge: RoutedEdge): ElkExtendedEdge => {
+  const sourcePort = edge.variant === "back" ? BOTTOM_PORT : `${OUT_PREFIX}${edge.id}`
+  return { id: edge.id, sources: [sourcePort], targets: [`${IN_PREFIX}${edge.id}`] }
+}
+
+const flatten = (
+  nodes: readonly ApiNode[],
+  member: ApiNode,
+  laid: ElkNode,
+  parent: string | null,
+  depth: number,
+  absoluteX: number,
+  absoluteY: number,
+  ports: Map<string, NodePorts>,
+  portEdges: ReadonlyMap<string, { readonly edgeId: string; readonly side: "in" | "out" | "bottom" }>,
+  points: Map<string, readonly Point[]>,
+): readonly CanvasNode[] => {
+  const box: Box = { x: laid.x ?? 0, y: laid.y ?? 0, width: laid.width ?? 0, height: laid.height ?? 0 }
+  const frameX = absoluteX + box.x
+  const frameY = absoluteY + box.y
+  ;(laid.edges ?? []).forEach((edge) => {
+    points.set(
+      edge.id,
+      pointsOf(edge).map((point) => ({ x: point.x + frameX, y: point.y + frameY })),
+    )
+  })
+  const own: { in: Port[]; out: Port[]; bottom: Port[] } = { in: [], out: [], bottom: [] }
+  ;(laid.ports ?? []).forEach((port) => {
+    const meta = portEdges.get(`${member.node_id}/${port.id}`)
+    if (meta === undefined) return
+    const offset = meta.side === "bottom" ? (port.x ?? 0) / Math.max(box.width, 1) : (port.y ?? 0) / Math.max(box.height, 1)
+    own[meta.side].push({ id: port.id, offset, edgeId: meta.edgeId })
+  })
+  if (own.in.length + own.out.length + own.bottom.length > 0) ports.set(member.node_id, own)
+  const children = childrenOf(nodes, member.node_id)
+  const common = {
+    id: member.node_id,
+    parent,
+    box,
+    size: sizeAt(depth),
+    kind: member.kind,
+    name: member.local_id,
+    problems: member.problems_count,
+  }
+  if (children.length === 0) {
+    return [{ ...common, role: "step", meta: nodeSubtitle(member) ?? "", inputs: member.upstream.length, outputs: member.downstream.length }]
+  }
+  const byChild = new Map((laid.children ?? []).map((child) => [child.id, child]))
+  return [
+    { ...common, role: "container", members: children.length },
+    ...children.flatMap((child) => {
+      const laidChild = byChild.get(child.node_id)
+      return laidChild === undefined ? [] : flatten(nodes, child, laidChild, member.node_id, depth + 1, frameX, frameY, ports, portEdges, points)
+    }),
+  ]
+}
+
+const pointsOf = (edge: ElkExtendedEdge): readonly Point[] => {
+  const section = edge.sections?.at(0)
+  if (section === undefined) return []
+  return [section.startPoint, ...(section.bendPoints ?? []), section.endPoint]
+}
+
+export const buildGraph = async (nodes: readonly ApiNode[], order: readonly string[]): Promise<CanvasGraph> => {
+  const roots = rootMembers(nodes, order)
+  const empty: CanvasGraph = { nodes: [], edges: [], ports: new Map(), extent: { x: 0, y: 0, width: 0, height: 0 } }
+  if (roots.length === 0) return empty
   const byId = new Map(nodes.map((node) => [node.node_id, node]))
-  const level = buildLevel(nodes, byId, rootMembers(nodes, order), null, null, 0)
-  return { nodes: level.nodes, edges: level.edges, extent: { x: 0, y: 0, width: level.width, height: level.height } }
+  const pairsByLevel = new Map<string | null, readonly Pair[]>()
+  collectLevelPairs(nodes, byId, roots, null, pairsByLevel)
+  const flow: readonly RoutedEdge[] = [...pairsByLevel.entries()].flatMap(([level, pairs]) =>
+    pairs.map((pair) => ({ ...pair, id: `${pair.source}→${pair.target}`, variant: "flow" as const, level })),
+  )
+  const routed = [...flow, ...loopBackEdges(nodes, pairsByLevel)]
+  const backs = routed.filter((edge) => edge.variant === "back")
+  const portEdges = new Map<string, { readonly edgeId: string; readonly side: "in" | "out" | "bottom" }>()
+  routed.forEach((edge) => {
+    if (edge.variant === "back") portEdges.set(`${edge.source}/${BOTTOM_PORT}`, { edgeId: edge.id, side: "bottom" })
+    else portEdges.set(`${edge.source}/${OUT_PREFIX}${edge.id}`, { edgeId: edge.id, side: "out" })
+    portEdges.set(`${edge.target}/${IN_PREFIX}${edge.id}`, { edgeId: edge.id, side: "in" })
+  })
+  const rootEdges = flow.filter((edge) => edge.level === null)
+  const input: ElkInput = {
+    id: "root",
+    layoutOptions: { ...ROOT_OPTIONS },
+    children: roots.map((member) => elkChild(nodes, member, routed, 0)),
+    edges: rootEdges.map(elkEdge),
+  }
+  const laid = await elk.layout(input)
+  const ports = new Map<string, NodePorts>()
+  const points = new Map<string, readonly Point[]>()
+  rootEdges.forEach((edge) => {
+    const laidEdge = (laid.edges ?? []).find((candidate) => candidate.id === edge.id)
+    if (laidEdge !== undefined) points.set(edge.id, pointsOf(laidEdge))
+  })
+  const byRoot = new Map((laid.children ?? []).map((child) => [child.id, child]))
+  const canvasNodes = roots.flatMap((member) => {
+    const laidRoot = byRoot.get(member.node_id)
+    return laidRoot === undefined ? [] : flatten(nodes, member, laidRoot, null, 0, 0, 0, ports, portEdges, points)
+  })
+  const abs = (id: string): Box => absoluteBox(canvasNodes, id) ?? { x: 0, y: 0, width: 0, height: 0 }
+  backs.forEach((edge) => {
+    if (edge.level === null) return
+    const source = abs(edge.source)
+    const target = abs(edge.target)
+    const container = abs(edge.level)
+    const sourcePorts = ports.get(edge.source)
+    const targetPorts = ports.get(edge.target)
+    const bottom = sourcePorts?.bottom.at(0)
+    const entry = targetPorts?.in.find((port) => port.edgeId === edge.id)
+    const start = { x: source.x + (bottom?.offset ?? 0.5) * source.width, y: source.y + source.height }
+    const end = { x: target.x, y: target.y + (entry?.offset ?? 0.5) * target.height }
+    const channelY = container.y + container.height - LOOP_FOOT / 2
+    const channelX = container.x + leftPaddingOf(byId.get(edge.level)?.kind ?? "loop") / 2
+    points.set(edge.id, [start, { x: start.x, y: channelY }, { x: channelX, y: channelY }, { x: channelX, y: end.y }, end])
+  })
+  return {
+    nodes: canvasNodes,
+    edges: routed.map((edge) => ({ ...edge, points: points.get(edge.id) ?? [] })),
+    ports,
+    extent: { x: 0, y: 0, width: laid.width ?? 0, height: laid.height ?? 0 },
+  }
 }
 
 export const absoluteBox = (nodes: readonly CanvasNode[], id: string): Box | null => {
