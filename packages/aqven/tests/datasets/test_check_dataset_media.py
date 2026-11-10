@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import TRIAGE_NESTED_MEDIA, without_accepted_diagnostics
 
 from aqven.check import CheckReport, check_project
 from aqven.diagnostics import DiagnosticCode, Severity
@@ -76,14 +77,14 @@ def test_file_ref_next_to_the_dataset_is_clean(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_file_ref_from_the_project_root_is_clean(shop: Path) -> None:
     write_bytes(shop, "samples/parcel.jpg", b"jpeg bytes")
     with_photo(shop, 'file: "@root/samples/parcel.jpg"')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_files_in_the_dataset_folder_are_not_specs(shop: Path) -> None:
@@ -95,7 +96,7 @@ def test_files_in_the_dataset_folder_are_not_specs(shop: Path) -> None:
     report = check_project(shop)
     loaded = load_project(shop).project
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert loaded is not None
     assert set(loaded.datasets) == {"photos"}
     assert not any(path.startswith(f"{MEDIA_FOLDER}/") for path in loaded.texts)

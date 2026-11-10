@@ -177,3 +177,21 @@ async def test_subprocess_runner_kills_on_timeout(tmp_path: Path) -> None:
     )
     assert (outcome.timed_out, outcome.exit_code) == (True, None)
     assert outcome.duration_ms < 10000
+
+
+@pytest.mark.asyncio
+async def test_aqven_check_includes_risk_warnings_by_default(tmp_path: Path) -> None:
+    root = shop_copy(tmp_path)
+    node = root / "flows" / "intake" / "nodes" / "clean" / "clean.node.yaml"
+    node.write_text(
+        node.read_text(encoding="utf-8").replace('description: "Note text"', 'description: "Note ID"'),
+        encoding="utf-8",
+    )
+
+    async with mcp_client(root) as client:
+        included = structured(await call(client, "aqven_check", {}))
+        excluded = structured(await call(client, "aqven_check", {"include_warnings": False}))
+
+    assert included["ok"] is True
+    assert "W_TEXT_IDENTIFIER_TYPE" in codes(included)
+    assert "W_TEXT_IDENTIFIER_TYPE" not in codes(excluded)

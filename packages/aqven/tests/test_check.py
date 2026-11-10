@@ -9,6 +9,13 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import (
+    QUICK_NESTED_MEDIA,
+    SHARED_CLASSIFY_NESTED_MEDIA,
+    TRIAGE_NESTED_MEDIA,
+    codes_of,
+    without_accepted_diagnostics,
+)
 from pydantic import JsonValue
 
 from aqven.check import CheckReport, CodeResolver, build_context, check_project
@@ -276,7 +283,7 @@ def shop(tmp_path: Path) -> Path:
 def test_fixture_project_is_clean() -> None:
     report = check_project(FIXTURE)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.ok
     assert report.project is not None
 
@@ -392,7 +399,7 @@ def test_outcome_fallback_with_fallback_models_is_clean(shop: Path) -> None:
     fallback = 'fallback_models:\n- "openai:gpt-5.4-mini"\noutput:\n  on_error: "fallback"\nsettings:'
     replace(shop, WRITER, "settings:", fallback)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_agent_reference_is_required_on_llm_node(shop: Path) -> None:
@@ -432,7 +439,7 @@ def test_llm_node_names_a_shared_inference_by_key(shop: Path) -> None:
     write(shop, "triage/classify.yaml", node)
     for name in (INFERENCE, PROMPT, CLASSIFY):
         (shop / name).unlink()
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), SHARED_CLASSIFY_NESTED_MEDIA) == ()
 
     replace(shop, "triage/classify.yaml", 'inference: "classify"', 'inference: "sort"')
 
@@ -445,7 +452,7 @@ def test_llm_node_names_a_shared_inference_by_key(shop: Path) -> None:
 def test_fragment_is_included_relative_to_prompt_or_module_root(shop: Path, include: str) -> None:
     replace(shop, PROMPT, '{% include "shared/tone" %}', f'{{% include "{include}" %}}')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_text_mode_on_inference_is_rejected(shop: Path) -> None:
@@ -484,7 +491,7 @@ PARTIAL_INCLUDE: Final = '{% include "classify.partials/customer" %}'
 def test_partial_reads_inputs_and_is_checked(shop: Path) -> None:
     write(shop, PARTIAL, "Customer: {{ ticket.customer.name }}\n")
     replace(shop, PROMPT, "Subject:", f"{PARTIAL_INCLUDE}\nSubject:")
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
     replace(shop, PARTIAL, "customer.name", "customer.phone")
 
@@ -532,7 +539,7 @@ def test_variant_slot_is_clean(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.project is not None
     assert set(report.project.inferences[InferenceId("classify")].texts) == {
         "prompt",
@@ -627,7 +634,7 @@ def test_variant_is_an_explicit_markdown_path(shop: Path, reference: str) -> Non
     write(shop, "shared/neutral_tone.md", TONE_FILES["neutral"])
     replace(shop, INFERENCE, 'default: "neutral"', f'default: "{reference}"')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
     (shop / "shared/neutral_tone.md").unlink()
 
@@ -691,7 +698,7 @@ def test_explicit_prompt_path_overrides_the_convention(shop: Path, reference: st
     (shop / PROMPT).unlink()
     replace(shop, INFERENCE, "examples:\n", f'prompt: "{reference}"\nexamples:\n')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
     replace(shop, PROMPT_ELSEWHERE, "{{ ticket.body }}", "{{ ticket.text }}")
 
@@ -716,7 +723,7 @@ def test_explicit_prompt_next_to_prompt_file_is_a_warning(shop: Path, prompt: st
 def test_explicit_path_to_the_adjacent_prompt_is_not_shadowing(shop: Path) -> None:
     replace(shop, INFERENCE, "examples:\n", 'prompt: "./classify.prompt.md"\nexamples:\n')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 LOOP_NODE: Final = """apiVersion: "aqven/v1"
@@ -779,7 +786,7 @@ def test_loop_with_policies_is_clean(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.project is not None
     assert NodeId("polish__draft") in report.project.flows[FlowId("triage")].nodes
 
@@ -897,7 +904,7 @@ def with_parallel(root: Path, node: str = PARALLEL_NODE) -> None:
 def test_parallel_with_custom_join_is_clean(shop: Path) -> None:
     with_parallel(shop)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 @pytest.mark.parametrize(
@@ -915,7 +922,7 @@ def test_branch_is_optional_unless_join_waits_for_all(
     node = PARALLEL_NODE.replace(CUSTOM_JOIN, join)
     with_parallel(shop, node if optional else node.replace('type: "Text?"', 'type: "Text"'))
 
-    assert found(check_project(shop)) == expected
+    assert codes_of(without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)) == expected
 
 
 @pytest.mark.parametrize(
@@ -974,7 +981,7 @@ def test_inner_node_is_found_by_reference_anywhere_under_the_flow(shop: Path) ->
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.project is not None
     assert NodeId("route__confirm") in report.project.flows[FlowId("triage")].nodes
 
@@ -982,7 +989,7 @@ def test_inner_node_is_found_by_reference_anywhere_under_the_flow(shop: Path) ->
 def test_builder_flow_failures_are_reported(shop: Path) -> None:
     write(shop, "built/flow.py", "def build() -> object:\n    raise RuntimeError('broken')\n")
 
-    (problem,) = check_project(shop).diagnostics
+    (problem,) = without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)
 
     assert (problem.code, problem.file) == (DiagnosticCode.E_BUILDER_FAILED, "built/flow.py")
 
@@ -1032,7 +1039,7 @@ def test_python_builders_materialize_inference_and_flow(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA, QUICK_NESTED_MEDIA) == ()
     assert report.project is not None
     assert report.project.inferences[InferenceId("quick")].source is not None
 
@@ -1046,7 +1053,7 @@ def test_check_restores_imports_and_search_path(shop: Path) -> None:
     check_project(shop)
     clean = check_project(FIXTURE)
 
-    assert clean.diagnostics == ()
+    assert without_accepted_diagnostics(clean, TRIAGE_NESTED_MEDIA) == ()
     assert sys.path == before_path
     assert not any(name == PACKAGE or name.startswith(f"{PACKAGE}.") for name in sys.modules)
 
@@ -1170,7 +1177,7 @@ def with_registry(root: Path) -> None:
 def test_registry_with_tools_mcp_subagent_and_approval_is_clean(shop: Path) -> None:
     with_registry(shop)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 @pytest.mark.parametrize(
@@ -1181,7 +1188,7 @@ def test_agent_instructions_path_is_relative_to_agent_or_module_root(shop: Path,
     (shop / "shared/writer.md").rename(shop / "shared/writer.instructions.md")
     replace(shop, WRITER, "./writer.md", reference)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 @pytest.mark.parametrize(
@@ -1311,7 +1318,7 @@ def ticket_fields() -> list[FieldSpec]:
 def test_field_spec_in_code_names_registry_types(shop: Path) -> None:
     write(shop, FORM_FILE, FORM_CODE)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 @pytest.mark.parametrize(
@@ -1371,7 +1378,7 @@ def test_changed_step_or_tool_makes_generated_types_stale_until_generate(
 
     generate_types(shop)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 PANEL_REQUEST: Final = """apiVersion: "aqven/v1"
@@ -1455,7 +1462,7 @@ def test_called_flow_with_contract_is_clean(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.project is not None
     assert set(report.project.flows) == {FlowId("triage"), FlowId("panel")}
 
@@ -1524,7 +1531,7 @@ def test_call_output_is_the_called_flow_output(shop: Path) -> None:
     with_panel(shop)
     replace(shop, SUMMARIZE, 'from: "$route.out.category"', 'from: "$panel.out.category"')
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_flow_calling_itself_is_reported(shop: Path) -> None:
@@ -1621,7 +1628,7 @@ def with_batch(root: Path) -> None:
 def test_batch_map_takes_its_bound_from_over(shop: Path) -> None:
     with_batch(shop)
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 @pytest.mark.parametrize(
@@ -1633,7 +1640,7 @@ def test_map_default_value_follows_body_output(shop: Path, value: str, expected:
     with_batch(shop)
     replace(shop, BATCH_MAP_FILE, '  use: "skip"\n', f'  use: "default"\n  with:\n    value:\n      summary: {value}\n')
 
-    assert found(check_project(shop)) == expected
+    assert codes_of(without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)) == expected
 
 
 def test_binding_mismatch_names_the_first_differing_keyword(shop: Path) -> None:
@@ -1762,7 +1769,7 @@ def test_allowed_conditions_pass(shop: Path) -> None:
         "{% if ticket.photo == nil or ticket.customer.email and ticket.photo != nil %}{% endif %}" + PHOTO_CONDITION,
     )
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 TAGS_INPUT: Final = """- name: "tags"
@@ -1791,13 +1798,13 @@ def with_tags(root: Path, loop: str, input_decl: str = TAGS_INPUT, binding: str 
 def test_loop_over_bounded_list_passes(shop: Path) -> None:
     with_tags(shop, "{% for tag in tags %}{{ tag }}{% endfor %}")
 
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_nested_loop_is_reported(shop: Path) -> None:
     with_tags(shop, "{% for tag in tags %}{% for other in tags %}{{ other }}{% endfor %}{{ tag }}{% endfor %}")
 
-    (problem,) = check_project(shop).diagnostics
+    (problem,) = without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)
 
     assert (problem.code, problem.rule, problem.file) == (DiagnosticCode.E_PROMPT_TAG_FORBIDDEN, "R-T5", PROMPT)
 
@@ -1821,7 +1828,7 @@ def test_condition_on_enum_value_outside_enum_is_reported(shop: Path) -> None:
     )
     replace(shop, INFERENCE, '    tags:\n    - "urgent"\n', '    tags: "billing"\n')
 
-    (problem,) = check_project(shop).diagnostics
+    (problem,) = without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)
 
     assert (problem.code, problem.rule) == (DiagnosticCode.E_PROMPT_TAG_FORBIDDEN, "R-T3")
     assert "returns" in problem.message
@@ -1830,8 +1837,11 @@ def test_condition_on_enum_value_outside_enum_is_reported(shop: Path) -> None:
 def test_cli_check_passes_on_clean_project(capsys: pytest.CaptureFixture[str]) -> None:
     code = main(["check", "--static", str(FIXTURE / "triage" / "types")])
 
+    output = capsys.readouterr().out
     assert code == 0
-    assert "errors: 0, warnings: 0" in capsys.readouterr().out
+    assert f"{INFERENCE}:6:3: warning W_NESTED_MEDIA_NOT_ATTACHED in[0].type:" in output
+    assert TRIAGE_NESTED_MEDIA.message in output
+    assert "errors: 0, warnings: 1" in output
 
 
 def test_cli_check_fails_with_readable_diagnostics(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -1841,8 +1851,10 @@ def test_cli_check_fails_with_readable_diagnostics(shop: Path, capsys: pytest.Ca
 
     output = capsys.readouterr().out
     assert code == 1
+    assert f"{INFERENCE}:6:3: warning W_NESTED_MEDIA_NOT_ATTACHED in[0].type:" in output
+    assert TRIAGE_NESTED_MEDIA.message in output
     assert f"{SUMMARIZE}:14:3: error E_REF_MISSING in[1].from:" in output
-    assert "errors: 1, warnings: 0" in output
+    assert "errors: 1, warnings: 1" in output
 
 
 def test_cli_check_json(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -1852,8 +1864,12 @@ def test_cli_check_json(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
 
     document = json.loads(capsys.readouterr().out)
     assert code == 1
-    assert (document["ok"], document["errors"]) == (False, 1)
-    assert document["diagnostics"][0]["code"] == "E_UNKNOWN_KEY"
+    assert (document["ok"], document["errors"], document["warnings"]) == (False, 1, 1)
+    assert [(item["code"], item["file"], item["path"]) for item in document["diagnostics"]] == [
+        ("W_NESTED_MEDIA_NOT_ATTACHED", INFERENCE, ["in", 0, "type"]),
+        ("E_UNKNOWN_KEY", SUMMARIZE, ["ttl_ms"]),
+    ]
+    assert document["diagnostics"][0]["message"] == TRIAGE_NESTED_MEDIA.message
 
 
 def test_cli_check_outside_project(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -1893,7 +1909,7 @@ def test_stale_generated_types_are_a_warning_until_generate(shop: Path, capsys: 
 
     assert capsys.readouterr().out.strip() == GENERATED_TYPES
     assert "max_length=1000" in (shop / GENERATED_TYPES).read_text(encoding="utf-8")
-    assert check_project(shop).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_cli_check_regenerates_types_first(shop: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -1901,7 +1917,10 @@ def test_cli_check_regenerates_types_first(shop: Path, capsys: pytest.CaptureFix
 
     assert DiagnosticCode.W_GENERATED_STALE in found(check_project(shop))
     assert main(["check", "--static", str(shop)]) == 0
-    assert "errors: 0, warnings: 0" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert f"{INFERENCE}:6:3: warning W_NESTED_MEDIA_NOT_ATTACHED in[0].type:" in output
+    assert TRIAGE_NESTED_MEDIA.message in output
+    assert "errors: 0, warnings: 1" in output
     assert (shop / GENERATED_TYPES).is_file()
 
 

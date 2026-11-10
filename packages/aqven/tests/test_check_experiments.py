@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import TRIAGE_NESTED_MEDIA, without_accepted_diagnostics
 
 from aqven.check import CheckReport, check_project
 from aqven.codegen import GENERATED_TYPES, generate_types
@@ -331,7 +332,7 @@ def lab(tmp_path: Path) -> Path:
 def test_experiments_with_local_flows_datasets_and_checks_are_clean(lab: Path) -> None:
     report = check_project(lab)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert report.project is not None
     assert set(report.project.experiments) == {"triage_agents", "judge_check"}
 
@@ -680,7 +681,8 @@ def test_plan_larger_than_the_selected_cases_is_a_warning(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert [(item.code, item.severity, item.file, item.path) for item in report.diagnostics] == [
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert [(item.code, item.severity, item.file, item.path) for item in problems] == [
         (DiagnosticCode.W_PLAN_EXCEEDS_CASES, Severity.WARNING, TRIAGE_EXPERIMENT, ("plan", "cases"))
     ]
     assert report.ok
@@ -692,7 +694,7 @@ def test_expected_without_fields_needs_an_expected_output_on_every_selected_case
 
     report = check_project(lab)
 
-    (problem,) = report.diagnostics
+    (problem,) = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
     assert (problem.code, problem.file, problem.path) == (
         DiagnosticCode.E_EXPECTED_MISSING,
         TRIAGE_CASES,
@@ -727,7 +729,7 @@ def test_expected_is_not_an_inference_check_because_a_live_request_has_no_case(l
 
     report = check_project(lab)
 
-    (problem,) = report.diagnostics
+    (problem,) = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
     assert (problem.code, problem.file, problem.path) == (
         DiagnosticCode.E_CHECK_PARAMS,
         inference,
@@ -758,7 +760,7 @@ def test_code_step_of_a_local_flow_imports_typed_models_named_after_experiment_a
     report = check_project(lab)
 
     assert DiagnosticCode.W_GENERATED_STALE in {item.code for item in stale.diagnostics}
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert "class JudgeCheckJudgeVerdictIn(BaseModel):" in generated_source(lab)
     assert "class JudgeCheckJudgeVerdictOut(BaseModel):" in generated_source(lab)
 
@@ -774,7 +776,7 @@ def test_same_local_step_in_two_experiments_gets_two_models(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
     assert "class JudgeAgainJudgeVerdictOut(BaseModel):" in generated_source(lab)
     assert "class JudgeCheckJudgeVerdictOut(BaseModel):" in generated_source(lab)
 
@@ -801,13 +803,14 @@ def test_checks_of_a_range_read_the_out_of_its_last_node(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert [(item.code, item.path) for item in report.diagnostics] == [
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert [(item.code, item.path) for item in problems] == [
         (DiagnosticCode.E_CHECK_PARAMS, ("checks", 0, "with")),
         (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run")),
         (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run")),
     ]
-    assert "$out.category: the value has no field category" in report.diagnostics[0].message
-    hint = report.diagnostics[1].hint
+    assert "$out.category: the value has no field category" in problems[0].message
+    hint = problems[1].hint
     assert hint is not None and "the JSON record of node summarize" in hint
 
 
@@ -821,14 +824,12 @@ def test_a_code_check_typed_for_an_inference_is_a_context_warning(lab: Path) -> 
 
     report = check_project(lab)
 
-    assert {(item.code, item.path) for item in report.diagnostics} == {
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert {(item.code, item.path) for item in problems} == {
         (DiagnosticCode.W_CHECK_CONTEXT_MISMATCH, ("checks", 1, "run"))
     }
     assert report.ok
-    assert (
-        report.diagnostics[0].hint
-        == "type value as TriageResult and context as EvalContext[TriageTicket, TriageResult]"
-    )
+    assert problems[0].hint == "type value as TriageResult and context as EvalContext[TriageTicket, TriageResult]"
 
 
 def test_a_path_outside_the_subject_names_the_fields_it_could_read(lab: Path) -> None:
@@ -840,7 +841,7 @@ def test_a_path_outside_the_subject_names_the_fields_it_could_read(lab: Path) ->
         '- id: "summary_written"\n',
     )
 
-    (problem,) = check_project(lab).diagnostics
+    (problem,) = without_accepted_diagnostics(check_project(lab), TRIAGE_NESTED_MEDIA)
 
     assert problem.code is DiagnosticCode.E_CHECK_PATH_UNKNOWN
     assert problem.message == (
@@ -863,10 +864,11 @@ def test_a_judge_input_missing_from_its_scope_is_a_warning(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert [(item.code, item.file, item.path) for item in report.diagnostics] == [
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert [(item.code, item.file, item.path) for item in problems] == [
         (DiagnosticCode.W_JUDGE_INPUT_UNBOUND, TRIAGE_EXPERIMENT, ("checks", 2, "inference"))
     ]
-    assert report.diagnostics[0].message == (
+    assert problems[0].message == (
         "experiment triage_agents: judge second_judge of check judge needs input topic, "
         "which no document of its scope carries in flow triage"
     )
@@ -876,7 +878,7 @@ def test_a_judge_input_missing_from_its_scope_is_a_warning(lab: Path) -> None:
 def test_a_judge_input_bound_from_an_earlier_node_output_is_in_scope(lab: Path) -> None:
     with_second_judge(lab, "rationale", "{{ category }} {{ rationale }}")
 
-    assert check_project(lab).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(lab), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_partial_case_inputs_pass_a_dataset_that_no_experiment_runs_whole(lab: Path) -> None:
@@ -884,7 +886,7 @@ def test_partial_case_inputs_pass_a_dataset_that_no_experiment_runs_whole(lab: P
     write(lab, "datasets/late_cases.yaml", (lab / TRIAGE_CASES).read_text(encoding="utf-8"))
     replace(lab, TRIAGE_CASES, '    body: "My card was charged twice for one order"\n', "")
 
-    assert check_project(lab).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(lab), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_flow_dataset_that_no_experiment_runs_is_checked_against_the_flow_input(lab: Path) -> None:
@@ -936,4 +938,5 @@ def test_broken_experiment_keeps_its_local_flows_out_of_the_project_flows(lab: P
 
     assert report.project is not None
     assert "judge" not in report.project.flows
-    assert {item.code for item in report.diagnostics} == {DiagnosticCode.E_SPEC_INVALID}
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert {item.code for item in problems} == {DiagnosticCode.E_SPEC_INVALID}

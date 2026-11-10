@@ -45,6 +45,15 @@ description: "Prepares images, PDFs, audio, video, long text and tables for AQVE
 | Long text | characters, estimated tokens against the context window, language, structure | headings, pages, speaker turns | first and last line of every chunk | a planted clause with a known answer |
 | Table | rows, columns, types, empty cells, encoding, decimal separator | a row, or a group key | sample rows per group | anomalies planted in known rows |
 
+## Nested-media warning
+
+`W_NESTED_MEDIA_NOT_ATTACHED` is emitted once per top-level inference input field when `Image`, `Audio`, `Video` or
+`Document` occurs below a record or union, including optional and list locations; all nested paths appear in one
+diagnostic. Nested media is never attached for either template or Python prompts. Direct top-level media and lists
+of media are attached and do not warn; output-only media and unresolved/`Dynamic` branches do not warn either. If
+the model must read nested media, hoist it to a top-level inference input; otherwise retain it only as metadata.
+Confirm the result with the attachments in `prompt preview`, not with the presence of the field in YAML.
+
 ## Scripts
 
 Both scripts sit in this skill's folder and declare their dependencies inline, so `uv run` fetches them in a

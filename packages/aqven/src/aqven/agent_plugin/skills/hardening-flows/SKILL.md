@@ -20,7 +20,7 @@ description: "Makes an AQVEN flow fail loudly and recover on purpose: run-time c
 | # | Step | Exit criterion |
 |---|---|---|
 | 1 | A table per node: possible failures (provider error, 429, refusal, truncation, invalid schema, empty or wrong input, some `map` items failing, a slow `parallel` branch; for tools an external API down or slow, a tool `wait` past its `timeout_seconds`, an approval nobody answers, an agent's tool-call loop stopped by `limits.tool_calls`; for long or split inputs a part of a document silently dropped, an empty list of pages, chunks, segments or rows), how to detect each, what to do, how a person sees it | every node has all four columns |
-| 2 | Detection: `checks` in the inference with `on_fail: "retry"` (or `"fail"`, `"flag"`); built-ins `not_empty`, `unique_items`, `ids_in_allowed_set` (with `allowed_sets`); flow `requires` predicates (`families_distinct`, `family_disjoint_from_input`, `field_before`) where they fit. A retry check never rejects a declared `cannot_tell` value: the input may not show the answer | every failure in the step-1 table has a detection: a run-time check, a later guard or a flow-output field; no check rejects `cannot_tell` |
+| 2 | Detection: `checks` in the inference with `on_fail: "retry"` (or `"fail"`, `"flag"`); built-ins `not_empty`, `unique_items` and, only when separately justified, `ids_in_allowed_set`; declared `allowed_sets` already enforce membership and do not require `ids_in_allowed_set` in addition. Flow `requires` predicates (`families_distinct`, `family_disjoint_from_input`, `field_before`) where they fit. A retry check never rejects a declared `cannot_tell` value: the input may not show the answer | every failure in the step-1 table has a detection: a run-time check, a later guard or a flow-output field; no check rejects `cannot_tell` |
 | 3 | Reaction to a call outcome in the agent: `output.on_error` (default `retry`), `output.on_refusal` and `output.on_truncated` (default `fail`), each `retry`, `fail` or `fallback`; `fallback` only with `fallback_models`. To see how a fallback model reads the real node, a project agent of that model through `run_start` `agent_overrides: {<node_id>: <agent_id>}` on a real case | no `E_OUTCOME_FALLBACK` |
 | 4 | `parallel`: pick `join` from the table below; if every branch's answer is needed, `all`; with `quorum` the output carries how many branches answered (`$ok[*]`) | the output shows how many branches answered |
 | 5 | `map`: `on_item_error` with `use: "skip"` or `use: "default"` only together with a coverage guard after the map (the required items) and an output field for the items not read (for example `unread`) | a missing required item fails the run; a missing optional item is visible in the flow output |
@@ -45,6 +45,20 @@ join:
     min_ok: 2
     on_error: "skip"
 ```
+
+## Recovery and retry warnings
+
+- `W_MAP_ITEM_FAILURE_HIDDEN`: built-in `on_item_error.use: "skip"` or `"default"` with no reference rooted at
+  `$failed` in the map's own `out`. A `$ok` projection does not count; any valid `$failed` projection suppresses the
+  warning. `fail` and custom `run` policies are outside it. `skip` can make failed items disappear, while `default`
+  counts them as successful without failure records. Expose a bounded `MapItemError[]` from `$failed` when the node
+  contract needs structured failure visibility; for `skip`, instead verify downstream coverage from `$ok` and the
+  input. Run recovery events do not replace node output.
+- `W_CHECK_RETRY_UNAVAILABLE`: one warning per resolved inference usage—ordinary `llm` node, subagent or LLM
+  judge—when any inference check has `on_fail: "retry"` but the selected agent has `output.retries: 0`; all retry
+  checks for that usage are named together. The first output is still checked, but rejection cannot start another
+  model attempt. `output.on_error`, fallback models and allowed-set declarations alone do not change the predicate.
+  Raise `output.retries` when another attempt is intended, or deliberately choose `fail` or `flag`.
 
 ## Pitfalls
 

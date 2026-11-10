@@ -40,6 +40,16 @@ has a single body node that runs once per list item, however many items there tu
   `$failed` is the list of items that failed, each as `{index, code, message}`. Neither is available
   in the map node's own body — they only exist once every item is done.
 
+With built-in `skip` or `default`, `{{CLI_COMMAND}} check` reports `W_MAP_ITEM_FAILURE_HIDDEN` when no `from`
+reference in the map's own `out` is rooted at `$failed`. Projecting only `$ok` does not expose failures; any valid
+projection of `$failed` does. The `fail` policy and a custom `run` policy are outside this warning. With `skip`,
+failed items can disappear from the node output; with `default`, defaulted items count as successful and their
+failure records are absent. If the node contract requires structured failure visibility, expose a bounded
+`MapItemError[]` field from `$failed`, as in the example below. For `skip`, the alternative is to verify that
+downstream code reconstructs coverage from `$ok` and the input; for `default`, expose failures whenever downstream
+must distinguish them. The `map_item_recovered` run event records recovery either way, but it is not part of the
+node's structured output.
+
 ### Example
 
 The [showcase](/start/quickstart/) project's own `map` node, `vote` in `support_case`, binds three of an earlier node's

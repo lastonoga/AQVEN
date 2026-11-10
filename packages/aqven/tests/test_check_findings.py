@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import TRIAGE_NESTED_MEDIA, without_accepted_diagnostics
 from test_check_experiments import PROJECT_FILES, TRIAGE_EXPERIMENT, write
 
 from aqven.check import check_project
@@ -264,8 +265,9 @@ def test_aqven_check_recomputes_the_hash_and_the_findings_file_of_the_series(lab
     put_finding(lab, FINDING_FILE, edited)
     tampered = check_project(lab)
 
-    assert clean.diagnostics == ()
-    assert {(item.code, item.path) for item in tampered.diagnostics} == {
+    assert without_accepted_diagnostics(clean, TRIAGE_NESTED_MEDIA) == ()
+    problems = without_accepted_diagnostics(tampered, TRIAGE_NESTED_MEDIA)
+    assert {(item.code, item.path) for item in problems} == {
         (DiagnosticCode.E_FINDING_TAMPERED, ("self_sha256",)),
         (DiagnosticCode.W_FINDINGS_STALE, ()),
     }
@@ -279,5 +281,6 @@ def test_the_experiment_stays_valid_next_to_its_findings(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert TRIAGE_EXPERIMENT not in {item.file for item in report.diagnostics}
-    assert [item.code for item in report.diagnostics] == [DiagnosticCode.W_FINDINGS_STALE]
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert TRIAGE_EXPERIMENT not in {item.file for item in problems}
+    assert [item.code for item in problems] == [DiagnosticCode.W_FINDINGS_STALE]

@@ -77,6 +77,15 @@ response itself rather than asking the provider to constrain generation to the s
 template ships this way by default. See [How to check your model providers are
 configured](../engine/check-providers.md) for what turning `strict: true` on actually requires.
 
+An inference check with `on_fail: retry` also needs an `output.retries` budget. When at least one such check exists
+but the selected agent has `output.retries: 0`, `aqven check` reports `W_CHECK_RETRY_UNAVAILABLE` at that
+agent usage and combines all retry-check names in one diagnostic. Ordinary `llm` nodes, subagents and LLM-judge
+evaluators are each checked as separate usages, including a shared inference used by different agents. The first
+output is still checked; a rejected output simply cannot start another model attempt. `output.on_error` and
+`fallback_models` do not change this warning, and allowed-set declarations without an explicit retry check are
+outside it. Raise `output.retries` if rejection should produce another attempt, or deliberately use `fail` or `flag`
+instead.
+
 Here's the transport retry in action: a call gets back a `429` response with `retry-after: 2`, twice in a
 row, then succeeds on the third attempt — each retry waits the two seconds the provider asked for, not a
 guess.

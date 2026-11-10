@@ -32,6 +32,22 @@ description: "Designs AQVEN types and llm output schemas models can produce: req
 The CLI probes read keys from the environment and `<package>/.env`. Keys saved in Studio settings are visible only
 to the project server: if your shell has no key, ask the owner to run the probe and paste the output.
 
+## Identifier and coverage warnings
+
+These are non-blocking risk signals, not proofs of a semantic error. A keyed list has a record/union element with a
+direct, non-nullable project `IdType` key; every union variant must expose that required key. Coverage and capacity
+warnings also require a non-nullable output list and key.
+
+| Warning | Exact trigger | Conditional fix |
+|---|---|---|
+| `W_TEXT_IDENTIFIER_TYPE` | One per matching field declaration whose name is exactly `id` or ends in case-sensitive `_id`/`_ids`, or whose description contains standalone uppercase `ID`, when storage is built-in `Text` or a Text-backed `ValueType`, including optional/list wrappers. Each registry field and each union-variant field is anchored at its own declaration. An existing `enum` suppresses it; `pattern` and `maxLength` do not | use an `IdType` for an entity ID, or an enum for a genuinely closed codebook; an intentional opaque, external, correlation, DOM or newly generated textual identifier may remain advisory. Selecting existing entities needs an appropriate allowed set after the type correction |
+| `W_ID_ALLOWED_SET_MISSING` | An output contains a project `IdType` anywhere, including optional/list/record/union locations, and `allowed_sets` has no entry for that type. No input occurrence is required; `allowed_set: none` does not acknowledge or suppress it, while any existing declaration does (declaration errors remain separate) | if the model selects existing entities, mark the `IdType` `allowed_set: dynamic` and declare `allowed_sets` from a compatible `$in` list of that ID type; the warning lists candidate list paths only. Otherwise pass through or mint IDs deterministically, or use a reviewed custom guard |
+| `W_ID_COVERAGE_UNCHECKED` | An input keyed list and required output keyed list share the same direct ID key type and no custom `run` inference check exists. A matching `unique_items` check on that output list and key removes only the duplicate part of the message; `allowed_sets` does not suppress coverage | add exact or subset coverage and uniqueness checks appropriate to the declared intent; a custom `run` check counts as a possible guard, while built-in and LLM-judge checks do not prove coverage |
+| `W_ID_COVERAGE_CAP` | For the same keyed-list pair, the products of all known `maxItems` bounds along the input and output paths give `I > 0` and `O < I`, including enclosing lists; union inputs use the maximum finite branch product only when every contributing input bound is known. Unknown input multiplicity gives no cap warning. Custom `run`, `unique_items` and `allowed_sets` do not suppress it | exact one-to-one coverage requires output capacity at least the possible input capacity: raise/rebalance output caps or narrow the declared input. An intentional subset/truncation contract instead declares and checks its own bound; full input capacity is not a universal requirement |
+
+Allowed-set membership, exact input/output coverage and uniqueness are different invariants. Do not add
+`ids_in_allowed_set` in addition to `allowed_sets` merely to silence these warnings.
+
 ## Pitfalls
 
 | What goes wrong | Do instead |
