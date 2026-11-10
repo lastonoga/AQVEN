@@ -6,6 +6,7 @@ from enum_projects import (
     input_only_inline_shop,
     manual_liquid_shop,
     nested_shop,
+    recursive_shop,
 )
 
 from aqven.check import CheckReport, check_project
@@ -68,6 +69,39 @@ def test_manual_broken_output_type_keeps_existing_error_without_warning(tmp_path
     assert warnings(report) == []
     assert not report.ok
     assert any(item.code is DiagnosticCode.E_TYPE_UNKNOWN for item in report.errors)
+
+
+def test_manual_recursive_output_keeps_type_error_without_warning(tmp_path: Path) -> None:
+    report = check_project(recursive_shop(tmp_path))
+
+    assert not report.ok
+    assert any(item.code is DiagnosticCode.E_TYPE_RECURSIVE for item in report.diagnostics)
+    assert warnings(report) == []
+
+
+def test_manual_recursive_output_and_valid_sibling_warns_only_for_sibling(tmp_path: Path) -> None:
+    report = check_project(recursive_shop(tmp_path, sibling=True))
+
+    assert not report.ok
+    assert any(item.code is DiagnosticCode.E_TYPE_RECURSIVE for item in report.diagnostics)
+    [warning] = warnings(report)
+    assert warning.message == (
+        "Inference `redo` disables automatic definitions for output enums "
+        "`Mood` (`good`); the prompt is responsible for defining these values."
+    )
+
+
+def test_manual_nonrecursive_wrapper_keeps_own_enum_but_not_recursive_branch(tmp_path: Path) -> None:
+    report = check_project(recursive_shop(tmp_path, wrapper=True))
+
+    assert not report.ok
+    assert any(item.code is DiagnosticCode.E_TYPE_RECURSIVE for item in report.diagnostics)
+    [warning] = warnings(report)
+    assert warning.message == (
+        "Inference `redo` disables automatic definitions for output enums "
+        "`Mood` (`result.mood`); the prompt is responsible for defining these values."
+    )
+    assert "result.node.mood" not in warning.message
 
 
 def test_same_enum_in_input_and_output_is_reported_once(tmp_path: Path) -> None:

@@ -180,6 +180,61 @@ def input_only_inline_shop(destination: Path) -> Path:
     return root
 
 
+def recursive_shop(destination: Path, *, sibling: bool = False, wrapper: bool = False) -> Path:
+    root = copy_project(STANDARD_SHOP, destination)
+    write(
+        root,
+        "types/records/node.yaml",
+        'apiVersion: "aqven/v1"\n'
+        'kind: "Type"\n'
+        'type: "record"\n'
+        'description: "Recursive node"\n'
+        "fields:\n"
+        '- name: "next"\n'
+        '  type: "Node?"\n'
+        '  description: "Next"\n'
+        '- name: "mood"\n'
+        '  type: "Mood"\n'
+        '  description: "Mood"\n',
+    )
+    if wrapper:
+        write(
+            root,
+            "types/records/wrapper.yaml",
+            'apiVersion: "aqven/v1"\n'
+            'kind: "Type"\n'
+            'type: "record"\n'
+            'description: "Nonrecursive wrapper"\n'
+            "fields:\n"
+            '- name: "node"\n'
+            '  type: "Node"\n'
+            '  description: "Recursive branch"\n'
+            '- name: "mood"\n'
+            '  type: "Mood"\n'
+            '  description: "Wrapper mood"\n',
+        )
+    sibling_field = "" if not sibling else '- name: "good"\n  type: "Mood"\n  description: "Valid sibling"\n'
+    write(
+        root,
+        "flows/intake/nodes/review/redo.inference.yaml",
+        'apiVersion: "aqven/v1"\n'
+        'kind: "Inference"\n'
+        'description: "Recursive output"\n'
+        "in:\n"
+        '- name: "text"\n'
+        '  type: "Text"\n'
+        '  description: "Input"\n'
+        "  maxLength: 100\n"
+        "out:\n"
+        '- name: "result"\n'
+        f'  type: "{"Wrapper" if wrapper else "Node"}"\n'
+        '  description: "Result"\n'
+        f"{sibling_field}"
+        'enum_definitions: "manual"\n',
+    )
+    return root
+
+
 def broken_shop(destination: Path) -> Path:
     root = copy_project(STANDARD_SHOP, destination)
     write(

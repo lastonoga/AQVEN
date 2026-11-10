@@ -6,7 +6,8 @@ from enum_projects import STANDARD_SHOP, input_only_inline_shop, nested_shop
 from aqven.compiler import compile_root
 from aqven.engine.llm.prompts import output_format
 from aqven.ir import CompiledProject
-from aqven.spec import InferenceId
+from aqven.spec import EnumType, EnumValue, FieldDecl, InferenceId, TypeId, UnionType, UnionVariant
+from aqven.spec.output_enums import collect_output_enums
 
 STANDARD_SCHEMA = (
     '{"additionalProperties": false, "properties": {"text": {"description": "Reply", "maxLength": 200, '
@@ -84,3 +85,38 @@ def test_explicit_auto_matches_the_default_mode(tmp_path: Path) -> None:
 
     assert explicit.inference(InferenceId("lookup")).enum_definitions == "auto"
     assert definition_summary(explicit, "lookup") == definition_summary(default, "lookup")
+
+
+def test_recursive_union_is_opaque_while_valid_sibling_enum_remains() -> None:
+    mood = EnumType(
+        apiVersion="aqven/v1",
+        kind="Type",
+        type="enum",
+        description="Reply tone",
+        values=[EnumValue(value="warm", description="Warm")],
+    )
+    choice = UnionType(
+        apiVersion="aqven/v1",
+        kind="Type",
+        type="union",
+        description="Recursive choice",
+        discriminator="kind",
+        variants=[
+            UnionVariant(
+                name="again",
+                description="Again",
+                fields=[
+                    FieldDecl(name="next", type="Choice?", description="Next"),
+                    FieldDecl(name="mood", type="Mood", description="Recursive mood"),
+                ],
+            )
+        ],
+    )
+    fields = (
+        FieldDecl(name="result", type="Choice", description="Result"),
+        FieldDecl(name="good", type="Mood", description="Valid sibling"),
+    )
+
+    definitions = collect_output_enums(fields, {TypeId("Mood"): mood, TypeId("Choice"): choice})
+
+    assert [(item.type_id, item.paths) for item in definitions] == [("Mood", ("good",))]
