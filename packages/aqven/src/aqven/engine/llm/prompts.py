@@ -16,7 +16,15 @@ from aqven.engine.llm.allowed import AllowedSet, flatten
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import CodeLoader
 from aqven.engine.llm.readable import readable_values
-from aqven.ir import CodePrompt, CompiledInference, CompiledPrompt, CompiledVariantSlot, FieldIr, TemplatePrompt
+from aqven.ir import (
+    CodePrompt,
+    CompiledInference,
+    CompiledOutputEnum,
+    CompiledPrompt,
+    CompiledVariantSlot,
+    FieldIr,
+    TemplatePrompt,
+)
 from aqven.policies.paths import read
 from aqven.runtime.address import JsonObject
 from aqven.spec import MEDIA_TYPES, MediaValue, PromptLevel, PromptMessage, RefRoot, RenderedPrompt, parse_type_ref
@@ -105,7 +113,11 @@ class PromptRenderer:
         rendered = target(**arguments)
         if not isinstance(rendered, RenderedPrompt):
             raise LlmNodeError(LlmFailureCode.CODE_INVALID, f"prompt {prompt.run} did not return a RenderedPrompt")
-        return RenderedParts(rendered.messages, {}, PromptLevel.CODE)
+        messages = rendered.messages
+        definitions = enum_definitions_format(source.inference)
+        if definitions:
+            messages = (*messages, PromptMessage(role=SYSTEM_ROLE, text=definitions))
+        return RenderedParts(messages, {}, PromptLevel.CODE)
 
 
 TEMPLATE_LEVELS: Final[Mapping[int, TemplateLevel]] = {
@@ -117,7 +129,23 @@ TEMPLATE_LEVELS: Final[Mapping[int, TemplateLevel]] = {
 def output_format(inference: CompiledInference, sets: Sequence[AllowedSet]) -> str:
     fields = ("Output fields:", *(f"- {field.name}: {field.description}" for field in inference.output_fields))
     allowed = tuple(line for item in sets for line in _allowed_lines(item))
-    return "\n".join((*fields, *allowed))
+    definitions = enum_definitions_format(inference)
+    if not definitions:
+        return "\n".join((*fields, *allowed))
+    sections = ("\n".join(fields), definitions, "\n".join(allowed))
+    return SECTION_SEPARATOR.join(section for section in sections if section)
+
+
+def enum_definitions_format(inference: CompiledInference) -> str:
+    if inference.enum_definitions != "auto":
+        return ""
+    return SECTION_SEPARATOR.join(_enum_definition_block(item) for item in inference.output_enums)
+
+
+def _enum_definition_block(item: CompiledOutputEnum) -> str:
+    heading = f"Enum values of {item.type_id} ({', '.join(item.paths)}):"
+    values = (f"- {value.value}: {value.description}" for value in item.values)
+    return "\n".join((heading, *values))
 
 
 def text_fields(inference: CompiledInference) -> tuple[FieldIr, ...]:
