@@ -17,6 +17,7 @@ from factor_lab import (
     replace,
     write,
 )
+from fixture_warnings import TRIAGE_NESTED_MEDIA, without_accepted_diagnostics
 
 from aqven.check import CheckReport, check_project
 from aqven.diagnostics import DiagnosticCode, Severity
@@ -45,7 +46,7 @@ def located(report: CheckReport, code: DiagnosticCode) -> list[tuple[str, tuple[
 def test_all_four_factor_kinds_check_clean(lab: Path) -> None:
     report = check_project(lab)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
 
 
 MUTATIONS: Final[dict[str, Mutation]] = {
@@ -166,7 +167,7 @@ def test_compile_problem_of_a_variant_names_the_variant_and_the_original_file(la
 
     report = check_project(lab)
 
-    (problem,) = report.diagnostics
+    (problem,) = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
     assert (problem.file, problem.path, problem.line) == (PROMPTS, ("variants", 1, "nodes", "classify"), 16)
     assert problem.message == (
         f"variant short: {SHORT_PROMPT}:6: variable mood is not declared in the inference inputs"
@@ -203,7 +204,8 @@ def test_two_variants_with_the_same_values_are_a_warning(lab: Path) -> None:
 
     report = check_project(lab)
 
-    assert {(item.code, item.severity, item.file, item.path) for item in report.diagnostics} == {
+    problems = without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)
+    assert {(item.code, item.severity, item.file, item.path) for item in problems} == {
         (DiagnosticCode.W_VARIANT_DUPLICATE, Severity.WARNING, ROUTES, ("variants", 2, "nodes")),
         (
             DiagnosticCode.W_ALTERNATIVE_UNUSED,
@@ -214,9 +216,7 @@ def test_two_variants_with_the_same_values_are_a_warning(lab: Path) -> None:
         (DiagnosticCode.W_ALTERNATIVE_UNUSED, Severity.WARNING, REVIEW, ()),
     }
     assert report.ok
-    assert report.diagnostics[0].message == (
-        "experiment triage_routes: variant senior sets the same values as variant direct"
-    )
+    assert problems[0].message == "experiment triage_routes: variant senior sets the same values as variant direct"
 
 
 def test_unused_alternative_prompt_and_local_flow_are_warnings(lab: Path) -> None:
@@ -240,14 +240,14 @@ def test_unused_alternative_prompt_and_local_flow_are_warnings(lab: Path) -> Non
 def test_varies_with_one_variant_is_allowed(lab: Path) -> None:
     replace(lab, AGENTS, '- id: "mini"\n  nodes:\n    classify: "mini"\n', "")
 
-    assert check_project(lab).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(lab), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_variants_that_all_keep_the_subject_are_an_aa_experiment(lab: Path) -> None:
     replace(lab, AGENTS, 'varies:\n  what: "agent"\n  nodes:\n  - "classify"\n', "")
     replace(lab, AGENTS, '- id: "mini"\n  nodes:\n    classify: "mini"\n', '- id: "again"\n')
 
-    assert check_project(lab).diagnostics == ()
+    assert without_accepted_diagnostics(check_project(lab), TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_one_variant_with_values_needs_a_factor(lab: Path) -> None:

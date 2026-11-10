@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import TRIAGE_NESTED_MEDIA
 from risk_warnings import shop
 
 from aqven.check import RULES, CodeResolver, build_context
@@ -43,7 +44,7 @@ def test_risk_rule_skeletons_are_registered_in_their_planned_positions() -> None
     assert RULES.index(check_flow_risks) == RULES.index(check_flows) + 1
 
 
-def test_risk_rule_skeletons_emit_no_diagnostics(tmp_path: Path) -> None:
+def test_risk_rules_emit_the_expected_fixture_nested_media_warning(tmp_path: Path) -> None:
     root = shop(tmp_path)
     loaded = load_project(root).project
     assert loaded is not None
@@ -56,4 +57,4 @@ def test_risk_rule_skeletons_emit_no_diagnostics(tmp_path: Path) -> None:
             for item in rule(context)
         ]
 
-    assert found == []
+    assert found == [TRIAGE_NESTED_MEDIA.model_copy(update={"line": None, "column": None})]
