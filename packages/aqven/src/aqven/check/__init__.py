@@ -13,6 +13,7 @@ from aqven.check.control import check_control
 from aqven.check.datasets import check_datasets
 from aqven.check.display import check_display
 from aqven.check.dynamic import check_dynamic
+from aqven.check.enum_definitions import check_enum_definitions
 from aqven.check.experiments import check_experiments
 from aqven.check.findings import check_findings
 from aqven.check.flows import check_flows
@@ -47,6 +48,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_registry,
     check_providers,
     check_inferences,
+    check_enum_definitions,
     check_refs,
     check_bindings,
     check_prompts,

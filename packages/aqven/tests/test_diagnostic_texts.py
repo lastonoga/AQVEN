@@ -28,6 +28,8 @@ VALUES: Final = {
     "agent": "classifier",
     "keys": "reasoning_effort",
     "accepted": "only thinking_config",
+    "inference": "classify_message",
+    "enums": "`CaseIntent` (`intent`), `ReplyCriterion` (`scores[*].criterion`)",
 }
 
 
@@ -41,6 +43,7 @@ VALUES: Final = {
         (DiagnosticCode.W_SAMPLING_IGNORED, Severity.WARNING),
         (DiagnosticCode.W_PROVIDER_OPTIONS_IGNORED, Severity.WARNING),
         (DiagnosticCode.W_TYPES_SHADOWS_STDLIB, Severity.WARNING),
+        (DiagnosticCode.W_ENUM_DEFINITIONS_MANUAL, Severity.WARNING),
     ],
 )
 def test_new_codes_have_severity_message_and_hint(code: DiagnosticCode, severity: Severity) -> None:

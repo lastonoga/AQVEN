@@ -138,6 +138,7 @@ class DiagnosticCode(StrEnum):
     W_TYPES_SHADOWS_STDLIB = "W_TYPES_SHADOWS_STDLIB"
     W_SIM_NODE_UNREACHED = "W_SIM_NODE_UNREACHED"
     W_PROMPT_VALUE_UNREADABLE = "W_PROMPT_VALUE_UNREADABLE"
+    W_ENUM_DEFINITIONS_MANUAL = "W_ENUM_DEFINITIONS_MANUAL"
     W_TOOL_ARG_UNREACHABLE = "W_TOOL_ARG_UNREACHABLE"
     W_CONTEXT_KEY_UNUSED = "W_CONTEXT_KEY_UNUSED"
     W_PLAN_EXCEEDS_CASES = "W_PLAN_EXCEEDS_CASES"
@@ -370,6 +371,11 @@ DIAGNOSTIC_TEXTS: Final[Mapping[DiagnosticCode, DiagnosticText]] = {
         "case {case} of dataset {dataset}: media file {file} has the extension {extension}, "
         "which does not fit $media {media_type}",
         "set $media to {guessed}, or point file at a {media_type} file",
+    ),
+    DiagnosticCode.W_ENUM_DEFINITIONS_MANUAL: DiagnosticText(
+        "Inference `{inference}` disables automatic definitions for output enums {enums}; "
+        "the prompt is responsible for defining these values.",
+        "include the value definitions in the prompt or restore `enum_definitions: auto`",
     ),
     DiagnosticCode.W_AGENT_SKILLS_STALE: DiagnosticText(
         "out of sync with the installed aqven {version} in {target}: {problem}",
