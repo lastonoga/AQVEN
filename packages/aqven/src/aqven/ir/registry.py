@@ -17,6 +17,8 @@ from aqven.spec import (
     PROVIDER_NAME_PATTERN,
     AgentId,
     Effect,
+    EnumDefinitionsMode,
+    EnumValue,
     ExampleSpec,
     InferenceId,
     Limits,
@@ -112,6 +114,13 @@ class CompiledAllowedSet(IrModel):
     labels_from: RefText | None = None
 
 
+class CompiledOutputEnum(IrModel):
+    type_id: TypeId
+    description: Annotated[str, Field(min_length=1)]
+    values: Annotated[tuple[EnumValue, ...], Field(min_length=1)]
+    paths: Annotated[tuple[str, ...], Field(min_length=1)]
+
+
 class CompiledDisplayFormatter(IrModel):
     run: AbsoluteCodeRef | None = None
     template: str | None = None
@@ -134,6 +143,8 @@ class CompiledInference(IrModel):
     description: Annotated[str, Field(min_length=1)]
     input_fields: tuple[FieldIr, ...] = ()
     output_fields: Annotated[tuple[FieldIr, ...], Field(min_length=1)]
+    output_enums: tuple[CompiledOutputEnum, ...] = ()
+    enum_definitions: EnumDefinitionsMode = "auto"
     input_schema: JsonSchema
     output_schema: JsonSchema
     dynamic_outputs: tuple[DynamicOutput, ...] = ()
