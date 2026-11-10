@@ -183,6 +183,20 @@ because the dataset id is part of the hash, so an input can be working in one an
 input that was on `dev` in any dataset has been seen: it no longer counts as held-out anywhere. Before you
 compare results across experiments, check that they ran on the same cases and the same halves.
 
+`aqven check` reports `W_DATASET_INPUT_REUSED` once per input-fingerprint group when at least two distinct
+`dataset_id/case.name` identities have the same canonical `inputs` and their production splits include both `dev`
+and `holdout`. Mapping key order does not affect the fingerprint; array order does. Case names, tags, context,
+`node_outputs`, metadata and expected outputs are excluded, so changing them does not exempt a duplicate. Reusing
+one case identity across experiments, variants or looks does not trigger the warning, and neither do duplicates
+whose identities all land in the same split.
+
+Media fingerprints use a file's declared media type and effective project-relative path, or a blob's media type and
+`blob_id`; the checker never reads media bytes. It does not infer identical bytes at different paths or file/blob
+equivalence, and a case with an unresolvable media reference is left to the existing media diagnostics. Consolidate
+the duplicate identity or review the intentional overlap. Renaming a case only rerolls its split. The warning
+establishes a current split collision, not that a `dev` run already exposed the input or that historical holdout
+results are contaminated.
+
 ## A tag is not what the input shows
 
 A source's tag describes the item, not always what the input shows. A thread tagged "billing" can open about

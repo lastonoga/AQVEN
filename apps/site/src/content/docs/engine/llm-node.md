@@ -23,10 +23,14 @@ your own code or routes data; this is the one that talks to a model.
   [how to constrain a field's values](/engine/field-constraints/) for what each one does, with its own
   example.
 - An `Image`, `Audio`, `Video` or `Document` field, or a list of one, goes to the model as an attachment,
-  not as text — but only when it is a top-level `in` field of the inference. A media field inside a record
-  is never attached, and `{{CLI_COMMAND}} check` does not flag it; the attachments `prompt_preview` lists are
-  what the model gets. On the `out` side an inference never returns `Audio` or `Video` (a
-  [`tool` node](/engine/tool-node/) produces them), and an `Image` output must be the only `out` field.
+  not as text — but only when it is a top-level `in` field of the inference. Media below a record or union is
+  never attached, including in optional and list locations. `{{CLI_COMMAND}} check` reports
+  `W_NESTED_MEDIA_NOT_ATTACHED` once per top-level input field containing such media, with every nested path in
+  one diagnostic; this applies to template and Python prompts alike. Direct top-level media, lists of media and
+  output-only media do not trigger it. If the model must read the media, hoist it to a top-level inference input;
+  otherwise keep it only as metadata. The attachments `prompt_preview` lists are what the model gets. On the `out`
+  side an inference never returns `Audio` or `Video` (a [`tool` node](/engine/tool-node/) produces them), and an
+  `Image` output must be the only `out` field.
 - Write `<stem>.prompt.md`: the prompt itself, in its own Markdown file — never inline in the YAML. It
   reads the same `in` field names the inference declares.
 - Point `agent` at an agent file (`agents/<agent_id>.yaml`) that already exists in the project, or add

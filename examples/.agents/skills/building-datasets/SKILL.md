@@ -43,6 +43,21 @@ of an experiment) and `cases`; a case has `name`, `inputs`, and optionally `tags
 `dataset_item_id: "<dataset_id>/<case_name>"`. A series with `--cases N` takes the first N cases of the chosen
 half in file order.
 
+## Split-reuse warning
+
+`W_DATASET_INPUT_REUSED` emits one warning per canonical-input fingerprint group when at least two distinct
+`dataset_id/case.name` identities have the same inputs and their computed split set contains both `dev` and
+`holdout`. Only `inputs` participate:
+mapping key order is normalized, array order remains significant, and case name, tags, context, `node_outputs`,
+metadata and `expected_output` are excluded. Reusing one identity across experiments, tag selections, variants or
+looks is not duplication; same-split duplicates do not trigger this warning.
+
+File media fingerprints contain the declared media type and effective project-relative path; existing blobs use
+media type and `blob_id`. The checker never reads media bytes, does not infer identical bytes at different paths or
+file/blob equivalence, and excludes cases whose media cannot be resolved safely. Consolidate the duplicate identity
+or review the intentional overlap; renaming a case only rerolls the split. This establishes a current split
+collision, not prior exposure in a `dev` run or historical holdout contamination.
+
 ## Pitfalls
 
 A pitfall is a general rule; the illustration after it is one instance.
