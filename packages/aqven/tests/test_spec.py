@@ -1180,6 +1180,7 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_TYPES_SHADOWS_STDLIB,
         DiagnosticCode.W_SIM_NODE_UNREACHED,
         DiagnosticCode.W_PROMPT_VALUE_UNREADABLE,
+        DiagnosticCode.W_ENUM_DEFINITIONS_MANUAL,
         DiagnosticCode.W_TOOL_ARG_UNREACHABLE,
         DiagnosticCode.W_CONTEXT_KEY_UNUSED,
         DiagnosticCode.W_PLAN_EXCEEDS_CASES,
