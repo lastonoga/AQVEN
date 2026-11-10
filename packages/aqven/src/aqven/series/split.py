@@ -3,7 +3,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, Protocol
 
-from aqven.check import CheckReport
+from aqven.check.report import CheckReport
 from aqven.spec import DatasetId, SeriesSplit
 
 HOLDOUT_SHARE: Final = 0.5

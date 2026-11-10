@@ -16,10 +16,13 @@ from aqven.check.dynamic import check_dynamic
 from aqven.check.enum_definitions import check_enum_definitions
 from aqven.check.experiments import check_experiments
 from aqven.check.findings import check_findings
+from aqven.check.flow_risks import check_flow_risks
 from aqven.check.flows import check_flows
 from aqven.check.generated import check_generated
 from aqven.check.graph import build_graph
 from aqven.check.human import check_human
+from aqven.check.identifier_types import check_identifier_types
+from aqven.check.inference_risks import check_inference_risks
 from aqven.check.inferences import check_inferences
 from aqven.check.local_flows import check_local_flows
 from aqven.check.names import check_names
@@ -37,6 +40,7 @@ from aqven.check.scopes import RefResolver
 from aqven.check.secrets import check_secrets
 from aqven.check.tool_args import check_tool_args
 from aqven.check.types import check_types
+from aqven.check.usage_risks import check_usage_risks
 from aqven.check.variants import check_variants
 from aqven.diagnostics import Diagnostic, sort_diagnostics
 from aqven.loader import LoadedFlow, LoadedProject, Position, SourceSpec, YamlPath, load_project, locate
@@ -45,9 +49,11 @@ from aqven.spec import FlowSpec, NodeSpec, TypeId, TypeSpec, build_type_models
 RULES: Final[tuple[CheckRule, ...]] = (
     check_names,
     check_types,
+    check_identifier_types,
     check_registry,
     check_providers,
     check_inferences,
+    check_inference_risks,
     check_enum_definitions,
     check_refs,
     check_bindings,
@@ -57,6 +63,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_policies,
     check_bounds,
     check_capabilities,
+    check_usage_risks,
     check_output_modes,
     check_sampling,
     check_provider_options,
@@ -64,6 +71,7 @@ RULES: Final[tuple[CheckRule, ...]] = (
     check_human,
     check_dynamic,
     check_flows,
+    check_flow_risks,
     check_secrets,
     check_tool_args,
     check_datasets,
