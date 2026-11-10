@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Final
 from unittest.mock import patch
 
+import pytest
 from factor_lab import factor_lab
 from risk_warnings import diagnostics, only, shop, write
 
@@ -230,3 +231,25 @@ def test_showcase_and_factor_lab_same_split_controls_remain_clean(tmp_path: Path
     desk_split = split_of(split_salt("fixture_shop"), DatasetId("desk_cases"), "late_parcel")
     assert factor_split is desk_split
     assert diagnostics(check_project(factor_lab(tmp_path)), CODE) == []
+
+
+@pytest.mark.parametrize("literal", [".nan", ".inf", "-.inf", "9007199254740992"])
+def test_noncanonical_numbers_are_excluded_without_aborting_checks(tmp_path: Path, literal: str) -> None:
+    root = shop(tmp_path)
+    inputs = f"    value: {literal}\n"
+    dataset(root, "reviews", case("case_a", inputs))
+    dataset(root, "review_copy", case("case_b", inputs))
+
+    report = check_project(root)
+
+    assert report.project is not None
+    assert diagnostics(report, CODE) == []
+
+
+def test_safe_integer_duplicate_still_warns(tmp_path: Path) -> None:
+    root = shop(tmp_path)
+    inputs = "    value: 9007199254740991\n"
+    dataset(root, "reviews", case("case_a", inputs))
+    dataset(root, "review_copy", case("case_b", inputs))
+
+    assert only(check_project(root), CODE)

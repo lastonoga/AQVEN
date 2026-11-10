@@ -4,6 +4,7 @@ from typing import Final
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
+from rfc8785 import CanonicalizationError
 
 from aqven.check.context import CheckContext
 from aqven.check.dataset_media import dataset_media
@@ -172,9 +173,9 @@ def _input_reuse(context: CheckContext) -> Iterator[Diagnostic]:
 def _fingerprint(context: CheckContext, source: SourceSpec[DatasetFile], inputs: JsonValue) -> IrHash | None:
     try:
         normalized = _normalized(context, source.path, inputs)
-    except (MediaFileError, ValidationError, OSError):
+        return hash_of(HashDomain.DATASET_INPUT, normalized)
+    except (MediaFileError, ValidationError, OSError, CanonicalizationError):
         return None
-    return hash_of(HashDomain.DATASET_INPUT, normalized)
 
 
 def _normalized(context: CheckContext, dataset_path: str, value: JsonValue) -> JsonValue:
