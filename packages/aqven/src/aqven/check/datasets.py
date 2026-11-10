@@ -2,17 +2,24 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import JsonValue, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
 
 from aqven.check.context import CheckContext
 from aqven.check.dataset_media import dataset_media
 from aqven.check.registry import known
 from aqven.check.subjects import flow_spec
-from aqven.datasets import with_media_placeholders
+from aqven.datasets import (
+    MediaFileError,
+    locate_media_file,
+    media_file_path,
+    parse_media_file_ref,
+    with_media_placeholders,
+)
 from aqven.diagnostics import Diagnostic, DiagnosticCode, diagnostic, templated_diagnostic
+from aqven.ir.hashing import HashDomain, IrHash, hash_of
 from aqven.loader import SourceSpec, YamlPath
-from aqven.spec import DatasetFile, DatasetId
+from aqven.spec import MEDIA_FILE_KEY, MEDIA_KEY, DatasetFile, DatasetId, MediaValue, SeriesSplit
 
 MISSING_ERROR: Final = "missing"
 STRICT: Final[frozenset[str]] = frozenset()
@@ -27,11 +34,12 @@ class CaseModel:
 
 
 def check_datasets(context: CheckContext) -> Iterable[Diagnostic]:
-    return tuple(
+    found = tuple(
         item
         for dataset_id, source in context.project.datasets.items()
         for item in _dataset(context, dataset_id, source)
     )
+    return (*found, *_input_reuse(context))
 
 
 def selected_cases(dataset: DatasetFile, tags: Mapping[str, str] | None) -> tuple[int, ...]:
@@ -108,3 +116,80 @@ def _duplicates(dataset_id: DatasetId, source: SourceSpec[DatasetFile]) -> Itera
         values = {"name": names[index], "first": str(first), "dataset": dataset_id}
         path: YamlPath = ("cases", index, "name")
         yield templated_diagnostic(DiagnosticCode.E_CASE_DUPLICATE, source.path, path, values)
+
+
+@dataclass(frozen=True, slots=True)
+class ReuseCase:
+    dataset_id: DatasetId
+    case_name: str
+    index: int
+    source: SourceSpec[DatasetFile]
+    split: SeriesSplit
+
+
+def _input_reuse(context: CheckContext) -> Iterator[Diagnostic]:
+    from aqven.series.split import HOLDOUT_SHARE, split_of, split_salt
+
+    salt = split_salt(context.spec.package)
+    groups: dict[IrHash, list[ReuseCase]] = {}
+    for dataset_id, source in context.project.datasets.items():
+        for index, case in enumerate(source.spec.cases):
+            fingerprint = _fingerprint(context, source, case.inputs)
+            if fingerprint is None:
+                continue
+            split = split_of(salt, dataset_id, case.name, HOLDOUT_SHARE)
+            groups.setdefault(fingerprint, []).append(ReuseCase(dataset_id, case.name, index, source, split))
+    for fingerprint in sorted(groups):
+        cases = groups[fingerprint]
+        identities = {(item.dataset_id, item.case_name) for item in cases}
+        if len(identities) < 2 or {item.split for item in cases} != {SeriesSplit.DEV, SeriesSplit.HOLDOUT}:
+            continue
+        occurrences = sorted(
+            {(item.dataset_id, item.case_name, item.split) for item in cases},
+            key=lambda item: (item[0], item[1]),
+        )
+        listed = ", ".join(f"`{dataset_id}/{name}` ({split.value})" for dataset_id, name, split in occurrences)
+        holdout = min(
+            (item for item in cases if item.split is SeriesSplit.HOLDOUT),
+            key=lambda item: (item.dataset_id, item.case_name, item.source.path, item.index),
+        )
+        message = (
+            f"The same input occurs as {listed}; tuning and held-out evaluation can receive the same stimulus. "
+            "Consolidate the duplicate identity or review the intentional overlap."
+        )
+        yield diagnostic(
+            DiagnosticCode.W_DATASET_INPUT_REUSED,
+            holdout.source.path,
+            ("cases", holdout.index, "inputs"),
+            message,
+            hint=(
+                "consolidate the duplicate identity or review the intentional overlap; "
+                "renaming a case only rerolls the split"
+            ),
+        )
+
+
+def _fingerprint(context: CheckContext, source: SourceSpec[DatasetFile], inputs: JsonValue) -> IrHash | None:
+    try:
+        normalized = _normalized(context, source.path, inputs)
+    except (MediaFileError, ValidationError, OSError):
+        return None
+    return hash_of(HashDomain.DATASET_INPUT, normalized)
+
+
+def _normalized(context: CheckContext, dataset_path: str, value: JsonValue) -> JsonValue:
+    if isinstance(value, dict) and MEDIA_KEY in value:
+        if MEDIA_FILE_KEY in value:
+            reference = parse_media_file_ref(value)
+            locate_media_file(context.project.root, reference.file, dataset_path)
+            return {
+                "media_type": reference.media_type,
+                "path": media_file_path(reference.file, dataset_path),
+            }
+        media = MediaValue.model_validate({"name": None, **value})
+        return {"media_type": media.media_type, "blob_id": media.blob_id}
+    if isinstance(value, dict):
+        return {key: _normalized(context, dataset_path, item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_normalized(context, dataset_path, item) for item in value]
+    return value
