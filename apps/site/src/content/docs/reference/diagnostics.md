@@ -134,6 +134,7 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `W_TYPES_SHADOWS_STDLIB` | `warning` | generated {module}/types.py shadows the standard library module types while {folder} is on sys.path |
 | `W_SIM_NODE_UNREACHED` | `warning` | node {node} does not run in any simulated pass of flow {flow} |
 | `W_PROMPT_VALUE_UNREADABLE` | `warning` | — |
+| `W_ENUM_DEFINITIONS_MANUAL` | `warning` | Inference `{inference}` disables automatic definitions for output enums {enums}; the prompt is responsible for defining these values. |
 | `W_TOOL_ARG_UNREACHABLE` | `warning` | — |
 | `W_CONTEXT_KEY_UNUSED` | `warning` | — |
 | `W_PLAN_EXCEEDS_CASES` | `warning` | experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases |

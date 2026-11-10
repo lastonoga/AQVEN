@@ -148,10 +148,11 @@ def illustrate_prompt(
     )
 ```
 
-Unlike the two Markdown levels, nothing is added for you: the function writes out the whole prompt,
-including the customer's reply text, itself. It only takes `text` and `category` as arguments — the
-inference also declares a `photo` field, but that one is an image, and media fields are never passed in
-as text; they're attached to the call separately.
+Unlike the two Markdown levels, the function writes its own dialog text and receives no `output_format`
+variable. In the default `enum_definitions: auto` mode, AQVEN adds only the named output-enum definitions
+as a separate system message; it does not add the output-field list or dynamic allowed-set lines. The
+function signature stays limited to the inference's non-media inputs. Set `enum_definitions: manual` to
+suppress that system message and own the definitions yourself.
 
 ## Variant slots and fragments
 
@@ -261,20 +262,34 @@ fragment are on [Tested snippets](/engine/snippets/).
 
 ## A closed list of labels
 
-When an output is one value of an enum — a ticket intent, a document type, a sound event in a recording, a defect
-kind in a product photo — the model sees only the bare values. The `description` of each value in the enum's type
-file reaches neither the prompt nor the output schema: `prompt_preview` shows the output limits as
-`one of "refund", "billing_error", …` and nothing more. A name is not a definition, and two close names get mixed
-up.
+Declare the meaning of every value once in the named enum type's `values[].description`. In the default
+`enum_definitions: auto` mode, AQVEN sends those declarations to the model after the output-field
+descriptions and before any dynamic allowed-set lines:
 
-- Define every value in the prompt by the evidence that shows it in the input this node reads: the words or facts
-  in a ticket, the printed label next to an amount on an invoice, the sound in a recording, what is visible in a
-  frame.
-- Say what separates each value from the values it is most often confused with: a refund request asks for money
-  back, a billing error says the money was charged wrongly.
-- Keep one table of values and definitions. A script in `scripts/` generates the enum type, one fragment per value
-  and any check that lists the values from that table, so the three never drift apart. One fragment per value lets
-  an experiment change one definition at a time.
+```text
+Enum values of CaseIntent (intent):
+- defect: Product defect: it does not work, or works wrongly
+- delivery: Delivery problem: damage, a missing item or a lost parcel
+- question: A question with no claim: setup, compatibility, warranty terms
+```
+
+The heading includes every readable output path where that named type occurs. Repeated uses share one value
+table; enum values retain declaration order. Plain prompts receive the block through the appended output
+contract, Liquid prompts through `{{ output_format }}`, and Python prompts through the separate enum-only
+system message described above. `prompt_preview` shows the same text that the corresponding prompt level
+sends.
+
+- Write definitions that identify the evidence for each value in this node's input and distinguish the values
+  most often confused with one another.
+- Keep the default `auto` mode so the enum, prompt, and preview cannot drift into separate copies of the
+  definitions. Inline `enum: [...]` constraints and enums used only in inputs add no block.
+- Use `enum_definitions: "manual"` only when the prompt needs custom wording or a deliberately different
+  contract. Manual mode suppresses injection at every prompt level and emits one non-blocking
+  `W_ENUM_DEFINITIONS_MANUAL` per inference with named output enums, even if the prompt already contains
+  the definitions verbatim. Include the definitions yourself or restore `enum_definitions: "auto"`.
+
+The output JSON Schema still contains the same bare `enum` values; these explanatory definitions travel
+only in prompt text.
 
 ## A step that reads another model's output
 

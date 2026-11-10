@@ -23,6 +23,7 @@ from aqven.spec.policy import EvaluatorRef
 type VariantRef = Annotated[str, Field(pattern=VARIANT_REF_PATTERN)]
 type DisplayVariableName = Annotated[str, Field(pattern=NAME_PATTERN)]
 type DisplayVariableRef = Annotated[str, Field(pattern=REF_PATTERN)]
+type EnumDefinitionsMode = Literal["auto", "manual"]
 DISPLAY_RUN_PATTERN = f"^({CODE_REF_BODY}|{CODE_ALIAS_BODY}|{CODE_FILE_BODY}|{FUNCTION_BODY})$"
 DISPLAY_TEMPLATE_PATTERN = (
     r"^(@root/|(?:\.\.?/)*)?"
@@ -77,6 +78,7 @@ class InferenceSpec(SpecModel):
     description: str = Field(min_length=1)
     in_: list[FieldDecl] = Field(default_factory=list[FieldDecl], alias="in")
     out: list[OutputField] = Field(min_length=1)
+    enum_definitions: EnumDefinitionsMode = "auto"
     prompt: str | None = Field(default=None, pattern=PROMPT_REF_PATTERN)
     variants: dict[str, VariantSlot] | None = None
     allowed_sets: list[AllowedSetSpec] | None = None

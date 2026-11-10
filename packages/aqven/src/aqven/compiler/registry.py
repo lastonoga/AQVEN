@@ -19,6 +19,7 @@ from aqven.ir import (
     CompiledInferenceDisplay,
     CompiledJobWait,
     CompiledMcpServer,
+    CompiledOutputEnum,
     CompiledTool,
     CompiledToolSource,
     JsonSchema,
@@ -26,6 +27,7 @@ from aqven.ir import (
 )
 from aqven.loader import LoadedInference, SourceSpec, YamlPath, include_candidates
 from aqven.spec import AgentId, AgentSpec, InferenceId, McpServerId, McpServerSpec, ToolId, ToolSpec, parse_model
+from aqven.spec.output_enums import OutputEnumDefinition, collect_output_enums
 
 type Side = Literal["in", "out"]
 
@@ -60,11 +62,15 @@ def compile_inference(context: CompileContext, loaded: LoadedInference) -> Compi
         raise compile_failure(DiagnosticCode.E_BUILDER_FAILED, loaded.builder_path or loaded.folder, (), message)
     spec = source.spec
     parts = inference_prompt(context, loaded, source)
+    types = {type_id: type_source.spec for type_id, type_source in context.project.types.items()}
+    output_enums = collect_output_enums(spec.out, types)
     return CompiledInference(
         inference_id=loaded.inference_id,
         description=spec.description,
         input_fields=fields_ir(spec.in_),
         output_fields=fields_ir(spec.out),
+        output_enums=tuple(_compiled_output_enum(item) for item in output_enums),
+        enum_definitions=spec.enum_definitions,
         input_schema=_inference_schema(context, loaded.inference_id, source.path, "in"),
         output_schema=_inference_schema(context, loaded.inference_id, source.path, "out"),
         dynamic_outputs=dynamic_outputs(spec.out),
@@ -86,6 +92,15 @@ def compile_inference(context: CompileContext, loaded: LoadedInference) -> Compi
         ),
         file=source.path,
         origin=loaded.origin,
+    )
+
+
+def _compiled_output_enum(item: OutputEnumDefinition) -> CompiledOutputEnum:
+    return CompiledOutputEnum(
+        type_id=item.type_id,
+        description=item.spec.description,
+        values=tuple(item.spec.values),
+        paths=item.paths,
     )
 
 

@@ -16,7 +16,15 @@ from aqven.engine.llm.allowed import AllowedSet, flatten
 from aqven.engine.llm.errors import LlmFailureCode, LlmNodeError
 from aqven.engine.llm.ports import CodeLoader
 from aqven.engine.llm.readable import readable_values
-from aqven.ir import CodePrompt, CompiledInference, CompiledPrompt, CompiledVariantSlot, FieldIr, TemplatePrompt
+from aqven.ir import (
+    CodePrompt,
+    CompiledInference,
+    CompiledOutputEnum,
+    CompiledPrompt,
+    CompiledVariantSlot,
+    FieldIr,
+    TemplatePrompt,
+)
 from aqven.policies.paths import read
 from aqven.runtime.address import JsonObject
 from aqven.spec import MEDIA_TYPES, MediaValue, PromptLevel, PromptMessage, RefRoot, RenderedPrompt, parse_type_ref
@@ -94,7 +102,9 @@ class PromptRenderer:
         chosen = {name: _variant(name, slot, document) for name, slot in source.inference.variants.items()}
         variants = {name: _render_text(environment, text, values) for name, (_, text) in chosen.items()}
         variables: dict[str, object] = {**values, OUTPUT_FORMAT: source.output_format, VARIANTS_VARIABLE: variants}
-        messages = _render_messages(environment, prompt.template, variables)
+        definitions = enum_definitions_format(source.inference)
+        terminal_output = source.output_format if definitions and source.output_format.endswith(definitions) else ""
+        messages = _render_messages(environment, prompt.template, variables, terminal_output)
         return RenderedParts(messages, {name: key for name, (key, _) in chosen.items()}, PromptLevel.TEMPLATE)
 
     def function(self, prompt: CodePrompt, source: PromptSource) -> RenderedParts:
@@ -105,7 +115,11 @@ class PromptRenderer:
         rendered = target(**arguments)
         if not isinstance(rendered, RenderedPrompt):
             raise LlmNodeError(LlmFailureCode.CODE_INVALID, f"prompt {prompt.run} did not return a RenderedPrompt")
-        return RenderedParts(rendered.messages, {}, PromptLevel.CODE)
+        messages = rendered.messages
+        definitions = enum_definitions_format(source.inference)
+        if definitions:
+            messages = (*messages, PromptMessage(role=SYSTEM_ROLE, text=definitions))
+        return RenderedParts(messages, {}, PromptLevel.CODE)
 
 
 TEMPLATE_LEVELS: Final[Mapping[int, TemplateLevel]] = {
@@ -117,7 +131,23 @@ TEMPLATE_LEVELS: Final[Mapping[int, TemplateLevel]] = {
 def output_format(inference: CompiledInference, sets: Sequence[AllowedSet]) -> str:
     fields = ("Output fields:", *(f"- {field.name}: {field.description}" for field in inference.output_fields))
     allowed = tuple(line for item in sets for line in _allowed_lines(item))
-    return "\n".join((*fields, *allowed))
+    definitions = enum_definitions_format(inference)
+    if not definitions:
+        return "\n".join((*fields, *allowed))
+    sections = ("\n".join(fields), definitions, "\n".join(allowed))
+    return SECTION_SEPARATOR.join(section for section in sections if section)
+
+
+def enum_definitions_format(inference: CompiledInference) -> str:
+    if inference.enum_definitions != "auto":
+        return ""
+    return SECTION_SEPARATOR.join(_enum_definition_block(item) for item in inference.output_enums)
+
+
+def _enum_definition_block(item: CompiledOutputEnum) -> str:
+    heading = f"Enum values of {item.type_id} ({', '.join(item.paths)}):"
+    values = (f"- {value.value}: {value.description}" for value in item.values)
+    return "\n".join((heading, *values))
 
 
 def text_fields(inference: CompiledInference) -> tuple[FieldIr, ...]:
@@ -202,23 +232,28 @@ def _render_text(environment: Environment, template: str, variables: Mapping[str
 
 
 def _render_messages(
-    environment: Environment, template: str, variables: Mapping[str, object]
+    environment: Environment, template: str, variables: Mapping[str, object], terminal_output: str
 ) -> tuple[PromptMessage, ...]:
     nodes = _rendered_nodes(environment, template, variables)
     if all(node.role is None for node in nodes):
-        return _messages((_RenderedNode(USER_ROLE, "".join(node.text for node in nodes)),))
+        return _messages((_RenderedNode(USER_ROLE, "".join(node.text for node in nodes)),), terminal_output)
     loose = "".join(node.text for node in nodes if node.role is None)
     if loose.strip():
         raise LlmNodeError(LlmFailureCode.PROMPT_INVALID, "template text outside {% message %} blocks")
-    return _messages(nodes)
+    return _messages(nodes, terminal_output)
 
 
-def _messages(nodes: Sequence[_RenderedNode]) -> tuple[PromptMessage, ...]:
-    return tuple(
-        PromptMessage(role=node.role, text=node.text.strip())
-        for node in nodes
-        if node.role is not None and node.text.strip()
-    )
+def _messages(nodes: Sequence[_RenderedNode], terminal_output: str) -> tuple[PromptMessage, ...]:
+    suffix = terminal_output[len(terminal_output.rstrip()) :]
+    messages: list[PromptMessage] = []
+    for node in nodes:
+        if node.role is None or not node.text.strip():
+            continue
+        text = node.text.strip()
+        if suffix and node.text.rstrip().endswith(terminal_output.rstrip()):
+            text += suffix
+        messages.append(PromptMessage(role=node.role, text=text))
+    return tuple(messages)
 
 
 def _rendered_nodes(

@@ -1,0 +1,116 @@
+{
+  "format": "aqven.cassette.v1",
+  "key": "sha256-5e23ac1488c2d22b993a4df267abd6756103e66a8b6eddd976acd39a0f4361a5",
+  "request_key": "sha256-85de0ffdb35de01253d64a6615957f434cfa772fa31aa1a1004f34dc75c57e9d",
+  "model_ref": "openrouter:google/gemini-2.5-flash-lite",
+  "site": {
+    "address": {
+      "node_id": "triage",
+      "branch_key": null,
+      "iteration": null,
+      "item_index": null
+    },
+    "attempt": 1
+  },
+  "events": [
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "",
+        "tool_call_id": "tool_final_result_DXmafejjEPuEBhdNS7aG",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "previous_part_kind": null,
+      "event_kind": "part_start"
+    },
+    {
+      "tool_name": "final_result",
+      "tool_call_id": "tool_final_result_DXmafejjEPuEBhdNS7aG",
+      "event_kind": "final_result"
+    },
+    {
+      "index": 0,
+      "delta": {
+        "tool_name_delta": null,
+        "args_delta": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi.\"}],\"safety_risk\":false,\"category\":\"smart_bulb\",\"intake_extra\":{},\"summary\":\"The customer is asking if the Lumen Glow E27 smart bulb supports 5 GHz Wi-Fi and wants to use it in the bedroom.\"}",
+        "tool_call_id": "tool_final_result_DXmafejjEPuEBhdNS7aG",
+        "provider_name": null,
+        "provider_details": null,
+        "part_delta_kind": "tool_call"
+      },
+      "event_kind": "part_delta"
+    },
+    {
+      "index": 0,
+      "part": {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi.\"}],\"safety_risk\":false,\"category\":\"smart_bulb\",\"intake_extra\":{},\"summary\":\"The customer is asking if the Lumen Glow E27 smart bulb supports 5 GHz Wi-Fi and wants to use it in the bedroom.\"}",
+        "tool_call_id": "tool_final_result_DXmafejjEPuEBhdNS7aG",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      },
+      "next_part_kind": null,
+      "event_kind": "part_end"
+    }
+  ],
+  "response": {
+    "parts": [
+      {
+        "tool_name": "final_result",
+        "args": "{\"observations\":[{\"key\":\"usage_question\",\"value\":\"The customer is asking if the Glow E27 bulb works with 5 GHz Wi-Fi.\"}],\"safety_risk\":false,\"category\":\"smart_bulb\",\"intake_extra\":{},\"summary\":\"The customer is asking if the Lumen Glow E27 smart bulb supports 5 GHz Wi-Fi and wants to use it in the bedroom.\"}",
+        "tool_call_id": "tool_final_result_DXmafejjEPuEBhdNS7aG",
+        "tool_kind": null,
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "tool-call"
+      }
+    ],
+    "usage": {
+      "input_tokens": 759,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 71,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": null,
+      "output_reasoning_tokens": 0
+    },
+    "model_name": "google/gemini-2.5-flash-lite",
+    "timestamp": "2026-09-23T06:52:53.255205Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-09-23T06:52:52Z",
+      "downstream_provider": "Google",
+      "finish_reason": "STOP",
+      "cost": 0.0001043,
+      "upstream_inference_cost": 0.0001043,
+      "upstream_inference_prompt_cost": 7.59e-05,
+      "upstream_inference_completions_cost": 2.84e-05,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1790146372-mhrvNu3mGIjmHRyeViJ1",
+    "finish_reason": "tool_call",
+    "run_id": null,
+    "conversation_id": null,
+    "metadata": null,
+    "state": "complete"
+  }
+}
