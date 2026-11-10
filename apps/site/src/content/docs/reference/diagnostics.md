@@ -126,6 +126,14 @@ Diagnostic codes and severity are generated from `aqven.diagnostics`. Some codes
 | `E_FINDING_TAMPERED` | `error` | finding {finding} of experiment {experiment}: {problem} |
 | `E_MEDIA_FILE_MISSING` | `error` | case {case} of dataset {dataset}: media file {file} does not exist at {path} |
 | `E_MEDIA_PATH_INVALID` | `error` | case {case} of dataset {dataset}: media file path {file} {problem} |
+| `W_TEXT_IDENTIFIER_TYPE` | `warning` | — |
+| `W_ID_ALLOWED_SET_MISSING` | `warning` | — |
+| `W_ID_COVERAGE_UNCHECKED` | `warning` | — |
+| `W_ID_COVERAGE_CAP` | `warning` | — |
+| `W_NESTED_MEDIA_NOT_ATTACHED` | `warning` | — |
+| `W_MAP_ITEM_FAILURE_HIDDEN` | `warning` | — |
+| `W_CHECK_RETRY_UNAVAILABLE` | `warning` | — |
+| `W_DATASET_INPUT_REUSED` | `warning` | — |
 | `W_PROMPT_SHADOWED` | `warning` | — |
 | `W_GENERATED_STALE` | `warning` | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | output.mode auto resolves to {mode} for model {model} ({source}) |

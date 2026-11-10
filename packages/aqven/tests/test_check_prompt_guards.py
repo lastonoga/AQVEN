@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import CREDIT_TEXT_IDENTIFIER, TRIAGE_NESTED_MEDIA, codes_of, without_accepted_diagnostics
 
 from aqven.check import CheckReport, check_project
 from aqven.codegen import generate_types
@@ -165,7 +166,7 @@ def test_rendering_the_tool_id_clears_the_warning(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA, CREDIT_TEXT_IDENTIFIER) == ()
 
 
 def test_rendering_the_whole_record_clears_the_warning(shop: Path) -> None:
@@ -174,7 +175,7 @@ def test_rendering_the_whole_record_clears_the_warning(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA, CREDIT_TEXT_IDENTIFIER) == ()
 
 
 def test_inference_without_an_input_of_the_tool_type_is_reported(shop: Path) -> None:
@@ -227,7 +228,7 @@ def test_record_with_text_fields_renders_without_a_warning(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert report.diagnostics == ()
+    assert without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA) == ()
 
 
 def test_media_input_is_not_reported_as_unused(shop: Path) -> None:
@@ -249,7 +250,7 @@ def test_media_input_is_not_reported_as_unused(shop: Path) -> None:
 
     report = check_project(shop)
 
-    assert codes(report) == set()
+    assert codes_of(without_accepted_diagnostics(report, TRIAGE_NESTED_MEDIA)) == set()
 
 
 def test_input_used_only_by_a_check_path_is_not_reported_as_unused(shop: Path) -> None:

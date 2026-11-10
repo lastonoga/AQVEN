@@ -231,6 +231,14 @@ The project server answers a refused MCP tool call or REST request with one of t
 | `E_FINDING_TAMPERED` | `error` | — | finding {finding} of experiment {experiment}: {problem} | a finding is written once by its series and never edited: restore the file from git or run a new series on holdout cases |
 | `E_MEDIA_FILE_MISSING` | `error` | — | case {case} of dataset {dataset}: media file {file} does not exist at {path} | put the file at {path} or fix file: a relative path starts in {folder}/, @root/<path> at the project root |
 | `E_MEDIA_PATH_INVALID` | `error` | — | case {case} of dataset {dataset}: media file path {file} {problem} | write a path relative to {folder}/ or @root/<path>; an absolute path, a path out of its folder and a path into .aqven/ are not allowed |
+| `W_TEXT_IDENTIFIER_TYPE` | `warning` | — | — | — |
+| `W_ID_ALLOWED_SET_MISSING` | `warning` | — | — | — |
+| `W_ID_COVERAGE_UNCHECKED` | `warning` | — | — | — |
+| `W_ID_COVERAGE_CAP` | `warning` | — | — | — |
+| `W_NESTED_MEDIA_NOT_ATTACHED` | `warning` | — | — | — |
+| `W_MAP_ITEM_FAILURE_HIDDEN` | `warning` | — | — | — |
+| `W_CHECK_RETRY_UNAVAILABLE` | `warning` | — | — | — |
+| `W_DATASET_INPUT_REUSED` | `warning` | — | — | — |
 | `W_PROMPT_SHADOWED` | `warning` | — | — | — |
 | `W_GENERATED_STALE` | `warning` | — | — | — |
 | `W_OUTPUT_MODE_RESOLVED` | `warning` | — | output.mode auto resolves to {mode} for model {model} ({source}) | set output.mode: {mode} to pin it |

@@ -1191,6 +1191,14 @@ def test_diagnostic_tables_and_text() -> None:
         DiagnosticCode.W_ALTERNATIVE_UNUSED,
         DiagnosticCode.W_MEDIA_TYPE_MISMATCH,
         DiagnosticCode.W_AGENT_SKILLS_STALE,
+        DiagnosticCode.W_TEXT_IDENTIFIER_TYPE,
+        DiagnosticCode.W_ID_ALLOWED_SET_MISSING,
+        DiagnosticCode.W_ID_COVERAGE_UNCHECKED,
+        DiagnosticCode.W_ID_COVERAGE_CAP,
+        DiagnosticCode.W_NESTED_MEDIA_NOT_ATTACHED,
+        DiagnosticCode.W_MAP_ITEM_FAILURE_HIDDEN,
+        DiagnosticCode.W_CHECK_RETRY_UNAVAILABLE,
+        DiagnosticCode.W_DATASET_INPUT_REUSED,
     }
     assert all(code.value.startswith("W_") == (code in warnings) for code in DiagnosticCode)
     unbounded = diagnostic(

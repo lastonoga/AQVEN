@@ -14,6 +14,7 @@ DOMAIN_SEPARATOR: Final = b"\x00"
 
 class HashDomain(StrEnum):
     PROJECT = "aqven/project-ir/v1"
+    DATASET_INPUT = "aqven/dataset-input/v1"
     FLOW_SPEC = "aqven/flow-spec/v1"
     NODE_BODY = "aqven/node-body/v1"
     NODE_BEHAVIOR = "aqven/node-behavior/v1"
