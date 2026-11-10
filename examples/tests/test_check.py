@@ -27,6 +27,13 @@ CLAIMS_FIRST: Final = "experiments/panel_judge_prompt/prompts/claims_first.md"
 REPLY_LOOK: Final = "experiments/reply_look/experiment.yaml"
 OVERPROMISE: Final = "experiments/reply_overpromise_risk/experiment.yaml"
 SUPPORT_CASES: Final = "datasets/support_case_cases.yaml"
+EXPECTED_RISK_WARNINGS: Final = {
+    ("W_ID_COVERAGE_CAP", f"{REVISE}.inference.yaml"),
+    ("W_ID_COVERAGE_CAP", "flows/support_case/nodes/triage/triage.inference.yaml"),
+    ("W_ID_COVERAGE_UNCHECKED", "flows/support_case/nodes/triage/triage.inference.yaml"),
+    ("W_MAP_ITEM_FAILURE_HIDDEN", "flows/support_case/nodes/vote/vote.node.yaml"),
+    ("W_TEXT_IDENTIFIER_TYPE", "tools/issue_store_credit.yaml"),
+}
 SHADOWING_PROMPT: Final[Breakage] = (RESEARCH_POLICY, "out:\n", 'prompt: "@root/fragments/untrusted_input.md"\nout:\n')
 UNBOUND_MESSAGE: Final[Breakage] = (TRIAGE, '- name: "message"\n  from: "$prepare.out.message"\n', "")
 PLAN_BEYOND_CASES: Final[Breakage] = (NONINFERIOR, "  cases: 12\n", "  cases: 40\n")
@@ -132,7 +139,7 @@ def broken_copy(root: Path, destination: Path, relative: str, old: str, new: str
 
 def test_example_is_clean(aqven_check_report: CheckReport) -> None:
     assert aqven_check_report.errors == ()
-    assert aqven_check_report.warnings == ()
+    assert {(item.code.value, item.file) for item in aqven_check_report.warnings} == EXPECTED_RISK_WARNINGS
 
 
 @pytest.mark.parametrize("code", BREAKAGES)
@@ -187,7 +194,10 @@ def test_check_typed_for_the_revise_inference_warns_on_the_polish_range(
     copy = broken_copy(aqven_project_root, tmp_path, *INFERENCE_TYPED_CHECK)
     report = check_project(copy)
     assert report.errors == ()
-    assert {(item.code.value, item.file) for item in report.warnings} == {("W_CHECK_CONTEXT_MISMATCH", NONINFERIOR)}
+    assert {(item.code.value, item.file) for item in report.warnings} == {
+        ("W_CHECK_CONTEXT_MISMATCH", NONINFERIOR),
+        *EXPECTED_RISK_WARNINGS,
+    }
 
 
 def test_judge_input_outside_the_polish_range_scope_warns(aqven_project_root: Path, tmp_path: Path) -> None:
