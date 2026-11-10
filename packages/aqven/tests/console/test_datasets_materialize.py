@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from fixture_warnings import TRIAGE_NESTED_MEDIA, without_accepted_diagnostics
 from pydantic import JsonValue
 
 from aqven.check import check_project
@@ -150,7 +151,10 @@ def test_materialize_copies_blobs_next_to_the_dataset_and_resolves_to_the_same_v
         **{name: before[name] for name in ("late_parcel", "torn_box", "same_parcel")},
         "sketch": {**before["sketch"], "name": sketch_file},
     }
-    assert check_project(shop).diagnostics == ()
+    problems = without_accepted_diagnostics(check_project(shop), TRIAGE_NESTED_MEDIA)
+    assert [(item.code.value, item.file, item.path) for item in problems] == [
+        ("W_DATASET_INPUT_REUSED", DATASET_FILE, ("cases", 2, "inputs"))
+    ]
     assert f"copied {parcel.media.blob_id[:19]}" in output
     assert "rewrote cases[1].inputs.photo of case torn_box as file parcel_2.jpg, name parcel.jpg" in output
     assert "4 values as 3 files (3 copied from .aqven/blobs), 0 values left, 0 blobs missing" in output
