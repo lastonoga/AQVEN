@@ -22,6 +22,13 @@ PRIORITY = CompiledOutputEnum(
     paths=("assessment.priority", "assessment.score.priorities[*]", "scores[*].priorities[*]"),
 )
 MOOD_BLOCK = "Enum values of Mood (mood):\n- calm: Calm\n- warm: Warm"
+TRAILING_MOOD = CompiledOutputEnum(
+    type_id=TypeId("Mood"),
+    description="Reply tone",
+    values=(EnumValue(value="calm", description="Calm"), EnumValue(value="warm", description="Warm  ")),
+    paths=("mood",),
+)
+TRAILING_MOOD_BLOCK = "Enum values of Mood (mood):\n- calm: Calm\n- warm: Warm  "
 PRIORITY_BLOCK = (
     "Enum values of Priority (assessment.priority, assessment.score.priorities[*], scores[*].priorities[*]):\n"
     "- high: Handle today\n"
@@ -96,6 +103,54 @@ def test_plain_and_liquid_prompts_render_the_same_enum_block(prompt: TemplatePro
     assert len(rendered.messages) == 1
     assert rendered.messages[0].role == "user"
     assert rendered.messages[0].text == expected
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        TemplatePrompt(level=1, template="Answer the customer."),
+        TemplatePrompt(level=2, template="{{ output_format }}"),
+        CodePrompt(run=PROMPT_REF),
+    ],
+    ids=["plain", "liquid", "code"],
+)
+def test_all_prompt_levels_preserve_terminal_enum_description_whitespace(prompt: TemplatePrompt | CodePrompt) -> None:
+    inference = enum_inference(prompt=prompt, output_enums=(TRAILING_MOOD,))
+    renderer = PromptRenderer(MappedCode({PROMPT_REF: level_three_prompt}))
+
+    rendered = renderer.render(prompt, source(inference))
+
+    assert rendered.messages[-1].text.endswith(TRAILING_MOOD_BLOCK)
+
+
+@pytest.mark.parametrize(
+    "update",
+    [{"enum_definitions": "manual"}, {"output_enums": ()}],
+    ids=["manual", "no-enums"],
+)
+def test_liquid_manual_or_no_enum_keeps_legacy_boundary_stripping(update: dict[str, object]) -> None:
+    prompt = TemplatePrompt(level=2, template="  {{ output_format }}  ")
+    inference = enum_inference(prompt=prompt, **update)
+
+    rendered = PromptRenderer(MappedCode({})).render(prompt, source(inference))
+
+    assert [message.text for message in rendered.messages] == ["Output fields:\n- mood: field mood"]
+
+
+def test_liquid_enum_followed_by_allowed_set_has_no_boundary_suffix() -> None:
+    prompt = TemplatePrompt(level=2, template="{{ output_format }}")
+    inference = enum_inference(prompt=prompt, output_enums=(TRAILING_MOOD,))
+    sets = (AllowedSet(type_id=TypeId("NoteId"), values=("n1", "n2"), labels=("First note", None)),)
+    base = source(inference)
+    prompt_source = PromptSource(base.inference, base.values, base.document, output_format(inference, sets))
+
+    rendered = PromptRenderer(MappedCode({})).render(prompt, prompt_source)
+
+    assert [message.text for message in rendered.messages] == [
+        "Output fields:\n- mood: field mood\n\n"
+        f"{TRAILING_MOOD_BLOCK}\n\n"
+        "Allowed values of NoteId:\n- n1: First note\n- n2"
+    ]
 
 
 def test_code_prompt_gets_enum_only_system_message() -> None:

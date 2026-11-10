@@ -102,7 +102,9 @@ class PromptRenderer:
         chosen = {name: _variant(name, slot, document) for name, slot in source.inference.variants.items()}
         variants = {name: _render_text(environment, text, values) for name, (_, text) in chosen.items()}
         variables: dict[str, object] = {**values, OUTPUT_FORMAT: source.output_format, VARIANTS_VARIABLE: variants}
-        messages = _render_messages(environment, prompt.template, variables)
+        definitions = enum_definitions_format(source.inference)
+        terminal_output = source.output_format if definitions and source.output_format.endswith(definitions) else ""
+        messages = _render_messages(environment, prompt.template, variables, terminal_output)
         return RenderedParts(messages, {name: key for name, (key, _) in chosen.items()}, PromptLevel.TEMPLATE)
 
     def function(self, prompt: CodePrompt, source: PromptSource) -> RenderedParts:
@@ -230,23 +232,28 @@ def _render_text(environment: Environment, template: str, variables: Mapping[str
 
 
 def _render_messages(
-    environment: Environment, template: str, variables: Mapping[str, object]
+    environment: Environment, template: str, variables: Mapping[str, object], terminal_output: str
 ) -> tuple[PromptMessage, ...]:
     nodes = _rendered_nodes(environment, template, variables)
     if all(node.role is None for node in nodes):
-        return _messages((_RenderedNode(USER_ROLE, "".join(node.text for node in nodes)),))
+        return _messages((_RenderedNode(USER_ROLE, "".join(node.text for node in nodes)),), terminal_output)
     loose = "".join(node.text for node in nodes if node.role is None)
     if loose.strip():
         raise LlmNodeError(LlmFailureCode.PROMPT_INVALID, "template text outside {% message %} blocks")
-    return _messages(nodes)
+    return _messages(nodes, terminal_output)
 
 
-def _messages(nodes: Sequence[_RenderedNode]) -> tuple[PromptMessage, ...]:
-    return tuple(
-        PromptMessage(role=node.role, text=node.text.strip())
-        for node in nodes
-        if node.role is not None and node.text.strip()
-    )
+def _messages(nodes: Sequence[_RenderedNode], terminal_output: str) -> tuple[PromptMessage, ...]:
+    suffix = terminal_output[len(terminal_output.rstrip()) :]
+    messages: list[PromptMessage] = []
+    for node in nodes:
+        if node.role is None or not node.text.strip():
+            continue
+        text = node.text.strip()
+        if suffix and node.text.rstrip().endswith(terminal_output.rstrip()):
+            text += suffix
+        messages.append(PromptMessage(role=node.role, text=text))
+    return tuple(messages)
 
 
 def _rendered_nodes(

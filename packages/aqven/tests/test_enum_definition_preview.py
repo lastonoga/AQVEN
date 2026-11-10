@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from enum_projects import STANDARD_SHOP, TRIAGE_ENUM_BLOCK, code_prompt_shop, manual_liquid_shop, plain_shop
 
 from aqven.check import CodeResolver
@@ -8,6 +9,7 @@ from aqven.preview import PromptPreview, PromptPreviewRequest, preview_prompt
 from aqven.spec import FlowId, InferenceId, NodeId
 
 MOOD_BLOCK = "Enum values of Mood (mood):\n- calm: Calm\n- warm: Warm"
+TRAILING_MOOD_BLOCK = "Enum values of Mood (mood):\n- calm: Calm\n- warm: Warm  "
 
 
 def preview_of(root: Path, flow: str, node: str) -> PromptPreview:
@@ -71,3 +73,33 @@ def test_code_manual_preview_has_no_engine_enum_block(tmp_path: Path) -> None:
         "You reply to customer notes in one short sentence.\n\n\nYou reply to customer notes"
     )
     assert "Output fields:" not in instructions
+
+
+def trailing_warm(root: Path) -> None:
+    target = root / "types/enums/mood.yaml"
+    text = target.read_text(encoding="utf-8")
+    assert text.count('description: "Warm"') == 1
+    target.write_text(text.replace('description: "Warm"', 'description: "Warm  "'), encoding="utf-8")
+
+
+@pytest.mark.parametrize("level", [1, 2, 3])
+def test_real_preview_preserves_terminal_enum_description_whitespace(tmp_path: Path, level: int) -> None:
+    if level == 3:
+        root = code_prompt_shop(tmp_path)
+    else:
+        root = plain_shop(tmp_path)
+        if level == 2:
+            (root / "flows/intake/nodes/reply/reply.prompt.md").write_text(
+                "{{ text }}\n{{ mood }}\n{{ output_format }}\n", encoding="utf-8"
+            )
+    trailing_warm(root)
+
+    preview = preview_of(root, "intake", "reply")
+    text = preview.instructions if level == 3 else preview.messages[-1].text
+
+    assert preview.prompt_level == level
+    assert text is not None
+    if level == 3:
+        assert TRAILING_MOOD_BLOCK in text
+    else:
+        assert text.endswith(TRAILING_MOOD_BLOCK)
