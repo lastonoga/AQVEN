@@ -66,6 +66,7 @@ JSON Schema
 | `description` | `string` | Yes | `—` | minLength=1 |
 | `in` | `FieldDecl[]` | No | `[]` | — |
 | `out` | `OutputField[]` | Yes | `—` | minItems=1 |
+| `enum_definitions` | `'auto' \| 'manual'` | No | `'auto'` | — |
 | `prompt` | `string \| null` | No | `None` | — |
 | `variants` | `map<string, VariantSlot> \| null` | No | `None` | — |
 | `allowed_sets` | `AllowedSetSpec[] \| null` | No | `None` | — |

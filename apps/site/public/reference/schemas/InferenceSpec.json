@@ -205,6 +205,13 @@
       "title": "DynamicLimits",
       "type": "object"
     },
+    "EnumDefinitionsMode": {
+      "enum": [
+        "auto",
+        "manual"
+      ],
+      "type": "string"
+    },
     "ExampleSpec": {
       "additionalProperties": false,
       "properties": {
@@ -618,6 +625,10 @@
         }
       ],
       "default": null
+    },
+    "enum_definitions": {
+      "$ref": "#/$defs/EnumDefinitionsMode",
+      "default": "auto"
     },
     "examples": {
       "anyOf": [

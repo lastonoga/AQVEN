@@ -243,6 +243,7 @@ The project server answers a refused MCP tool call or REST request with one of t
 | `W_TYPES_SHADOWS_STDLIB` | `warning` | — | generated {module}/types.py shadows the standard library module types while {folder} is on sys.path | remove {folder} from sys.path and PYTHONPATH; import the models as {module}.types |
 | `W_SIM_NODE_UNREACHED` | `warning` | — | node {node} does not run in any simulated pass of flow {flow} | no simulated input reaches it: check the switch cases and the conditions above it, or remove the node |
 | `W_PROMPT_VALUE_UNREADABLE` | `warning` | — | — | — |
+| `W_ENUM_DEFINITIONS_MANUAL` | `warning` | — | Inference `{inference}` disables automatic definitions for output enums {enums}; the prompt is responsible for defining these values. | include the value definitions in the prompt or restore `enum_definitions: auto` |
 | `W_TOOL_ARG_UNREACHABLE` | `warning` | — | — | — |
 | `W_CONTEXT_KEY_UNUSED` | `warning` | — | — | — |
 | `W_PLAN_EXCEEDS_CASES` | `warning` | — | experiment {experiment}: plan.cases is {planned}, but dataset {dataset} has {selected} selected cases | add cases to the dataset or lower plan.cases: a series runs each selected case at most once per repeat |
