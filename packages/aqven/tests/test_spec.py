@@ -374,6 +374,7 @@ CANONICAL_NODE_KEYS: dict[type[BaseModel], tuple[str, ...]] = {
         "description",
         "in",
         "out",
+        "enum_definitions",
         "prompt",
         "variants",
         "allowed_sets",
@@ -527,6 +528,26 @@ def test_inference_binds_input_output_variants_and_checks() -> None:
     assert (run.run, run.on_fail) == ("lumen.code.prompting:promises_match_resolution", OnFail.FLAG)
     assert (judge.inference, judge.agent, judge.threshold) == ("judge_reply", "deepseek", 3)
     assert (spec.examples or [])[0].in_ == {"chunks": []}
+
+
+@pytest.mark.parametrize("mode", [None, "auto", "manual"])
+def test_inference_enum_definitions_defaults_and_accepts_both_modes(mode: str | None) -> None:
+    body = document("Inference", out=[field("answer", "Text", maxLength=200)])
+    if mode is not None:
+        body["enum_definitions"] = mode
+
+    spec = INFERENCE_ADAPTER.validate_python(body)
+
+    assert isinstance(spec, InferenceSpec)
+    assert spec.enum_definitions == (mode or "auto")
+
+
+def test_inference_rejects_an_unknown_enum_definitions_mode() -> None:
+    body = document("Inference", out=[field("answer", "Text", maxLength=200)], enum_definitions="sometimes")
+
+    errors = validation_errors(INFERENCE_ADAPTER, body)
+
+    assert ("literal_error", ("enum_definitions",)) in errors
 
 
 def test_inference_prompt_is_a_markdown_path_or_code_reference() -> None:
