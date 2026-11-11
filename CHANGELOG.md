@@ -12,6 +12,44 @@ formats can still change, and `aqven` / `aqven-llm` are released as a matched pa
 Every entry below cites the commit(s) or tag range it was reconstructed from. Where a change
 could not be attributed to a specific commit, that is said out loud.
 
+## [0.0.8] - 2026-11-11
+
+Named output-enum definitions reach every prompt level, and the workflow checker now warns about
+structural reliability risks (`v0.0.7..v0.0.8`).
+
+### Added
+
+- Per-inference `enum_definitions: auto|manual`, default `auto`: named output enum values and their
+  descriptions are compiled once with deterministic paths and delivered at plain, Liquid and Python
+  prompt levels, with `prompt_preview` showing the same text (`b2154f25`, `f75aa43d`, `17019c48`)
+- `W_ENUM_DEFINITIONS_MANUAL`: manual mode suppresses injection and emits one non-blocking
+  configuration warning even when definitions are already in the prompt (`b1b07587`, `efd3b949`)
+- Eight workflow checker warnings: textual identifiers, missing allowed sets, unchecked ID coverage,
+  insufficient coverage capacity, unattached nested media, hidden map item failures, retry checks
+  that cannot retry and canonical dataset inputs reused across dev/holdout (`486ea315`, `d75bf0e7`,
+  `6627d0c0`)
+- Cycle-safe value-path traversal and resolved inference usages cover direct, optional, list, record
+  and union declarations, local flows, variants, subagents and LLM judges; generated references,
+  authored skills and installed Lumen copies describe the new contracts (`8d5684a3`, `57671c59`)
+
+### Fixed
+
+- Liquid prompts preserve declared trailing whitespace in terminal enum descriptions without changing
+  legacy manual/no-enum trimming (`8476da6e`)
+- Recursive output types stay opaque to enum collection while valid sibling and wrapper paths remain
+  (`5d208220`)
+- Dataset inputs that RFC 8785 cannot canonicalize (NaN, infinities and unsafe integers) are excluded
+  from reuse analysis instead of aborting the entire check; safe integer duplicates still warn
+  (`57c6431b`)
+
+### Tests
+
+- Offline example cassettes were migrated to actual current request hashes with unchanged
+  response/events (`d84897ed`)
+- Exact expected-diagnostics fixtures and the showcase template were updated for intentional new
+  warnings, including subset outputs, successful-ballots-only maps and materialized duplicate inputs
+  (`bdfb813e`, `728ddcb3`, `dfc20222`, `2442d114`)
+
 ## [0.0.7] - 2026-11-04
 
 Studio only: `v0.0.6..v0.0.7` is one feature commit plus this release.
